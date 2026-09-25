@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { netflixAdapter } from "./netflix";
-import { findVideoTab, getActiveWindowTab, openOrFocusVideoTab, sendToVideo } from "./tab";
+import {
+  CUE_LEAD_IN_MS, CUE_TAIL_MS, cuePlaybackStart, cuePlaybackWindow,
+  findVideoTab, getActiveWindowTab, openOrFocusVideoTab, sendToVideo,
+} from "./tab";
 
 const url = "https://www.netflix.com/watch/81234567";
 const other = "https://www.netflix.com/watch/76543210";
@@ -176,4 +179,30 @@ test("a form URL can find its matching watch tab without using the unrelated act
     await sendToVideo(netflixAdapter, url, { type: "NETFLIX_SUBTITLES_GET", language: "en" });
   });
   assert.deepEqual(received, [13]);
+});
+
+test("subtitle playback has two seconds of lead-in and a short tail without seeking before zero", () => {
+  assert.equal(CUE_LEAD_IN_MS, 2_000);
+  assert.equal(CUE_TAIL_MS, 400);
+  assert.equal(cuePlaybackStart(84_000), 82_000);
+  assert.equal(cuePlaybackStart(500), 0);
+  assert.deepEqual(cuePlaybackWindow(84_000, 85_200), { startMs: 82_000, endMs: 85_600 });
+  assert.throws(() => cuePlaybackWindow(2000, 2000), /Invalid subtitle end/);
+});
+
+test("opening a timestamp link reuses an existing watch tab instead of opening another", async () => {
+  const current = tab(51, true, 1, other);
+  const playing = tab(52, false, 1, url);
+  let opened = 0;
+  const focused: number[] = [];
+  await withChrome({
+    tabs: [current, playing], current: [current],
+    onCreate: () => { opened++; }, onUpdate: id => focused.push(id),
+  }, async () => {
+    const result = await openOrFocusVideoTab(netflixAdapter, url + "?t=82");
+    assert.equal(result.reused, true);
+    assert.equal(result.tab.id, 52);
+  });
+  assert.equal(opened, 0);
+  assert.deepEqual(focused, [52]);
 });
