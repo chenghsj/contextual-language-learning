@@ -3,7 +3,7 @@ import test from "node:test";
 import { parseSubtitles } from "@immersive/core";
 import {
   allowedYouTubeCaptionUrl, chooseYouTubeCaptionTrack,
-  observedYouTubeCaptionUrls, readYouTubeCaptionTracks,
+  observedYouTubeCaptionUrls, parsePlayerYouTubeCaptionResponse, readYouTubeCaptionTracks,
   youtubeJson3ToVtt, youtubeTimedTextToVtt, youtubeXmlToVtt,
 } from "./youtube-captions";
 
@@ -127,4 +127,21 @@ test("never accepts an observed caption URL without matching video identity", ()
     "https://www.youtube.com/api/timedtext?lang=en&pot=token",
     "https://www.youtube.com/watch?v=" + videoId + "&lang=en",
   ], videoId, "en"), []);
+});
+
+test("a captured player response succeeds even when the unsigned base URL is empty", () => {
+  const signedUrl = "https://www.youtube.com/api/timedtext?v=" + videoId +
+    "&lang=en&caps=asr&pot=session-private&fmt=json3";
+  const body = JSON.stringify({ events: [
+    { tStartMs: 4000, dDurationMs: 2500, segs: [{ utf8: "Hello world" }] },
+  ] });
+  const player = parsePlayerYouTubeCaptionResponse(signedUrl, body, videoId);
+  assert.equal(parsePlayerYouTubeCaptionResponse(signedUrl, "", videoId), null);
+  assert.deepEqual(player && {
+    language: player.language, kind: player.kind,
+    cues: parseSubtitles(player.text).length,
+  }, { language: "en", kind: "asr", cues: 1 });
+  assert.equal(parsePlayerYouTubeCaptionResponse(signedUrl, body, "AAAAAAAAAAA"), null);
+  assert.equal(parsePlayerYouTubeCaptionResponse(signedUrl + "&tlang=ja", body, videoId), null);
+  assert.equal(parsePlayerYouTubeCaptionResponse(signedUrl.replace("youtube.com", "youtube.com.evil.test"), body, videoId), null);
 });
