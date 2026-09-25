@@ -59,6 +59,7 @@ export default function App() {
   const [sourceUrl, setSourceUrl] = useState("");
   const [profile, setProfile] = useState<LearningProfile>(DEFAULT_PROFILE);
   const [agent, setAgent] = useState<AgentSettings>(DEFAULT_AGENT);
+  const [agentProfiles, setAgentProfiles] = useState<Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>>({});
   const [installed, setInstalled] = useState<Installed | null>(null);
   const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([
     { id: "claude", label: "Claude Code", installed: false, supportsAccountProfiles: true },
@@ -82,9 +83,15 @@ export default function App() {
   const readerAdapter = getVideoAdapter(document?.source.url);
 
   useEffect(() => {
-    void chrome.storage.local.get(["profile", "agent", "repeat", "delay"]).then(saved => {
+    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "repeat", "delay"]).then(saved => {
       if (saved.profile) setProfile(saved.profile as LearningProfile);
       if (saved.agent) setAgent(saved.agent as AgentSettings);
+      if (saved.agentProfiles && typeof saved.agentProfiles === "object") {
+        setAgentProfiles(saved.agentProfiles as Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>);
+      } else if (saved.agent) {
+        const previous = saved.agent as AgentSettings;
+        setAgentProfiles({ [previous.provider]: { modelId: previous.modelId, accountConfigDir: previous.accountConfigDir } });
+      }
       if (saved.repeat) setRepeat(saved.repeat as RepeatOption);
       if (typeof saved.delay === "number") setDelay(saved.delay);
       setHydrated(true);
@@ -100,8 +107,25 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (hydrated) void chrome.storage.local.set({ profile, agent, repeat, delay });
-  }, [hydrated, profile, agent, repeat, delay]);
+    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, repeat, delay });
+  }, [hydrated, profile, agent, agentProfiles, repeat, delay]);
+
+  function updateAgent(next: AgentSettings): void {
+    setAgent(next);
+    setAgentProfiles(previous => ({
+      ...previous,
+      [next.provider]: { modelId: next.modelId, accountConfigDir: next.accountConfigDir },
+    }));
+  }
+
+  function selectAgent(provider: string): void {
+    const previous = agentProfiles[provider];
+    updateAgent({
+      provider,
+      modelId: previous?.modelId ?? "",
+      accountConfigDir: previous?.accountConfigDir,
+    });
+  }
 
   function checkHost(): void {
     setError("");
@@ -322,17 +346,17 @@ export default function App() {
             {agentCatalog.map(entry => entry.label + "：" + (entry.installed ? "已安裝" : "未找到")).join(" · ")}
           </div>}
           <label>預設 Agent
-            <Select value={agent.provider} onChange={event => setAgent(current => ({ ...current, provider: event.target.value as AgentSettings["provider"], accountConfigDir: undefined }))}>
+            <Select value={agent.provider} onChange={event => selectAgent(event.target.value)}>
               {agentCatalog.map(entry =>
                 <option key={entry.id} value={entry.id}>{entry.label}{installed && !entry.installed ? "（未安裝）" : ""}</option>
               )}
             </Select>
           </label>
           <label>預設模型 ID
-            <Input value={agent.modelId} onChange={event => setAgent(current => ({ ...current, modelId: event.target.value }))} placeholder="留空使用 CLI 預設模型" />
+            <Input value={agent.modelId} onChange={event => updateAgent({ ...agent, modelId: event.target.value })} placeholder="留空使用 CLI 預設模型" />
           </label>
           <label>獨立帳號設定目錄（選填）
-            <Input disabled={!agentCatalog.find(entry => entry.id === agent.provider)?.supportsAccountProfiles} value={agent.accountConfigDir ?? ""} onChange={event => setAgent(current => ({ ...current, accountConfigDir: event.target.value || undefined }))} placeholder="例如：/Users/you/.codex-work" />
+            <Input disabled={!agentCatalog.find(entry => entry.id === agent.provider)?.supportsAccountProfiles} value={agent.accountConfigDir ?? ""} onChange={event => updateAgent({ ...agent, accountConfigDir: event.target.value || undefined })} placeholder="例如：/Users/you/.codex-work" />
           </label>
           <p className="hint">帳號設定目錄僅供宣告支援獨立 Profile 的 Agent 使用；目錄必須已存在於家目錄內。不支援獨立 Profile 的 Agent 使用目前的 CLI 登入環境。</p>
           <div className="callout">Google Drive OAuth、多個帳號的圖形化管理及背景 Daemon 尚未納入這個 MVP，不會假裝已連線。</div>
