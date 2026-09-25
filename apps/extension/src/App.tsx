@@ -1075,7 +1075,8 @@ export default function App() {
           <h2>{t("subtitleHeading")}</h2>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
             <p className="hint">{subtitleUi.hint}</p>
-            <Button disabled={subtitleBusy || metadataBusy || checking || generating}
+            <Button className="subtitleFetchButton"
+              disabled={subtitleBusy || metadataBusy || checking || generating}
               onClick={() => void fetchCurrentSubtitles()}>
               {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
             </Button>
