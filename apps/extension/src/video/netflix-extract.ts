@@ -87,7 +87,7 @@ function browserTextTrack(video: HTMLVideoElement | null, requested: string): Su
 /** Only the current user's selected watch session is examined; no DRM or media access. */
 export async function readNetflixSubtitles(
   player: NetflixCaptionPlayer, video: HTMLVideoElement | null,
-  sessionRoot: unknown, requestedLanguage: string, options: Options = {},
+  sessionRoot: () => unknown, requestedLanguage: string, options: Options = {},
 ): Promise<SubtitleDocument> {
   if (!/^(en|ja|ko)$/.test(requestedLanguage)) throw new Error("Unsupported learning language.");
   const sameVideo = options.sameVideo ?? (() => true);
@@ -108,7 +108,7 @@ export async function readNetflixSubtitles(
   const previous = original ?? tracks.find(track => track.isNoneTrack) ?? null;
   let changed = false;
   try {
-    let url = subtitleUrlFromTrack(chosen) ?? (id ? findInternalTrackUrl(sessionRoot, id) : null);
+    let url = subtitleUrlFromTrack(chosen) ?? (id ? findInternalTrackUrl(sessionRoot(), id) : null);
     if (!url && id && previous && player.setTimedTextTrack &&
       trackId(previous) !== id) {
       // User requested this language; restore the original selection in finally.
@@ -119,7 +119,7 @@ export async function readNetflixSubtitles(
     for (let attempt = 0; !url && id && attempt < 12; attempt++) {
       if (!sameVideo()) throw new Error("The Netflix watch page changed. Try again.");
       await pause(250);
-      url = subtitleUrlFromTrack(chosen) ?? findInternalTrackUrl(sessionRoot, id);
+      url = subtitleUrlFromTrack(chosen) ?? findInternalTrackUrl(sessionRoot(), id);
     }
     if (!url) {
       const native = browserTextTrack(video, requestedLanguage);
