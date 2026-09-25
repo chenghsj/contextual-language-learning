@@ -1,6 +1,7 @@
 import {
   allowedYouTubeCaptionUrl, chooseYouTubeCaptionTrack,
-  observedYouTubeCaptionUrls, readYouTubeCaptionTracks, youtubeTimedTextToVtt,
+  observedYouTubeCaptionUrls, parsePlayerYouTubeCaptionResponse,
+  readYouTubeCaptionTracks, youtubeTimedTextToVtt,
 } from "../video/youtube-captions";
 
 // MAIN world: access only the active watch player's public caption-track metadata.
@@ -44,16 +45,9 @@ import {
 
   function rememberCaption(raw: string, body: string, requestVideo: string): void {
     if (currentVideoId() !== requestVideo || !body.trim() || body.length > MAX_CAPTURE) return;
-    let url: URL;
-    try { url = allowedYouTubeCaptionUrl(new URL(raw, location.href).toString(), requestVideo); }
-    catch { return; }
-    if (url.searchParams.get("v") !== requestVideo || url.searchParams.has("tlang")) return;
-    const language = (url.searchParams.get("lang") ?? "").toLowerCase();
-    if (!/^[a-z]{2,3}(?:-[a-z0-9]+)*$/.test(language)) return;
-    let text: string;
-    try { text = youtubeTimedTextToVtt(body); } catch { return; }
-    if (text.length > MAX_CAPTURE || !text.includes("-->")) return;
-    const kind = url.searchParams.get("caps") === "asr" ? "asr" : "manual";
+    const entry = parsePlayerYouTubeCaptionResponse(raw, body, requestVideo);
+    if (!entry) return;
+    const { language, kind, text } = entry;
     const key = requestVideo + ":" + language + ":" + kind;
     captured.delete(key);
     captured.set(key, { videoId: requestVideo, language, kind, text });
