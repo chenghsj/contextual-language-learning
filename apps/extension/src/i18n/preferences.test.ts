@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { messages, translate } from "./messages";
-import { isLocalePreference, isThemePreference, localeFromBrowser, resolveTheme } from "./preferences";
+import { isLocalePreference, isThemePreference, localeFromBrowser, nativeLanguageName, resolveTheme } from "./preferences";
 
 test("browser language resolves Chinese script and supported locales", () => {
   assert.equal(localeFromBrowser("zh-TW"), "zh-TW");
@@ -32,4 +32,12 @@ test("theme and locale overrides accept supported values only", () => {
   assert.equal(isLocalePreference("fr"), false);
   assert.equal(isThemePreference("system"), true);
   assert.equal(isThemePreference("sepia"), false);
+});
+
+test("language options always use each language's own name regardless of UI locale", () => {
+  assert.equal(nativeLanguageName("en"), "English");
+  assert.equal(nativeLanguageName("ja"), "日本語");
+  assert.equal(nativeLanguageName("ko"), "한국어");
+  assert.equal(nativeLanguageName("zh-TW"), "繁體中文");
+  assert.equal(nativeLanguageName("zh-CN"), "简体中文");
 });
