@@ -18,7 +18,7 @@ Automated CI covers TypeScript, unit tests, extension packaging and Native Messa
 ## Netflix (experimental; not part of CI)
 
 1. Use content and subtitles you have permission to process. Open the Netflix watch page, start playback, choose the target language in **建立教材**, then click **一鍵取得目前影片字幕**. Verify the returned cue count, source video ID, target language, cue times and title before running the local Agent. No file upload should be required when Netflix exposes a readable track.
-2. Test English/Japanese/Korean subtitles where available, temporary subtitle-track selection/restoration, a player with no track, a track whose document is not readable, and navigation to another episode during fetching. Confirm no incomplete or wrong-video transcript enters generation.
+2. Test English/Japanese/Korean subtitles where available, temporary subtitle-track selection/restoration, a player with no track, a track whose document is not readable, and navigation to another episode during fetching. Check that Chrome grants Netflix delivery-domain permissions after extension updates. Test blocked network/expired signed URL and denied permission: show an actionable error instead of raw `Failed to fetch` or a partial transcript. Confirm no incomplete or wrong-video transcript enters generation.
 3. Open the matching Netflix /watch/ video and diagnose the player. Confirm failure is reported when the undocumented API is unavailable.
    - Click **開啟／切換到影片** while that video is already open: the existing tab should be selected and no new tab created.
    - Open two tabs with the same watch ID. Select one in the current window and confirm diagnose/seek/rate/loop target **that** tab, not the first result from Chrome's tab list.
