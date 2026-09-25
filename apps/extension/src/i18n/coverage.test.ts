@@ -31,3 +31,13 @@ test("all five Chrome manifest locales contain the required display strings", as
   }
   assert.deepEqual(Object.keys(messages).sort(), ["en", "ja", "ko", "zh-CN", "zh-TW"].sort());
 });
+
+test("YouTube one-click caption UI follows the active watch tab", async () => {
+  const source = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const manifest = JSON.parse(await readFile(new URL("../../public/manifest.json", import.meta.url), "utf8"));
+  assert.match(source, /subtitlePlatform === "youtube"/);
+  assert.match(source, /chrome\\.tabs\\.onActivated\\.addListener/);
+  assert.match(source, /adapter\\.fetchSubtitles\\(url, profile\\.targetLanguage\\)/);
+  assert.ok(manifest.content_scripts.some((script: { world?: string; js: string[] }) =>
+    script.world === "MAIN" && script.js.includes("youtube-page.js")));
+});
