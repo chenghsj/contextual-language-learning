@@ -171,7 +171,7 @@ export default function App() {
       }).catch(() => setActiveVideo(null));
     };
     const onActivated = () => syncActiveTab();
-    const onUpdated = (_tabId: number, change: chrome.tabs.TabChangeInfo) => {
+    const onUpdated = (_tabId: number, change: { url?: string; status?: string }) => {
       if (change.url || change.status === "complete") syncActiveTab();
     };
     chrome.tabs.onActivated.addListener(onActivated);
