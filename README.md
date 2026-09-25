@@ -116,6 +116,11 @@ Read [Scope and limitations](docs/scope.md) before using an external-model CLI w
 
 ### Experimental Netflix controls
 
+The Reader's **開啟／切換到影片** button reuses an existing tab showing the exact saved video ID before opening a new one. When multiple matching Netflix watch tabs are open, the extension prefers the active matching tab in the current window, then a unique active matching tab in another window. If the intended player is ambiguous, it asks you to switch to the correct tab or close the extra copies instead of controlling an arbitrary player or opening a third tab. A generic Netflix homepage or a different title is not treated as the same video. The extension never closes tabs on your behalf.
+
+If a watch tab was opened before installing/reloading the extension, reload **that same tab** to initialize its content scripts. Do not open a second tab to work around a missing bridge.
+
+
 Open the same Netflix /watch/<video-id> URL saved with your authorized subtitle file. In **閱讀文件**, select **檢查 Netflix 播放器** before clicking **跳到 Netflix 指定時間** or **循環此句**. This uses a MAIN-world bridge with Netflix's **undocumented** player session API, following the pattern in your [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override) repository. Session seek times are in milliseconds.
 
 This is not an official Netflix API. The extension does **not** download Netflix subtitles, modify subtitle tracks, bypass content protection, or intercept the Netflix keyboard. The bridge remains idle except when you explicitly diagnose, seek or start a loop. Stop the loop before using other playback controls; manual pause/seek, page navigation or an unavailable player automatically cancel it. If the API changes, copy the timestamp and seek manually.
