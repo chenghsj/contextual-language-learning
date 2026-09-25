@@ -2,7 +2,7 @@
 
 A local-first Chrome side-panel extension that turns **subtitles you have permission to use** into structured, level-appropriate language lessons using your locally installed CLI agent.
 
-> MVP status: the working implementation covers subtitle import, three CLI adapters, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Automatic Netflix subtitle retrieval and a durable background daemon are **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a user-configured Desktop OAuth client and live account testing are required. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
+> MVP status: the working implementation covers subtitle import, three CLI adapters, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Netflix one-click subtitle retrieval is **experimental** and works only when the currently playing session exposes a readable subtitle track; a durable background daemon is **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a user-configured Desktop OAuth client and live account testing are required. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
 
 ## Open source and project status
 
@@ -12,14 +12,14 @@ This repository remains **private** pending the public-release checklist and liv
 
 ## Features
 
-- Import SRT, VTT, or pasted text. Original subtitles and timestamps remain unchanged.
+- On an open Netflix watch page, click **一鍵取得目前影片字幕** to read the selected learning language's available timed-text track into the lesson form, without uploading a file. Manual SRT, VTT and pasted text remain a fallback; original cue times are preserved.
 - Select target language (English/Japanese/Korean), level, **instruction language**, teaching mode, vocabulary cap, and exercises per section.
 - Pick Claude Code, Codex, or AGY. The Native Host queries `agy models` or Codex's experimental `codex debug models` for available model options; Claude Code offers documented aliases rather than an account-specific machine-readable list. You can always use the CLI default or a custom model ID. Catalog entries do not guarantee entitlement.
 - Save named Claude/Codex CLI account Profiles pointing to existing, separately authenticated directories inside your home folder. Selecting one changes `CLAUDE_CONFIG_DIR` or `CODEX_HOME` only for that Agent invocation; profile names/paths are stored locally, never credentials. AGY uses its current CLI login.
 - Native Messaging bridge to macOS, Windows and Linux Hosts; no API keys or CLI credentials are stored in the extension.
 - Run a checkpointed generation pipeline: chunk subtitles, validate AI sections with Zod, save each successful chapter, then export the JSON/Markdown document. Reopen the Side Panel and use **任務紀錄與恢復** to resume interrupted/failed jobs.
 - Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping and user-triggered playback speed (0.5×–2×).
-- Netflix has optional, user-initiated seek, per-sentence looping and playback speed (0.5×–2×) via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). It never extracts Netflix subtitles, bypasses DRM, intercepts keyboard shortcuts or opens a second playback session.
+- Netflix has optional, user-initiated seek, per-sentence looping and playback speed (0.5×–2×) via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). Subtitle retrieval is user-initiated and conditional on Netflix exposing a readable timed-text document in the active session. It does not bypass DRM, intercept keyboard shortcuts or open a second playback session.
 
 ## Install from GitHub Release (Chromium + macOS / Windows / Linux)
 
@@ -123,7 +123,7 @@ In the Reader's **影片伴讀** section, choose a speed from 0.5× to 2× and c
 
 ### YouTube loops
 
-Open the source YouTube watch page in Chrome before clicking **循環此句** in the Reader. The extension uses a content script **only on YouTube**, and the loop ends on manual pause/seek or when the selected repetition count is reached. A loop cannot be guaranteed if YouTube changes its player DOM. Netflix controls are opt-in and do not modify subtitles or intercept keyboard shortcuts.
+Open the source YouTube watch page in Chrome before clicking **循環此句** in the Reader. The extension uses a content script **only on YouTube**, and the loop ends on manual pause/seek or when the selected repetition count is reached. A loop cannot be guaranteed if YouTube changes its player DOM. Netflix playback controls are opt-in and do not intercept keyboard shortcuts. Subtitle retrieval may temporarily select the requested language and restores the original subtitle track when the player exposes a restorable selection.
 
 ## Extensible providers
 
@@ -153,11 +153,11 @@ The Reader's **開啟／切換到影片** button reuses an existing tab showing 
 If a watch tab was opened before installing/reloading the extension, reload **that same tab** to initialize its content scripts. Do not open a second tab to work around a missing bridge.
 
 
-Open the same Netflix /watch/<video-id> URL saved with your authorized subtitle file. In **閱讀文件**, select **檢查 Netflix 播放器** before clicking **跳到 Netflix 指定時間** or **循環此句**. This uses a MAIN-world bridge with Netflix's **undocumented** player session API, following the pattern in your [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override) repository. Session seek times are in milliseconds.
+Open the Netflix /watch/<video-id> page, select the learning language in **建立教材**, and click **一鍵取得目前影片字幕**. The extension reads the current playback session's available timed-text document when Netflix exposes it; it does not read protected video/audio streams. If Netflix does not expose a usable track, the UI reports the limitation instead of silently generating from incomplete captions. You may also supply a subtitle file you are permitted to process. In the Reader, open the same Netflix /watch/<video-id> URL saved with the lesson. In **閱讀文件**, select **檢查 Netflix 播放器** before clicking **跳到 Netflix 指定時間** or **循環此句**. This uses a MAIN-world bridge with Netflix's **undocumented** player session API, following the pattern in your [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override) repository. Session seek times are in milliseconds.
 
-This is not an official Netflix API. The extension does **not** download Netflix subtitles, modify subtitle tracks, bypass content protection, or intercept the Netflix keyboard. The bridge remains idle except when you explicitly diagnose, seek or start a loop. Stop the loop before using other playback controls; manual pause/seek, page navigation or an unavailable player automatically cancel it. If the API changes, copy the timestamp and seek manually.
+This is not an official Netflix API. The extension retrieves subtitle text only when you click the button; it may briefly select and then restore the requested track. It does not bypass content protection, extract audio/video or intercept the Netflix keyboard. Playback controls remain idle except when explicitly requested. Stop the loop before using other playback controls; manual pause/seek, page navigation or an unavailable player automatically cancel it. If the API changes, copy the timestamp and seek manually.
 
-A real-browser smoke test with your Netflix account is required; automated CI does not test a live Netflix playback session.
+A real-browser test with your Netflix account is required: confirm successful caption retrieval, language selection, track restoration, navigation cancellation and a clear failure when Netflix's undocumented internals change. Automated CI does not test a live Netflix playback session.
 
 ### Resumable job workflow
 
