@@ -710,7 +710,7 @@ export default function App() {
           </Button>
           {generating && <Button variant="outline" className="secondary" onClick={cancelGeneration}>取消生成</Button>}
           {progress && <p className="status" role="status">{progress}</p>}
-          {publishedLocation && <p className="hint">已發布至：{publishedLocation}</p>}}
+          {publishedLocation && <p className="hint">已發布至：{publishedLocation}</p>}
         </Card>
         <Card className="panel">
           <h2>任務紀錄與恢復</h2>
@@ -793,7 +793,7 @@ export default function App() {
             <Badge className="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
             <h1>{document.source.title}</h1>
             <p className="hint">{document.sections.length} 個學習章節 · 教學語言 {document.profile.instructionLanguage}</p>
-            {publishedLocation && <p className="hint">已發布至：{publishedLocation}</p>
+            {publishedLocation && <p className="hint">已發布至：{publishedLocation}</p>}
             <div className="actions">
               <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "json")}>JSON 另存新檔</Button>
               <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "md")}>Markdown 另存新檔</Button>
