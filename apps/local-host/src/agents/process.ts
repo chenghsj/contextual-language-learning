@@ -34,7 +34,7 @@ export async function findExecutable(name: string): Promise<string | null> {
       const shim = join(folder, name + ".cmd");
       try {
         const body = await readFile(shim, "utf8");
-        const match = body.match(/%~?dp0%[\\/]node_modules[\\/]([A-Za-z0-9@._+\\/-]+\.m?js)\b/i);
+        const match = body.match(/%(?:dp0%|~dp0)[\\/]node_modules[\\/]([A-Za-z0-9@._+\\/-]+\.m?js)\b/i);
         if (match) {
           const script = resolve(folder, "node_modules", ...match[1].split(/[\\/]/));
           const root = resolve(folder, "node_modules");
