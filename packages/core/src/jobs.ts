@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { chunkCues } from "./subtitles";
 import {
-  GenerationRequestSchema, LearningDocumentSchema, LearningSectionSchema,
+  CandidateSceneSchema, GenerationRequestSchema, LearningDocumentSchema, LearningSectionSchema, StudySceneSchema,
   type GenerationRequest, type LearningDocument, type LearningSection,
 } from "./schema";
 
@@ -23,16 +24,34 @@ export const JobSummarySchema = z.object({
 });
 export type JobSummary = z.infer<typeof JobSummarySchema>;
 
+export const ScenePlanSchema = z.object({
+  candidateChunks: z.array(z.array(CandidateSceneSchema).max(2)).max(100),
+  selected: z.array(CandidateSceneSchema).min(1).max(6).optional(),
+});
+export type ScenePlan = z.infer<typeof ScenePlanSchema>;
+
 export const JobSnapshotSchema = z.object({
   schemaVersion: z.literal(1),
   summary: JobSummarySchema,
   request: GenerationRequestSchema,
-  sections: z.array(LearningSectionSchema),
+  sections: z.array(z.union([LearningSectionSchema, StudySceneSchema])),
+  scenePlan: ScenePlanSchema.optional(),
 }).superRefine((job, ctx) => {
   if (job.summary.id !== job.request.id) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Job ID and request ID differ" });
   }
-  if (job.sections.length !== job.summary.completed || job.summary.completed > job.summary.total) {
+  const completed = job.scenePlan
+    ? job.scenePlan.candidateChunks.length + (job.scenePlan.selected ? 1 + job.sections.length : 0)
+    : job.sections.length;
+  const chunks = chunkCues(job.request.cues).length;
+  const expectedTotal = job.scenePlan
+    ? chunks + 1 + (job.scenePlan.selected?.length ?? Math.min(job.request.profile.sceneCount, job.request.profile.maxNewVocabulary))
+    : job.summary.total;
+  if (completed !== job.summary.completed || job.summary.completed > job.summary.total ||
+      job.summary.total !== expectedTotal ||
+      (job.scenePlan && (job.scenePlan.candidateChunks.length > chunks ||
+        (!job.scenePlan.selected && job.sections.length > 0) ||
+        (job.scenePlan.selected && job.sections.length > job.scenePlan.selected.length)))) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Job checkpoint is inconsistent" });
   }
   if (job.summary.status === "completed" &&
@@ -68,12 +87,18 @@ export function createJob(request: GenerationRequest, total: number, now = new D
   });
 }
 
+/** New video lessons checkpoint candidate discovery, global selection, then each scene. */
+export function createSceneJob(request: GenerationRequest, chunkCount: number, now = new Date().toISOString()): JobSnapshot {
+  const job = createJob(request, chunkCount + 1 + Math.min(request.profile.sceneCount, request.profile.maxNewVocabulary), now);
+  return JobSnapshotSchema.parse({ ...job, scenePlan: { candidateChunks: [] } });
+}
+
 export function readLearningDocument(value: unknown): LearningDocument {
   if (!value || typeof value !== "object" || !("schemaVersion" in value)) {
     throw new Error("Learning document is missing its schema version");
   }
   const version = (value as { schemaVersion: unknown }).schemaVersion;
-  if (version !== 1) throw new Error("Unsupported learning document schema version: " + String(version));
+  if (version !== 1 && version !== 2) throw new Error("Unsupported learning document schema version: " + String(version));
   return LearningDocumentSchema.parse(value);
 }
 
