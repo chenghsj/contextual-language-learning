@@ -24,6 +24,8 @@ import { Input } from "./components/ui/input";
 import { Select } from "./components/ui/select";
 import { Textarea } from "./components/ui/textarea";
 import { Badge } from "./components/ui/badge";
+import { SettingInfo } from "./components/setting-info";
+import { learningSettingsCopy } from "./i18n/learning-settings";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
@@ -87,6 +89,7 @@ export default function App() {
   const uiLocale = localePreference === "auto" ? browserLocale : localePreference;
   const subtitleUi = subtitleAcquisition[uiLocale];
   const metadataUi = videoMetadataMessages[uiLocale];
+  const settingsCopy = learningSettingsCopy[uiLocale];
   const t = (key: MessageKey, params?: MessageParams) => translate(uiLocale, key, params);
   const [profile, setProfile] = useState<LearningProfile>(() => ({
     ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
@@ -1088,35 +1091,97 @@ export default function App() {
         <Card className="panel">
           <h2>{t("learningHeading")}</h2>
           <div className="twoColumns">
-            <label>{t("targetLanguage")}
-              <Select value={profile.targetLanguage} onChange={event => {
+            <div className="settingField">
+              <div className="settingHeading">
+                <label htmlFor="learning-target">{t("targetLanguage")}</label>
+                <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
+                  explanation={settingsCopy.fieldHints.targetLanguage}
+                  choices={(["en", "ja", "ko"] as const).map(language => ({
+                    label: nativeLanguageName(language),
+                    description: settingsCopy.targetDescriptions[language],
+                  }))} />
+              </div>
+              <Select id="learning-target" value={profile.targetLanguage} onChange={event => {
                 const targetLanguage = event.target.value as LearningProfile["targetLanguage"];
                 setProfile(current => ({ ...current, targetLanguage, level: targetLanguage === "en" ? "B1" : targetLanguage === "ja" ? "N4" : "2" }));
               }}><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option></Select>
-            </label>
-            <label>{t("level")}
-              <Select value={profile.level} onChange={event => setProfile(current => ({ ...current, level: event.target.value }))}>
-                {levelOptions.map(level => <option key={level} value={level}>{level}</option>)}
+            </div>
+            <div className="settingField">
+              <div className="settingHeading">
+                <label htmlFor="learning-level">{t("level")}</label>
+                <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
+                  explanation={settingsCopy.fieldHints.level}
+                  choices={levelOptions.map(level => ({
+                    label: level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
+                    description: settingsCopy.levels[profile.targetLanguage][level]?.description ?? "",
+                  }))} />
+              </div>
+              <Select id="learning-level" value={profile.level}
+                onChange={event => setProfile(current => ({ ...current, level: event.target.value }))}>
+                {levelOptions.map(level => <option key={level} value={level}>
+                  {level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level)}
+                </option>)}
               </Select>
-            </label>
+            </div>
           </div>
-          <label>{t("instructionLanguage")}
-            <Select value={profile.instructionLanguage} onChange={event => setProfile(current => ({ ...current, instructionLanguage: event.target.value as LearningProfile["instructionLanguage"] }))}>
+          <div className="settingField">
+            <div className="settingHeading">
+              <label htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
+              <SettingInfo label={t("instructionLanguage")} infoLabel={settingsCopy.infoLabel}
+                explanation={settingsCopy.fieldHints.instructionLanguage}
+                choices={(["zh-TW", "zh-CN", "en", "ja", "ko"] as const).map(language => ({
+                  label: nativeLanguageName(language),
+                  description: settingsCopy.instructionDescriptions[language],
+                }))} />
+            </div>
+            <Select id="learning-explanation-language" value={profile.instructionLanguage}
+              onChange={event => setProfile(current => ({
+                ...current, instructionLanguage: event.target.value as LearningProfile["instructionLanguage"],
+              }))}>
               <option value="zh-TW">{nativeLanguageName("zh-TW")}</option><option value="zh-CN">{nativeLanguageName("zh-CN")}</option><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option>
             </Select>
-          </label>
-          <label>{t("teachingMode")}
-            <Select value={profile.mode} onChange={event => setProfile(current => ({ ...current, mode: event.target.value as LearningProfile["mode"] }))}>
-              <option value="adaptive">{t("adaptive")}</option><option value="guided">{t("guided")}</option><option value="immersive">{t("immersive")}</option>
+          </div>
+          <div className="settingField">
+            <div className="settingHeading">
+              <label htmlFor="learning-mode">{t("teachingMode")}</label>
+              <SettingInfo label={t("teachingMode")} infoLabel={settingsCopy.infoLabel}
+                explanation={settingsCopy.fieldHints.teachingMode}
+                choices={(["adaptive", "guided", "immersive"] as const).map(mode => settingsCopy.modes[mode])} />
+            </div>
+            <Select id="learning-mode" value={profile.mode}
+              onChange={event => setProfile(current => ({
+                ...current, mode: event.target.value as LearningProfile["mode"],
+              }))}>
+              <option value="adaptive">{settingsCopy.modes.adaptive.label}</option>
+              <option value="guided">{settingsCopy.modes.guided.label}</option>
+              <option value="immersive">{settingsCopy.modes.immersive.label}</option>
             </Select>
-          </label>
+          </div>
           <div className="twoColumns">
-            <label>{t("vocabLimit")}
-              <Input type="number" min={1} max={30} value={profile.maxNewVocabulary} onChange={event => setProfile(current => ({ ...current, maxNewVocabulary: Number(event.target.value) }))} />
-            </label>
-            <label>{t("exerciseCount")}
-              <Input type="number" min={0} max={12} value={profile.exerciseCount} onChange={event => setProfile(current => ({ ...current, exerciseCount: Number(event.target.value) }))} />
-            </label>
+            <div className="settingField">
+              <div className="settingHeading">
+                <label htmlFor="learning-vocabulary">{t("vocabLimit")}</label>
+                <SettingInfo label={t("vocabLimit")} infoLabel={settingsCopy.infoLabel}
+                  explanation={settingsCopy.fieldHints.vocabLimit} />
+              </div>
+              <Input id="learning-vocabulary" type="number" min={1} max={30}
+                value={profile.maxNewVocabulary}
+                onChange={event => setProfile(current => ({
+                  ...current, maxNewVocabulary: Number(event.target.value),
+                }))} />
+            </div>
+            <div className="settingField">
+              <div className="settingHeading">
+                <label htmlFor="learning-exercises">{t("exerciseCount")}</label>
+                <SettingInfo label={t("exerciseCount")} infoLabel={settingsCopy.infoLabel}
+                  explanation={settingsCopy.fieldHints.exerciseCount} />
+              </div>
+              <Input id="learning-exercises" type="number" min={0} max={12}
+                value={profile.exerciseCount}
+                onChange={event => setProfile(current => ({
+                  ...current, exerciseCount: Number(event.target.value),
+                }))} />
+            </div>
           </div>
         </Card>
 
