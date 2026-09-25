@@ -8,7 +8,7 @@ import {
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
 import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
-import { openOrFocusVideoTab } from "./video/tab";
+import { findVideoTab, getActiveWindowTab, openOrFocusVideoTab } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { BookOpen, Settings2, WandSparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
@@ -68,7 +68,9 @@ export default function App() {
   const [subtitleStatus, setSubtitleStatus] = useState("");
   const [title, setTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
-  const [activeVideo, setActiveVideo] = useState<{ url: string; title: string } | null>(null);
+  const [activeVideo, setActiveVideo] = useState<{
+    tabId: number; windowId: number; url: string; title: string;
+  } | null>(null);
   const [browserLocale] = useState(getBrowserLocale);
   const [localePreference, setLocalePreference] = useState<LocalePreference>("auto");
   const [themePreference, setThemePreference] = useState<ThemePreference>("system");
@@ -128,7 +130,8 @@ export default function App() {
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
   const platform = getVideoAdapter(sourceUrl).id;
-  const subtitlePlatform = getVideoAdapter(activeVideo?.url).id;
+  // A valid saved source remains actionable when the Side Panel temporarily loses its tab context.
+  const subtitlePlatform = getVideoAdapter(activeVideo?.url ?? sourceUrl).id;
   const readerAdapter = getVideoAdapter(document?.source.url);
   const selectedAgentInfo = agentCatalog.find(entry => entry.id === agent.provider);
   const selectedSavedProfile = savedAgentProfiles.find(profile =>
@@ -162,24 +165,42 @@ export default function App() {
       setHydrated(true);
     }).catch(() => setHydrated(true));
     void refreshDriveAccounts();
-    // The Side Panel stays mounted across navigation; follow the selected tab.
+    // Resolve the hosting Chrome window on every refresh. Discard stale async results
+    // when navigation, activation and Side Panel initialization overlap.
+    let mounted = true;
+    let syncVersion = 0;
     const syncActiveTab = () => {
-      void chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
-        const tab = tabs[0];
-        setActiveVideo(tab?.url && getVideoAdapter(tab.url).id !== "import"
-          ? { url: tab.url, title: tab.title ?? "Video" } : null);
-      }).catch(() => setActiveVideo(null));
+      const version = ++syncVersion;
+      void getActiveWindowTab().then(tab => {
+        if (!mounted || version !== syncVersion) return;
+        setActiveVideo(tab && tab.id !== undefined && tab.url &&
+          getVideoAdapter(tab.url).id !== "import"
+          ? { tabId: tab.id, windowId: tab.windowId, url: tab.url, title: tab.title ?? "Video" }
+          : null);
+      }).catch(() => {
+        if (mounted && version === syncVersion) setActiveVideo(null);
+      });
     };
     const onActivated = () => syncActiveTab();
-    const onUpdated = (_tabId: number, change: { url?: string; status?: string }) => {
-      if (change.url || change.status === "complete") syncActiveTab();
+    const onUpdated = (_tabId: number, change: { url?: string; status?: string; title?: string }) => {
+      if (change.url || change.title || change.status === "complete") syncActiveTab();
+    };
+    const onRemoved = () => syncActiveTab();
+    const onFocusChanged = (windowId: number) => {
+      if (windowId >= 0) syncActiveTab();
     };
     chrome.tabs.onActivated.addListener(onActivated);
     chrome.tabs.onUpdated.addListener(onUpdated);
+    chrome.tabs.onRemoved.addListener(onRemoved);
+    chrome.windows.onFocusChanged.addListener(onFocusChanged);
     syncActiveTab();
     return () => {
+      mounted = false;
+      ++syncVersion;
       chrome.tabs.onActivated.removeListener(onActivated);
       chrome.tabs.onUpdated.removeListener(onUpdated);
+      chrome.tabs.onRemoved.removeListener(onRemoved);
+      chrome.windows.onFocusChanged.removeListener(onFocusChanged);
       portRef.current?.disconnect();
       preflightPortRef.current?.disconnect();
     };
@@ -667,11 +688,16 @@ export default function App() {
     setSubtitleStatus("");
     setError("");
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      const url = tab?.url ?? "";
+      const selected = await getActiveWindowTab();
+      const selectedUrl = selected?.url ?? "";
+      const url = getVideoAdapter(selectedUrl).fetchSubtitles ? selectedUrl : sourceUrl.trim();
       const adapter = getVideoAdapter(url);
       if (!adapter.fetchSubtitles) throw new Error(subtitleUi.unavailable);
-      const fetched = await adapter.fetchSubtitles(url, profile.targetLanguage);
+      // Revalidate against a real, matching watch tab even when using the form URL
+      // as a fallback. Never send a subtitle request to an unrelated active tab.
+      const tab = await findVideoTab(adapter, url);
+      const actualUrl = tab.url ?? url;
+      const fetched = await adapter.fetchSubtitles(actualUrl, profile.targetLanguage);
       const parsed = parseSubtitles(fetched.text);
       if (!parsed.length || parsed.length > 3_000 ||
         parsed.reduce((sum, cue) => sum + cue.originalText.length, 0) > 220_000) {
@@ -680,8 +706,8 @@ export default function App() {
       // Never combine cues from a previous video with the currently selected video.
       setRaw(fetched.text);
       setFileName("");
-      setSourceUrl(url);
-      const videoTitle = (tab?.title ?? "").replace(/\s*-\s*(?:Netflix|YouTube)\s*$/i, "").trim();
+      setSourceUrl(actualUrl);
+      const videoTitle = (tab.title ?? "").replace(/\s*-\s*(?:Netflix|YouTube)\s*$/i, "").trim();
       if (videoTitle && !["Netflix", "YouTube"].includes(videoTitle)) setTitle(videoTitle.slice(0, 200));
       setSubtitleStatus(subtitleMessage(subtitleUi.success, {
         count: parsed.length, language: fetched.language,

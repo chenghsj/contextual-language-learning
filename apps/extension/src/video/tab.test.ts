@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { netflixAdapter } from "./netflix";
-import { findVideoTab, openOrFocusVideoTab, sendToVideo } from "./tab";
+import { findVideoTab, getActiveWindowTab, openOrFocusVideoTab, sendToVideo } from "./tab";
 
 const url = "https://www.netflix.com/watch/81234567";
 const other = "https://www.netflix.com/watch/76543210";
@@ -27,7 +27,8 @@ async function withChrome(
     globalChrome.chrome = {
       tabs: {
         query: async (info: chrome.tabs.QueryInfo) =>
-          info.active && info.currentWindow ? handlers.current : handlers.tabs,
+          info.active && (info.currentWindow || info.windowId === 1 || info.lastFocusedWindow)
+            ? handlers.current : handlers.tabs,
         create: async (info: chrome.tabs.CreateProperties) => {
           handlers.onCreate?.(info.url ?? "");
           const created = tab(99, true, 1, info.url);
@@ -43,7 +44,7 @@ async function withChrome(
           return handlers.reply ?? { ok: true };
         },
       },
-      windows: { update: async () => ({}) },
+      windows: { getCurrent: async () => ({ id: 1 }), update: async () => ({}) },
     } as unknown as ChromeApi;
     await run();
   } finally {
@@ -153,4 +154,26 @@ test("malformed or impersonating Netflix URLs are rejected before opening any ta
     );
   });
   assert.equal(created, 0);
+});
+
+test("active Side Panel tab is resolved from its hosting window, not another window", async () => {
+  const current = tab(44, true, 1, "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+  const otherWindow = tab(45, true, 2);
+  await withChrome({ tabs: [otherWindow, current], current: [current] }, async () => {
+    assert.equal((await getActiveWindowTab())?.id, 44);
+  });
+});
+
+test("a form URL can find its matching watch tab without using the unrelated active tab", async () => {
+  const selected = tab(12, true, 1, other);
+  const wanted = tab(13, false, 1, url);
+  const received: number[] = [];
+  await withChrome({
+    tabs: [selected, wanted], current: [selected],
+    onMessage: id => received.push(id),
+  }, async () => {
+    assert.equal((await findVideoTab(netflixAdapter, url)).id, 13);
+    await sendToVideo(netflixAdapter, url, { type: "NETFLIX_SUBTITLES_GET", language: "en" });
+  });
+  assert.deepEqual(received, [13]);
 });

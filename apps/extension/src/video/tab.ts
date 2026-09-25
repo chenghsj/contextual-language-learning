@@ -1,5 +1,21 @@
 import type { VideoAdapter } from "./types";
 
+/** Resolve the browser window hosting the Side Panel instead of relying on an
+ * extension page's potentially stale currentWindow query. */
+export async function getActiveWindowTab(): Promise<chrome.tabs.Tab | null> {
+  try {
+    const current = await chrome.windows.getCurrent();
+    if (typeof current.id === "number") {
+      const [tab] = await chrome.tabs.query({ active: true, windowId: current.id });
+      if (tab) return tab;
+    }
+  } catch {
+    // Older Chromium builds may not resolve the Side Panel's current window.
+  }
+  const [fallback] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  return fallback ?? null;
+}
+
 function assertVideoId(adapter: VideoAdapter, sourceUrl: string): string {
   const id = adapter.getVideoId(sourceUrl);
   if (!id) throw new Error("影片來源網址無效，請確認目前的網址。");
@@ -19,8 +35,8 @@ async function chooseExistingVideoTab(tabs: chrome.tabs.Tab[]): Promise<chrome.t
 
   // Chrome's query order is not a selection policy: the first duplicate may be
   // paused, stale, or playing in a different window.
-  const current = await chrome.tabs.query({ active: true, currentWindow: true });
-  const selected = current.find(tab => tabs.some(candidate => candidate.id === tab.id));
+  const current = await getActiveWindowTab();
+  const selected = tabs.find(candidate => candidate.id === current?.id);
   if (selected) return selected;
 
   // There may be one selected video in another window. Do not guess if several
