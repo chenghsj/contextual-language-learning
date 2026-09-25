@@ -10,6 +10,9 @@ export const youtubeAdapter: VideoAdapter = {
   label: "YouTube",
   getVideoId: videoIdFromUrl,
   timestampLink: (url, ms) => youtubeTimeLink(url, ms),
+  async seek(url, startMs) {
+    await sendToVideo(youtubeAdapter, url, { type: "YOUTUBE_SEEK", timeMs: startMs }, true);
+  },
   async fetchSubtitles(url, language) {
     const videoId = videoIdFromUrl(url);
     if (!videoId) throw new Error("Open a supported YouTube watch page first.");
