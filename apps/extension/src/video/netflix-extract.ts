@@ -149,7 +149,14 @@ export async function readNetflixSubtitles(
       if (native) return native;
       throw new Error("Netflix did not expose a readable subtitle document for this video. Enable subtitles, refresh the watch tab and try again.");
     }
-    if (!allowedNetflixSubtitleUrl(url)) throw new Error("Netflix returned an unexpected subtitle address.");
+    if (!allowedNetflixSubtitleUrl(url)) {
+      // An unapproved CDN must not be fetched. Report only the hostname, never
+      // the signed subtitle URL, so a live playback failure can be diagnosed.
+      let hostname = "invalid URL";
+      try { hostname = new URL(url).hostname; } catch { /* invalid URL */ }
+      throw new Error("Netflix caption URL host is not approved: " + hostname +
+        ". No network request was sent. If this is an official Netflix caption CDN, verify its origin before adding host permissions.");
+    }
     const request = options.fetchDocument ?? fetch;
     const response = await request(url, { credentials: "include", signal: AbortSignal.timeout(10_000) });
     if (!response.ok) throw new Error("Netflix subtitle request failed (HTTP " + response.status + ").");
