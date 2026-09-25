@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import type { AgentSettings, AgentModel, AgentModelSource } from "@immersive/core";
 import { getAgentAdapter } from "../agents";
-import { findExecutable } from "./process";
+import { cliInvocation, findExecutable } from "./process";
 
 const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/;
 const MODEL_LIMIT = 80;
@@ -47,7 +47,8 @@ export function parseCatalogModels(input: unknown): AgentModel[] {
 /** Fixed executables and fixed argv only. Never pass input from the extension as a shell command. */
 export function probeCli(command: string, args: readonly string[], env: NodeJS.ProcessEnv): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, [...args], { env, stdio: ["ignore", "pipe", "ignore"], shell: false });
+    const { executable, argv } = cliInvocation(command, args);
+    const child = spawn(executable, argv, { env, stdio: ["ignore", "pipe", "ignore"], shell: false, windowsHide: true });
     let output = "";
     let finished = false;
     let timedOut = false;
