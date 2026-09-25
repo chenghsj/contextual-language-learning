@@ -101,6 +101,8 @@ export default function App() {
   const [hydrated, setHydrated] = useState(false);
   const [repeat, setRepeat] = useState<RepeatOption>("3");
   const [delay, setDelay] = useState(1);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [rateApplying, setRateApplying] = useState(false);
   const [loopActive, setLoopActive] = useState(false);
   const [playbackStatus, setPlaybackStatus] = useState("");
   const portRef = useRef<chrome.runtime.Port | null>(null);
@@ -116,7 +118,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "repeat", "delay", "uiLocalePreference", "themePreference"]).then(saved => {
+    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference"]).then(saved => {
       if (saved.profile) setProfile(saved.profile as LearningProfile);
       if (isLocalePreference(saved.uiLocalePreference)) setLocalePreference(saved.uiLocalePreference);
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
@@ -130,6 +132,9 @@ export default function App() {
       if (saved.destination) setDestination(saved.destination as Destination);
       if (saved.repeat) setRepeat(saved.repeat as RepeatOption);
       if (typeof saved.delay === "number") setDelay(saved.delay);
+      if (typeof saved.playbackRate === "number" && [0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].includes(saved.playbackRate)) {
+        setPlaybackRate(saved.playbackRate);
+      }
       setHydrated(true);
     }).catch(() => setHydrated(true));
     void refreshDriveAccounts();
@@ -156,8 +161,8 @@ export default function App() {
   }, [uiLocale, themePreference, systemDark]);
 
   useEffect(() => {
-    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, destination, repeat, delay, uiLocalePreference: localePreference, themePreference });
-  }, [hydrated, profile, agent, agentProfiles, destination, repeat, delay, localePreference, themePreference]);
+    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, destination, repeat, delay, playbackRate, uiLocalePreference: localePreference, themePreference });
+  }, [hydrated, profile, agent, agentProfiles, destination, repeat, delay, playbackRate, localePreference, themePreference]);
 
   function nativeOnce(request: { id: string; type: string; [key: string]: unknown }): Promise<HostMessage> {
     return new Promise((resolve, reject) => {
@@ -566,6 +571,23 @@ export default function App() {
     }
   }
 
+  async function applyPlaybackRate(): Promise<void> {
+    setError("");
+    if (!readerAdapter.setPlaybackRate || !document?.source.url) {
+      setError("這個影片來源沒有可用的倍速控制。");
+      return;
+    }
+    setRateApplying(true);
+    try {
+      await readerAdapter.setPlaybackRate(document.source.url, playbackRate);
+      setPlaybackStatus("已將 " + readerAdapter.label + " 播放速度設為 " + playbackRate + "×");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "播放器未能套用播放速度。");
+    } finally {
+      setRateApplying(false);
+    }
+  }
+
   async function stopLoop(): Promise<void> {
     try {
       if (readerAdapter.stopLoop && document?.source.url) {
@@ -813,6 +835,22 @@ export default function App() {
                 </Select>
               </label>
             </div>
+            {readerAdapter.setPlaybackRate && <div className="twoColumns">
+              <label>播放速度
+                <Select value={playbackRate} disabled={rateApplying}
+                  onChange={event => setPlaybackRate(Number(event.target.value))}>
+                  {[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map(rate =>
+                    <option value={rate} key={rate}>{rate}×</option>)}
+                </Select>
+              </label>
+              <div className="actions" style={{ alignSelf: "center" }}>
+                <Button variant="outline" className="secondary" disabled={rateApplying}
+                  onClick={() => void applyPlaybackRate()}>
+                  {rateApplying ? "套用中…" : "套用播放速度"}
+                </Button>
+              </div>
+            </div>}
+            {readerAdapter.setPlaybackRate && <p className="hint">速度是儲存的偏好值；點擊「套用播放速度」後，才會變更目前開啟的播放器。播放網站可能自行重設速度。</p>}
             {readerAdapter.diagnose
               ? <div className="callout">
                   {readerAdapter.label} 的播放器控制由該平台 Adapter 提供；非公開介面可能更新失效。所有控制皆由你主動操作，不取得字幕。
