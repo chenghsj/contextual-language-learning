@@ -659,7 +659,7 @@ export default function App() {
       setRaw(fetched.text);
       setFileName("");
       setSourceUrl(url);
-      const videoTitle = (tab?.title ?? "").replace(/\\s*-\\s*Netflix\\s*$/i, "").trim();
+      const videoTitle = (tab?.title ?? "").replace(/\s*-\s*Netflix\s*$/i, "").trim();
       if (videoTitle && videoTitle !== "Netflix") setTitle(videoTitle.slice(0, 200));
       setSubtitleStatus(subtitleMessage(subtitleUi.success, {
         count: parsed.length, language: fetched.language,
