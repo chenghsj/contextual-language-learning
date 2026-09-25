@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { ExternalLink, Play, Repeat2, SlidersHorizontal, Square } from "lucide-react";
 import { nextStudyStep, readSceneProgress, STUDY_STEPS, type StudyStep } from "./scene-navigation";
 import { formatTime, type LearningDocument, type StudyScene, type SubtitleCue } from "@immersive/core";
 import type { UiLocale } from "../i18n/messages";
@@ -9,6 +10,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Select } from "./ui/select";
 import { Textarea } from "./ui/textarea";
+import { SettingInfo } from "./setting-info";
 
 type SceneDocument = Extract<LearningDocument, { schemaVersion: 2 }>;
 type Mode = "watch" | "learn" | "review";
@@ -49,6 +51,8 @@ export function SceneReader({
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [status, setStatus] = useState("");
+  const [playbackSettingsOpen, setPlaybackSettingsOpen] = useState(false);
+  const [loopingSceneId, setLoopingSceneId] = useState<string | null>(null);
   const [watchTime, setWatchTime] = useState<number | null>(null);
   const [watchAvailable, setWatchAvailable] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -61,6 +65,7 @@ export function SceneReader({
   const hintKey = "sceneHint";
   const canPlay = !!sourceUrl && !!adapter.loop && scene.startMs !== null && scene.endMs !== null;
   const selectedFocusCue = focusCue(scene, cues);
+  const focusLoopActive = loopingSceneId === scene.id;
   const originalVisible = showOriginal ?? hint !== "progressive";
   const translationVisible = showTranslation ?? hint === "bilingual";
   const watchScene = watchTime === null ? undefined : document.sections.find(item =>
@@ -112,11 +117,22 @@ export function SceneReader({
   }, [mode, sourceUrl, adapter]);
 
   function selectScene(index: number): void {
-    if (!Number.isInteger(index) || index < 0 || index >= document.sections.length ||
-      index === sceneIndex) return;
+    if (busy || !Number.isInteger(index) || index < 0 ||
+      index >= document.sections.length || index === sceneIndex) return;
+    // Stop any loop owned by the previous scene so it cannot keep repeating
+    // an unrelated line after navigation. This does not seek the video.
+    if (loopingSceneId && sourceUrl && adapter.stopLoop) {
+      // Keep new playback disabled until the old scene's loop is cancelled.
+      // Otherwise the late stop response could cancel the new scene's playback.
+      setBusy(true);
+      void adapter.stopLoop(sourceUrl)
+        .catch(error => onError(error instanceof Error ? error.message : c.unavailable))
+        .finally(() => setBusy(false));
+      setLoopingSceneId(null);
+    }
     setSceneIndex(index);
     // Each scene keeps its own last visited study step; switching never marks
-    // the previous scene complete or changes the video's playback position.
+    // the previous scene complete or seeks to the new scene's position.
     setShowOriginal(null);
     setShowTranslation(null);
     setShowAnswer(false);
@@ -151,6 +167,7 @@ export function SceneReader({
         startMs: cuePlaybackStart(scene.startMs), endMs: scene.endMs + 400,
         repeats: 1, delaySeconds: 0,
       });
+      setLoopingSceneId(null);
       setStatus(c.playbackStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
@@ -168,6 +185,7 @@ export function SceneReader({
         repeats: isLoop ? repeat === "infinite" ? "infinite" : Number(repeat) : 1,
         delaySeconds: isLoop ? delay : 0,
       });
+      setLoopingSceneId(isLoop ? scene.id : null);
       setStatus(isLoop ? c.loopStarted : c.playbackStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
@@ -178,12 +196,21 @@ export function SceneReader({
 
   async function stopLoop(): Promise<void> {
     if (!sourceUrl || !adapter.stopLoop) return;
+    setBusy(true);
     try {
       await adapter.stopLoop(sourceUrl);
+      setLoopingSceneId(null);
       setStatus(c.loopStopped);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
+    } finally {
+      setBusy(false);
     }
+  }
+
+  async function toggleFocusLoop(): Promise<void> {
+    if (focusLoopActive) await stopLoop();
+    else await playFocus(selectedFocusCue);
   }
 
   async function changeRate(value: number): Promise<void> {
@@ -264,7 +291,7 @@ export function SceneReader({
         </div>
         <div className="scenePicker">
           <label htmlFor="study-scene-picker">{c.chooseScene}</label>
-          <Select id="study-scene-picker" value={String(sceneIndex)}
+          <Select id="study-scene-picker" value={String(sceneIndex)} disabled={busy}
             onChange={event => selectScene(Number(event.target.value))}>
             {document.sections.map((item, index) => (
               <option key={item.id} value={index}>
@@ -275,6 +302,15 @@ export function SceneReader({
           </Select>
         </div>
         <h2>{scene.title}</h2>
+        <div className="sceneQuickPlay">
+          <Button size="sm" variant="outline" disabled={busy || !canPlay}
+            onClick={() => void playScene()}>
+            <Play aria-hidden="true" />{c.playScene}
+          </Button>
+          {!canPlay && <p className="hint">
+            {!sourceUrl || adapter.id === "import" ? c.noVideo : c.noTime}
+          </p>}
+        </div>
         <p className="hint">{scene.context}</p>
         <p className="sceneGoal"><strong>{c.goal}:</strong> {scene.learningGoal}</p>
         <nav className="sceneSteps" aria-label={c.studySteps}>
@@ -290,6 +326,22 @@ export function SceneReader({
         <p className="sceneStepHint" id="scene-step-hint">
           {step === "listen" ? c.listenHint : step === "understand" ? c.understandHint : c.practiceHint}
         </p>
+        <details className="sceneReadingSettings">
+          <summary>{c.hintLabel} · {c[hint]}</summary>
+          <div className="sceneReadingControl">
+            <Select value={hint} aria-label={c.hintLabel} onChange={event => {
+              setHint(event.target.value as Hint);
+              setShowOriginal(null);
+              setShowTranslation(null);
+            }}>
+              <option value="progressive">{c.progressive}</option>
+              <option value="original">{c.original}</option>
+              <option value="bilingual">{c.bilingual}</option>
+            </Select>
+            <SettingInfo label={c.hintLabel} infoLabel={c.hintInfo}
+              explanation={c.originalSubtitleNotice} />
+          </div>
+        </details>
         {step === "listen" && <>
           {originalVisible && <div className="sceneDialogue">
             {scene.cueIds.map(id => cues.get(id)).filter((cue): cue is SubtitleCue => !!cue)
@@ -344,10 +396,11 @@ export function SceneReader({
           </Button>
         </div>
         <nav className="sceneNavigation" aria-label={c.sceneNavigation}>
-          <Button variant="outline" size="sm" disabled={sceneIndex === 0}
+          <Button variant="outline" size="sm" disabled={busy || sceneIndex === 0}
             onClick={() => selectScene(sceneIndex - 1)}>{c.previousScene}</Button>
           <span className="sceneNavPosition">{sceneIndex + 1} / {document.sections.length}</span>
-          <Button variant="outline" size="sm" disabled={sceneIndex === document.sections.length - 1}
+          <Button variant="outline" size="sm"
+            disabled={busy || sceneIndex === document.sections.length - 1}
             onClick={() => selectScene(sceneIndex + 1)}>{c.nextScene}</Button>
         </nav>
       </Card>
@@ -376,56 +429,59 @@ export function SceneReader({
       <Button variant="outline" size="sm" onClick={() => setMode("learn")}>{c.returnStudy}</Button>
     </Card>}
 
-    {mode === "learn" && <Card className="panel scenePlayer">
-      <div className="sceneHeading"><strong>{c.playback}</strong>
-        <span className="time">{formatTime(scene.startMs)}</span>
-      </div>
-      {!sourceUrl || adapter.id === "import" ? <p className="hint">{c.noVideo}</p> : <>
-        <div className="actions">
-          <Button size="sm" variant="outline" disabled={busy} onClick={() => void openVideo()}>{c.openVideo}</Button>
-          <Button size="sm" disabled={busy || !canPlay} onClick={() => void playScene()}>{c.playScene}</Button>
-          <Button size="sm" variant="outline" disabled={busy || !selectedFocusCue || !adapter.loop}
-            onClick={() => void playFocus(selectedFocusCue)}>{c.repeatFocus}</Button>
-          <Button size="sm" variant="outline" disabled={!adapter.stopLoop} onClick={() => void stopLoop()}>
-            {c.stopLoop}
-          </Button>
+    {mode === "learn" && sourceUrl && adapter.id !== "import" && <Card
+      className="panel scenePlayer" aria-label={c.miniPlayer}>
+      <div className="sceneMiniHeader">
+        <div className="sceneMiniTitle">
+          <span className="time">{c.scene} {sceneIndex + 1} · {formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
+          <strong title={scene.title}>{scene.title}</strong>
         </div>
-        {!canPlay && <p className="hint">{c.noTime}</p>}
-        <details className="scenePlaybackSettings">
-          <summary>{c.playback}</summary>
-          <div className="twoColumns">
-            <label>{c.repeat}
-              <Select value={repeat} onChange={event => setRepeat(event.target.value as Repeat)}>
-                <option value="2">2×</option><option value="3">3×</option>
-                <option value="5">5×</option><option value="infinite">∞</option>
-              </Select>
-            </label>
-            <label>{c.delay}
-              <Select value={delay} onChange={event => setDelay(Number(event.target.value))}>
-                {[0, 1, 2, 3].map(value =>
-                  <option key={value} value={value}>{value}s</option>)}
-              </Select>
-            </label>
-          </div>
-          {adapter.setPlaybackRate && <label>{c.speed}
-            <Select value={playbackRate} disabled={busy}
-              onChange={event => void changeRate(Number(event.target.value))}>
-              {[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5].map(rate =>
-                <option value={rate} key={rate}>{rate}×</option>)}
+        <Button size="icon" variant="ghost" aria-label={c.openVideo}
+          title={c.openVideo} disabled={busy} onClick={() => void openVideo()}>
+          <ExternalLink aria-hidden="true" />
+        </Button>
+      </div>
+      <div className="sceneMiniControls">
+        <Button size="sm" className="sceneMiniLoop" variant={focusLoopActive ? "secondary" : "default"}
+          aria-pressed={focusLoopActive}
+          disabled={busy || !selectedFocusCue || !adapter.loop ||
+            (focusLoopActive && !adapter.stopLoop)}
+          onClick={() => void toggleFocusLoop()}>
+          {focusLoopActive ? <Square aria-hidden="true" /> : <Repeat2 aria-hidden="true" />}
+          {focusLoopActive ? c.stopLoop : c.repeatFocus}
+        </Button>
+        <Button size="sm" variant="outline" className="sceneMiniSettingsToggle"
+          aria-expanded={playbackSettingsOpen}
+          aria-controls={playbackSettingsOpen ? "scene-playback-options" : undefined}
+          onClick={() => setPlaybackSettingsOpen(open => !open)}>
+          <SlidersHorizontal aria-hidden="true" />{c.playbackOptions}
+        </Button>
+      </div>
+      {playbackSettingsOpen && <div className="sceneMiniSettings" id="scene-playback-options"
+        role="region" aria-label={c.playbackOptions}>
+        <div className="twoColumns">
+          <label>{c.repeat}
+            <Select value={repeat} onChange={event => setRepeat(event.target.value as Repeat)}>
+              <option value="2">2×</option><option value="3">3×</option>
+              <option value="5">5×</option><option value="infinite">∞</option>
             </Select>
-          </label>}
-        </details>
-      </>}
-      {status && <p className="status" role="status">{status}</p>}
-      <p className="hint">{c.originalSubtitleNotice}</p>
-      <label>{c.hintLabel}
-        <Select value={hint} onChange={event => { setHint(event.target.value as Hint);
-          setShowOriginal(null); setShowTranslation(null); }}>
-          <option value="progressive">{c.progressive}</option>
-          <option value="original">{c.original}</option>
-          <option value="bilingual">{c.bilingual}</option>
-        </Select>
-      </label>
+          </label>
+          <label>{c.delay}
+            <Select value={delay} onChange={event => setDelay(Number(event.target.value))}>
+              {[0, 1, 2, 3].map(value =>
+                <option key={value} value={value}>{value}s</option>)}
+            </Select>
+          </label>
+        </div>
+        {adapter.setPlaybackRate && <label>{c.speed}
+          <Select value={playbackRate} disabled={busy}
+            onChange={event => void changeRate(Number(event.target.value))}>
+            {[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5].map(rate =>
+              <option value={rate} key={rate}>{rate}×</option>)}
+          </Select>
+        </label>}
+      </div>}
+      {status && <p className="sceneMiniStatus" role="status">{status}</p>}
     </Card>}
   </div>;
 }

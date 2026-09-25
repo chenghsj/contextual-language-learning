@@ -45,10 +45,15 @@ const document: Extract<LearningDocument, { schemaVersion: 2 }> = {
   ],
 };
 
-function renderReader(locale: UiLocale): string {
+function renderReader(locale: UiLocale, withVideo = false): string {
+  const playbackDocument: typeof document = withVideo ? {
+    ...document,
+    source: { platform: "netflix", title: document.source.title,
+      url: "https://www.netflix.com/watch/82036383" },
+  } : document;
   return renderToStaticMarkup(createElement(SceneReader, {
-    document,
-    adapter: getVideoAdapter(undefined),
+    document: playbackDocument,
+    adapter: getVideoAdapter(playbackDocument.source.url),
     locale,
     repeat: "2", setRepeat: () => undefined,
     delay: 0, setDelay: () => undefined,
@@ -91,4 +96,54 @@ test("scene switching, completion and step progression have separate handlers an
   assert.match(css, /\.sceneStepNumber \{[^}]*font-size: 16px/);
   assert.match(css, /\.sceneSteps button \{[^}]*min-height: 66px/);
   assert.match(css, /\.sceneNavigation \{[\s\S]*?grid-template-columns:/);
+});
+
+test("the mini player is collapsed by default and leaves one full-scene playback action in the scene header", () => {
+  for (const locale of Object.keys(messages) as UiLocale[]) {
+    const copy = sceneReaderMessages[locale];
+    const html = renderReader(locale, true);
+    assert.match(html, /class="sceneQuickPlay"/);
+    assert.match(html, /class="[^"]*scenePlayer[^"]*"/);
+    assert.ok(html.includes("sceneMiniHeader"), locale + ": compact player title");
+    assert.ok(html.includes("sceneMiniControls"), locale + ": compact controls");
+    assert.ok(html.includes("sceneMiniLoop"), locale + ": focus loop toggle");
+    assert.ok(html.includes(copy.repeatFocus), locale + ": focus loop label");
+    assert.ok(html.includes(copy.playbackOptions), locale + ": settings label");
+    assert.ok(html.includes(copy.openVideo), locale + ": open-video button accessible label");
+    assert.ok(html.includes('aria-expanded="false"'), locale + ": settings closed initially");
+    assert.doesNotMatch(html, /class="sceneMiniSettings"/, locale + ": expanded settings must be hidden");
+    assert.equal(html.split(copy.playScene).length - 1, 1,
+      locale + ": full-scene playback should appear only once");
+    assert.ok(html.includes("sceneReadingSettings"), locale + ": study hints beside the steps");
+    assert.ok(html.includes("settingInfo"), locale + ": playback subtitle notice is in info help");
+    const readableMarkup = html.replaceAll("&#x27;", "'").replaceAll("&quot;", '"')
+      .replaceAll("&amp;", "&");
+    assert.ok(readableMarkup.includes(copy.originalSubtitleNotice),
+      locale + ": existing subtitle notice remains available on demand");
+  }
+});
+
+test("import-only lessons do not show a useless sticky player but keep study hint controls", () => {
+  const html = renderReader("zh-TW");
+  assert.doesNotMatch(html, /class="[^"]*scenePlayer[^"]*"/);
+  assert.ok(html.includes("sceneReadingSettings"));
+  assert.ok(html.includes(sceneReaderMessages["zh-TW"].noVideo));
+});
+
+test("compact playback keeps original loop settings and removes the old always-visible controls", async () => {
+  const source = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(source, /async function toggleFocusLoop\(\)/);
+  assert.match(source, /if \(focusLoopActive\) await stopLoop\(\)/);
+  assert.match(source, /else await playFocus\(selectedFocusCue\)/);
+  assert.match(source, /setLoopingSceneId\(null\)/);
+  assert.match(source, /aria-expanded=\{playbackSettingsOpen\}/);
+  assert.match(source, /playbackSettingsOpen && <div className="sceneMiniSettings"/);
+  assert.match(source, /<Select value=\{repeat\}/);
+  assert.match(source, /<Select value=\{delay\}/);
+  assert.match(source, /<Select value=\{playbackRate\}/);
+  assert.doesNotMatch(source, /scenePlaybackSettings/);
+  assert.match(css, /\.scenePlayer \{[^}]*padding: 9px 12px/);
+  assert.match(css, /\.sceneMiniControls \{[^}]*grid-template-columns:/);
+  assert.match(css, /\.sceneReadingSettings \{[^}]*margin:/);
 });

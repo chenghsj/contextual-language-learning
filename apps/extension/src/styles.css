@@ -257,10 +257,51 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 }
 .sceneNavigation button { width: 100%; height: auto; min-height: 36px; padding: 7px 4px; font-size: 12px; white-space: normal; overflow-wrap: anywhere; }
 .sceneNavPosition { color: var(--muted-foreground); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.scenePlayer { position: sticky; bottom: 0; z-index: 3; box-shadow: 0 -6px 18px #00000012; }
-.scenePlayer .actions > button { flex: 1 1 42%; min-width: 0; height: auto; min-height: 34px; white-space: normal; }
-.scenePlayer .scenePlaybackSettings { margin: 10px 0 0; }
-.scenePlayer label { margin: 6px 0; }
+/* Put the full-scene playback action where the scene is introduced. */
+.sceneQuickPlay { margin: 6px 0 12px; }
+.sceneQuickPlay > button { height: auto; min-height: 36px; padding: 8px 12px; font-size: 12px; font-weight: 600; }
+.sceneQuickPlay > .hint { margin: 6px 0 0; }
+
+/* Reading hints belong to the study steps, not the persistent player. */
+.sceneReadingSettings { margin: 8px 0 14px; padding: 8px 10px; }
+.sceneReadingSettings > summary { color: var(--muted-foreground); font-size: 12px; line-height: 1.5; }
+.sceneReadingControl { display: flex; align-items: center; gap: 8px; min-width: 0; margin-top: 10px; position: relative; }
+.sceneReadingControl > select { flex: 1; min-width: 0; width: 100%; }
+.sceneReadingControl .settingInfoPopover { width: min(260px, calc(100vw - 72px)); max-width: 100%; }
+
+/* Only two compact rows remain sticky; settings open on demand. */
+.scenePlayer {
+  position: sticky; bottom: 0; z-index: 3; min-width: 0;
+  margin-bottom: 0; padding: 9px 12px;
+  border-top: 1px solid var(--border); background: var(--card);
+  box-shadow: 0 -6px 18px #00000012;
+}
+.sceneMiniHeader { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-width: 0; }
+.sceneMiniTitle { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; }
+.sceneMiniTitle .time { font-size: 11px; }
+.sceneMiniTitle strong {
+  display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; font-size: 12px; font-weight: 650;
+}
+.sceneMiniHeader > button { width: 32px; height: 32px; flex-shrink: 0; }
+.sceneMiniControls { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 6px; margin-top: 6px; }
+.sceneMiniControls button {
+  width: 100%; min-width: 0; height: auto; min-height: 35px;
+  padding: 6px; font-size: 12px; font-weight: 600; line-height: 1.35;
+  white-space: normal; overflow-wrap: anywhere;
+}
+.sceneMiniSettings {
+  max-height: min(220px, 38vh); overflow-y: auto;
+  margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border);
+}
+.sceneMiniSettings .twoColumns { gap: 8px; }
+.sceneMiniSettings label { min-width: 0; margin: 0 0 8px; font-size: 12px; }
+.sceneMiniSettings select { width: 100%; min-width: 0; }
+.sceneMiniStatus {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  max-height: 34px; overflow: hidden; overflow-wrap: anywhere;
+  margin: 5px 0 0; color: var(--muted-foreground); font-size: 11px; line-height: 1.45;
+}
 
 /* Keep the task history visually separate from the refresh control. */
 .jobHistoryList { display: grid; gap: 12px; margin-top: 12px; }
