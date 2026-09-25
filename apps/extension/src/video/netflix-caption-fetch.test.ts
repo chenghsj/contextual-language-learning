@@ -35,7 +35,9 @@ test("does not make any request for an untrusted subtitle URL", async () => {
     requested = true;
     return new Response(vtt);
   };
-  await assert.rejects(() => fetchNetflixCaptionText("https://evil.example/vtt", request), /unsupported subtitle address/);
+  await assert.rejects(() => fetchNetflixCaptionText("https://evil.example/vtt?token=secret", request),
+    error => error instanceof Error && /host evil.example/.test(error.message) &&
+      !error.message.includes("secret"));
   assert.equal(requested, false);
 });
 
@@ -67,4 +69,13 @@ test("enforces document size even when Content-Length is missing or wrong", asyn
       start(controller) { controller.enqueue(bytes); controller.close(); },
     }))),
   /2 MB limit/);
+});
+
+test("a malformed Netflix subtitle URL is rejected by the worker before any fetch", async () => {
+  let called = false;
+  await assert.rejects(() => fetchNetflixCaptionText("not-an-absolute-url", async () => {
+    called = true;
+    return new Response(vtt);
+  }), /malformed URL/);
+  assert.equal(called, false);
 });
