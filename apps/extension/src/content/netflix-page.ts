@@ -1,19 +1,21 @@
-// Runs in Netflix's MAIN world. This is an opt-in playback bridge, not a subtitle scraper.
+import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netflix-extract";
+
+// MAIN-world playback bridge. Caption access happens only after a user action.
 // Adapted to the minimal diagnostic and seek actions from netflix-shortcut-override.
 // Netflix playerApp.getAPI() is an undocumented internal interface and may disappear.
 
 (() => {
   const REQUEST_EVENT = "immersive-learning:netflix:request";
   const RESPONSE_EVENT = "immersive-learning:netflix:response";
-  type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate";
-  type Request = { source: "immersive-learning"; id: string; action: Action; value?: number };
-  type Player = { seek(ms: number): void; getCurrentTime(): number; pause(): void; play(): void };
+  type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
+  type Request = { source: "immersive-learning"; id: string; action: Action; value?: number; language?: string };
+  type Player = NetflixCaptionPlayer & { seek(ms: number): void; getCurrentTime(): number; pause(): void; play(): void };
   type PlayerApi = {
     getAllPlayerSessionIds(): string[];
     getVideoPlayerBySessionId(id: string): Player | null | undefined;
   };
   type Page = typeof window & {
-    netflix?: { appContext?: { state?: { playerApp?: { getAPI(): { videoPlayer: PlayerApi } } } } };
+    netflix?: { player?: { MediaSession?: unknown }; appContext?: { state?: { playerApp?: { getAPI(): { videoPlayer: PlayerApi } } } } };
     __immersiveLearningNetflixBridge?: boolean;
   };
   const page = window as Page;
@@ -63,12 +65,36 @@
     const candidate = value as Partial<Request>;
     return candidate.source === "immersive-learning"
       && typeof candidate.id === "string" && candidate.id.length < 100
-      && ["diagnose", "status", "seekTo", "pause", "play", "setPlaybackRate"].includes(candidate.action ?? "");
+      && ["diagnose", "status", "seekTo", "pause", "play", "setPlaybackRate", "subtitlesGet"].includes(candidate.action ?? "");
   };
 
   window.addEventListener(REQUEST_EVENT, (event: Event) => {
     const request = (event as CustomEvent<unknown>).detail;
     if (!isRequest(request)) return;
+    if (request.action === "subtitlesGet") {
+      const watchId = location.pathname.match(/^\/watch\/(\d+)/)?.[1];
+      void (async () => {
+        if (!watchId) throw new Error("Open a Netflix watch page first.");
+        const chosen = selectPlayer();
+        if (!chosen) throw new Error("Netflix playback session is not ready. Start the video and retry.");
+        const subtitle = await readNetflixSubtitles(
+          chosen.player, chosen.video, () => page.netflix?.player?.MediaSession,
+          request.language ?? "", {
+            sameVideo: () => location.pathname.match(/^\/watch\/(\d+)/)?.[1] === watchId,
+          },
+        );
+        window.dispatchEvent(new CustomEvent(RESPONSE_EVENT, {
+          detail: { source: "immersive-learning", id: request.id, ok: true,
+            available: true, text: subtitle.text, language: subtitle.language },
+        }));
+      })().catch(error => {
+        window.dispatchEvent(new CustomEvent(RESPONSE_EVENT, {
+          detail: { source: "immersive-learning", id: request.id, ok: false,
+            available: false, error: error instanceof Error ? error.message : "Netflix subtitles are unavailable." },
+        }));
+      });
+      return;
+    }
     const result: {
       source: "immersive-learning"; id: string; ok: boolean; available: boolean;
       currentMs?: number; playing?: boolean | null; sessionId?: string;
