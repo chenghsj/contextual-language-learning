@@ -80,9 +80,7 @@ textarea { resize: vertical; }
 details { margin: 8px 0; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; }
 details summary { cursor: pointer; font-weight: 600; }
 details p { margin-bottom: 2px; color: var(--muted-foreground); }
-@media (prefers-color-scheme: dark) {
-  :root { color-scheme: dark; --background: #121b16; --foreground: #e8f1e9; --card: #1a2920; --card-foreground: #e8f1e9; --muted: #23372a; --muted-foreground: #a4bba9; --border: #375341; --input: #496b53; --primary: #8bd1a5; --primary-foreground: #0d291a; --ring: #86c5a2; }
-  .chip { border-color: #416c4c; background: #233e2a; color: #bee8c6; }
-  .alert { border-color: #844337; background: #3b221f; color: #f5c1b4; }
-  .status { border-color: #426b86; background: #203747; color: #cbe6f5; }
-}
+:root[data-theme="dark"] { color-scheme: dark; --background: #121b16; --foreground: #e8f1e9; --card: #1a2920; --card-foreground: #e8f1e9; --muted: #23372a; --muted-foreground: #a4bba9; --border: #375341; --input: #496b53; --primary: #8bd1a5; --primary-foreground: #0d291a; --ring: #86c5a2; }
+:root[data-theme="dark"] .chip { border-color: #416c4c; background: #233e2a; color: #bee8c6; }
+:root[data-theme="dark"] .alert { border-color: #844337; background: #3b221f; color: #f5c1b4; }
+:root[data-theme="dark"] .status { border-color: #426b86; background: #203747; color: #cbe6f5; }
