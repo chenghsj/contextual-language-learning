@@ -7,6 +7,8 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
 (() => {
   const REQUEST_EVENT = "immersive-learning:netflix:request";
   const RESPONSE_EVENT = "immersive-learning:netflix:response";
+  const CAPTION_FETCH_REQUEST_EVENT = "immersive-learning:netflix:caption-fetch-request";
+  const CAPTION_FETCH_RESPONSE_EVENT = "immersive-learning:netflix:caption-fetch-response";
   type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
   type Request = { source: "immersive-learning"; id: string; action: Action; value?: number; language?: string };
   type Player = NetflixCaptionPlayer & { seek(ms: number): void; getCurrentTime(): number; pause(): void; play(): void };
@@ -21,6 +23,32 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
   const page = window as Page;
   if (page.__immersiveLearningNetflixBridge) return;
   page.__immersiveLearningNetflixBridge = true;
+
+  function requestCaptionDocument(url: string, id: string): Promise<Response> {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        window.removeEventListener(CAPTION_FETCH_RESPONSE_EVENT, onResponse);
+        reject(new Error("Netflix subtitle delivery timed out. Reload the watch tab and retry."));
+      }, 12_500);
+      function onResponse(event: Event): void {
+        const detail = (event as CustomEvent<{
+          source?: string; id?: string; ok?: boolean; text?: string; error?: string;
+        }>).detail;
+        if (detail?.source !== "immersive-learning" || detail.id !== id) return;
+        clearTimeout(timer);
+        window.removeEventListener(CAPTION_FETCH_RESPONSE_EVENT, onResponse);
+        if (!detail.ok || typeof detail.text !== "string") {
+          reject(new Error(detail.error ?? "Netflix caption delivery is unavailable."));
+        } else {
+          resolve(new Response(detail.text, { status: 200 }));
+        }
+      }
+      window.addEventListener(CAPTION_FETCH_RESPONSE_EVENT, onResponse);
+      window.dispatchEvent(new CustomEvent(CAPTION_FETCH_REQUEST_EVENT, {
+        detail: { source: "immersive-learning", id, url },
+      }));
+    });
+  }
 
   const findVideo = (): HTMLVideoElement | null => {
     const videos = Array.from(document.querySelectorAll<HTMLVideoElement>("video"));
@@ -81,6 +109,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
           chosen.player, chosen.video, () => page.netflix?.player?.MediaSession,
           request.language ?? "", {
             sameVideo: () => location.pathname.match(/^\/watch\/(\d+)/)?.[1] === watchId,
+            fetchDocument: url => requestCaptionDocument(String(url), request.id),
           },
         );
         window.dispatchEvent(new CustomEvent(RESPONSE_EVENT, {
