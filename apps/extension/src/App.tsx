@@ -588,57 +588,57 @@ export default function App() {
         <div><span className="brandMark">IL</span><strong>Immersive Learning</strong></div>
         <span className="version">MVP · v0.1</span>
       </header>
-      <nav className="tabs" aria-label="主要選單">
+      <nav className="tabs" aria-label={t("navLabel")}>
         <Button className={page === "create" ? "selected" : ""} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
         <Button className={page === "reader" ? "selected" : ""} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
-        <Button className={page === "settings" ? "selected" : ""} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />Agent 設定</Button>
+        <Button className={page === "settings" ? "selected" : ""} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
       </nav>
 
-      {error && <div className="alert" role="alert">{error}<Button variant="ghost" size="icon" aria-label="關閉錯誤" onClick={() => setError("")}>×</Button></div>}
+      {error && <div className="alert" role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}>×</Button></div>}
 
       {page === "create" && <main>
         <Card className="panel">
           <h2>{t("subtitleHeading")}</h2>
-          <p className="hint">匯入你有權使用的 SRT、VTT 或文字。Netflix 不會被自動擷取或修改。</p>
+          <p className="hint">{t("subtitleHint")}</p>
           <label>{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
-          {fileName && <p className="hint">已匯入：{fileName}</p>}
+          {fileName && <p className="hint">{t("importedFile", { name: fileName })}</p>}
           <label>{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => setRaw(event.target.value)} placeholder={t("subtitlePlaceholder")} /></label>
-          <p className="hint">已解析 {cues.length} 段字幕。</p>
+          <p className="hint">{t("parsedCues", { count: cues.length })}</p>
           <label>{t("videoTitle")} <Input value={title} onChange={event => setTitle(event.target.value)} placeholder={t("titlePlaceholder")} /></label>
           <label>{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => setSourceUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=…" /></label>
-          <Badge className="chip">來源：{getVideoAdapter(sourceUrl).label}</Badge>
+          <Badge className="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
         </Card>
 
         <Card className="panel">
           <h2>{t("learningHeading")}</h2>
           <div className="twoColumns">
-            <label>學習語言
+            <label>{t("targetLanguage")}
               <Select value={profile.targetLanguage} onChange={event => {
                 const targetLanguage = event.target.value as LearningProfile["targetLanguage"];
                 setProfile(current => ({ ...current, targetLanguage, level: targetLanguage === "en" ? "B1" : targetLanguage === "ja" ? "N4" : "2" }));
               }}><option value="en">{t("english")}</option><option value="ja">{t("japanese")}</option><option value="ko">{t("korean")}</option></Select>
             </label>
-            <label>程度
+            <label>{t("level")}
               <Select value={profile.level} onChange={event => setProfile(current => ({ ...current, level: event.target.value }))}>
                 {levelOptions.map(level => <option key={level} value={level}>{level}</option>)}
               </Select>
             </label>
           </div>
-          <label>文件教學語言
+          <label>{t("instructionLanguage")}
             <Select value={profile.instructionLanguage} onChange={event => setProfile(current => ({ ...current, instructionLanguage: event.target.value as LearningProfile["instructionLanguage"] }))}>
-              <option value="zh-TW">{t("traditionalChinese")}</option><option value="zh-CN">简体中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option>
+              <option value="zh-TW">{t("traditionalChinese")}</option><option value="zh-CN">{t("simplifiedChinese")}</option><option value="en">{t("english")}</option><option value="ja">{t("japanese")}</option><option value="ko">{t("korean")}</option>
             </Select>
           </label>
-          <label>解說模式
+          <label>{t("teachingMode")}
             <Select value={profile.mode} onChange={event => setProfile(current => ({ ...current, mode: event.target.value as LearningProfile["mode"] }))}>
               <option value="adaptive">{t("adaptive")}</option><option value="guided">{t("guided")}</option><option value="immersive">{t("immersive")}</option>
             </Select>
           </label>
           <div className="twoColumns">
-            <label>每章新詞彙上限
+            <label>{t("vocabLimit")}
               <Input type="number" min={1} max={30} value={profile.maxNewVocabulary} onChange={event => setProfile(current => ({ ...current, maxNewVocabulary: Number(event.target.value) }))} />
             </label>
-            <label>每章練習題
+            <label>{t("exerciseCount")}
               <Input type="number" min={0} max={12} value={profile.exerciseCount} onChange={event => setProfile(current => ({ ...current, exerciseCount: Number(event.target.value) }))} />
             </label>
           </div>
@@ -646,8 +646,8 @@ export default function App() {
 
         <Card className="panel">
           <h2>{t("generationHeading")}</h2>
-          <p className="hint">目前使用：{agent.provider} · {agent.modelId || "CLI 預設模型"}。切換請至 Agent 設定。</p>
-          <label>儲存位置
+          <p className="hint">{t("currentAgent", { provider: agent.provider, model: agent.modelId || t("cliDefault") })}</p>
+          <label>{t("storageLocation")}
             <Select value={destination.kind} onChange={event => {
               if (event.target.value === "drive") {
                 setDestination({ kind: "drive", accountId: driveAccounts[0]?.id ?? "" });
@@ -661,16 +661,16 @@ export default function App() {
             </Select>
           </label>
           {destination.kind === "local" ? <>
-            <p className="hint">目前資料夾：{destination.directory ?? "~/Documents/Immersive Learning（預設）"}</p>
+            <p className="hint">{t("currentFolder", { path: destination.directory ?? t("defaultFolder") })}</p>
             <div className="actions">
               <Button variant="outline" className="secondary" disabled={storageBusy || generating}
                 onClick={() => void chooseFolder()}>{t("chooseFolder")}</Button>
               {destination.directory && <Button variant="ghost" size="sm"
                 onClick={() => setDestination({ kind: "local" })}>{t("useDefaultFolder")}</Button>}
             </div>
-            <p className="hint">Google Drive for desktop 的同步資料夾也可以透過本地資料夾選擇器選取。</p>
+            <p className="hint">{t("driveDesktopPicker")}</p>
           </> : <>
-            <label>Google 帳號
+            <label>{t("googleAccount")}
               <Select value={destination.accountId} onChange={event =>
                 setDestination({ kind: "drive", accountId: event.target.value })}>
                 <option value="">{t("chooseConnected")}</option>
@@ -683,15 +683,15 @@ export default function App() {
               <Button variant="ghost" size="sm" disabled={storageBusy}
                 onClick={() => void refreshDriveAccounts()}>{t("refreshAccounts")}</Button>
             </div>
-            <p className="hint">教材會上傳至該帳號中的 Immersive Learning 資料夾；Checkpoint 仍保留在本地。</p>
-            {!driveConfigured && <p className="callout">尚未設定 Google OAuth Client。請先至 Agent 設定頁的 Google Drive 區完成設定。</p>}
+            <p className="hint">{t("driveUploadHint")}</p>
+            {!driveConfigured && <p className="callout">{t("oauthFirst")}</p>}
           </>}
-          {duplicateWarning && <div className="callout" role="alertdialog" aria-label="重新生成確認">
-            <strong>此來源已有 {duplicateWarning.matches.length} 份教材或未完成任務。</strong>
-            <p className="hint">重新生成會建立新版本，不會覆蓋原教材或學習進度。確認後才會呼叫 AI Agent。</p>
+          {duplicateWarning && <div className="callout" role="alertdialog" aria-label={t("duplicateConfirmLabel")}>
+            <strong>{t("duplicateFound", { count: duplicateWarning.matches.length })}</strong>
+            <p className="hint">{t("duplicateNewVersion")}</p>
             {duplicateWarning.matches.map(match => <div className="learningCard" key={match.documentId}>
               <strong>{match.title}</strong>
-              <p>{new Date(match.createdAt).toLocaleString()} · {match.destination} · {match.exactSettings ? "相同生成設定" : "不同生成設定"}{match.jobStatus ? " · " + match.jobStatus : ""}</p>
+              <p>{new Date(match.createdAt).toLocaleString(uiLocale)} · {match.destination} · {t(match.exactSettings ? "sameSettings" : "differentSettings")}{match.jobStatus ? " · " + match.jobStatus : ""}</p>
               <div className="actions">
                 {match.local && <Button variant="outline" size="sm" onClick={() => {
                   cancelDuplicate();
@@ -706,20 +706,20 @@ export default function App() {
             </div>
           </div>}
           <Button className="primary" onClick={startGeneration} disabled={generating || checking || !cues.length || !title.trim() || (destination.kind === "drive" && !destination.accountId)}>
-            {generating ? "生成中…" : checking ? "檢查既有教材…" : "檢查後生成教材"}
+            {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
           {generating && <Button variant="outline" className="secondary" onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
           {progress && <p className="status" role="status">{progress}</p>}
-          {publishedLocation && <p className="hint">已發布至：{publishedLocation}</p>}
+          {publishedLocation && <p className="hint">{t("publishedTo", { location: publishedLocation })}</p>}
         </Card>
         <Card className="panel">
           <h2>{t("jobHistory")}</h2>
-          <p className="hint">已完成的章節會儲存在本地；Host 中斷後，可從未完成處繼續。取消的任務不會自動恢復。</p>
+          <p className="hint">{t("jobHistoryHint")}</p>
           <Button variant="outline" className="secondary" disabled={loadingJobs}
-            onClick={loadJobs}>{loadingJobs ? "讀取中…" : "重新整理任務"}</Button>
+            onClick={loadJobs}>{loadingJobs ? t("loading") : t("refreshJobs")}</Button>
           {jobs.map(job => <div className="learningCard" key={job.id}>
             <strong>{job.sourceTitle}</strong>
-            <p>{job.provider} · {job.status} · {job.completed} / {job.total} 章節</p>
+            <p>{t("jobProgress", { provider: job.provider, status: t(jobStatusKeys[job.status]), completed: job.completed, total: job.total })}</p>
             {job.error && <p>{job.error}</p>}
             <div className="actions">
               {["queued", "waiting", "failed"].includes(job.status) &&
@@ -793,7 +793,7 @@ export default function App() {
             <Badge className="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
             <h1>{document.source.title}</h1>
             <p className="hint">{document.sections.length} 個學習章節 · 教學語言 {document.profile.instructionLanguage}</p>
-            {publishedLocation && <p className="hint">已發布至：{publishedLocation}</p>
+            {publishedLocation && <p className="hint">{t("publishedTo", { location: publishedLocation })}</p>
             <div className="actions">
               <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "json")}>{t("saveJson")}</Button>
               <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "md")}>{t("saveMarkdown")}</Button>
