@@ -7,6 +7,7 @@ import {
   type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
+import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
 import { openOrFocusVideoTab } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { BookOpen, Settings2, WandSparkles } from "lucide-react";
