@@ -125,3 +125,37 @@ test("each interface locale declares exactly one levelHints block in its own lan
       locale + " must use its own localized level explanation");
   }
 });
+
+
+test("level tooltip displays the complete scale for the selected language in every UI locale", async () => {
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(app, /items=\{levelOptions\.map\(value => \{/);
+  assert.match(app, /settingsCopy\.levels\[profile\.targetLanguage\]\[value\]/);
+  assert.match(css, /\.settingInfoLevels \{[^}]*display: grid/);
+  for (const locale of locales) {
+    const copy = learningSettingsCopy[locale];
+    for (const language of ["en", "ja", "ko"] as const) {
+      const items = levels[language].map(value => ({
+        value,
+        label: copy.levels[language][value].label,
+        description: copy.levels[language][value].description,
+      }));
+      const html = renderToStaticMarkup(createElement(SettingInfo, {
+        label: "Level",
+        infoLabel: copy.infoLabel,
+        explanation: levelHint(copy, language),
+        items,
+      }));
+      assert.match(html, /class="settingInfoLevels"/);
+      assert.equal((html.match(/<li>/g) ?? []).length, items.length,
+        locale + " " + language + ": one entry per level");
+      for (const item of items) {
+        assert.ok(html.includes(item.value + " · " + item.label),
+          locale + " " + language + ": label for " + item.value);
+        assert.ok(html.includes(item.description),
+          locale + " " + language + ": description for " + item.value);
+      }
+    }
+  }
+});

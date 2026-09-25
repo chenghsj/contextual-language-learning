@@ -251,6 +251,11 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 }
 .twoColumns > .settingField:first-child .settingInfoPopover { left: 0; right: auto; }
 .settingInfoPopover p { margin: 0; color: var(--foreground); }
+/* Display the current language's complete proficiency scale without widening the Side Panel. */
+.settingInfoLevels { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+.settingInfoLevels li { min-width: 0; padding-top: 8px; border-top: 1px solid var(--border); }
+.settingInfoLevels strong { display: block; color: var(--foreground); font-size: 12px; font-weight: 650; }
+.settingInfoLevels span { display: block; color: var(--muted-foreground); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 
 /* Curated study keeps a single scene in view, with playback accessible while scrolling. */
 .advancedLessonSettings { margin: 8px 0 12px; }
