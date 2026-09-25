@@ -189,7 +189,7 @@
         return { ok: false, error: "Unsupported subtitle language." };
       }
       const result = await requestPage("subtitlesGet", undefined, message.language);
-      if (result.bridgeVersion !== "native-caption-capture-v1") {
+      if (result.bridgeVersion !== "netflix-worker-url-check-v2") {
         return { ok: false, error: "The Netflix page has an outdated caption reader. Rebuild the extension and reload this watch tab before retrying." };
       }
       if (!result.ok || !result.text || !result.language) {
