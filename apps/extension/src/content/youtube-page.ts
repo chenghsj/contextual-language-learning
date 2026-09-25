@@ -57,7 +57,7 @@ import {
     }
     const body = await response.text();
     if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
-    const text = /^\\s*WEBVTT\\b/.test(body) ? body : youtubeJson3ToVtt(body);
+    const text = /^\s*WEBVTT\b/.test(body) ? body : youtubeJson3ToVtt(body);
     if (text.length > 3_000_000) throw new Error("YouTube subtitles exceed the size limit.");
     return { text, language: track.languageCode };
   }
