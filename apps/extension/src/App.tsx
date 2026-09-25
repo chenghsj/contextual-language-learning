@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
   parseSubtitles, type AgentInfo, type GenerationRequest, type JobSummary,
+  type Destination, type DriveAccount, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
   type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
@@ -19,7 +20,6 @@ const HOST_NAME = "dev.immersive.language_learning";
 type Page = "create" | "reader" | "settings";
 type Installed = Record<string, boolean>;
 type RepeatOption = "2" | "3" | "5" | "infinite";
-type StorageLocation = { id: string; kind: "local" | "google-drive-desktop"; label: string; path: string; account?: string };
 
 const DEFAULT_PROFILE: LearningProfile = {
   targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
@@ -74,17 +74,24 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
-  const [storageLocations, setStorageLocations] = useState<StorageLocation[]>([]);
-  const [outputPath, setOutputPath] = useState("");
-  const [customOutputPath, setCustomOutputPath] = useState("");
-  const [useCustomOutput, setUseCustomOutput] = useState(false);
-  const [duplicateWarning, setDuplicateWarning] = useState<{ payload: GenerationRequest; count: number } | null>(null);
+  const [destination, setDestination] = useState<Destination>({ kind: "local" });
+  const [driveAccounts, setDriveAccounts] = useState<DriveAccount[]>([]);
+  const [driveConfigured, setDriveConfigured] = useState(false);
+  const [oauthClientId, setOauthClientId] = useState("");
+  const [oauthClientSecret, setOauthClientSecret] = useState("");
+  const [storageBusy, setStorageBusy] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [publishedLocation, setPublishedLocation] = useState("");
+  const [duplicateWarning, setDuplicateWarning] = useState<{
+    payload: GenerationRequest; token: string; matches: DuplicateMatch[];
+  } | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [repeat, setRepeat] = useState<RepeatOption>("3");
   const [delay, setDelay] = useState(1);
   const [loopActive, setLoopActive] = useState(false);
   const [playbackStatus, setPlaybackStatus] = useState("");
   const portRef = useRef<chrome.runtime.Port | null>(null);
+  const preflightPortRef = useRef<chrome.runtime.Port | null>(null);
   const requestRef = useRef<string | null>(null);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
@@ -92,7 +99,7 @@ export default function App() {
   const readerAdapter = getVideoAdapter(document?.source.url);
 
   useEffect(() => {
-    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "repeat", "delay"]).then(saved => {
+    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "repeat", "delay"]).then(saved => {
       if (saved.profile) setProfile(saved.profile as LearningProfile);
       if (saved.agent) setAgent(saved.agent as AgentSettings);
       if (saved.agentProfiles && typeof saved.agentProfiles === "object") {
@@ -101,20 +108,12 @@ export default function App() {
         const previous = saved.agent as AgentSettings;
         setAgentProfiles({ [previous.provider]: { modelId: previous.modelId, accountConfigDir: previous.accountConfigDir } });
       }
+      if (saved.destination) setDestination(saved.destination as Destination);
       if (saved.repeat) setRepeat(saved.repeat as RepeatOption);
       if (typeof saved.delay === "number") setDelay(saved.delay);
       setHydrated(true);
     }).catch(() => setHydrated(true));
-    const storageId = crypto.randomUUID();
-    const storagePort = chrome.runtime.connectNative(HOST_NAME);
-    storagePort.onMessage.addListener((message: HostMessage) => {
-      if (message.id === storageId && message.type === "storageLocations") {
-        setStorageLocations(message.locations);
-        setOutputPath(current => current || message.locations[0]?.path || "");
-        storagePort.disconnect();
-      }
-    });
-    storagePort.postMessage({ id: storageId, type: "storageLocations" });
+    void refreshDriveAccounts();
     void chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
       const tab = tabs[0];
       if (tab?.url && getVideoAdapter(tab.url).id !== "import") {
@@ -122,12 +121,110 @@ export default function App() {
         setTitle((tab.title ?? "Video").slice(0, 200));
       }
     });
-    return () => { portRef.current?.disconnect(); };
+    return () => { portRef.current?.disconnect(); preflightPortRef.current?.disconnect(); };
   }, []);
 
   useEffect(() => {
-    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, repeat, delay });
-  }, [hydrated, profile, agent, agentProfiles, repeat, delay]);
+    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, destination, repeat, delay });
+  }, [hydrated, profile, agent, agentProfiles, destination, repeat, delay]);
+
+  function nativeOnce(request: { id: string; type: string; [key: string]: unknown }): Promise<HostMessage> {
+    return new Promise((resolve, reject) => {
+      const port = chrome.runtime.connectNative(HOST_NAME);
+      let finished = false;
+      port.onMessage.addListener((response: HostMessage) => {
+        if (response.id !== request.id) return;
+        finished = true;
+        port.disconnect();
+        if (response.type === "error") reject(new Error(response.message));
+        else resolve(response);
+      });
+      port.onDisconnect.addListener(() => {
+        if (!finished) reject(new Error(chrome.runtime.lastError?.message ?? "Native Host 已中斷"));
+      });
+      try { port.postMessage(request); }
+      catch (error) { port.disconnect(); reject(error); }
+    });
+  }
+
+  async function refreshDriveAccounts(): Promise<void> {
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveAccounts" });
+      if (response.type !== "driveAccounts") throw new Error("Unexpected Drive accounts response");
+      setDriveAccounts(response.accounts);
+      setDriveConfigured(response.configured);
+      setDestination(current =>
+        current.kind === "drive" && !current.accountId && response.accounts[0]
+          ? { kind: "drive", accountId: response.accounts[0].id } : current);
+    } catch (cause) {
+      // Local-only use does not require a connected Host or a Google account.
+      setDriveAccounts([]);
+      setDriveConfigured(false);
+    }
+  }
+
+  async function chooseFolder(): Promise<void> {
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "chooseFolder" });
+      if (response.type !== "folder") throw new Error("Unexpected folder picker response");
+      setDestination({ kind: "local", directory: response.directory });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "無法選擇資料夾。");
+    } finally { setStorageBusy(false); }
+  }
+
+  async function configureDrive(): Promise<void> {
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({
+        id: crypto.randomUUID(), type: "driveConfigure",
+        clientId: oauthClientId.trim(), ...(oauthClientSecret ? { clientSecret: oauthClientSecret } : {}),
+      });
+      if (response.type !== "driveConfigured") throw new Error("Unexpected OAuth configuration response");
+      setOauthClientSecret("");
+      setDriveConfigured(true);
+      await refreshDriveAccounts();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Google OAuth 設定失敗。");
+    } finally { setStorageBusy(false); }
+  }
+
+  async function connectDrive(): Promise<void> {
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveConnect" });
+      if (response.type !== "driveConnected") throw new Error("Unexpected Google account response");
+      setDriveAccounts(current => [...current.filter(item => item.id !== response.account.id), response.account]);
+      setDestination({ kind: "drive", accountId: response.account.id });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "無法連線 Google Drive 帳號。");
+    } finally { setStorageBusy(false); }
+  }
+
+  async function retryPublication(jobId: string): Promise<void> {
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "publishJob", jobId });
+      if (response.type === "publicationFailed") throw new Error(response.message);
+      if (response.type !== "published") throw new Error("Unexpected publication response");
+      setPublishedLocation(response.location);
+      setProgress("已發布至：" + response.location);
+      loadJobs();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "重新發布失敗。");
+    } finally { setStorageBusy(false); }
+  }
+
+  function cancelDuplicate(): void {
+    preflightPortRef.current?.disconnect();
+    preflightPortRef.current = null;
+    setDuplicateWarning(null);
+  }
 
   function updateAgent(next: AgentSettings): void {
     setAgent(next);
@@ -178,12 +275,18 @@ export default function App() {
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
   }
 
-  function runGeneration(input: { type: "generate"; payload: GenerationRequest } | { type: "resume"; jobId: string }): void {
+  function runGeneration(
+    input: { type: "generate"; payload: GenerationRequest; checkToken: string; confirmRegeneration: boolean }
+      | { type: "resume"; jobId: string },
+    existingPort?: chrome.runtime.Port,
+  ): void {
     if (generating) return;
     setError("");
+    setDuplicateWarning(null);
     const id = input.type === "generate" ? input.payload.id : crypto.randomUUID();
     const jobId = input.type === "generate" ? input.payload.id : input.jobId;
-    const port = chrome.runtime.connectNative(HOST_NAME);
+    const port = existingPort ?? chrome.runtime.connectNative(HOST_NAME);
+    preflightPortRef.current = null;
     portRef.current = port;
     requestRef.current = jobId;
     setGenerating(true);
@@ -191,11 +294,8 @@ export default function App() {
     const chunks = new DocumentChunkAssembler();
     let finished = false;
     function complete(raw: unknown): void {
-      try {
-        showDocument(raw);
-      } catch (error) {
-        setError(error instanceof Error ? error.message : "文件無法開啟。");
-      }
+      try { showDocument(raw); }
+      catch (error) { setError(error instanceof Error ? error.message : "文件無法開啟。"); }
       finished = true;
       setGenerating(false);
       port.disconnect();
@@ -206,6 +306,10 @@ export default function App() {
         updateJob(message.job);
       } else if (message.type === "progress") {
         setProgress("已完成 " + message.completed + " / " + message.total + " 個章節");
+      } else if (message.type === "published") {
+        setPublishedLocation(message.location);
+      } else if (message.type === "publicationFailed") {
+        setError("教材已保存在本地，但發布失敗：" + message.message + "。可從任務紀錄重新發布。");
       } else if (message.type === "result") {
         complete(message.document);
       } else if (message.type === "documentChunk") {
@@ -235,33 +339,60 @@ export default function App() {
     port.postMessage({ id, ...input });
   }
 
-  function startGeneration(allowRegenerate = false): void {
+  function startGeneration(): void {
+    if (checking || generating) return;
     setError("");
-    setDuplicateWarning(null);
+    cancelDuplicate();
+    setPublishedLocation("");
     try {
-      const id = crypto.randomUUID();
       const payload = GenerationRequestSchema.parse({
-        id,
+        id: crypto.randomUUID(),
         source: { platform, title: title.trim(), ...(sourceUrl.trim() ? { url: sourceUrl.trim() } : {}) },
-        profile, agent, cues, outputPath: (useCustomOutput ? customOutputPath.trim() : outputPath) || undefined, allowRegenerate,
+        profile, agent, destination, cues,
       });
-      if (allowRegenerate) { runGeneration({ type: "generate", payload }); return; }
       const port = chrome.runtime.connectNative(HOST_NAME);
+      preflightPortRef.current = port;
+      setChecking(true);
+      setProgress("正在檢查本地與所選儲存位置的既有教材…");
+      const id = crypto.randomUUID();
+      let responded = false;
       port.onMessage.addListener((message: HostMessage) => {
         if (message.id !== id) return;
-        if (message.type === "preflight") {
-          port.disconnect();
-          if (message.existing.length) setDuplicateWarning({ payload, count: message.existing.length });
-          else runGeneration({ type: "generate", payload });
+        responded = true;
+        setChecking(false);
+        if (message.type === "duplicates") {
+          if (message.matches.length) {
+            setDuplicateWarning({ payload, token: message.token, matches: message.matches });
+            setProgress("找到 " + message.matches.length + " 份既有教材，請選擇下一步。");
+          } else {
+            setProgress("沒有找到既有教材，開始生成。");
+            runGeneration({ type: "generate", payload, checkToken: message.token, confirmRegeneration: false }, port);
+          }
         } else if (message.type === "error") {
-          port.disconnect();
           setError(message.message);
+          preflightPortRef.current = null;
+          port.disconnect();
         }
       });
-      port.postMessage({ id, type: "preflight", payload });
+      port.onDisconnect.addListener(() => {
+        if (!responded) {
+          preflightPortRef.current = null;
+          setChecking(false);
+          setError(chrome.runtime.lastError?.message ?? "檢查中斷，尚未開始生成。");
+        }
+      });
+      port.postMessage({ type: "checkDuplicates", id, payload });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Invalid generation settings.");
+      setChecking(false);
+      setError(cause instanceof Error ? cause.message : "生成設定無效。");
     }
+  }
+
+  function confirmRegeneration(): void {
+    if (!duplicateWarning || !preflightPortRef.current) return;
+    const { payload, token } = duplicateWarning;
+    runGeneration({ type: "generate", payload, checkToken: token, confirmRegeneration: true },
+      preflightPortRef.current);
   }
 
   function loadJobs(): void {
@@ -337,6 +468,11 @@ export default function App() {
     });
     port.postMessage({ type: "getDocument", id, documentId });
   }
+
+  useEffect(() => {
+    if (duplicateWarning && preflightPortRef.current) cancelDuplicate();
+    // Intentional: only changes to the generation inputs invalidate a checked request.
+  }, [raw, title, sourceUrl, profile, agent, destination]);
 
   function cancelGeneration(): void {
     if (!portRef.current || !requestRef.current) return;
@@ -475,31 +611,69 @@ export default function App() {
           <h2>3. Agent 與生成</h2>
           <p className="hint">目前使用：{agent.provider} · {agent.modelId || "CLI 預設模型"}。切換請至 Agent 設定。</p>
           <label>儲存位置
-            <Select value={useCustomOutput ? "custom" : outputPath} onChange={event => {
-              if (event.target.value === "custom") { setUseCustomOutput(true); return; }
-              setUseCustomOutput(false); setOutputPath(event.target.value);
+            <Select value={destination.kind} onChange={event => {
+              if (event.target.value === "drive") {
+                setDestination({ kind: "drive", accountId: driveAccounts[0]?.id ?? "" });
+              } else {
+                setDestination({ kind: "local" });
+              }
+              cancelDuplicate();
             }}>
-              {storageLocations.map(location => <option key={location.id} value={location.path}>{location.label}</option>)}
-              <option value="custom">其他本機資料夾…</option>
+              <option value="local">本地資料夾</option>
+              <option value="drive">Google Drive（獨立帳號授權）</option>
             </Select>
           </label>
-          {useCustomOutput ? <label>自訂資料夾路徑
-            <Input value={customOutputPath} onChange={event => setCustomOutputPath(event.target.value)}
-              placeholder="/Users/you/Documents/My Lessons" />
-          </label> : null}
-          <p className="hint">若已安裝 Google Drive for desktop，這裡會自動列出每個已掛載帳號，可直接切換。資料仍先保留本地 checkpoint。</p>
-          {duplicateWarning && <div className="callout">
-            這個影片／教材在目前儲存位置已生成過 {duplicateWarning.count} 次。重新生成會建立新版本，不覆蓋舊文件。
+          {destination.kind === "local" ? <>
+            <p className="hint">目前資料夾：{destination.directory ?? "~/Documents/Immersive Learning（預設）"}</p>
             <div className="actions">
-              <Button variant="destructive" size="sm" onClick={() => runGeneration({ type: "generate", payload: { ...duplicateWarning.payload, allowRegenerate: true } })}>確認重新生成</Button>
-              <Button variant="outline" size="sm" onClick={() => setDuplicateWarning(null)}>取消</Button>
+              <Button variant="outline" className="secondary" disabled={storageBusy || generating}
+                onClick={() => void chooseFolder()}>選擇本地資料夾…</Button>
+              {destination.directory && <Button variant="ghost" size="sm"
+                onClick={() => setDestination({ kind: "local" })}>使用預設資料夾</Button>}
+            </div>
+            <p className="hint">Google Drive for desktop 的同步資料夾也可以透過本地資料夾選擇器選取。</p>
+          </> : <>
+            <label>Google 帳號
+              <Select value={destination.accountId} onChange={event =>
+                setDestination({ kind: "drive", accountId: event.target.value })}>
+                <option value="">請選擇已連線的帳號</option>
+                {driveAccounts.map(account => <option key={account.id} value={account.id}>{account.email}</option>)}
+              </Select>
+            </label>
+            <div className="actions">
+              <Button variant="outline" className="secondary" disabled={storageBusy || generating}
+                onClick={() => void connectDrive()}>連結其他 Google 帳號</Button>
+              <Button variant="ghost" size="sm" disabled={storageBusy}
+                onClick={() => void refreshDriveAccounts()}>重新整理帳號</Button>
+            </div>
+            <p className="hint">教材會上傳至該帳號中的 Immersive Learning 資料夾；Checkpoint 仍保留在本地。</p>
+            {!driveConfigured && <p className="callout">尚未設定 Google OAuth Client。請先至 Agent 設定頁的 Google Drive 區完成設定。</p>}
+          </>}
+          {duplicateWarning && <div className="callout" role="alertdialog" aria-label="重新生成確認">
+            <strong>此來源已有 {duplicateWarning.matches.length} 份教材或未完成任務。</strong>
+            <p className="hint">重新生成會建立新版本，不會覆蓋原教材或學習進度。確認後才會呼叫 AI Agent。</p>
+            {duplicateWarning.matches.map(match => <div className="learningCard" key={match.documentId}>
+              <strong>{match.title}</strong>
+              <p>{new Date(match.createdAt).toLocaleString()} · {match.destination} · {match.exactSettings ? "相同生成設定" : "不同生成設定"}{match.jobStatus ? " · " + match.jobStatus : ""}</p>
+              <div className="actions">
+                {match.local && <Button variant="outline" size="sm" onClick={() => {
+                  cancelDuplicate();
+                  openSavedDocument(match.documentId);
+                }}>開啟既有教材</Button>}
+                {match.url && <Button variant="outline" size="sm" onClick={() => void chrome.tabs.create({ url: match.url })}>在 Google Drive 開啟</Button>}
+              </div>
+            </div>)}
+            <div className="actions">
+              <Button variant="destructive" size="sm" onClick={confirmRegeneration}>確認重新生成新版本</Button>
+              <Button variant="outline" size="sm" onClick={cancelDuplicate}>取消，不生成</Button>
             </div>
           </div>}
-          <Button className="primary" onClick={startGeneration} disabled={generating || !cues.length || !title.trim()}>
-            {generating ? "生成中…" : "使用本地 Agent 生成教材"}
+          <Button className="primary" onClick={startGeneration} disabled={generating || checking || !cues.length || !title.trim() || (destination.kind === "drive" && !destination.accountId)}>
+            {generating ? "生成中…" : checking ? "檢查既有教材…" : "檢查後生成教材"}
           </Button>
           {generating && <Button variant="outline" className="secondary" onClick={cancelGeneration}>取消生成</Button>}
           {progress && <p className="status" role="status">{progress}</p>}
+          {publishedLocation && <p className="hint">已發布至：{publishedLocation}</p>}
         </Card>
         <Card className="panel">
           <h2>任務紀錄與恢復</h2>
@@ -514,9 +688,13 @@ export default function App() {
               {["queued", "waiting", "failed"].includes(job.status) &&
                 <Button variant="outline" size="sm" disabled={generating}
                   onClick={() => runGeneration({ type: "resume", jobId: job.id })}>繼續生成</Button>}
-              {job.documentId &&
+              {job.documentId && <>
                 <Button variant="outline" size="sm" disabled={generating}
-                  onClick={() => openSavedDocument(job.documentId!)}>開啟教材</Button>}
+                  onClick={() => openSavedDocument(job.documentId!)}>開啟教材</Button>
+                {job.publication?.status !== "published" &&
+                  <Button variant="outline" size="sm" disabled={storageBusy}
+                    onClick={() => void retryPublication(job.id)}>重新發布（不重新生成）</Button>}
+              </>}
             </div>
           </div>)}
         </Card>
@@ -544,7 +722,28 @@ export default function App() {
             <Input disabled={!agentCatalog.find(entry => entry.id === agent.provider)?.supportsAccountProfiles} value={agent.accountConfigDir ?? ""} onChange={event => updateAgent({ ...agent, accountConfigDir: event.target.value || undefined })} placeholder="例如：/Users/you/.codex-work" />
           </label>
           <p className="hint">帳號設定目錄僅供宣告支援獨立 Profile 的 Agent 使用；目錄必須已存在於家目錄內。不支援獨立 Profile 的 Agent 使用目前的 CLI 登入環境。</p>
-          <div className="callout">Google Drive OAuth、多個帳號的圖形化管理及背景 Daemon 尚未納入這個 MVP，不會假裝已連線。</div>
+          <div className="callout">背景 Daemon 與 Google Drive 雙向同步尚未提供。Google Drive 的登入與上傳使用獨立 OAuth 授權。</div>
+        </Card>
+        <Card className="panel">
+          <h2>Google Drive 帳號設定</h2>
+          <p className="hint">首次使用請在 Google Cloud 建立 Desktop OAuth Client、啟用 Drive API，並在同意畫面設定 drive.file、openid 與 email 權限。OAuth 憑證僅儲存在本機 Host，不存入 Chrome Storage。</p>
+          <p className="hint">狀態：{driveConfigured ? "已設定 OAuth Client" : "尚未設定 OAuth Client"}</p>
+          <label>Google Desktop OAuth Client ID
+            <Input value={oauthClientId} onChange={event => setOauthClientId(event.target.value)}
+              placeholder="123456789-xxx.apps.googleusercontent.com" />
+          </label>
+          <label>Desktop Client Secret（若 Google 要求，選填）
+            <Input type="password" value={oauthClientSecret}
+              onChange={event => setOauthClientSecret(event.target.value)}
+              placeholder="僅傳至本地 Host，不儲存在擴充功能設定" />
+          </label>
+          <Button variant="outline" className="secondary" disabled={storageBusy || !oauthClientId.trim()}
+            onClick={() => void configureDrive()}>儲存 OAuth 設定到本機</Button>
+          <div className="actions">
+            <Button variant="outline" className="secondary" disabled={storageBusy || !driveConfigured}
+              onClick={() => void connectDrive()}>連結 Google 帳號</Button>
+          </div>
+          {driveAccounts.map(account => <p className="hint" key={account.id}>已連線：{account.email}</p>)}
         </Card>
       </main>}
 

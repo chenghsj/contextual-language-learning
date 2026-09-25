@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import type { DuplicateMatch, GenerationRequest, LearningDocument } from "@immersive/core";
 import { settingsKey, sourceKey, transcriptKey } from "../duplicates";
 import { accessTokenFor, listGoogleAccounts } from "./oauth";
@@ -17,10 +17,10 @@ const FOLDER_TYPE = "application/vnd.google-apps.folder";
 const FOLDER_NAME = "Immersive Learning";
 
 async function googleFetch(accountId: string, url: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", "Bearer " + await accessTokenFor(accountId));
   const response = await fetch(url, {
-    ...init,
-    headers: { Authorization: "Bearer " + await accessTokenFor(accountId), ...init.headers },
-    signal: init.signal ?? AbortSignal.timeout(45_000),
+    ...init, headers, signal: init.signal ?? AbortSignal.timeout(45_000),
   });
   if (!response.ok) throw new Error("Google Drive request failed (HTTP " + response.status + "); check account permissions or reconnect");
   return response;
@@ -118,10 +118,10 @@ export async function findDriveDuplicates(request: GenerationRequest): Promise<D
   const account = accounts.find(item => item.id === accountId);
   if (!account) throw new Error("請先連線所選的 Google Drive 帳號");
   const key = sourceKey(request.source, request.cues);
+  const transcript = transcriptKey(request.cues);
   const files = await listFiles(accountId,
-    propertyMatch("immersiveSourceKey", key) +
-      " and " + propertyMatch("immersiveFormatKey", "a".repeat(64)).replace(
-        " and " + propertyMatch("immersiveFormatKey", "a".repeat(64)), ""),
+    "(" + propertyMatch("immersiveSourceKey", key) + " or " +
+      propertyMatch("immersiveTranscriptKey", transcript) + ") and trashed = false",
     "id,name,createdTime,webViewLink,appProperties", 100);
   const expected = settingsKey(request);
   return files.filter(file => file.appProperties?.immersiveFormat === "json")
@@ -151,7 +151,7 @@ export async function publishDriveDocument(accountId: string, document: Learning
     const found = await listFiles(accountId,
       "trashed = false and " + propertyMatch("immersiveDocumentKey",
         // Hash document ID so all query values have a simple, safely escaped alphabet.
-        (await import("node:crypto")).createHash("sha256").update(document.id).digest("hex")),
+        createHash("sha256").update(document.id).digest("hex")),
       "id,name,webViewLink,appProperties", 30);
     const existing = found.find(file => file.appProperties?.immersiveFormat === format);
     const name = "Immersive-" + document.id + "." + format;
@@ -159,7 +159,7 @@ export async function publishDriveDocument(accountId: string, document: Learning
       format === "json" ? "application/json" : "text/markdown",
       Buffer.from(format === "json" ? JSON.stringify(document, null, 2) + "\n" : markdown, "utf8"),
       { ...properties, immersiveFormat: format,
-        immersiveDocumentKey: (await import("node:crypto")).createHash("sha256").update(document.id).digest("hex") });
+        immersiveDocumentKey: createHash("sha256").update(document.id).digest("hex") });
     if (format === "json") jsonUrl = file.webViewLink ??
       "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view";
   }
