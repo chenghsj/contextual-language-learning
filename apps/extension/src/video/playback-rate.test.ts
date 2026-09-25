@@ -49,7 +49,7 @@ test("playback rate errors propagate to the reader instead of falsely reporting 
       },
     } as unknown as typeof chrome;
     await assert.rejects(
-      youtubeAdapter.setPlaybackRate?.(youtubeUrl, 0.75),
+      youtubeAdapter.setPlaybackRate!(youtubeUrl, 0.75),
       /The player rejected this speed/,
     );
   } finally {
