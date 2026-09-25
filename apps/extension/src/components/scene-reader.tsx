@@ -117,13 +117,17 @@ export function SceneReader({
   }, [mode, sourceUrl, adapter]);
 
   function selectScene(index: number): void {
-    if (!Number.isInteger(index) || index < 0 || index >= document.sections.length ||
-      index === sceneIndex) return;
+    if (busy || !Number.isInteger(index) || index < 0 ||
+      index >= document.sections.length || index === sceneIndex) return;
     // Stop any loop owned by the previous scene so it cannot keep repeating
     // an unrelated line after navigation. This does not seek the video.
     if (loopingSceneId && sourceUrl && adapter.stopLoop) {
-      void adapter.stopLoop(sourceUrl).catch(error =>
-        onError(error instanceof Error ? error.message : c.unavailable));
+      // Keep new playback disabled until the old scene's loop is cancelled.
+      // Otherwise the late stop response could cancel the new scene's playback.
+      setBusy(true);
+      void adapter.stopLoop(sourceUrl)
+        .catch(error => onError(error instanceof Error ? error.message : c.unavailable))
+        .finally(() => setBusy(false));
       setLoopingSceneId(null);
     }
     setSceneIndex(index);
@@ -287,7 +291,7 @@ export function SceneReader({
         </div>
         <div className="scenePicker">
           <label htmlFor="study-scene-picker">{c.chooseScene}</label>
-          <Select id="study-scene-picker" value={String(sceneIndex)}
+          <Select id="study-scene-picker" value={String(sceneIndex)} disabled={busy}
             onChange={event => selectScene(Number(event.target.value))}>
             {document.sections.map((item, index) => (
               <option key={item.id} value={index}>
@@ -392,10 +396,11 @@ export function SceneReader({
           </Button>
         </div>
         <nav className="sceneNavigation" aria-label={c.sceneNavigation}>
-          <Button variant="outline" size="sm" disabled={sceneIndex === 0}
+          <Button variant="outline" size="sm" disabled={busy || sceneIndex === 0}
             onClick={() => selectScene(sceneIndex - 1)}>{c.previousScene}</Button>
           <span className="sceneNavPosition">{sceneIndex + 1} / {document.sections.length}</span>
-          <Button variant="outline" size="sm" disabled={sceneIndex === document.sections.length - 1}
+          <Button variant="outline" size="sm"
+            disabled={busy || sceneIndex === document.sections.length - 1}
             onClick={() => selectScene(sceneIndex + 1)}>{c.nextScene}</Button>
         </nav>
       </Card>
@@ -446,7 +451,8 @@ export function SceneReader({
           {focusLoopActive ? c.stopLoop : c.repeatFocus}
         </Button>
         <Button size="sm" variant="outline" className="sceneMiniSettingsToggle"
-          aria-expanded={playbackSettingsOpen} aria-controls="scene-playback-options"
+          aria-expanded={playbackSettingsOpen}
+          aria-controls={playbackSettingsOpen ? "scene-playback-options" : undefined}
           onClick={() => setPlaybackSettingsOpen(open => !open)}>
           <SlidersHorizontal aria-hidden="true" />{c.playbackOptions}
         </Button>
