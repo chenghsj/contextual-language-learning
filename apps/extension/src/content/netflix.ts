@@ -1,5 +1,5 @@
 import {
-  NETFLIX_SEEK_GRACE_MS, isManagedNetflixSeek,
+  NETFLIX_SEEK_GRACE_MS, NETFLIX_SEEK_TOLERANCE_MS, isManagedNetflixSeek,
   reachedNetflixSeekTarget, netflixLoopReachedEnd,
 } from "../video/netflix-loop-timing";
 
@@ -115,17 +115,21 @@ import {
     const state = current;
     if (!state) return;
     // Netflix may pause internally while a programmatic seek is still loading.
-    if (state.managedPause ||
+    if (state.managedPause || Date.now() <= state.playbackGraceUntil ||
       isManagedNetflixSeek(state.expectedSeekTarget, state.expectedSeekUntil, Date.now())) return;
     clearLoop();
   }
 
-  function onSeeking(): void {
+  function onSeeking(event: Event): void {
     const state = current;
     if (!state) return;
-    // 'seeking' fires BEFORE currentTime necessarily reaches our requested
-    // target. Compare after 'seeked' instead; otherwise every loop self-cancels.
-    if (isManagedNetflixSeek(state.expectedSeekTarget, state.expectedSeekUntil, Date.now())) return;
+    // A native seek may produce more than one seeking/seeked pair while the
+    // player settles. Ignore a near-target follow-up inside the grace window.
+    const video = event.currentTarget as HTMLVideoElement;
+    const now = Date.now();
+    if (isManagedNetflixSeek(state.expectedSeekTarget, state.expectedSeekUntil, now) ||
+      (now <= state.playbackGraceUntil &&
+        Math.abs(video.currentTime * 1000 - state.startMs) <= NETFLIX_SEEK_TOLERANCE_MS)) return;
     clearLoop(); // A user scrub or another extension overrides this loop.
   }
 
