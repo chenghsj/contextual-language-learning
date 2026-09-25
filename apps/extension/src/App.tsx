@@ -68,6 +68,7 @@ export default function App() {
   const [subtitleStatus, setSubtitleStatus] = useState("");
   const [title, setTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
+  const [activeVideo, setActiveVideo] = useState<{ url: string; title: string } | null>(null);
   const [browserLocale] = useState(getBrowserLocale);
   const [localePreference, setLocalePreference] = useState<LocalePreference>("auto");
   const [themePreference, setThemePreference] = useState<ThemePreference>("system");
@@ -127,6 +128,7 @@ export default function App() {
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
   const platform = getVideoAdapter(sourceUrl).id;
+  const subtitlePlatform = getVideoAdapter(activeVideo?.url).id;
   const readerAdapter = getVideoAdapter(document?.source.url);
   const selectedAgentInfo = agentCatalog.find(entry => entry.id === agent.provider);
   const selectedSavedProfile = savedAgentProfiles.find(profile =>
@@ -160,15 +162,35 @@ export default function App() {
       setHydrated(true);
     }).catch(() => setHydrated(true));
     void refreshDriveAccounts();
-    void chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
-      const tab = tabs[0];
-      if (tab?.url && getVideoAdapter(tab.url).id !== "import") {
-        setSourceUrl(tab.url);
-        setTitle((tab.title ?? "Video").slice(0, 200));
-      }
-    });
-    return () => { portRef.current?.disconnect(); preflightPortRef.current?.disconnect(); };
+    // The Side Panel stays mounted across navigation; follow the selected tab.
+    const syncActiveTab = () => {
+      void chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
+        const tab = tabs[0];
+        setActiveVideo(tab?.url && getVideoAdapter(tab.url).id !== "import"
+          ? { url: tab.url, title: tab.title ?? "Video" } : null);
+      }).catch(() => setActiveVideo(null));
+    };
+    const onActivated = () => syncActiveTab();
+    const onUpdated = (_tabId: number, change: chrome.tabs.TabChangeInfo) => {
+      if (change.url || change.status === "complete") syncActiveTab();
+    };
+    chrome.tabs.onActivated.addListener(onActivated);
+    chrome.tabs.onUpdated.addListener(onUpdated);
+    syncActiveTab();
+    return () => {
+      chrome.tabs.onActivated.removeListener(onActivated);
+      chrome.tabs.onUpdated.removeListener(onUpdated);
+      portRef.current?.disconnect();
+      preflightPortRef.current?.disconnect();
+    };
   }, []);
+
+  useEffect(() => {
+    if (!activeVideo || raw.trim()) return;
+    setSourceUrl(activeVideo.url);
+    const nextTitle = activeVideo.title.replace(/\\s*-\\s*(?:Netflix|YouTube)\\s*$/i, "").trim();
+    if (nextTitle && !["Netflix", "YouTube"].includes(nextTitle)) setTitle(nextTitle.slice(0, 200));
+  }, [activeVideo?.url, activeVideo?.title, raw]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -659,8 +681,8 @@ export default function App() {
       setRaw(fetched.text);
       setFileName("");
       setSourceUrl(url);
-      const videoTitle = (tab?.title ?? "").replace(/\s*-\s*Netflix\s*$/i, "").trim();
-      if (videoTitle && videoTitle !== "Netflix") setTitle(videoTitle.slice(0, 200));
+      const videoTitle = (tab?.title ?? "").replace(/\s*-\s*(?:Netflix|YouTube)\s*$/i, "").trim();
+      if (videoTitle && !["Netflix", "YouTube"].includes(videoTitle)) setTitle(videoTitle.slice(0, 200));
       setSubtitleStatus(subtitleMessage(subtitleUi.success, {
         count: parsed.length, language: fetched.language,
       }));
@@ -791,7 +813,7 @@ export default function App() {
       {page === "create" && <main>
         <Card className="panel">
           <h2>{t("subtitleHeading")}</h2>
-          {platform === "netflix" && <>
+          {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
             <p className="hint">{subtitleUi.hint}</p>
             <Button disabled={subtitleBusy || checking || generating}
               onClick={() => void fetchCurrentSubtitles()}>
@@ -799,8 +821,8 @@ export default function App() {
             </Button>
             {subtitleStatus && <p className="hint" role="status">{subtitleStatus}</p>}
           </>}
-          {platform !== "netflix" && <p className="hint">{t("subtitleHint")}</p>}
-          <details open={platform !== "netflix"}>
+          {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className="hint">{t("subtitleHint")}</p>}
+          <details open={subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube"}>
             <summary>{subtitleUi.manual}</summary>
             <label>{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
             {fileName && <p className="hint">{t("importedFile", { name: fileName })}</p>}
