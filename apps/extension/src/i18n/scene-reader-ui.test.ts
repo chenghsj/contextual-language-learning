@@ -92,3 +92,37 @@ test("scene switching, completion and step progression have separate handlers an
   assert.match(css, /\.sceneSteps button \{[^}]*min-height: 66px/);
   assert.match(css, /\.sceneNavigation \{[\s\S]*?grid-template-columns:/);
 });
+
+test("collapsed mini player exposes compact playback and an accessible settings toggle in every locale", () => {
+  for (const locale of Object.keys(messages) as UiLocale[]) {
+    const copy = sceneReaderMessages[locale];
+    const markup = renderReader(locale);
+    assert.match(markup, /class="[^"]*scenePlayer[^"]*"/);
+    assert.match(markup, /class="miniPlayerActions"/);
+    assert.match(markup, /aria-expanded="false"/);
+    assert.match(markup, /aria-controls="mini-player-settings"/);
+    assert.ok(markup.includes(copy.playScene), locale + ": play scene");
+    assert.ok(markup.includes(copy.repeatFocus), locale + ": loop focus line");
+    assert.ok(markup.includes(copy.showPlayerSettings), locale + ": open settings");
+    assert.doesNotMatch(markup, /class="miniPlayerSettings"/);
+    assert.doesNotMatch(markup, /id="mini-player-settings"/);
+  }
+});
+
+test("expanded mini-player contains repeat count, loop delay and supported playback speed", async () => {
+  const source = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(source, /\{playerExpanded && <div className="miniPlayerSettings" id="mini-player-settings">/);
+  assert.match(source, /className="miniPlayerSettingsGrid"/);
+  assert.match(source, /\{c\.repeat\}/);
+  assert.match(source, /\{c\.delay\}/);
+  assert.match(source, /\{adapter\.setPlaybackRate && <label>\{c\.speed\}/);
+  assert.match(source, /onChange=\{event => setRepeat\(event\.target\.value as Repeat\)\}/);
+  assert.match(source, /onChange=\{event => setDelay\(Number\(event\.target\.value\)\)\}/);
+  assert.match(source, /onChange=\{event => void changeRate\(Number\(event\.target\.value\)\)\}/);
+  assert.match(source, /onClick=\{\(\) => setPlayerExpanded\(value => !value\)\}/);
+  assert.match(source, /loopingSceneId === null\s*\? playFocus\(selectedFocusCue\) : stopLoop\(\)/);
+  assert.match(css, /\.miniPlayerActions \{[^}]*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.miniPlayerSettingsGrid \{[^}]*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.doesNotMatch(source, /className="scenePlaybackSettings"/);
+});
