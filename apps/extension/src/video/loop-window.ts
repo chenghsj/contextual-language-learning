@@ -28,7 +28,7 @@ export function readLoopWindows(value: unknown, cueIds: readonly string[]): Reco
 export function adjustLoopBoundary(
   original: LoopWindow, boundary: LoopBoundary, positionMs: number,
 ): LoopWindow | null {
-  if (!isLoopWindow(original) || !Number.isFinite(positionMs)) return null;
+  if (!isLoopWindow(original) || !Number.isFinite(positionMs) || positionMs < 0) return null;
   const ms = Math.round(positionMs / 100) * 100;
   const next = boundary === "start"
     ? { ...original, startMs: ms }
