@@ -127,6 +127,7 @@ export default function App() {
   const portRef = useRef<chrome.runtime.Port | null>(null);
   const preflightPortRef = useRef<chrome.runtime.Port | null>(null);
   const requestRef = useRef<string | null>(null);
+  const lastSelectedVideoKeyRef = useRef<string | null>(null);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
   const platform = getVideoAdapter(sourceUrl).id;
@@ -212,6 +213,18 @@ export default function App() {
     const nextTitle = activeVideo.title.replace(/\s*-\s*(?:Netflix|YouTube)\s*$/i, "").trim();
     if (nextTitle && !["Netflix", "YouTube"].includes(nextTitle)) setTitle(nextTitle.slice(0, 200));
   }, [activeVideo?.url, activeVideo?.title, raw]);
+
+  // An error from YouTube must not remain visible after switching to Netflix
+  // (or a different video). Leave ongoing generation errors untouched otherwise.
+  useEffect(() => {
+    const adapter = getVideoAdapter(activeVideo?.url);
+    const key = activeVideo?.url && adapter.id !== "import"
+      ? adapter.id + ":" + adapter.getVideoId(activeVideo.url) : null;
+    if (key === lastSelectedVideoKeyRef.current) return;
+    lastSelectedVideoKeyRef.current = key;
+    setError("");
+    setSubtitleStatus("");
+  }, [activeVideo?.url]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -690,7 +703,15 @@ export default function App() {
     try {
       const selected = await getActiveWindowTab();
       const selectedUrl = selected?.url ?? "";
-      const url = getVideoAdapter(selectedUrl).fetchSubtitles ? selectedUrl : sourceUrl.trim();
+      const currentAdapter = getVideoAdapter(selectedUrl);
+      const formUrl = sourceUrl.trim();
+      const formAdapter = getVideoAdapter(formUrl);
+      if (currentAdapter.fetchSubtitles && formAdapter.fetchSubtitles &&
+        (currentAdapter.id !== formAdapter.id ||
+          currentAdapter.getVideoId(selectedUrl) !== formAdapter.getVideoId(formUrl))) {
+        throw new Error(subtitleUi.sourceMismatch);
+      }
+      const url = currentAdapter.fetchSubtitles ? selectedUrl : formUrl;
       const adapter = getVideoAdapter(url);
       if (!adapter.fetchSubtitles) throw new Error(subtitleUi.unavailable);
       // Revalidate against a real, matching watch tab even when using the form URL

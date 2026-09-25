@@ -58,7 +58,7 @@ function onTimeUpdate(): void {
 }
 
 type CaptionResponse = {
-  source: "immersive-learning"; id: string; ok: boolean;
+  source: "immersive-learning"; id: string; ok: boolean; bridgeVersion?: string;
   text?: string; language?: string; error?: string;
 };
 
@@ -93,6 +93,10 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
       return;
     }
     void requestYouTubeCaptions(message.videoId, message.language).then(result => {
+      if (result.bridgeVersion !== "native-caption-capture-v1") {
+        respond({ ok: false, error: "The YouTube page has an outdated caption reader. Rebuild the extension and reload this video tab before retrying." });
+        return;
+      }
       respond(result.ok && result.text && result.text.length <= 3_000_000 &&
         typeof result.language === "string"
         ? { ok: true, text: result.text, language: result.language }

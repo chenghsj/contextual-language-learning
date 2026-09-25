@@ -140,3 +140,55 @@ export function youtubeTimedTextToVtt(input: string): string {
   if (body.startsWith("<")) return youtubeXmlToVtt(body);
   throw new Error("YouTube did not return a readable subtitle document.");
 }
+
+/**
+ * Reuse only caption URLs exposed to the currently playing video's browser
+ * session. Resource Timing may contain a player-generated session token;
+ * never log, persist or send these URLs outside the current watch page.
+ */
+export function observedYouTubeCaptionUrls(
+  resources: readonly string[], videoId: string, language: string,
+): string[] {
+  const matches: { url: string; session: boolean }[] = [];
+  const seen = new Set<string>();
+  const wanted = language.toLowerCase();
+  for (const raw of resources.slice(-2_000).reverse()) {
+    let url: URL;
+    try { url = allowedYouTubeCaptionUrl(raw, videoId); } catch { continue; }
+    if (url.searchParams.get("v") !== videoId) continue;
+    const actualLanguage = (url.searchParams.get("tlang") ??
+      url.searchParams.get("lang") ?? "").toLowerCase();
+    if (actualLanguage !== wanted && !actualLanguage.startsWith(wanted + "-")) continue;
+    const address = url.toString();
+    if (seen.has(address)) continue;
+    seen.add(address);
+    matches.push({ url: address, session: url.searchParams.has("pot") });
+    if (matches.length >= 10) break;
+  }
+  return [
+    ...matches.filter(entry => entry.session),
+    ...matches.filter(entry => !entry.session),
+  ].map(entry => entry.url);
+}
+
+/** Accept only a readable body observed on the active player's timedtext request. */
+export function parsePlayerYouTubeCaptionResponse(
+  rawUrl: string, body: string, videoId: string,
+): { videoId: string; language: string; kind: "asr" | "manual"; text: string } | null {
+  if (!body.trim() || body.length > 3_000_000) return null;
+  let url: URL;
+  try { url = allowedYouTubeCaptionUrl(new URL(rawUrl, "https://www.youtube.com/").toString(), videoId); }
+  catch { return null; }
+  if (url.searchParams.get("v") !== videoId || url.searchParams.has("tlang")) return null;
+  const language = (url.searchParams.get("lang") ?? "").toLowerCase();
+  if (!/^[a-z]{2,3}(?:-[a-z0-9]+)*$/.test(language)) return null;
+  try {
+    const text = youtubeTimedTextToVtt(body);
+    if (text.length > 3_000_000 || !text.includes("-->")) return null;
+    return {
+      videoId, language,
+      kind: url.searchParams.get("caps") === "asr" ? "asr" : "manual",
+      text,
+    };
+  } catch { return null; }
+}
