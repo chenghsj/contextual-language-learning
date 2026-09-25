@@ -103,3 +103,25 @@ test("level help follows the selected learning language in every interface local
   assert.match(app, /explanation=\{levelHint\(settingsCopy, profile\.targetLanguage\)\}/);
   assert.match(app, /targetLanguage, level: targetLanguage === "en" \? "B1" : targetLanguage === "ja" \? "N4" : "2"/);
 });
+
+test("each interface locale declares exactly one levelHints block in its own language", async () => {
+  const source = await readFile(new URL("./learning-settings.ts", import.meta.url), "utf8");
+  const headers = [...source.matchAll(/^  "(en|zh-TW|zh-CN|ja|ko)": \{$/gm)];
+  assert.deepEqual(headers.map(match => match[1]), ["en", "zh-TW", "zh-CN", "ja", "ko"]);
+  const localeStarts = {
+    en: "English uses",
+    "zh-TW": "英文使用",
+    "zh-CN": "英语使用",
+    ja: "英語は",
+    ko: "영어는",
+  };
+  for (let index = 0; index < headers.length; index++) {
+    const locale = headers[index][1] as UiLocale;
+    const section = source.slice(headers[index].index,
+      headers[index + 1]?.index ?? source.indexOf("\n};", headers[index].index));
+    assert.equal([...section.matchAll(/^    "levelHints": \{/gm)].length, 1,
+      locale + " must declare levelHints exactly once");
+    assert.ok(learningSettingsCopy[locale].levelHints.en.startsWith(localeStarts[locale]),
+      locale + " must use its own localized level explanation");
+  }
+});
