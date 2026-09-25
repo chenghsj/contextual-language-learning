@@ -138,10 +138,14 @@ export function youtubeJson3ToVtt(input: string): string {
       typeof (next as Record<string, unknown>).tStartMs === "number" &&
       Number.isFinite((next as { tStartMs: number }).tStartMs) &&
       (next as { tStartMs: number }).tStartMs > eventStartMs) as { tStartMs: number } | undefined;
+    const latestTimedOffset = pieces.reduce((latest, piece) =>
+      piece.text.trim() && piece.offsetMs !== null && piece.offsetMs >= 0
+        ? Math.max(latest, piece.offsetMs) : latest, 0);
     const duration = typeof event.dDurationMs === "number" &&
       Number.isFinite(event.dDurationMs) && event.dDurationMs > 0
       ? event.dDurationMs
-      : nextStartMs ? Math.min(20_000, nextStartMs.tStartMs - event.tStartMs) : 2_000;
+      : nextStartMs ? Math.min(20_000, nextStartMs.tStartMs - event.tStartMs)
+        : Math.min(20_000, Math.max(2_000, latestTimedOffset + 2_000));
     const endMs = event.tStartMs + duration;
     const segmented = splitTimedCaption(pieces, event.tStartMs, endMs);
     const intervals = segmented.length
