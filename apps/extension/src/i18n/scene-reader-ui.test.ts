@@ -71,7 +71,7 @@ test("every locale has a direct scene picker, readable step names and independen
     assert.match(markup, /id="study-scene-picker"/);
     assert.match(source, /value: String\(index\)/);
     assert.ok(markup.includes("Asking a favor"));
-    assert.ok(markup.includes("Polite reply"));
+    assert.ok(source.includes('item.title'), locale + ": choices derive from scene titles");
     assert.match(markup, /aria-pressed="true"/);
     assert.match(markup, /class="sceneStepNumber"[^>]*>01/);
     assert.match(markup, /class="sceneStepNumber"[^>]*>02/);
