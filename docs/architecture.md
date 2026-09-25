@@ -23,7 +23,7 @@ Existing platform modules:
 
 - apps/extension/src/video/youtube.ts — timestamp links, opt-in looping.
 - apps/extension/src/video/netflix.ts — opt-in diagnose, seek and loop through its **undocumented** internal player API, which may stop working.
-- apps/extension/src/video/tab.ts — shared tab resolution by video ID and messaging.
+- apps/extension/src/video/tab.ts — shared tab resolution by exact video ID and messaging. A matching active tab in the current window takes precedence; ambiguous duplicate tabs fail rather than controlling an arbitrary player. The reader's open/switch action reuses an existing matching video before opening another tab.
 - apps/extension/src/content/* — platform-specific browser scripts, isolated from the reader.
 
 **To add HBO Max, Apple TV+ or another service:** implement an adapter (even if its only capability is identification and opening the video), register it in video/index.ts, add its exact domains to the Chrome extension manifest and, **only when necessary**, add content scripts and build entries in Vite. Add tests for URL matching, capabilities and playback failure. Browser permissions and content-script injection require manifest/build registration; the Adapter registry does not grant arbitrary sites runtime access.

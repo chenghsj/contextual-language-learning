@@ -14,6 +14,10 @@ Automated CI covers TypeScript, unit tests, extension packaging and Native Messa
 
 1. Use content you are licensed to watch, and separately supply subtitles you are authorized to process.
 2. Open the matching Netflix /watch/ video and diagnose the player. Confirm failure is reported when the undocumented API is unavailable.
+   - Click **開啟／切換到影片** while that video is already open: the existing tab should be selected and no new tab created.
+   - Open two tabs with the same watch ID. Select one in the current window and confirm diagnose/seek/rate/loop target **that** tab, not the first result from Chrome's tab list.
+   - With duplicate tabs active in different windows and neither selected in the current window, the extension should refuse ambiguous commands and ask you to select the intended tab; it must not close or open additional tabs.
+   - If the extension is installed after the tab is already open, reload the existing tab before checking the player.
 3. Test explicit seek, loop and playback speeds 0.75×, 1× and 1.5×. Confirm the UI never claims an unsupported speed succeeded.
 4. During a loop, manually pause/seek and confirm it stops. Navigate away and confirm the loop timer stops. Test with netflix-shortcut-override enabled if both extensions may be installed.
 5. If Netflix overrides playbackRate or changes its player internals, document and handle the error; do not scrape protected streams or force compatibility by bypassing playback protections.
