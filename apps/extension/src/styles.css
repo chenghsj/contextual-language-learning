@@ -84,3 +84,20 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 :root[data-theme="dark"] .chip { border-color: #416c4c; background: #233e2a; color: #bee8c6; }
 :root[data-theme="dark"] .alert { border-color: #844337; background: #3b221f; color: #f5c1b4; }
 :root[data-theme="dark"] .status { border-color: #426b86; background: #203747; color: #cbe6f5; }
+
+/* Narrow Chrome Side Panels must not be widened by long episode titles, paths,
+   agent messages or untranslated subtitle text. Break content rather than clip
+   it; preserve scrolling for actual preformatted blocks. */
+.panel, .callout, .learningCard, .status, .alert, .cue, .lesson {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.panel :is(h1, h2, h3, p, strong, span, li),
+.callout > *, .learningCard > *, .alert > *, .cue > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.actions > * { min-width: 0; max-width: 100%; }
+.panel :is(pre, code) { max-width: 100%; overflow-x: auto; }
