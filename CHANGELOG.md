@@ -4,6 +4,8 @@ Notable user-facing changes to Immersive Language Learning are recorded here. Ve
 
 ## [Unreleased]
 
+- Route user-initiated Netflix subtitle document requests through the extension worker with restricted Netflix delivery-domain permissions, bounded responses and explicit network/permission errors. Existing playback-session and subtitle-track checks still apply.
+
 - Add a one-click Netflix caption action for readable subtitle tracks in the active watch session, retaining original timestamps and treating manual imports as a fallback. Netflix compatibility remains experimental and requires live account testing.
 
 - Fix AGY 1.2.11 model discovery when its model table is emitted on stderr or uses nonbreaking-space columns; keep the CLI model IDs for generation.
