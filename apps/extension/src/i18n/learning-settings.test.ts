@@ -10,7 +10,7 @@ import { SettingInfo } from "../components/setting-info";
 
 const fields: LearningSettingKey[] = [
   "targetLanguage", "level", "instructionLanguage",
-  "teachingMode", "vocabLimit", "exerciseCount",
+  "teachingMode", "sceneCount", "vocabLimit", "exerciseCount",
 ];
 const levels = {
   en: ["A1", "A2", "B1", "B2", "C1", "C2"],

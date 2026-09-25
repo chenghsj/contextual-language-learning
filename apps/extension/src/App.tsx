@@ -39,7 +39,7 @@ type RepeatOption = "2" | "3" | "5" | "infinite";
 
 const DEFAULT_PROFILE: LearningProfile = {
   targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-  mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3,
+  mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3, sceneCount: 4,
 };
 const DEFAULT_AGENT: AgentSettings = { provider: "claude", modelId: "" };
 
@@ -164,7 +164,7 @@ export default function App() {
 
   useEffect(() => {
     void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference"]).then(saved => {
-      if (saved.profile) setProfile(saved.profile as LearningProfile);
+      if (saved.profile) setProfile({ ...DEFAULT_PROFILE, instructionLanguage: browserLocale, ...(saved.profile as Partial<LearningProfile>) });
       if (isLocalePreference(saved.uiLocalePreference)) setLocalePreference(saved.uiLocalePreference);
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
       if (saved.agent) setAgent(saved.agent as AgentSettings);
@@ -1141,6 +1141,8 @@ export default function App() {
               <option value="zh-TW">{nativeLanguageName("zh-TW")}</option><option value="zh-CN">{nativeLanguageName("zh-CN")}</option><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option>
             </Select>
           </div>
+          <details className="advancedLessonSettings">
+            <summary>{t("advancedLessonSettings")}</summary>
           <div className="settingField">
             <div className="settingHeading">
               <label htmlFor="learning-mode">{t("teachingMode")}</label>
@@ -1156,6 +1158,18 @@ export default function App() {
               <option value="guided">{settingsCopy.modes.guided.label}</option>
               <option value="immersive">{settingsCopy.modes.immersive.label}</option>
             </Select>
+          </div>
+          </details>
+          <div className="settingField">
+            <div className="settingHeading">
+              <label htmlFor="learning-scenes">{t("sceneCount")}</label>
+              <SettingInfo label={t("sceneCount")} infoLabel={settingsCopy.infoLabel}
+                explanation={settingsCopy.fieldHints.sceneCount} />
+            </div>
+            <Input id="learning-scenes" type="number" min={1} max={6}
+              value={profile.sceneCount} onChange={event => setProfile(current => ({
+                ...current, sceneCount: Number(event.target.value),
+              }))} />
           </div>
           <div className="twoColumns">
             <div className="settingField">
