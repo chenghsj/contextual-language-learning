@@ -1,5 +1,19 @@
 import type { VideoAdapter } from "./types";
 
+// Start slightly before the subtitle's timestamp so the listener hears the
+// beginning of the utterance, and leave a small tail for inaccurate end times.
+export const CUE_LEAD_IN_MS = 2_000;
+export const CUE_TAIL_MS = 400;
+export function cuePlaybackStart(startMs: number): number {
+  if (!Number.isFinite(startMs) || startMs < 0) throw new Error("Invalid subtitle start time.");
+  return Math.max(0, Math.round(startMs) - CUE_LEAD_IN_MS);
+}
+export function cuePlaybackWindow(startMs: number, endMs: number): { startMs: number; endMs: number } {
+  if (!Number.isFinite(endMs) || endMs <= startMs) throw new Error("Invalid subtitle end time.");
+  return { startMs: cuePlaybackStart(startMs), endMs: Math.round(endMs) + CUE_TAIL_MS };
+}
+
+
 /** Resolve the browser window hosting the Side Panel instead of relying on an
  * extension page's potentially stale currentWindow query. */
 export async function getActiveWindowTab(): Promise<chrome.tabs.Tab | null> {

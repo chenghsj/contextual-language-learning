@@ -15,7 +15,7 @@ test("resolves registered platforms using a validated video identity", () => {
 
 test("capabilities derive from the adapter, not from platform conditionals in the reader", () => {
   assert.equal(supports(getVideoAdapter(yt), "timestampLink"), true);
-  assert.equal(supports(getVideoAdapter(yt), "seek"), false);
+  assert.equal(supports(getVideoAdapter(yt), "seek"), true);
   assert.equal(supports(getVideoAdapter(nf), "seek"), true);
   assert.equal(supports(getVideoAdapter(nf), "loop"), true);
   assert.equal(supports(getVideoAdapter(""), "loop"), false);

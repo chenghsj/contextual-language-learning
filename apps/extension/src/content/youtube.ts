@@ -1,6 +1,7 @@
 type LoopMessage =
   | { type: "LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
   | { type: "LOOP_CLEAR" }
+  | { type: "YOUTUBE_SEEK"; timeMs: number }
   | { type: "PLAYBACK_RATE_SET"; rate: number }
   | { type: "YOUTUBE_SUBTITLES_GET"; videoId: string; language: "en" | "ja" | "ko" };
 
@@ -104,6 +105,27 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
     }).catch(error => {
       respond({ ok: false, error: error instanceof Error ? error.message : "YouTube subtitles are unavailable." });
     });
+    return true;
+  }
+  if (message.type === "YOUTUBE_SEEK") {
+    if (!Number.isInteger(message.timeMs) || message.timeMs < 0 || message.timeMs > 43_200_000) {
+      respond({ ok: false, error: "Invalid video timestamp." });
+      return;
+    }
+    const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
+      document.querySelector<HTMLVideoElement>("video");
+    if (!video) {
+      respond({ ok: false, error: "YouTube player is not ready. Start the video and retry." });
+      return;
+    }
+    clearLoop();
+    try {
+      video.currentTime = message.timeMs / 1000;
+      void video.play().then(() => respond({ ok: true })).catch(() =>
+        respond({ ok: false, error: "Video was positioned, but YouTube blocked playback. Press Play in the existing video tab." }));
+    } catch {
+      respond({ ok: false, error: "YouTube could not seek to the subtitle timestamp." });
+    }
     return true;
   }
   if (message.type === "PLAYBACK_RATE_SET") {
