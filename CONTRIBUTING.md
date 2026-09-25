@@ -10,6 +10,7 @@ Requirements: Node.js 22+, pnpm 9, Chromium-based browser. The Native Messaging 
 git clone https://github.com/chenghsj/immersive-language-learning.git
 cd immersive-language-learning
 corepack enable
+corepack prepare pnpm@9.15.4 --activate
 pnpm install
 pnpm typecheck
 pnpm test
@@ -17,7 +18,7 @@ pnpm build
 pnpm package:release
 ~~~
 
-Use the feature branch while the initial MVP pull request is open. The Extension is in apps/extension, Host in apps/local-host, and shared schemas and subtitle utilities in packages/core. Load apps/extension/dist with chrome://extensions > Developer mode > Load unpacked. See README for the macOS Host installer. Do not commit generated dist/, release-assets/, credentials, OAuth tokens, downloaded videos or imported subtitles.
+Use a branch based on current `main` for each contribution. npm/yarn installs are blocked by `preinstall` because this is a pnpm workspace. The Extension is in apps/extension, Host in apps/local-host, and shared schemas and subtitle utilities in packages/core. Load apps/extension/dist with chrome://extensions > Developer mode > Load unpacked. See README for the macOS Host installer. Do not commit generated dist/, release-assets/, npm/yarn lockfiles, credentials, OAuth tokens, downloaded videos or imported subtitles.
 
 ## Before opening an issue
 
