@@ -12,7 +12,9 @@
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
-    "https://m.youtube.com/*"
+    "https://m.youtube.com/*",
+    "https://www.netflix.com/*",
+    "https://netflix.com/*"
   ],
   "action": {
     "default_title": "Open Immersive Learning"
@@ -32,6 +34,27 @@
       ],
       "js": [
         "youtube.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.netflix.com/*",
+        "https://netflix.com/*"
+      ],
+      "js": [
+        "netflix-page.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://www.netflix.com/*",
+        "https://netflix.com/*"
+      ],
+      "js": [
+        "netflix.js"
       ],
       "run_at": "document_idle"
     }

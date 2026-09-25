@@ -2,7 +2,7 @@
 
 A local-first Chrome side-panel extension that turns **subtitles you have permission to use** into structured, level-appropriate language lessons using your locally installed CLI agent.
 
-> MVP status: the working implementation covers subtitle import, three CLI adapters, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Google Drive, automatic Netflix subtitle retrieval, Netflix automated seeking, graphical multi-account login, and a durable background daemon are **not implemented**.
+> MVP status: the working implementation covers subtitle import, three CLI adapters, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Google Drive, automatic Netflix subtitle retrieval, graphical multi-account login, and a durable background daemon are **not implemented**.
 
 ## Features
 
@@ -13,7 +13,7 @@ A local-first Chrome side-panel extension that turns **subtitles you have permis
 - Native Messaging bridge to a macOS host; no API keys or CLI credentials are stored in the extension.
 - Chunk transcripts and validate every AI-generated section with Zod. Export the full structured document as JSON or Markdown.
 - Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping.
-- Netflix operates in **companion-only mode**: no content script, automatic subtitle extraction, DRM bypass, forced seek, or automatic loop.
+- Netflix has optional, user-initiated seek and per-sentence looping via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). It never extracts Netflix subtitles, bypasses DRM, intercepts keyboard shortcuts or opens a second playback session.
 
 ## Quick start (macOS)
 
@@ -48,7 +48,7 @@ Sign in using each CLI itself first. A model ID is passed explicitly only when f
 
 ### YouTube loops
 
-Open the source YouTube watch page in Chrome before clicking **循環此句** in the Reader. The extension uses a content script **only on YouTube**, and the loop ends on manual pause/seek or when the selected repetition count is reached. A loop cannot be guaranteed if YouTube changes its player DOM. Netflix is never injected or controlled.
+Open the source YouTube watch page in Chrome before clicking **循環此句** in the Reader. The extension uses a content script **only on YouTube**, and the loop ends on manual pause/seek or when the selected repetition count is reached. A loop cannot be guaranteed if YouTube changes its player DOM. Netflix controls are opt-in and do not modify subtitles or intercept keyboard shortcuts.
 
 ## Engineering
 
@@ -64,3 +64,11 @@ Packages:
 - \`apps/extension\`: React side panel, settings, reader, and opt-in YouTube loop content script.
 
 Read [Scope and limitations](docs/scope.md) before using an external-model CLI with sensitive or copyrighted transcripts.
+
+### Experimental Netflix controls
+
+Open the same Netflix /watch/<video-id> URL saved with your authorized subtitle file. In **閱讀文件**, select **檢查 Netflix 播放器** before clicking **跳到 Netflix 指定時間** or **循環此句**. This uses a MAIN-world bridge with Netflix's **undocumented** player session API, following the pattern in your [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override) repository. Session seek times are in milliseconds.
+
+This is not an official Netflix API. The extension does **not** download Netflix subtitles, modify subtitle tracks, bypass content protection, or intercept the Netflix keyboard. The bridge remains idle except when you explicitly diagnose, seek or start a loop. Stop the loop before using other playback controls; manual pause/seek, page navigation or an unavailable player automatically cancel it. If the API changes, copy the timestamp and seek manually.
+
+A real-browser smoke test with your Netflix account is required; automated CI does not test a live Netflix playback session.
