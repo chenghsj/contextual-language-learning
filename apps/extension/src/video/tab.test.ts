@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { netflixAdapter } from "./netflix";
+import { youtubeAdapter } from "./youtube";
 import {
   CUE_LEAD_IN_MS, CUE_TAIL_MS, cuePlaybackStart, cuePlaybackWindow,
   findVideoTab, getActiveWindowTab, openOrFocusVideoTab, sendToVideo,
@@ -205,4 +206,18 @@ test("opening a timestamp link reuses an existing watch tab instead of opening a
   });
   assert.equal(opened, 0);
   assert.deepEqual(focused, [52]);
+});
+
+test("YouTube direct seek targets only its matching existing video tab", async () => {
+  const watchUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+  const wanted = tab(62, false, 1, watchUrl);
+  const unrelated = tab(63, true, 1, "https://www.youtube.com/watch?v=AAAAAAAAAAA");
+  const sent: { id: number; message: unknown }[] = [];
+  await withChrome({
+    tabs: [wanted, unrelated], current: [unrelated],
+    onMessage: (id, message) => sent.push({ id, message }),
+  }, async () => {
+    await youtubeAdapter.seek?.(watchUrl, 82_000);
+  });
+  assert.deepEqual(sent, [{ id: 62, message: { type: "YOUTUBE_SEEK", timeMs: 82_000 } }]);
 });
