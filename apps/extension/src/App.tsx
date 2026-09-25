@@ -14,6 +14,7 @@ import {
   findVideoTab, getActiveWindowTab, openOrFocusVideoTab,
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
+import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
 import { BookOpen, Settings2, WandSparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
@@ -130,6 +131,8 @@ export default function App() {
   const openingVideoRef = useRef(false);
   const portRef = useRef<chrome.runtime.Port | null>(null);
   const preflightPortRef = useRef<chrome.runtime.Port | null>(null);
+  const controllerPortRef = useRef<chrome.runtime.Port | null>(null);
+  const activeRequestIdRef = useRef<string | null>(null);
   const requestRef = useRef<string | null>(null);
   const lastSelectedVideoKeyRef = useRef<string | null>(null);
   const manuallyEditedTitleRef = useRef(false);
@@ -209,6 +212,74 @@ export default function App() {
       chrome.windows.onFocusChanged.removeListener(onFocusChanged);
       portRef.current?.disconnect();
       preflightPortRef.current?.disconnect();
+    };
+  }, []);
+
+  // A new Side Panel can attach to an Agent that stayed alive in the service
+  // worker after the previous panel closed. Do not start or resume a second job.
+  useEffect(() => {
+    const observer = chrome.runtime.connect({ name: GENERATION_CONTROLLER_PORT });
+    controllerPortRef.current = observer;
+    const chunks = new DocumentChunkAssembler();
+    observer.onMessage.addListener((message: GenerationControllerMessage) => {
+      if (message.type === "generationState") {
+        if (message.active) {
+          activeRequestIdRef.current = message.active.requestId;
+          requestRef.current = message.active.jobId;
+          if (!portRef.current) portRef.current = observer;
+          setGenerating(true);
+          if (message.active.summary) {
+            updateJob(message.active.summary);
+            setProgress(t("statusProgress", {
+              completed: message.active.summary.completed,
+              total: message.active.summary.total,
+            }));
+          } else {
+            setProgress(t("statusResuming"));
+          }
+        } else {
+          activeRequestIdRef.current = null;
+          requestRef.current = null;
+          if (portRef.current === observer) portRef.current = null;
+          setGenerating(false);
+          void loadJobs();
+        }
+        return;
+      }
+      if (message.id !== activeRequestIdRef.current) return;
+      if (message.type === "job") {
+        updateJob(message.job);
+      } else if (message.type === "progress") {
+        setProgress(t("statusProgress", {
+          completed: message.completed, total: message.total,
+        }));
+      } else if (message.type === "published") {
+        setPublishedLocation(message.location);
+      } else if (message.type === "publicationFailed") {
+        setError(t("publishFailed", { message: message.message }));
+      } else if (message.type === "result") {
+        try { showDocument(message.document); }
+        catch { void loadJobs(); }
+        setGenerating(false);
+      } else if (message.type === "documentChunk") {
+        try {
+          const document = chunks.push(message);
+          if (document) showDocument(document);
+        } catch {
+          // Reopening a panel in the middle of a chunk stream may miss its
+          // first chunk. The complete canonical document remains on disk.
+        }
+        if (message.index === message.total - 1) void loadJobs();
+      } else if (message.type === "error") {
+        setError(message.message);
+        setGenerating(false);
+        void loadJobs();
+      }
+    });
+    observer.postMessage({ type: "watch" });
+    return () => {
+      if (controllerPortRef.current === observer) controllerPortRef.current = null;
+      observer.disconnect();
     };
   }, []);
 
@@ -521,10 +592,11 @@ export default function App() {
     setDuplicateWarning(null);
     const id = input.type === "generate" ? input.payload.id : crypto.randomUUID();
     const jobId = input.type === "generate" ? input.payload.id : input.jobId;
-    const port = existingPort ?? chrome.runtime.connectNative(HOST_NAME);
+    const port = existingPort ?? chrome.runtime.connect({ name: GENERATION_CONTROLLER_PORT });
     preflightPortRef.current = null;
     portRef.current = port;
     requestRef.current = jobId;
+    activeRequestIdRef.current = id;
     setGenerating(true);
     setProgress(t(input.type === "resume" ? "statusResuming" : "statusConnecting"));
     const chunks = new DocumentChunkAssembler();
@@ -586,7 +658,7 @@ export default function App() {
         source: { platform, title: title.trim(), ...(sourceUrl.trim() ? { url: sourceUrl.trim() } : {}) },
         profile, agent, destination, cues,
       });
-      const port = chrome.runtime.connectNative(HOST_NAME);
+      const port = chrome.runtime.connect({ name: GENERATION_CONTROLLER_PORT });
       preflightPortRef.current = port;
       setChecking(true);
       setProgress(t("checkingExisting"));
