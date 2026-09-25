@@ -86,7 +86,7 @@ import {
           emptyResponses++;
           throw new Error("YouTube returned an empty subtitle response (HTTP " + response.status + ").");
         }
-        if (/^\\s*(?:<!doctype html|<html\\b)/i.test(body)) {
+        if (/^\s*(?:<!doctype html|<html\b)/i.test(body)) {
           throw new Error("YouTube returned HTML instead of a subtitle document (HTTP " + response.status + ").");
         }
         const text = youtubeTimedTextToVtt(body);
