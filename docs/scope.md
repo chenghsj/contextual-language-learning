@@ -7,15 +7,15 @@
 - Level + target language + instruction language + per-section learning load.
 - Zod-validated structured sections; saved JSON and Markdown documents.
 - Vite + React + Tailwind CSS and local shadcn-style UI components. Side Panel document reading, YouTube time links, and opt-in per-cue looping on an already open YouTube watch tab.
-- Experimental user-initiated Netflix diagnostics, seeking and looping on a matching open watch tab, subject to availability of its undocumented internal player session API.
+- YouTube playback speed and experimental Netflix user-initiated diagnostics, seeking, looping and playback speed on a matching open watch tab, subject to availability of Netflix's undocumented player session API.
 - Native Host installation on macOS.
 
 ## Not implemented yet
 
-- Google Drive OAuth/sync, remote edits, multi-device sync, a persistent *background daemon*, live subtitle capture from third-party players, automatic account sign-in, live model enumeration, learning-progress UI and spaced repetition.
+- Google Drive two-way synchronization/conflict handling, remote edits, multi-device sync, a persistent *background daemon*, live subtitle capture from third-party players, automatic Agent sign-in, live model enumeration, learning-progress UI and spaced repetition.
 - Automated Netflix subtitle extraction, DRM bypass, or guaranteed Netflix seek/loop compatibility after player updates. When the unsupported playback bridge is unavailable, only manual timestamp navigation is available.
 - Hosted AI API integration. Local CLI means the **CLI is local**; model inference may still run on the provider's remote servers.
-- Per-user GUI selection of a persistent local directory: files are saved in ~/Documents/Immersive Learning and can be individually saved elsewhere via the browser's Save As dialog.
+- Cross-platform native folder selection: the current local folder picker supports macOS only; canonical checkpoints remain in ~/Documents/Immersive Learning.
 
 ## Security notes
 
