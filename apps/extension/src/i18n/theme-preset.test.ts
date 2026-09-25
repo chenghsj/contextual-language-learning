@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
 const button = await readFile(new URL("../components/ui/button.tsx", import.meta.url), "utf8");
+const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
 
 function declarations(block: string): Record<string, string> {
   return Object.fromEntries(
@@ -62,4 +63,18 @@ test("button variants and transient feedback use theme tokens instead of the old
   assert.doesNotMatch(css, /#(?:f8faf9|17231f|e7f4ec|f3c0b5|fff0ec|e9f4fb|79b18d)/i);
   assert.match(css, /\.status \{[^}]+var\(--primary\)/);
   assert.match(css, /\.alert \{[^}]+var\(--destructive\)/);
+});
+
+test("primary Side Panel action labels are readable without changing the preset palette", () => {
+  assert.match(app, /<Button className="subtitleFetchButton"/);
+  assert.match(app, /<Button className="primary" onClick=\{startGeneration\}/);
+  assert.match(css, /button\[data-slot="button"\]\.subtitleFetchButton,\s*button\[data-slot="button"\]\.primary\s*\{/);
+  const rule = css.match(/button\[data-slot="button"\]\.subtitleFetchButton,[\s\S]*?\{([^}]+)\}/)?.[1] ?? "";
+  assert.match(rule, /min-height: 40px/);
+  assert.match(rule, /font-size: 14px/);
+  assert.match(rule, /font-weight: 600/);
+  assert.match(rule, /white-space: normal/);
+  assert.doesNotMatch(rule, /(?:background|color):/);
+  assert.equal(light.primary, "oklch(0.511 0.096 186.391)");
+  assert.equal(light["primary-foreground"], "oklch(0.984 0.014 180.72)");
 });
