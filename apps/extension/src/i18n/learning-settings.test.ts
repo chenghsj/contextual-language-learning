@@ -3,7 +3,7 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { learningSettingsCopy, type LearningSettingKey } from "./learning-settings";
+import { learningSettingsCopy, levelHint, type LearningSettingKey } from "./learning-settings";
 import { nativeLanguageName } from "./preferences";
 import { messages, type UiLocale } from "./messages";
 import { SettingInfo } from "../components/setting-info";
@@ -78,4 +78,24 @@ test("task cards start below the refresh control with consistent spacing", async
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   assert.match(app, /className="jobHistoryList"/);
   assert.match(css, /\.jobHistoryList\s*\{[^}]*margin-top:\s*12px/);
+});
+
+test("level help follows the selected learning language in every interface locale", async () => {
+  const scales = { en: "CEFR", ja: "JLPT", ko: "TOPIK" } as const;
+  for (const locale of locales) {
+    const copy = learningSettingsCopy[locale];
+    for (const language of ["en", "ja", "ko"] as const) {
+      const help = levelHint(copy, language);
+      assert.ok(help.includes(scales[language]), locale + " " + language + " level scale");
+      for (const other of ["en", "ja", "ko"] as const) {
+        if (other !== language) assert.ok(!help.includes(scales[other]),
+          locale + " " + language + " should not explain " + other);
+      }
+      assert.ok(help.endsWith(copy.fieldHints.level), locale + " difficulty disclaimer");
+      assert.ok(copy.levelHints[language].length > 20, locale + " " + language + " explanation");
+    }
+  }
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  assert.match(app, /explanation=\{levelHint\(settingsCopy, profile\.targetLanguage\)\}/);
+  assert.match(app, /targetLanguage, level: targetLanguage === "en" \? "B1" : targetLanguage === "ja" \? "N4" : "2"/);
 });
