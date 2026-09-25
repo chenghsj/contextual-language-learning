@@ -37,7 +37,7 @@ export async function saveAgentProfile(provider: string, label: string, director
   const saved = await listAgentProfiles();
   const existing = saved.find(item => item.provider === provider && item.directory === actual);
   if (!existing && saved.length >= 30) throw new Error("Too many saved Agent profiles.");
-  const next = existing
+  const next: AgentProfile[] = existing
     ? saved.map(item => item.id === existing.id ? { ...item, label: name } : item)
     : [...saved, { id: randomUUID(), provider, label: name, directory: actual }];
   await writeProfiles(next);
