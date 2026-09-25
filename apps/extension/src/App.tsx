@@ -77,6 +77,7 @@ export default function App() {
   const [storageLocations, setStorageLocations] = useState<StorageLocation[]>([]);
   const [outputPath, setOutputPath] = useState("");
   const [customOutputPath, setCustomOutputPath] = useState("");
+  const [useCustomOutput, setUseCustomOutput] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<{ payload: GenerationRequest; count: number } | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [repeat, setRepeat] = useState<RepeatOption>("3");
@@ -242,7 +243,7 @@ export default function App() {
       const payload = GenerationRequestSchema.parse({
         id,
         source: { platform, title: title.trim(), ...(sourceUrl.trim() ? { url: sourceUrl.trim() } : {}) },
-        profile, agent, cues, outputPath: customOutputPath.trim() || outputPath || undefined, allowRegenerate,
+        profile, agent, cues, outputPath: (useCustomOutput ? customOutputPath.trim() : outputPath) || undefined, allowRegenerate,
       });
       if (allowRegenerate) { runGeneration({ type: "generate", payload }); return; }
       const port = chrome.runtime.connectNative(HOST_NAME);
@@ -474,15 +475,15 @@ export default function App() {
           <h2>3. Agent 與生成</h2>
           <p className="hint">目前使用：{agent.provider} · {agent.modelId || "CLI 預設模型"}。切換請至 Agent 設定。</p>
           <label>儲存位置
-            <Select value={customOutputPath ? "custom" : outputPath} onChange={event => {
-              if (event.target.value === "custom") { setCustomOutputPath(customOutputPath || ""); return; }
-              setCustomOutputPath(""); setOutputPath(event.target.value);
+            <Select value={useCustomOutput ? "custom" : outputPath} onChange={event => {
+              if (event.target.value === "custom") { setUseCustomOutput(true); return; }
+              setUseCustomOutput(false); setOutputPath(event.target.value);
             }}>
               {storageLocations.map(location => <option key={location.id} value={location.path}>{location.label}</option>)}
               <option value="custom">其他本機資料夾…</option>
             </Select>
           </label>
-          {customOutputPath !== "" || (!storageLocations.some(location => location.path === outputPath) && outputPath === "") ? <label>自訂資料夾路徑
+          {useCustomOutput ? <label>自訂資料夾路徑
             <Input value={customOutputPath} onChange={event => setCustomOutputPath(event.target.value)}
               placeholder="/Users/you/Documents/My Lessons" />
           </label> : null}
