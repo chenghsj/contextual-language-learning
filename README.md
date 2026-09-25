@@ -4,6 +4,12 @@ A local-first Chrome side-panel extension that turns **subtitles you have permis
 
 > MVP status: the working implementation covers subtitle import, three CLI adapters, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Automatic Netflix subtitle retrieval and a durable background daemon are **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a user-configured Desktop OAuth client and live account testing are required. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
 
+## Open source and project status
+
+This repository is currently **private** while the initial MVP is reviewed. Adding a license and contributor files does not make it public. See the [MIT license](LICENSE), [contribution guide](CONTRIBUTING.md), [code of conduct](CODE_OF_CONDUCT.md), [security policy](SECURITY.md), [privacy and data handling](PRIVACY.md), [changelog](CHANGELOG.md), [roadmap](docs/ROADMAP.md) and [open-source readiness checklist](docs/OPEN_SOURCE_CHECKLIST.md).
+
+**No production-ready Google Drive or Netflix compatibility guarantee:** Google OAuth and Netflix's undocumented playback API require manual platform testing before a public stable release. This project is not affiliated with the streaming platforms or model providers.
+
 ## Features
 
 - Import SRT, VTT, or pasted text. Original subtitles and timestamps remain unchanged.
@@ -12,8 +18,8 @@ A local-first Chrome side-panel extension that turns **subtitles you have permis
 - Optionally isolate Claude/Codex accounts using an existing config directory under your home directory. AGY uses its current CLI login.
 - Native Messaging bridge to a macOS host; no API keys or CLI credentials are stored in the extension.
 - Run a checkpointed generation pipeline: chunk subtitles, validate AI sections with Zod, save each successful chapter, then export the JSON/Markdown document. Reopen the Side Panel and use **任務紀錄與恢復** to resume interrupted/failed jobs.
-- Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping.
-- Netflix has optional, user-initiated seek and per-sentence looping via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). It never extracts Netflix subtitles, bypasses DRM, intercepts keyboard shortcuts or opens a second playback session.
+- Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping and user-triggered playback speed (0.5×–2×).
+- Netflix has optional, user-initiated seek, per-sentence looping and playback speed (0.5×–2×) via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). It never extracts Netflix subtitles, bypasses DRM, intercepts keyboard shortcuts or opens a second playback session.
 
 ## Install from GitHub Release (Chromium + macOS)
 
@@ -61,7 +67,7 @@ pnpm install
 pnpm build
 ~~~
 
-1. Open \`chrome://extensions\`, enable Developer mode, click **Load unpacked**, and select \`apps/extension/dist\`.
+1. Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, and select `apps/extension/dist`.
 2. Copy the newly loaded extension ID (32 characters).
 3. Register its macOS native messaging host:
 
@@ -70,14 +76,18 @@ pnpm host:install YOUR_EXTENSION_ID
 ~~~
 
 4. Click the extension icon to open the Side Panel. Under **Agent 設定**, select **檢查 Native Host / CLI**.
-5. In **建立教材**, import an SRT/VTT or paste text, set the title and learning profile, then generate. Files are also saved to \`~/Documents/Immersive Learning\`.
+5. In **建立教材**, import an SRT/VTT or paste text, set the title and learning profile, then generate. Files are also saved to `~/Documents/Immersive Learning`.
 6. In **閱讀文件**, use **另存新檔** to choose where to download the JSON or Markdown copy.
 
-If Chrome reports a missing native host, verify that \`~/Library/Application Support/Google/Chrome/NativeMessagingHosts/dev.immersive.language_learning.json\` includes your current extension ID and points to the generated executable launcher. Rerun \`pnpm build\` and \`pnpm host:install YOUR_EXTENSION_ID\` after relocating the repository or changing Node installations.
+If Chrome reports a missing native host, verify that `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/dev.immersive.language_learning.json` includes your current extension ID and points to the generated executable launcher. Rerun `pnpm build` and `pnpm host:install YOUR_EXTENSION_ID` after relocating the repository or changing Node installations.
 
 ### Accounts and models
 
 Sign in using each CLI itself first. Model/profile defaults are remembered separately for each Agent in the Side Panel. Switching Agent does not carry over the previous Agent's model ID. A model ID is passed explicitly only when filled in; the extension does **not** fabricate a live model list or silently fall back to another model. To use a separate Claude or Codex profile, create and authenticate that CLI profile first, then enter the existing absolute directory in Agent settings. The profile must be inside your home folder. AGY profile switching remains unavailable pending a supported isolation mechanism.
+
+### Video playback speed and sentence loops
+
+In the Reader's **影片伴讀** section, choose a speed from 0.5× to 2× and click **套用播放速度**. The selection is remembered as a preference, but does not automatically change a newly opened video. Speed controls appear only when the current Video Adapter supports them. Changing speed while a sentence is looping does not intentionally stop the loop. YouTube uses the active HTML video element; Netflix uses an experimental bridge and may reject or reset the requested speed. There is no speed control for imported subtitles without an attached supported video.
 
 ### YouTube loops
 
@@ -98,9 +108,9 @@ pnpm build
 ~~~
 
 Packages:
-- \`packages/core\`: shared Zod schema, subtitle parsers/chunking, time links.
-- \`apps/local-host\`: Native Messaging framing, restricted temporary workspace, CLI adapters, Job State Machine, resumable Generation Pipeline and file-backed repository ports.
-- \`apps/extension\`: React side panel, settings, reader, and opt-in YouTube loop content script.
+- `packages/core`: shared Zod schema, subtitle parsers/chunking, time links.
+- `apps/local-host`: Native Messaging framing, restricted temporary workspace, CLI adapters, Job State Machine, resumable Generation Pipeline and file-backed repository ports.
+- `apps/extension`: React side panel, settings, reader, and opt-in YouTube loop content script.
 
 Read [Scope and limitations](docs/scope.md) before using an external-model CLI with sensitive or copyrighted transcripts.
 
