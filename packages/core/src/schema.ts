@@ -70,6 +70,8 @@ export const LearningSectionSchema = SectionContentSchema.extend({
   startMs: z.number().int().nonnegative().nullable(),
   endMs: z.number().int().nonnegative().nullable(),
 });
+export type LearningSection = z.infer<typeof LearningSectionSchema>;
+
 export const LearningDocumentSchema = z.object({
   id: z.string().uuid(),
   schemaVersion: z.literal(1),
