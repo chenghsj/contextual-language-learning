@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Immersive Language Learning"
+  },
+  "extensionDescription": {
+    "message": "Generate language lessons from subtitles using your local CLI agent."
+  },
+  "actionTitle": {
+    "message": "Open Immersive Learning"
+  }
+}
