@@ -1144,6 +1144,10 @@ export default function App() {
                 <label htmlFor="learning-level">{t("level")}</label>
                 <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
                   explanation={levelHint(settingsCopy, profile.targetLanguage)}
+                  items={levelOptions.map(value => {
+                    const info = settingsCopy.levels[profile.targetLanguage][value];
+                    return { value, label: info?.label ?? value, description: info?.description ?? "" };
+                  })}
                   />
               </div>
               <NativeSelect id="learning-level" value={profile.level}
