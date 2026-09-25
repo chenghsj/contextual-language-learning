@@ -1,7 +1,8 @@
 type LoopMessage =
   | { type: "LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
   | { type: "LOOP_CLEAR" }
-  | { type: "PLAYBACK_RATE_SET"; rate: number };
+  | { type: "PLAYBACK_RATE_SET"; rate: number }
+  | { type: "YOUTUBE_SUBTITLES_GET"; videoId: string; language: "en" | "ja" | "ko" };
 
 let active: { video: HTMLVideoElement; start: number; end: number; repeats: number | "infinite"; completed: number; delayMs: number } | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -56,7 +57,51 @@ function onTimeUpdate(): void {
   }, state.delayMs);
 }
 
+type CaptionResponse = {
+  source: "immersive-learning"; id: string; ok: boolean;
+  text?: string; language?: string; error?: string;
+};
+
+function requestYouTubeCaptions(videoId: string, language: string): Promise<CaptionResponse> {
+  return new Promise(resolve => {
+    const id = crypto.randomUUID();
+    const RESPONSE = "immersive-learning:youtube:caption-response";
+    const timer = setTimeout(() => {
+      window.removeEventListener(RESPONSE, receive);
+      resolve({ source: "immersive-learning", id, ok: false,
+        error: "YouTube subtitle reader did not respond. Reload this video tab and retry." });
+    }, 16_000);
+    function receive(event: Event): void {
+      const reply = (event as CustomEvent<CaptionResponse>).detail;
+      if (reply?.source !== "immersive-learning" || reply.id !== id) return;
+      clearTimeout(timer);
+      window.removeEventListener(RESPONSE, receive);
+      resolve(reply);
+    }
+    window.addEventListener(RESPONSE, receive);
+    window.dispatchEvent(new CustomEvent("immersive-learning:youtube:caption-request", {
+      detail: { source: "immersive-learning", id, videoId, language },
+    }));
+  });
+}
+
 chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) => {
+  if (message.type === "YOUTUBE_SUBTITLES_GET") {
+    const videoId = new URL(location.href).searchParams.get("v");
+    if (location.pathname !== "/watch" || videoId !== message.videoId) {
+      respond({ ok: false, error: "The active YouTube video changed. Retry on the current watch tab." });
+      return;
+    }
+    void requestYouTubeCaptions(message.videoId, message.language).then(result => {
+      respond(result.ok && result.text && result.text.length <= 3_000_000 &&
+        typeof result.language === "string"
+        ? { ok: true, text: result.text, language: result.language }
+        : { ok: false, error: result.error ?? "YouTube did not return readable subtitles." });
+    }).catch(error => {
+      respond({ ok: false, error: error instanceof Error ? error.message : "YouTube subtitles are unavailable." });
+    });
+    return true;
+  }
   if (message.type === "PLAYBACK_RATE_SET") {
     const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
       document.querySelector<HTMLVideoElement>("video");
