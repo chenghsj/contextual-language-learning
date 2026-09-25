@@ -16,7 +16,7 @@ const darkMatch = css.match(/:root\[data-theme="dark"\], :root\.dark \{([\s\S]*?
 if (!lightMatch || !darkMatch) throw new Error("Theme must support both app data-theme and shadcn dark class.");
 const light = declarations(lightMatch[1]), dark = declarations(darkMatch[1]);
 
-test("the supplied shadcn preset is applied to both themes without dropping semantic tokens", () => {
+test("the warm OKLCH theme covers light and dark semantic tokens", () => {
   const names = [
     "background", "foreground", "card", "card-foreground", "popover",
     "popover-foreground", "primary", "primary-foreground", "secondary",
@@ -33,30 +33,37 @@ test("the supplied shadcn preset is applied to both themes without dropping sema
     assert.match(css, new RegExp("--color-" + name + ": var\\(--" + name + "\\);"),
       "Tailwind mapping missing " + name);
   }
-  assert.equal(light.primary, "oklch(0.511 0.096 186.391)");
-  assert.equal(dark.primary, "oklch(0.437 0.078 188.216)");
-  assert.equal(light.background, "oklch(1 0 0)");
-  assert.equal(dark.background, "oklch(0.148 0.004 228.8)");
-  assert.equal(light["sidebar-primary"], "oklch(0.6 0.118 184.704)");
-  assert.equal(dark["sidebar-primary"], "oklch(0.704 0.14 182.503)");
-  assert.equal(light.radius, "0");
+  assert.equal(light.primary, "oklch(0.6171 0.1375 39.0427)");
+  assert.equal(dark.primary, "oklch(0.6724 0.1308 38.7559)");
+  assert.equal(light.background, "oklch(0.9818 0.0054 95.0986)");
+  assert.equal(dark.background, "oklch(0.2679 0.0036 106.6427)");
+  assert.equal(light["sidebar-primary"], "oklch(0.6171 0.1375 39.0427)");
+  assert.equal(dark["sidebar-primary"], "oklch(0.3250 0 0)");
+  assert.equal(light.radius, "1rem");
 });
 
-test("cards, tooltips and existing rounded utilities respect the square preset", () => {
-  for (const token of ["xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl", "full"]) {
-    assert.match(css, new RegExp("--radius-" + token + ": var\\(--radius\\);"));
-  }
-  assert.doesNotMatch(css, /border-radius:\s*(?:\d+(?:\.\d+)?px|50%)/);
+test("cards, tooltips and compact player use warm rounded surfaces", () => {
+  assert.equal(light.radius, "1rem");
+  for (const [token, expected] of [
+    ["xs", "calc(var(--radius) - 6px)"],
+    ["sm", "calc(var(--radius) - 4px)"],
+    ["md", "calc(var(--radius) - 2px)"],
+    ["lg", "var(--radius)"],
+    ["xl", "calc(var(--radius) + 4px)"],
+    ["full", "9999px"],
+  ]) assert.ok(css.includes("--radius-" + token + ": " + expected + ";"), token);
+  assert.doesNotMatch(css, /--radius:\s*0;/);
   assert.match(css, /\.panel \{[^}]+border-radius: var\(--radius\)/);
   assert.match(css, /\.settingInfoPopover \{[\s\S]*?background: var\(--popover\)/);
-  assert.match(css, /\.scenePlayer \{/);
+  assert.match(css, /\.sceneMiniControls \{/);
+  assert.match(css, /:root\.dark \.textButton \{\s*color: var\(--primary\)/);
 });
 
 test("button variants and transient feedback use theme tokens instead of the old fixed palette", () => {
   for (const value of [
     "bg-primary text-primary-foreground",
     "bg-secondary text-secondary-foreground",
-    "bg-destructive text-background",
+    "bg-destructive text-destructive-foreground",
     "hover:bg-accent hover:text-accent-foreground",
   ]) assert.ok(button.includes(value), "button variant missing " + value);
   assert.doesNotMatch(button, /bg-red-600|bg-red-700/);
@@ -65,7 +72,7 @@ test("button variants and transient feedback use theme tokens instead of the old
   assert.match(css, /\.alert \{[^}]+var\(--destructive\)/);
 });
 
-test("primary Side Panel action labels are readable without changing the preset palette", () => {
+test("primary Side Panel action labels are readable without changing the warm palette", () => {
   assert.match(app, /<Button className="subtitleFetchButton"/);
   assert.match(app, /<Button className="primary" onClick=\{startGeneration\}/);
   assert.match(css, /button\[data-slot="button"\]\.subtitleFetchButton,\s*button\[data-slot="button"\]\.primary\s*\{/);
@@ -75,6 +82,15 @@ test("primary Side Panel action labels are readable without changing the preset 
   assert.match(rule, /font-weight: 600/);
   assert.match(rule, /white-space: normal/);
   assert.doesNotMatch(rule, /(?:background|color):/);
-  assert.equal(light.primary, "oklch(0.511 0.096 186.391)");
-  assert.equal(light["primary-foreground"], "oklch(0.984 0.014 180.72)");
+  assert.equal(light.primary, "oklch(0.6171 0.1375 39.0427)");
+  assert.equal(light["primary-foreground"], "oklch(1.0000 0 0)");
+  assert.match(css, /@custom-variant dark \(&:is\(\.dark \*\)\);/);
+});
+
+
+test("saved and system dark appearance apply the warm theme before and after React renders", async () => {
+  const entry = await readFile(new URL("../main.tsx", import.meta.url), "utf8");
+  assert.match(entry, /classList\.toggle\("dark", initialTheme === "dark"\)/);
+  assert.match(app, /classList\.toggle\("dark", activeTheme === "dark"\)/);
+  assert.match(css, /--color-destructive-foreground: var\(--destructive-foreground\);/);
 });
