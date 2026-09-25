@@ -38,7 +38,7 @@ test("Netflix replay survives its own seeking/pause events before currentTime ch
   try {
     globals.CustomEvent = TestCustomEvent as unknown as typeof CustomEvent;
     globals.window = windowEvents as unknown as Window;
-    globals.location = { pathname: "/watch/81234567", href: "https://www.netflix.com/watch/81234567" } as Location;
+    globals.location = { pathname: "/watch/81234567", href: "https://www.netflix.com/watch/81234567" } as unknown as Location;
     globals.document = {
       querySelectorAll: () => [video],
     } as unknown as Document;
@@ -68,7 +68,7 @@ test("Netflix replay survives its own seeking/pause events before currentTime ch
         video.dispatchEvent(new Event("seeked"));
         result.seekCalled = true;
       }
-      if (req.action === "play") video.paused = false;
+      if (req.action === "play") Object.assign(video, { paused: false });
       if (req.action === "diagnose") result.currentMs = video.currentTime * 1000;
       windowEvents.dispatchEvent(new TestCustomEvent("immersive-learning:netflix:response", {
         detail: result,
