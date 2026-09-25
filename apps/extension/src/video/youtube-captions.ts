@@ -119,6 +119,7 @@ export function youtubeJson3ToVtt(input: string): string {
     const event = item as Record<string, unknown>;
     if (!Array.isArray(event.segs) || typeof event.tStartMs !== "number" ||
       !Number.isFinite(event.tStartMs) || event.tStartMs < 0) continue;
+    const eventStartMs = event.tStartMs;
     const pieces: CaptionPiece[] = event.segs.map(segment => {
       const value = segment && typeof segment === "object"
         ? segment as Record<string, unknown> : {};
@@ -136,7 +137,7 @@ export function youtubeJson3ToVtt(input: string): string {
       next && typeof next === "object" &&
       typeof (next as Record<string, unknown>).tStartMs === "number" &&
       Number.isFinite((next as { tStartMs: number }).tStartMs) &&
-      (next as { tStartMs: number }).tStartMs > event.tStartMs!) as { tStartMs: number } | undefined;
+      (next as { tStartMs: number }).tStartMs > eventStartMs) as { tStartMs: number } | undefined;
     const duration = typeof event.dDurationMs === "number" &&
       Number.isFinite(event.dDurationMs) && event.dDurationMs > 0
       ? event.dDurationMs
