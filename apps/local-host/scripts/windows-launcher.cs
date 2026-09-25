@@ -13,8 +13,13 @@ internal static class NativeHostLauncher
     {
         try
         {
-            input.CopyTo(output);
-            output.Flush();
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, read);
+                output.Flush(); // Flush each Native Messaging frame; the port stays open.
+            }
         }
         catch (IOException) { /* Browser disconnected. */ }
         catch (ObjectDisposedException) { /* Child already exited. */ }
