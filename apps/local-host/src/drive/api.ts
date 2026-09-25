@@ -91,7 +91,7 @@ async function uploadFile(
     }
     return apiJSON<DriveFile>(accountId, url.toString(), {
       method: "PUT", headers: { "Content-Type": mimeType, "Content-Length": String(data.length) },
-      body: data,
+      body: new Uint8Array(data),
     });
   }
   const boundary = "immersive_" + randomBytes(12).toString("hex");
@@ -106,7 +106,7 @@ async function uploadFile(
     UPLOAD + "/files?uploadType=multipart&fields=id,name,webViewLink,appProperties", {
       method: "POST",
       headers: { "Content-Type": "multipart/related; boundary=" + boundary },
-      body,
+      body: new Uint8Array(body),
     });
 }
 

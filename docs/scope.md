@@ -32,3 +32,7 @@ Only import transcripts/media you have rights to process. Do not bypass DRM, pla
 The bridge is adapted from the session-oriented design in [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). A MAIN-world listener uses playerApp.getAPI().videoPlayer and chooses the session closest to the active video timestamp. It exposes only diagnostics, read-only position, play, pause, and absolute seek for explicit learning controls. A separate isolated content script handles Side Panel requests and opt-in loops. The bridge does not retrieve Netflix subtitles, inspect protected streams, or change subtitle tracks.
 
 This is an **undocumented** Netflix interface, not a stable official API. It may fail after a player update. Stop or clear a loop on manual pause/seek, tab navigation or player failure. Playback should remain usable without the extension.
+
+## Storage and duplicate safety
+
+A user-initiated macOS folder picker, per-job destinations, limited Google Drive OAuth account selection, local/remote duplicate checks and explicit regeneration confirmation are implemented. Google Drive is an experimental user-configured integration and has not been tested against a live account. Local canonical documents and checkpoints survive cloud upload failures; publication can be retried without generating again. The extension does not scan arbitrary third-party Drive files, pick arbitrary existing Drive folders, provide full two-way sync, or continue generating after Chrome is closed.

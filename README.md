@@ -2,7 +2,7 @@
 
 A local-first Chrome side-panel extension that turns **subtitles you have permission to use** into structured, level-appropriate language lessons using your locally installed CLI agent.
 
-> MVP status: the working implementation covers subtitle import, three CLI adapters, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Google Drive, automatic Netflix subtitle retrieval, graphical multi-account login, and a durable background daemon are **not implemented**. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
+> MVP status: the working implementation covers subtitle import, three CLI adapters, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Automatic Netflix subtitle retrieval and a durable background daemon are **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a user-configured Desktop OAuth client and live account testing are required. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
 
 ## Features
 
@@ -86,3 +86,20 @@ The local Host saves snapshots under ~/Documents/Immersive Learning/jobs/ after 
 A single Host instance executes one generation at a time. Current file-backed storage is designed for one writer per job, not simultaneous editing across several independent Chrome profiles/processes. Persistent background generation and cross-device synchronization require a separate managed daemon and transactional storage in a later phase. Progress and personal annotations have a separate repository contract; a full learning-progress UI is not yet implemented.
 
 Existing version-1 learning documents retain their original format and remain readable; future schema versions must use an explicit migration. Local canonical JSON is saved before the Markdown convenience export.
+
+## Choose destination and prevent duplicate generation
+
+The Create page offers an explicit macOS folder picker or a Google Drive account. The Host stores the selected destination with each generation job. It retains the canonical JSON document and validated chapter checkpoints in the local document library, even when publishing to another folder or Drive. A selected local folder receives JSON and Markdown copies; an authorized Google account receives JSON and Markdown in an app-created Immersive Learning folder. Google Drive for desktop folders may also be selected through the local picker, but this is local synchronization rather than Drive API account authorization.
+
+Before generating, the Host checks saved documents and jobs, and checks app-created files in the selected Google Drive account when applicable. It uses source identity and subtitle content, not merely the filename. The Side Panel displays matches and requires an explicit regeneration confirmation. The preflight ticket is tied to the original request and Native Messaging connection; a changed request or newly found duplicate requires another check. Regeneration creates a new document ID and never overwrites earlier material or learning progress.
+
+If publication fails, the local document remains complete. Use the job-history Publish Again action to retry the original destination without calling the Agent again.
+
+### Google Drive account setup on macOS
+
+1. Enable Google Drive API in a Google Cloud project. Configure the OAuth consent screen with openid, email, and the limited https://www.googleapis.com/auth/drive.file scope. Create a Desktop OAuth client. Add test users when the consent screen is in Testing mode.
+2. In the extension Settings page, enter that Desktop OAuth Client ID. If Google requires its generated Desktop Client Secret for token exchange, enter it there as well. These values are sent to the local Host and are not stored in Chrome Storage.
+3. Choose Connect Google Account. Your browser opens a PKCE flow with a local loopback callback. Connect each account separately, then select its email in the destination dropdown.
+4. The Host stores refresh tokens in macOS Keychain and keeps the account metadata in the user-only application-support directory. Changing the default account does not move old jobs to another account.
+
+Google Drive integration uses the limited drive.file scope and can only search app-created or app-shared files, not every file in the account. Authorization and upload have not been tested against a live Google account in CI. For privacy, choose only transcripts you are authorized to send to your configured Agent provider.

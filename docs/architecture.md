@@ -72,3 +72,11 @@ The pipeline depends on these interfaces, not on fs, Chrome or Google Drive. Fut
 ## Document versioning and Native Messaging
 
 Version-1 documents preserve the existing JSON structure. readLearningDocument() dispatches by explicit schemaVersion and rejects unsupported versions instead of dropping fields. Large Host responses are encoded as ordered, bounded base64 document chunks; the reader reassembles, UTF-8 decodes and validates the complete schema.
+
+## Destination Publisher and duplicate preflight
+
+The canonical local DocumentRepository is authoritative for job recovery. GenerationRequest includes an immutable Destination snapshot: a selected local directory or a Google account ID. DestinationPublisher writes JSON and Markdown copies after canonical material is saved; JobSummary records publication separately from generation. A publication failure does not invalidate the completed job. Publish Again retries the saved destination without invoking the Agent.
+
+The macOS Native Host owns the native folder picker and allowlist, Google Desktop OAuth with PKCE, Keychain-backed per-account refresh tokens, and the Drive API. The Chrome extension does not receive refresh tokens. Drive uses the limited drive.file scope and appProperties on app-created documents for duplicate detection and repeat-safe publishing. An authentication or network failure aborts the preflight instead of reporting an empty Drive.
+
+Duplicate matching combines canonical local documents, incomplete jobs and visible app-created Drive files. A short-lived preflight ticket binds the generation request. The Host rejects unconfirmed regeneration, altered requests, and matches that appeared after the preflight. Each regenerated version has a fresh document UUID. Existing content and learning progress remain unchanged.
