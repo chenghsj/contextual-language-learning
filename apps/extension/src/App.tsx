@@ -710,7 +710,7 @@ export default function App() {
           </Button>
           {generating && <Button variant="outline" className="secondary" onClick={cancelGeneration}>取消生成</Button>}
           {progress && <p className="status" role="status">{progress}</p>}
-          {publishedLocation && <p className="hint">已發布至：{publishedLocation}</p>}
+          {publishedLocation && <p className="hint">已發布至：{publishedLocation}</p>}}
         </Card>
         <Card className="panel">
           <h2>任務紀錄與恢復</h2>
