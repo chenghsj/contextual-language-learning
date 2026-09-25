@@ -2,6 +2,10 @@
 (() => {
   const REQUEST_EVENT = "immersive-learning:netflix:request";
   const RESPONSE_EVENT = "immersive-learning:netflix:response";
+  const CAPTION_FETCH_REQUEST_EVENT = "immersive-learning:netflix:caption-fetch-request";
+  const CAPTION_FETCH_RESPONSE_EVENT = "immersive-learning:netflix:caption-fetch-response";
+  const pendingCaptionRequests = new Set<string>();
+  const captionRequestsInFlight = new Set<string>();
   type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
   type PageResponse = {
     source: "immersive-learning"; id: string; ok: boolean; available: boolean;
@@ -27,7 +31,9 @@
   function requestPage(action: Action, value?: number, language?: string): Promise<PageResponse> {
     return new Promise(resolve => {
       const id = crypto.randomUUID();
+      if (action === "subtitlesGet") pendingCaptionRequests.add(id);
       const timer = setTimeout(() => {
+        pendingCaptionRequests.delete(id);
         window.removeEventListener(RESPONSE_EVENT, onResponse);
         resolve({ source: "immersive-learning", id, ok: false, available: false, error: "Netflix page bridge did not respond." });
       }, action === "subtitlesGet" ? 16_000 : 700);
@@ -35,6 +41,7 @@
         const detail = (event as CustomEvent<PageResponse>).detail;
         if (detail?.source !== "immersive-learning" || detail.id !== id) return;
         clearTimeout(timer);
+        pendingCaptionRequests.delete(id);
         window.removeEventListener(RESPONSE_EVENT, onResponse);
         resolve(detail);
       }
@@ -44,6 +51,34 @@
       }));
     });
   }
+
+  // The page world cannot use chrome.runtime. Relay only a caption URL tied to
+  // an outstanding user-initiated subtitlesGet request to the extension worker.
+  window.addEventListener(CAPTION_FETCH_REQUEST_EVENT, (event: Event) => {
+    const detail = (event as CustomEvent<unknown>).detail;
+    if (!detail || typeof detail !== "object") return;
+    const request = detail as { source?: string; id?: string; url?: string };
+    if (request.source !== "immersive-learning" || typeof request.id !== "string" ||
+        !pendingCaptionRequests.has(request.id) || captionRequestsInFlight.has(request.id) ||
+        typeof request.url !== "string") return;
+    const id = request.id;
+    captionRequestsInFlight.add(id);
+    void chrome.runtime.sendMessage({
+      type: "NETFLIX_CAPTION_DOCUMENT_FETCH", url: request.url,
+    }).then((response: { ok: boolean; text?: string; error?: string } | undefined) => {
+      if (!pendingCaptionRequests.has(id)) return;
+      window.dispatchEvent(new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
+        detail: { source: "immersive-learning", id, ok: response?.ok === true,
+          text: response?.text, error: response?.error },
+      }));
+    }).catch(error => {
+      if (!pendingCaptionRequests.has(id)) return;
+      window.dispatchEvent(new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
+        detail: { source: "immersive-learning", id, ok: false,
+          error: error instanceof Error ? error.message : "Netflix caption request failed." },
+      }));
+    }).finally(() => { captionRequestsInFlight.delete(id); });
+  });
 
   function findVideo(): HTMLVideoElement | null {
     const videos = Array.from(document.querySelectorAll<HTMLVideoElement>("video"));
