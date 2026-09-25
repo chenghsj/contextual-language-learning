@@ -147,3 +147,25 @@ test("compact playback keeps original loop settings and removes the old always-v
   assert.match(css, /\.sceneMiniControls \{[^}]*grid-template-columns:/);
   assert.match(css, /\.sceneReadingSettings \{[^}]*margin:/);
 });
+
+test("reader opens in study with only Study and Review tabs; no watch-along polling", async () => {
+  const source = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(source, /type Mode = "learn" \| "review"/);
+  assert.match(source, /useState<Mode>\("learn"\)/);
+  assert.match(source, /\(\["learn", "review"\] as const\)/);
+  assert.doesNotMatch(source, /watchScene|watchTime|watchAvailable|mode === "watch"|adapter\.status|setInterval\(poll/);
+  assert.match(css, /\.sceneTabs \{[^}]*grid-template-columns: repeat\(2,minmax\(0,1fr\)\)/);
+  for (const locale of Object.keys(messages) as UiLocale[]) {
+    const copy = sceneReaderMessages[locale];
+    const html = renderReader(locale, true);
+    assert.equal((html.match(/role="tab"/g) ?? []).length, 2, locale + ": two tabs");
+    assert.ok(html.includes(copy.learn), locale + ": study");
+    assert.ok(html.includes(copy.review), locale + ": review");
+    assert.ok(html.includes('class="scenePicker"'), locale + ": scene picker");
+    assert.ok(html.includes('class="sceneMiniControls"'), locale + ": playback controls");
+    for (const removed of ["watch", "watchHint", "watchNoScene", "watchUnavailable", "studyThis"]) {
+      assert.equal(Object.hasOwn(copy, removed), false, locale + ": obsolete " + removed);
+    }
+  }
+});

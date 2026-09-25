@@ -13,7 +13,7 @@ import { Textarea } from "./ui/textarea";
 import { SettingInfo } from "./setting-info";
 
 type SceneDocument = Extract<LearningDocument, { schemaVersion: 2 }>;
-type Mode = "watch" | "learn" | "review";
+type Mode = "learn" | "review";
 type Hint = "progressive" | "original" | "bilingual";
 type Repeat = "2" | "3" | "5" | "infinite";
 
@@ -53,8 +53,6 @@ export function SceneReader({
   const [status, setStatus] = useState("");
   const [playbackSettingsOpen, setPlaybackSettingsOpen] = useState(false);
   const [loopingSceneId, setLoopingSceneId] = useState<string | null>(null);
-  const [watchTime, setWatchTime] = useState<number | null>(null);
-  const [watchAvailable, setWatchAvailable] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const cues = useMemo(() => new Map(document.cues.map(cue => [cue.id, cue])), [document.cues]);
@@ -68,8 +66,6 @@ export function SceneReader({
   const focusLoopActive = loopingSceneId === scene.id;
   const originalVisible = showOriginal ?? hint !== "progressive";
   const translationVisible = showTranslation ?? hint === "bilingual";
-  const watchScene = watchTime === null ? undefined : document.sections.find(item =>
-    item.startMs !== null && item.endMs !== null && watchTime >= item.startMs && watchTime <= item.endMs);
 
   useEffect(() => {
     let live = true;
@@ -98,23 +94,6 @@ export function SceneReader({
       [hintKey]: hint,
     }).catch(() => undefined);
   }, [loaded, progressKey, scene.id, completedIds, stepByScene, hint, hintKey]);
-
-  useEffect(() => {
-    if (mode !== "watch" || !sourceUrl || !adapter.status) return;
-    let live = true;
-    const poll = () => {
-      void adapter.status!(sourceUrl).then(result => {
-        if (!live) return;
-        setWatchTime(typeof result.currentMs === "number" ? result.currentMs : null);
-        setWatchAvailable(true);
-      }).catch(() => {
-        if (live) { setWatchAvailable(false); setWatchTime(null); }
-      });
-    };
-    poll();
-    const timer = window.setInterval(poll, 2000);
-    return () => { live = false; window.clearInterval(timer); };
-  }, [mode, sourceUrl, adapter]);
 
   function selectScene(index: number): void {
     if (busy || !Number.isInteger(index) || index < 0 ||
@@ -258,7 +237,7 @@ export function SceneReader({
         </div>
       </div>
       <div className="sceneTabs" role="tablist" aria-label={c.scene}>
-        {(["watch", "learn", "review"] as const).map(tab =>
+        {(["learn", "review"] as const.map(tab =>
           <Button key={tab} role="tab" aria-selected={mode === tab}
             className={mode === tab ? "selected" : ""}
             onClick={() => { setMode(tab); setStatus(""); }}>
@@ -266,22 +245,6 @@ export function SceneReader({
           </Button>)}
       </div>
     </Card>
-
-    {mode === "watch" && <Card className="panel">
-      <h2>{c.watch}</h2>
-      <p className="hint">{c.watchHint}</p>
-      <p className="hint">{watchAvailable && watchTime !== null ? formatTime(watchTime) : c.watchUnavailable}</p>
-      {watchScene ? <>
-        <span className="chip">{formatTime(watchScene.startMs)}–{formatTime(watchScene.endMs)}</span>
-        <h2>{watchScene.title}</h2>
-        <p>{watchScene.context}</p>
-        <Button onClick={() => {
-          selectScene(document.sections.findIndex(item => item.id === watchScene.id));
-          setMode("learn");
-        }}>{c.studyThis}</Button>
-      </> : <p className="hint">{c.watchNoScene}</p>}
-      {sourceUrl && <Button variant="outline" onClick={() => void openVideo()} disabled={busy}>{c.openVideo}</Button>}
-    </Card>}
 
     {mode === "learn" && <>
       <Card className="panel">
