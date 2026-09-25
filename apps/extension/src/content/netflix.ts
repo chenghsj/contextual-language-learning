@@ -63,9 +63,17 @@
         !pendingCaptionRequests.has(request.id) || captionRequestsInFlight.has(request.id) ||
         typeof request.url !== "string") return;
     const id = request.id;
+    const watchId = location.pathname.match(/^\/watch\/(\d+)(?:\/|$)/)?.[1];
+    if (!watchId) {
+      window.dispatchEvent(new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
+        detail: { source: "immersive-learning", id, ok: false,
+          error: "The Netflix watch page changed before its subtitle request. Retry on the video." },
+      }));
+      return;
+    }
     captionRequestsInFlight.add(id);
     void chrome.runtime.sendMessage({
-      type: "NETFLIX_CAPTION_DOCUMENT_FETCH", url: request.url,
+      type: "NETFLIX_CAPTION_DOCUMENT_FETCH", url: request.url, watchId,
     }).then((response: { ok: boolean; text?: string; error?: string } | undefined) => {
       if (!pendingCaptionRequests.has(id)) return;
       window.dispatchEvent(new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
