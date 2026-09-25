@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability (private report)
+    url: https://github.com/chenghsj/immersive-language-learning/security/advisories
+    about: Do not file credential exposure or exploitation details in public issues. Use private vulnerability reporting if enabled; see SECURITY.md.
+  - name: Installation and troubleshooting guide
+    url: https://github.com/chenghsj/immersive-language-learning#install-from-github-release-chromium--macos
+    about: Check the Chromium ZIP, macOS Native Host setup, supported CLI login and limitations first.
