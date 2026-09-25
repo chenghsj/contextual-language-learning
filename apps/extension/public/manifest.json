@@ -14,7 +14,10 @@
     "https://www.youtube.com/*",
     "https://m.youtube.com/*",
     "https://www.netflix.com/*",
-    "https://netflix.com/*"
+    "https://netflix.com/*",
+    "https://*.nflxvideo.net/*",
+    "https://*.nflximg.net/*",
+    "https://*.nflxext.com/*"
   ],
   "action": {
     "default_title": "__MSG_actionTitle__"
