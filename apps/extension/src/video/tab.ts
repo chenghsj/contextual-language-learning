@@ -2,7 +2,7 @@ import type { VideoAdapter } from "./types";
 
 // Start slightly before the subtitle's timestamp so the listener hears the
 // beginning of the utterance, and leave a small tail for inaccurate end times.
-export const CUE_LEAD_IN_MS = 2_000;
+export const CUE_LEAD_IN_MS = 500;
 export const CUE_TAIL_MS = 400;
 export function cuePlaybackStart(startMs: number): number {
   if (!Number.isFinite(startMs) || startMs < 0) throw new Error("Invalid subtitle start time.");
