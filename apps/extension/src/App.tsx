@@ -574,15 +574,15 @@ export default function App() {
   async function applyPlaybackRate(): Promise<void> {
     setError("");
     if (!readerAdapter.setPlaybackRate || !document?.source.url) {
-      setError("這個影片來源沒有可用的倍速控制。");
+      setError(t("errorRateUnsupported"));
       return;
     }
     setRateApplying(true);
     try {
       await readerAdapter.setPlaybackRate(document.source.url, playbackRate);
-      setPlaybackStatus("已將 " + readerAdapter.label + " 播放速度設為 " + playbackRate + "×");
+      setPlaybackStatus(t("rateApplied", { name: readerAdapter.label, rate: playbackRate }));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "播放器未能套用播放速度。");
+      setError(cause instanceof Error ? cause.message : t("errorRate"));
     } finally {
       setRateApplying(false);
     }
@@ -836,7 +836,7 @@ export default function App() {
               </label>
             </div>
             {readerAdapter.setPlaybackRate && <div className="twoColumns">
-              <label>播放速度
+              <label>{t("playbackRateLabel")}
                 <Select value={playbackRate} disabled={rateApplying}
                   onChange={event => setPlaybackRate(Number(event.target.value))}>
                   {[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map(rate =>
@@ -846,11 +846,11 @@ export default function App() {
               <div className="actions" style={{ alignSelf: "center" }}>
                 <Button variant="outline" className="secondary" disabled={rateApplying}
                   onClick={() => void applyPlaybackRate()}>
-                  {rateApplying ? "套用中…" : "套用播放速度"}
+                  {rateApplying ? t("applyingRate") : t("applyPlaybackRate")}
                 </Button>
               </div>
             </div>}
-            {readerAdapter.setPlaybackRate && <p className="hint">速度是儲存的偏好值；點擊「套用播放速度」後，才會變更目前開啟的播放器。播放網站可能自行重設速度。</p>}
+            {readerAdapter.setPlaybackRate && <p className="hint">{t("ratePreferenceHint")}</p>}
             {readerAdapter.diagnose
               ? <div className="callout">
                   {readerAdapter.label} 的播放器控制由該平台 Adapter 提供；非公開介面可能更新失效。所有控制皆由你主動操作，不取得字幕。
