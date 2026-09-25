@@ -237,7 +237,7 @@ export function SceneReader({
         </div>
       </div>
       <div className="sceneTabs" role="tablist" aria-label={c.scene}>
-        {(["learn", "review"] as const.map(tab =>
+        {(["learn", "review"] as const).map(tab =>
           <Button key={tab} role="tab" aria-selected={mode === tab}
             className={mode === tab ? "selected" : ""}
             onClick={() => { setMode(tab); setStatus(""); }}>
