@@ -1,4 +1,4 @@
-export type PlaybackCapability = "timestampLink" | "diagnose" | "seek" | "loop";
+export type PlaybackCapability = "timestampLink" | "diagnose" | "seek" | "loop" | "playbackRate";
 
 export type LoopSettings = {
   startMs: number;
@@ -17,6 +17,7 @@ export interface VideoAdapter {
   timestampLink?(url: string, startMs: number): string | null;
   diagnose?(url: string): Promise<PlaybackStatus>;
   seek?(url: string, startMs: number): Promise<void>;
+  setPlaybackRate?(url: string, rate: number): Promise<void>;
   loop?(url: string, options: LoopSettings): Promise<void>;
   stopLoop?(url: string): Promise<void>;
 }
@@ -27,5 +28,6 @@ export function supports(adapter: VideoAdapter, capability: PlaybackCapability):
     case "diagnose": return typeof adapter.diagnose === "function";
     case "seek": return typeof adapter.seek === "function";
     case "loop": return typeof adapter.loop === "function";
+    case "playbackRate": return typeof adapter.setPlaybackRate === "function";
   }
 }
