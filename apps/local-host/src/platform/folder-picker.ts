@@ -22,7 +22,7 @@ export async function pickFolder(platform: NodeJS.Platform = process.platform): 
   if (platform === "win32") {
     // Static PowerShell, not interpolated with user content. -Sta is needed for WinForms dialogs.
     const script = [
-      "[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)",
+      "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)",
       "Add-Type -AssemblyName System.Windows.Forms",
       "$dialog = New-Object System.Windows.Forms.FolderBrowserDialog",
       "$dialog.Description = 'Select lesson storage folder'",
