@@ -46,3 +46,34 @@ jobs:
           path: release-assets/*
           if-no-files-found: error
           retention-days: 7
+
+  windows-host:
+    name: Windows Host install and binary stdio
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: node apps/local-host/scripts/smoke-host.mjs
+      - name: Register and exercise real Windows Native Host executable
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          try {
+            node apps/local-host/scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser chrome
+            if ($LASTEXITCODE -ne 0) { throw 'Windows Host installer failed' }
+            $launcher = Join-Path $env:LOCALAPPDATA 'Immersive Learning\native-host\native-host.exe'
+            if (!(Test-Path -LiteralPath $launcher)) { throw 'Native Host .exe not created' }
+            node apps/local-host/scripts/smoke-host.mjs "$launcher"
+            if ($LASTEXITCODE -ne 0) { throw 'Windows Native Host stdio smoke failed' }
+          } finally {
+            reg.exe delete 'HKCU\Software\Google\Chrome\NativeMessagingHosts\dev.immersive.language_learning' /f | Out-Null
+          }
