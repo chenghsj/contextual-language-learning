@@ -14,8 +14,8 @@ This repository remains **private** pending the public-release checklist and liv
 
 - Import SRT, VTT, or pasted text. Original subtitles and timestamps remain unchanged.
 - Select target language (English/Japanese/Korean), level, **instruction language**, teaching mode, vocabulary cap, and exercises per section.
-- Pick Claude Code, Codex, or AGY. Leave model blank to use the selected CLI's default model, or enter an explicit model ID.
-- Optionally isolate Claude/Codex accounts using an existing config directory under your home directory. AGY uses its current CLI login.
+- Pick Claude Code, Codex, or AGY. The Native Host queries `agy models` or Codex's experimental `codex debug models` for available model options; Claude Code offers documented aliases rather than an account-specific machine-readable list. You can always use the CLI default or a custom model ID. Catalog entries do not guarantee entitlement.
+- Save named Claude/Codex CLI account Profiles pointing to existing, separately authenticated directories inside your home folder. Selecting one changes `CLAUDE_CONFIG_DIR` or `CODEX_HOME` only for that Agent invocation; profile names/paths are stored locally, never credentials. AGY uses its current CLI login.
 - Native Messaging bridge to a macOS host; no API keys or CLI credentials are stored in the extension.
 - Run a checkpointed generation pipeline: chunk subtitles, validate AI sections with Zod, save each successful chapter, then export the JSON/Markdown document. Reopen the Side Panel and use **任務紀錄與恢復** to resume interrupted/failed jobs.
 - Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping and user-triggered playback speed (0.5×–2×).
@@ -79,6 +79,31 @@ pnpm host:install YOUR_EXTENSION_ID
 6. In **閱讀文件**, use **另存新檔** to choose where to download the JSON or Markdown copy.
 
 If Chrome reports a missing native host, verify that `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/dev.immersive.language_learning.json` includes your current extension ID and points to the generated executable launcher. Rerun `pnpm build` and `pnpm host:install YOUR_EXTENSION_ID` after relocating the repository or changing Node installations.
+
+### CLI model discovery and account Profiles
+
+In **Settings → Local CLI Agent**, check the Native Host, choose an account Profile and refresh the available CLI models. Choosing a different Profile resets the model choice. Use CLI default or custom Model ID if discovery is unavailable. The Codex debug catalog and Claude aliases are not a guarantee that an account may use the listed model.
+
+Create and authenticate any extra account directories in Terminal before registering them in Settings:
+
+~~~sh
+mkdir -p "$HOME/.claude-work" "$HOME/.codex-work"
+CLAUDE_CONFIG_DIR="$HOME/.claude-work" claude
+CODEX_HOME="$HOME/.codex-work" codex login
+~~~
+
+Enter a name and its absolute folder path in Settings, save it, then switch accounts from the dropdown. Only Claude/Codex profiles are supported; AGY remains on its current CLI login. Switching never runs logout, copies credentials, or changes Terminal's selected account. Removing a Profile only removes its label/path entry; the CLI directory remains.
+
+The Host invokes a fixed `agy models` or `codex debug models` command with no shell and a timeout. Claude Code exposes `/model` interactively, so this extension offers the `sonnet`, `opus` and `haiku` CLI aliases instead of pretending to fetch account-specific entitlements. All providers retain default and custom model choices.
+
+If you see **Specified native messaging host not found**, copy the current extension ID from `chrome://extensions` and run these commands from the project root:
+
+~~~sh
+pnpm build
+pnpm host:install YOUR_EXTENSION_ID
+~~~
+
+Reload the extension. If the Chrome extension ID changes, reinstall the Host with the new ID. Extensions cannot silently install Native Messaging Hosts.
 
 ### Accounts and models
 

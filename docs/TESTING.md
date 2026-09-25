@@ -29,7 +29,7 @@ Automated CI covers TypeScript, unit tests, extension packaging and Native Messa
 
 ## Native Host / Agent / publishing
 
-1. Extract the macOS Host ZIP, run its installer with the **currently loaded extension ID**, and verify Host/CLI diagnostics in the Side Panel.
+1. Extract the macOS Host ZIP, run its installer with the **currently loaded extension ID**, and verify Host/CLI diagnostics in the Side Panel.,   - Verify missing Host registration shows the matching extension-ID installation command.,   - Confirm AGY models are queried via `agy models`, Codex via `codex debug models` where supported, and Claude Code shows documented aliases without asserting account entitlement.,   - Create two separately authenticated Claude/Codex config directories, save their names/absolute paths, switch Profiles, and verify generation uses the matching environment without logging out the other account. Switching Profiles must clear the prior model.,   - Test out-of-home/missing profile folders, removing profile registration without deleting the CLI directory, unknown CLI model metadata and custom model ID fallback.
 2. Test one short generation with a separately authenticated CLI, then interrupt a longer synthetic task and resume from its saved chapter checkpoint.
 3. Generate an identical transcript with changed title/URL tracking parameters. Confirm duplicate preflight shows the original and requires explicit new-version confirmation without overwriting previous data.
 4. Select a local folder via the macOS picker and verify JSON/Markdown are written there while checkpoints remain in the canonical library.

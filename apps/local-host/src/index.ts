@@ -3,6 +3,8 @@ import {
   HostRequestSchema, type DuplicateMatch, type GenerationRequest, type HostMessage, type LearningDocument,
 } from "@immersive/core";
 import { getAgentCatalog } from "./agents";
+import { discoverAgentModels } from "./agents/metadata";
+import { listAgentProfiles, saveAgentProfile, removeAgentProfile } from "./agents/profiles";
 import { findLocalDuplicates, requestKey } from "./duplicates";
 import { findDriveDuplicates } from "./drive/api";
 import { configureGoogleOAuth, connectGoogleAccount, googleConfigured, listGoogleAccounts } from "./drive/oauth";
@@ -89,6 +91,21 @@ async function handle(input: unknown): Promise<void> {
           installed: Object.fromEntries(agents.map(agent => [agent.id, agent.installed])) });
         break;
       }
+      case "agentModels": {
+        const result = await discoverAgentModels(request.settings);
+        reply({ id: request.id, type: "agentModels", ...result });
+        break;
+      }
+      case "agentProfiles":
+        reply({ id: request.id, type: "agentProfiles", profiles: await listAgentProfiles() });
+        break;
+      case "agentProfileSave":
+        reply({ id: request.id, type: "agentProfiles",
+          profiles: await saveAgentProfile(request.provider, request.label, request.directory) });
+        break;
+      case "agentProfileRemove":
+        reply({ id: request.id, type: "agentProfiles", profiles: await removeAgentProfile(request.profileId) });
+        break;
       case "listJobs":
         reply({ id: request.id, type: "jobs", jobs: await manager.list() });
         break;
