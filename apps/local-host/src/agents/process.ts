@@ -1,16 +1,21 @@
 import { spawn } from "node:child_process";
-import { access, realpath, readdir, stat } from "node:fs/promises";
+import { access, readFile, realpath, readdir, stat } from "node:fs/promises";
 import { constants } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, isAbsolute, join, resolve, sep } from "node:path";
+import { delimiter, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import type { AgentSettings } from "@immersive/core";
 
+/** Resolve an installed trusted Agent without invoking a Windows command shell. */
 export async function findExecutable(name: string): Promise<string | null> {
   const home = homedir();
   const paths = [
-    ...String(process.env.PATH ?? "").split(":"),
+    ...String(process.env.PATH ?? "").split(delimiter),
     "/opt/homebrew/bin", "/usr/local/bin",
     join(home, ".local/bin"), join(home, ".npm-global/bin"),
+    ...(process.platform === "win32" ? [
+      join(process.env.APPDATA ?? join(home, "AppData", "Roaming"), "npm"),
+      join(home, "scoop", "shims"),
+    ] : []),
     dirname(process.execPath),
   ].filter(Boolean);
   try {
@@ -18,13 +23,42 @@ export async function findExecutable(name: string): Promise<string | null> {
     for (const version of versions) paths.push(join(home, ".nvm/versions/node", version, "bin"));
   } catch { /* nvm is optional */ }
   for (const folder of paths) {
-    const candidate = join(folder, name);
-    try {
-      await access(candidate, constants.X_OK);
-      return candidate;
-    } catch { /* try another configured installation */ }
+    if (process.platform === "win32") {
+      for (const extension of [".exe", ".com"]) {
+        const binary = join(folder, name + extension);
+        try { await access(binary, constants.X_OK); return binary; } catch { /* next */ }
+      }
+      // npm publishes global .cmd shims on Windows, which require cmd.exe.
+      // Resolve only their adjacent node_modules JS entry and invoke Node directly;
+      // passing lesson text through cmd.exe would allow shell metacharacter injection.
+      const shim = join(folder, name + ".cmd");
+      try {
+        const body = await readFile(shim, "utf8");
+        const match = body.match(/%~?dp0%[\\/]node_modules[\\/]([A-Za-z0-9@._+\\/-]+\.m?js)\b/i);
+        if (match) {
+          const script = resolve(folder, "node_modules", ...match[1].split(/[\\/]/));
+          const root = resolve(folder, "node_modules");
+          if (script.startsWith(root + sep)) {
+            await access(script, constants.R_OK);
+            return script;
+          }
+        }
+      } catch { /* missing shim or unsupported npm launcher */ }
+    } else {
+      const candidate = join(folder, name);
+      try { await access(candidate, constants.X_OK); return candidate; } catch { /* next */ }
+    }
   }
   return null;
+}
+
+export function cliInvocation(command: string, args: readonly string[]): {
+  executable: string; argv: string[];
+} {
+  if (process.platform === "win32" && /\.m?js$/i.test(command)) {
+    return { executable: process.execPath, argv: [command, ...args] };
+  }
+  return { executable: command, argv: [...args] };
 }
 
 export async function profileEnvironment(
@@ -55,8 +89,9 @@ export function runCLI(
     let stderr = "";
     let done = false;
     let exceeded = false;
-    const child = spawn(command, [...args], {
-      cwd, env, signal, stdio: ["ignore", "pipe", "pipe"], shell: false,
+    const { executable, argv } = cliInvocation(command, args);
+    const child = spawn(executable, argv, {
+      cwd, env, signal, stdio: ["ignore", "pipe", "pipe"], shell: false, windowsHide: true,
     });
     child.stdout.setEncoding("utf8");
     child.stderr.setEncoding("utf8");
