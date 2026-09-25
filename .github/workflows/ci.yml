@@ -23,6 +23,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Reject non-pnpm lockfiles
+        run: |
+          if git ls-files --cached --others --exclude-standard -- 'package-lock.json' '**/package-lock.json' 'npm-shrinkwrap.json' '**/npm-shrinkwrap.json' 'yarn.lock' '**/yarn.lock' | grep -q .; then
+            echo "::error::This repository uses pnpm. Remove npm/yarn lockfiles."
+            exit 1
+          fi
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
