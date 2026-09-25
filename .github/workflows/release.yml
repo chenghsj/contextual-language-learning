@@ -102,7 +102,13 @@ jobs:
           sha256sum -c SHA256SUMS
           chromium="immersive-language-learning-chromium-$RELEASE_VERSION.zip"
           unzip -tq "$chromium"
-          unzip -Z -1 "$chromium" | grep -Eq '^(\./)?manifest\.json
+          unzip -Z -1 "$chromium" | grep -Eq '^(\./)?manifest\.json$'
+          for platform in macos windows linux; do
+            host="immersive-language-learning-$platform-host-$RELEASE_VERSION.zip"
+            unzip -tq "$host"
+            unzip -Z -1 "$host" | grep -Eq '^(\./)?dist/native-host\.mjs$'
+            unzip -Z -1 "$host" | grep -Eq '^(\./)?scripts/install-host\.mjs$'
+          done
 
       - name: Write installation notes
         shell: bash
@@ -127,150 +133,9 @@ jobs:
           A signed-in supported CLI Agent must be installed separately.
           Linux GUI folder selection requires zenity or kdialog.
 
-          Both Host installers and Chromium ZIP are covered by SHA256SUMS.
-          Google Drive OAuth remains experimental and macOS-only because its
-          credential storage currently uses macOS Keychain.
-          EOF
-
-      - name: Publish GitHub Release and assets
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" release-assets/* --clobber
-          else
-            gh release create "$RELEASE_TAG" release-assets/* \
-              --title "Immersive Language Learning $RELEASE_TAG" \
-              --notes-file release-notes.md \
-              --verify-tag
-          fi
-
-          for platform in macos windows linux; do
-            host="immersive-language-learning-$platform-host-$RELEASE_VERSION.zip"
-            unzip -tq "$host"
-            unzip -Z -1 "$host" | grep -Eq '^(\./)?dist/native-host\.mjs
-
-      - name: Write installation notes
-        shell: bash
-        run: |
-          cat > release-notes.md <<'EOF'
-          ## Install in Chrome or Edge Chromium
-
-          Download the Chromium ZIP asset, extract it, and open chrome://extensions.
-          Enable Developer mode and click Load unpacked. Select the extracted
-          directory containing manifest.json at its root.
-
-          ## macOS Native Host (required for CLI generation)
-
-          Download and extract the matching macOS Host ZIP. With Node.js 22+,
-          run the following inside its extracted directory:
-
-          node scripts/install-host.mjs YOUR_EXTENSION_ID
-
-          The extension ID is shown in chrome://extensions after loading the
-          Chromium extension. The installer copies the Host into a stable
-          directory in your user Library. Install and sign in to at least one
-          supported CLI Agent separately.
-
-          Both ZIPs are verified by SHA256SUMS. The Chromium ZIP is an unpacked
-          extension, not a signed CRX. It cannot call local CLI tools without
-          the macOS Native Host. Google Drive requires your own Desktop OAuth
-          Client configuration.
-          EOF
-
-      - name: Publish GitHub Release and assets
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" release-assets/* --clobber
-          else
-            gh release create "$RELEASE_TAG" release-assets/* \
-              --title "Immersive Language Learning $RELEASE_TAG" \
-              --notes-file release-notes.md \
-              --verify-tag
-          fi
-
-            unzip -Z -1 "$host" | grep -Eq '^(\./)?scripts/install-host\.mjs
-
-      - name: Write installation notes
-        shell: bash
-        run: |
-          cat > release-notes.md <<'EOF'
-          ## Install in Chrome or Edge Chromium
-
-          Download the Chromium ZIP asset, extract it, and open chrome://extensions.
-          Enable Developer mode and click Load unpacked. Select the extracted
-          directory containing manifest.json at its root.
-
-          ## macOS Native Host (required for CLI generation)
-
-          Download and extract the matching macOS Host ZIP. With Node.js 22+,
-          run the following inside its extracted directory:
-
-          node scripts/install-host.mjs YOUR_EXTENSION_ID
-
-          The extension ID is shown in chrome://extensions after loading the
-          Chromium extension. The installer copies the Host into a stable
-          directory in your user Library. Install and sign in to at least one
-          supported CLI Agent separately.
-
-          Both ZIPs are verified by SHA256SUMS. The Chromium ZIP is an unpacked
-          extension, not a signed CRX. It cannot call local CLI tools without
-          the macOS Native Host. Google Drive requires your own Desktop OAuth
-          Client configuration.
-          EOF
-
-      - name: Publish GitHub Release and assets
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" release-assets/* --clobber
-          else
-            gh release create "$RELEASE_TAG" release-assets/* \
-              --title "Immersive Language Learning $RELEASE_TAG" \
-              --notes-file release-notes.md \
-              --verify-tag
-          fi
-
-          done
-
-      - name: Write installation notes
-        shell: bash
-        run: |
-          cat > release-notes.md <<'EOF'
-          ## Install in Chrome or Edge Chromium
-
-          Download the Chromium ZIP asset, extract it, and open chrome://extensions.
-          Enable Developer mode and click Load unpacked. Select the extracted
-          directory containing manifest.json at its root.
-
-          ## macOS Native Host (required for CLI generation)
-
-          Download and extract the matching macOS Host ZIP. With Node.js 22+,
-          run the following inside its extracted directory:
-
-          node scripts/install-host.mjs YOUR_EXTENSION_ID
-
-          The extension ID is shown in chrome://extensions after loading the
-          Chromium extension. The installer copies the Host into a stable
-          directory in your user Library. Install and sign in to at least one
-          supported CLI Agent separately.
-
-          Both ZIPs are verified by SHA256SUMS. The Chromium ZIP is an unpacked
-          extension, not a signed CRX. It cannot call local CLI tools without
-          the macOS Native Host. Google Drive requires your own Desktop OAuth
-          Client configuration.
+          All four ZIPs are covered by SHA256SUMS. Google Drive OAuth remains
+          experimental and macOS-only because its credential storage currently
+          uses macOS Keychain.
           EOF
 
       - name: Publish GitHub Release and assets
