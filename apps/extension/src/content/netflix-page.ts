@@ -5,7 +5,7 @@
 (() => {
   const REQUEST_EVENT = "immersive-learning:netflix:request";
   const RESPONSE_EVENT = "immersive-learning:netflix:response";
-  type Action = "diagnose" | "status" | "seekTo" | "pause" | "play";
+  type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate";
   type Request = { source: "immersive-learning"; id: string; action: Action; value?: number };
   type Player = { seek(ms: number): void; getCurrentTime(): number; pause(): void; play(): void };
   type PlayerApi = {
@@ -63,7 +63,7 @@
     const candidate = value as Partial<Request>;
     return candidate.source === "immersive-learning"
       && typeof candidate.id === "string" && candidate.id.length < 100
-      && ["diagnose", "status", "seekTo", "pause", "play"].includes(candidate.action ?? "");
+      && ["diagnose", "status", "seekTo", "pause", "play", "setPlaybackRate"].includes(candidate.action ?? "");
   };
 
   window.addEventListener(REQUEST_EVENT, (event: Event) => {
@@ -72,7 +72,7 @@
     const result: {
       source: "immersive-learning"; id: string; ok: boolean; available: boolean;
       currentMs?: number; playing?: boolean | null; sessionId?: string;
-      seekCalled?: boolean; error?: string;
+      seekCalled?: boolean; playbackRate?: number; error?: string;
     } = { source: "immersive-learning", id: request.id, ok: false, available: false };
     try {
       const chosen = selectPlayer();
@@ -90,6 +90,20 @@
         chosen.player.pause();
       } else if (request.action === "play") {
         chosen.player.play();
+      } else if (request.action === "setPlaybackRate") {
+        const rate = request.value;
+        if (typeof rate !== "number" || !Number.isFinite(rate) || rate < 0.5 || rate > 2) {
+          throw new Error("Invalid playback speed.");
+        }
+        if (!chosen.video) throw new Error("Netflix HTML video is unavailable for playback speed.");
+        // Follow netflix-shortcut-override: use the active video for rate changes,
+        // not an undocumented internal setPlaybackRate method that may not exist.
+        chosen.video.playbackRate = rate;
+        chosen.video.defaultPlaybackRate = rate;
+        if (Math.abs(chosen.video.playbackRate - rate) > 0.01) {
+          throw new Error("Netflix did not accept the requested playback speed.");
+        }
+        result.playbackRate = chosen.video.playbackRate;
       }
       if (request.action === "status" || request.action === "diagnose") {
         const currentMs = chosen.player.getCurrentTime();
