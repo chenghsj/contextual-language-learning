@@ -96,9 +96,17 @@ export function installGenerationController(
 
   runtime.onConnect.addListener(client => {
     if (client.name !== GENERATION_CONTROLLER_PORT) return;
-    // Internal onConnect cannot be invoked from an external extension, but
-    // check the sender's extension ID before accepting native Host requests.
-    if (client.sender?.id && client.sender.id !== runtime.id) {
+    // Restrict Native Host generation commands to the extension's Side Panel.
+    // An isolated content script can also call runtime.connect(), so checking
+    // only sender.id is not sufficient.
+    let fromPanel = false;
+    try {
+      const senderUrl = new URL(client.sender?.url ?? "");
+      fromPanel = senderUrl.protocol === "chrome-extension:" &&
+        senderUrl.hostname === runtime.id && senderUrl.pathname === "/sidepanel.html" &&
+        !client.sender?.tab;
+    } catch { /* Unknown or missing sender document. */ }
+    if (!fromPanel || (client.sender?.id && client.sender.id !== runtime.id)) {
       client.disconnect();
       return;
     }
