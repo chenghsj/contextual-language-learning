@@ -11,7 +11,7 @@ export const SubtitleCueSchema = z.object({
 export type SubtitleCue = z.infer<typeof SubtitleCueSchema>;
 
 export const SourceSchema = z.object({
-  platform: z.enum(["youtube", "netflix", "import"]),
+  platform: z.string().regex(/^[a-z][a-z0-9-]{0,39}$/),
   title: z.string().trim().min(1).max(200),
   url: z.string().url().max(2048).optional(),
 });
@@ -28,7 +28,7 @@ export const LearningProfileSchema = z.object({
 export type LearningProfile = z.infer<typeof LearningProfileSchema>;
 
 export const AgentSettingsSchema = z.object({
-  provider: z.enum(["claude", "codex", "agy"]),
+  provider: z.string().regex(/^[a-z][a-z0-9-]{0,39}$/),
   modelId: z.string().max(120),
   accountConfigDir: z.string().max(1024).optional(),
 });
@@ -89,8 +89,15 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
 ]);
 export type HostRequest = z.infer<typeof HostRequestSchema>;
 
+export interface AgentInfo {
+  id: string;
+  label: string;
+  installed: boolean;
+  supportsAccountProfiles: boolean;
+}
+
 export type HostMessage =
-  | { id: string; type: "health"; installed: Record<"claude" | "codex" | "agy", boolean> }
+  | { id: string; type: "health"; installed: Record<string, boolean>; agents: AgentInfo[] }
   | { id: string; type: "progress"; completed: number; total: number }
   | { id: string; type: "result"; document: LearningDocument }
   | { id: string; type: "cancelled" }

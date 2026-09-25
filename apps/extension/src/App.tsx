@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
-  parseSubtitles, youtubeTimeLink, netflixWatchId,
+  parseSubtitles, type AgentInfo,
   type AgentSettings, type HostMessage, type LearningDocument,
-  type LearningProfile, type SubtitleCue, type VideoSource,
+  type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
+import { getVideoAdapter } from "./video";
 import { BookOpen, Settings2, WandSparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
@@ -15,7 +16,7 @@ import { Badge } from "./components/ui/badge";
 
 const HOST_NAME = "dev.immersive.language_learning";
 type Page = "create" | "reader" | "settings";
-type Installed = Record<"claude" | "codex" | "agy", boolean>;
+type Installed = Record<string, boolean>;
 type RepeatOption = "2" | "3" | "5" | "infinite";
 
 const DEFAULT_PROFILE: LearningProfile = {
@@ -23,15 +24,6 @@ const DEFAULT_PROFILE: LearningProfile = {
   mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3,
 };
 const DEFAULT_AGENT: AgentSettings = { provider: "claude", modelId: "" };
-
-function platformFromUrl(value: string): VideoSource["platform"] {
-  try {
-    const host = new URL(value).hostname.toLowerCase();
-    if (["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"].includes(host)) return "youtube";
-    if (host === "netflix.com" || host.endsWith(".netflix.com")) return "netflix";
-  } catch { /* manual import */ }
-  return "import";
-}
 
 function downloadDocument(doc: LearningDocument, format: "json" | "md"): void {
   const md = [
@@ -68,6 +60,11 @@ export default function App() {
   const [profile, setProfile] = useState<LearningProfile>(DEFAULT_PROFILE);
   const [agent, setAgent] = useState<AgentSettings>(DEFAULT_AGENT);
   const [installed, setInstalled] = useState<Installed | null>(null);
+  const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([
+    { id: "claude", label: "Claude Code", installed: false, supportsAccountProfiles: true },
+    { id: "codex", label: "Codex", installed: false, supportsAccountProfiles: true },
+    { id: "agy", label: "AGY", installed: false, supportsAccountProfiles: false },
+  ]);
   const [document, setDocument] = useState<LearningDocument | null>(null);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
@@ -81,7 +78,8 @@ export default function App() {
   const requestRef = useRef<string | null>(null);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
-  const platform = platformFromUrl(sourceUrl);
+  const platform = getVideoAdapter(sourceUrl).id;
+  const readerAdapter = getVideoAdapter(document?.source.url);
 
   useEffect(() => {
     void chrome.storage.local.get(["profile", "agent", "repeat", "delay"]).then(saved => {
@@ -93,7 +91,7 @@ export default function App() {
     }).catch(() => setHydrated(true));
     void chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
       const tab = tabs[0];
-      if (tab?.url && platformFromUrl(tab.url) !== "import") {
+      if (tab?.url && getVideoAdapter(tab.url).id !== "import") {
         setSourceUrl(tab.url);
         setTitle((tab.title ?? "Video").slice(0, 200));
       }
@@ -114,6 +112,7 @@ export default function App() {
       if (message.id === id && message.type === "health") {
         replied = true;
         setInstalled(message.installed);
+        if (Array.isArray(message.agents)) setAgentCatalog(message.agents);
         port.disconnect();
       }
     });
@@ -184,84 +183,53 @@ export default function App() {
     setError("");
   }
 
-  async function youtubeTab(): Promise<chrome.tabs.Tab | undefined> {
-    const url = document?.source.url ?? sourceUrl;
-    if (platformFromUrl(url) !== "youtube") return undefined;
-    const sourceId = youtubeTimeLink(url, 0)?.match(/[?&]v=([^&]+)/)?.[1];
-    const tabs = await chrome.tabs.query({});
-    return tabs.find(tab => tab.id && tab.url && youtubeTimeLink(tab.url, 0)?.includes("v=" + sourceId + "&"));
-  }
-
-  async function netflixTab(): Promise<chrome.tabs.Tab | undefined> {
-    const id = netflixWatchId(document?.source.url ?? sourceUrl);
-    if (!id) return undefined;
-    const tabs = await chrome.tabs.query({});
-    return tabs.find(tab => tab.id && netflixWatchId(tab.url) === id);
-  }
-
-  async function diagnoseNetflix(): Promise<void> {
+  async function diagnoseVideo(): Promise<void> {
     setError("");
     try {
-      const tab = await netflixTab();
-      if (!tab?.id) throw new Error("請先開啟教材對應的 Netflix 影片分頁。");
-      const response = await chrome.tabs.sendMessage(tab.id, { type: "NETFLIX_DIAGNOSE" }) as {
-        ok: boolean; error?: string; currentMs?: number;
-      };
-      if (!response?.ok) throw new Error(response?.error ?? "Netflix 播放器尚未就緒。");
-      setPlaybackStatus("播放器已就緒 · 目前時間 " + formatTime(response.currentMs ?? null));
+      if (!readerAdapter.diagnose || !document?.source.url) throw new Error("這個影片來源不支援播放器診斷。");
+      const status = await readerAdapter.diagnose(document.source.url);
+      setPlaybackStatus(status.message + (status.currentMs !== undefined ? " · 目前時間 " + formatTime(status.currentMs) : ""));
     } catch (cause) {
       setPlaybackStatus("");
-      setError(cause instanceof Error ? cause.message : "Netflix 診斷失敗。");
+      setError(cause instanceof Error ? cause.message : "播放器診斷失敗。");
     }
   }
 
-  async function seekNetflix(cue: SubtitleCue): Promise<void> {
+  async function seekCue(cue: SubtitleCue): Promise<void> {
     if (cue.startMs === null) return;
     setError("");
     try {
-      const tab = await netflixTab();
-      if (!tab?.id) throw new Error("請先在 Chrome 開啟這部 Netflix 影片。");
-      const response = await chrome.tabs.sendMessage(tab.id, {
-        type: "NETFLIX_SEEK", timeMs: cue.startMs,
-      }) as { ok: boolean; error?: string };
-      if (!response?.ok) throw new Error(response?.error ?? "Netflix 不支援這次跳轉。");
+      if (!readerAdapter.seek || !document?.source.url) throw new Error("此來源不支援直接時間跳轉。");
+      await readerAdapter.seek(document.source.url, cue.startMs);
       setLoopActive(false);
-      await chrome.tabs.update(tab.id, { active: true });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Netflix 無法跳轉，請使用顯示的時間手動定位。");
+      setError(cause instanceof Error ? cause.message : "無法跳轉，請使用顯示的時間手動定位。");
     }
   }
 
   async function loopCue(cue: SubtitleCue): Promise<void> {
     if (cue.startMs === null || cue.endMs === null) return;
-    const netflix = !!netflixWatchId(document?.source.url ?? sourceUrl);
+    setError("");
     try {
-      const tab = netflix ? await netflixTab() : await youtubeTab();
-      if (!tab?.id) throw new Error("請先在 Chrome 開啟對應的影片分頁。");
-      const response = await chrome.tabs.sendMessage(tab.id, {
-        type: netflix ? "NETFLIX_LOOP_SET" : "LOOP_SET",
+      if (!readerAdapter.loop || !document?.source.url) throw new Error("此來源不支援片段循環。");
+      await readerAdapter.loop(document.source.url, {
         startMs: cue.startMs, endMs: cue.endMs,
         repeats: repeat === "infinite" ? "infinite" : Number(repeat),
         delaySeconds: delay,
-      }) as { ok: boolean; error?: string };
-      if (!response?.ok) throw new Error(response?.error ?? "播放器無法進行片段循環。");
+      });
       setLoopActive(true);
-      setError("");
-      await chrome.tabs.update(tab.id, { active: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "無法設定循環播放。");
     }
   }
 
   async function stopLoop(): Promise<void> {
-    const netflix = !!netflixWatchId(document?.source.url ?? sourceUrl);
     try {
-      const tab = netflix ? await netflixTab() : await youtubeTab();
-      if (tab?.id) await chrome.tabs.sendMessage(tab.id, {
-        type: netflix ? "NETFLIX_LOOP_CLEAR" : "LOOP_CLEAR",
-      });
+      if (readerAdapter.stopLoop && document?.source.url) {
+        await readerAdapter.stopLoop(document.source.url);
+      }
     } catch {
-      // A removed or reloaded video tab already ends its loop.
+      // Closing or reloading a video tab already cancels its loop.
     }
     setLoopActive(false);
   }
@@ -295,7 +263,7 @@ export default function App() {
           <p className="hint">已解析 {cues.length} 段字幕。</p>
           <label>影片／教材標題 <Input value={title} onChange={event => setTitle(event.target.value)} placeholder="例如：Making a decision" /></label>
           <label>原始影片網址（選填） <Input type="url" value={sourceUrl} onChange={event => setSourceUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=…" /></label>
-          <Badge className="chip">來源：{platform === "youtube" ? "YouTube" : platform === "netflix" ? "Netflix（可選播放器控制）" : "字幕匯入"}</Badge>
+          <Badge className="chip">來源：{getVideoAdapter(sourceUrl).label}</Badge>
         </Card>
 
         <Card className="panel">
@@ -351,20 +319,22 @@ export default function App() {
           <p className="hint">只使用你的本地 CLI 登入狀態；字幕會依所選 CLI 的服務條款傳送給相應模型供應商。</p>
           <Button variant="outline" className="secondary" onClick={checkHost}>檢查 Native Host / CLI</Button>
           {installed && <div className="status">
-            Claude：{installed.claude ? "已安裝" : "未找到"} · Codex：{installed.codex ? "已安裝" : "未找到"} · AGY：{installed.agy ? "已安裝" : "未找到"}
+            {agentCatalog.map(entry => entry.label + "：" + (entry.installed ? "已安裝" : "未找到")).join(" · ")}
           </div>}
           <label>預設 Agent
             <Select value={agent.provider} onChange={event => setAgent(current => ({ ...current, provider: event.target.value as AgentSettings["provider"], accountConfigDir: undefined }))}>
-              <option value="claude">Claude Code</option><option value="codex">Codex</option><option value="agy">AGY</option>
+              {agentCatalog.map(entry =>
+                <option key={entry.id} value={entry.id}>{entry.label}{installed && !entry.installed ? "（未安裝）" : ""}</option>
+              )}
             </Select>
           </label>
           <label>預設模型 ID
             <Input value={agent.modelId} onChange={event => setAgent(current => ({ ...current, modelId: event.target.value }))} placeholder="留空使用 CLI 預設模型" />
           </label>
           <label>獨立帳號設定目錄（選填）
-            <Input disabled={agent.provider === "agy"} value={agent.accountConfigDir ?? ""} onChange={event => setAgent(current => ({ ...current, accountConfigDir: event.target.value || undefined }))} placeholder="例如：/Users/you/.codex-work" />
+            <Input disabled={!agentCatalog.find(entry => entry.id === agent.provider)?.supportsAccountProfiles} value={agent.accountConfigDir ?? ""} onChange={event => setAgent(current => ({ ...current, accountConfigDir: event.target.value || undefined }))} placeholder="例如：/Users/you/.codex-work" />
           </label>
-          <p className="hint">Claude 使用 CLAUDE_CONFIG_DIR，Codex 使用 CODEX_HOME；目錄必須已存在且位於使用者家目錄內。AGY 暫時使用目前登入帳號。</p>
+          <p className="hint">帳號設定目錄僅供宣告支援獨立 Profile 的 Agent 使用；目錄必須已存在於家目錄內。不支援獨立 Profile 的 Agent 使用目前的 CLI 登入環境。</p>
           <div className="callout">Google Drive OAuth、多個帳號的圖形化管理及背景 Daemon 尚未納入這個 MVP，不會假裝已連線。</div>
         </Card>
       </main>}
@@ -397,15 +367,15 @@ export default function App() {
                 </Select>
               </label>
             </div>
-            {platformFromUrl(document.source.url ?? "") === "youtube"
-              ? <p className="hint">循環控制使用已開啟的 YouTube 分頁，不會重新載入影片。</p>
-              : netflixWatchId(document.source.url)
-                ? <div className="callout">
-                    Netflix 時間跳轉及循環使用非公開播放器 API，可能隨 Netflix 更新而失效；只在你點擊後執行，不取得字幕或改寫播放器。
-                    <div className="actions"><Button variant="outline" className="secondary" onClick={() => void diagnoseNetflix()}>檢查 Netflix 播放器</Button></div>
-                    {playbackStatus && <p className="hint" role="status">{playbackStatus}</p>}
-                  </div>
-                : <p className="hint">沒有播放器連結；仍可查看字幕時間戳及下載文件。</p>}
+            {readerAdapter.diagnose
+              ? <div className="callout">
+                  {readerAdapter.label} 的播放器控制由該平台 Adapter 提供；非公開介面可能更新失效。所有控制皆由你主動操作，不取得字幕。
+                  <div className="actions"><Button variant="outline" className="secondary" onClick={() => void diagnoseVideo()}>檢查 {readerAdapter.label} 播放器</Button></div>
+                  {playbackStatus && <p className="hint" role="status">{playbackStatus}</p>}
+                </div>
+              : readerAdapter.loop
+                ? <p className="hint">目前來源：{readerAdapter.label}。循環會控制已開啟的影片分頁，不會重新載入。</p>
+                : <p className="hint">目前來源沒有自動播放器控制；仍可閱讀字幕、查看時間及匯出文件。</p>}
             {loopActive && <Button variant="outline" className="secondary" onClick={() => void stopLoop()}>停止循環</Button>}
           </Card>
           {document.sections.map(section => <Card className="panel lesson" key={section.id}>
@@ -416,15 +386,17 @@ export default function App() {
             {section.cueIds.map(id => {
               const cue = document.cues.find(item => item.id === id);
               if (!cue) return null;
-              const link = youtubeTimeLink(document.source.url, cue.startMs);
-              const netflix = netflixWatchId(document.source.url) !== null;
+              const link = cue.startMs !== null && document.source.url
+                ? readerAdapter.timestampLink?.(document.source.url, cue.startMs) ?? null : null;
+              const canSeek = cue.startMs !== null && !!readerAdapter.seek;
+              const canLoop = cue.startMs !== null && cue.endMs !== null && !!readerAdapter.loop;
               return <div className="cue" key={id}>
                 <span className="time">{formatTime(cue.startMs)}</span>
                 <p>{cue.originalText}</p>
                 <div className="actions">
                   {link && <Button variant="link" className="textButton" onClick={() => void chrome.tabs.create({ url: link })}>開啟時間連結</Button>}
-                  {netflix && cue.startMs !== null && <Button variant="link" className="textButton" onClick={() => void seekNetflix(cue)}>跳到 Netflix 指定時間</Button>}
-                  {(link || netflix) && cue.startMs !== null && cue.endMs !== null && <Button variant="link" className="textButton" onClick={() => void loopCue(cue)}>循環此句</Button>}
+                  {canSeek && <Button variant="link" className="textButton" onClick={() => void seekCue(cue)}>跳到影片指定時間</Button>}
+                  {canLoop && <Button variant="link" className="textButton" onClick={() => void loopCue(cue)}>循環此句</Button>}
                   {!link && cue.startMs !== null && <Button variant="link" className="textButton" onClick={() => void navigator.clipboard.writeText(formatTime(cue.startMs))}>複製時間</Button>}
                 </div>
               </div>;

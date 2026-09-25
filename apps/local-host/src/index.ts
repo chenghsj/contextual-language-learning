@@ -1,6 +1,6 @@
 import { HostRequestSchema, type HostMessage } from "@immersive/core";
 import { generateDocument } from "./generation";
-import { installedAgents } from "./agents";
+import { getAgentCatalog } from "./agents";
 import { encodeMessage, NativeFramer } from "./protocol";
 
 const active = new Map<string, AbortController>();
@@ -19,7 +19,10 @@ async function handle(input: unknown): Promise<void> {
   }
   const request = parsed.data;
   if (request.type === "health") {
-    reply({ id: request.id, type: "health", installed: await installedAgents() });
+    const agents = await getAgentCatalog();
+    reply({ id: request.id, type: "health", agents,
+      installed: Object.fromEntries(agents.map(agent => [agent.id, agent.installed])),
+    });
     return;
   }
   if (request.type === "cancel") {
