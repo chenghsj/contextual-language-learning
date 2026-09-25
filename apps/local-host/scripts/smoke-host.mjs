@@ -28,9 +28,13 @@ await writeFile(join(library, existingId + ".json"), JSON.stringify({
   }],
 }), { flag: "wx" });
 
-const child = spawn(process.execPath, [host], {
+const launcher = process.argv[2];
+const child = spawn(launcher ?? process.execPath, launcher ? [] : [host], {
   stdio: ["pipe", "pipe", "pipe"],
-  env: { ...process.env, HOME: home },
+  env: { ...process.env, HOME: home,
+    ...(process.platform === "win32" ? { USERPROFILE: home,
+      APPDATA: join(home, "AppData", "Roaming"), LOCALAPPDATA: join(home, "AppData", "Local") } : {}) },
+  windowsHide: true,
 });
 let stdout = Buffer.alloc(0);
 let stderr = "";
