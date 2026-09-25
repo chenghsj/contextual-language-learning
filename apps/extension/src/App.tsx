@@ -501,8 +501,14 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (duplicateWarning && preflightPortRef.current) cancelDuplicate();
-    // Intentional: only changes to the generation inputs invalidate a checked request.
+    // A pending check is valid only for the exact inputs originally submitted.
+    // Changing the source, profile, Agent or destination cancels that check and its confirmation ticket.
+    if (preflightPortRef.current) {
+      preflightPortRef.current.disconnect();
+      preflightPortRef.current = null;
+      setDuplicateWarning(null);
+      setChecking(false);
+    }
   }, [raw, title, sourceUrl, profile, agent, destination]);
 
   function cancelGeneration(): void {
@@ -787,6 +793,7 @@ export default function App() {
             <Badge className="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
             <h1>{document.source.title}</h1>
             <p className="hint">{document.sections.length} 個學習章節 · 教學語言 {document.profile.instructionLanguage}</p>
+            {publishedLocation && <p className="hint">已發布至：{publishedLocation}</p>
             <div className="actions">
               <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "json")}>JSON 另存新檔</Button>
               <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "md")}>Markdown 另存新檔</Button>
