@@ -9,7 +9,7 @@ test("language and appearance settings use Radix Select, not NativeSelect", asyn
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   const preferences = app.slice(
     app.indexOf('<h2>{t("uiLanguage")} · {t("appearance")}</h2>'),
-    app.indexOf('<h2>{t("agentHeading")}</h2>'),
+    app.indexOf('<h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>'),
   );
   assert.match(preferences, /<Select value=\{localePreference\} onValueChange=/);
   assert.match(preferences, /<Select value=\{themePreference\} onValueChange=/);
