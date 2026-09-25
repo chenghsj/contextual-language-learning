@@ -19,7 +19,19 @@ export async function fetchNetflixCaptionText(
   url: string, fetchDocument: typeof fetch = fetch,
 ): Promise<string> {
   if (!isAllowedCaptionDeliveryUrl(url)) {
-    throw new Error("Netflix provided an unsupported subtitle address.");
+    // Never include the signed URL, query parameters, cookies, or response body
+    // in a user-facing diagnostic. No network request is made for this input.
+    let detail = "invalid URL";
+    try {
+      const parsed = new URL(url);
+      detail = parsed.protocol === "https:"
+        ? "host " + parsed.hostname.toLowerCase()
+        : "scheme " + parsed.protocol.replace(":", "");
+    } catch {
+      detail = "malformed URL";
+    }
+    throw new Error("Netflix subtitle address rejected by the extension worker (" +
+      detail + "). No network request was sent.");
   }
   let response: Response;
   try {
