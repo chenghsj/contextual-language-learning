@@ -1,8 +1,17 @@
 name: CI
+
 on:
   push:
     branches: [main, "feat/**"]
   pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -20,3 +29,14 @@ jobs:
       - run: pnpm build
       - run: node apps/extension/scripts/check-build.mjs
       - run: node apps/local-host/scripts/smoke-host.mjs
+      - name: Package and verify release archives
+        run: |
+          pnpm package:release
+          (cd release-assets && sha256sum -c SHA256SUMS)
+      - name: Upload downloadable preview packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-preview-${{ github.sha }}
+          path: release-assets/*
+          if-no-files-found: error
+          retention-days: 7
