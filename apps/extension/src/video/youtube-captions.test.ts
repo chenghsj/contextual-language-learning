@@ -187,3 +187,18 @@ test("missing JSON3 duration uses the next source event time instead of a fixed 
     [1000, 7900], [7900, 9900],
   ]);
 });
+
+
+test("final JSON3 event with timed segments is not truncated to two seconds", () => {
+  const cues = parseSubtitles(youtubeJson3ToVtt(JSON.stringify({ events: [
+    { tStartMs: 1000, segs: [
+      { utf8: "First sentence.", tOffsetMs: 0 },
+      { utf8: " Second sentence.", tOffsetMs: 6200 },
+    ] },
+  ] })));
+  // The source timestamps establish sentence starts. The unreported last
+  // endpoint receives a conservative tail and remains manually adjustable.
+  assert.deepEqual(cues.map(cue => [cue.startMs, cue.endMs]), [
+    [1000, 7200], [7200, 9200],
+  ]);
+});
