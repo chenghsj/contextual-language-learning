@@ -108,3 +108,18 @@ test("accepts getTextTrackList/getTextTrack/setTextTrack when timed-text APIs ar
   assert.deepEqual(changes, ["english-1", "japanese-1"]);
   assert.equal(active, ja);
 });
+
+test("a signed allowlisted caption URL reaches the worker boundary without a redundant page URL check", async () => {
+  const player: NetflixCaptionPlayer = {
+    getTimedTextTrackList: () => [{ ...en, urls: [{ url }] }],
+  };
+  let received = "";
+  const result = await readNetflixSubtitles(player, null, () => null, "en", {
+    fetchDocument: async input => {
+      received = String(input);
+      return new Response(vtt, { status: 200 });
+    },
+  });
+  assert.equal(received, url);
+  assert.equal(parseSubtitles(result.text).length, 1);
+});
