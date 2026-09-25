@@ -27,6 +27,7 @@ import { Badge } from "./components/ui/badge";
 import { SceneReader } from "./components/scene-reader";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
+import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
@@ -113,8 +114,8 @@ export default function App() {
   const [installed, setInstalled] = useState<Installed | null>(null);
   const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([
     { id: "claude", label: "Claude Code", installed: false, supportsAccountProfiles: true },
-    { id: "codex", label: "Codex", installed: false, supportsAccountProfiles: true },
-    { id: "agy", label: "AGY", installed: false, supportsAccountProfiles: false },
+    { id: "codex", label: "Codex CLI", installed: false, supportsAccountProfiles: true },
+    { id: "agy", label: "Antigravity CLI (agy)", installed: false, supportsAccountProfiles: false },
   ]);
   const [document, setDocument] = useState<LearningDocument | null>(null);
   const [progress, setProgress] = useState("");
@@ -603,7 +604,7 @@ export default function App() {
     return summary.status === "queued" || summary.status === "running"
       ? t("statusProgress", { completed: summary.completed, total: summary.total })
       : t("jobProgress", {
-          provider: summary.provider, status: t(jobStatusKeys[summary.status]),
+          provider: agentDisplayName(summary.provider), status: t(jobStatusKeys[summary.status]),
           completed: summary.completed, total: summary.total,
         });
   }
@@ -1232,7 +1233,6 @@ export default function App() {
 
         <Card className="panel">
           <h2>{t("generationHeading")}</h2>
-          <p className="hint">{t("currentAgent", { provider: agent.provider, model: agent.modelId || t("cliDefault") })}</p>
           <label>{t("storageLocation")}
             <NativeSelect value={destination.kind} onChange={event => {
               if (event.target.value === "drive") {
@@ -1291,6 +1291,25 @@ export default function App() {
               <Button variant="outline" size="sm" onClick={cancelDuplicate}>{t("cancelNoGeneration")}</Button>
             </div>
           </div>}
+          <div className="generationSummary">
+            <div className="generationSummaryHeading">
+              <strong>{t("generationSummary")}</strong>
+              <Button variant="outline" size="sm" onClick={() => {
+                setPage("settings");
+                window.requestAnimationFrame(() => {
+                  const heading = document.getElementById("agent-settings-heading");
+                  heading?.scrollIntoView({ block: "start" });
+                  heading?.focus({ preventScroll: true });
+                });
+              }}>{t("editAgentModel")}</Button>
+            </div>
+            <dl>
+              <div><dt>{t("generationAgentLabel")}</dt><dd>{agentDisplayName(agent.provider, selectedAgentInfo?.label)}</dd></div>
+              <div><dt>{t("generationModelLabel")}</dt>
+                <dd title={agent.modelId || undefined}>{modelDisplayName(agent.modelId, modelOptions, t("cliDefault"))}</dd>
+              </div>
+            </dl>
+          </div>
           <Button className="primary" onClick={startGeneration} disabled={generating || checking || !cues.length || !title.trim() || (destination.kind === "drive" && !destination.accountId)}>
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
@@ -1306,7 +1325,7 @@ export default function App() {
           {jobs.length > 0 && <div className="jobHistoryList">
             {jobs.map(job => <div className="learningCard" key={job.id}>
             <strong>{job.sourceTitle}</strong>
-            <p>{t("jobProgress", { provider: job.provider, status: t(jobStatusKeys[job.status]), completed: job.completed, total: job.total })}</p>
+            <p>{t("jobProgress", { provider: agentDisplayName(job.provider), status: t(jobStatusKeys[job.status]), completed: job.completed, total: job.total })}</p>
             {job.error && <p>{job.error}</p>}
             <div className="actions">
               {["queued", "waiting", "failed"].includes(job.status) &&
@@ -1365,16 +1384,16 @@ export default function App() {
           <p className="hint">{t("appearanceHint")}</p>
         </Card>
         <Card className="panel">
-          <h2>{t("agentHeading")}</h2>
+          <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
           <p className="hint">{t("agentHint")}</p>
           <Button variant="outline" className="secondary" onClick={checkHost}>{t("checkHost")}</Button>
           {installed && <div className="status">
-            {agentCatalog.map(entry => entry.label + ": " + t(entry.installed ? "agentInstalled" : "agentMissing")).join(" · ")}
+            {agentCatalog.map(entry => agentDisplayName(entry.id, entry.label) + ": " + t(entry.installed ? "agentInstalled" : "agentMissing")).join(" · ")}
           </div>}
           <label>{t("defaultAgent")}
             <NativeSelect value={agent.provider} onChange={event => selectAgent(event.target.value)}>
               {agentCatalog.map(entry =>
-                <option key={entry.id} value={entry.id}>{entry.label}{installed && !entry.installed ? t("agentNotInstalled") : ""}</option>
+                <option key={entry.id} value={entry.id}>{agentDisplayName(entry.id, entry.label)}{installed && !entry.installed ? t("agentNotInstalled") : ""}</option>
               )}
             </NativeSelect>
           </label>
