@@ -19,6 +19,7 @@ export const JobSummarySchema = z.object({
   error: z.string().optional(),
   documentId: z.string().uuid().optional(),
   ownerPid: z.number().int().positive().optional(),
+  publication: z.object({ status: z.enum(["pending", "published", "failed"]), location: z.string().optional(), error: z.string().optional() }).optional(),
 });
 export type JobSummary = z.infer<typeof JobSummarySchema>;
 

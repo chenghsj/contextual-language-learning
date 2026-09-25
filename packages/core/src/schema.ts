@@ -34,11 +34,36 @@ export const AgentSettingsSchema = z.object({
 });
 export type AgentSettings = z.infer<typeof AgentSettingsSchema>;
 
+export const DestinationSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("local"), directory: z.string().min(1).max(2048).optional() }),
+  z.object({ kind: z.literal("drive"), accountId: z.string().min(1).max(256) }),
+]);
+export type Destination = z.infer<typeof DestinationSchema>;
+
+export const DriveAccountSchema = z.object({
+  id: z.string().min(1).max(256),
+  email: z.string().email().max(320),
+});
+export type DriveAccount = z.infer<typeof DriveAccountSchema>;
+
+export const DuplicateMatchSchema = z.object({
+  documentId: z.string().uuid(),
+  title: z.string(),
+  createdAt: z.string().datetime(),
+  destination: z.string(),
+  exactSettings: z.boolean(),
+  local: z.boolean(),
+  url: z.string().url().optional(),
+  jobStatus: z.string().optional(),
+});
+export type DuplicateMatch = z.infer<typeof DuplicateMatchSchema>;
+
 export const GenerationRequestSchema = z.object({
   id: z.string().uuid(),
   source: SourceSchema,
   profile: LearningProfileSchema,
   agent: AgentSettingsSchema,
+  destination: DestinationSchema.optional(),
   cues: z.array(SubtitleCueSchema).min(1).max(3000),
   outputPath: z.string().max(2048).optional(),
   allowRegenerate: z.boolean().optional(),
@@ -88,13 +113,22 @@ export type LearningDocument = z.infer<typeof LearningDocumentSchema>;
 
 export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("health"), id: z.string().uuid() }),
-  z.object({ type: z.literal("generate"), id: z.string().uuid(), payload: GenerationRequestSchema }),
+  z.object({ type: z.literal("generate"), id: z.string().uuid(), payload: GenerationRequestSchema,
+    checkToken: z.string().uuid(), confirmRegeneration: z.boolean() }),
   z.object({ type: z.literal("cancel"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({ type: z.literal("listJobs"), id: z.string().uuid() }),
   z.object({ type: z.literal("resume"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({ type: z.literal("getDocument"), id: z.string().uuid(), documentId: z.string().uuid() }),
   z.object({ type: z.literal("storageLocations"), id: z.string().uuid() }),
   z.object({ type: z.literal("preflight"), id: z.string().uuid(), payload: GenerationRequestSchema }),
+  z.object({ type: z.literal("checkDuplicates"), id: z.string().uuid(), payload: GenerationRequestSchema }),
+  z.object({ type: z.literal("chooseFolder"), id: z.string().uuid() }),
+  z.object({ type: z.literal("driveAccounts"), id: z.string().uuid() }),
+  z.object({ type: z.literal("driveConfigure"), id: z.string().uuid(),
+    clientId: z.string().regex(/^[A-Za-z0-9_.-]+\.apps\.googleusercontent\.com$/),
+    clientSecret: z.string().max(512).optional() }),
+  z.object({ type: z.literal("driveConnect"), id: z.string().uuid() }),
+  z.object({ type: z.literal("publishJob"), id: z.string().uuid(), jobId: z.string().uuid() }),
 ]);
 export type HostRequest = z.infer<typeof HostRequestSchema>;
 
@@ -114,5 +148,12 @@ export type HostMessage =
   | { id: string; type: "storageLocations"; locations: { id: string; kind: "local" | "google-drive-desktop"; label: string; path: string; account?: string }[] }
   | { id: string; type: "preflight"; existing: { id: string; title: string; createdAt: string; path: string }[] }
   | { id: string; type: "result"; document: LearningDocument }
+  | { id: string; type: "duplicates"; token: string; matches: DuplicateMatch[] }
+  | { id: string; type: "folder"; directory: string }
+  | { id: string; type: "driveAccounts"; accounts: DriveAccount[]; configured: boolean }
+  | { id: string; type: "driveConnected"; account: DriveAccount }
+  | { id: string; type: "driveConfigured" }
+  | { id: string; type: "published"; jobId: string; location: string }
+  | { id: string; type: "publicationFailed"; jobId: string; message: string }
   | { id: string; type: "cancelled" }
   | { id: string; type: "error"; message: string };

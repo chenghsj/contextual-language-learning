@@ -58,7 +58,7 @@ export class FileJobRepository implements JobRepository {
       return job?.summary ?? null;
     }));
     return items.filter((item): item is JobSummary => item !== null)
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, Math.min(limit, 100));
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, Math.min(limit, 5000));
   }
 
   async update(id: string, change: (current: JobSnapshot) => JobSnapshot): Promise<JobSnapshot> {
@@ -92,6 +92,16 @@ export class FileDocumentRepository implements DocumentRepository {
       throw new Error("Cannot load document " + id + ": " + String(error));
     }
   }
+  async list(limit = 5000): Promise<LearningDocument[]> {
+    await mkdir(this.root, { recursive: true, mode: 0o700 });
+    const entries = (await readdir(this.root))
+      .filter(name => name.endsWith(".json") && UUID.test(name.slice(0, -5)));
+    const documents = await Promise.all(entries.map(name => this.get(name.slice(0, -5))));
+    return documents.filter((value): value is LearningDocument => value !== null)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, Math.min(limit, 5000));
+  }
+
   async save(document: LearningDocument, markdown: string): Promise<void> {
     const id = safeId(document.id);
     await mkdir(this.root, { recursive: true, mode: 0o700 });

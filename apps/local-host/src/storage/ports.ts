@@ -1,4 +1,4 @@
-import type { JobSnapshot, JobSummary, LearningDocument, StudyProgress } from "@immersive/core";
+import type { Destination, JobSnapshot, JobSummary, LearningDocument, StudyProgress } from "@immersive/core";
 
 export interface JobRepository {
   create(job: JobSnapshot): Promise<void>;
@@ -9,6 +9,7 @@ export interface JobRepository {
 
 export interface DocumentRepository {
   get(id: string): Promise<LearningDocument | null>;
+  list(limit?: number): Promise<LearningDocument[]>;
   save(document: LearningDocument, markdown: string): Promise<void>;
 }
 
@@ -22,4 +23,8 @@ export interface StoragePorts {
   jobs: JobRepository;
   documents: DocumentRepository;
   progress: ProgressRepository;
+}
+
+export interface DocumentPublisher {
+  publish(document: LearningDocument, markdown: string, destination: Destination): Promise<string>;
 }
