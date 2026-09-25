@@ -84,3 +84,27 @@ test("rejects navigation to another Netflix title while subtitle fetch is runnin
     fetchDocument: fakeFetch, sameVideo: () => ++calls === 1,
   }), /watch page changed/);
 });
+
+test("accepts getTextTrackList/getTextTrack/setTextTrack when timed-text APIs are absent", async () => {
+  let active: NetflixCaptionTrack = ja;
+  const changes: string[] = [];
+  let session: unknown = null;
+  const textEn: NetflixCaptionTrack = { id: "english-1", language: "en-US" };
+  const player: NetflixCaptionPlayer = {
+    getTextTrackList: () => [none, textEn, ja],
+    getTextTrack: () => active,
+    setTextTrack: track => {
+      active = track;
+      changes.push(track.trackId ?? track.id ?? "");
+      if (track.id === textEn.id) session = {
+        subtitles: [{ id: "english-1", downloadUrls: { primary: { url } } }],
+      };
+    },
+  };
+  const result = await readNetflixSubtitles(player, null, () => session, "en", {
+    fetchDocument: fakeFetch, pause: async () => {},
+  });
+  assert.equal(parseSubtitles(result.text).length, 1);
+  assert.deepEqual(changes, ["english-1", "japanese-1"]);
+  assert.equal(active, ja);
+});
