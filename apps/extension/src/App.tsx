@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
+  compactStudyExport, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
   parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
   type Destination, type DriveAccount, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
@@ -24,6 +24,7 @@ import { Input } from "./components/ui/input";
 import { Select } from "./components/ui/select";
 import { Textarea } from "./components/ui/textarea";
 import { Badge } from "./components/ui/badge";
+import { SceneReader } from "./components/scene-reader";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy } from "./i18n/learning-settings";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
@@ -39,7 +40,7 @@ type RepeatOption = "2" | "3" | "5" | "infinite";
 
 const DEFAULT_PROFILE: LearningProfile = {
   targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-  mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3,
+  mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3, sceneCount: 4,
 };
 const DEFAULT_AGENT: AgentSettings = { provider: "claude", modelId: "" };
 
@@ -51,7 +52,11 @@ function downloadDocument(doc: LearningDocument, format: "json" | "md"): void {
       "## " + section.title, "", section.context, "",
       ...section.cueIds.map(id => {
         const cue = doc.cues.find(item => item.id === id);
-        return cue ? "> " + formatTime(cue.startMs) + " " + cue.originalText : "";
+        if (!cue) return "";
+        const translated = "translations" in section
+          ? section.translations.find(item => item.cueId === id)?.text : undefined;
+        return "> " + formatTime(cue.startMs) + " " + cue.originalText +
+          (translated ? "\n> " + translated : "");
       }),
       "", "### Vocabulary",
       ...section.vocabulary.map(word => "- " + word.expression + " — " + word.meaning + ": " + word.explanation),
@@ -59,7 +64,7 @@ function downloadDocument(doc: LearningDocument, format: "json" | "md"): void {
       "", "### Practice", ...section.exercises.map(ex => "- " + ex.question + "\n  - " + ex.answer), "",
     ]),
   ].join("\n");
-  const content = format === "json" ? JSON.stringify(doc, null, 2) : md;
+  const content = format === "json" ? JSON.stringify(compactStudyExport(doc), null, 2) : md;
   const blob = new Blob([content], { type: format === "json" ? "application/json" : "text/markdown" });
   const url = URL.createObjectURL(blob);
   chrome.downloads.download({
@@ -164,7 +169,7 @@ export default function App() {
 
   useEffect(() => {
     void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference"]).then(saved => {
-      if (saved.profile) setProfile(saved.profile as LearningProfile);
+      if (saved.profile) setProfile({ ...DEFAULT_PROFILE, instructionLanguage: browserLocale, ...(saved.profile as Partial<LearningProfile>) });
       if (isLocalePreference(saved.uiLocalePreference)) setLocalePreference(saved.uiLocalePreference);
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
       if (saved.agent) setAgent(saved.agent as AgentSettings);
@@ -1096,10 +1101,7 @@ export default function App() {
                 <label htmlFor="learning-target">{t("targetLanguage")}</label>
                 <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.targetLanguage}
-                  choices={(["en", "ja", "ko"] as const).map(language => ({
-                    label: nativeLanguageName(language),
-                    description: settingsCopy.targetDescriptions[language],
-                  }))} />
+                  />
               </div>
               <Select id="learning-target" value={profile.targetLanguage} onChange={event => {
                 const targetLanguage = event.target.value as LearningProfile["targetLanguage"];
@@ -1111,10 +1113,7 @@ export default function App() {
                 <label htmlFor="learning-level">{t("level")}</label>
                 <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.level}
-                  choices={levelOptions.map(level => ({
-                    label: level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
-                    description: settingsCopy.levels[profile.targetLanguage][level]?.description ?? "",
-                  }))} />
+                  />
               </div>
               <Select id="learning-level" value={profile.level}
                 onChange={event => setProfile(current => ({ ...current, level: event.target.value }))}>
@@ -1129,10 +1128,7 @@ export default function App() {
               <label htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
               <SettingInfo label={t("instructionLanguage")} infoLabel={settingsCopy.infoLabel}
                 explanation={settingsCopy.fieldHints.instructionLanguage}
-                choices={(["zh-TW", "zh-CN", "en", "ja", "ko"] as const).map(language => ({
-                  label: nativeLanguageName(language),
-                  description: settingsCopy.instructionDescriptions[language],
-                }))} />
+                />
             </div>
             <Select id="learning-explanation-language" value={profile.instructionLanguage}
               onChange={event => setProfile(current => ({
@@ -1141,12 +1137,14 @@ export default function App() {
               <option value="zh-TW">{nativeLanguageName("zh-TW")}</option><option value="zh-CN">{nativeLanguageName("zh-CN")}</option><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option>
             </Select>
           </div>
+          <details className="advancedLessonSettings">
+            <summary>{t("advancedLessonSettings")}</summary>
           <div className="settingField">
             <div className="settingHeading">
               <label htmlFor="learning-mode">{t("teachingMode")}</label>
               <SettingInfo label={t("teachingMode")} infoLabel={settingsCopy.infoLabel}
                 explanation={settingsCopy.fieldHints.teachingMode}
-                choices={(["adaptive", "guided", "immersive"] as const).map(mode => settingsCopy.modes[mode])} />
+                />
             </div>
             <Select id="learning-mode" value={profile.mode}
               onChange={event => setProfile(current => ({
@@ -1157,6 +1155,18 @@ export default function App() {
               <option value="immersive">{settingsCopy.modes.immersive.label}</option>
             </Select>
           </div>
+          </details>
+          <div className="settingField">
+            <div className="settingHeading">
+              <label htmlFor="learning-scenes">{t("sceneCount")}</label>
+              <SettingInfo label={t("sceneCount")} infoLabel={settingsCopy.infoLabel}
+                explanation={settingsCopy.fieldHints.sceneCount} />
+            </div>
+            <Input id="learning-scenes" type="number" min={1} max={6}
+              value={profile.sceneCount} onChange={event => setProfile(current => ({
+                ...current, sceneCount: Number(event.target.value),
+              }))} />
+          </div>
           <div className="twoColumns">
             <div className="settingField">
               <div className="settingHeading">
@@ -1164,7 +1174,7 @@ export default function App() {
                 <SettingInfo label={t("vocabLimit")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.vocabLimit} />
               </div>
-              <Input id="learning-vocabulary" type="number" min={1} max={30}
+              <Input id="learning-vocabulary" type="number" min={1} max={12}
                 value={profile.maxNewVocabulary}
                 onChange={event => setProfile(current => ({
                   ...current, maxNewVocabulary: Number(event.target.value),
@@ -1176,7 +1186,7 @@ export default function App() {
                 <SettingInfo label={t("exerciseCount")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.exerciseCount} />
               </div>
-              <Input id="learning-exercises" type="number" min={0} max={12}
+              <Input id="learning-exercises" type="number" min={0} max={6}
                 value={profile.exerciseCount}
                 onChange={event => setProfile(current => ({
                   ...current, exerciseCount: Number(event.target.value),
@@ -1258,7 +1268,8 @@ export default function App() {
           <p className="hint">{t("jobHistoryHint")}</p>
           <Button variant="outline" className="secondary" disabled={loadingJobs}
             onClick={loadJobs}>{loadingJobs ? t("loading") : t("refreshJobs")}</Button>
-          {jobs.map(job => <div className="learningCard" key={job.id}>
+          {jobs.length > 0 && <div className="jobHistoryList">
+            {jobs.map(job => <div className="learningCard" key={job.id}>
             <strong>{job.sourceTitle}</strong>
             <p>{t("jobProgress", { provider: job.provider, status: t(jobStatusKeys[job.status]), completed: job.completed, total: job.total })}</p>
             {job.error && <p>{job.error}</p>}
@@ -1275,6 +1286,7 @@ export default function App() {
               </>}
             </div>
           </div>)}
+          </div>}
         </Card>
       </main>}
 
@@ -1407,7 +1419,12 @@ export default function App() {
         {!document ? <Card className="panel empty">
           <h2>{t("emptyHeading")}</h2><p className="hint">{t("emptyHint")}</p>
           <Button variant="outline" className="secondary" onClick={() => setPage("create")}>{t("create")}</Button>
-        </Card> : <>
+        </Card> : document.schemaVersion === 2 ? <SceneReader key={document.id}
+          document={document} adapter={readerAdapter} locale={uiLocale}
+          repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
+          playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
+          onError={setError} onDownload={format => downloadDocument(document, format)}
+        /> : <>
           <Card className="panel">
             <Badge className="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
             <h1>{document.source.title}</h1>

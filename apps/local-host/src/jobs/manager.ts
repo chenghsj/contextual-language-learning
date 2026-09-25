@@ -1,4 +1,4 @@
-import { chunkCues, createJob, transitionJob, type GenerationRequest, type JobSummary, type LearningDocument } from "@immersive/core";
+import { chunkCues, createJob, createSceneJob, transitionJob, type GenerationRequest, type JobSummary, type LearningDocument } from "@immersive/core";
 import { runGenerationPipeline, type PipelineDependencies } from "../generation";
 import type { StoragePorts } from "../storage/ports";
 import { findExisting, publishDocument } from "../storage/publisher";
@@ -53,7 +53,8 @@ export class JobManager {
         throw new Error("This source already has generated learning material. Confirm regeneration first.");
       }
     }
-    const job = createJob(request, chunkCues(request.cues).length);
+    const chunks = chunkCues(request.cues).length;
+    const job = this.deps.legacyGeneration ? createJob(request, chunks) : createSceneJob(request, chunks);
     await this.storage.jobs.create(job);
     return this.execute(requestId, job.summary.id, signal);
   }

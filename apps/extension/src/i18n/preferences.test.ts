@@ -21,7 +21,7 @@ test("all supported languages have the same keys and replace interpolation token
   }
   assert.equal(translate("ja", "parsedCues", { count: 3 }), "3 件の字幕を解析しました。");
   assert.equal(translate("en", "jobProgress",
-    { provider: "Codex", status: "Running", completed: 1, total: 3 }), "Codex · Running · 1 / 3 sections");
+    { provider: "Codex", status: "Running", completed: 1, total: 3 }), "Codex · Running · 1 / 3 steps");
 });
 test("theme and locale overrides accept supported values only", () => {
   assert.equal(resolveTheme("system", true), "dark");

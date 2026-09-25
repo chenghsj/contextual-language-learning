@@ -97,7 +97,7 @@ test("duplicate check and authorized generation share the same Host process and 
     id: jobId, source: { platform: "youtube", title: "A video" },
     profile: {
       targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-      mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3,
+      mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3, sceneCount: 4,
     },
     agent: { provider: "claude", modelId: "" },
     cues: [{ id: "line-1", startMs: 1_000, endMs: 2_000, originalText: "Hello" }],

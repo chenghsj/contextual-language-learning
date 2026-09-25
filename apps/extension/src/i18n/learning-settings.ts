@@ -2,7 +2,7 @@ import type { UiLocale } from "./messages";
 import type { LearningProfile } from "@immersive/core";
 
 export type LearningSettingKey = "targetLanguage" | "level" | "instructionLanguage" |
-  "teachingMode" | "vocabLimit" | "exerciseCount";
+  "teachingMode" | "sceneCount" | "vocabLimit" | "exerciseCount";
 export type SettingOptionInfo = { label: string; description: string };
 export type LearningSettingsCopy = {
   infoLabel: string;
@@ -22,8 +22,9 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
       "level": "Choose a comfortable starting point. English uses CEFR (A1–C2), Japanese uses JLPT (N5–N1), and Korean uses TOPIK (1–6). This adjusts the requested lesson difficulty; it is not a proficiency test.",
       "instructionLanguage": "Choose the language used to explain meanings, grammar and answers. Original subtitle lines stay in the learning language.",
       "teachingMode": "Choose how the AI explains and practices the subtitle dialogue. The language of explanations remains your selected explanation language.",
-      "vocabLimit": "Maximum new words or phrases highlighted in each section (1–30). Fewer items give you more time to review. The AI may choose fewer if the dialogue has little useful vocabulary.",
-      "exerciseCount": "Maximum practice questions per section (0–12). Enter 0 to skip exercises. The AI may generate fewer when the dialogue does not support more."
+      "sceneCount": "Maximum selected scenes for the entire video (1–6). The AI chooses only meaningful conversations and may select fewer.",
+      "vocabLimit": "Maximum focus expressions across the entire video (1–12), not per scene. The AI may select fewer.",
+      "exerciseCount": "Maximum practice questions across the entire video (0–6), including sentence-building. Enter 0 to skip exercises."
     },
     "targetDescriptions": {
       "en": "Learn from English subtitle lines.",
@@ -135,8 +136,9 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
       "level": "選擇目前適合的難度。英文使用 CEFR（A1～C2）、日文使用 JLPT（N5～N1）、韓文使用 TOPIK（1～6）。這是教材難度設定，不是能力測驗結果。",
       "instructionLanguage": "選擇單字意思、文法與答案解說使用的語言；字幕原句仍保留學習語言。",
       "teachingMode": "選擇 AI 如何解說及安排字幕練習。解說文字仍使用你選的解說語言。",
-      "vocabLimit": "每章最多挑選 1～30 個新單字或片語。數量少一點比較容易複習；字幕內容不夠時，AI 可能挑得更少。",
-      "exerciseCount": "每章最多產生 0～12 題練習。設為 0 就不出練習題；若對話素材不足，AI 可能產生較少題。"
+      "sceneCount": "整部影片最多挑選 1～6 個有上下文的對話場景。若沒有足夠合適的內容，AI 會挑得更少。",
+      "vocabLimit": "整部影片合計最多 1～12 個重點表達，不是每個場景各算一次；AI 可以選更少。",
+      "exerciseCount": "整部影片合計最多 0～6 題練習，包含替換造句或情境回答。設為 0 就不產生練習題。"
     },
     "targetDescriptions": {
       "en": "從英文字幕學英文。",
@@ -248,8 +250,9 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
       "level": "选择适合自己的难度。英语使用 CEFR（A1～C2）、日语使用 JLPT（N5～N1）、韩语使用 TOPIK（1～6）。这是教材难度设置，不是能力测试结果。",
       "instructionLanguage": "选择词义、语法和答案讲解使用的语言；字幕原句仍保留学习语言。",
       "teachingMode": "选择 AI 如何讲解及安排字幕练习。讲解文字仍使用你选的讲解语言。",
-      "vocabLimit": "每章最多挑选 1～30 个新词或短语。数量少一些更方便复习；素材不足时 AI 可能挑选更少。",
-      "exerciseCount": "每章最多生成 0～12 道练习题。设为 0 则跳过练习；如果对话素材不足，AI 可能生成更少。"
+      "sceneCount": "整部影片最多挑选 1～6 个有上下文的对话场景。没有足够合适的内容时，AI 会选得更少。",
+      "vocabLimit": "整部影片合计最多 1～12 个重点表达，所有场景共用上限，AI 可选更少。",
+      "exerciseCount": "整部影片合计最多 0～6 道练习，包括造句与情境回答；设为 0 就不生成练习。"
     },
     "targetDescriptions": {
       "en": "通过英语字幕学习英语。",
@@ -361,8 +364,9 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
       "level": "教材の難しさを選びます。英語は CEFR（A1～C2）、日本語は JLPT（N5～N1）、韓国語は TOPIK（1～6）が目安です。能力試験の結果ではありません。",
       "instructionLanguage": "語彙の意味、文法、解答の説明に使う言語を選びます。字幕の原文は学習言語のままです。",
       "teachingMode": "AI にどのくらい説明や練習を入れてもらうかを選びます。解説の言語は指定したままです。",
-      "vocabLimit": "各章で取り上げる新しい単語・表現の上限は 1～30 個です。素材によっては指定数より少なくなります。",
-      "exerciseCount": "各章の練習問題の上限は 0～12 問です。0 にすると練習を省きます。素材により問題数が少なくなることがあります。"
+      "sceneCount": "動画全体から選ぶ会話シーンの上限（1～6）。適切な場面が少ない場合は、より少ない数を選びます。",
+      "vocabLimit": "動画全体で取り上げる重要表現の上限（1～12）。シーンごとではなく、全シーン共通の上限です。",
+      "exerciseCount": "動画全体の練習問題の上限（0～6）。文作り・状況に合う返答も含み、0 なら練習を省略します。"
     },
     "targetDescriptions": {
       "en": "英語の字幕から英語を学びます。",
@@ -474,8 +478,9 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
       "level": "교재의 난이도를 선택합니다. 영어는 CEFR(A1~C2), 일본어는 JLPT(N5~N1), 한국어는 TOPIK(1~6)을 사용합니다. 실제 능력을 판정하는 시험은 아닙니다.",
       "instructionLanguage": "어휘 의미, 문법 및 정답 설명에 사용할 언어를 선택합니다. 자막 원문은 학습 언어 그대로 유지됩니다.",
       "teachingMode": "AI가 자막 대화를 설명하고 연습을 구성하는 방식을 선택합니다. 설명 언어는 지정한 언어를 유지합니다.",
-      "vocabLimit": "각 장에서 다룰 새 단어나 표현의 최대 개수입니다(1~30개). 소재에 따라 더 적게 선택할 수 있습니다.",
-      "exerciseCount": "각 장의 연습 문제 최대 개수입니다(0~12개). 0이면 연습을 생략합니다. 소재가 부족하면 문제 수가 줄어들 수 있습니다."
+      "sceneCount": "동영상 전체에서 고를 대화 장면의 상한(1~6개)입니다. 적합한 장면이 적으면 더 적게 선택합니다.",
+      "vocabLimit": "동영상 전체에서 배울 핵심 표현의 상한(1~12개)입니다. 장면별이 아닌 전체 합계입니다.",
+      "exerciseCount": "동영상 전체 연습 문제 상한(0~6개)입니다. 문장 만들기와 상황별 대답을 포함하며 0이면 생략합니다."
     },
     "targetDescriptions": {
       "en": "영어 자막으로 영어를 학습합니다.",

@@ -9,7 +9,7 @@ test("reassembles UTF-8 characters split between native messages", () => {
   const doc: LearningDocument = {
     id, schemaVersion: 1, createdAt: new Date().toISOString(),
     source: { platform: "import", title: "日本語 🎬" },
-    profile: { targetLanguage: "ja", instructionLanguage: "zh-TW", level: "N4", mode: "guided", maxNewVocabulary: 5, exerciseCount: 1 },
+    profile: { targetLanguage: "ja", instructionLanguage: "zh-TW", level: "N4", mode: "guided", maxNewVocabulary: 5, exerciseCount: 1, sceneCount: 4 },
     generation: { provider: "claude", modelId: "" },
     cues: [{ id: "cue-1", startMs: null, endMs: null, originalText: "こんにちは" }],
     sections: [{

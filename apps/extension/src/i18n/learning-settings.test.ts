@@ -10,7 +10,7 @@ import { SettingInfo } from "../components/setting-info";
 
 const fields: LearningSettingKey[] = [
   "targetLanguage", "level", "instructionLanguage",
-  "teachingMode", "vocabLimit", "exerciseCount",
+  "teachingMode", "sceneCount", "vocabLimit", "exerciseCount",
 ];
 const levels = {
   en: ["A1", "A2", "B1", "B2", "C1", "C2"],
@@ -49,18 +49,17 @@ test("all five UI locales explain every field and every available dropdown choic
   }
 });
 
-test("setting help is an accessible click/keyboard popover with option explanations", () => {
+test("setting help shows only the concise field explanation, without repeating all choices", () => {
   const markup = renderToStaticMarkup(createElement(SettingInfo, {
     label: "Level", infoLabel: "About",
     explanation: "Choose a comfortable starting point.",
-    choices: [{ label: "B1 · Intermediate", description: "Understand everyday dialogue." }],
   }));
   assert.match(markup, /<details[^>]*class="settingInfo"/);
   assert.match(markup, /<summary[^>]*aria-label="About Level"/);
   assert.match(markup, /aria-controls="/);
   assert.match(markup, /role="note"/);
-  assert.match(markup, /B1 · Intermediate/);
-  assert.match(markup, /Understand everyday dialogue/);
+  assert.match(markup, /Choose a comfortable starting point\./);
+  assert.doesNotMatch(markup, /<ul>|<li>|B1 · Intermediate/);
 });
 
 test("settings keep stable saved option values rather than persisting translated labels", async () => {
@@ -72,4 +71,11 @@ test("settings keep stable saved option values rather than persisting translated
   for (const field of fields) {
     assert.ok(app.includes('settingsCopy.fieldHints.' + field), "missing help for " + field);
   }
+});
+
+test("task cards start below the refresh control with consistent spacing", async () => {
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(app, /className="jobHistoryList"/);
+  assert.match(css, /\.jobHistoryList\s*\{[^}]*margin-top:\s*12px/);
 });

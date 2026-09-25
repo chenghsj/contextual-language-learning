@@ -7,12 +7,17 @@ import type { StoragePorts } from "../storage/ports";
 import { generateWithAgent } from "../agents";
 import { toMarkdown } from "./markdown";
 import { sectionPrompt } from "./prompt";
+import { runSceneGenerationPipeline } from "./scene-pipeline";
 
 export type SectionGenerator = (agent: AgentSettings, prompt: string, signal: AbortSignal) => Promise<unknown>;
 
 export interface PipelineDependencies {
   storage: StoragePorts;
   generateSection?: SectionGenerator;
+  generateCandidates?: SectionGenerator;
+  generateSelection?: SectionGenerator;
+  /** Retain the existing chunk-based behavior only for legacy pipeline tests. */
+  legacyGeneration?: boolean;
 }
 
 function checkSignal(signal: AbortSignal): void {
@@ -28,6 +33,7 @@ export async function runGenerationPipeline(
   const generate = deps.generateSection ?? generateWithAgent;
   let job = await storage.jobs.get(jobId);
   if (!job || job.summary.status !== "running") throw new Error("Job is not in the running state");
+  if (job.scenePlan) return runSceneGenerationPipeline(jobId, deps, signal, onProgress);
   const chunks = chunkCues(job.request.cues);
   if (chunks.length !== job.summary.total) throw new Error("Saved job plan does not match its transcript");
 

@@ -13,6 +13,12 @@ export const netflixAdapter: VideoAdapter = {
     if (!result.text || !result.language) throw new Error("Netflix did not return subtitle text.");
     return { text: result.text, language: result.language };
   },
+  async status(url) {
+    const result = await sendToVideo<{ ok: boolean; error?: string; currentMs?: number; playing?: boolean }>(
+      netflixAdapter, url, { type: "NETFLIX_DIAGNOSE" },
+    );
+    return { currentMs: result.currentMs, playing: result.playing };
+  },
   async diagnose(url) {
     const result = await sendToVideo<{ ok: boolean; error?: string; currentMs?: number }>(
       netflixAdapter, url, { type: "NETFLIX_DIAGNOSE" },

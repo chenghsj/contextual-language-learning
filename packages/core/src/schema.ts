@@ -24,6 +24,7 @@ export const LearningProfileSchema = z.object({
   mode: z.enum(["adaptive", "guided", "immersive"]),
   maxNewVocabulary: z.number().int().min(1).max(30),
   exerciseCount: z.number().int().min(0).max(12),
+  sceneCount: z.number().int().min(1).max(6).default(4),
 });
 export type LearningProfile = z.infer<typeof LearningProfileSchema>;
 
@@ -99,16 +100,65 @@ export const LearningSectionSchema = SectionContentSchema.extend({
 });
 export type LearningSection = z.infer<typeof LearningSectionSchema>;
 
-export const LearningDocumentSchema = z.object({
+/** Selection IDs and timestamps are resolved against the real transcript, never invented by the model. */
+export const CandidateContentSchema = z.object({
+  cueIds: z.array(z.string().min(1)).min(1).max(10),
+  focusExpressions: z.array(z.string().min(1).max(160)).min(1).max(2),
+  learningGoal: z.string().min(1).max(250),
+});
+export const CandidateSceneSchema = CandidateContentSchema.extend({
+  id: z.string().min(1).max(100),
+});
+export type CandidateScene = z.infer<typeof CandidateSceneSchema>;
+export const CandidateBatchSchema = z.object({
+  candidates: z.array(CandidateContentSchema).max(2),
+});
+export const FinalSelectionSchema = z.object({
+  selectedCandidateIds: z.array(z.string().min(1)).min(1).max(6),
+});
+
+export const StudyTranslationSchema = z.object({
+  cueId: z.string().min(1),
+  text: z.string().min(1).max(700),
+});
+export const StudyExerciseSchema = ExerciseSchema.extend({
+  type: z.enum(["substitution", "situational", "comprehension"]),
+});
+export const StudySceneContentSchema = SectionContentSchema.extend({
+  translations: z.array(StudyTranslationSchema).min(1).max(10),
+  exercises: z.array(StudyExerciseSchema).max(1),
+  vocabulary: z.array(VocabularySchema).max(2),
+  insights: z.array(z.string().min(1).max(1200)).max(1),
+});
+export const StudySceneSchema = StudySceneContentSchema.extend({
   id: z.string().uuid(),
-  schemaVersion: z.literal(1),
+  learningGoal: z.string().min(1).max(250),
+  cueIds: z.array(z.string().min(1)).min(1).max(10),
+  focusCueIds: z.array(z.string().min(1)).min(1).max(2),
+  startMs: z.number().int().nonnegative().nullable(),
+  endMs: z.number().int().nonnegative().nullable(),
+});
+export type StudyScene = z.infer<typeof StudySceneSchema>;
+
+const DocumentCommonSchema = z.object({
+  id: z.string().uuid(),
   createdAt: z.string().datetime(),
   source: SourceSchema,
   profile: LearningProfileSchema,
   generation: AgentSettingsSchema,
   cues: z.array(SubtitleCueSchema),
+});
+export const LearningDocumentV1Schema = DocumentCommonSchema.extend({
+  schemaVersion: z.literal(1),
   sections: z.array(LearningSectionSchema).min(1),
 });
+export const LearningDocumentV2Schema = DocumentCommonSchema.extend({
+  schemaVersion: z.literal(2),
+  sections: z.array(StudySceneSchema).min(1).max(6),
+});
+export const LearningDocumentSchema = z.discriminatedUnion("schemaVersion", [
+  LearningDocumentV1Schema, LearningDocumentV2Schema,
+]);
 export type LearningDocument = z.infer<typeof LearningDocumentSchema>;
 
 export interface AgentModel { id: string; label: string }

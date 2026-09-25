@@ -56,6 +56,30 @@ export function parsePlainText(input: string): SubtitleCue[] {
   }));
 }
 
+/** A caption update can repeat the same displayed text in overlapping time ranges.
+ * Keep its first source ID so AI selections still resolve into original cues.
+ * A later, separately spoken repetition is preserved. This is only for curation:
+ * the canonical transcript is never modified or discarded. */
+export function normalizeLearningCues(cues: readonly SubtitleCue[]): SubtitleCue[] {
+  const cleaned: SubtitleCue[] = [];
+  for (const cue of cues) {
+    const text = cue.originalText.trim().replace(/\s+/g, " ");
+    if (!text || /^[♪♫～〜\s]+$/.test(text)) continue;
+    const previous = cleaned[cleaned.length - 1];
+    const repeatedOverlay = previous && previous.originalText === text &&
+      previous.startMs !== null && previous.endMs !== null &&
+      cue.startMs !== null && cue.endMs !== null &&
+      cue.startMs <= previous.endMs + 100 && cue.startMs >= previous.startMs &&
+      cue.startMs - previous.startMs < 1500;
+    if (repeatedOverlay) {
+      cleaned[cleaned.length - 1] = { ...previous, endMs: Math.max(previous.endMs!, cue.endMs!) };
+    } else {
+      cleaned.push({ ...cue, originalText: text });
+    }
+  }
+  return cleaned;
+}
+
 export function chunkCues(cues: SubtitleCue[], maxChars = 4500, maxDurationMs = 300000): SubtitleCue[][] {
   const result: SubtitleCue[][] = [];
   let current: SubtitleCue[] = [];

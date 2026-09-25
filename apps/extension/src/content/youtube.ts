@@ -4,6 +4,7 @@ type LoopMessage =
   | { type: "VIDEO_METADATA_GET" }
   | { type: "YOUTUBE_SEEK"; timeMs: number }
   | { type: "PLAYBACK_RATE_SET"; rate: number }
+  | { type: "PLAYBACK_STATUS_GET" }
   | { type: "YOUTUBE_SUBTITLES_GET"; videoId: string; language: "en" | "ja" | "ko" };
 
 let active: { video: HTMLVideoElement; start: number; end: number; repeats: number | "infinite"; completed: number; delayMs: number } | null = null;
@@ -135,6 +136,17 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
       respond({ ok: false, error: "YouTube could not seek to the subtitle timestamp." });
     }
     return true;
+  }
+  if (message.type === "PLAYBACK_STATUS_GET") {
+    const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
+      document.querySelector<HTMLVideoElement>("video");
+    if (!video || !Number.isFinite(video.currentTime)) {
+      respond({ ok: false, error: "The video player is not ready." });
+    } else {
+      respond({ ok: true, currentMs: Math.round(video.currentTime * 1000),
+        playing: !video.paused && !video.ended });
+    }
+    return;
   }
   if (message.type === "PLAYBACK_RATE_SET") {
     const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ??

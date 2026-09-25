@@ -8,7 +8,7 @@ const makeRequest = (mode: GenerationRequest["profile"]["mode"]): GenerationRequ
   source: { title: "A video", platform: "youtube" },
   profile: {
     targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-    mode, maxNewVocabulary: 8, exerciseCount: 3,
+    mode, maxNewVocabulary: 8, exerciseCount: 3, sceneCount: 4,
   },
   agent: { provider: "claude", modelId: "" },
   cues: [{ id: "cue-1", startMs: 1000, endMs: 3000, originalText: "I need to decide." }],
