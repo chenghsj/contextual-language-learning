@@ -20,28 +20,28 @@ export function allowedNetflixSubtitleUrl(input: string): boolean {
 export function subtitleUrlFromTrack(track: unknown): string | null {
   if (!track || typeof track !== "object") return null;
   const source = track as Record<string, unknown>;
+  // Traverse only known subtitle delivery fields, not arbitrary player internals.
+  function readableUrl(value: unknown, depth = 0): string | null {
+    if (typeof value === "string") return allowedNetflixSubtitleUrl(value) ? value : null;
+    if (!value || typeof value !== "object" || depth > 5) return null;
+    const entries = Array.isArray(value) ? value.slice(0, 100) : Object.values(value).slice(0, 100);
+    for (const entry of entries) {
+      const url = readableUrl(entry, depth + 1);
+      if (url) return url;
+    }
+    return null;
+  }
   const entries: unknown[] = [];
   if (source.ttDownloadables && typeof source.ttDownloadables === "object") {
     const downloadables = source.ttDownloadables as Record<string, unknown>;
-    for (const name of ["webvtt-lssdh-ios8", "dfxp-ls-sdh", "imsc1.1", "simplesdh"]) {
+    for (const name of ["webvtt-lssdh-ios8", "webvtt-lssdh", "dfxp-ls-sdh", "imsc1.1", "simplesdh"]) {
       if (name in downloadables) entries.push(downloadables[name]);
     }
   }
-  entries.push(source);
+  entries.push(source.urls, source.downloadUrls, source.url);
   for (const entry of entries) {
-    if (!entry || typeof entry !== "object") continue;
-    const info = entry as Record<string, unknown>;
-    const candidates: unknown[] = [];
-    if (Array.isArray(info.urls)) {
-      candidates.push(...info.urls.map(item => item && typeof item === "object" ? item.url : item));
-    }
-    if (info.downloadUrls && typeof info.downloadUrls === "object") {
-      candidates.push(...Object.values(info.downloadUrls));
-    }
-    if (typeof info.url === "string") candidates.push(info.url);
-    for (const candidate of candidates) {
-      if (typeof candidate === "string" && allowedNetflixSubtitleUrl(candidate)) return candidate;
-    }
+    const url = readableUrl(entry);
+    if (url) return url;
   }
   return null;
 }
@@ -99,10 +99,14 @@ export function normalizeNetflixTimedText(
   const xml = parseXml(body);
   if (xml.getElementsByTagName("parsererror").length) throw new Error("Netflix subtitle XML is invalid.");
   const root = xml.documentElement;
+  if (!root || !["tt", "timedtext"].includes(root.localName)) {
+    throw new Error("Netflix returned an unsupported subtitle XML format.");
+  }
   const rate = Number(root?.getAttribute("ttp:frameRate") ?? root?.getAttribute("frameRate") ?? 30);
   const frameRate = Number.isFinite(rate) && rate > 0 ? rate : 30;
   const cues: { startMs: number; endMs: number; text: string }[] = [];
   const paragraphs = Array.from(xml.getElementsByTagNameNS("*", "p"));
+  if (!paragraphs.length) throw new Error("Netflix subtitle XML contains no timed-text paragraphs.");
   for (const paragraph of paragraphs) {
     const begin = subtitleClockMs(paragraph.getAttribute("begin") ?? "", frameRate);
     const end = subtitleClockMs(paragraph.getAttribute("end") ?? "", frameRate);
@@ -113,6 +117,10 @@ export function normalizeNetflixTimedText(
     const text = xmlText(paragraph).replace(/[ \t]+/g, " ").trim();
     if (text) cues.push({ startMs: begin, endMs: until, text });
     if (cues.length > MAX_SUBTITLE_CUES) throw new Error("Too many subtitle cues.");
+  }
+  if (!cues.length) {
+    throw new Error("Netflix subtitle XML has " + paragraphs.length +
+      " paragraphs but no usable timed cues. Check the subtitle time format.");
   }
   return normalizedVttCues(cues);
 }

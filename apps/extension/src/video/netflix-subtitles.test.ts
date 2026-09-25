@@ -24,6 +24,9 @@ test("Netflix metadata resolves signed text-track URLs, never arbitrary content"
   assert.equal(subtitleUrlFromTrack({ urls: [{ url: "https://evil.test/track.xml" }] }), null);
   assert.equal(subtitleUrlFromTrack({ urls: [{ url: "https://nflxvideo.net/track.xml" }] }),
     "https://nflxvideo.net/track.xml");
+  assert.equal(subtitleUrlFromTrack({ ttDownloadables: {
+    "webvtt-lssdh-ios8": { downloadUrls: { one: { url: "https://nflxvideo.net/track.vtt" } } },
+  } }), "https://nflxvideo.net/track.vtt");
 });
 
 test("TTML clock, frames and offsets convert to milliseconds", () => {
@@ -43,7 +46,7 @@ test("browser XML cue nodes normalize to VTT and existing lesson cues", () => {
   const xml = {
     getElementsByTagName: () => [],
     getElementsByTagNameNS: () => [paragraph],
-    documentElement: { getAttribute: () => null },
+    documentElement: { localName: "tt", getAttribute: () => null },
   } as unknown as Document;
   const vtt = normalizeNetflixTimedText("<tt/>", () => xml);
   assert.deepEqual(parseSubtitles(vtt), [{
@@ -60,5 +63,24 @@ test("reject empty and oversized captions instead of claiming success", () => {
     getElementsByTagName: () => [],
     getElementsByTagNameNS: () => [],
     documentElement: { getAttribute: () => null },
-  } as unknown as Document)), /No usable/);
+  } as unknown as Document)), /unsupported subtitle XML/);
+});
+
+test("distinguishes Netflix XML without paragraphs from paragraphs without valid timing", () => {
+  const root = { localName: "tt", getAttribute: () => null };
+  const emptyXml = {
+    documentElement: root,
+    getElementsByTagName: () => [],
+    getElementsByTagNameNS: () => [],
+  } as unknown as Document;
+  assert.throws(() => normalizeNetflixTimedText("<tt/>", () => emptyXml),
+    /contains no timed-text paragraphs/);
+  const invalidXml = {
+    ...emptyXml,
+    getElementsByTagNameNS: () => [{
+      getAttribute: () => null, childNodes: [{ nodeType: 3, nodeValue: "Hello" }],
+    }],
+  } as unknown as Document;
+  assert.throws(() => normalizeNetflixTimedText("<tt/>", () => invalidXml),
+    /paragraphs but no usable timed cues/);
 });

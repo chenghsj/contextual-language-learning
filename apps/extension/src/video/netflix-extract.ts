@@ -5,14 +5,17 @@ import {
 
 /** Optional, undocumented Netflix interfaces: never assume their presence. */
 export type NetflixCaptionTrack = {
-  trackId?: string; new_track_id?: string; bcp47?: string; language?: string;
+  id?: string; trackId?: string; new_track_id?: string; bcp47?: string; language?: string;
   isNoneTrack?: boolean; isForcedNarrative?: boolean; ttDownloadables?: unknown;
   [key: string]: unknown;
 };
 
 export type NetflixCaptionPlayer = {
+  getTextTrackList?(): NetflixCaptionTrack[];
   getTimedTextTrackList?(): NetflixCaptionTrack[];
+  getTextTrack?(): NetflixCaptionTrack | null;
   getTimedTextTrack?(): NetflixCaptionTrack | null;
+  setTextTrack?(track: NetflixCaptionTrack): void;
   setTimedTextTrack?(track: NetflixCaptionTrack): void;
 };
 
@@ -23,7 +26,7 @@ type Options = {
 };
 
 function trackId(track: NetflixCaptionTrack | null): string | null {
-  return track?.trackId ?? track?.new_track_id ?? null;
+  return track?.trackId ?? track?.new_track_id ?? track?.id ?? null;
 }
 
 function languageMatches(trackLanguage: string | undefined, requested: string): boolean {
@@ -42,7 +45,7 @@ function findInternalTrackUrl(root: unknown, wantedId: string): string | null {
     if (Array.isArray(value)) {
       for (const entry of value) {
         if (entry && typeof entry === "object" &&
-          (entry as NetflixCaptionTrack).trackId === wantedId) {
+          trackId(entry as NetflixCaptionTrack) === wantedId) {
           const url = subtitleUrlFromTrack(entry);
           if (url) return url;
         }
@@ -92,10 +95,17 @@ export async function readNetflixSubtitles(
   if (!/^(en|ja|ko)$/.test(requestedLanguage)) throw new Error("Unsupported learning language.");
   const sameVideo = options.sameVideo ?? (() => true);
   if (!sameVideo()) throw new Error("The Netflix watch page changed. Try again.");
-  const tracks = player.getTimedTextTrackList?.() ?? [];
+  // The active Netflix build may expose either generation of the text-track API.
+  let timedTracks: NetflixCaptionTrack[] = [];
+  let textTracks: NetflixCaptionTrack[] = [];
+  try { timedTracks = player.getTimedTextTrackList?.() ?? []; } catch { /* unavailable */ }
+  try { textTracks = player.getTextTrackList?.() ?? []; } catch { /* unavailable */ }
+  const tracks = [...timedTracks, ...textTracks];
   const candidates = tracks.filter(track => !track.isNoneTrack &&
-    !track.isForcedNarrative && languageMatches(track.bcp47 ?? track.language, requestedLanguage));
-  const chosen = candidates[0];
+    !track.isForcedNarrative && [track.bcp47, track.language].some(
+      language => languageMatches(language, requestedLanguage),
+    ));
+  const chosen = candidates.find(track => subtitleUrlFromTrack(track)) ?? candidates[0];
   if (!chosen) {
     const native = browserTextTrack(video, requestedLanguage);
     if (native) return native;
@@ -103,17 +113,30 @@ export async function readNetflixSubtitles(
   }
   const id = trackId(chosen);
   let original: NetflixCaptionTrack | null = null;
-  try { original = player.getTimedTextTrack?.() ?? null; }
+  try { original = player.getTextTrack?.() ?? null; }
   catch { /* Not supported on every Netflix build. */ }
+  if (!original) {
+    try { original = player.getTimedTextTrack?.() ?? null; }
+    catch { /* Not supported on every Netflix build. */ }
+  }
   const previous = original ?? tracks.find(track => track.isNoneTrack) ?? null;
+  const selectTrack = (track: NetflixCaptionTrack): boolean => {
+    if (player.setTextTrack) {
+      try { player.setTextTrack(track); return true; }
+      catch { /* Fall back to the older timed-text method. */ }
+    }
+    if (player.setTimedTextTrack) {
+      player.setTimedTextTrack(track);
+      return true;
+    }
+    return false;
+  };
   let changed = false;
   try {
     let url = subtitleUrlFromTrack(chosen) ?? (id ? findInternalTrackUrl(sessionRoot(), id) : null);
-    if (!url && id && previous && player.setTimedTextTrack &&
-      trackId(previous) !== id) {
-      // User requested this language; restore the original selection in finally.
-      player.setTimedTextTrack(chosen);
-      changed = true;
+    if (!url && id && previous && trackId(previous) !== id) {
+      // Change languages only after a user click; restore the original track.
+      changed = selectTrack(chosen);
     }
     const pause = options.pause ?? (ms => new Promise<void>(resolve => setTimeout(resolve, ms)));
     for (let attempt = 0; !url && id && attempt < 12; attempt++) {
@@ -138,7 +161,7 @@ export async function readNetflixSubtitles(
     return { text: normalizeNetflixTimedText(body), language: chosen.bcp47 ?? chosen.language ?? requestedLanguage };
   } finally {
     if (changed && previous) {
-      try { player.setTimedTextTrack?.(previous); }
+      try { selectTrack(previous); }
       catch { /* Preserve successful transcript even when the player changes while loading. */ }
     }
   }
