@@ -101,10 +101,11 @@ export function SelectField({
   disabled?: boolean;
   className?: string;
 }) {
+  const selectedLabel = options.find(option => String(option.value) === String(value))?.label;
   return <Select value={encodeSelectValue(String(value))}
     onValueChange={next => onValueChange(decodeSelectValue(next))} disabled={disabled}>
     <SelectTrigger id={id} aria-label={ariaLabel} className={className}>
-      <SelectValue />
+      <SelectValue>{selectedLabel}</SelectValue>
     </SelectTrigger>
     <SelectContent>
       {options.map(option => <SelectItem key={String(option.value)}

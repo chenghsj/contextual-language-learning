@@ -64,7 +64,8 @@ test("setting help shows only the concise field explanation, without repeating a
 
 test("settings keep stable saved option values rather than persisting translated labels", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  for (const mode of modes) assert.ok(app.includes('value: "' + mode + '"'));
+  for (const mode of modes) assert.ok(app.includes('"' + mode + '"'));
+  assert.match(app, /\(\["adaptive", "guided", "immersive"\] as const\)\.map/);
   for (const language of ["en", "ja", "ko"] as const) {
     assert.ok(app.includes('value: "' + language + '"') || app.includes('["zh-TW", "zh-CN", "en", "ja", "ko"]'));
   }
