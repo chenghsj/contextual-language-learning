@@ -1,0 +1,17 @@
+{
+  "name": "immersive-language-learning",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "pnpm --filter @immersive/extension build && pnpm --filter @immersive/local-host build",
+    "typecheck": "tsc -p packages/core/tsconfig.json --noEmit && tsc -p apps/local-host/tsconfig.json --noEmit && tsc -p apps/extension/tsconfig.json --noEmit",
+    "test": "tsx --test packages/core/src/subtitles.test.ts apps/local-host/src/protocol.test.ts",
+    "host:install": "node apps/local-host/scripts/install-host.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.0",
+    "tsx": "^4.19.0"
+  }
+}
