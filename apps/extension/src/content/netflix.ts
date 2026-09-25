@@ -9,6 +9,7 @@
   type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
   type PageResponse = {
     source: "immersive-learning"; id: string; ok: boolean; available: boolean;
+    bridgeVersion?: string;
     currentMs?: number; playing?: boolean | null; sessionId?: string;
     seekCalled?: boolean; playbackRate?: number; text?: string; language?: string; error?: string;
   };
@@ -188,6 +189,9 @@
         return { ok: false, error: "Unsupported subtitle language." };
       }
       const result = await requestPage("subtitlesGet", undefined, message.language);
+      if (result.bridgeVersion !== "native-caption-capture-v1") {
+        return { ok: false, error: "The Netflix page has an outdated caption reader. Rebuild the extension and reload this watch tab before retrying." };
+      }
       if (!result.ok || !result.text || !result.language) {
         return { ok: false, error: result.error ?? "Netflix did not provide a readable transcript." };
       }
