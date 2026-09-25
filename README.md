@@ -22,6 +22,7 @@ Prerequisites: Node.js 22+, pnpm 9, Chrome, and at least one **installed and sig
 ~~~sh
 git clone https://github.com/chenghsj/immersive-language-learning.git
 cd immersive-language-learning
+git switch feat/immersive-learning-mvp  # until the pull request is merged
 corepack enable
 pnpm install
 pnpm build
