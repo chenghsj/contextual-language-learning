@@ -5,6 +5,10 @@ import { formatTime, type LearningDocument, type StudyScene, type SubtitleCue } 
 import type { UiLocale } from "../i18n/messages";
 import { sceneReaderMessages } from "../i18n/scene-reader";
 import { cuePlaybackStart, cuePlaybackWindow, openOrFocusVideoTab } from "../video/tab";
+import {
+  adjustLoopBoundary, formatLoopTimestamp, readLoopWindows,
+  type LoopBoundary, type LoopWindow,
+} from "../video/loop-window";
 import type { VideoAdapter } from "../video/types";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -32,7 +36,7 @@ type Props = {
 };
 
 function focusCue(scene: StudyScene, cues: ReadonlyMap<string, SubtitleCue>): SubtitleCue | undefined {
-  return scene.focusCueIds.map(id => cues.get(id)).find(cue => !!cue && cue.startMs !== null && cue.endMs !== null);
+  return scene.focusCueIds.map(id => cues.get(id)).find(cue => !!cue && cue.startMs !== null && cue.endMs !== null && cue.endMs > cue.startMs);
 }
 
 export function SceneReader({
@@ -53,6 +57,7 @@ export function SceneReader({
   const [status, setStatus] = useState("");
   const [playbackSettingsOpen, setPlaybackSettingsOpen] = useState(false);
   const [loopingSceneId, setLoopingSceneId] = useState<string | null>(null);
+  const [loopRanges, setLoopRanges] = useState<Record<string, LoopWindow>>({});
   const [busy, setBusy] = useState(false);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const cues = useMemo(() => new Map(document.cues.map(cue => [cue.id, cue])), [document.cues]);
@@ -61,15 +66,20 @@ export function SceneReader({
   const sourceUrl = document.source.url;
   const progressKey = "sceneStudy:" + document.id;
   const hintKey = "sceneHint";
+  const loopKey = "sceneLoopRanges:" + document.id;
   const canPlay = !!sourceUrl && !!adapter.loop && scene.startMs !== null && scene.endMs !== null;
   const selectedFocusCue = focusCue(scene, cues);
+  const selectedFocusRange = selectedFocusCue && selectedFocusCue.startMs !== null &&
+    selectedFocusCue.endMs !== null
+    ? loopRanges[selectedFocusCue.id] ?? cuePlaybackWindow(selectedFocusCue.startMs, selectedFocusCue.endMs)
+    : null;
   const focusLoopActive = loopingSceneId === scene.id;
   const originalVisible = showOriginal ?? hint !== "progressive";
   const translationVisible = showTranslation ?? hint === "bilingual";
 
   useEffect(() => {
     let live = true;
-    void chrome.storage.local.get([progressKey, hintKey]).then(stored => {
+    void chrome.storage.local.get([progressKey, hintKey, loopKey]).then(stored => {
       if (!live) return;
       const saved = readSceneProgress(stored[progressKey],
         document.sections.map(item => item.id));
@@ -79,21 +89,23 @@ export function SceneReader({
       }
       setCompletedIds(saved.completedIds);
       setStepByScene(saved.steps);
+      setLoopRanges(readLoopWindows(stored[loopKey], document.cues.map(cue => cue.id)));
       const previousHint = stored[hintKey];
       if (typeof previousHint === "string" && ["progressive", "original", "bilingual"].includes(previousHint)) {
         setHint(previousHint as Hint);
       }
     }).catch(() => undefined).finally(() => { if (live) setLoaded(true); });
     return () => { live = false; };
-  }, [document.id, document.sections, progressKey]);
+  }, [document.id, document.sections, document.cues, progressKey, loopKey]);
 
   useEffect(() => {
     if (!loaded) return;
     void chrome.storage.local.set({
       [progressKey]: { sceneId: scene.id, completedIds, steps: stepByScene },
       [hintKey]: hint,
+      [loopKey]: loopRanges,
     }).catch(() => undefined);
-  }, [loaded, progressKey, scene.id, completedIds, stepByScene, hint, hintKey]);
+  }, [loaded, progressKey, scene.id, completedIds, stepByScene, hint, hintKey, loopKey, loopRanges]);
 
   function selectScene(index: number): void {
     if (busy || !Number.isInteger(index) || index < 0 ||
@@ -156,11 +168,11 @@ export function SceneReader({
   }
 
   async function playFocus(cue: SubtitleCue | undefined, isLoop = true): Promise<void> {
-    if (!sourceUrl || !cue || cue.startMs === null || cue.endMs === null || !adapter.loop) return;
+    if (!sourceUrl || !cue || cue.startMs === null || cue.endMs === null || cue.endMs <= cue.startMs || !adapter.loop) return;
     setBusy(true);
     try {
       await adapter.loop(sourceUrl, {
-        ...cuePlaybackWindow(cue.startMs, cue.endMs),
+        ...(loopRanges[cue.id] ?? cuePlaybackWindow(cue.startMs, cue.endMs)),
         repeats: isLoop ? repeat === "infinite" ? "infinite" : Number(repeat) : 1,
         delaySeconds: isLoop ? delay : 0,
       });
@@ -190,6 +202,52 @@ export function SceneReader({
   async function toggleFocusLoop(): Promise<void> {
     if (focusLoopActive) await stopLoop();
     else await playFocus(selectedFocusCue);
+  }
+
+
+  /** A/B edits stop the old loop first, so the player never keeps using stale bounds. */
+  async function updateFocusRange(boundary: LoopBoundary | "reset", position: number | "current" = 0): Promise<void> {
+    if (busy || !selectedFocusCue || !selectedFocusRange) return;
+    setBusy(true);
+    try {
+      let next: LoopWindow | null = null;
+      if (boundary !== "reset") {
+        let target = position;
+        if (position === "current") {
+          if (!sourceUrl || !adapter.status) {
+            setStatus(c.positionUnavailable);
+            return;
+          }
+          const playback = await adapter.status(sourceUrl);
+          if (typeof playback.currentMs !== "number" || !Number.isFinite(playback.currentMs)) {
+            setStatus(c.positionUnavailable);
+            return;
+          }
+          target = playback.currentMs;
+        }
+        next = adjustLoopBoundary(selectedFocusRange, boundary, target as number);
+        if (!next) {
+          setStatus(c.invalidLoopRange);
+          return;
+        }
+      }
+      if (focusLoopActive && sourceUrl && adapter.stopLoop) {
+        await adapter.stopLoop(sourceUrl);
+        setLoopingSceneId(null);
+      }
+      const cueId = selectedFocusCue.id;
+      setLoopRanges(previous => {
+        const updated = { ...previous };
+        if (next) updated[cueId] = next;
+        else delete updated[cueId];
+        return updated;
+      });
+      setStatus(next ? c.loopRangeSaved : c.loopRangeReset);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : c.unavailable);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function changeRate(value: number): Promise<void> {
@@ -444,6 +502,38 @@ export function SceneReader({
               value: rate, label: rate + "×",
             }))} />
         </label>}
+
+        <div className="sceneLoopRange" role="group" aria-label={c.loopRange}>
+          <div className="sceneLoopRangeTitle">
+            <strong>{c.loopRange}</strong>
+            <Button variant="outline" size="sm" disabled={busy || !selectedFocusCue ||
+              !loopRanges[selectedFocusCue.id]}
+              onClick={() => void updateFocusRange("reset")}>{c.loopRangeResetButton}</Button>
+          </div>
+          <p className="hint">{c.loopRangeHint}</p>
+          {selectedFocusRange ? (["start", "end"] as const).map(boundary => {
+            const point = boundary === "start" ? selectedFocusRange.startMs : selectedFocusRange.endMs;
+            const name = boundary === "start" ? c.loopStart : c.loopEnd;
+            return <div className="sceneLoopBoundary" key={boundary}>
+              <div className="sceneLoopBoundaryTitle">
+                <span>{name}</span>
+                <output>{formatLoopTimestamp(point)}</output>
+              </div>
+              <div className="sceneLoopNudge">
+                <Button variant="outline" size="sm" disabled={busy}
+                  aria-label={name + " " + c.loopEarlier}
+                  onClick={() => void updateFocusRange(boundary, point - 500)}>−0.5s</Button>
+                <Button variant="outline" size="sm" disabled={busy}
+                  aria-label={name + " " + c.loopLater}
+                  onClick={() => void updateFocusRange(boundary, point + 500)}>+0.5s</Button>
+                <Button variant="outline" size="sm" disabled={busy || !adapter.status}
+                  onClick={() => void updateFocusRange(boundary, "current")}>
+                  {c.setBoundaryHere}
+                </Button>
+              </div>
+            </div>;
+          }) : <p className="hint">{c.noTime}</p>}
+        </div>
       </div>}
       {status && <p className="sceneMiniStatus" role="status">{status}</p>}
     </Card>}

@@ -155,7 +155,7 @@ test("reader opens in study with only Study and Review tabs; no watch-along poll
   assert.match(source, /type Mode = "learn" \| "review"/);
   assert.match(source, /useState<Mode>\("learn"\)/);
   assert.match(source, /\(\["learn", "review"\] as const\)/);
-  assert.doesNotMatch(source, /watchScene|watchTime|watchAvailable|mode === "watch"|adapter\.status|setInterval\(poll/);
+  assert.doesNotMatch(source, /watchScene|watchTime|watchAvailable|mode === "watch"|setInterval\(poll/);
   assert.match(css, /\.sceneTabs \{[^}]*grid-template-columns: repeat\(2,minmax\(0,1fr\)\)/);
   for (const locale of Object.keys(messages) as UiLocale[]) {
     const copy = sceneReaderMessages[locale];
@@ -168,5 +168,31 @@ test("reader opens in study with only Study and Review tabs; no watch-along poll
     for (const removed of ["watch", "watchHint", "watchNoScene", "watchUnavailable", "studyThis"]) {
       assert.equal(Object.hasOwn(copy, removed), false, locale + ": obsolete " + removed);
     }
+  }
+});
+
+
+test("A/B controls are scoped to the expanded player, persisted per document and cue", async () => {
+  const source = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(source, /const loopKey = "sceneLoopRanges:" \+ document\.id/);
+  assert.match(source, /readLoopWindows\(stored\[loopKey\], document\.cues\.map\(cue => cue\.id\)\)/);
+  assert.match(source, /\[loopKey\]: loopRanges/);
+  assert.match(source, /loopRanges\[cue\.id\] \?\? cuePlaybackWindow\(cue\.startMs, cue\.endMs\)/);
+  assert.match(source, /await adapter\.status\(sourceUrl\)/);
+  assert.match(source, /await adapter\.stopLoop\(sourceUrl\)/);
+  assert.match(source, /updateFocusRange\(boundary, "current"\)/);
+  assert.match(source, /updateFocusRange\("reset"\)/);
+  assert.match(source, /formatLoopTimestamp\(point\)/);
+  assert.match(css, /\.sceneLoopNudge \{[^}]*grid-template-columns:/);
+  for (const locale of Object.keys(messages) as UiLocale[]) {
+    const copy = sceneReaderMessages[locale];
+    for (const key of ["loopRange", "loopRangeHint", "loopStart", "loopEnd",
+      "loopEarlier", "loopLater", "setBoundaryHere", "loopRangeResetButton",
+      "loopRangeSaved", "loopRangeReset", "invalidLoopRange", "positionUnavailable"] as const) {
+      assert.ok(copy[key].trim(), locale + " " + key);
+    }
+    assert.doesNotMatch(renderReader(locale, true), /class="sceneLoopRange"/,
+      locale + ": A/B controls stay collapsed until requested");
   }
 });
