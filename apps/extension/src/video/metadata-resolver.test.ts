@@ -83,3 +83,27 @@ test("rejects tab navigation during video metadata lookup", async () => {
     else delete globalChrome.chrome;
   }
 });
+
+test("ignores the previous active watch tab when the user switches during detection", async () => {
+  const globalChrome = globalThis as unknown as { chrome?: typeof chrome };
+  const previous = globalChrome.chrome;
+  let queries = 0;
+  try {
+    globalChrome.chrome = {
+      windows: { getCurrent: async () => ({ id: 1 }) },
+      tabs: {
+        query: async () => [{
+          id: ++queries === 1 ? 11 : 12,
+          url: queries === 1 ? netflix : youtube,
+          title: "Netflix", active: true, windowId: 1,
+        }],
+        get: async () => ({ id: 11, url: netflix, title: "Netflix" }),
+        sendMessage: async () => ({ ok: true, url: netflix, title: "Episode title" }),
+      },
+    } as unknown as typeof chrome;
+    await assert.rejects(detectCurrentVideoMetadata("", 0), /VIDEO_CHANGED/);
+  } finally {
+    if (previous) globalChrome.chrome = previous;
+    else delete globalChrome.chrome;
+  }
+});
