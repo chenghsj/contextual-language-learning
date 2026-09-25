@@ -18,7 +18,7 @@ function fakePort(name: string, senderId = "immersive-extension-test") {
   const sent: unknown[] = [];
   let disconnected = false;
   return {
-    name, sender: { id: senderId }, onMessage, onDisconnect,
+    name, sender: { id: senderId, url: "chrome-extension://" + senderId + "/sidepanel.html" }, onMessage, onDisconnect,
     postMessage: (value: unknown) => { sent.push(value); },
     disconnect: () => {
       if (disconnected) return;
@@ -141,4 +141,15 @@ test("an invalid preflight or a foreign UI client cannot reach the native Host",
   panel.onMessage.fire({ type: "checkDuplicates", id: randomUUID(), payload: { invalid: true } });
   assert.equal(app.connections, 0);
   assert.equal((panel.sent.at(-1) as { type: string }).type, "error");
+});
+
+test("an internal content-script port cannot run an Agent through the worker", () => {
+  const app = setup();
+  const contentScript = fakePort(GENERATION_CONTROLLER_PORT, app.id);
+  Object.assign(contentScript.sender, {
+    url: "https://www.netflix.com/watch/81234567", tab: { id: 42 },
+  });
+  app.onConnect.fire(contentScript);
+  assert.equal(contentScript.disconnected, true);
+  assert.equal(app.connections, 0);
 });
