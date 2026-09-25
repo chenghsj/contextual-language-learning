@@ -852,7 +852,7 @@ export default function App() {
                   onClick={() => void openVideo()}>
                   {openingVideo ? t("openingVideo") : t("openOrFocusVideo")}
                 </Button>
-              </div>
+              </div>}
             <div className="twoColumns">
               <label>循環次數
                 <Select value={repeat} onChange={event => setRepeat(event.target.value as RepeatOption)}>
