@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseAgyModels, parseCatalogModels } from "./metadata";
+import { parseAgyModels, parseCatalogModels, probeCli } from "./metadata";
 
 test("AGY command output becomes a bounded, ID-preserving model picker", () => {
   const output = "slug                        name\n" +
@@ -53,4 +53,12 @@ test("AGY 1.2.11 models supports nonbreaking spaces and all available model IDs"
   assert.deepEqual(models[0], { id: "gemini-3.8-flash-high", label: "Gemini 3.8 Flash (High)" });
   assert.deepEqual(models[12], { id: "claude-opus-4-6-thinking", label: "Claude Opus 4.6 (Thinking)" });
   assert.deepEqual(models[13], { id: "gpt-oss-120b-medium", label: "GPT-OSS 120B (Medium)" });
+});
+
+test("CLI probe captures a model table on stderr", async () => {
+  const output = await probeCli(process.execPath, ["-e", "process.stderr.write(\"gemini-3.8-flash-high    Gemini 3.8 Flash (High)\\n\")"], { ...process.env });
+  assert.equal(output.stdout, "");
+  assert.deepEqual(parseAgyModels(output.stderr), [{
+    id: "gemini-3.8-flash-high", label: "Gemini 3.8 Flash (High)",
+  }]);
 });
