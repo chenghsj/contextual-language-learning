@@ -15,6 +15,39 @@ A local-first Chrome side-panel extension that turns **subtitles you have permis
 - Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping.
 - Netflix has optional, user-initiated seek and per-sentence looping via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). It never extracts Netflix subtitles, bypasses DRM, intercepts keyboard shortcuts or opens a second playback session.
 
+## Install from GitHub Release (Chromium + macOS)
+
+After a version tag is published, go to [GitHub Releases](https://github.com/chenghsj/immersive-language-learning/releases) and download these matching assets:
+
+- immersive-language-learning-chromium-VERSION.zip — Chrome / Edge Chromium Manifest V3 extension.
+- immersive-language-learning-macos-host-VERSION.zip — bundled local CLI Native Host and installer for macOS.
+- SHA256SUMS — SHA-256 checksums for the two ZIP files.
+
+Extract the **Chromium** ZIP, open chrome://extensions, enable Developer mode, select **Load unpacked**, and choose the extracted folder with manifest.json at its root. The ZIP is not a signed CRX and is not installed by dragging it into Chrome.
+
+Copy the new extension's 32-character ID from Chrome's extension details. Extract the **macOS Host** ZIP separately and run this from inside its extracted folder (Node.js 22+ required):
+
+~~~sh
+node scripts/install-host.mjs YOUR_EXTENSION_ID
+~~~
+
+The installer copies the Host to a permanent location under your user Library and registers the extension ID with Chrome Native Messaging. You can remove the Host extraction afterward. Install and sign in to a supported CLI Agent separately; the release contains no API keys or account tokens. To update the unpacked extension, extract the new Chromium ZIP into the **same** extension folder and reload it; if Chrome assigns a different extension ID, run the Host installer again with the new ID.
+
+### Publishing the Chromium release
+
+The workflow at .github/workflows/release.yml follows the ZIP packaging used by the netflix-shortcut-override project, but also includes our required macOS Host. It runs the normal typecheck, tests, build, extension/host checks, ZIP integrity checks, and SHA-256 verification before creating or updating a GitHub Release.
+
+First merge the tested PR into main. Make sure package.json and apps/extension/public/manifest.json have the same version, then create and push the matching version tag:
+
+~~~sh
+git switch main
+git pull
+git tag v0.1.0
+git push origin v0.1.0
+~~~
+
+A tag push runs the Release workflow and uploads both ZIPs and SHA256SUMS. Alternatively, after this workflow exists on the default branch, use GitHub Actions > Release > Run workflow with an **existing** version tag. Tag/version mismatches fail instead of shipping mismatched files. Ordinary PR builds expose the same packages as a short-lived Actions artifact called release-preview-SHA; this is not a GitHub Release. Do not tag a development branch unless you explicitly intend to release that commit.
+
 ## Quick start (macOS)
 
 Prerequisites: Node.js 22+, pnpm 9, Chrome, and at least one **installed and signed-in** CLI (Claude Code / Codex / AGY).
