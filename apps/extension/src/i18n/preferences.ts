@@ -1,6 +1,18 @@
 import type { UiLocale } from "./messages";
 
 export type LocalePreference = UiLocale | "auto";
+
+/** Display each language in its own writing system, independent of UI locale. */
+export const NATIVE_LANGUAGE_LABELS: Readonly<Record<UiLocale, string>> = {
+  "en": "English",
+  "ja": "日本語",
+  "ko": "한국어",
+  "zh-TW": "繁體中文",
+  "zh-CN": "简体中文",
+};
+export function nativeLanguageName(locale: UiLocale): string {
+  return NATIVE_LANGUAGE_LABELS[locale];
+}
 export type ThemePreference = "system" | "light" | "dark";
 export type AppliedTheme = "light" | "dark";
 
