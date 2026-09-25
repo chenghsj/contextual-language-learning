@@ -5,7 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 
-test("language and appearance settings use Radix Select, not NativeSelect", async () => {
+test("language and appearance settings use Radix Select", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   const preferences = app.slice(
     app.indexOf('<h2>{t("uiLanguage")} · {t("appearance")}</h2>'),
@@ -21,6 +21,7 @@ test("language and appearance settings use Radix Select, not NativeSelect", asyn
     assert.ok(preferences.includes('<SelectItem value="' + value + '">'));
   }
   assert.doesNotMatch(preferences, /<NativeSelect|<option\b|<select\b/);
+  assert.doesNotMatch(app, /<NativeSelect\b|<option\b|<select\b/);
   assert.match(preferences, /isLocalePreference\(next\)/);
   assert.match(preferences, /isThemePreference\(next\)/);
 });

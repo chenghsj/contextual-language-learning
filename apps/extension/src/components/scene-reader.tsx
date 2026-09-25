@@ -8,7 +8,7 @@ import { cuePlaybackStart, cuePlaybackWindow, openOrFocusVideoTab } from "../vid
 import type { VideoAdapter } from "../video/types";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { NativeSelect as Select } from "./ui/select";
+import { SelectField } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { SettingInfo } from "./setting-info";
 
@@ -254,15 +254,15 @@ export function SceneReader({
         </div>
         <div className="scenePicker">
           <label htmlFor="study-scene-picker">{c.chooseScene}</label>
-          <Select id="study-scene-picker" value={String(sceneIndex)} disabled={busy}
-            onChange={event => selectScene(Number(event.target.value))}>
-            {document.sections.map((item, index) => (
-              <option key={item.id} value={index}>
-                {c.scene} {index + 1} · {item.title} ({formatTime(item.startMs)}–{formatTime(item.endMs)})
-                {completedIds.includes(item.id) ? " ✓ " + c.completed : ""}
-              </option>
-            ))}
-          </Select>
+          <SelectField id="study-scene-picker" ariaLabel={c.chooseScene}
+            value={String(sceneIndex)} disabled={busy}
+            onValueChange={value => selectScene(Number(value))}
+            options={document.sections.map((item, index) => ({
+              value: String(index),
+              label: c.scene + " " + (index + 1) + " · " + item.title +
+                " (" + formatTime(item.startMs) + "–" + formatTime(item.endMs) + ")" +
+                (completedIds.includes(item.id) ? " ✓ " + c.completed : ""),
+            }))} />
         </div>
         <h2>{scene.title}</h2>
         <div className="sceneQuickPlay">
@@ -292,15 +292,15 @@ export function SceneReader({
         <details className="sceneReadingSettings">
           <summary>{c.hintLabel} · {c[hint]}</summary>
           <div className="sceneReadingControl">
-            <Select value={hint} aria-label={c.hintLabel} onChange={event => {
-              setHint(event.target.value as Hint);
+            <SelectField ariaLabel={c.hintLabel} value={hint} onValueChange={value => {
+              setHint(value as Hint);
               setShowOriginal(null);
               setShowTranslation(null);
-            }}>
-              <option value="progressive">{c.progressive}</option>
-              <option value="original">{c.original}</option>
-              <option value="bilingual">{c.bilingual}</option>
-            </Select>
+            }} options={[
+              { value: "progressive", label: c.progressive },
+              { value: "original", label: c.original },
+              { value: "bilingual", label: c.bilingual },
+            ]} />
             <SettingInfo label={c.hintLabel} infoLabel={c.hintInfo}
               explanation={c.originalSubtitleNotice} />
           </div>
@@ -424,24 +424,25 @@ export function SceneReader({
         role="region" aria-label={c.playbackOptions}>
         <div className="twoColumns">
           <label>{c.repeat}
-            <Select value={repeat} onChange={event => setRepeat(event.target.value as Repeat)}>
-              <option value="2">2×</option><option value="3">3×</option>
-              <option value="5">5×</option><option value="infinite">∞</option>
-            </Select>
+            <SelectField ariaLabel={c.repeat} value={repeat}
+              onValueChange={value => setRepeat(value as Repeat)}
+              options={[
+                { value: "2", label: "2×" }, { value: "3", label: "3×" },
+                { value: "5", label: "5×" }, { value: "infinite", label: "∞" },
+              ]} />
           </label>
           <label>{c.delay}
-            <Select value={delay} onChange={event => setDelay(Number(event.target.value))}>
-              {[0, 1, 2, 3].map(value =>
-                <option key={value} value={value}>{value}s</option>)}
-            </Select>
+            <SelectField ariaLabel={c.delay} value={delay}
+              onValueChange={value => setDelay(Number(value))}
+              options={[0, 1, 2, 3].map(value => ({ value, label: value + "s" }))} />
           </label>
         </div>
         {adapter.setPlaybackRate && <label>{c.speed}
-          <Select value={playbackRate} disabled={busy}
-            onChange={event => void changeRate(Number(event.target.value))}>
-            {[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5].map(rate =>
-              <option value={rate} key={rate}>{rate}×</option>)}
-          </Select>
+          <SelectField ariaLabel={c.speed} value={playbackRate} disabled={busy}
+            onValueChange={value => void changeRate(Number(value))}
+            options={[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5].map(rate => ({
+              value: rate, label: rate + "×",
+            }))} />
         </label>}
       </div>}
       {status && <p className="sceneMiniStatus" role="status">{status}</p>}

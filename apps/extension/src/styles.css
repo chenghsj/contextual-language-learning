@@ -123,7 +123,7 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .panel h3 { margin: 18px 0 8px; color: var(--muted-foreground); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
 .hint { margin: 7px 0 12px; color: var(--muted-foreground); font-size: 12px; line-height: 1.55; }
 label { display: grid; gap: 6px; margin: 12px 0; font-size: 12px; font-weight: 600; }
-label [data-slot=input], label [data-slot=select], label [data-slot=textarea] { width: 100%; }
+label [data-slot=input], label [data-slot=select-trigger], label [data-slot=textarea] { width: 100%; }
 /* Radix preferences use button triggers instead of browser-native select elements. */
 .uiPreferenceField { margin: 12px 0; min-width: 0; }
 .uiPreferenceField > label { display: block; margin: 0 0 6px; font-size: 12px; font-weight: 600; }
@@ -243,7 +243,7 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .settingField { min-width: 0; position: relative; margin: 12px 0; }
 .settingHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; min-width: 0; margin-bottom: 6px; }
 .settingHeading label { display: block; min-width: 0; margin: 0; padding-top: 3px; line-height: 1.45; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
-.settingField [data-slot=select], .settingField [data-slot=input] { width: 100%; min-width: 0; }
+.settingField [data-slot=select-trigger], .settingField [data-slot=input] { width: 100%; min-width: 0; }
 .settingInfo { display: block; flex-shrink: 0; width: auto; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .settingInfo summary { display: grid; place-items: center; width: 23px; height: 23px; padding: 0; border-radius: var(--radius); color: var(--muted-foreground); list-style: none; cursor: pointer; }
 .settingInfo summary::-webkit-details-marker { display: none; }
@@ -282,7 +282,7 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .sceneTabs button.selected { background: var(--card); color: var(--foreground); box-shadow: 0 1px 4px #0001; }
 .scenePicker { display: grid; gap: 6px; min-width: 0; margin: 12px 0 14px; }
 .scenePicker label { margin: 0; font-size: 12px; font-weight: 600; }
-.scenePicker select { width: 100%; min-width: 0; font-size: 12px; text-overflow: ellipsis; }
+.scenePicker [data-slot="select-trigger"] { width: 100%; min-width: 0; font-size: 12px; text-overflow: ellipsis; }
 .sceneSteps { grid-template-columns: repeat(3,minmax(0,1fr)); margin: 14px 0 8px; gap: 6px; }
 .sceneSteps button {
   display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 66px;
@@ -325,7 +325,7 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .sceneReadingSettings { margin: 8px 0 14px; padding: 8px 10px; }
 .sceneReadingSettings > summary { color: var(--muted-foreground); font-size: 12px; line-height: 1.5; }
 .sceneReadingControl { display: flex; align-items: center; gap: 8px; min-width: 0; margin-top: 10px; position: relative; }
-.sceneReadingControl > select { flex: 1; min-width: 0; width: 100%; }
+.sceneReadingControl > [data-slot="select-trigger"] { flex: 1; min-width: 0; width: 100%; }
 .sceneReadingControl .settingInfoPopover { width: min(260px, calc(100vw - 72px)); max-width: 100%; }
 
 /* Only two compact rows remain sticky; settings open on demand. */
@@ -355,7 +355,7 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 }
 .sceneMiniSettings .twoColumns { gap: 8px; }
 .sceneMiniSettings label { min-width: 0; margin: 0 0 8px; font-size: 12px; }
-.sceneMiniSettings select { width: 100%; min-width: 0; }
+.sceneMiniSettings [data-slot="select-trigger"] { width: 100%; min-width: 0; }
 .sceneMiniStatus {
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
   max-height: 34px; overflow: hidden; overflow-wrap: anywhere;
@@ -390,3 +390,8 @@ button[data-slot="button"].primary {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+/* Every Radix trigger, including the scene picker and account options, fits the narrow Side Panel. */
+[data-slot="select-trigger"] { width: 100%; min-width: 0; max-width: 100%; }
+[data-slot="select-trigger"] [data-slot="select-value"] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-slot="select-content"] { max-width: min(440px, calc(100vw - 24px)); }
