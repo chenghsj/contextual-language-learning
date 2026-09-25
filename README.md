@@ -103,3 +103,9 @@ If publication fails, the local document remains complete. Use the job-history P
 4. The Host stores refresh tokens in macOS Keychain and keeps the account metadata in the user-only application-support directory. Changing the default account does not move old jobs to another account.
 
 Google Drive integration uses the limited drive.file scope and can only search app-created or app-shared files, not every file in the account. Authorization and upload have not been tested against a live Google account in CI. For privacy, choose only transcripts you are authorized to send to your configured Agent provider.
+
+### Interface language and appearance
+
+The Side Panel detects the browser UI language on first launch (Chrome UI language, then navigator language). It supports English, Traditional Chinese, Simplified Chinese, Japanese, and Korean; unsupported browser languages fall back to English. In **Settings**, choose **Interface language → Automatic (browser language)** or a manual language override. Changing the interface does not change the source subtitles, target language, or the saved lesson's explanation language. The initial explanation language defaults to the detected browser language and can be changed independently.
+
+Appearance defaults to **Use system setting**, follows the system's light/dark preference, and updates while the Side Panel is open. You can override it with Light or Dark. Language and appearance choices are saved in Chrome extension-local storage; neither setting is sent to the CLI Agent.

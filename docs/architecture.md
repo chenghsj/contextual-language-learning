@@ -80,3 +80,9 @@ The canonical local DocumentRepository is authoritative for job recovery. Genera
 The macOS Native Host owns the native folder picker and allowlist, Google Desktop OAuth with PKCE, Keychain-backed per-account refresh tokens, and the Drive API. The Chrome extension does not receive refresh tokens. Drive uses the limited drive.file scope and appProperties on app-created documents for duplicate detection and repeat-safe publishing. An authentication or network failure aborts the preflight instead of reporting an empty Drive.
 
 Duplicate matching combines canonical local documents, incomplete jobs and visible app-created Drive files. A short-lived preflight ticket binds the generation request. The Host rejects unconfirmed regeneration, altered requests, and matches that appeared after the preflight. Each regenerated version has a fresh document UUID. Existing content and learning progress remain unchanged.
+
+## Interface localization and theme
+
+All UI text is defined in apps/extension/src/i18n/messages.ts and accessed through typed translate(locale, key, parameters). The UI locale defaults to Chrome's browser language, with navigator as a fallback and English for unsupported languages. Browser locale and the manual UI override are separate from LearningProfile.instructionLanguage, so switching the extension's UI does not modify an existing lesson or prompt.
+
+The Side Panel saves uiLocalePreference and themePreference under Chrome extension-local storage. Appearance defaults to the system's prefers-color-scheme; a live matchMedia listener updates the resolved theme when the system setting changes. The resolved light/dark palette is applied using the HTML data-theme attribute. Chrome manifest action/name/description messages are also localized under _locales, independently of the React UI catalog.

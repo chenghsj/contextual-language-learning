@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "イマーシブ語学学習"
+  },
+  "extensionDescription": {
+    "message": "ローカル CLI Agent で字幕から語学教材を生成します。"
+  },
+  "actionTitle": {
+    "message": "イマーシブ語学学習を開く"
+  }
+}
