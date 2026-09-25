@@ -111,8 +111,18 @@ export const LearningDocumentSchema = z.object({
 });
 export type LearningDocument = z.infer<typeof LearningDocumentSchema>;
 
+export interface AgentModel { id: string; label: string }
+export type AgentModelSource = "cli" | "aliases" | "unavailable";
+export interface AgentProfile { id: string; provider: "claude" | "codex"; label: string; directory: string }
+
 export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("health"), id: z.string().uuid() }),
+  z.object({ type: z.literal("agentModels"), id: z.string().uuid(), settings: AgentSettingsSchema }),
+  z.object({ type: z.literal("agentProfiles"), id: z.string().uuid() }),
+  z.object({ type: z.literal("agentProfileSave"), id: z.string().uuid(),
+    provider: z.enum(["claude", "codex"]), label: z.string().min(1).max(80),
+    directory: z.string().min(1).max(1024) }),
+  z.object({ type: z.literal("agentProfileRemove"), id: z.string().uuid(), profileId: z.string().uuid() }),
   z.object({ type: z.literal("generate"), id: z.string().uuid(), payload: GenerationRequestSchema,
     checkToken: z.string().uuid(), confirmRegeneration: z.boolean() }),
   z.object({ type: z.literal("cancel"), id: z.string().uuid(), jobId: z.string().uuid() }),
@@ -141,6 +151,8 @@ export interface AgentInfo {
 
 export type HostMessage =
   | { id: string; type: "health"; installed: Record<string, boolean>; agents: AgentInfo[] }
+  | { id: string; type: "agentModels"; models: AgentModel[]; source: AgentModelSource; notice?: string }
+  | { id: string; type: "agentProfiles"; profiles: AgentProfile[] }
   | { id: string; type: "progress"; jobId: string; completed: number; total: number }
   | { id: string; type: "job"; job: import("./jobs").JobSummary }
   | { id: string; type: "jobs"; jobs: import("./jobs").JobSummary[] }
