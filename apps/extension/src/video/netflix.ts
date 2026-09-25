@@ -6,6 +6,13 @@ export const netflixAdapter: VideoAdapter = {
   id: "netflix",
   label: "Netflix",
   getVideoId: netflixWatchId,
+  async fetchSubtitles(url, language) {
+    const result = await sendToVideo<{
+      ok: boolean; error?: string; text?: string; language?: string;
+    }>(netflixAdapter, url, { type: "NETFLIX_SUBTITLES_GET", language });
+    if (!result.text || !result.language) throw new Error("Netflix did not return subtitle text.");
+    return { text: result.text, language: result.language };
+  },
   async diagnose(url) {
     const result = await sendToVideo<{ ok: boolean; error?: string; currentMs?: number }>(
       netflixAdapter, url, { type: "NETFLIX_DIAGNOSE" },
