@@ -104,7 +104,7 @@ export class JobManager {
       }
       return document;
     } catch (error) {
-      await this.storage.jobs.update(jobId, current => {
+      const updated = await this.storage.jobs.update(jobId, current => {
         if (current.summary.status !== "running") return current;
         const next = transitionJob(current, controller.signal.aborted ? "waiting" : "failed");
         return {
@@ -115,6 +115,11 @@ export class JobManager {
           },
         };
       });
+      // Persist the terminal checkpoint first, then send the real status to
+      // any open Side Panel. The error message alone cannot update a progress bar.
+      if (updated.summary.status === "failed" || updated.summary.status === "waiting") {
+        this.notify(requestId, updated.summary);
+      }
       throw error;
     } finally {
       signal?.removeEventListener("abort", externalAbort);

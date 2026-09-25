@@ -34,7 +34,9 @@ test("interruption retains validated checkpoints and resume does not regenerate 
     const payload = request();
     let calls = 0;
     const abort = new AbortController();
+    const reportedWaiting: JobSummary[] = [];
     const notify = (_id: string, summary: JobSummary) => {
+      reportedWaiting.push(summary);
       if (summary.completed === 1 && summary.status === "running") abort.abort();
     };
     const first = new JobManager({
@@ -45,6 +47,7 @@ test("interruption retains validated checkpoints and resume does not regenerate 
     await assert.rejects(first.start(payload.id, payload, abort.signal), /interrupt/);
     const waiting = await storage.jobs.get(payload.id);
     assert.equal(waiting?.summary.status, "waiting");
+    assert.equal(reportedWaiting.at(-1)?.status, "waiting");
     assert.equal(waiting?.summary.completed, 1);
     assert.equal(waiting?.sections.length, 1);
     const previousSectionId = waiting!.sections[0].id;
@@ -73,11 +76,15 @@ test("failed generation is restartable, cancellation is terminal", async () => {
   try {
     const storage = localStoragePorts(root);
     const payload = request();
+    const reported: JobSummary[] = [];
     const manager = new JobManager({
       storage, legacyGeneration: true, generateSection: async () => { throw new Error("Agent temporarily unavailable"); },
-    }, () => undefined);
+    }, (_requestId, summary) => { reported.push(summary); });
     await assert.rejects(manager.start(payload.id, payload), /Agent temporarily unavailable/);
     assert.equal((await storage.jobs.get(payload.id))?.summary.status, "failed");
+    assert.equal(reported.at(-1)?.status, "failed", "failure must be pushed to the Side Panel");
+    assert.equal(reported.at(-1)?.completed, 0);
+    assert.match(reported.at(-1)?.error ?? "", /temporarily unavailable/);
     assert.equal(await manager.cancel(payload.id), true);
     assert.equal((await storage.jobs.get(payload.id))?.summary.status, "cancelled");
     await assert.rejects(manager.resume(randomUUID(), payload.id), /cannot be resumed/);

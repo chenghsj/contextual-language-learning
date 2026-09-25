@@ -44,3 +44,12 @@ test("YouTube one-click caption UI follows the active watch tab", async () => {
     script.world === "MAIN" && script.run_at === "document_start" &&
     script.js.includes("youtube-page.js")));
 });
+
+test("failed generation updates the progress status and refreshing tasks preserves its error", async () => {
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  assert.match(app, /function jobStatusLine\(summary: JobSummary\)/);
+  assert.match(app, /lastJobSummaryRef\.current = summary;/);
+  assert.match(app, /const current = message\.jobs\.find\(job => job\.id === lastJobIdRef\.current\);/);
+  const load = app.slice(app.indexOf("function loadJobs(): void"), app.indexOf("function openSavedDocument("));
+  assert.doesNotMatch(load, /setError\(" "\)|setError\(""\)/);
+});
