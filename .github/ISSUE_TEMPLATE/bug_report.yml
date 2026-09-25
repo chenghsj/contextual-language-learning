@@ -1,0 +1,74 @@
+name: Bug report
+description: Report a reproducible bug using synthetic or sanitized data.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Do not include private transcripts, OAuth tokens,
+        CLI credentials, copyrighted media, real Google Drive documents or exploits.
+        Security issues must be disclosed privately per SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Extension version or commit
+      placeholder: "v0.1.0 or commit SHA"
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Chromium Extension / reader
+        - YouTube playback
+        - Netflix experimental playback
+        - Local Native Host / Agent
+        - Subtitles / document generation
+        - Local storage / job recovery
+        - Google Drive (experimental)
+        - Packaging / installation / CI
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser version, macOS/OS version, Node version, installed Agent and model if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include a small synthetic SRT/VTT example when relevant, not licensed streaming subtitles.
+      placeholder: |
+        1. Import synthetic subtitle sample...
+        2. Open Reader and...
+        3. Click...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and sanitized logs
+      description: Remove paths with usernames, account addresses, access tokens and private video URLs.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I checked existing issues and the documented limitations.
+          required: true
+        - label: I removed credentials, personal data and protected streaming content.
+          required: true
