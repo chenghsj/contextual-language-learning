@@ -16,7 +16,9 @@ export function toMarkdown(doc: LearningDocument): string {
       const cue = doc.cues.find(item => item.id === id);
       if (!cue) continue;
       const time = cue.startMs === null ? "" : "[" + Math.floor(cue.startMs / 1000) + "s] ";
+      const translation = "translations" in section ? section.translations.find(item => item.cueId === id)?.text : undefined;
       parts.push("> " + time + safeMarkdown(cue.originalText));
+      if (translation) parts.push("> " + safeMarkdown(translation));
     }
     parts.push("", "### Vocabulary", "");
     for (const word of section.vocabulary) {
