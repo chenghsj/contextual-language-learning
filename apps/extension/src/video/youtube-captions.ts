@@ -91,3 +91,52 @@ export function youtubeJson3ToVtt(input: string): string {
   if (!count) throw new Error("YouTube did not provide any readable subtitle cues.");
   return lines.join("\n");
 }
+
+/** YouTube may return WEBVTT, JSON3 or a legacy XML timed-text document. */
+export function youtubeXmlToVtt(
+  input: string,
+  parseXml: (source: string) => Document =
+    source => new DOMParser().parseFromString(source, "application/xml"),
+): string {
+  if (input.length > 3_000_000) throw new Error("YouTube subtitles exceed the size limit.");
+  const xml = parseXml(input);
+  if (xml.getElementsByTagName("parsererror").length) {
+    throw new Error("YouTube returned invalid subtitle XML.");
+  }
+  const kind = xml.documentElement?.localName;
+  if (kind !== "transcript" && kind !== "timedtext") {
+    throw new Error("YouTube returned an unsupported subtitle XML format.");
+  }
+  const entries = kind === "transcript"
+    ? Array.from(xml.getElementsByTagName("text"))
+    : Array.from(xml.getElementsByTagNameNS("*", "p"));
+  const lines = ["WEBVTT", ""];
+  let count = 0;
+  let totalChars = 0;
+  for (const entry of entries) {
+    const start = kind === "transcript"
+      ? Number(entry.getAttribute("start")) * 1000
+      : Number(entry.getAttribute("t"));
+    const duration = kind === "transcript"
+      ? Number(entry.getAttribute("dur")) * 1000
+      : Number(entry.getAttribute("d"));
+    const text = (entry.textContent ?? "").replace(/\s+/g, " ").trim();
+    if (!Number.isFinite(start) || start < 0 ||
+      !Number.isFinite(duration) || duration <= 0 || !text) continue;
+    if (text.length > 1_500 || ++count > MAX_CAPTION_CUES ||
+      (totalChars += text.length) > MAX_CAPTION_CHARS) {
+      throw new Error("YouTube subtitles exceed the lesson size limit; use a shorter video.");
+    }
+    lines.push(vttTime(start) + " --> " + vttTime(start + duration), text, "");
+  }
+  if (!count) throw new Error("YouTube did not provide any readable subtitle cues.");
+  return lines.join("\n");
+}
+
+export function youtubeTimedTextToVtt(input: string): string {
+  const body = input.trim().replace(/^\uFEFF/, "");
+  if (/^WEBVTT(?:\s|$)/.test(body)) return body;
+  if (body.startsWith("{")) return youtubeJson3ToVtt(body);
+  if (body.startsWith("<")) return youtubeXmlToVtt(body);
+  throw new Error("YouTube did not return a readable subtitle document.");
+}

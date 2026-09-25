@@ -3,7 +3,7 @@ import test from "node:test";
 import { parseSubtitles } from "@immersive/core";
 import {
   allowedYouTubeCaptionUrl, chooseYouTubeCaptionTrack,
-  readYouTubeCaptionTracks, youtubeJson3ToVtt,
+  readYouTubeCaptionTracks, youtubeJson3ToVtt, youtubeTimedTextToVtt, youtubeXmlToVtt,
 } from "./youtube-captions";
 
 const videoId = "dQw4w9WgXcQ";
@@ -68,4 +68,44 @@ test("reject unusable or oversized YouTube transcript rather than inventing capt
   assert.throws(() => youtubeJson3ToVtt(JSON.stringify({ events: [
     { tStartMs: 0, segs: [{ utf8: "a".repeat(1501) }] },
   ] })), /size limit/);
+});
+
+test("accept WEBVTT directly without requiring JSON3", () => {
+  const vtt = "WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nHello\n";
+  assert.equal(parseSubtitles(youtubeTimedTextToVtt(vtt)).length, 1);
+  assert.throws(() => youtubeTimedTextToVtt(""), /readable subtitle document/);
+});
+
+test("convert legacy YouTube transcript XML with second-based timestamps", () => {
+  const nodes = [
+    { getAttribute: (key: string) => ({ start: "1.25", dur: "2.5" })[key as "start" | "dur"] ?? null,
+      textContent: "Hello & welcome" },
+    { getAttribute: (key: string) => ({ start: "4.0", dur: "1.0" })[key as "start" | "dur"] ?? null,
+      textContent: "Next line" },
+  ];
+  const fakeXml = {
+    documentElement: { localName: "transcript" },
+    getElementsByTagName: (key: string) => key === "text" ? nodes : [],
+    getElementsByTagNameNS: () => [],
+  } as unknown as Document;
+  const vtt = youtubeXmlToVtt("<transcript/>", () => fakeXml);
+  assert.deepEqual(parseSubtitles(vtt).map(({ startMs, endMs, originalText }) =>
+    ({ startMs, endMs, originalText })), [
+    { startMs: 1250, endMs: 3750, originalText: "Hello & welcome" },
+    { startMs: 4000, endMs: 5000, originalText: "Next line" },
+  ]);
+});
+
+test("convert millisecond-based YouTube timedtext XML and reject unsupported XML", () => {
+  const paragraph = { getAttribute: (key: string) =>
+    ({ t: "2500", d: "1800" })[key as "t" | "d"] ?? null, textContent: "Timed text" };
+  const fakeXml = {
+    documentElement: { localName: "timedtext" },
+    getElementsByTagName: () => [],
+    getElementsByTagNameNS: () => [paragraph],
+  } as unknown as Document;
+  assert.equal(parseSubtitles(youtubeXmlToVtt("<timedtext/>", () => fakeXml))[0]?.endMs, 4300);
+  assert.throws(() => youtubeXmlToVtt("<unrelated/>", () => ({
+    ...fakeXml, documentElement: { localName: "unrelated" },
+  } as Document)), /unsupported subtitle XML/);
 });

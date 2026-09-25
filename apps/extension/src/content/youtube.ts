@@ -70,7 +70,7 @@ function requestYouTubeCaptions(videoId: string, language: string): Promise<Capt
       window.removeEventListener(RESPONSE, receive);
       resolve({ source: "immersive-learning", id, ok: false,
         error: "YouTube subtitle reader did not respond. Reload this video tab and retry." });
-    }, 16_000);
+    }, 32_000);
     function receive(event: Event): void {
       const reply = (event as CustomEvent<CaptionResponse>).detail;
       if (reply?.source !== "immersive-learning" || reply.id !== id) return;
