@@ -4,13 +4,14 @@ Notable user-facing changes to Immersive Language Learning are recorded here. Ve
 
 ## [Unreleased]
 
+- Add OS-specific Native Messaging installers, native folder pickers and Windows binary launcher; distribute macOS, Windows and Linux Host ZIPs with checksums.
 - Add fixed-command CLI model discovery and named Claude/Codex account Profiles; keep CLI default and custom model fallbacks without copying credentials.
 - Show actionable Native Host registration instructions using the current extension ID.
 
 - Prepared MIT licensing, contribution and security/privacy documentation, issue and pull-request templates.
 - Completed five-language Side Panel localization and localized Chrome extension metadata; added working system/light/dark appearance selection and regression tests.
 - Added capability-based playback-speed controls for existing YouTube and experimental Netflix video adapters.
-- Added validated release packaging for Chromium Extension and macOS Native Host ZIPs with SHA-256 checksums.
+- Added validated Chromium/Host release packaging with SHA-256 checksums.
 - Added opt-in local folder / experimental Google Drive destination selection, duplicate preflight and explicit regeneration confirmation.
 - Added checkpointed generation, saved job recovery and independent document-publishing retry.
 
