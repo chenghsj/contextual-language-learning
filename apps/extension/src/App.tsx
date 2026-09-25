@@ -821,7 +821,7 @@ export default function App() {
             <Badge className="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
             <h1>{document.source.title}</h1>
             <p className="hint">{t("lessonOverview", { count: document.sections.length, language: document.profile.instructionLanguage })}</p>
-            {publishedLocation && <p className="hint">{t("publishedTo", { location: publishedLocation })}</p>
+            {publishedLocation && <p className="hint">{t("publishedTo", { location: publishedLocation })}</p>}
             <div className="actions">
               <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "json")}>{t("saveJson")}</Button>
               <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "md")}>{t("saveMarkdown")}</Button>
