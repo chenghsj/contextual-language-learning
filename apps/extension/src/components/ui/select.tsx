@@ -3,19 +3,10 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "../../lib/utils";
 
-// Existing form fields still use the native control until they are migrated.
-export function NativeSelect({ className, ...props }: React.ComponentProps<"select">) {
-  return (
-    <select
-      data-slot="select"
-      className={cn("flex h-9 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50", className)}
-      {...props}
-    />
-  );
-}
-
 export const Select = SelectPrimitive.Root;
-export const SelectValue = SelectPrimitive.Value;
+export function SelectValue(props: React.ComponentProps<typeof SelectPrimitive.Value>) {
+  return <SelectPrimitive.Value data-slot="select-value" {...props} />;
+}
 
 export function SelectTrigger({
   className, children, ...props
@@ -86,4 +77,40 @@ export function SelectItem({
       </span>
     </SelectPrimitive.Item>
   );
+}
+
+
+/** Radix does not allow an empty SelectItem value. Keep saved empty IDs unchanged. */
+export const EMPTY_OPTION_VALUE = "__immersive_default_select_option__";
+export function encodeSelectValue(value: string): string {
+  if (value === EMPTY_OPTION_VALUE) throw new Error("Reserved Select option value.");
+  return value === "" ? EMPTY_OPTION_VALUE : value;
+}
+export function decodeSelectValue(value: string): string {
+  return value === EMPTY_OPTION_VALUE ? "" : value;
+}
+export type SelectFieldOption = { value: string | number; label: string; disabled?: boolean };
+export function SelectField({
+  id, ariaLabel, value, onValueChange, options, disabled, className,
+}: {
+  id?: string;
+  ariaLabel: string;
+  value: string | number;
+  onValueChange: (value: string) => void;
+  options: readonly SelectFieldOption[];
+  disabled?: boolean;
+  className?: string;
+}) {
+  return <Select value={encodeSelectValue(String(value))}
+    onValueChange={next => onValueChange(decodeSelectValue(next))} disabled={disabled}>
+    <SelectTrigger id={id} aria-label={ariaLabel} className={className}>
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent>
+      {options.map(option => <SelectItem key={String(option.value)}
+        value={encodeSelectValue(String(option.value))} disabled={option.disabled}>
+        {option.label}
+      </SelectItem>)}
+    </SelectContent>
+  </Select>;
 }

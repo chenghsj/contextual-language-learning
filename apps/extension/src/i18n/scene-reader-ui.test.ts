@@ -66,9 +66,9 @@ test("every locale has a direct scene picker, readable step names and independen
   for (const locale of Object.keys(messages) as UiLocale[]) {
     const copy = sceneReaderMessages[locale];
     const markup = renderReader(locale);
-    assert.match(markup, /<select[^>]+id="study-scene-picker"/);
-    assert.match(markup, /<option[^>]+value="0"/);
-    assert.match(markup, /<option[^>]+value="1"/);
+    assert.match(markup, /role="combobox"/);
+    assert.match(markup, /id="study-scene-picker"/);
+    assert.match(source, /value: String\(index\)/);
     assert.ok(markup.includes("Asking a favor"));
     assert.ok(markup.includes("Polite reply"));
     assert.match(markup, /aria-pressed="true"/);
@@ -88,7 +88,7 @@ test("every locale has a direct scene picker, readable step names and independen
 test("scene switching, completion and step progression have separate handlers and readable sizing", async () => {
   const source = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
-  assert.match(source, /onChange=\{event => selectScene\(Number\(event\.target\.value\)\)\}/);
+  assert.match(source, /onValueChange=\{value => selectScene\(Number\(value\)\)\}/);
   assert.match(source, /onClick=\{\(\) => selectStep\(part\)\}/);
   assert.match(source, /const next = nextStudyStep\(step\)/);
   const finish = source.slice(source.indexOf("  function finishScene():"), source.indexOf("  function renderOriginal("));
@@ -139,9 +139,9 @@ test("compact playback keeps original loop settings and removes the old always-v
   assert.match(source, /setLoopingSceneId\(null\)/);
   assert.match(source, /aria-expanded=\{playbackSettingsOpen\}/);
   assert.match(source, /playbackSettingsOpen && <div className="sceneMiniSettings"/);
-  assert.match(source, /<Select value=\{repeat\}/);
-  assert.match(source, /<Select value=\{delay\}/);
-  assert.match(source, /<Select value=\{playbackRate\}/);
+  assert.match(source, /<SelectField ariaLabel=\{c.repeat\} value=\{repeat\}/);
+  assert.match(source, /<SelectField ariaLabel=\{c.delay\} value=\{delay\}/);
+  assert.match(source, /<SelectField ariaLabel=\{c.speed\} value=\{playbackRate\}/);
   assert.doesNotMatch(source, /scenePlaybackSettings/);
   assert.match(css, /\.scenePlayer \{[^}]*padding: 9px 12px/);
   assert.match(css, /\.sceneMiniControls \{[^}]*grid-template-columns:/);
