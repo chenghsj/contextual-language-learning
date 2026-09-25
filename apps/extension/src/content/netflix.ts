@@ -14,6 +14,7 @@
     seekCalled?: boolean; playbackRate?: number; text?: string; language?: string; error?: string;
   };
   type Message =
+    | { type: "VIDEO_METADATA_GET" }
     | { type: "NETFLIX_DIAGNOSE" }
     | { type: "NETFLIX_SEEK"; timeMs: number }
     | { type: "NETFLIX_LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
@@ -270,6 +271,15 @@
   chrome.runtime.onMessage.addListener((incoming: unknown, _sender, sendResponse) => {
     if (!incoming || typeof incoming !== "object") return false;
     const candidate = incoming as Partial<Message>;
+    if (candidate.type === "VIDEO_METADATA_GET") {
+      const title = document.querySelector('[data-uia="video-title"]')?.textContent?.trim() ||
+        document.querySelector('[data-uia="player-title"]')?.textContent?.trim() ||
+        document.querySelector(".video-title h4")?.textContent?.trim() ||
+        document.querySelector('meta[property="og:title"]')?.getAttribute("content") ||
+        document.title;
+      sendResponse({ ok: true, url: location.href, title });
+      return false;
+    }
     if (!["NETFLIX_DIAGNOSE", "NETFLIX_SEEK", "NETFLIX_LOOP_SET", "NETFLIX_LOOP_CLEAR", "NETFLIX_PLAYBACK_RATE_SET", "NETFLIX_SUBTITLES_GET"].includes(candidate.type ?? "")) {
       return false;
     }

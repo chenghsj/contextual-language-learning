@@ -7,6 +7,7 @@ import {
   type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
+import { titleForVideoTab } from "./video/metadata";
 import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
 import {
   cuePlaybackStart, cuePlaybackWindow,
@@ -131,6 +132,7 @@ export default function App() {
   const preflightPortRef = useRef<chrome.runtime.Port | null>(null);
   const requestRef = useRef<string | null>(null);
   const lastSelectedVideoKeyRef = useRef<string | null>(null);
+  const manuallyEditedTitleRef = useRef(false);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
   const platform = getVideoAdapter(sourceUrl).id;
@@ -211,11 +213,33 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!activeVideo || raw.trim()) return;
-    setSourceUrl(activeVideo.url);
-    const nextTitle = activeVideo.title.replace(/\s*-\s*(?:Netflix|YouTube)\s*$/i, "").trim();
-    if (nextTitle && !["Netflix", "YouTube"].includes(nextTitle)) setTitle(nextTitle.slice(0, 200));
-  }, [activeVideo?.url, activeVideo?.title, raw]);
+    if (!activeVideo) return;
+    const adapter = getVideoAdapter(activeVideo.url);
+    const videoId = adapter.getVideoId(activeVideo.url);
+    if (!videoId) return;
+    const sourceAdapter = getVideoAdapter(sourceUrl);
+    const sameSource = sourceAdapter.id === adapter.id &&
+      sourceAdapter.getVideoId(sourceUrl) === videoId;
+
+    // Never attach the currently playing video's title to subtitles already
+    // imported or fetched for a different source.
+    if (raw.trim() && !sameSource) return;
+    if (!raw.trim() && !sameSource) {
+      manuallyEditedTitleRef.current = false;
+      setTitle("");
+      setSourceUrl(activeVideo.url);
+    }
+    if (fileName && raw.trim()) return;
+    let cancelled = false;
+    void titleForVideoTab({
+      id: activeVideo.tabId, url: activeVideo.url, title: activeVideo.title,
+    }, adapter).then(detected => {
+      if (!cancelled && detected && !manuallyEditedTitleRef.current) {
+        setTitle(previous => previous === detected ? previous : detected);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [activeVideo?.tabId, activeVideo?.url, activeVideo?.title, raw, sourceUrl, fileName]);
 
   // An error from YouTube must not remain visible after switching to Netflix
   // (or a different video). Leave ongoing generation errors untouched otherwise.
@@ -728,11 +752,15 @@ export default function App() {
         throw new Error("The current video did not return a usable transcript within the lesson size limit.");
       }
       // Never combine cues from a previous video with the currently selected video.
+      const fromDifferentVideo = formAdapter.id !== adapter.id ||
+        formAdapter.getVideoId(formUrl) !== adapter.getVideoId(actualUrl);
+      const videoTitle = await titleForVideoTab(tab, adapter);
+      if (fromDifferentVideo) manuallyEditedTitleRef.current = false;
       setRaw(fetched.text);
       setFileName("");
       setSourceUrl(actualUrl);
-      const videoTitle = (tab.title ?? "").replace(/\s*-\s*(?:Netflix|YouTube)\s*$/i, "").trim();
-      if (videoTitle && !["Netflix", "YouTube"].includes(videoTitle)) setTitle(videoTitle.slice(0, 200));
+      if (videoTitle && !manuallyEditedTitleRef.current) setTitle(videoTitle);
+      else if (fromDifferentVideo) setTitle("");
       setSubtitleStatus(subtitleMessage(subtitleUi.success, {
         count: parsed.length, language: fetched.language,
       }));
@@ -749,7 +777,10 @@ export default function App() {
     setRaw(await file.text());
     setFileName(file.name);
     setSubtitleStatus("");
-    if (!title) setTitle(file.name.replace(/\.(srt|vtt|txt)$/i, ""));
+    if (!title) {
+      manuallyEditedTitleRef.current = true;
+      setTitle(file.name.replace(/\.(srt|vtt|txt)$/i, ""));
+    }
     setError("");
   }
 
@@ -903,7 +934,10 @@ export default function App() {
               placeholder={t("subtitlePlaceholder")} /></label>
           </details>
           <p className="hint">{t("parsedCues", { count: cues.length })}</p>
-          <label>{t("videoTitle")} <Input value={title} onChange={event => setTitle(event.target.value)} placeholder={t("titlePlaceholder")} /></label>
+          <label>{t("videoTitle")} <Input value={title} onChange={event => {
+            manuallyEditedTitleRef.current = !!event.target.value.trim();
+            setTitle(event.target.value);
+          }} placeholder={t("titlePlaceholder")} /></label>
           <label>{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => setSourceUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=…" /></label>
           <Badge className="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
         </Card>
