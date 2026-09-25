@@ -151,8 +151,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = uiLocale;
-    document.documentElement.dataset.theme = resolveTheme(themePreference, systemDark);
+    window.document.documentElement.lang = uiLocale;
+    window.document.documentElement.dataset.theme = resolveTheme(themePreference, systemDark);
   }, [uiLocale, themePreference, systemDark]);
 
   useEffect(() => {
