@@ -2,14 +2,23 @@ import { youtubeTimeLink } from "@immersive/core";
 import { sendToVideo } from "./tab";
 import type { VideoAdapter } from "./types";
 
-const videoId = (url: string | undefined): string | null =>
+const videoIdFromUrl = (url: string | undefined): string | null =>
   youtubeTimeLink(url, 0)?.match(/[?&]v=([A-Za-z0-9_-]{11})&/)?.[1] ?? null;
 
 export const youtubeAdapter: VideoAdapter = {
   id: "youtube",
   label: "YouTube",
-  getVideoId: videoId,
+  getVideoId: videoIdFromUrl,
   timestampLink: (url, ms) => youtubeTimeLink(url, ms),
+  async fetchSubtitles(url, language) {
+    const videoId = videoIdFromUrl(url);
+    if (!videoId) throw new Error("Open a supported YouTube watch page first.");
+    const result = await sendToVideo<{
+      ok: boolean; error?: string; text?: string; language?: string;
+    }>(youtubeAdapter, url, { type: "YOUTUBE_SUBTITLES_GET", videoId, language });
+    if (!result.text || !result.language) throw new Error("YouTube did not return subtitle text.");
+    return { text: result.text, language: result.language };
+  },
   async setPlaybackRate(url, rate) {
     await sendToVideo(youtubeAdapter, url, { type: "PLAYBACK_RATE_SET", rate });
   },
