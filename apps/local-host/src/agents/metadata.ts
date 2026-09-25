@@ -7,7 +7,8 @@ const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/;
 const MODEL_LIMIT = 80;
 
 export function parseAgyModels(stdout: string): AgentModel[] {
-  const cleaned = stdout.replace(/\u001b\[[0-9;]*m/g, "").trim();
+  // Strip terminal control sequences and normalize whitespace seen in AGY 1.2.11 output.
+  const cleaned = stdout.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "").replace(/\u00a0/g, " ").trim();
   try {
     const data: unknown = JSON.parse(cleaned);
     if (Array.isArray(data) || (data && typeof data === "object" && "models" in data)) {
@@ -15,8 +16,9 @@ export function parseAgyModels(stdout: string): AgentModel[] {
     }
   } catch { /* AGY normally prints a human-readable model table. */ }
   const found = new Map<string, AgentModel>();
-  for (const row of cleaned.split(/\r?\n/)) {
-    const match = row.trim().match(/^([A-Za-z0-9][A-Za-z0-9._-]{0,119})\s{2,}(.+)$/);
+  for (const row of cleaned.split(/[\r\n]+/)) {
+    // AGY columns may be separated by ordinary spaces, tabs, or nonbreaking spaces.
+    const match = row.trim().match(/^([A-Za-z0-9][A-Za-z0-9._-]{0,119})\s+(.+)$/);
     if (!match || ["model", "slug", "id"].includes(match[1].toLowerCase())) continue;
     if (!match[1].includes("-") && !match[1].includes(".")) continue;
     found.set(match[1], { id: match[1], label: match[2].trim().slice(0, 120) || match[1] });
@@ -45,11 +47,12 @@ export function parseCatalogModels(input: unknown): AgentModel[] {
 }
 
 /** Fixed executables and fixed argv only. Never pass input from the extension as a shell command. */
-export function probeCli(command: string, args: readonly string[], env: NodeJS.ProcessEnv): Promise<string> {
+export function probeCli(command: string, args: readonly string[], env: NodeJS.ProcessEnv): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     const { executable, argv } = cliInvocation(command, args);
-    const child = spawn(executable, argv, { env, stdio: ["ignore", "pipe", "ignore"], shell: false, windowsHide: true });
+    const child = spawn(executable, argv, { env, stdio: ["ignore", "pipe", "pipe"], shell: false, windowsHide: true });
     let output = "";
+    let errorOutput = "";
     let finished = false;
     let timedOut = false;
     let tooLarge = false;
@@ -58,6 +61,11 @@ export function probeCli(command: string, args: readonly string[], env: NodeJS.P
     child.stdout.on("data", (text: string) => {
       output += text;
       if (output.length > 12_000_000) { tooLarge = true; child.kill(); }
+    });
+    child.stderr.setEncoding("utf8");
+    child.stderr.on("data", (text: string) => {
+      errorOutput += text;
+      if (errorOutput.length > 12_000_000) { tooLarge = true; child.kill(); }
     });
     child.on("error", error => {
       if (!finished) { finished = true; clearTimeout(timer); reject(error); }
@@ -69,7 +77,7 @@ export function probeCli(command: string, args: readonly string[], env: NodeJS.P
       if (timedOut) reject(new Error("Model discovery timed out."));
       else if (tooLarge) reject(new Error("Model catalog exceeded its size limit."));
       else if (code !== 0) reject(new Error("CLI model discovery is not supported or did not complete."));
-      else resolve(output);
+      else resolve({ stdout: output, stderr: errorOutput });
     });
   });
 }
@@ -83,7 +91,11 @@ export async function discoverAgentModels(settings: AgentSettings): Promise<{
   const env = await adapter.configureEnvironment(settings);
   if (settings.provider === "agy") {
     try {
-      const models = parseAgyModels(await probeCli(executable, ["models"], env));
+      // AGY can print a human-readable catalog to stderr in some environments.
+      // Parse streams separately so stderr notices cannot break JSON on stdout.
+      const output = await probeCli(executable, ["models"], env);
+      const fromStdout = parseAgyModels(output.stdout);
+      const models = fromStdout.length ? fromStdout : parseAgyModels(output.stderr);
       return models.length
         ? { models, source: "cli", notice: "Models reported by the current AGY CLI; availability depends on its active login." }
         : { models: [], source: "unavailable", notice: "AGY did not return a parseable model list. Enter a model ID manually." };
@@ -93,7 +105,8 @@ export async function discoverAgentModels(settings: AgentSettings): Promise<{
   }
   if (settings.provider === "codex") {
     try {
-      const models = parseCatalogModels(JSON.parse(await probeCli(executable, ["debug", "models"], env)) as unknown);
+      const output = await probeCli(executable, ["debug", "models"], env);
+      const models = parseCatalogModels(JSON.parse(output.stdout) as unknown);
       if (models.length) return { models, source: "cli", notice: "Codex CLI catalog; model access depends on the selected login and CLI version." };
     } catch { /* Older Codex versions may not support the experimental debug command. */ }
     return { models: [], source: "unavailable", notice: "This Codex CLI cannot expose a model catalog. Choose CLI default or enter a model ID." };
