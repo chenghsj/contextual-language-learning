@@ -188,7 +188,7 @@ export default function App() {
   useEffect(() => {
     if (!activeVideo || raw.trim()) return;
     setSourceUrl(activeVideo.url);
-    const nextTitle = activeVideo.title.replace(/\\s*-\\s*(?:Netflix|YouTube)\\s*$/i, "").trim();
+    const nextTitle = activeVideo.title.replace(/\s*-\s*(?:Netflix|YouTube)\s*$/i, "").trim();
     if (nextTitle && !["Netflix", "YouTube"].includes(nextTitle)) setTitle(nextTitle.slice(0, 200));
   }, [activeVideo?.url, activeVideo?.title, raw]);
 
