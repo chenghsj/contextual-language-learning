@@ -24,7 +24,7 @@ import { Badge } from "./components/ui/badge";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
-  type LocalePreference, type ThemePreference,
+  nativeLanguageName, type LocalePreference, type ThemePreference,
 } from "./i18n/preferences";
 
 const HOST_NAME = "dev.immersive.language_learning";
@@ -949,7 +949,7 @@ export default function App() {
               <Select value={profile.targetLanguage} onChange={event => {
                 const targetLanguage = event.target.value as LearningProfile["targetLanguage"];
                 setProfile(current => ({ ...current, targetLanguage, level: targetLanguage === "en" ? "B1" : targetLanguage === "ja" ? "N4" : "2" }));
-              }}><option value="en">{t("english")}</option><option value="ja">{t("japanese")}</option><option value="ko">{t("korean")}</option></Select>
+              }}><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option></Select>
             </label>
             <label>{t("level")}
               <Select value={profile.level} onChange={event => setProfile(current => ({ ...current, level: event.target.value }))}>
@@ -959,7 +959,7 @@ export default function App() {
           </div>
           <label>{t("instructionLanguage")}
             <Select value={profile.instructionLanguage} onChange={event => setProfile(current => ({ ...current, instructionLanguage: event.target.value as LearningProfile["instructionLanguage"] }))}>
-              <option value="zh-TW">{t("traditionalChinese")}</option><option value="zh-CN">{t("simplifiedChinese")}</option><option value="en">{t("english")}</option><option value="ja">{t("japanese")}</option><option value="ko">{t("korean")}</option>
+              <option value="zh-TW">{nativeLanguageName("zh-TW")}</option><option value="zh-CN">{nativeLanguageName("zh-CN")}</option><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option>
             </Select>
           </label>
           <label>{t("teachingMode")}
@@ -1078,12 +1078,12 @@ export default function App() {
               const next = event.target.value;
               if (isLocalePreference(next)) setLocalePreference(next);
             }}>
-              <option value="auto">{t("browserLanguage")} · {browserLocale}</option>
-              <option value="en">{t("english")}</option>
-              <option value="zh-TW">{t("traditionalChinese")}</option>
-              <option value="zh-CN">{t("simplifiedChinese")}</option>
-              <option value="ja">{t("japanese")}</option>
-              <option value="ko">{t("korean")}</option>
+              <option value="auto">{t("browserLanguage")} · {nativeLanguageName(browserLocale)}</option>
+              <option value="en">{nativeLanguageName("en")}</option>
+              <option value="zh-TW">{nativeLanguageName("zh-TW")}</option>
+              <option value="zh-CN">{nativeLanguageName("zh-CN")}</option>
+              <option value="ja">{nativeLanguageName("ja")}</option>
+              <option value="ko">{nativeLanguageName("ko")}</option>
             </Select>
           </label>
           <p className="hint">{t("uiLanguageHint")}</p>
