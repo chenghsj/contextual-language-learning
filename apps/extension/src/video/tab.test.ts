@@ -182,12 +182,12 @@ test("a form URL can find its matching watch tab without using the unrelated act
   assert.deepEqual(received, [13]);
 });
 
-test("subtitle playback has two seconds of lead-in and a short tail without seeking before zero", () => {
-  assert.equal(CUE_LEAD_IN_MS, 2_000);
+test("subtitle playback has half a second of lead-in and a short tail without seeking before zero", () => {
+  assert.equal(CUE_LEAD_IN_MS, 500);
   assert.equal(CUE_TAIL_MS, 400);
-  assert.equal(cuePlaybackStart(84_000), 82_000);
+  assert.equal(cuePlaybackStart(84_000), 83_500);
   assert.equal(cuePlaybackStart(500), 0);
-  assert.deepEqual(cuePlaybackWindow(84_000, 85_200), { startMs: 82_000, endMs: 85_600 });
+  assert.deepEqual(cuePlaybackWindow(84_000, 85_200), { startMs: 83_500, endMs: 85_600 });
   assert.throws(() => cuePlaybackWindow(2000, 2000), /Invalid subtitle end/);
 });
 
@@ -217,7 +217,7 @@ test("YouTube direct seek targets only its matching existing video tab", async (
     tabs: [wanted, unrelated], current: [unrelated],
     onMessage: (id, message) => sent.push({ id, message }),
   }, async () => {
-    await youtubeAdapter.seek?.(watchUrl, 82_000);
+    await youtubeAdapter.seek?.(watchUrl, 83_500);
   });
-  assert.deepEqual(sent, [{ id: 62, message: { type: "YOUTUBE_SEEK", timeMs: 82_000 } }]);
+  assert.deepEqual(sent, [{ id: 62, message: { type: "YOUTUBE_SEEK", timeMs: 83_500 } }]);
 });
