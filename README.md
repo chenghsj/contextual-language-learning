@@ -16,32 +16,34 @@ This repository remains **private** pending the public-release checklist and liv
 - Select target language (English/Japanese/Korean), level, **instruction language**, teaching mode, vocabulary cap, and exercises per section.
 - Pick Claude Code, Codex, or AGY. The Native Host queries `agy models` or Codex's experimental `codex debug models` for available model options; Claude Code offers documented aliases rather than an account-specific machine-readable list. You can always use the CLI default or a custom model ID. Catalog entries do not guarantee entitlement.
 - Save named Claude/Codex CLI account Profiles pointing to existing, separately authenticated directories inside your home folder. Selecting one changes `CLAUDE_CONFIG_DIR` or `CODEX_HOME` only for that Agent invocation; profile names/paths are stored locally, never credentials. AGY uses its current CLI login.
-- Native Messaging bridge to a macOS host; no API keys or CLI credentials are stored in the extension.
+- Native Messaging bridge to macOS, Windows and Linux Hosts; no API keys or CLI credentials are stored in the extension.
 - Run a checkpointed generation pipeline: chunk subtitles, validate AI sections with Zod, save each successful chapter, then export the JSON/Markdown document. Reopen the Side Panel and use **任務紀錄與恢復** to resume interrupted/failed jobs.
 - Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping and user-triggered playback speed (0.5×–2×).
 - Netflix has optional, user-initiated seek, per-sentence looping and playback speed (0.5×–2×) via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). It never extracts Netflix subtitles, bypasses DRM, intercepts keyboard shortcuts or opens a second playback session.
 
-## Install from GitHub Release (Chromium + macOS)
+## Install from GitHub Release (Chromium + macOS / Windows / Linux)
 
 After a version tag is published, go to [GitHub Releases](https://github.com/chenghsj/immersive-language-learning/releases) and download these matching assets:
 
 - immersive-language-learning-chromium-VERSION.zip — Chrome / Edge Chromium Manifest V3 extension.
-- immersive-language-learning-macos-host-VERSION.zip — bundled local CLI Native Host and installer for macOS.
-- SHA256SUMS — SHA-256 checksums for the two ZIP files.
+- immersive-language-learning-macos-host-VERSION.zip — macOS Native Host.
+- immersive-language-learning-windows-host-VERSION.zip — Windows Native Host.
+- immersive-language-learning-linux-host-VERSION.zip — Linux Native Host.
+- SHA256SUMS — SHA-256 checksums for all four ZIP files.
 
 Extract the **Chromium** ZIP, open chrome://extensions, enable Developer mode, select **Load unpacked**, and choose the extracted folder with manifest.json at its root. The ZIP is not a signed CRX and is not installed by dragging it into Chrome.
 
-Copy the new extension's 32-character ID from Chrome's extension details. Extract the **macOS Host** ZIP separately and run this from inside its extracted folder (Node.js 22+ required):
+Copy the extension's 32-character ID from `chrome://extensions` (or `edge://extensions`). Extract the **Host ZIP for your operating system** separately and run this from the extracted folder (Node.js 22+ required):
 
 ~~~sh
 node scripts/install-host.mjs YOUR_EXTENSION_ID
 ~~~
 
-The installer copies the Host to a permanent location under your user Library and registers the extension ID with Chrome Native Messaging. You can remove the Host extraction afterward. Install and sign in to a supported CLI Agent separately; the release contains no API keys or account tokens. To update the unpacked extension, extract the new Chromium ZIP into the **same** extension folder and reload it; if Chrome assigns a different extension ID, run the Host installer again with the new ID.
+For Edge append `--browser edge`; for Chromium append `--browser chromium`. The installer copies the Host to a permanent per-user location and registers the extension ID for that browser, without administrator privileges. Windows also requires Windows PowerShell 5.1 and .NET Framework to compile a tiny native `.exe` stdio launcher locally. Linux requires `zenity` or `kdialog` for graphical local-folder selection. You can remove the Host extraction afterward. Install and sign in to a supported CLI Agent separately; the release contains no API keys or account tokens. To update the unpacked extension, extract the new Chromium ZIP into the **same** extension folder and reload it; if Chrome assigns a different extension ID, run the Host installer again with the new ID.
 
 ### Publishing the Chromium release
 
-The workflow at .github/workflows/release.yml follows the ZIP packaging used by the netflix-shortcut-override project, but also includes our required macOS Host. It runs the normal typecheck, tests, build, extension/host checks, ZIP integrity checks, and SHA-256 verification before creating or updating a GitHub Release.
+The workflow at .github/workflows/release.yml follows the ZIP packaging used by the netflix-shortcut-override project, and also packages macOS, Windows and Linux Hosts. It runs the normal typecheck, tests, build, extension/host checks, ZIP integrity checks, and SHA-256 verification before creating or updating a GitHub Release.
 
 First merge the tested PR into main. Make sure package.json and apps/extension/public/manifest.json have the same version, then create and push the matching version tag:
 
@@ -52,11 +54,11 @@ git tag v0.1.0
 git push origin v0.1.0
 ~~~
 
-A tag push runs the Release workflow and uploads both ZIPs and SHA256SUMS. Alternatively, after this workflow exists on the default branch, use GitHub Actions > Release > Run workflow with an **existing** version tag. Tag/version mismatches fail instead of shipping mismatched files. Ordinary PR builds expose the same packages as a short-lived Actions artifact called release-preview-SHA; this is not a GitHub Release. Do not tag a development branch unless you explicitly intend to release that commit.
+A tag push runs the Release workflow and uploads the Chromium ZIP, three OS Host ZIPs and SHA256SUMS. Alternatively, after this workflow exists on the default branch, use GitHub Actions > Release > Run workflow with an **existing** version tag. Tag/version mismatches fail instead of shipping mismatched files. Ordinary PR builds expose the same packages as a short-lived Actions artifact called release-preview-SHA; this is not a GitHub Release. Do not tag a development branch unless you explicitly intend to release that commit.
 
-## Quick start (macOS)
+## Quick start (macOS / Windows / Linux)
 
-Prerequisites: Node.js 22+, pnpm 9, Chrome, and at least one **installed and signed-in** CLI (Claude Code / Codex / AGY).
+Prerequisites: Node.js 22+, pnpm 9, Chrome / Edge / Chromium, and at least one **installed and signed-in** CLI (Claude Code / Codex / AGY). Windows additionally needs Windows PowerShell 5.1 and .NET Framework for the Host installer.
 
 ~~~sh
 git clone https://github.com/chenghsj/immersive-language-learning.git
@@ -68,7 +70,7 @@ pnpm build
 
 1. Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, and select `apps/extension/dist`.
 2. Copy the newly loaded extension ID (32 characters).
-3. Register its macOS native messaging host:
+3. Register its Native Messaging Host for your OS (append `--browser edge` for Edge or `--browser chromium` for Chromium):
 
 ~~~sh
 pnpm host:install YOUR_EXTENSION_ID
@@ -78,7 +80,7 @@ pnpm host:install YOUR_EXTENSION_ID
 5. In **建立教材**, import an SRT/VTT or paste text, set the title and learning profile, then generate. Files are also saved to `~/Documents/Immersive Learning`.
 6. In **閱讀文件**, use **另存新檔** to choose where to download the JSON or Markdown copy.
 
-If Chrome reports a missing native host, verify that `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/dev.immersive.language_learning.json` includes your current extension ID and points to the generated executable launcher. Rerun `pnpm build` and `pnpm host:install YOUR_EXTENSION_ID` after relocating the repository or changing Node installations.
+If your browser reports a missing Native Host, confirm you installed it for the same browser and its **current extension ID**. The macOS/Linux installer writes a browser-specific NativeMessagingHosts manifest; Windows writes its path to the browser's per-user HKCU NativeMessagingHosts registry key. Re-run `pnpm build` and `pnpm host:install YOUR_EXTENSION_ID` after changing the Node installation or extension ID.
 
 ### CLI model discovery and account Profiles
 
@@ -103,17 +105,17 @@ pnpm build
 pnpm host:install YOUR_EXTENSION_ID
 ~~~
 
-Reload the extension. If the Chrome extension ID changes, reinstall the Host with the new ID. Extensions cannot silently install Native Messaging Hosts.
+Reload the extension. For a Release installation, use `node scripts/install-host.mjs YOUR_EXTENSION_ID` from the extracted OS Host ZIP instead of pnpm. If the extension ID changes, reinstall the Host with the new ID. Extensions cannot silently install Native Messaging Hosts.
 
 ### Accounts and models
 
-Sign in using each CLI itself first. Model/profile defaults are remembered separately for each Agent in the Side Panel. Switching Agent does not carry over the previous Agent's model ID. A model ID is passed explicitly only when filled in; the extension does **not** fabricate a live model list or silently fall back to another model. To use a separate Claude or Codex profile, create and authenticate that CLI profile first, then enter the existing absolute directory in Agent settings. The profile must be inside your home folder. AGY profile switching remains unavailable pending a supported isolation mechanism.
+Sign in using each CLI itself first. Model/profile defaults are remembered separately for each Agent in the Side Panel. Switching Agent does not carry over the previous Agent's model ID. A model ID is passed explicitly only when filled in; the extension queries supported CLI model catalogs when available and does **not** silently fall back to another model. To use a separate Claude or Codex profile, create and authenticate that CLI profile first, then register its existing absolute directory and name in Agent settings. The profile must be inside your home folder. AGY profile switching remains unavailable pending a supported isolation mechanism.
 
 ### Interface language and appearance
 
 The Side Panel automatically uses Chrome's browser UI language on first launch. Supported interface languages are English, Traditional Chinese, Simplified Chinese, Japanese and Korean; unsupported browser languages fall back to English. In **Settings**, choose **Interface language → Automatic (browser language)** or override it manually. This changes only the extension's interface: the language being learned, lesson explanation language, imported subtitle text and saved documents remain independent.
 
-Appearance defaults to **Use system setting**, following macOS/OS light or dark appearance. You can choose Light or Dark in Settings; both language and theme preferences are saved in Chrome extension-local storage. The release ZIP also includes Chrome `_locales` metadata so the extension's displayed name and description follow supported browser languages. Chrome's interface language may require restarting the browser before its extension metadata updates.
+Appearance defaults to **Use system setting**, following your OS light or dark appearance. You can choose Light or Dark in Settings; both language and theme preferences are saved in Chrome extension-local storage. The release ZIP also includes Chrome `_locales` metadata so the extension's displayed name and description follow supported browser languages. Chrome's interface language may require restarting the browser before its extension metadata updates.
 
 ### Video playback speed and sentence loops
 

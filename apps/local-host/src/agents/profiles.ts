@@ -2,10 +2,11 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve, sep } from "node:path";
+import { appConfigRoot } from "../platform/paths";
 import { z } from "zod";
 import type { AgentProfile } from "@immersive/core";
 
-const registryRoot = () => join(homedir(), "Library", "Application Support", "Immersive Learning");
+const registryRoot = () => appConfigRoot();
 const registryFile = () => join(registryRoot(), "agent-profiles.json");
 const profileSchema = z.array(z.object({
   id: z.string().uuid(),

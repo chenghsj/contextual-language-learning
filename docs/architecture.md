@@ -44,6 +44,14 @@ apps/local-host/src/agents/process.ts owns executable resolution and process exe
 
 No plugin code is loaded dynamically from web content or subtitle text. New adapters are packaged with the Host/extension, tested and installed through the normal release process.
 
+## Native Host OS Strategy (no inheritance hierarchy)
+
+apps/local-host/src/platform/paths.ts supplies per-OS user configuration directories. apps/local-host/src/platform/folder-picker.ts dispatches to one OS-specific native folder-picker strategy: macOS osascript, Windows PowerShell WinForms, or Linux zenity/kdialog. All results pass through the same directory realpath, writability and allowed-folder checks in storage/folders.ts.
+
+apps/local-host/scripts/native-host-platform.mjs selects the per-OS installer strategy: POSIX executable shell launcher and browser-specific manifest on macOS/Linux; a locally compiled Windows .exe binary stdio proxy plus HKCU browser registry entry on Windows. The browser selector chooses Chrome, Edge or Chromium. Chrome Native Messaging requires an executable on Windows; an npm .cmd shim is not used as the Host. Windows Agent npm shims are resolved to adjacent JS entrypoints and invoked directly with Node rather than forwarding subtitle text through cmd.exe.
+
+This is a small **Strategy + Factory** boundary: a single platform lookup at the Host/installer entry point and shared logic for the remainder of the system. There is no need for abstract classes or a separate code path in React or the learning pipeline. Add another OS/browser by extending this boundary and its cross-platform tests; do not duplicate document generation.
+
 ## Stable document contract
 
 A document refers to source.platform as a provider identifier. The platform can be unknown to an older reader; the fallback still displays source text, metadata and times without attempting player control. All agents return the same SectionContentSchema. Existing learning documents do not need to be regenerated when adapters are added.
@@ -78,6 +86,6 @@ Version-1 documents preserve the existing JSON structure. readLearningDocument()
 
 The canonical local DocumentRepository is authoritative for job recovery. GenerationRequest includes an immutable Destination snapshot: a selected local directory or a Google account ID. DestinationPublisher writes JSON and Markdown copies after canonical material is saved; JobSummary records publication separately from generation. A publication failure does not invalidate the completed job. Publish Again retries the saved destination without invoking the Agent.
 
-The macOS Native Host owns the native folder picker and allowlist, Google Desktop OAuth with PKCE, Keychain-backed per-account refresh tokens, and the Drive API. The Chrome extension does not receive refresh tokens. Drive uses the limited drive.file scope and appProperties on app-created documents for duplicate detection and repeat-safe publishing. An authentication or network failure aborts the preflight instead of reporting an empty Drive.
+The Native Host selects the macOS, Windows or Linux folder picker and per-user allowlist via an OS-specific Strategy. Google Desktop OAuth with PKCE, Keychain-backed refresh tokens and the Drive API remain macOS-only and experimental. The Chrome extension does not receive refresh tokens. Drive uses the limited drive.file scope and appProperties on app-created documents for duplicate detection and repeat-safe publishing. An authentication or network failure aborts the preflight instead of reporting an empty Drive.
 
 Duplicate matching combines canonical local documents, incomplete jobs and visible app-created Drive files. A short-lived preflight ticket binds the generation request. The Host rejects unconfirmed regeneration, altered requests, and matches that appeared after the preflight. Each regenerated version has a fresh document UUID. Existing content and learning progress remain unchanged.
