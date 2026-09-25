@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Info } from "lucide-react";
 
 export type SettingHelpChoice = { label: string; description: string };
@@ -16,7 +16,7 @@ export function SettingInfo({
   choices?: readonly SettingHelpChoice[];
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
-  const contentId = useId();
+  const contentId = React.useId();
 
   useEffect(() => {
     const closeOutside = (event: PointerEvent) => {
