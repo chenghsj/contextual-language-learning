@@ -353,7 +353,9 @@ export default function App() {
 
   useEffect(() => {
     window.document.documentElement.lang = uiLocale;
-    window.document.documentElement.dataset.theme = resolveTheme(themePreference, systemDark);
+    const activeTheme = resolveTheme(themePreference, systemDark);
+    window.document.documentElement.dataset.theme = activeTheme;
+    window.document.documentElement.classList.toggle("dark", activeTheme === "dark");
   }, [uiLocale, themePreference, systemDark]);
 
   useEffect(() => {

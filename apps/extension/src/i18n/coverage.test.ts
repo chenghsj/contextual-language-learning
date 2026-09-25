@@ -53,3 +53,21 @@ test("failed generation updates the progress status and refreshing tasks preserv
   const load = app.slice(app.indexOf("function loadJobs(): void"), app.indexOf("function openSavedDocument("));
   assert.doesNotMatch(load, /setError\(" "\)|setError\(""\)/);
 });
+
+test("warm OKLCH theme and the chosen dark variant apply to the actual Side Panel", async () => {
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  const entry = await readFile(new URL("../main.tsx", import.meta.url), "utf8");
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  for (const expected of [
+    '--background: oklch(0.9818 0.0054 95.0986)',
+    '--primary: oklch(0.6171 0.1375 39.0427)',
+    '--background: oklch(0.2679 0.0036 106.6427)',
+    '--primary: oklch(0.6724 0.1308 38.7559)',
+    '@custom-variant dark (&:is(.dark *));',
+    '--color-accent: var(--accent)',
+    '--color-sidebar: var(--sidebar)',
+  ]) assert.ok(css.includes(expected), "Theme token missing: " + expected);
+  assert.match(entry, /classList\.toggle\("dark", initialTheme === "dark"\)/);
+  assert.match(app, /classList\.toggle\("dark", activeTheme === "dark"\)/);
+  assert.doesNotMatch(css, /#17674d|#8bd1a5|#e7f4ec/);
+});
