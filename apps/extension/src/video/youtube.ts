@@ -10,6 +10,12 @@ export const youtubeAdapter: VideoAdapter = {
   label: "YouTube",
   getVideoId: videoIdFromUrl,
   timestampLink: (url, ms) => youtubeTimeLink(url, ms),
+  async status(url) {
+    const result = await sendToVideo<{ ok: boolean; error?: string; currentMs?: number; playing?: boolean }>(
+      youtubeAdapter, url, { type: "PLAYBACK_STATUS_GET" },
+    );
+    return { currentMs: result.currentMs, playing: result.playing };
+  },
   async seek(url, startMs) {
     await sendToVideo(youtubeAdapter, url, { type: "YOUTUBE_SEEK", timeMs: startMs }, true);
   },

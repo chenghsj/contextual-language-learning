@@ -242,14 +242,15 @@ import {
     }
   }
 
-  async function handle(message: Message): Promise<{ ok: boolean; error?: string; currentMs?: number; text?: string; language?: string }> {
+  async function handle(message: Message): Promise<{ ok: boolean; error?: string; currentMs?: number; playing?: boolean; text?: string; language?: string }> {
     if (message.type === "NETFLIX_LOOP_CLEAR") {
       clearLoop();
       return { ok: true };
     }
     if (message.type === "NETFLIX_DIAGNOSE") {
       const diagnostic = await requestPage("diagnose");
-      return { ok: diagnostic.ok, error: diagnostic.error, currentMs: diagnostic.currentMs };
+      return { ok: diagnostic.ok, error: diagnostic.error, currentMs: diagnostic.currentMs,
+        ...(typeof diagnostic.playing === "boolean" ? { playing: diagnostic.playing } : {}) };
     }
     if (message.type === "NETFLIX_SUBTITLES_GET") {
       if (!["en", "ja", "ko"].includes(message.language)) {

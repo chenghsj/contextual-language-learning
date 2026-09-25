@@ -16,6 +16,8 @@ export interface VideoAdapter {
   getVideoId(url: string | undefined): string | null;
   timestampLink?(url: string, startMs: number): string | null;
   diagnose?(url: string): Promise<PlaybackStatus>;
+  /** Read-only current playback state for the optional companion view. */
+  status?(url: string): Promise<{ currentMs?: number; playing?: boolean }>;
   seek?(url: string, startMs: number): Promise<void>;
   setPlaybackRate?(url: string, rate: number): Promise<void>;
   fetchSubtitles?(url: string, language: "en" | "ja" | "ko"): Promise<{ text: string; language: string }>;
