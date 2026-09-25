@@ -20,3 +20,9 @@ test("capabilities derive from the adapter, not from platform conditionals in th
   assert.equal(supports(getVideoAdapter(nf), "loop"), true);
   assert.equal(supports(getVideoAdapter(""), "loop"), false);
 });
+
+test("speed controls are provided only by adapters with playback rate support", () => {
+  assert.equal(supports(getVideoAdapter(yt), "playbackRate"), true);
+  assert.equal(supports(getVideoAdapter(nf), "playbackRate"), true);
+  assert.equal(supports(getVideoAdapter("https://tv.apple.com/watch/example"), "playbackRate"), false);
+});
