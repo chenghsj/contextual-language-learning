@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { ExternalLink, Play, Repeat2, SlidersHorizontal, Square } from "lucide-react";
 import { nextStudyStep, readSceneProgress, STUDY_STEPS, type StudyStep } from "./scene-navigation";
 import { formatTime, type LearningDocument, type StudyScene, type SubtitleCue } from "@immersive/core";
 import type { UiLocale } from "../i18n/messages";
@@ -52,6 +53,8 @@ export function SceneReader({
   const [watchTime, setWatchTime] = useState<number | null>(null);
   const [watchAvailable, setWatchAvailable] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [playerExpanded, setPlayerExpanded] = useState(false);
+  const [loopingSceneId, setLoopingSceneId] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const cues = useMemo(() => new Map(document.cues.map(cue => [cue.id, cue])), [document.cues]);
   const scene = document.sections[sceneIndex] ?? document.sections[0];
@@ -151,6 +154,7 @@ export function SceneReader({
         startMs: cuePlaybackStart(scene.startMs), endMs: scene.endMs + 400,
         repeats: 1, delaySeconds: 0,
       });
+      setLoopingSceneId(null);
       setStatus(c.playbackStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
@@ -168,6 +172,7 @@ export function SceneReader({
         repeats: isLoop ? repeat === "infinite" ? "infinite" : Number(repeat) : 1,
         delaySeconds: isLoop ? delay : 0,
       });
+      setLoopingSceneId(isLoop ? scene.id : null);
       setStatus(isLoop ? c.loopStarted : c.playbackStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
@@ -180,6 +185,7 @@ export function SceneReader({
     if (!sourceUrl || !adapter.stopLoop) return;
     try {
       await adapter.stopLoop(sourceUrl);
+      setLoopingSceneId(null);
       setStatus(c.loopStopped);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
@@ -377,55 +383,77 @@ export function SceneReader({
     </Card>}
 
     {mode === "learn" && <Card className="panel scenePlayer">
-      <div className="sceneHeading"><strong>{c.playback}</strong>
-        <span className="time">{formatTime(scene.startMs)}</span>
-      </div>
-      {!sourceUrl || adapter.id === "import" ? <p className="hint">{c.noVideo}</p> : <>
-        <div className="actions">
-          <Button size="sm" variant="outline" disabled={busy} onClick={() => void openVideo()}>{c.openVideo}</Button>
-          <Button size="sm" disabled={busy || !canPlay} onClick={() => void playScene()}>{c.playScene}</Button>
-          <Button size="sm" variant="outline" disabled={busy || !selectedFocusCue || !adapter.loop}
-            onClick={() => void playFocus(selectedFocusCue)}>{c.repeatFocus}</Button>
-          <Button size="sm" variant="outline" disabled={!adapter.stopLoop} onClick={() => void stopLoop()}>
-            {c.stopLoop}
-          </Button>
+      <div className="miniPlayerHeader">
+        <div className="miniPlayerScene">
+          <strong>{c.playback} · {c.scene} {sceneIndex + 1}</strong>
+          <span className="time">{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
         </div>
-        {!canPlay && <p className="hint">{c.noTime}</p>}
-        <details className="scenePlaybackSettings">
-          <summary>{c.playback}</summary>
-          <div className="twoColumns">
-            <label>{c.repeat}
-              <Select value={repeat} onChange={event => setRepeat(event.target.value as Repeat)}>
-                <option value="2">2×</option><option value="3">3×</option>
-                <option value="5">5×</option><option value="infinite">∞</option>
-              </Select>
-            </label>
-            <label>{c.delay}
-              <Select value={delay} onChange={event => setDelay(Number(event.target.value))}>
-                {[0, 1, 2, 3].map(value =>
-                  <option key={value} value={value}>{value}s</option>)}
-              </Select>
-            </label>
-          </div>
+        {!!sourceUrl && adapter.id !== "import" && <Button
+          size="icon" variant="ghost" className="miniPlayerOpen"
+          aria-label={c.openVideo} title={c.openVideo} disabled={busy}
+          onClick={() => void openVideo()}>
+          <ExternalLink aria-hidden="true" />
+        </Button>}
+      </div>
+      <div className="miniPlayerActions">
+        <Button size="sm" disabled={busy || !canPlay} onClick={() => void playScene()}>
+          <Play aria-hidden="true" />{c.playScene}
+        </Button>
+        <Button size="sm" variant="outline"
+          disabled={busy || (loopingSceneId === null
+            ? !sourceUrl || !selectedFocusCue || !adapter.loop
+            : !adapter.stopLoop)}
+          onClick={() => void (loopingSceneId === null
+            ? playFocus(selectedFocusCue) : stopLoop())}>
+          {loopingSceneId === null ? <Repeat2 aria-hidden="true" /> : <Square aria-hidden="true" />}
+          {loopingSceneId === null ? c.repeatFocus : c.stopLoop}
+        </Button>
+        <Button size="sm" variant={playerExpanded ? "secondary" : "outline"}
+          aria-expanded={playerExpanded} aria-controls="mini-player-settings"
+          onClick={() => setPlayerExpanded(value => !value)}>
+          <SlidersHorizontal aria-hidden="true" />
+          {playerExpanded ? c.hidePlayerSettings : c.showPlayerSettings}
+        </Button>
+      </div>
+      {!sourceUrl || adapter.id === "import"
+        ? <p className="miniPlayerNote">{c.noVideo}</p>
+        : !canPlay ? <p className="miniPlayerNote">{c.noTime}</p> : null}
+      {status && <p className="miniPlayerStatus" role="status">{status}</p>}
+      {playerExpanded && <div className="miniPlayerSettings" id="mini-player-settings">
+        <div className="miniPlayerSettingsTitle">{c.playerSettings}</div>
+        <div className="miniPlayerSettingsGrid">
+          <label>{c.repeat}
+            <Select value={repeat} disabled={busy || !adapter.loop}
+              onChange={event => setRepeat(event.target.value as Repeat)}>
+              <option value="2">2×</option><option value="3">3×</option>
+              <option value="5">5×</option><option value="infinite">∞</option>
+            </Select>
+          </label>
+          <label>{c.delay}
+            <Select value={delay} disabled={busy || !adapter.loop}
+              onChange={event => setDelay(Number(event.target.value))}>
+              {[0, 1, 2, 3].map(value =>
+                <option key={value} value={value}>{value}s</option>)}
+            </Select>
+          </label>
           {adapter.setPlaybackRate && <label>{c.speed}
-            <Select value={playbackRate} disabled={busy}
+            <Select value={playbackRate} disabled={busy || !sourceUrl}
               onChange={event => void changeRate(Number(event.target.value))}>
               {[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5].map(rate =>
                 <option value={rate} key={rate}>{rate}×</option>)}
             </Select>
           </label>}
-        </details>
-      </>}
-      {status && <p className="status" role="status">{status}</p>}
-      <p className="hint">{c.originalSubtitleNotice}</p>
-      <label>{c.hintLabel}
-        <Select value={hint} onChange={event => { setHint(event.target.value as Hint);
-          setShowOriginal(null); setShowTranslation(null); }}>
-          <option value="progressive">{c.progressive}</option>
-          <option value="original">{c.original}</option>
-          <option value="bilingual">{c.bilingual}</option>
-        </Select>
-      </label>
+        </div>
+        <label className="miniPlayerHint">{c.hintLabel}
+          <Select value={hint} onChange={event => { setHint(event.target.value as Hint);
+            setShowOriginal(null); setShowTranslation(null); }}>
+            <option value="progressive">{c.progressive}</option>
+            <option value="original">{c.original}</option>
+            <option value="bilingual">{c.bilingual}</option>
+          </Select>
+        </label>
+        <p className="miniPlayerNote">{c.originalSubtitleNotice}</p>
+      </div>}
     </Card>}
   </div>;
 }
