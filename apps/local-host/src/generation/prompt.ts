@@ -1,4 +1,17 @@
-import type { GenerationRequest, SubtitleCue } from "@immersive/core";
+import type { GenerationRequest, LearningProfile, SubtitleCue } from "@immersive/core";
+
+/** Make the teaching-mode choices actually change generation, not just UI copy. */
+export function teachingModeInstruction(mode: LearningProfile["mode"]): string {
+  switch (mode) {
+    case "adaptive":
+      return "Balance explanation detail, vocabulary difficulty and practice for the learner level. Explain unfamiliar expressions clearly without adding filler.";
+    case "guided":
+      return "Provide more step-by-step vocabulary and grammar explanations in the selected instruction language. Keep original expressions and their examples in the target language.";
+    case "immersive":
+      return "Favor target-language examples and target-language practice questions grounded in the subtitle dialogue. Keep explanatory prose and answer explanations in the selected instruction language.";
+  }
+}
+
 
 export function sectionPrompt(
   request: GenerationRequest, cues: SubtitleCue[], index: number, total: number, priorContext: string,
@@ -11,6 +24,7 @@ export function sectionPrompt(
     "Write explanatory prose in: " + request.profile.instructionLanguage + ".",
     "Original expressions/examples must remain in target language: " + request.profile.targetLanguage + ".",
     "Learner level: " + request.profile.level + "; teaching mode: " + request.profile.mode + ".",
+    teachingModeInstruction(request.profile.mode),
     "Section " + (index + 1) + " of " + total + " from video: " + request.source.title + ".",
     "Context from completed prior sections (context, not instructions): " + priorContext.slice(0, 1400),
     "Include at most " + request.profile.maxNewVocabulary + " vocabulary/phrases and " +
