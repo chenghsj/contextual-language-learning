@@ -48,6 +48,12 @@ export async function detectCurrentVideoMetadata(
       throw new Error("VIDEO_CHANGED");
     }
     if (title || attempt === maxAttempts) {
+      // Without a saved source, the selected watch tab is the user's intent.
+      // Do not fill in an old tab's metadata after the user has switched tabs.
+      if (sourceAdapter.id === "import" &&
+        (await getActiveWindowTab())?.id !== tab.id) {
+        throw new Error("VIDEO_CHANGED");
+      }
       return {
         tabId: tab.id, url: verifiedTab.url, videoId,
         platform: adapter.id, title,
