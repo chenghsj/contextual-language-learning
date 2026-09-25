@@ -1,0 +1,156 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { netflixAdapter } from "./netflix";
+import { findVideoTab, openOrFocusVideoTab, sendToVideo } from "./tab";
+
+const url = "https://www.netflix.com/watch/81234567";
+const other = "https://www.netflix.com/watch/76543210";
+
+type ChromeApi = typeof chrome;
+type MockTab = { id: number; url: string; active: boolean; windowId: number };
+const tab = (id: number, active: boolean, windowId: number, source = url): MockTab =>
+  ({ id, active, windowId, url: source });
+
+async function withChrome(
+  handlers: {
+    tabs: MockTab[];
+    current: MockTab[];
+    reply?: { ok: boolean; error?: string };
+    onCreate?: (url: string) => void;
+    onUpdate?: (id: number) => void;
+    onMessage?: (id: number, message: unknown) => void;
+  }, run: () => Promise<void>,
+): Promise<void> {
+  const globalChrome = globalThis as unknown as { chrome?: ChromeApi };
+  const previous = globalChrome.chrome;
+  try {
+    globalChrome.chrome = {
+      tabs: {
+        query: async (info: chrome.tabs.QueryInfo) =>
+          info.active && info.currentWindow ? handlers.current : handlers.tabs,
+        create: async (info: chrome.tabs.CreateProperties) => {
+          handlers.onCreate?.(info.url ?? "");
+          const created = tab(99, true, 1, info.url);
+          handlers.tabs.push(created);
+          return created;
+        },
+        update: async (id: number) => {
+          handlers.onUpdate?.(id);
+          return handlers.tabs.find(item => item.id === id);
+        },
+        sendMessage: async (id: number, message: unknown) => {
+          handlers.onMessage?.(id, message);
+          return handlers.reply ?? { ok: true };
+        },
+      },
+      windows: { update: async () => ({}) },
+    } as unknown as ChromeApi;
+    await run();
+  } finally {
+    globalChrome.chrome = previous;
+  }
+}
+
+test("two matching Netflix tabs: prefer the active tab in the current window, not the first match", async () => {
+  const first = tab(10, false, 1);
+  const selected = tab(11, true, 1);
+  const sent: number[] = [];
+  const activated: number[] = [];
+  let opened = 0;
+  await withChrome({
+    tabs: [first, selected], current: [selected],
+    onMessage: id => sent.push(id),
+    onUpdate: id => activated.push(id),
+    onCreate: () => { opened++; },
+  }, async () => {
+    assert.equal((await findVideoTab(netflixAdapter, url)).id, 11);
+    await sendToVideo(netflixAdapter, url, { type: "NETFLIX_DIAGNOSE" }, true);
+    const result = await openOrFocusVideoTab(netflixAdapter, url);
+    assert.equal(result.reused, true);
+    assert.equal(result.tab.id, 11);
+  });
+  assert.deepEqual(sent, [11]);
+  assert.deepEqual(activated, [11, 11]);
+  assert.equal(opened, 0);
+});
+
+test("ambiguous duplicates without a selected matching tab fail safely and never open a third tab", async () => {
+  const first = tab(10, true, 1);
+  const second = tab(11, true, 2);
+  const unrelated = tab(7, true, 3, other);
+  let opened = 0;
+  let messaged = 0;
+  await withChrome({
+    tabs: [first, second, unrelated], current: [unrelated],
+    onCreate: () => { opened++; },
+    onMessage: () => { messaged++; },
+  }, async () => {
+    await assert.rejects(findVideoTab(netflixAdapter, url), /多個分頁/);
+    await assert.rejects(openOrFocusVideoTab(netflixAdapter, url), /多個分頁/);
+    await assert.rejects(sendToVideo(netflixAdapter, url, { type: "NETFLIX_SEEK", timeMs: 5000 }), /多個分頁/);
+  });
+  assert.equal(opened, 0);
+  assert.equal(messaged, 0);
+});
+
+test("reuse an existing matching tab, even when another Netflix title is active", async () => {
+  const matching = tab(12, false, 1);
+  const unrelated = tab(13, true, 1, other);
+  let created = 0;
+  const activated: number[] = [];
+  await withChrome({
+    tabs: [matching, unrelated], current: [unrelated],
+    onCreate: () => { created++; },
+    onUpdate: id => activated.push(id),
+  }, async () => {
+    const result = await openOrFocusVideoTab(netflixAdapter, url);
+    assert.equal(result.reused, true);
+    assert.equal(result.tab.id, 12);
+  });
+  assert.equal(created, 0);
+  assert.deepEqual(activated, [12]);
+});
+
+test("open one watch tab if absent; a later request reuses it", async () => {
+  const openUrls: string[] = [];
+  const activated: number[] = [];
+  const state = { tabs: [tab(7, true, 1, other)], current: [tab(7, true, 1, other)] };
+  await withChrome({
+    ...state,
+    onCreate: url => openUrls.push(url),
+    onUpdate: id => activated.push(id),
+  }, async () => {
+    const created = await openOrFocusVideoTab(netflixAdapter, url);
+    assert.equal(created.reused, false);
+    const reused = await openOrFocusVideoTab(netflixAdapter, url);
+    assert.equal(reused.reused, true);
+    assert.equal(reused.tab.id, created.tab.id);
+  });
+  assert.deepEqual(openUrls, [url]);
+  assert.deepEqual(activated, [99]);
+});
+
+test("missing content script advises reloading the original tab, not opening a duplicate", async () => {
+  const current = tab(22, true, 1);
+  await withChrome({ tabs: [current], current: [current] }, async () => {
+    const globalChrome = globalThis as unknown as { chrome: ChromeApi };
+    globalChrome.chrome.tabs.sendMessage = async () => {
+      throw new Error("Could not establish connection. Receiving end does not exist.");
+    };
+    await assert.rejects(sendToVideo(netflixAdapter, url, { type: "NETFLIX_DIAGNOSE" }), /重新整理原本的影片分頁/);
+  });
+});
+
+test("malformed or impersonating Netflix URLs are rejected before opening any tab", async () => {
+  const current = tab(22, true, 1);
+  let created = 0;
+  await withChrome({
+    tabs: [current], current: [current], onCreate: () => { created++; },
+  }, async () => {
+    await assert.rejects(
+      openOrFocusVideoTab(netflixAdapter, "https://www.netflix.com.evil.example/watch/81234567"),
+      /網址無效/,
+    );
+  });
+  assert.equal(created, 0);
+});
