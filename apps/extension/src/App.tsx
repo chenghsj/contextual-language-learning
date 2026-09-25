@@ -26,7 +26,7 @@ import { Textarea } from "./components/ui/textarea";
 import { Badge } from "./components/ui/badge";
 import { SceneReader } from "./components/scene-reader";
 import { SettingInfo } from "./components/setting-info";
-import { learningSettingsCopy } from "./i18n/learning-settings";
+import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
@@ -1143,7 +1143,7 @@ export default function App() {
               <div className="settingHeading">
                 <label htmlFor="learning-level">{t("level")}</label>
                 <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
-                  explanation={settingsCopy.fieldHints.level}
+                  explanation={levelHint(settingsCopy, profile.targetLanguage)}
                   />
               </div>
               <NativeSelect id="learning-level" value={profile.level}
