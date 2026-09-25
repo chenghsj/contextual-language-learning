@@ -17,8 +17,10 @@ test("parseAgentJson accepts raw JSON and a complete AGY-style JSON code fence",
 test("the AGY adapter unwraps a JSON envelope containing a fenced model response", async () => {
   const output = JSON.stringify({ status: "SUCCESS", response: fence + "json\n" + JSON.stringify(reply) + "\n" + fence });
   const actual = await agyAdapter.generate({
-    prompt: "Generate dialogue candidates", modelId: "", run: async () => output,
-  } as Parameters<typeof agyAdapter.generate>[0]);
+    command: "agy", prompt: "Generate dialogue candidates", modelId: "",
+    env: {}, workDir: "/tmp", signal: new AbortController().signal,
+    run: async () => output,
+  });
   assert.deepEqual(actual, reply);
 });
 
