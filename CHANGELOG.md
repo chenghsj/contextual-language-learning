@@ -5,6 +5,7 @@ Notable user-facing changes to Immersive Language Learning are recorded here. Ve
 ## [Unreleased]
 
 - Prepared MIT licensing, contribution and security/privacy documentation, issue and pull-request templates.
+- Completed five-language Side Panel localization and localized Chrome extension metadata; added working system/light/dark appearance selection and regression tests.
 - Added capability-based playback-speed controls for existing YouTube and experimental Netflix video adapters.
 - Added validated release packaging for Chromium Extension and macOS Native Host ZIPs with SHA-256 checksums.
 - Added opt-in local folder / experimental Google Drive destination selection, duplicate preflight and explicit regeneration confirmation.
