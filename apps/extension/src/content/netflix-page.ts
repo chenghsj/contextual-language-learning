@@ -7,6 +7,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
 (() => {
   const REQUEST_EVENT = "immersive-learning:netflix:request";
   const RESPONSE_EVENT = "immersive-learning:netflix:response";
+  const BRIDGE_VERSION = "native-caption-capture-v1";
   const CAPTION_FETCH_REQUEST_EVENT = "immersive-learning:netflix:caption-fetch-request";
   const CAPTION_FETCH_RESPONSE_EVENT = "immersive-learning:netflix:caption-fetch-response";
   type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
@@ -113,12 +114,12 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
           },
         );
         window.dispatchEvent(new CustomEvent(RESPONSE_EVENT, {
-          detail: { source: "immersive-learning", id: request.id, ok: true,
+          detail: { source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION, ok: true,
             available: true, text: subtitle.text, language: subtitle.language },
         }));
       })().catch(error => {
         window.dispatchEvent(new CustomEvent(RESPONSE_EVENT, {
-          detail: { source: "immersive-learning", id: request.id, ok: false,
+          detail: { source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION, ok: false,
             available: false, error: error instanceof Error ? error.message : "Netflix subtitles are unavailable." },
         }));
       });
