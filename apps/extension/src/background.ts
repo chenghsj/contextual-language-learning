@@ -1,31 +1,34 @@
 import { fetchNetflixCaptionText } from "./video/netflix-caption-fetch";
-
-function isNetflixWatchPage(value: string | undefined): boolean {
-  if (!value) return false;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" &&
-      ["www.netflix.com", "netflix.com"].includes(url.hostname.toLowerCase()) &&
-      /^\/watch\/\d+(?:\/|$)/.test(url.pathname);
-  } catch { return false; }
-}
+import { validateNetflixCaptionSender } from "./video/netflix-caption-sender";
 
 chrome.runtime.onMessage.addListener((incoming: unknown, sender, respond) => {
   if (!incoming || typeof incoming !== "object" ||
       (incoming as { type?: string }).type !== "NETFLIX_CAPTION_DOCUMENT_FETCH") return false;
-  const url = (incoming as { url?: unknown }).url;
-  // Only the top-level content script on the user's Netflix watch tab may
-  // request a caption document. The URL itself is independently allowlisted.
+
+  const message = incoming as { url?: unknown; watchId?: unknown };
+  const tabId = sender.tab?.id;
+  // Reject malformed requests before querying a tab or attempting network I/O.
   if (sender.id !== chrome.runtime.id || sender.frameId !== 0 ||
-      !sender.tab || !isNetflixWatchPage(sender.tab.url) ||
-      !isNetflixWatchPage(sender.url) ||
-      typeof url !== "string" || url.length > 8192) {
-    respond({ ok: false, error: "Caption requests require the current Netflix watch tab." });
+      typeof tabId !== "number" || !Number.isInteger(tabId) ||
+      typeof message.watchId !== "string" || !/^\d{1,20}$/.test(message.watchId) ||
+      typeof message.url !== "string" || message.url.length > 8192) {
+    respond({ ok: false, error: "Netflix caption request is missing a valid watch tab or video ID." });
     return false;
   }
-  void fetchNetflixCaptionText(url).then(text => {
+
+  // A Netflix content script can retain /browse as sender.url after a client-
+  // side navigation to /watch/:id. Query the tab at request time, then verify
+  // its actual watch ID and the original document's matching Netflix origin.
+  void (async () => {
+    const tab = await chrome.tabs.get(tabId);
+    const reason = validateNetflixCaptionSender(sender, chrome.runtime.id, tab.url, message.watchId as string);
+    if (reason) {
+      respond({ ok: false, error: reason });
+      return;
+    }
+    const text = await fetchNetflixCaptionText(message.url as string);
     respond({ ok: true, text });
-  }).catch(error => {
+  })().catch(error => {
     respond({ ok: false, error: error instanceof Error ? error.message : "Netflix subtitle request failed." });
   });
   return true;
