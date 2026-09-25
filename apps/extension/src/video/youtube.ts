@@ -10,6 +10,9 @@ export const youtubeAdapter: VideoAdapter = {
   label: "YouTube",
   getVideoId: videoId,
   timestampLink: (url, ms) => youtubeTimeLink(url, ms),
+  async setPlaybackRate(url, rate) {
+    await sendToVideo(youtubeAdapter, url, { type: "PLAYBACK_RATE_SET", rate });
+  },
   async loop(url, options) {
     await sendToVideo(youtubeAdapter, url, { type: "LOOP_SET", ...options }, true);
   },
