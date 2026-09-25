@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: node apps/extension/scripts/check-build.mjs
+      - run: node apps/local-host/scripts/smoke-host.mjs
+      - name: Package and verify release archives
+        run: |
+          pnpm package:release
+          (cd release-assets && sha256sum -c SHA256SUMS)
+      - name: Upload downloadable preview packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-preview-${{ github.sha }}
+          path: release-assets/*
+          if-no-files-found: error
+          retention-days: 7

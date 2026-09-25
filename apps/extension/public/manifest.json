@@ -1,0 +1,62 @@
+{
+  "manifest_version": 3,
+  "name": "Immersive Language Learning",
+  "description": "Generate local-first language lessons from subtitles using your own CLI agent.",
+  "version": "0.1.0",
+  "permissions": [
+    "sidePanel",
+    "nativeMessaging",
+    "storage",
+    "tabs",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://m.youtube.com/*",
+    "https://www.netflix.com/*",
+    "https://netflix.com/*"
+  ],
+  "action": {
+    "default_title": "Open Immersive Learning"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://m.youtube.com/*"
+      ],
+      "js": [
+        "youtube.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.netflix.com/*",
+        "https://netflix.com/*"
+      ],
+      "js": [
+        "netflix-page.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://www.netflix.com/*",
+        "https://netflix.com/*"
+      ],
+      "js": [
+        "netflix.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

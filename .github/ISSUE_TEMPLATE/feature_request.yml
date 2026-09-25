@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest a new learning, video-adapter or Agent capability.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the learning or development workflow rather than only the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain the user action, expected UI and available capabilities.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Video platform adapter
+        - CLI Agent adapter
+        - Lesson generation / learning
+        - Playback / looping / speed
+        - Local storage / Drive
+        - Accessibility / localization
+        - Documentation / contributors
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Platform, security and compatibility considerations
+      description: For new video services, state whether a permitted player control API exists; do not request DRM bypass or subtitle scraping.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and the roadmap.
+          required: true

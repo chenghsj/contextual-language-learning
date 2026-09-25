@@ -1,0 +1,145 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag, such as v0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  chromium:
+    name: Build and publish Chromium release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout tags and source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve and verify existing release tag
+        shell: bash
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            tag="$INPUT_TAG"
+          else
+            tag="$GITHUB_REF_NAME"
+          fi
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]; then
+            echo "Tag must be vMAJOR.MINOR.PATCH, optionally with a prerelease suffix" >&2
+            exit 1
+          fi
+          if ! git rev-parse -q --verify "refs/tags/$tag^{commit}" >/dev/null; then
+            echo "Tag $tag does not exist. Create and push it before publishing." >&2
+            exit 1
+          fi
+          git checkout --detach "refs/tags/$tag"
+          version="$(node -p "require('./package.json').version")"
+          if [[ "$tag" != "v$version" ]]; then
+            echo "Tag $tag does not match package.json version $version" >&2
+            exit 1
+          fi
+          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Typecheck and test
+        run: |
+          pnpm typecheck
+          pnpm test
+
+      - name: Build Extension and bundled Native Host
+        run: pnpm build
+
+      - name: Validate Extension and Native Host
+        run: |
+          node apps/extension/scripts/check-build.mjs
+          node apps/local-host/scripts/smoke-host.mjs
+
+      - name: Package Chromium and macOS Host
+        run: pnpm package:release
+
+      - name: Verify ZIPs and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release-assets
+          sha256sum -c SHA256SUMS
+          chromium="immersive-language-learning-chromium-$RELEASE_VERSION.zip"
+          host="immersive-language-learning-macos-host-$RELEASE_VERSION.zip"
+          unzip -tq "$chromium"
+          unzip -tq "$host"
+          unzip -Z -1 "$chromium" | grep -Eq '^(\./)?manifest\.json$'
+          unzip -Z -1 "$host" | grep -Eq '^(\./)?dist/native-host\.mjs$'
+
+      - name: Write installation notes
+        shell: bash
+        run: |
+          cat > release-notes.md <<'EOF'
+          ## Install in Chrome or Edge Chromium
+
+          Download the Chromium ZIP asset, extract it, and open chrome://extensions.
+          Enable Developer mode and click Load unpacked. Select the extracted
+          directory containing manifest.json at its root.
+
+          ## macOS Native Host (required for CLI generation)
+
+          Download and extract the matching macOS Host ZIP. With Node.js 22+,
+          run the following inside its extracted directory:
+
+          node scripts/install-host.mjs YOUR_EXTENSION_ID
+
+          The extension ID is shown in chrome://extensions after loading the
+          Chromium extension. The installer copies the Host into a stable
+          directory in your user Library. Install and sign in to at least one
+          supported CLI Agent separately.
+
+          Both ZIPs are verified by SHA256SUMS. The Chromium ZIP is an unpacked
+          extension, not a signed CRX. It cannot call local CLI tools without
+          the macOS Native Host. Google Drive requires your own Desktop OAuth
+          Client configuration.
+          EOF
+
+      - name: Publish GitHub Release and assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release-assets/* \
+              --title "Immersive Language Learning $RELEASE_TAG" \
+              --notes-file release-notes.md \
+              --verify-tag
+          fi
