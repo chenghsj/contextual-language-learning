@@ -7,6 +7,7 @@ import {
   type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
+import { openOrFocusVideoTab } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { BookOpen, Settings2, WandSparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
@@ -105,6 +106,8 @@ export default function App() {
   const [rateApplying, setRateApplying] = useState(false);
   const [loopActive, setLoopActive] = useState(false);
   const [playbackStatus, setPlaybackStatus] = useState("");
+  const [openingVideo, setOpeningVideo] = useState(false);
+  const openingVideoRef = useRef(false);
   const portRef = useRef<chrome.runtime.Port | null>(null);
   const preflightPortRef = useRef<chrome.runtime.Port | null>(null);
   const requestRef = useRef<string | null>(null);
@@ -531,6 +534,26 @@ export default function App() {
     setError("");
   }
 
+  async function openVideo(): Promise<void> {
+    if (openingVideoRef.current) return;
+    if (!document?.source.url || readerAdapter.id === "import") {
+      setError(t("errorVideoOpenUnsupported"));
+      return;
+    }
+    openingVideoRef.current = true;
+    setOpeningVideo(true);
+    setError("");
+    try {
+      const { reused } = await openOrFocusVideoTab(readerAdapter, document.source.url);
+      setPlaybackStatus(t(reused ? "statusVideoReused" : "statusVideoOpened"));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("errorVideoOpen"));
+    } finally {
+      openingVideoRef.current = false;
+      setOpeningVideo(false);
+    }
+  }
+
   async function diagnoseVideo(): Promise<void> {
     setError("");
     try {
@@ -823,6 +846,13 @@ export default function App() {
           </Card>
           <Card className="panel">
             <h2>影片伴讀</h2>
+            {document.source.url && readerAdapter.id !== "import" &&
+              <div className="actions">
+                <Button variant="outline" className="secondary" disabled={openingVideo}
+                  onClick={() => void openVideo()}>
+                  {openingVideo ? t("openingVideo") : t("openOrFocusVideo")}
+                </Button>
+              </div>
             <div className="twoColumns">
               <label>循環次數
                 <Select value={repeat} onChange={event => setRepeat(event.target.value as RepeatOption)}>
