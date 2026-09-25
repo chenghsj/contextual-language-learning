@@ -40,4 +40,4 @@ void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((
 });
 
 // Long-running generation must belong to the worker, never to the Side Panel.
-if (chrome.runtime.onConnect?.addListener) installGenerationController();
+if ("onConnect" in chrome.runtime) installGenerationController();
