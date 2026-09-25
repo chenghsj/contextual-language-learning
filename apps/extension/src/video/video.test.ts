@@ -27,8 +27,8 @@ test("speed controls are provided only by adapters with playback rate support", 
   assert.equal(supports(getVideoAdapter("https://tv.apple.com/watch/example"), "playbackRate"), false);
 });
 
-test("Netflix offers user-initiated subtitle retrieval; unsupported videos do not", () => {
+test("YouTube and Netflix offer user-initiated subtitle retrieval; unsupported videos do not", () => {
   assert.equal(typeof getVideoAdapter(nf).fetchSubtitles, "function");
-  assert.equal(getVideoAdapter(yt).fetchSubtitles, undefined);
+  assert.equal(typeof getVideoAdapter(yt).fetchSubtitles, "function");
   assert.equal(getVideoAdapter("https://example.com/video").fetchSubtitles, undefined);
 });

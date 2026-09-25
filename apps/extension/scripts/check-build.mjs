@@ -17,7 +17,7 @@ for (const locale of ["en", "zh_TW", "zh_CN", "ja", "ko"]) {
     assert.ok(catalog[key].message.trim(), locale + "/" + key + " is empty");
   }
 }
-for (const file of ["background.js", "youtube.js", "netflix-page.js", "netflix.js", "sidepanel.html"]) {
+for (const file of ["background.js", "youtube.js", "youtube-page.js", "netflix-page.js", "netflix.js", "sidepanel.html"]) {
   await access(resolve(dist, file));
 }
 for (const script of manifest.content_scripts) {
@@ -27,4 +27,5 @@ for (const script of manifest.content_scripts) {
   }
 }
 assert.ok(manifest.content_scripts.some(script => script.world === "MAIN" && script.js.includes("netflix-page.js")));
+assert.ok(manifest.content_scripts.some(script => script.world === "MAIN" && script.js.includes("youtube-page.js")));
 process.stdout.write("Extension manifest and content-script assets OK\n");

@@ -13,7 +13,8 @@ Automated CI covers TypeScript, unit tests, extension packaging and Native Messa
    - Select browser-language Automatic and test with a supported/unsupported Chrome UI locale (restart Chrome when changing its UI locale). Confirm unsupported languages fall back to English.
    - Test system, light and dark appearance, change the OS theme while Side Panel is open, and confirm explicit light/dark overrides persist when reopening. Verify no dark-mode flash on first display.
    - Check the Chromium ZIP contains all five `_locales/*/messages.json` files and the localized extension name/description in Chrome.
-5. With a sample YouTube video already open, test timestamp navigation, two repetitions, manual pause/seek cancellation and switching playback speed from 1× to 0.75× and 1.5× **while playing**. Confirm the speed does not reset the current loop.
+5. Open a YouTube watch video with English subtitles and the Side Panel. Click **一鍵取得目前影片字幕** without uploading a file; confirm it selects the current tab and produces readable timestamps and the YouTube source title/URL. Switch between Netflix and YouTube watch tabs while the panel remains open; verify the empty form follows the active tab, and existing imported subtitles are not silently overwritten. Check missing language tracks, no captions, page navigation during fetching and blocked YouTube caption requests. Verify that none of these cases fabricates a transcript.
+6. With a sample YouTube video already open, test timestamp navigation5. With a sample YouTube video already open, test timestamp navigation, two repetitions, manual pause/seek cancellation and switching playback speed from 1× to 0.75× and 1.5× **while playing**. Confirm the speed does not reset the current loop.
 
 ## Netflix (experimental; not part of CI)
 

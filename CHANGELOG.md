@@ -4,6 +4,8 @@ Notable user-facing changes to Immersive Language Learning are recorded here. Ve
 
 ## [Unreleased]
 
+- Add user-triggered YouTube subtitle acquisition from the current watch player's available caption tracks and keep the Side Panel source in sync as active tabs change; preserve manual import as a fallback.
+
 - Route user-initiated Netflix subtitle document requests through the extension worker with restricted Netflix delivery-domain permissions, bounded responses and explicit network/permission errors. Existing playback-session and subtitle-track checks still apply.
 
 - Add a one-click Netflix caption action for readable subtitle tracks in the active watch session, retaining original timestamps and treating manual imports as a fallback. Netflix compatibility remains experimental and requires live account testing.
