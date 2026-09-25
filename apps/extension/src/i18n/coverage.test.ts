@@ -37,7 +37,9 @@ test("YouTube one-click caption UI follows the active watch tab", async () => {
   const manifest = JSON.parse(await readFile(new URL("../../public/manifest.json", import.meta.url), "utf8"));
   assert.match(source, /subtitlePlatform === "youtube"/);
   assert.match(source, /chrome\.tabs\.onActivated\.addListener/);
-  assert.match(source, /adapter\.fetchSubtitles\(url, profile\.targetLanguage\)/);
+  assert.match(source, /adapter\.fetchSubtitles\(actualUrl, profile\.targetLanguage\)/);
+  assert.match(source, /getVideoAdapter\(activeVideo\?\.url \?\? sourceUrl\)/);
+  assert.match(source, /findVideoTab\(adapter, url\)/);
   assert.ok(manifest.content_scripts.some((script: { world?: string; js: string[] }) =>
     script.world === "MAIN" && script.js.includes("youtube-page.js")));
 });
