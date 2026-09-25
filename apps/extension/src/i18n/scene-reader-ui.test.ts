@@ -62,7 +62,8 @@ function renderReader(locale: UiLocale, withVideo = false): string {
   }));
 }
 
-test("every locale has a direct scene picker, readable step names and independent scene navigation", () => {
+test("every locale has a direct scene picker, readable step names and independent scene navigation", async () => {
+  const source = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
   for (const locale of Object.keys(messages) as UiLocale[]) {
     const copy = sceneReaderMessages[locale];
     const markup = renderReader(locale);
