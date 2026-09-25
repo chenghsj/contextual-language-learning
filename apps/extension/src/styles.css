@@ -60,7 +60,7 @@ textarea { resize: vertical; }
 .panel > .primary + .secondary { width: 100%; margin-top: 8px; }
 .alert { display: flex; justify-content: space-between; gap: 10px; margin: 10px 0; padding: 10px 12px; border: 1px solid #f3c0b5; border-radius: 10px; background: #fff0ec; color: #9c321e; font-size: 12px; }
 .alert button { flex-shrink: 0; background: transparent; color: inherit; }
-.status { padding: 10px; border-radius: 8px; border: 1px solid #b7d3e6; background: #e9f4fb; color: #265b77; font-size: 12px; overflow-wrap: anywhere; }
+.status { margin: 10px 0 0; padding: 10px; border-radius: 8px; border: 1px solid #b7d3e6; background: #e9f4fb; color: #265b77; font-size: 12px; overflow-wrap: anywhere; }
 .callout { margin: 12px 0; padding: 12px; border: 1px dashed var(--border); border-radius: 9px; background: var(--muted); color: var(--muted-foreground); font-size: 12px; line-height: 1.6; }
 .empty { padding: 32px 18px; text-align: center; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
