@@ -19,7 +19,7 @@ Using Netflix or YouTube also involves those sites' normal first-party network a
 
 ## Permissions
 
-The Manifest V3 Extension uses sidePanel for the reader, nativeMessaging for the local Host, storage for preferences, tabs for matching an open video and downloads for user-requested exports. Host permissions/content scripts are limited to declared YouTube and Netflix domains for playback and optional caption integration. Netflix may fetch its already-session-authorized timed-text document from a first-party Netflix delivery domain only when requested; no subtitle text is sent to the Native Host until you start a generation job. Adding a future service requires an explicit permission review.
+The Manifest V3 Extension uses sidePanel for the reader, nativeMessaging for the local Host, storage for preferences, tabs for matching an open video and downloads for user-requested exports. Host permissions/content scripts are limited to declared YouTube and Netflix domains for playback and optional caption integration. After your click, the extension's background worker may request a signed timed-text document from Netflix-owned delivery domains (`nflxvideo.net`, `nflximg.net`, `nflxext.com` or `netflix.com`), using the browser's existing session where applicable. Host permissions are restricted to those domains and do not permit unrelated sites; the worker rejects other URLs, redirects and oversized responses. Chrome may require you to approve the added Netflix CDN permissions after an update. No subtitle text is sent to the Native Host until you start a generation job. Adding a future service requires an explicit permission review.
 
 ## Retention and deletion
 

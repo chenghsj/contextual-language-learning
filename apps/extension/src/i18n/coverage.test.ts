@@ -17,6 +17,11 @@ test("all five Chrome manifest locales contain the required display strings", as
   assert.equal(manifest.name, "__MSG_extensionName__");
   assert.equal(manifest.description, "__MSG_extensionDescription__");
   assert.equal(manifest.action.default_title, "__MSG_actionTitle__");
+  for (const origin of [
+    "https://*.nflxvideo.net/*", "https://*.nflximg.net/*", "https://*.nflxext.com/*",
+  ]) {
+    assert.ok(manifest.host_permissions.includes(origin), "Missing caption CDN permission: " + origin);
+  }
   for (const locale of ["en", "zh_TW", "zh_CN", "ja", "ko"]) {
     const file = new URL(`../../public/_locales/${locale}/messages.json`, import.meta.url);
     const catalog = JSON.parse(await readFile(file, "utf8"));

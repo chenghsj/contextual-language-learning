@@ -12,7 +12,7 @@ This repository remains **private** pending the public-release checklist and liv
 
 ## Features
 
-- On an open Netflix watch page, click **一鍵取得目前影片字幕** to read the selected learning language's available timed-text track into the lesson form, without uploading a file. Manual SRT, VTT and pasted text remain a fallback; original cue times are preserved.
+- On an open Netflix watch page, click **一鍵取得目前影片字幕** to read the selected learning language's available timed-text track into the lesson form, without uploading a file. Netflix's signed caption document is requested by the extension worker from allowlisted Netflix delivery domains, not by a cross-origin page fetch. Chrome may ask you to approve the extension's new Netflix delivery-domain permissions after updating; if denied, one-click retrieval cannot work. Manual SRT, VTT and pasted text remain a fallback; original cue times are preserved.
 - Select target language (English/Japanese/Korean), level, **instruction language**, teaching mode, vocabulary cap, and exercises per section.
 - Pick Claude Code, Codex, or AGY. The Native Host queries `agy models` or Codex's experimental `codex debug models` for available model options; Claude Code offers documented aliases rather than an account-specific machine-readable list. You can always use the CLI default or a custom model ID. Catalog entries do not guarantee entitlement.
 - Save named Claude/Codex CLI account Profiles pointing to existing, separately authenticated directories inside your home folder. Selecting one changes `CLAUDE_CONFIG_DIR` or `CODEX_HOME` only for that Agent invocation; profile names/paths are stored locally, never credentials. AGY uses its current CLI login.
