@@ -23,7 +23,7 @@ test("publication failure preserves finished material; retry never regenerates",
     });
     let generated = 0;
     const manager = new JobManager({
-      storage, generateSection: async () => {
+      storage, legacyGeneration: true, generateSection: async () => {
         generated += 1;
         return { title: "Hello", context: "Context", vocabulary: [], insights: [], exercises: [] };
       },
