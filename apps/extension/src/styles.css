@@ -257,10 +257,47 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 }
 .sceneNavigation button { width: 100%; height: auto; min-height: 36px; padding: 7px 4px; font-size: 12px; white-space: normal; overflow-wrap: anywhere; }
 .sceneNavPosition { color: var(--muted-foreground); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.scenePlayer { position: sticky; bottom: 0; z-index: 3; box-shadow: 0 -6px 18px #00000012; }
-.scenePlayer .actions > button { flex: 1 1 42%; min-width: 0; height: auto; min-height: 34px; white-space: normal; }
-.scenePlayer .scenePlaybackSettings { margin: 10px 0 0; }
-.scenePlayer label { margin: 6px 0; }
+/* Collapsed mini-player is one compact control bar; extra settings are opt-in. */
+.scenePlayer {
+  position: sticky; bottom: 0; z-index: 3;
+  padding: 10px 12px; min-width: 0;
+  background: var(--card); box-shadow: 0 -6px 18px #00000012;
+}
+.miniPlayerHeader, .miniPlayerScene {
+  display: flex; align-items: center; min-width: 0; gap: 6px;
+}
+.miniPlayerHeader { justify-content: space-between; margin-bottom: 8px; }
+.miniPlayerScene { flex: 1; flex-wrap: wrap; justify-content: space-between; }
+.miniPlayerScene strong { min-width: 0; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.miniPlayerScene .time { font-size: 11px; flex: none; }
+.miniPlayerOpen { flex: none; min-width: 30px; min-height: 30px; }
+.miniPlayerActions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; min-width: 0; }
+.miniPlayerActions button {
+  width: 100%; min-width: 0; height: auto; min-height: 36px;
+  padding: 6px 4px; font-size: 11px; font-weight: 600;
+  line-height: 1.3; white-space: normal; overflow-wrap: anywhere;
+}
+.miniPlayerActions button svg { width: 14px; height: 14px; flex: none; }
+.miniPlayerStatus, .miniPlayerNote {
+  margin: 7px 0 0; min-width: 0; font-size: 11px; line-height: 1.45;
+  color: var(--muted-foreground); overflow-wrap: anywhere;
+}
+.miniPlayerStatus { color: var(--foreground); }
+.miniPlayerSettings {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border); min-width: 0;
+}
+.miniPlayerSettingsTitle { margin: 0 0 9px; font-size: 12px; font-weight: 650; }
+.miniPlayerSettingsGrid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+}
+.miniPlayerSettingsGrid label, .miniPlayerHint {
+  display: grid; min-width: 0; gap: 5px; margin: 0;
+  font-size: 12px; font-weight: 600;
+}
+.miniPlayerSettingsGrid select, .miniPlayerHint select { width: 100%; min-width: 0; }
+.miniPlayerHint { margin-top: 10px; }
+
 
 /* Keep the task history visually separate from the refresh control. */
 .jobHistoryList { display: grid; gap: 12px; margin-top: 12px; }
