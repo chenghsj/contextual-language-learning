@@ -254,3 +254,19 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 :root[data-theme="dark"] .learningCard strong, :root.dark .learningCard strong {
   color: var(--sidebar-primary);
 }
+
+/* Primary actions contain full Chinese/Japanese/Korean phrases in a narrow
+   Side Panel. 14px semibold text is clearer than inherited compact labels,
+   while the preset's primary/foreground colors remain unchanged. */
+button[data-slot="button"].subtitleFetchButton,
+button[data-slot="button"].primary {
+  min-height: 40px;
+  height: auto;
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
