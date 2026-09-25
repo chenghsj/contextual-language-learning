@@ -4,7 +4,7 @@ Contributions to Immersive Language Learning are welcome. Start with a small, re
 
 ## Development
 
-Requirements: Node.js 22+, pnpm 9, Chromium-based browser. The Native Messaging installer is currently macOS-only. Install and authenticate a supported CLI yourself only when manually testing AI generation.
+Requirements: Node.js 22+, pnpm 9, Chromium-based browser. The Native Messaging installer supports macOS, Windows and Linux; Windows additionally requires Windows PowerShell 5.1 and .NET Framework, while Linux folder selection needs zenity or kdialog. Install and authenticate a supported CLI yourself only when manually testing AI generation.
 
 ~~~sh
 git clone https://github.com/chenghsj/immersive-language-learning.git
@@ -18,7 +18,7 @@ pnpm build
 pnpm package:release
 ~~~
 
-Use a branch based on current `main` for each contribution. npm/yarn installs are blocked by `preinstall` because this is a pnpm workspace. The Extension is in apps/extension, Host in apps/local-host, and shared schemas and subtitle utilities in packages/core. Load apps/extension/dist with chrome://extensions > Developer mode > Load unpacked. See README for the macOS Host installer. Do not commit generated dist/, release-assets/, npm/yarn lockfiles, credentials, OAuth tokens, downloaded videos or imported subtitles.
+Use a branch based on current `main` for each contribution. npm/yarn installs are blocked by `preinstall` because this is a pnpm workspace. The Extension is in apps/extension, Host in apps/local-host, and shared schemas and subtitle utilities in packages/core. Load apps/extension/dist with chrome://extensions > Developer mode > Load unpacked. See README for your OS Host installer and the --browser option for Edge/Chromium. Do not commit generated dist/, release-assets/, npm/yarn lockfiles, credentials, OAuth tokens, downloaded videos or imported subtitles.
 
 ## Before opening an issue
 
@@ -28,7 +28,7 @@ Search existing issues and [the roadmap](docs/ROADMAP.md). Use the bug or featur
 
 1. Open an issue before a substantial feature or security-sensitive change. Scope each pull request to one problem and state compatibility implications.
 2. Add/adjust automated tests for parsing, schema changes, adapter capability/failure behavior, job transitions, checkpoints and Native Messaging where applicable.
-3. Run pnpm typecheck, pnpm test, pnpm build and pnpm package:release. CI also verifies the Chromium ZIP root manifest and macOS Host package.
+3. Run pnpm typecheck, pnpm test, pnpm build and pnpm package:release. CI also verifies the Chromium ZIP, all three OS Host ZIPs and the Windows executable launcher's binary stdio protocol.
 4. Describe user-visible changes, manual checks and limitations in the PR template. Update README, CHANGELOG and relevant docs. Do not mark Netflix or Google Drive integration as production-tested without a real-platform test.
 5. Preserve source subtitle cue IDs, source text and document schema versions. Any incompatible schema change needs a version bump, migration and fixtures.
 
