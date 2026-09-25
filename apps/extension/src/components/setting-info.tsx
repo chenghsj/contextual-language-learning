@@ -1,19 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import { Info } from "lucide-react";
 
-export type SettingHelpChoice = { label: string; description: string };
-
 /**
  * A click/keyboard-accessible info tooltip. Native <details> supports touch
  * screens and does not rely on hover (unlike the browser's title attribute).
  */
 export function SettingInfo({
-  label, infoLabel, explanation, choices = [],
+  label, infoLabel, explanation
 }: {
   label: string;
   infoLabel: string;
   explanation: string;
-  choices?: readonly SettingHelpChoice[];
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const contentId = React.useId();
@@ -45,16 +42,6 @@ export function SettingInfo({
       </summary>
       <div className="settingInfoPopover" id={contentId} role="note">
         <p>{explanation}</p>
-        {choices.length > 0 && (
-          <ul>
-            {choices.map(choice => (
-              <li key={choice.label}>
-                <strong>{choice.label}</strong>
-                <span>{choice.description}</span>
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </details>
   );

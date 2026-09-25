@@ -123,10 +123,6 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 }
 .twoColumns > .settingField:first-child .settingInfoPopover { left: 0; right: auto; }
 .settingInfoPopover p { margin: 0; color: var(--foreground); }
-.settingInfoPopover ul { display: grid; gap: 9px; margin: 10px 0 0; padding: 9px 0 0; border-top: 1px solid var(--border); list-style: none; }
-.settingInfoPopover li { display: grid; gap: 2px; min-width: 0; }
-.settingInfoPopover strong { display: block; color: var(--foreground); font-weight: 650; }
-.settingInfoPopover span { display: block; color: var(--muted-foreground); font-weight: 400; }
 
 /* Curated study keeps a single scene in view, with playback accessible while scrolling. */
 .advancedLessonSettings { margin: 8px 0 12px; }
@@ -162,3 +158,7 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .scenePlayer .actions > button { flex: 1 1 42%; min-width: 0; height: auto; min-height: 34px; white-space: normal; }
 .scenePlayer .scenePlaybackSettings { margin: 10px 0 0; }
 .scenePlayer label { margin: 6px 0; }
+
+/* Keep the task history visually separate from the refresh control. */
+.jobHistoryList { display: grid; gap: 12px; margin-top: 12px; }
+.jobHistoryList .learningCard { margin-bottom: 0; }

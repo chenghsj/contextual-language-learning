@@ -1101,10 +1101,7 @@ export default function App() {
                 <label htmlFor="learning-target">{t("targetLanguage")}</label>
                 <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.targetLanguage}
-                  choices={(["en", "ja", "ko"] as const).map(language => ({
-                    label: nativeLanguageName(language),
-                    description: settingsCopy.targetDescriptions[language],
-                  }))} />
+                  />
               </div>
               <Select id="learning-target" value={profile.targetLanguage} onChange={event => {
                 const targetLanguage = event.target.value as LearningProfile["targetLanguage"];
@@ -1116,10 +1113,7 @@ export default function App() {
                 <label htmlFor="learning-level">{t("level")}</label>
                 <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.level}
-                  choices={levelOptions.map(level => ({
-                    label: level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
-                    description: settingsCopy.levels[profile.targetLanguage][level]?.description ?? "",
-                  }))} />
+                  />
               </div>
               <Select id="learning-level" value={profile.level}
                 onChange={event => setProfile(current => ({ ...current, level: event.target.value }))}>
@@ -1134,10 +1128,7 @@ export default function App() {
               <label htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
               <SettingInfo label={t("instructionLanguage")} infoLabel={settingsCopy.infoLabel}
                 explanation={settingsCopy.fieldHints.instructionLanguage}
-                choices={(["zh-TW", "zh-CN", "en", "ja", "ko"] as const).map(language => ({
-                  label: nativeLanguageName(language),
-                  description: settingsCopy.instructionDescriptions[language],
-                }))} />
+                />
             </div>
             <Select id="learning-explanation-language" value={profile.instructionLanguage}
               onChange={event => setProfile(current => ({
@@ -1153,7 +1144,7 @@ export default function App() {
               <label htmlFor="learning-mode">{t("teachingMode")}</label>
               <SettingInfo label={t("teachingMode")} infoLabel={settingsCopy.infoLabel}
                 explanation={settingsCopy.fieldHints.teachingMode}
-                choices={(["adaptive", "guided", "immersive"] as const).map(mode => settingsCopy.modes[mode])} />
+                />
             </div>
             <Select id="learning-mode" value={profile.mode}
               onChange={event => setProfile(current => ({
@@ -1277,7 +1268,8 @@ export default function App() {
           <p className="hint">{t("jobHistoryHint")}</p>
           <Button variant="outline" className="secondary" disabled={loadingJobs}
             onClick={loadJobs}>{loadingJobs ? t("loading") : t("refreshJobs")}</Button>
-          {jobs.map(job => <div className="learningCard" key={job.id}>
+          {jobs.length > 0 && <div className="jobHistoryList">
+            {jobs.map(job => <div className="learningCard" key={job.id}>
             <strong>{job.sourceTitle}</strong>
             <p>{t("jobProgress", { provider: job.provider, status: t(jobStatusKeys[job.status]), completed: job.completed, total: job.total })}</p>
             {job.error && <p>{job.error}</p>}
@@ -1294,6 +1286,7 @@ export default function App() {
               </>}
             </div>
           </div>)}
+          </div>}
         </Card>
       </main>}
 
