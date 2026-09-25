@@ -19,6 +19,7 @@ const HOST_NAME = "dev.immersive.language_learning";
 type Page = "create" | "reader" | "settings";
 type Installed = Record<string, boolean>;
 type RepeatOption = "2" | "3" | "5" | "infinite";
+type StorageLocation = { id: string; kind: "local" | "google-drive-desktop"; label: string; path: string; account?: string };
 
 const DEFAULT_PROFILE: LearningProfile = {
   targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
@@ -73,6 +74,10 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
+  const [storageLocations, setStorageLocations] = useState<StorageLocation[]>([]);
+  const [outputPath, setOutputPath] = useState("");
+  const [customOutputPath, setCustomOutputPath] = useState("");
+  const [duplicateWarning, setDuplicateWarning] = useState<{ payload: GenerationRequest; count: number } | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [repeat, setRepeat] = useState<RepeatOption>("3");
   const [delay, setDelay] = useState(1);
@@ -99,6 +104,16 @@ export default function App() {
       if (typeof saved.delay === "number") setDelay(saved.delay);
       setHydrated(true);
     }).catch(() => setHydrated(true));
+    const storageId = crypto.randomUUID();
+    const storagePort = chrome.runtime.connectNative(HOST_NAME);
+    storagePort.onMessage.addListener((message: HostMessage) => {
+      if (message.id === storageId && message.type === "storageLocations") {
+        setStorageLocations(message.locations);
+        setOutputPath(current => current || message.locations[0]?.path || "");
+        storagePort.disconnect();
+      }
+    });
+    storagePort.postMessage({ id: storageId, type: "storageLocations" });
     void chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
       const tab = tabs[0];
       if (tab?.url && getVideoAdapter(tab.url).id !== "import") {
@@ -219,16 +234,30 @@ export default function App() {
     port.postMessage({ id, ...input });
   }
 
-  function startGeneration(): void {
+  function startGeneration(allowRegenerate = false): void {
     setError("");
+    setDuplicateWarning(null);
     try {
       const id = crypto.randomUUID();
       const payload = GenerationRequestSchema.parse({
         id,
         source: { platform, title: title.trim(), ...(sourceUrl.trim() ? { url: sourceUrl.trim() } : {}) },
-        profile, agent, cues,
+        profile, agent, cues, outputPath: customOutputPath.trim() || outputPath || undefined, allowRegenerate,
       });
-      runGeneration({ type: "generate", payload });
+      if (allowRegenerate) { runGeneration({ type: "generate", payload }); return; }
+      const port = chrome.runtime.connectNative(HOST_NAME);
+      port.onMessage.addListener((message: HostMessage) => {
+        if (message.id !== id) return;
+        if (message.type === "preflight") {
+          port.disconnect();
+          if (message.existing.length) setDuplicateWarning({ payload, count: message.existing.length });
+          else runGeneration({ type: "generate", payload });
+        } else if (message.type === "error") {
+          port.disconnect();
+          setError(message.message);
+        }
+      });
+      port.postMessage({ id, type: "preflight", payload });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Invalid generation settings.");
     }
@@ -444,7 +473,27 @@ export default function App() {
         <Card className="panel">
           <h2>3. Agent 與生成</h2>
           <p className="hint">目前使用：{agent.provider} · {agent.modelId || "CLI 預設模型"}。切換請至 Agent 設定。</p>
-          <p className="hint">教材會存到 ~/Documents/Immersive Learning；完成後也能以「另存新檔」選擇本地位置。</p>
+          <label>儲存位置
+            <Select value={customOutputPath ? "custom" : outputPath} onChange={event => {
+              if (event.target.value === "custom") { setCustomOutputPath(customOutputPath || ""); return; }
+              setCustomOutputPath(""); setOutputPath(event.target.value);
+            }}>
+              {storageLocations.map(location => <option key={location.id} value={location.path}>{location.label}</option>)}
+              <option value="custom">其他本機資料夾…</option>
+            </Select>
+          </label>
+          {customOutputPath !== "" || (!storageLocations.some(location => location.path === outputPath) && outputPath === "") ? <label>自訂資料夾路徑
+            <Input value={customOutputPath} onChange={event => setCustomOutputPath(event.target.value)}
+              placeholder="/Users/you/Documents/My Lessons" />
+          </label> : null}
+          <p className="hint">若已安裝 Google Drive for desktop，這裡會自動列出每個已掛載帳號，可直接切換。資料仍先保留本地 checkpoint。</p>
+          {duplicateWarning && <div className="callout">
+            這個影片／教材在目前儲存位置已生成過 {duplicateWarning.count} 次。重新生成會建立新版本，不覆蓋舊文件。
+            <div className="actions">
+              <Button variant="destructive" size="sm" onClick={() => runGeneration({ type: "generate", payload: { ...duplicateWarning.payload, allowRegenerate: true } })}>確認重新生成</Button>
+              <Button variant="outline" size="sm" onClick={() => setDuplicateWarning(null)}>取消</Button>
+            </div>
+          </div>}
           <Button className="primary" onClick={startGeneration} disabled={generating || !cues.length || !title.trim()}>
             {generating ? "生成中…" : "使用本地 Agent 生成教材"}
           </Button>

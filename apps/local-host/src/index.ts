@@ -3,6 +3,8 @@ import { getAgentCatalog } from "./agents";
 import { JobManager } from "./jobs/manager";
 import { encodeMessage, NativeFramer } from "./protocol";
 import { localStoragePorts } from "./storage/file";
+import { findExisting } from "./storage/publisher";
+import { listStorageLocations, validateUserStoragePath } from "./storage/locations";
 
 const storage = localStoragePorts();
 const manager = new JobManager({ storage }, (requestId, job) => {
@@ -50,6 +52,14 @@ async function handle(input: unknown): Promise<void> {
       case "listJobs":
         reply({ id: request.id, type: "jobs", jobs: await manager.list() });
         break;
+      case "storageLocations":
+        reply({ id: request.id, type: "storageLocations", locations: await listStorageLocations() });
+        break;
+      case "preflight": {
+        const root = validateUserStoragePath(request.payload.outputPath ?? (await listStorageLocations())[0].path);
+        reply({ id: request.id, type: "preflight", existing: await findExisting(root, request.payload) });
+        break;
+      }
       case "getDocument": {
         const document = await storage.documents.get(request.documentId);
         if (!document) throw new Error("Saved document not found");

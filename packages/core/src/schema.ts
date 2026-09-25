@@ -40,6 +40,8 @@ export const GenerationRequestSchema = z.object({
   profile: LearningProfileSchema,
   agent: AgentSettingsSchema,
   cues: z.array(SubtitleCueSchema).min(1).max(3000),
+  outputPath: z.string().max(2048).optional(),
+  allowRegenerate: z.boolean().optional(),
 }).refine(request => request.cues.reduce((sum, cue) => sum + cue.originalText.length, 0) <= 220_000, {
   message: "Transcript exceeds the 220,000-character limit; select a shorter section",
 });
@@ -91,6 +93,8 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("listJobs"), id: z.string().uuid() }),
   z.object({ type: z.literal("resume"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({ type: z.literal("getDocument"), id: z.string().uuid(), documentId: z.string().uuid() }),
+  z.object({ type: z.literal("storageLocations"), id: z.string().uuid() }),
+  z.object({ type: z.literal("preflight"), id: z.string().uuid(), payload: GenerationRequestSchema }),
 ]);
 export type HostRequest = z.infer<typeof HostRequestSchema>;
 
@@ -107,6 +111,8 @@ export type HostMessage =
   | { id: string; type: "job"; job: import("./jobs").JobSummary }
   | { id: string; type: "jobs"; jobs: import("./jobs").JobSummary[] }
   | { id: string; type: "documentChunk"; documentId: string; index: number; total: number; dataBase64: string }
+  | { id: string; type: "storageLocations"; locations: { id: string; kind: "local" | "google-drive-desktop"; label: string; path: string; account?: string }[] }
+  | { id: string; type: "preflight"; existing: { id: string; title: string; createdAt: string; path: string }[] }
   | { id: string; type: "result"; document: LearningDocument }
   | { id: string; type: "cancelled" }
   | { id: string; type: "error"; message: string };

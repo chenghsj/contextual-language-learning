@@ -1,6 +1,8 @@
 import { chunkCues, createJob, transitionJob, type GenerationRequest, type JobSummary, type LearningDocument } from "@immersive/core";
 import { runGenerationPipeline, type PipelineDependencies } from "../generation";
 import type { StoragePorts } from "../storage/ports";
+import { findExisting, publishDocument } from "../storage/publisher";
+import { validateUserStoragePath } from "../storage/locations";
 
 function isAlive(pid: number | undefined): boolean {
   if (pid === undefined) return false;
@@ -44,6 +46,13 @@ export class JobManager {
 
   async start(requestId: string, request: GenerationRequest, signal?: AbortSignal): Promise<LearningDocument> {
     if (this.running.size) throw new Error("Another generation is already running in this Host");
+    if (request.outputPath) {
+      const root = validateUserStoragePath(request.outputPath);
+      const existing = await findExisting(root, request);
+      if (existing.length && !request.allowRegenerate) {
+        throw new Error("This source already has generated learning material. Confirm regeneration first.");
+      }
+    }
     const job = createJob(request, chunkCues(request.cues).length);
     await this.storage.jobs.create(job);
     return this.execute(requestId, job.summary.id, signal);
@@ -87,7 +96,12 @@ export class JobManager {
         return { ...next, summary: { ...next.summary, ownerPid: process.pid, error: undefined } };
       });
       this.notify(requestId, started.summary);
-      return await runGenerationPipeline(jobId, this.deps, controller.signal, summary => this.notify(requestId, summary));
+      const document = await runGenerationPipeline(jobId, this.deps, controller.signal, summary => this.notify(requestId, summary));
+      const saved = await this.storage.jobs.get(jobId);
+      if (saved?.request.outputPath) {
+        await publishDocument(validateUserStoragePath(saved.request.outputPath), document);
+      }
+      return document;
     } catch (error) {
       await this.storage.jobs.update(jobId, current => {
         if (current.summary.status !== "running") return current;
