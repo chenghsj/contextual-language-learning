@@ -350,12 +350,22 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
   white-space: normal; overflow-wrap: anywhere;
 }
 .sceneMiniSettings {
-  max-height: min(220px, 38vh); overflow-y: auto;
+  max-height: min(340px, 55vh); overflow-y: auto;
   margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border);
 }
 .sceneMiniSettings .twoColumns { gap: 8px; }
 .sceneMiniSettings label { min-width: 0; margin: 0 0 8px; font-size: 12px; }
 .sceneMiniSettings [data-slot="select-trigger"] { width: 100%; min-width: 0; }
+.sceneLoopRange { min-width: 0; margin-top: 8px; padding-top: 9px; border-top: 1px solid var(--border); }
+.sceneLoopRangeTitle, .sceneLoopBoundaryTitle { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sceneLoopRangeTitle > strong { font-size: 12px; }
+.sceneLoopRange .hint { margin: 5px 0 8px; font-size: 11px; }
+.sceneLoopBoundary { min-width: 0; margin-top: 10px; }
+.sceneLoopBoundaryTitle { margin-bottom: 5px; font-size: 12px; font-weight: 600; }
+.sceneLoopBoundaryTitle output { font-variant-numeric: tabular-nums; }
+.sceneLoopNudge { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.sceneLoopNudge button { min-width: 0; min-height: 32px; padding: 5px 6px; font-size: 11px; white-space: normal; }
+.sceneLoopNudge button:last-child { grid-column: 1 / -1; }
 .sceneMiniStatus {
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
   max-height: 34px; overflow: hidden; overflow-wrap: anywhere;
