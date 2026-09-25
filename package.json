@@ -7,7 +7,8 @@
     "build": "pnpm --filter @immersive/extension build && pnpm --filter @immersive/local-host build",
     "typecheck": "tsc -p packages/core/tsconfig.json --noEmit && tsc -p apps/local-host/tsconfig.json --noEmit && tsc -p apps/extension/tsconfig.json --noEmit",
     "test": "tsx --test packages/core/src/*.test.ts apps/local-host/src/*.test.ts apps/local-host/src/jobs/*.test.ts apps/local-host/src/storage/*.test.ts apps/extension/src/video/*.test.ts apps/extension/src/native/*.test.ts",
-    "host:install": "node apps/local-host/scripts/install-host.mjs"
+    "host:install": "node apps/local-host/scripts/install-host.mjs",
+    "package:release": "node scripts/package-release.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
