@@ -4,6 +4,8 @@ Notable user-facing changes to Immersive Language Learning are recorded here. Ve
 
 ## [Unreleased]
 
+- Fix AGY 1.2.11 model discovery when its model table is emitted on stderr or uses nonbreaking-space columns; keep the CLI model IDs for generation.
+
 - Add OS-specific Native Messaging installers, native folder pickers and Windows binary launcher; distribute macOS, Windows and Linux Host ZIPs with checksums.
 - Add fixed-command CLI model discovery and named Claude/Codex account Profiles; keep CLI default and custom model fallbacks without copying credentials.
 - Show actionable Native Host registration instructions using the current extension ID.
