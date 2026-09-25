@@ -15,6 +15,11 @@ import { Input } from "./components/ui/input";
 import { Select } from "./components/ui/select";
 import { Textarea } from "./components/ui/textarea";
 import { Badge } from "./components/ui/badge";
+import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
+import {
+  getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
+  type LocalePreference, type ThemePreference,
+} from "./i18n/preferences";
 
 const HOST_NAME = "dev.immersive.language_learning";
 type Page = "create" | "reader" | "settings";
@@ -59,7 +64,15 @@ export default function App() {
   const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
-  const [profile, setProfile] = useState<LearningProfile>(DEFAULT_PROFILE);
+  const [browserLocale] = useState(getBrowserLocale);
+  const [localePreference, setLocalePreference] = useState<LocalePreference>("auto");
+  const [themePreference, setThemePreference] = useState<ThemePreference>("system");
+  const [systemDark, setSystemDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const uiLocale = localePreference === "auto" ? browserLocale : localePreference;
+  const t = (key: MessageKey, params?: MessageParams) => translate(uiLocale, key, params);
+  const [profile, setProfile] = useState<LearningProfile>(() => ({
+    ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
+  }));
   const [agent, setAgent] = useState<AgentSettings>(DEFAULT_AGENT);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>>({});
   const [installed, setInstalled] = useState<Installed | null>(null);
@@ -97,10 +110,16 @@ export default function App() {
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
   const platform = getVideoAdapter(sourceUrl).id;
   const readerAdapter = getVideoAdapter(document?.source.url);
+  const jobStatusKeys: Record<JobSummary["status"], MessageKey> = {
+    queued: "jobQueued", running: "jobRunning", waiting: "jobWaiting",
+    completed: "jobCompleted", failed: "jobFailed", cancelled: "jobCancelled",
+  };
 
   useEffect(() => {
-    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "repeat", "delay"]).then(saved => {
+    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "repeat", "delay", "uiLocalePreference", "themePreference"]).then(saved => {
       if (saved.profile) setProfile(saved.profile as LearningProfile);
+      if (isLocalePreference(saved.uiLocalePreference)) setLocalePreference(saved.uiLocalePreference);
+      if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
       if (saved.agent) setAgent(saved.agent as AgentSettings);
       if (saved.agentProfiles && typeof saved.agentProfiles === "object") {
         setAgentProfiles(saved.agentProfiles as Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>);
@@ -125,8 +144,20 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, destination, repeat, delay });
-  }, [hydrated, profile, agent, agentProfiles, destination, repeat, delay]);
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => setSystemDark(media.matches);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = uiLocale;
+    document.documentElement.dataset.theme = resolveTheme(themePreference, systemDark);
+  }, [uiLocale, themePreference, systemDark]);
+
+  useEffect(() => {
+    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, destination, repeat, delay, uiLocalePreference: localePreference, themePreference });
+  }, [hydrated, profile, agent, agentProfiles, destination, repeat, delay, localePreference, themePreference]);
 
   function nativeOnce(request: { id: string; type: string; [key: string]: unknown }): Promise<HostMessage> {
     return new Promise((resolve, reject) => {
@@ -140,7 +171,7 @@ export default function App() {
         else resolve(response);
       });
       port.onDisconnect.addListener(() => {
-        if (!finished) reject(new Error(chrome.runtime.lastError?.message ?? "Native Host 已中斷"));
+        if (!finished) reject(new Error(chrome.runtime.lastError?.message ?? t("errorHostDisconnected")));
       });
       try { port.postMessage(request); }
       catch (error) { port.disconnect(); reject(error); }
@@ -171,7 +202,7 @@ export default function App() {
       if (response.type !== "folder") throw new Error("Unexpected folder picker response");
       setDestination({ kind: "local", directory: response.directory });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "無法選擇資料夾。");
+      setError(cause instanceof Error ? cause.message : t("folderError"));
     } finally { setStorageBusy(false); }
   }
 
@@ -188,7 +219,7 @@ export default function App() {
       setDriveConfigured(true);
       await refreshDriveAccounts();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Google OAuth 設定失敗。");
+      setError(cause instanceof Error ? cause.message : t("oauthError"));
     } finally { setStorageBusy(false); }
   }
 
@@ -201,7 +232,7 @@ export default function App() {
       setDriveAccounts(current => [...current.filter(item => item.id !== response.account.id), response.account]);
       setDestination({ kind: "drive", accountId: response.account.id });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "無法連線 Google Drive 帳號。");
+      setError(cause instanceof Error ? cause.message : t("connectDriveError"));
     } finally { setStorageBusy(false); }
   }
 
@@ -213,10 +244,10 @@ export default function App() {
       if (response.type === "publicationFailed") throw new Error(response.message);
       if (response.type !== "published") throw new Error("Unexpected publication response");
       setPublishedLocation(response.location);
-      setProgress("已發布至：" + response.location);
+      setProgress(t("publishedTo", { location: response.location }));
       loadJobs();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "重新發布失敗。");
+      setError(cause instanceof Error ? cause.message : t("publicationError"));
     } finally { setStorageBusy(false); }
   }
 
@@ -267,7 +298,7 @@ export default function App() {
     if (!parsed.success) throw new Error("Host returned an invalid learning document.");
     setDocument(parsed.data);
     setPage("reader");
-    setProgress("教材已建立並存入本地 Documents/Immersive Learning");
+    setProgress(t("statusSaved"));
   }
 
   function updateJob(summary: JobSummary): void {
@@ -290,12 +321,12 @@ export default function App() {
     portRef.current = port;
     requestRef.current = jobId;
     setGenerating(true);
-    setProgress(input.type === "resume" ? "正在載入上次的生成進度…" : "連線至本地 CLI…");
+    setProgress(t(input.type === "resume" ? "statusResuming" : "statusConnecting"));
     const chunks = new DocumentChunkAssembler();
     let finished = false;
     function complete(raw: unknown): void {
       try { showDocument(raw); }
-      catch (error) { setError(error instanceof Error ? error.message : "文件無法開啟。"); }
+      catch (error) { setError(error instanceof Error ? error.message : t("errorDocumentOpen")); }
       finished = true;
       setGenerating(false);
       port.disconnect();
@@ -305,11 +336,11 @@ export default function App() {
       if (message.type === "job") {
         updateJob(message.job);
       } else if (message.type === "progress") {
-        setProgress("已完成 " + message.completed + " / " + message.total + " 個章節");
+        setProgress(t("statusProgress", { completed: message.completed, total: message.total }));
       } else if (message.type === "published") {
         setPublishedLocation(message.location);
       } else if (message.type === "publicationFailed") {
-        setError("教材已保存在本地，但發布失敗：" + message.message + "。可從任務紀錄重新發布。");
+        setError(t("publishFailed", { message: message.message }));
       } else if (message.type === "result") {
         complete(message.document);
       } else if (message.type === "documentChunk") {
@@ -317,7 +348,7 @@ export default function App() {
           const document = chunks.push(message);
           if (document) complete(document);
         } catch (error) {
-          setError(error instanceof Error ? error.message : "文件分段資料無法讀取。");
+          setError(error instanceof Error ? error.message : t("errorDocumentChunks"));
           finished = true;
           setGenerating(false);
           port.disconnect();
@@ -333,7 +364,7 @@ export default function App() {
       if (portRef.current === port) portRef.current = null;
       if (!finished) {
         setGenerating(false);
-        setError(chrome.runtime.lastError?.message ?? "Native Host 中斷，可從任務紀錄恢復已完成的章節。");
+        setError(chrome.runtime.lastError?.message ?? t("errorDisconnected"));
       }
     });
     port.postMessage({ id, ...input });
@@ -353,7 +384,7 @@ export default function App() {
       const port = chrome.runtime.connectNative(HOST_NAME);
       preflightPortRef.current = port;
       setChecking(true);
-      setProgress("正在檢查本地與所選儲存位置的既有教材…");
+      setProgress(t("checkingExisting"));
       const id = crypto.randomUUID();
       let responded = false;
       port.onMessage.addListener((message: HostMessage) => {
@@ -363,9 +394,9 @@ export default function App() {
         if (message.type === "duplicates") {
           if (message.matches.length) {
             setDuplicateWarning({ payload, token: message.token, matches: message.matches });
-            setProgress("找到 " + message.matches.length + " 份既有教材，請選擇下一步。");
+            setProgress(t("foundExisting", { count: message.matches.length }));
           } else {
-            setProgress("沒有找到既有教材，開始生成。");
+            setProgress(t("noExisting"));
             runGeneration({ type: "generate", payload, checkToken: message.token, confirmRegeneration: false }, port);
           }
         } else if (message.type === "error") {
@@ -378,13 +409,13 @@ export default function App() {
         if (!responded) {
           preflightPortRef.current = null;
           setChecking(false);
-          setError(chrome.runtime.lastError?.message ?? "檢查中斷，尚未開始生成。");
+          setError(chrome.runtime.lastError?.message ?? t("preflightInterrupted"));
         }
       });
       port.postMessage({ type: "checkDuplicates", id, payload });
     } catch (cause) {
       setChecking(false);
-      setError(cause instanceof Error ? cause.message : "生成設定無效。");
+      setError(cause instanceof Error ? cause.message : t("errorGenerationSettings"));
     }
   }
 
@@ -419,7 +450,7 @@ export default function App() {
     port.onDisconnect.addListener(() => {
       if (!received) {
         setLoadingJobs(false);
-        setError(chrome.runtime.lastError?.message ?? "無法讀取本地任務紀錄。");
+        setError(chrome.runtime.lastError?.message ?? t("errorJobs"));
       }
     });
     port.postMessage({ type: "listJobs", id });
@@ -435,7 +466,7 @@ export default function App() {
     let finished = false;
     function complete(raw: unknown): void {
       try { showDocument(raw); }
-      catch (error) { setError(error instanceof Error ? error.message : "無法開啟教材。"); }
+      catch (error) { setError(error instanceof Error ? error.message : t("errorDocumentOpen")); }
       finished = true;
       setGenerating(false);
       port.disconnect();
@@ -450,7 +481,7 @@ export default function App() {
         } catch (error) {
           finished = true;
           setGenerating(false);
-          setError(error instanceof Error ? error.message : "文件分段資料損壞。");
+          setError(error instanceof Error ? error.message : t("errorDocumentCorrupt"));
           port.disconnect();
         }
       } else if (message.type === "error") {
@@ -463,7 +494,7 @@ export default function App() {
     port.onDisconnect.addListener(() => {
       if (!finished) {
         setGenerating(false);
-        setError(chrome.runtime.lastError?.message ?? "Native Host 已中斷。");
+        setError(chrome.runtime.lastError?.message ?? t("errorHostDisconnected"));
       }
     });
     port.postMessage({ type: "getDocument", id, documentId });
@@ -477,12 +508,12 @@ export default function App() {
   function cancelGeneration(): void {
     if (!portRef.current || !requestRef.current) return;
     portRef.current.postMessage({ id: crypto.randomUUID(), type: "cancel", jobId: requestRef.current });
-    setProgress("正在取消…");
+    setProgress(t("statusCancelling"));
   }
 
   async function onFile(file: File | undefined): Promise<void> {
     if (!file) return;
-    if (file.size > 2_000_000) { setError("檔案上限為 2 MB。請選擇較短的字幕。"); return; }
+    if (file.size > 2_000_000) { setError(t("errorFileSize")); return; }
     setRaw(await file.text());
     setFileName(file.name);
     if (!title) setTitle(file.name.replace(/\.(srt|vtt|txt)$/i, ""));
@@ -492,12 +523,12 @@ export default function App() {
   async function diagnoseVideo(): Promise<void> {
     setError("");
     try {
-      if (!readerAdapter.diagnose || !document?.source.url) throw new Error("這個影片來源不支援播放器診斷。");
+      if (!readerAdapter.diagnose || !document?.source.url) throw new Error(t("errorPlayerDiagnoseUnsupported"));
       const status = await readerAdapter.diagnose(document.source.url);
-      setPlaybackStatus(status.message + (status.currentMs !== undefined ? " · 目前時間 " + formatTime(status.currentMs) : ""));
+      setPlaybackStatus(t("statusPlayerReady") + (status.currentMs !== undefined ? t("statusCurrentTime", { time: formatTime(status.currentMs) }) : ""));
     } catch (cause) {
       setPlaybackStatus("");
-      setError(cause instanceof Error ? cause.message : "播放器診斷失敗。");
+      setError(cause instanceof Error ? cause.message : t("errorPlayerDiagnose"));
     }
   }
 
@@ -505,11 +536,11 @@ export default function App() {
     if (cue.startMs === null) return;
     setError("");
     try {
-      if (!readerAdapter.seek || !document?.source.url) throw new Error("此來源不支援直接時間跳轉。");
+      if (!readerAdapter.seek || !document?.source.url) throw new Error(t("errorSeekUnsupported"));
       await readerAdapter.seek(document.source.url, cue.startMs);
       setLoopActive(false);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "無法跳轉，請使用顯示的時間手動定位。");
+      setError(cause instanceof Error ? cause.message : t("errorSeek"));
     }
   }
 
@@ -517,7 +548,7 @@ export default function App() {
     if (cue.startMs === null || cue.endMs === null) return;
     setError("");
     try {
-      if (!readerAdapter.loop || !document?.source.url) throw new Error("此來源不支援片段循環。");
+      if (!readerAdapter.loop || !document?.source.url) throw new Error(t("errorLoopUnsupported"));
       await readerAdapter.loop(document.source.url, {
         startMs: cue.startMs, endMs: cue.endMs,
         repeats: repeat === "infinite" ? "infinite" : Number(repeat),
@@ -525,7 +556,7 @@ export default function App() {
       });
       setLoopActive(true);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "無法設定循環播放。");
+      setError(cause instanceof Error ? cause.message : t("errorLoop"));
     }
   }
 
