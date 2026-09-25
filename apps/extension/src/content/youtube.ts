@@ -1,6 +1,7 @@
 type LoopMessage =
   | { type: "LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
   | { type: "LOOP_CLEAR" }
+  | { type: "VIDEO_METADATA_GET" }
   | { type: "YOUTUBE_SEEK"; timeMs: number }
   | { type: "PLAYBACK_RATE_SET"; rate: number }
   | { type: "YOUTUBE_SUBTITLES_GET"; videoId: string; language: "en" | "ja" | "ko" };
@@ -87,6 +88,13 @@ function requestYouTubeCaptions(videoId: string, language: string): Promise<Capt
 }
 
 chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) => {
+  if (message.type === "VIDEO_METADATA_GET") {
+    const title = document.querySelector("h1.ytd-watch-metadata yt-formatted-string")?.textContent?.trim() ??
+      document.querySelector('meta[property="og:title"]')?.getAttribute("content") ??
+      document.title;
+    respond({ ok: true, url: location.href, title });
+    return false;
+  }
   if (message.type === "YOUTUBE_SUBTITLES_GET") {
     const videoId = new URL(location.href).searchParams.get("v");
     if (location.pathname !== "/watch" || videoId !== message.videoId) {
