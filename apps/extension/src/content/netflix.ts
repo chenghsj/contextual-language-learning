@@ -1,3 +1,8 @@
+import {
+  NETFLIX_SEEK_GRACE_MS, isManagedNetflixSeek,
+  reachedNetflixSeekTarget, netflixLoopReachedEnd,
+} from "../video/netflix-loop-timing";
+
 // ISOLATED world: only handles user-initiated control requests from our Side Panel.
 (() => {
   const REQUEST_EVENT = "immersive-learning:netflix:request";
@@ -24,7 +29,8 @@
   type Loop = {
     startMs: number; endMs: number; repeats: number | "infinite"; delayMs: number;
     count: number; busy: boolean; managedPause: boolean; expectedSeekUntil: number;
-    expectedSeekTarget: number | null; pathname: string; video: HTMLVideoElement | null;
+    expectedSeekTarget: number | null; playbackGraceUntil: number;
+    pathname: string; video: HTMLVideoElement | null;
     interval: ReturnType<typeof setInterval> | null;
     timeout: ReturnType<typeof setTimeout> | null;
   };
@@ -38,7 +44,7 @@
         pendingCaptionRequests.delete(id);
         window.removeEventListener(RESPONSE_EVENT, onResponse);
         resolve({ source: "immersive-learning", id, ok: false, available: false, error: "Netflix page bridge did not respond." });
-      }, action === "subtitlesGet" ? 16_000 : 700);
+      }, action === "subtitlesGet" ? 16_000 : action === "status" ? 900 : 2_000);
       function onResponse(event: Event): void {
         const detail = (event as CustomEvent<PageResponse>).detail;
         if (detail?.source !== "immersive-learning" || detail.id !== id) return;
@@ -101,61 +107,97 @@
     if (current.timeout !== null) clearTimeout(current.timeout);
     current.video?.removeEventListener("pause", onPause);
     current.video?.removeEventListener("seeking", onSeeking);
+    current.video?.removeEventListener("seeked", onSeeked);
     current = null;
   }
 
   function onPause(): void {
-    if (current && !current.managedPause) clearLoop();
+    const state = current;
+    if (!state) return;
+    // Netflix may pause internally while a programmatic seek is still loading.
+    if (state.managedPause ||
+      isManagedNetflixSeek(state.expectedSeekTarget, state.expectedSeekUntil, Date.now())) return;
+    clearLoop();
   }
 
-  function onSeeking(event: Event): void {
+  function onSeeking(): void {
+    const state = current;
+    if (!state) return;
+    // 'seeking' fires BEFORE currentTime necessarily reaches our requested
+    // target. Compare after 'seeked' instead; otherwise every loop self-cancels.
+    if (isManagedNetflixSeek(state.expectedSeekTarget, state.expectedSeekUntil, Date.now())) return;
+    clearLoop(); // A user scrub or another extension overrides this loop.
+  }
+
+  function onSeeked(event: Event): void {
     const state = current;
     if (!state) return;
     const video = event.currentTarget as HTMLVideoElement;
-    const expected = state.expectedSeekTarget;
-    if (expected !== null && Date.now() <= state.expectedSeekUntil
-      && Math.abs(video.currentTime * 1000 - expected) <= 1500) {
+    if (reachedNetflixSeekTarget(state.expectedSeekTarget, video.currentTime * 1000, video.seeking)) {
       state.expectedSeekTarget = null;
-      return;
+      state.expectedSeekUntil = 0;
     }
-    clearLoop(); // Respect manual seeking, including other extension shortcuts.
   }
 
   async function seek(state: Loop, ms: number): Promise<PageResponse> {
     state.expectedSeekTarget = ms;
-    state.expectedSeekUntil = Date.now() + 1500;
+    state.expectedSeekUntil = Date.now() + NETFLIX_SEEK_GRACE_MS;
+    state.playbackGraceUntil = Date.now() + 3_500;
     const response = await requestPage("seekTo", ms);
     if (!response.ok || !response.seekCalled) {
       state.expectedSeekTarget = null;
+      state.expectedSeekUntil = 0;
     }
     return response;
   }
 
   async function tick(state: Loop): Promise<void> {
-    if (current !== state || state.busy) return;
+    if (current !== state || state.busy || state.timeout !== null) return;
     state.busy = true;
     try {
-      if (location.pathname !== state.pathname || !state.video?.isConnected) {
+      const video = state.video;
+      if (location.pathname !== state.pathname || !video?.isConnected) {
         clearLoop();
         return;
       }
-      const status = await requestPage("status");
-      if (current !== state) return;
-      if (!status.ok || typeof status.currentMs !== "number" || status.playing === false) {
+
+      const actualMs = video.currentTime * 1000;
+      if (state.expectedSeekTarget !== null) {
+        if (reachedNetflixSeekTarget(state.expectedSeekTarget, actualMs, video.seeking)) {
+          state.expectedSeekTarget = null;
+          state.expectedSeekUntil = 0;
+        } else if (isManagedNetflixSeek(
+          state.expectedSeekTarget, state.expectedSeekUntil, Date.now(),
+        )) {
+          return; // Wait for Netflix's asynchronous internal seek.
+        } else {
+          clearLoop(); // The requested seek never completed.
+          return;
+        }
+      }
+      if (video.seeking) return;
+      if (video.paused) {
+        if (state.managedPause || Date.now() <= state.playbackGraceUntil) return;
+        clearLoop(); // Respect a user pause after playback has settled.
+        return;
+      }
+      // The main-world API may select a different Netflix session as it loads.
+      // The same HTML video element used for pause/seek events is the stable
+      // source of actual playback time; no extra asynchronous status request.
+      if (!Number.isFinite(actualMs) ||
+        actualMs < state.startMs - 1_500 || actualMs > state.endMs + 5_000) {
         clearLoop();
         return;
       }
-      if (status.currentMs < state.startMs - 2000 || status.currentMs > state.endMs + 5000) {
-        clearLoop();
-        return;
-      }
-      if (status.currentMs < state.endMs - 90) return;
+      if (!netflixLoopReachedEnd(actualMs, state.endMs)) return;
+
       state.count += 1;
       if (state.repeats !== "infinite" && state.count >= state.repeats) {
-        // Do not force a pause on completion; let Netflix continue normally.
+        // Finite repetition ends without forcing Netflix to pause.
         clearLoop();
         return;
       }
+
       if (state.delayMs > 0) {
         state.managedPause = true;
         const pause = await requestPage("pause");
@@ -166,21 +208,33 @@
           void (async () => {
             if (current !== state) return;
             const jumped = await seek(state, state.startMs);
-            if (current !== state || !jumped.ok || !jumped.seekCalled) { clearLoop(); return; }
+            if (current !== state || !jumped.ok || !jumped.seekCalled) {
+              clearLoop();
+              return;
+            }
             const played = await requestPage("play");
-            if (!played.ok) { clearLoop(); return; }
+            if (current !== state || !played.ok) { clearLoop(); return; }
+            state.playbackGraceUntil = Date.now() + 3_000;
             state.managedPause = false;
             state.busy = false;
           })().catch(() => clearLoop());
         }, state.delayMs);
       } else {
         const jumped = await seek(state, state.startMs);
-        if (!jumped.ok || !jumped.seekCalled) clearLoop();
+        if (current !== state || !jumped.ok || !jumped.seekCalled) {
+          clearLoop();
+          return;
+        }
+        const played = await requestPage("play");
+        if (current !== state || !played.ok) { clearLoop(); return; }
+        state.playbackGraceUntil = Date.now() + 3_000;
       }
     } catch {
       clearLoop();
     } finally {
-      if (current === state && state.timeout === null) state.busy = false;
+      if (current === state && state.timeout === null && !state.managedPause) {
+        state.busy = false;
+      }
     }
   }
 
@@ -249,11 +303,12 @@
       startMs: message.startMs, endMs: message.endMs, repeats: message.repeats,
       delayMs: message.delaySeconds * 1000, count: 0, busy: false,
       managedPause: false, expectedSeekUntil: 0, expectedSeekTarget: null,
-      pathname: location.pathname, video, interval: null, timeout: null,
+      playbackGraceUntil: 0, pathname: location.pathname, video, interval: null, timeout: null,
     };
     current = state;
     video.addEventListener("pause", onPause);
     video.addEventListener("seeking", onSeeking);
+    video.addEventListener("seeked", onSeeked);
     const jumped = await seek(state, state.startMs);
     if (current !== state || !jumped.ok || !jumped.seekCalled) {
       clearLoop();
@@ -264,7 +319,8 @@
       clearLoop();
       return { ok: false, error: played.error ?? "Netflix could not start playback." };
     }
-    state.interval = setInterval(() => void tick(state), 200);
+    state.playbackGraceUntil = Date.now() + 3_000;
+    state.interval = setInterval(() => void tick(state), 100);
     return { ok: true };
   }
 
