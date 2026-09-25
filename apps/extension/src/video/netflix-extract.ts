@@ -1,0 +1,145 @@
+import {
+  allowedNetflixSubtitleUrl, MAX_SUBTITLE_BYTES, normalizeNetflixTimedText,
+  normalizedVttCues, subtitleUrlFromTrack, type SubtitleDocument,
+} from "./netflix-subtitles";
+
+/** Optional, undocumented Netflix interfaces: never assume their presence. */
+export type NetflixCaptionTrack = {
+  trackId?: string; new_track_id?: string; bcp47?: string; language?: string;
+  isNoneTrack?: boolean; isForcedNarrative?: boolean; ttDownloadables?: unknown;
+  [key: string]: unknown;
+};
+
+export type NetflixCaptionPlayer = {
+  getTimedTextTrackList?(): NetflixCaptionTrack[];
+  getTimedTextTrack?(): NetflixCaptionTrack | null;
+  setTimedTextTrack?(track: NetflixCaptionTrack): void;
+};
+
+type Options = {
+  fetchDocument?: typeof fetch;
+  pause?: (ms: number) => Promise<void>;
+  sameVideo?: () => boolean;
+};
+
+function trackId(track: NetflixCaptionTrack | null): string | null {
+  return track?.trackId ?? track?.new_track_id ?? null;
+}
+
+function languageMatches(trackLanguage: string | undefined, requested: string): boolean {
+  const language = (trackLanguage ?? "").toLowerCase();
+  const preferred = requested.toLowerCase();
+  return language === preferred || language.startsWith(preferred + "-");
+}
+
+function findInternalTrackUrl(root: unknown, wantedId: string): string | null {
+  const visited = new WeakSet<object>();
+  let checked = 0;
+  function walk(value: unknown, depth: number): string | null {
+    if (!value || typeof value !== "object" || visited.has(value) ||
+      depth > 14 || ++checked > 30_000) return null;
+    visited.add(value);
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        if (entry && typeof entry === "object" &&
+          (entry as NetflixCaptionTrack).trackId === wantedId) {
+          const url = subtitleUrlFromTrack(entry);
+          if (url) return url;
+        }
+      }
+      for (const entry of value) {
+        const result = walk(entry, depth + 1);
+        if (result) return result;
+      }
+      return null;
+    }
+    // Inspect only own data properties: do not invoke arbitrary Netflix getters.
+    let descriptors: PropertyDescriptorMap;
+    try { descriptors = Object.getOwnPropertyDescriptors(value); }
+    catch { return null; }
+    for (const [name, descriptor] of Object.entries(descriptors)) {
+      if (["parentNode", "ownerDocument", "window", "document"].includes(name) ||
+        !("value" in descriptor)) continue;
+      const result = walk(descriptor.value, depth + 1);
+      if (result) return result;
+    }
+    return null;
+  }
+  return walk(root, 0);
+}
+
+function browserTextTrack(video: HTMLVideoElement | null, requested: string): SubtitleDocument | null {
+  if (!video) return null;
+  const tracks = Array.from(video.textTracks);
+  const selected = tracks.find(track => languageMatches(track.language, requested) && track.mode === "showing") ??
+    tracks.find(track => languageMatches(track.language, requested));
+  if (!selected?.cues?.length) return null;
+  const cues = Array.from(selected.cues).map(cue => {
+    const text = cue instanceof VTTCue ? cue.text : (cue as VTTCue).text ?? "";
+    return { startMs: cue.startTime * 1000, endMs: cue.endTime * 1000, text };
+  });
+  const duration = video.duration * 1000;
+  if (Number.isFinite(duration) && duration > 60_000 &&
+      Math.max(...cues.map(cue => cue.endMs)) < duration * 0.7) return null;
+  return { text: normalizedVttCues(cues), language: selected.language };
+}
+
+/** Only the current user's selected watch session is examined; no DRM or media access. */
+export async function readNetflixSubtitles(
+  player: NetflixCaptionPlayer, video: HTMLVideoElement | null,
+  sessionRoot: () => unknown, requestedLanguage: string, options: Options = {},
+): Promise<SubtitleDocument> {
+  if (!/^(en|ja|ko)$/.test(requestedLanguage)) throw new Error("Unsupported learning language.");
+  const sameVideo = options.sameVideo ?? (() => true);
+  if (!sameVideo()) throw new Error("The Netflix watch page changed. Try again.");
+  const tracks = player.getTimedTextTrackList?.() ?? [];
+  const candidates = tracks.filter(track => !track.isNoneTrack &&
+    !track.isForcedNarrative && languageMatches(track.bcp47 ?? track.language, requestedLanguage));
+  const chosen = candidates[0];
+  if (!chosen) {
+    const native = browserTextTrack(video, requestedLanguage);
+    if (native) return native;
+    throw new Error("No subtitle track in this language is exposed by the current Netflix player.");
+  }
+  const id = trackId(chosen);
+  let original: NetflixCaptionTrack | null = null;
+  try { original = player.getTimedTextTrack?.() ?? null; }
+  catch { /* Not supported on every Netflix build. */ }
+  const previous = original ?? tracks.find(track => track.isNoneTrack) ?? null;
+  let changed = false;
+  try {
+    let url = subtitleUrlFromTrack(chosen) ?? (id ? findInternalTrackUrl(sessionRoot(), id) : null);
+    if (!url && id && previous && player.setTimedTextTrack &&
+      trackId(previous) !== id) {
+      // User requested this language; restore the original selection in finally.
+      player.setTimedTextTrack(chosen);
+      changed = true;
+    }
+    const pause = options.pause ?? (ms => new Promise<void>(resolve => setTimeout(resolve, ms)));
+    for (let attempt = 0; !url && id && attempt < 12; attempt++) {
+      if (!sameVideo()) throw new Error("The Netflix watch page changed. Try again.");
+      await pause(250);
+      url = subtitleUrlFromTrack(chosen) ?? findInternalTrackUrl(sessionRoot(), id);
+    }
+    if (!url) {
+      const native = browserTextTrack(video, requestedLanguage);
+      if (native) return native;
+      throw new Error("Netflix did not expose a readable subtitle document for this video. Enable subtitles, refresh the watch tab and try again.");
+    }
+    if (!allowedNetflixSubtitleUrl(url)) throw new Error("Netflix returned an unexpected subtitle address.");
+    const request = options.fetchDocument ?? fetch;
+    const response = await request(url, { credentials: "include", signal: AbortSignal.timeout(10_000) });
+    if (!response.ok) throw new Error("Netflix subtitle request failed (HTTP " + response.status + ").");
+    if (Number(response.headers.get("content-length") ?? 0) > MAX_SUBTITLE_BYTES) {
+      throw new Error("Netflix subtitle document exceeds the size limit.");
+    }
+    const body = await response.text();
+    if (!sameVideo()) throw new Error("The Netflix watch page changed. Try again.");
+    return { text: normalizeNetflixTimedText(body), language: chosen.bcp47 ?? chosen.language ?? requestedLanguage };
+  } finally {
+    if (changed && previous) {
+      try { player.setTimedTextTrack?.(previous); }
+      catch { /* Preserve successful transcript even when the player changes while loading. */ }
+    }
+  }
+}

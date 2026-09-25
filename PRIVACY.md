@@ -4,10 +4,10 @@ This policy describes the current open-source application's behavior, not the pr
 
 ## What the extension and local Host handle
 
-- **Subtitles and learning documents:** You import or paste SRT/VTT/text. The local Host stores the original transcript, generation settings, section checkpoints, generated lessons and export files under your selected folders and/or the local document library. It may include timestamps, source URLs, expressions and personal notes or progress if you add them.
+- **Subtitles and learning documents:** You import or paste SRT/VTT/text, or explicitly request readable Netflix captions from the currently playing video. The local Host stores the original transcript, generation settings, section checkpoints, generated lessons and export files under your selected folders and/or the local document library. It may include timestamps, source URLs, expressions and personal notes or progress if you add them.
 - **Preferences:** The Extension stores learning settings, chosen Agent/model/profile and playback preferences using chrome.storage.local. The Side Panel sends job requests to the local Native Messaging Host.
 - **Local account settings:** The Host stores connected Google account metadata and Desktop OAuth client configuration in your macOS user application-support directory. Google refresh tokens are stored in macOS Keychain; Chrome storage does not receive them. CLI authentication remains managed by each CLI's own credential store.
-- **Playback:** The Extension operates on the selected YouTube/Netflix tabs for user-triggered navigation, speed changes and optional looping. It does not automatically download Netflix subtitles or bypass playback protection.
+- **Playback:** The Extension operates on selected YouTube/Netflix tabs for user-triggered navigation, speed changes and optional looping. A separate, user-triggered Netflix caption request may use the active playback session to obtain a readable timed-text subtitle document, temporarily select the requested subtitle track, and restore the previous track when the player permits it. No continuous transcript harvesting, video/audio extraction or playback-protection bypass is implemented.
 
 ## When information leaves your computer
 
@@ -19,7 +19,7 @@ Using Netflix or YouTube also involves those sites' normal first-party network a
 
 ## Permissions
 
-The Manifest V3 Extension uses sidePanel for the reader, nativeMessaging for the local Host, storage for preferences, tabs for matching an open video and downloads for user-requested exports. Host permissions/content scripts are limited to declared YouTube and Netflix domains for video playback integration. Adding a future service requires an explicit permission review.
+The Manifest V3 Extension uses sidePanel for the reader, nativeMessaging for the local Host, storage for preferences, tabs for matching an open video and downloads for user-requested exports. Host permissions/content scripts are limited to declared YouTube and Netflix domains for playback and optional caption integration. Netflix may fetch its already-session-authorized timed-text document from a first-party Netflix delivery domain only when requested; no subtitle text is sent to the Native Host until you start a generation job. Adding a future service requires an explicit permission review.
 
 ## Retention and deletion
 

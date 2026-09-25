@@ -2,7 +2,7 @@
 
 ## Supported now
 
-- Local subtitle import (SRT/VTT/text), unchanged source cue IDs, capped input size, a checkpointed generation pipeline and resumable failed/interrupted jobs.
+- User-initiated one-click Netflix subtitle acquisition when the active player exposes a readable timed-text track; local SRT/VTT/text import remains available. Input is size-limited and the generated sections have durable checkpoints and job recovery.
 - Claude Code, Codex and AGY noninteractive CLI adapters. No password or token handling.
 - Level + target language + instruction language + per-section learning load.
 - Zod-validated structured sections; saved JSON and Markdown documents.
@@ -12,8 +12,8 @@
 
 ## Not implemented yet
 
-- Google Drive two-way synchronization/conflict handling, remote edits, multi-device sync, a persistent *background daemon*, live subtitle capture from third-party players, automatic Agent sign-in, live model enumeration, learning-progress UI and spaced repetition.
-- Automated Netflix subtitle extraction, DRM bypass, or guaranteed Netflix seek/loop compatibility after player updates. When the unsupported playback bridge is unavailable, only manual timestamp navigation is available.
+- Google Drive two-way synchronization/conflict handling, remote edits, multi-device sync, a persistent *background daemon*, continuous subtitle capture or DRM decryption, automatic Agent sign-in, and learning-progress/spaced-repetition UI.
+- Guaranteed full-subtitle access on every Netflix title or Netflix-version compatibility. Automatic acquisition is limited to a user click and readable tracks in the current session; it fails visibly if subtitles are inaccessible.
 - Hosted AI API integration. Local CLI means the **CLI is local**; model inference may still run on the provider's remote servers.
 - Cross-platform native folder selection: the current local folder picker supports macOS only; canonical checkpoints remain in ~/Documents/Immersive Learning.
 
@@ -29,7 +29,7 @@ Only import transcripts/media you have rights to process. Do not bypass DRM, pla
 
 ## Experimental Netflix playback
 
-The bridge is adapted from the session-oriented design in [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). A MAIN-world listener uses playerApp.getAPI().videoPlayer and chooses the session closest to the active video timestamp. It exposes only diagnostics, read-only position, play, pause, and absolute seek for explicit learning controls. A separate isolated content script handles Side Panel requests and opt-in loops. The bridge does not retrieve Netflix subtitles, inspect protected streams, or change subtitle tracks.
+The bridge is adapted from the session-oriented design in [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). A MAIN-world listener uses playerApp.getAPI().videoPlayer and chooses the session closest to the active video timestamp. It exposes only diagnostics, read-only position, play, pause, and absolute seek for explicit learning controls. A separate isolated content script handles Side Panel requests and opt-in loops. An explicit **Get subtitles** action may read a session-exposed timed-text document for the chosen learning language and temporarily select that subtitle track, restoring the original selection when possible. It never accesses protected video/audio streams or decrypts DRM.
 
 This is an **undocumented** Netflix interface, not a stable official API. It may fail after a player update. Stop or clear a loop on manual pause/seek, tab navigation or player failure. Playback should remain usable without the extension.
 

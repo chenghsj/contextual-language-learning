@@ -7,6 +7,7 @@ import {
   type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
+import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
 import { openOrFocusVideoTab } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { BookOpen, Settings2, WandSparkles } from "lucide-react";
@@ -63,6 +64,8 @@ export default function App() {
   const [page, setPage] = useState<Page>("create");
   const [raw, setRaw] = useState("");
   const [fileName, setFileName] = useState("");
+  const [subtitleBusy, setSubtitleBusy] = useState(false);
+  const [subtitleStatus, setSubtitleStatus] = useState("");
   const [title, setTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [browserLocale] = useState(getBrowserLocale);
@@ -70,6 +73,7 @@ export default function App() {
   const [themePreference, setThemePreference] = useState<ThemePreference>("system");
   const [systemDark, setSystemDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
   const uiLocale = localePreference === "auto" ? browserLocale : localePreference;
+  const subtitleUi = subtitleAcquisition[uiLocale];
   const t = (key: MessageKey, params?: MessageParams) => translate(uiLocale, key, params);
   const [profile, setProfile] = useState<LearningProfile>(() => ({
     ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
@@ -635,11 +639,44 @@ export default function App() {
     setProgress(t("statusCancelling"));
   }
 
+  async function fetchCurrentSubtitles(): Promise<void> {
+    if (subtitleBusy) return;
+    setSubtitleBusy(true);
+    setSubtitleStatus("");
+    setError("");
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const url = tab?.url ?? "";
+      const adapter = getVideoAdapter(url);
+      if (!adapter.fetchSubtitles) throw new Error(subtitleUi.unavailable);
+      const fetched = await adapter.fetchSubtitles(url, profile.targetLanguage);
+      const parsed = parseSubtitles(fetched.text);
+      if (!parsed.length || parsed.length > 3_000 ||
+        parsed.reduce((sum, cue) => sum + cue.originalText.length, 0) > 220_000) {
+        throw new Error("The current video did not return a usable transcript within the lesson size limit.");
+      }
+      // Never combine cues from a previous video with the currently selected video.
+      setRaw(fetched.text);
+      setFileName("");
+      setSourceUrl(url);
+      const videoTitle = (tab?.title ?? "").replace(/\s*-\s*Netflix\s*$/i, "").trim();
+      if (videoTitle && videoTitle !== "Netflix") setTitle(videoTitle.slice(0, 200));
+      setSubtitleStatus(subtitleMessage(subtitleUi.success, {
+        count: parsed.length, language: fetched.language,
+      }));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : subtitleUi.unavailable);
+    } finally {
+      setSubtitleBusy(false);
+    }
+  }
+
   async function onFile(file: File | undefined): Promise<void> {
     if (!file) return;
     if (file.size > 2_000_000) { setError(t("errorFileSize")); return; }
     setRaw(await file.text());
     setFileName(file.name);
+    setSubtitleStatus("");
     if (!title) setTitle(file.name.replace(/\.(srt|vtt|txt)$/i, ""));
     setError("");
   }
@@ -754,10 +791,22 @@ export default function App() {
       {page === "create" && <main>
         <Card className="panel">
           <h2>{t("subtitleHeading")}</h2>
-          <p className="hint">{t("subtitleHint")}</p>
-          <label>{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
-          {fileName && <p className="hint">{t("importedFile", { name: fileName })}</p>}
-          <label>{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => setRaw(event.target.value)} placeholder={t("subtitlePlaceholder")} /></label>
+          {platform === "netflix" && <>
+            <p className="hint">{subtitleUi.hint}</p>
+            <Button disabled={subtitleBusy || checking || generating}
+              onClick={() => void fetchCurrentSubtitles()}>
+              {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
+            </Button>
+            {subtitleStatus && <p className="hint" role="status">{subtitleStatus}</p>}
+          </>}
+          {platform !== "netflix" && <p className="hint">{t("subtitleHint")}</p>}
+          <details open={platform !== "netflix"}>
+            <summary>{subtitleUi.manual}</summary>
+            <label>{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
+            {fileName && <p className="hint">{t("importedFile", { name: fileName })}</p>}
+            <label>{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => { setRaw(event.target.value); setSubtitleStatus(""); }}
+              placeholder={t("subtitlePlaceholder")} /></label>
+          </details>
           <p className="hint">{t("parsedCues", { count: cues.length })}</p>
           <label>{t("videoTitle")} <Input value={title} onChange={event => setTitle(event.target.value)} placeholder={t("titlePlaceholder")} /></label>
           <label>{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => setSourceUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=…" /></label>

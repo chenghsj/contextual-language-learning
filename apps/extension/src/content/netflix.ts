@@ -2,18 +2,19 @@
 (() => {
   const REQUEST_EVENT = "immersive-learning:netflix:request";
   const RESPONSE_EVENT = "immersive-learning:netflix:response";
-  type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate";
+  type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
   type PageResponse = {
     source: "immersive-learning"; id: string; ok: boolean; available: boolean;
     currentMs?: number; playing?: boolean | null; sessionId?: string;
-    seekCalled?: boolean; playbackRate?: number; error?: string;
+    seekCalled?: boolean; playbackRate?: number; text?: string; language?: string; error?: string;
   };
   type Message =
     | { type: "NETFLIX_DIAGNOSE" }
     | { type: "NETFLIX_SEEK"; timeMs: number }
     | { type: "NETFLIX_LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
     | { type: "NETFLIX_LOOP_CLEAR" }
-    | { type: "NETFLIX_PLAYBACK_RATE_SET"; rate: number };
+    | { type: "NETFLIX_PLAYBACK_RATE_SET"; rate: number }
+    | { type: "NETFLIX_SUBTITLES_GET"; language: "en" | "ja" | "ko" };
   type Loop = {
     startMs: number; endMs: number; repeats: number | "infinite"; delayMs: number;
     count: number; busy: boolean; managedPause: boolean; expectedSeekUntil: number;
@@ -23,13 +24,13 @@
   };
   let current: Loop | null = null;
 
-  function requestPage(action: Action, value?: number): Promise<PageResponse> {
+  function requestPage(action: Action, value?: number, language?: string): Promise<PageResponse> {
     return new Promise(resolve => {
       const id = crypto.randomUUID();
       const timer = setTimeout(() => {
         window.removeEventListener(RESPONSE_EVENT, onResponse);
         resolve({ source: "immersive-learning", id, ok: false, available: false, error: "Netflix page bridge did not respond." });
-      }, 700);
+      }, action === "subtitlesGet" ? 16_000 : 700);
       function onResponse(event: Event): void {
         const detail = (event as CustomEvent<PageResponse>).detail;
         if (detail?.source !== "immersive-learning" || detail.id !== id) return;
@@ -39,7 +40,7 @@
       }
       window.addEventListener(RESPONSE_EVENT, onResponse);
       window.dispatchEvent(new CustomEvent(REQUEST_EVENT, {
-        detail: { source: "immersive-learning", id, action, value },
+        detail: { source: "immersive-learning", id, action, value, language },
       }));
     });
   }
@@ -138,7 +139,7 @@
     }
   }
 
-  async function handle(message: Message): Promise<{ ok: boolean; error?: string; currentMs?: number }> {
+  async function handle(message: Message): Promise<{ ok: boolean; error?: string; currentMs?: number; text?: string; language?: string }> {
     if (message.type === "NETFLIX_LOOP_CLEAR") {
       clearLoop();
       return { ok: true };
@@ -146,6 +147,16 @@
     if (message.type === "NETFLIX_DIAGNOSE") {
       const diagnostic = await requestPage("diagnose");
       return { ok: diagnostic.ok, error: diagnostic.error, currentMs: diagnostic.currentMs };
+    }
+    if (message.type === "NETFLIX_SUBTITLES_GET") {
+      if (!["en", "ja", "ko"].includes(message.language)) {
+        return { ok: false, error: "Unsupported subtitle language." };
+      }
+      const result = await requestPage("subtitlesGet", undefined, message.language);
+      if (!result.ok || !result.text || !result.language) {
+        return { ok: false, error: result.error ?? "Netflix did not provide a readable transcript." };
+      }
+      return { ok: true, text: result.text, language: result.language };
     }
     if (message.type === "NETFLIX_PLAYBACK_RATE_SET") {
       if (!Number.isFinite(message.rate) || message.rate < 0.5 || message.rate > 2) {
@@ -205,7 +216,7 @@
   chrome.runtime.onMessage.addListener((incoming: unknown, _sender, sendResponse) => {
     if (!incoming || typeof incoming !== "object") return false;
     const candidate = incoming as Partial<Message>;
-    if (!["NETFLIX_DIAGNOSE", "NETFLIX_SEEK", "NETFLIX_LOOP_SET", "NETFLIX_LOOP_CLEAR", "NETFLIX_PLAYBACK_RATE_SET"].includes(candidate.type ?? "")) {
+    if (!["NETFLIX_DIAGNOSE", "NETFLIX_SEEK", "NETFLIX_LOOP_SET", "NETFLIX_LOOP_CLEAR", "NETFLIX_PLAYBACK_RATE_SET", "NETFLIX_SUBTITLES_GET"].includes(candidate.type ?? "")) {
       return false;
     }
     void handle(candidate as Message).then(sendResponse).catch(error => {

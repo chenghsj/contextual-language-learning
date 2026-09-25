@@ -18,6 +18,7 @@ export interface VideoAdapter {
   diagnose?(url: string): Promise<PlaybackStatus>;
   seek?(url: string, startMs: number): Promise<void>;
   setPlaybackRate?(url: string, rate: number): Promise<void>;
+  fetchSubtitles?(url: string, language: "en" | "ja" | "ko"): Promise<{ text: string; language: string }>;
   loop?(url: string, options: LoopSettings): Promise<void>;
   stopLoop?(url: string): Promise<void>;
 }
