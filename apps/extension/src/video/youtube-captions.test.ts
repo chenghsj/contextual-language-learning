@@ -3,7 +3,8 @@ import test from "node:test";
 import { parseSubtitles } from "@immersive/core";
 import {
   allowedYouTubeCaptionUrl, chooseYouTubeCaptionTrack,
-  readYouTubeCaptionTracks, youtubeJson3ToVtt, youtubeTimedTextToVtt, youtubeXmlToVtt,
+  observedYouTubeCaptionUrls, readYouTubeCaptionTracks,
+  youtubeJson3ToVtt, youtubeTimedTextToVtt, youtubeXmlToVtt,
 } from "./youtube-captions";
 
 const videoId = "dQw4w9WgXcQ";
@@ -108,4 +109,22 @@ test("convert millisecond-based YouTube timedtext XML and reject unsupported XML
   assert.throws(() => youtubeXmlToVtt("<unrelated/>", () => ({
     ...fakeXml, documentElement: { localName: "unrelated" },
   } as Document)), /unsupported subtitle XML/);
+});
+
+test("only reuses player-observed caption requests for the current video and language", () => {
+  const base = "https://www.youtube.com/api/timedtext?v=" + videoId + "&lang=en";
+  const playerUrl = base + "&pot=session-token&fmt=json3";
+  const unrelated = "https://example.com/api/timedtext?v=" + videoId + "&lang=en";
+  const videoChanged = "https://www.youtube.com/api/timedtext?v=AAAAAAAAAAA&lang=en&pot=other";
+  const wrongLanguage = base.replace("lang=en", "lang=ja") + "&pot=other";
+  assert.deepEqual(observedYouTubeCaptionUrls([
+    unrelated, videoChanged, wrongLanguage, base, playerUrl, playerUrl,
+  ], videoId, "en"), [playerUrl, base]);
+});
+
+test("never accepts an observed caption URL without matching video identity", () => {
+  assert.deepEqual(observedYouTubeCaptionUrls([
+    "https://www.youtube.com/api/timedtext?lang=en&pot=token",
+    "https://www.youtube.com/watch?v=" + videoId + "&lang=en",
+  ], videoId, "en"), []);
 });

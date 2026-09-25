@@ -1,6 +1,6 @@
 import {
   allowedYouTubeCaptionUrl, chooseYouTubeCaptionTrack,
-  readYouTubeCaptionTracks, youtubeTimedTextToVtt,
+  observedYouTubeCaptionUrls, readYouTubeCaptionTracks, youtubeTimedTextToVtt,
 } from "../video/youtube-captions";
 
 // MAIN world: access only the active watch player's public caption-track metadata.
@@ -57,8 +57,17 @@ import {
     json3Url.searchParams.set("fmt", "json3");
     // Do not assume every player accepts an added fmt parameter. Retry the exact
     // player-provided URL if JSON3 is unavailable; it may return WEBVTT or XML.
-    const candidates = [...new Set([json3Url.toString(), originalUrl.toString()])];
+    // The player's own session request can include parameters missing from the
+    // caption track's baseUrl. Use only resources already loaded on this page.
+    const observed = observedYouTubeCaptionUrls(
+      performance.getEntriesByType("resource").map(entry => entry.name),
+      request.videoId, track.languageCode,
+    );
+    const candidates = [...new Set([
+      ...observed, json3Url.toString(), originalUrl.toString(),
+    ])];
     let lastError: Error | null = null;
+    let emptyResponses = 0;
     for (const candidate of candidates) {
       if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
       try {
@@ -73,6 +82,13 @@ import {
         const body = await response.text();
         if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
         if (body.length > 3_000_000) throw new Error("YouTube subtitle document exceeds the size limit.");
+        if (!body.trim()) {
+          emptyResponses++;
+          throw new Error("YouTube returned an empty subtitle response (HTTP " + response.status + ").");
+        }
+        if (/^\\s*(?:<!doctype html|<html\\b)/i.test(body)) {
+          throw new Error("YouTube returned HTML instead of a subtitle document (HTTP " + response.status + ").");
+        }
         const text = youtubeTimedTextToVtt(body);
         if (text.length > 3_000_000) throw new Error("YouTube subtitles exceed the size limit.");
         return { text, language: track.languageCode };
@@ -80,6 +96,12 @@ import {
         if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
         lastError = error instanceof Error ? error : new Error("YouTube subtitle request failed.");
       }
+    }
+    if (emptyResponses === candidates.length) {
+      throw new Error("YouTube returned empty subtitle responses (HTTP 200). " +
+        "Some videos need the player's own session caption request. " +
+        "Enable CC, play the video for a few seconds, then retry. " +
+        "If it persists, this subtitle track is not readable in the current session.");
     }
     throw lastError ?? new Error("YouTube subtitles are unavailable.");
   }

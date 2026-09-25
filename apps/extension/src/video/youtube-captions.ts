@@ -140,3 +140,33 @@ export function youtubeTimedTextToVtt(input: string): string {
   if (body.startsWith("<")) return youtubeXmlToVtt(body);
   throw new Error("YouTube did not return a readable subtitle document.");
 }
+
+/**
+ * Reuse only caption URLs exposed to the currently playing video's browser
+ * session. Resource Timing may contain a player-generated session token;
+ * never log, persist or send these URLs outside the current watch page.
+ */
+export function observedYouTubeCaptionUrls(
+  resources: readonly string[], videoId: string, language: string,
+): string[] {
+  const matches: { url: string; session: boolean }[] = [];
+  const seen = new Set<string>();
+  const wanted = language.toLowerCase();
+  for (const raw of resources.slice(-2_000).reverse()) {
+    let url: URL;
+    try { url = allowedYouTubeCaptionUrl(raw, videoId); } catch { continue; }
+    if (url.searchParams.get("v") !== videoId) continue;
+    const actualLanguage = (url.searchParams.get("tlang") ??
+      url.searchParams.get("lang") ?? "").toLowerCase();
+    if (actualLanguage !== wanted && !actualLanguage.startsWith(wanted + "-")) continue;
+    const address = url.toString();
+    if (seen.has(address)) continue;
+    seen.add(address);
+    matches.push({ url: address, session: url.searchParams.has("pot") });
+    if (matches.length >= 10) break;
+  }
+  return [
+    ...matches.filter(entry => entry.session),
+    ...matches.filter(entry => !entry.session),
+  ].map(entry => entry.url);
+}
