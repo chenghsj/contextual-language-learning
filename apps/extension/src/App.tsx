@@ -21,7 +21,7 @@ import { BookOpen, Settings2, WandSparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
 import { Input } from "./components/ui/input";
-import { Select } from "./components/ui/select";
+import { NativeSelect, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Textarea } from "./components/ui/textarea";
 import { Badge } from "./components/ui/badge";
 import { SceneReader } from "./components/scene-reader";
@@ -1134,10 +1134,10 @@ export default function App() {
                   explanation={settingsCopy.fieldHints.targetLanguage}
                   />
               </div>
-              <Select id="learning-target" value={profile.targetLanguage} onChange={event => {
+              <NativeSelect id="learning-target" value={profile.targetLanguage} onChange={event => {
                 const targetLanguage = event.target.value as LearningProfile["targetLanguage"];
                 setProfile(current => ({ ...current, targetLanguage, level: targetLanguage === "en" ? "B1" : targetLanguage === "ja" ? "N4" : "2" }));
-              }}><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option></Select>
+              }}><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option></NativeSelect>
             </div>
             <div className="settingField">
               <div className="settingHeading">
@@ -1146,12 +1146,12 @@ export default function App() {
                   explanation={settingsCopy.fieldHints.level}
                   />
               </div>
-              <Select id="learning-level" value={profile.level}
+              <NativeSelect id="learning-level" value={profile.level}
                 onChange={event => setProfile(current => ({ ...current, level: event.target.value }))}>
                 {levelOptions.map(level => <option key={level} value={level}>
                   {level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level)}
                 </option>)}
-              </Select>
+              </NativeSelect>
             </div>
           </div>
           <div className="settingField">
@@ -1161,12 +1161,12 @@ export default function App() {
                 explanation={settingsCopy.fieldHints.instructionLanguage}
                 />
             </div>
-            <Select id="learning-explanation-language" value={profile.instructionLanguage}
+            <NativeSelect id="learning-explanation-language" value={profile.instructionLanguage}
               onChange={event => setProfile(current => ({
                 ...current, instructionLanguage: event.target.value as LearningProfile["instructionLanguage"],
               }))}>
               <option value="zh-TW">{nativeLanguageName("zh-TW")}</option><option value="zh-CN">{nativeLanguageName("zh-CN")}</option><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option>
-            </Select>
+            </NativeSelect>
           </div>
           <details className="advancedLessonSettings">
             <summary>{t("advancedLessonSettings")}</summary>
@@ -1177,14 +1177,14 @@ export default function App() {
                 explanation={settingsCopy.fieldHints.teachingMode}
                 />
             </div>
-            <Select id="learning-mode" value={profile.mode}
+            <NativeSelect id="learning-mode" value={profile.mode}
               onChange={event => setProfile(current => ({
                 ...current, mode: event.target.value as LearningProfile["mode"],
               }))}>
               <option value="adaptive">{settingsCopy.modes.adaptive.label}</option>
               <option value="guided">{settingsCopy.modes.guided.label}</option>
               <option value="immersive">{settingsCopy.modes.immersive.label}</option>
-            </Select>
+            </NativeSelect>
           </div>
           </details>
           <div className="settingField">
@@ -1230,7 +1230,7 @@ export default function App() {
           <h2>{t("generationHeading")}</h2>
           <p className="hint">{t("currentAgent", { provider: agent.provider, model: agent.modelId || t("cliDefault") })}</p>
           <label>{t("storageLocation")}
-            <Select value={destination.kind} onChange={event => {
+            <NativeSelect value={destination.kind} onChange={event => {
               if (event.target.value === "drive") {
                 setDestination({ kind: "drive", accountId: driveAccounts[0]?.id ?? "" });
               } else {
@@ -1240,7 +1240,7 @@ export default function App() {
             }}>
               <option value="local">{t("localFolder")}</option>
               <option value="drive">{t("driveAccountOption")}</option>
-            </Select>
+            </NativeSelect>
           </label>
           {destination.kind === "local" ? <>
             <p className="hint">{t("currentFolder", { path: destination.directory ?? t("defaultFolder") })}</p>
@@ -1253,11 +1253,11 @@ export default function App() {
             <p className="hint">{t("driveDesktopPicker")}</p>
           </> : <>
             <label>{t("googleAccount")}
-              <Select value={destination.accountId} onChange={event =>
+              <NativeSelect value={destination.accountId} onChange={event =>
                 setDestination({ kind: "drive", accountId: event.target.value })}>
                 <option value="">{t("chooseConnected")}</option>
                 {driveAccounts.map(account => <option key={account.id} value={account.id}>{account.email}</option>)}
-              </Select>
+              </NativeSelect>
             </label>
             <div className="actions">
               <Button variant="outline" className="secondary" disabled={storageBusy || generating}
@@ -1324,30 +1324,40 @@ export default function App() {
       {page === "settings" && <main>
         <Card className="panel">
           <h2>{t("uiLanguage")} · {t("appearance")}</h2>
-          <label>{t("uiLanguage")}
-            <Select value={localePreference} onChange={event => {
-              const next = event.target.value;
+          <div className="uiPreferenceField">
+            <label htmlFor="ui-language-select">{t("uiLanguage")}</label>
+            <Select value={localePreference} onValueChange={next => {
               if (isLocalePreference(next)) setLocalePreference(next);
             }}>
-              <option value="auto">{t("browserLanguage")} · {nativeLanguageName(browserLocale)}</option>
-              <option value="en">{nativeLanguageName("en")}</option>
-              <option value="zh-TW">{nativeLanguageName("zh-TW")}</option>
-              <option value="zh-CN">{nativeLanguageName("zh-CN")}</option>
-              <option value="ja">{nativeLanguageName("ja")}</option>
-              <option value="ko">{nativeLanguageName("ko")}</option>
+              <SelectTrigger id="ui-language-select" aria-label={t("uiLanguage")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">{t("browserLanguage")} · {nativeLanguageName(browserLocale)}</SelectItem>
+                <SelectItem value="en">{nativeLanguageName("en")}</SelectItem>
+                <SelectItem value="zh-TW">{nativeLanguageName("zh-TW")}</SelectItem>
+                <SelectItem value="zh-CN">{nativeLanguageName("zh-CN")}</SelectItem>
+                <SelectItem value="ja">{nativeLanguageName("ja")}</SelectItem>
+                <SelectItem value="ko">{nativeLanguageName("ko")}</SelectItem>
+              </SelectContent>
             </Select>
-          </label>
+          </div>
           <p className="hint">{t("uiLanguageHint")}</p>
-          <label>{t("appearance")}
-            <Select value={themePreference} onChange={event => {
-              const next = event.target.value;
+          <div className="uiPreferenceField">
+            <label htmlFor="appearance-select">{t("appearance")}</label>
+            <Select value={themePreference} onValueChange={next => {
               if (isThemePreference(next)) setThemePreference(next);
             }}>
-              <option value="system">{t("themeSystem")}</option>
-              <option value="light">{t("themeLight")}</option>
-              <option value="dark">{t("themeDark")}</option>
+              <SelectTrigger id="appearance-select" aria-label={t("appearance")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="system">{t("themeSystem")}</SelectItem>
+                <SelectItem value="light">{t("themeLight")}</SelectItem>
+                <SelectItem value="dark">{t("themeDark")}</SelectItem>
+              </SelectContent>
             </Select>
-          </label>
+          </div>
           <p className="hint">{t("appearanceHint")}</p>
         </Card>
         <Card className="panel">
@@ -1358,22 +1368,22 @@ export default function App() {
             {agentCatalog.map(entry => entry.label + ": " + t(entry.installed ? "agentInstalled" : "agentMissing")).join(" · ")}
           </div>}
           <label>{t("defaultAgent")}
-            <Select value={agent.provider} onChange={event => selectAgent(event.target.value)}>
+            <NativeSelect value={agent.provider} onChange={event => selectAgent(event.target.value)}>
               {agentCatalog.map(entry =>
                 <option key={entry.id} value={entry.id}>{entry.label}{installed && !entry.installed ? t("agentNotInstalled") : ""}</option>
               )}
-            </Select>
+            </NativeSelect>
           </label>
           {selectedAgentInfo?.supportsAccountProfiles ? <>
             <label>{t("agentAccount")}
-              <Select value={selectedSavedProfile?.id ?? (agent.accountConfigDir ? "__legacy__" : "")}
+              <NativeSelect value={selectedSavedProfile?.id ?? (agent.accountConfigDir ? "__legacy__" : "")}
                 onChange={event => chooseAgentProfile(event.target.value)}>
                 <option value="">{t("accountDefault")}</option>
                 {agent.accountConfigDir && !selectedSavedProfile &&
                   <option value="__legacy__">{t("accountLegacy", { path: agent.accountConfigDir })}</option>}
                 {savedAgentProfiles.filter(profile => profile.provider === agent.provider).map(profile =>
                   <option key={profile.id} value={profile.id}>{profile.label}</option>)}
-              </Select>
+              </NativeSelect>
             </label>
             <p className="hint">{t("accountFolderHint")}</p>
             <label>{t("profileName")}
@@ -1395,7 +1405,7 @@ export default function App() {
             {profileStatus && <p className="hint" role="status">{profileStatus}</p>}
           </> : <p className="hint">{t("agentProfileUnsupported")}</p>}
           <label>{t("defaultModel")}
-            <Select disabled={modelBusy} value={modelSelection} onChange={event => {
+            <NativeSelect disabled={modelBusy} value={modelSelection} onChange={event => {
               const value = event.target.value;
               if (value === "__custom__") {
                 setCustomModelMode(true);
@@ -1410,7 +1420,7 @@ export default function App() {
                 {model.label === model.id ? model.id : model.label + " · " + model.id}
               </option>)}
               <option value="__custom__">{t("customModel")}</option>
-            </Select>
+            </NativeSelect>
           </label>
           {modelSelection === "__custom__" && <label>{t("modelId")}
             <Input value={agent.modelId} onChange={event => updateAgent({ ...agent, modelId: event.target.value })}
@@ -1477,23 +1487,23 @@ export default function App() {
               </div>}
             <div className="twoColumns">
               <label>{t("repeatCount")}
-                <Select value={repeat} onChange={event => setRepeat(event.target.value as RepeatOption)}>
+                <NativeSelect value={repeat} onChange={event => setRepeat(event.target.value as RepeatOption)}>
                   <option value="2">{t("repeatTwice")}</option><option value="3">{t("repeatThrice")}</option><option value="5">{t("repeatFive")}</option><option value="infinite">{t("repeatForever")}</option>
-                </Select>
+                </NativeSelect>
               </label>
               <label>{t("repeatDelay")}
-                <Select value={delay} onChange={event => setDelay(Number(event.target.value))}>
+                <NativeSelect value={delay} onChange={event => setDelay(Number(event.target.value))}>
                   {[0, 1, 2, 3].map(seconds => <option key={seconds} value={seconds}>{t("seconds", { count: seconds })}</option>)}
-                </Select>
+                </NativeSelect>
               </label>
             </div>
             {readerAdapter.setPlaybackRate && <div className="twoColumns">
               <label>{t("playbackRateLabel")}
-                <Select value={playbackRate} disabled={rateApplying}
+                <NativeSelect value={playbackRate} disabled={rateApplying}
                   onChange={event => setPlaybackRate(Number(event.target.value))}>
                   {[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map(rate =>
                     <option value={rate} key={rate}>{rate}×</option>)}
-                </Select>
+                </NativeSelect>
               </label>
               <div className="actions" style={{ alignSelf: "center" }}>
                 <Button variant="outline" className="secondary" disabled={rateApplying}

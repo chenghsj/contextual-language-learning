@@ -8,7 +8,7 @@ import { cuePlaybackStart, cuePlaybackWindow, openOrFocusVideoTab } from "../vid
 import type { VideoAdapter } from "../video/types";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Select } from "./ui/select";
+import { NativeSelect as Select } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { SettingInfo } from "./setting-info";
 
