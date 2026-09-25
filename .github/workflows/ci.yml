@@ -35,6 +35,11 @@ jobs:
       - run: pnpm build
       - run: node apps/extension/scripts/check-build.mjs
       - run: node apps/local-host/scripts/smoke-host.mjs
+      - name: Install and smoke real Linux Native Host launcher
+        run: |
+          node apps/local-host/scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser chromium
+          test -f "$HOME/.config/chromium/NativeMessagingHosts/dev.immersive.language_learning.json"
+          node apps/local-host/scripts/smoke-host.mjs "$HOME/.local/share/immersive-language-learning/native-host/launch.sh"
       - name: Package and verify release archives
         run: |
           pnpm package:release
