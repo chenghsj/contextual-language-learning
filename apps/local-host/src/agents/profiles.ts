@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, realpath, rename, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve, sep } from "node:path";
 import { z } from "zod";
 import type { AgentProfile } from "@immersive/core";
 
-const root = join(homedir(), "Library", "Application Support", "Immersive Learning");
-const file = join(root, "agent-profiles.json");
+const registryRoot = () => join(homedir(), "Library", "Application Support", "Immersive Learning");
+const registryFile = () => join(registryRoot(), "agent-profiles.json");
 const profileSchema = z.array(z.object({
   id: z.string().uuid(),
   provider: z.enum(["claude", "codex"]),
@@ -16,7 +16,7 @@ const profileSchema = z.array(z.object({
 
 export async function listAgentProfiles(): Promise<AgentProfile[]> {
   try {
-    return profileSchema.parse(JSON.parse(await readFile(file, "utf8")));
+    return profileSchema.parse(JSON.parse(await readFile(registryFile(), "utf8")));
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
     throw new Error("Cannot load saved Agent profiles. Check the local profile registry.");
@@ -53,13 +53,13 @@ export async function removeAgentProfile(id: string): Promise<AgentProfile[]> {
 }
 
 async function writeProfiles(profiles: AgentProfile[]): Promise<void> {
+  const root = registryRoot();
   await mkdir(root, { recursive: true, mode: 0o700 });
   const temporary = join(root, "agent-profiles." + randomUUID() + ".tmp");
   try {
     await writeFile(temporary, JSON.stringify(profiles, null, 2) + "\n", { mode: 0o600, flag: "wx" });
-    await rename(temporary, file);
+    await rename(temporary, registryFile());
   } finally {
-    const { rm } = await import("node:fs/promises");
     await rm(temporary, { force: true }).catch(() => undefined);
   }
 }
