@@ -14,9 +14,10 @@ Each adapter may implement these optional capabilities:
 | timestampLink | Open a supported timed video URL |
 | diagnose | Check whether playback control is currently available |
 | seek | Position an existing video at a timestamp, if available and permitted |
+| setPlaybackRate | Set playback speed for an existing player (0.5×–2×) on explicit user action |
 | loop / stopLoop | User-triggered repeat/stop for a cue, if available and permitted |
 
-The reader never branches on "youtube", "netflix" or another platform ID. It renders available actions from the adapter capabilities. Without playback capabilities, a subtitle file still generates a document and its time cues can be copied.
+The reader never branches on "youtube", "netflix" or another platform ID. It renders available actions from the adapter capabilities. Playback speed preferences belong to the local reader, not to the generated document, and changing the selected speed does not control the player until the user applies it. Without playback capabilities, a subtitle file still generates a document and its time cues can be copied.
 
 Existing platform modules:
 
