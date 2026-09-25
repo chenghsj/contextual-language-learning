@@ -228,6 +228,14 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
   overflow-wrap: anywhere;
 }
 .actions > * { min-width: 0; max-width: 100%; }
+/* Generation settings stay visible next to the submit action in narrow panels. */
+.generationSummary { min-width: 0; margin: 12px 0; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); }
+.generationSummaryHeading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.generationSummaryHeading > strong { font-size: 12px; }
+.generationSummary dl { display: grid; gap: 8px; margin: 10px 0 0; }
+.generationSummary dl > div { display: grid; grid-template-columns: minmax(50px, auto) minmax(0, 1fr); gap: 10px; align-items: start; }
+.generationSummary dt { color: var(--muted-foreground); font-size: 12px; }
+.generationSummary dd { min-width: 0; margin: 0; text-align: right; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
 .panel :is(pre, code) { max-width: 100%; overflow-x: auto; }
 
 /* Field-level help is opened by click/touch/keyboard, not hover alone.
