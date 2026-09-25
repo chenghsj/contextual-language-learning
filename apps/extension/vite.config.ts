@@ -14,6 +14,7 @@ export default defineConfig({
         sidepanel: resolve(__dirname, "sidepanel.html"),
         background: resolve(__dirname, "src/background.ts"),
         youtube: resolve(__dirname, "src/content/youtube.ts"),
+        youtubePage: resolve(__dirname, "src/content/youtube-page.ts"),
         netflix: resolve(__dirname, "src/content/netflix.ts"),
         netflixPage: resolve(__dirname, "src/content/netflix-page.ts"),
       },
@@ -21,6 +22,7 @@ export default defineConfig({
         entryFileNames: chunk => {
           if (chunk.name === "background") return "background.js";
           if (chunk.name === "youtube") return "youtube.js";
+          if (chunk.name === "youtubePage") return "youtube-page.js";
           if (chunk.name === "netflix") return "netflix.js";
           if (chunk.name === "netflixPage") return "netflix-page.js";
           return "assets/[name]-[hash].js";
