@@ -8,6 +8,7 @@ import {
 (() => {
   const REQUEST = "immersive-learning:youtube:caption-request";
   const RESPONSE = "immersive-learning:youtube:caption-response";
+  const BRIDGE_VERSION = "native-caption-capture-v1";
   type CaptionRequest = {
     source: "immersive-learning"; id: string; videoId: string; language: string;
   };
@@ -23,6 +24,95 @@ import {
     const id = new URL(location.href).searchParams.get("v");
     return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
   }
+
+
+  // A signed track baseUrl can return HTTP 200 with an empty body. Install
+  // before the player starts, then retain only the readable body of an actual
+  // YouTube caption request. No token, URL or transcript is sent anywhere.
+  type Captured = { videoId: string; language: string; kind: "asr" | "manual"; text: string };
+  const captured = new Map<string, Captured>();
+  const MAX_CAPTURE = 3_000_000;
+
+  function requestVideoId(raw: string): string | null {
+    const videoId = currentVideoId();
+    if (!videoId) return null;
+    try {
+      const url = allowedYouTubeCaptionUrl(new URL(raw, location.href).toString(), videoId);
+      return url.searchParams.get("v") === videoId ? videoId : null;
+    } catch { return null; }
+  }
+
+  function rememberCaption(raw: string, body: string, requestVideo: string): void {
+    if (currentVideoId() !== requestVideo || !body.trim() || body.length > MAX_CAPTURE) return;
+    let url: URL;
+    try { url = allowedYouTubeCaptionUrl(new URL(raw, location.href).toString(), requestVideo); }
+    catch { return; }
+    if (url.searchParams.get("v") !== requestVideo || url.searchParams.has("tlang")) return;
+    const language = (url.searchParams.get("lang") ?? "").toLowerCase();
+    if (!/^[a-z]{2,3}(?:-[a-z0-9]+)*$/.test(language)) return;
+    let text: string;
+    try { text = youtubeTimedTextToVtt(body); } catch { return; }
+    if (text.length > MAX_CAPTURE || !text.includes("-->")) return;
+    const kind = url.searchParams.get("caps") === "asr" ? "asr" : "manual";
+    const key = requestVideo + ":" + language + ":" + kind;
+    captured.delete(key);
+    captured.set(key, { videoId: requestVideo, language, kind, text });
+    while (captured.size > 8) {
+      const oldest = captured.keys().next().value;
+      if (!oldest) break;
+      captured.delete(oldest);
+    }
+  }
+
+  function fromPlayer(videoId: string, language: string, kind: string | undefined): Captured | null {
+    const wanted = language.toLowerCase();
+    const preferred = kind === "asr" ? "asr" : "manual";
+    const exact = captured.get(videoId + ":" + wanted + ":" + preferred);
+    if (exact) return exact;
+    const matching = Array.from(captured.values()).filter(entry =>
+      entry.videoId === videoId && (entry.language === wanted ||
+        entry.language.startsWith(wanted + "-")));
+    return matching.find(entry => entry.kind === preferred) ??
+      (matching.length === 1 ? matching[0] : null);
+  }
+
+  const nativeFetch = window.fetch;
+  window.fetch = function (...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
+    const input = args[0];
+    let address = "";
+    try { address = typeof input === "string" ? input : input instanceof URL ? input.href : input.url; }
+    catch { /* Pass unknown request forms through untouched. */ }
+    const videoId = address ? requestVideoId(address) : null;
+    return nativeFetch.apply(window, args).then(response => {
+      if (videoId && response.ok &&
+        Number(response.headers.get("content-length") ?? 0) <= MAX_CAPTURE) {
+        void response.clone().text().then(body => rememberCaption(address, body, videoId))
+          .catch(() => { /* Never affect playback if a clone cannot be read. */ });
+      }
+      return response;
+    });
+  };
+
+  const nativeOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function (
+    this: XMLHttpRequest, method: string, url: string | URL,
+    async = true, username?: string, password?: string,
+  ): void {
+    const address = String(url);
+    const videoId = method.toUpperCase() === "GET" ? requestVideoId(address) : null;
+    if (videoId) {
+      this.addEventListener("load", () => {
+        if (this.status !== 200) return;
+        try {
+          const body = this.responseType === "" || this.responseType === "text"
+            ? this.responseText
+            : this.responseType === "json" ? JSON.stringify(this.response) : "";
+          if (body && body.length <= MAX_CAPTURE) rememberCaption(address, body, videoId);
+        } catch { /* Ignore unsupported response types. */ }
+      }, { once: true });
+    }
+    nativeOpen.call(this, method, url, async, username, password);
+  };
 
   function tracksForVideo(videoId: string) {
     const player = document.getElementById("movie_player") as PlayerElement | null;
@@ -52,6 +142,8 @@ import {
       throw new Error("This YouTube video has no available " + request.language +
         " subtitle track. Choose a language provided by the video.");
     }
+    const playerCaptions = fromPlayer(request.videoId, track.languageCode, track.kind);
+    if (playerCaptions) return { text: playerCaptions.text, language: playerCaptions.language };
     const originalUrl = allowedYouTubeCaptionUrl(track.baseUrl, request.videoId);
     const json3Url = new URL(originalUrl);
     json3Url.searchParams.set("fmt", "json3");
@@ -97,6 +189,13 @@ import {
         lastError = error instanceof Error ? error : new Error("YouTube subtitle request failed.");
       }
     }
+    // The player's cloned response may finish after our fallback requests.
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const playerCaptions = fromPlayer(request.videoId, track.languageCode, track.kind);
+      if (playerCaptions) return { text: playerCaptions.text, language: playerCaptions.language };
+      await new Promise<void>(resolve => setTimeout(resolve, 200));
+      if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
+    }
     if (emptyResponses === candidates.length) {
       throw new Error("YouTube returned empty subtitle responses (HTTP 200). " +
         "Some videos need the player's own session caption request. " +
@@ -113,11 +212,11 @@ import {
       typeof request.videoId !== "string" || typeof request.language !== "string") return;
     void getCurrentCaptions(request).then(result => {
       window.dispatchEvent(new CustomEvent(RESPONSE, {
-        detail: { source: "immersive-learning", id: request.id, ok: true, ...result },
+        detail: { source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION, ok: true, ...result },
       }));
     }).catch(error => {
       window.dispatchEvent(new CustomEvent(RESPONSE, {
-        detail: { source: "immersive-learning", id: request.id, ok: false,
+        detail: { source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION, ok: false,
           error: error instanceof Error ? error.message : "YouTube subtitles are unavailable." },
       }));
     });
