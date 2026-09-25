@@ -4,6 +4,9 @@ Notable user-facing changes to Immersive Language Learning are recorded here. Ve
 
 ## [Unreleased]
 
+- Add fixed-command CLI model discovery and named Claude/Codex account Profiles; keep CLI default and custom model fallbacks without copying credentials.
+- Show actionable Native Host registration instructions using the current extension ID.
+
 - Prepared MIT licensing, contribution and security/privacy documentation, issue and pull-request templates.
 - Completed five-language Side Panel localization and localized Chrome extension metadata; added working system/light/dark appearance selection and regression tests.
 - Added capability-based playback-speed controls for existing YouTube and experimental Netflix video adapters.
