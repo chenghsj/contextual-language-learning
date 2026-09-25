@@ -86,6 +86,9 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("health"), id: z.string().uuid() }),
   z.object({ type: z.literal("generate"), id: z.string().uuid(), payload: GenerationRequestSchema }),
   z.object({ type: z.literal("cancel"), id: z.string().uuid(), jobId: z.string().uuid() }),
+  z.object({ type: z.literal("listJobs"), id: z.string().uuid() }),
+  z.object({ type: z.literal("resume"), id: z.string().uuid(), jobId: z.string().uuid() }),
+  z.object({ type: z.literal("getDocument"), id: z.string().uuid(), documentId: z.string().uuid() }),
 ]);
 export type HostRequest = z.infer<typeof HostRequestSchema>;
 
@@ -98,7 +101,10 @@ export interface AgentInfo {
 
 export type HostMessage =
   | { id: string; type: "health"; installed: Record<string, boolean>; agents: AgentInfo[] }
-  | { id: string; type: "progress"; completed: number; total: number }
+  | { id: string; type: "progress"; jobId: string; completed: number; total: number }
+  | { id: string; type: "job"; job: import("./jobs").JobSummary }
+  | { id: string; type: "jobs"; jobs: import("./jobs").JobSummary[] }
+  | { id: string; type: "documentChunk"; documentId: string; index: number; total: number; dataBase64: string }
   | { id: string; type: "result"; document: LearningDocument }
   | { id: string; type: "cancelled" }
   | { id: string; type: "error"; message: string };

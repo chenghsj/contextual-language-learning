@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
-  parseSubtitles, type AgentInfo,
+  parseSubtitles, type AgentInfo, type GenerationRequest, type JobSummary,
   type AgentSettings, type HostMessage, type LearningDocument,
   type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
+import { DocumentChunkAssembler } from "./native/document-chunks";
 import { BookOpen, Settings2, WandSparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
@@ -70,6 +71,8 @@ export default function App() {
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [jobs, setJobs] = useState<JobSummary[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [repeat, setRepeat] = useState<RepeatOption>("3");
   const [delay, setDelay] = useState(1);
@@ -146,6 +149,76 @@ export default function App() {
     port.postMessage({ id, type: "health" });
   }
 
+  function showDocument(raw: unknown): void {
+    const parsed = LearningDocumentSchema.safeParse(raw);
+    if (!parsed.success) throw new Error("Host returned an invalid learning document.");
+    setDocument(parsed.data);
+    setPage("reader");
+    setProgress("教材已建立並存入本地 Documents/Immersive Learning");
+  }
+
+  function updateJob(summary: JobSummary): void {
+    setJobs(previous => [summary, ...previous.filter(job => job.id !== summary.id)]
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
+  }
+
+  function runGeneration(input: { type: "generate"; payload: GenerationRequest } | { type: "resume"; jobId: string }): void {
+    if (generating) return;
+    setError("");
+    const id = input.type === "generate" ? input.payload.id : crypto.randomUUID();
+    const jobId = input.type === "generate" ? input.payload.id : input.jobId;
+    const port = chrome.runtime.connectNative(HOST_NAME);
+    portRef.current = port;
+    requestRef.current = jobId;
+    setGenerating(true);
+    setProgress(input.type === "resume" ? "正在載入上次的生成進度…" : "連線至本地 CLI…");
+    const chunks = new DocumentChunkAssembler();
+    let finished = false;
+    function complete(raw: unknown): void {
+      try {
+        showDocument(raw);
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "文件無法開啟。");
+      }
+      finished = true;
+      setGenerating(false);
+      port.disconnect();
+    }
+    port.onMessage.addListener((message: HostMessage) => {
+      if (message.id !== id) return;
+      if (message.type === "job") {
+        updateJob(message.job);
+      } else if (message.type === "progress") {
+        setProgress("已完成 " + message.completed + " / " + message.total + " 個章節");
+      } else if (message.type === "result") {
+        complete(message.document);
+      } else if (message.type === "documentChunk") {
+        try {
+          const document = chunks.push(message);
+          if (document) complete(document);
+        } catch (error) {
+          setError(error instanceof Error ? error.message : "文件分段資料無法讀取。");
+          finished = true;
+          setGenerating(false);
+          port.disconnect();
+        }
+      } else if (message.type === "error") {
+        finished = true;
+        setError(message.message);
+        setGenerating(false);
+        port.disconnect();
+      }
+    });
+    port.onDisconnect.addListener(() => {
+      if (portRef.current === port) portRef.current = null;
+      if (!finished) {
+        setGenerating(false);
+        setError(chrome.runtime.lastError?.message ?? "Native Host 中斷，可從任務紀錄恢復已完成的章節。");
+      }
+    });
+    port.postMessage({ id, ...input });
+  }
+
   function startGeneration(): void {
     setError("");
     try {
@@ -155,41 +228,84 @@ export default function App() {
         source: { platform, title: title.trim(), ...(sourceUrl.trim() ? { url: sourceUrl.trim() } : {}) },
         profile, agent, cues,
       });
-      const port = chrome.runtime.connectNative(HOST_NAME);
-      portRef.current = port;
-      requestRef.current = id;
-      setGenerating(true);
-      setProgress("連線至本地 CLI…");
-      let finished = false;
-      port.onMessage.addListener((message: HostMessage) => {
-        if (message.id !== id) return;
-        if (message.type === "progress") {
-          setProgress("已完成 " + message.completed + " / " + message.total + " 個章節");
-        } else if (message.type === "result") {
-          finished = true;
-          const parsed = LearningDocumentSchema.safeParse(message.document);
-          if (!parsed.success) setError("Host returned an invalid document.");
-          else { setDocument(parsed.data); setPage("reader"); setProgress("教材已建立並存入本地 Documents/Immersive Learning"); }
-          setGenerating(false);
-          port.disconnect();
-        } else if (message.type === "error") {
-          finished = true;
-          setError(message.message);
-          setGenerating(false);
-          port.disconnect();
-        }
-      });
-      port.onDisconnect.addListener(() => {
-        if (portRef.current === port) portRef.current = null;
-        if (!finished) {
-          setGenerating(false);
-          setError(chrome.runtime.lastError?.message ?? "Native Host disconnected during generation.");
-        }
-      });
-      port.postMessage({ id, type: "generate", payload });
+      runGeneration({ type: "generate", payload });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Invalid generation settings.");
     }
+  }
+
+  function loadJobs(): void {
+    if (loadingJobs) return;
+    setError("");
+    setLoadingJobs(true);
+    const id = crypto.randomUUID();
+    const port = chrome.runtime.connectNative(HOST_NAME);
+    let received = false;
+    port.onMessage.addListener((message: HostMessage) => {
+      if (message.id !== id) return;
+      if (message.type === "jobs") {
+        received = true;
+        setJobs(message.jobs);
+        setLoadingJobs(false);
+        port.disconnect();
+      } else if (message.type === "error") {
+        received = true;
+        setError(message.message);
+        setLoadingJobs(false);
+        port.disconnect();
+      }
+    });
+    port.onDisconnect.addListener(() => {
+      if (!received) {
+        setLoadingJobs(false);
+        setError(chrome.runtime.lastError?.message ?? "無法讀取本地任務紀錄。");
+      }
+    });
+    port.postMessage({ type: "listJobs", id });
+  }
+
+  function openSavedDocument(documentId: string): void {
+    if (generating) return;
+    setError("");
+    setGenerating(true);
+    const id = crypto.randomUUID();
+    const port = chrome.runtime.connectNative(HOST_NAME);
+    const chunks = new DocumentChunkAssembler();
+    let finished = false;
+    function complete(raw: unknown): void {
+      try { showDocument(raw); }
+      catch (error) { setError(error instanceof Error ? error.message : "無法開啟教材。"); }
+      finished = true;
+      setGenerating(false);
+      port.disconnect();
+    }
+    port.onMessage.addListener((message: HostMessage) => {
+      if (message.id !== id) return;
+      if (message.type === "result") complete(message.document);
+      else if (message.type === "documentChunk") {
+        try {
+          const doc = chunks.push(message);
+          if (doc) complete(doc);
+        } catch (error) {
+          finished = true;
+          setGenerating(false);
+          setError(error instanceof Error ? error.message : "文件分段資料損壞。");
+          port.disconnect();
+        }
+      } else if (message.type === "error") {
+        finished = true;
+        setGenerating(false);
+        setError(message.message);
+        port.disconnect();
+      }
+    });
+    port.onDisconnect.addListener(() => {
+      if (!finished) {
+        setGenerating(false);
+        setError(chrome.runtime.lastError?.message ?? "Native Host 已中斷。");
+      }
+    });
+    port.postMessage({ type: "getDocument", id, documentId });
   }
 
   function cancelGeneration(): void {
@@ -334,6 +450,25 @@ export default function App() {
           </Button>
           {generating && <Button variant="outline" className="secondary" onClick={cancelGeneration}>取消生成</Button>}
           {progress && <p className="status" role="status">{progress}</p>}
+        </Card>
+        <Card className="panel">
+          <h2>任務紀錄與恢復</h2>
+          <p className="hint">已完成的章節會儲存在本地；Host 中斷後，可從未完成處繼續。取消的任務不會自動恢復。</p>
+          <Button variant="outline" className="secondary" disabled={loadingJobs}
+            onClick={loadJobs}>{loadingJobs ? "讀取中…" : "重新整理任務"}</Button>
+          {jobs.map(job => <div className="learningCard" key={job.id}>
+            <strong>{job.sourceTitle}</strong>
+            <p>{job.provider} · {job.status} · {job.completed} / {job.total} 章節</p>
+            {job.error && <p>{job.error}</p>}
+            <div className="actions">
+              {["queued", "waiting", "failed"].includes(job.status) &&
+                <Button variant="outline" size="sm" disabled={generating}
+                  onClick={() => runGeneration({ type: "resume", jobId: job.id })}>繼續生成</Button>}
+              {job.documentId &&
+                <Button variant="outline" size="sm" disabled={generating}
+                  onClick={() => openSavedDocument(job.documentId!)}>開啟教材</Button>}
+            </div>
+          </div>)}
         </Card>
       </main>}
 

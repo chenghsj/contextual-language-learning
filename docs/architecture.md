@@ -54,3 +54,21 @@ A document refers to source.platform as a provider identifier. The platform can 
 - One source video, one tab; navigation, manual controls and unsupported APIs must stop looping rather than forcibly resume playback.
 - Permissions for a new service are reviewed per provider, not granted as a blanket <all_urls> host permission.
 - Netflix control is experimental and user initiated, not an official API or a guarantee of future compatibility.
+
+## Generation Pipeline + Job State Machine
+
+The generation pipeline in apps/local-host/src/generation/pipeline.ts owns six explicit stages: plan (subtitle cue chunking), generate (injected SectionGenerator/Agent Adapter), validate (Zod and configured learning-load limits), checkpoint (persist each successful LearningSection), assemble (stable version-1 document), and persist (document repository + Markdown export). A failed chapter never overwrites earlier validated checkpoints. Resuming uses the original saved request snapshot and preserved section IDs, not whatever settings are currently selected in the Side Panel.
+
+The JobManager in apps/local-host/src/jobs/manager.ts owns the state machine (queued → running → completed | failed | waiting | cancelled). Failed/waiting jobs may return to queued, but completed and cancelled jobs are terminal. The Host records the generating process PID so another live Host's running job is not misclassified as interrupted. Closing the Native Messaging port aborts active execution and leaves durable checkpoints; the next job-list/resume operation reconciles orphaned running jobs to waiting. A separate background daemon is **not** implemented.
+
+## Storage Ports & Repositories
+
+The storage/ports.ts module defines JobRepository, DocumentRepository and ProgressRepository contracts. The initial file adapters use atomic temporary-file writes and fixed UUID-derived paths. Canonical document JSON and optional Markdown are separate from checkpoint files (jobs/) and private study progress (progress/). All persisted data is Zod-validated when read; malformed checkpoints fail visibly instead of silently restarting.
+
+The pipeline depends on these interfaces, not on fs, Chrome or Google Drive. Future SQLite adapters can implement the same ports. Google Drive is better introduced as a separate DocumentPublisher rather than replacing durable local storage, so upload failures cannot erase the generated document.
+
+**Operational boundary:** storage has a per-process update lock, but it is not a fully transactional cross-process database. A future daemon must own single-writer scheduling/locking before multi-window or cross-device concurrent edits are supported.
+
+## Document versioning and Native Messaging
+
+Version-1 documents preserve the existing JSON structure. readLearningDocument() dispatches by explicit schemaVersion and rejects unsupported versions instead of dropping fields. Large Host responses are encoded as ordered, bounded base64 document chunks; the reader reassembles, UTF-8 decodes and validates the complete schema.

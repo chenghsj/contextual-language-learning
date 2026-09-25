@@ -2,7 +2,7 @@
 
 ## Supported now
 
-- Local subtitle import (SRT/VTT/text), unchanged source cue IDs, capped input size and per-section generation.
+- Local subtitle import (SRT/VTT/text), unchanged source cue IDs, capped input size, a checkpointed generation pipeline and resumable failed/interrupted jobs.
 - Claude Code, Codex and AGY noninteractive CLI adapters. No password or token handling.
 - Level + target language + instruction language + per-section learning load.
 - Zod-validated structured sections; saved JSON and Markdown documents.
@@ -12,7 +12,7 @@
 
 ## Not implemented yet
 
-- Google Drive OAuth/sync, remote edits, multi-device sync, browser-level persistent Job Manager/daemon, live subtitle capture from third-party players, automatic account sign-in, live model enumeration, learning progress and spaced repetition.
+- Google Drive OAuth/sync, remote edits, multi-device sync, a persistent *background daemon*, live subtitle capture from third-party players, automatic account sign-in, live model enumeration, learning-progress UI and spaced repetition.
 - Automated Netflix subtitle extraction, DRM bypass, or guaranteed Netflix seek/loop compatibility after player updates. When the unsupported playback bridge is unavailable, only manual timestamp navigation is available.
 - Hosted AI API integration. Local CLI means the **CLI is local**; model inference may still run on the provider's remote servers.
 - Per-user GUI selection of a persistent local directory: files are saved in ~/Documents/Immersive Learning and can be individually saved elsewhere via the browser's Save As dialog.
@@ -23,7 +23,7 @@ The subtitle file is untrusted input. The CLI prompt explicitly marks it as sour
 
 The host validates all messages and all generated section JSON. Its Native Messaging manifest permits only the specific installed Extension ID. Messages from host to Chrome are bounded below Chrome's 1 MB maximum.
 
-The current Host lives only while the Side Panel holds its native messaging port. Closing the panel stops the host and aborts ongoing jobs; checkpoints and true background processing are future work. Generation of very large documents may require shorter transcript ranges.
+The Host lives only while the Side Panel holds its native messaging port. Closing the panel interrupts active CLI work, but every successfully validated chapter is checkpointed to local disk and may be resumed on user request after reopening Chrome. Native Messaging splits large document responses into bounded chunks. True background generation while the browser is closed requires a future daemon. Generation of very large documents may still require shorter transcript ranges.
 
 Only import transcripts/media you have rights to process. Do not bypass DRM, player protection, or site terms. For YouTube, timestamp links work independently of transcript extraction; the public YouTube captions API does not guarantee access to arbitrary videos.
 
