@@ -163,6 +163,6 @@ test("unrecognized Netflix XML timings report only timing fields, never subtitle
   const xml = fakeNetflixXml("tt", {}, { begin: "unknown_timing", end: "other_timing" }, "Secret subtitle content");
   assert.throws(() => normalizeNetflixTimedText("<tt/>", () => xml), error =>
     error instanceof Error && /paragraphs but no usable timed cues/.test(error.message) &&
-    /begin=unknown?timing/.test(error.message) &&
+    /begin=unknown[?]timing/.test(error.message) &&
     !error.message.includes("Secret subtitle content"));
 });
