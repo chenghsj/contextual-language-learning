@@ -35,15 +35,25 @@ export function parseSubtitles(input: string): SubtitleCue[] {
 }
 
 export function parsePlainText(input: string): SubtitleCue[] {
-  return input.replace(/\r\n?/g, "\n").split(/\n\s*\n/)
+  const paragraphs = input.replace(/\r\n?/g, "\n").split(/\n\s*\n/)
     .map(text => text.trim().replace(/\s+/g, " "))
-    .filter(Boolean)
-    .map((originalText, index) => ({
-      id: "cue-" + (index + 1),
-      startMs: null,
-      endMs: null,
-      originalText: originalText.slice(0, 1500),
-    }));
+    .filter(Boolean);
+  const segments: string[] = [];
+  for (let remaining of paragraphs) {
+    while (remaining.length > 1500) {
+      const space = remaining.lastIndexOf(" ", 1500);
+      const boundary = space >= 1000 ? space : 1500;
+      segments.push(remaining.slice(0, boundary).trim());
+      remaining = remaining.slice(boundary).trim();
+    }
+    if (remaining) segments.push(remaining);
+  }
+  return segments.map((originalText, index) => ({
+    id: "cue-" + (index + 1),
+    startMs: null,
+    endMs: null,
+    originalText,
+  }));
 }
 
 export function chunkCues(cues: SubtitleCue[], maxChars = 4500, maxDurationMs = 300000): SubtitleCue[][] {
