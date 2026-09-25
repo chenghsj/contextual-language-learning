@@ -855,11 +855,11 @@ export default function App() {
               ? <div className="callout">
                   {readerAdapter.label} 的播放器控制由該平台 Adapter 提供；非公開介面可能更新失效。所有控制皆由你主動操作，不取得字幕。
                   <div className="actions"><Button variant="outline" className="secondary" onClick={() => void diagnoseVideo()}>檢查 {readerAdapter.label} 播放器</Button></div>
-                  {playbackStatus && <p className="hint" role="status">{playbackStatus}</p>}
                 </div>
               : readerAdapter.loop
                 ? <p className="hint">目前來源：{readerAdapter.label}。循環會控制已開啟的影片分頁，不會重新載入。</p>
                 : <p className="hint">目前來源沒有自動播放器控制；仍可閱讀字幕、查看時間及匯出文件。</p>}
+            {playbackStatus && <p className="hint" role="status">{playbackStatus}</p>}
             {loopActive && <Button variant="outline" className="secondary" onClick={() => void stopLoop()}>停止循環</Button>}
           </Card>
           {document.sections.map(section => <Card className="panel lesson" key={section.id}>
