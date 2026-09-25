@@ -39,6 +39,7 @@ test("interruption retains validated checkpoints and resume does not regenerate 
     };
     const first = new JobManager({
       storage,
+      legacyGeneration: true,
       generateSection: async () => { calls++; return sample; },
     }, notify);
     await assert.rejects(first.start(payload.id, payload, abort.signal), /interrupt/);
@@ -51,6 +52,7 @@ test("interruption retains validated checkpoints and resume does not regenerate 
 
     const second = new JobManager({
       storage,
+      legacyGeneration: true,
       generateSection: async () => { calls++; return sample; },
     }, () => undefined);
     const document = await second.resume(randomUUID(), payload.id);
@@ -72,7 +74,7 @@ test("failed generation is restartable, cancellation is terminal", async () => {
     const storage = localStoragePorts(root);
     const payload = request();
     const manager = new JobManager({
-      storage, generateSection: async () => { throw new Error("Agent temporarily unavailable"); },
+      storage, legacyGeneration: true, generateSection: async () => { throw new Error("Agent temporarily unavailable"); },
     }, () => undefined);
     await assert.rejects(manager.start(payload.id, payload), /Agent temporarily unavailable/);
     assert.equal((await storage.jobs.get(payload.id))?.summary.status, "failed");

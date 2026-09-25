@@ -29,5 +29,5 @@ test("state machine permits only legal transitions", () => {
 test("checkpoints must agree with completed count and document versions are explicit", () => {
   const job = createJob(request(), 1);
   assert.equal(JobSnapshotSchema.safeParse({ ...job, summary: { ...job.summary, completed: 1 } }).success, false);
-  assert.throws(() => readLearningDocument({ schemaVersion: 2 }), /Unsupported/);
+  assert.throws(() => readLearningDocument({ schemaVersion: 99 }), /Unsupported/);
 });
