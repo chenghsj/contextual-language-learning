@@ -64,8 +64,12 @@ test("Netflix replay survives its own seeking/pause events before currentTime ch
         Object.assign(video, { paused: true, seeking: true });
         video.dispatchEvent(new Event("pause"));
         video.currentTime = (req.value ?? 0) / 1000;
-        Object.assign(video, { seeking: false, paused: false });
+        Object.assign(video, { seeking: false, paused: true });
         video.dispatchEvent(new Event("seeked"));
+        // Some Netflix sessions emit a transient pause and another seeking
+        // event after the cursor reaches its target but before play resumes.
+        video.dispatchEvent(new Event("pause"));
+        video.dispatchEvent(new Event("seeking"));
         result.seekCalled = true;
       }
       if (req.action === "play") Object.assign(video, { paused: false });
