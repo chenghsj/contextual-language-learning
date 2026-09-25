@@ -210,7 +210,7 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .advancedLessonSettings { margin: 8px 0 12px; }
 .advancedLessonSettings > summary { color: var(--muted-foreground); font-size: 12px; }
 .sceneReader { min-width: 0; }
-.sceneHeader, .sceneHeading, .sceneNavigation {
+.sceneHeader, .sceneHeading {
   display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
 }
 .sceneHeaderTitle { min-width: 0; flex: 1; overflow-wrap: anywhere; }
@@ -221,8 +221,23 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .sceneTabs { grid-template-columns: repeat(3,minmax(0,1fr)); margin: 12px 0 0; padding: 4px; border-radius: var(--radius); background: var(--muted); }
 .sceneTabs button { width: 100%; min-width: 0; padding: 6px 2px; font-size: 12px; color: var(--muted-foreground); background: transparent; }
 .sceneTabs button.selected { background: var(--card); color: var(--foreground); box-shadow: 0 1px 4px #0001; }
-.sceneSteps { grid-template-columns: repeat(3,minmax(0,1fr)); margin: 14px 0; }
-.sceneSteps button { min-width: 0; padding: 4px; white-space: normal; font-size: 11px; }
+.scenePicker { display: grid; gap: 6px; min-width: 0; margin: 12px 0 14px; }
+.scenePicker label { margin: 0; font-size: 12px; font-weight: 600; }
+.scenePicker select { width: 100%; min-width: 0; font-size: 12px; text-overflow: ellipsis; }
+.sceneSteps { grid-template-columns: repeat(3,minmax(0,1fr)); margin: 14px 0 8px; gap: 6px; }
+.sceneSteps button {
+  display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 66px;
+  height: auto; padding: 8px 4px; white-space: normal; overflow-wrap: anywhere;
+  line-height: 1.35; text-align: center;
+}
+.sceneStepNumber { display: block; font-size: 16px; font-weight: 750; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.sceneStepLabel { display: block; font-size: 12px; font-weight: 650; line-height: 1.35; }
+.sceneStepHint { min-width: 0; min-height: 36px; margin: 0 0 14px; color: var(--muted-foreground); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.sceneStageNavigation { margin-top: 18px; }
+.sceneStageNavigation button {
+  width: 100%; height: auto; min-height: 40px; padding: 10px 12px;
+  font-size: 14px; font-weight: 600; white-space: normal; overflow-wrap: anywhere;
+}
 .sceneGoal { padding: 9px 11px; border-radius: var(--radius); background: var(--muted); font-size: 12px; }
 .sceneDialogue { margin: 10px 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .sceneUtterance { display: grid; grid-template-columns: 20px minmax(0,1fr); gap: 8px; padding: 9px; }
@@ -235,7 +250,13 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .scenePractice p { margin: 10px 0; font-size: 13px; }
 .scenePractice textarea { width: 100%; }
 .sceneSample { padding: 10px; border-radius: var(--radius); background: var(--muted); overflow-wrap: anywhere; }
-.sceneNavigation { margin-top: 20px; }
+.sceneNavigation {
+  display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  align-items: center; gap: 8px; min-width: 0; margin-top: 16px;
+  padding-top: 14px; border-top: 1px solid var(--border);
+}
+.sceneNavigation button { width: 100%; height: auto; min-height: 36px; padding: 7px 4px; font-size: 12px; white-space: normal; overflow-wrap: anywhere; }
+.sceneNavPosition { color: var(--muted-foreground); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .scenePlayer { position: sticky; bottom: 0; z-index: 3; box-shadow: 0 -6px 18px #00000012; }
 .scenePlayer .actions > button { flex: 1 1 42%; min-width: 0; height: auto; min-height: 34px; white-space: normal; }
 .scenePlayer .scenePlaybackSettings { margin: 10px 0 0; }
