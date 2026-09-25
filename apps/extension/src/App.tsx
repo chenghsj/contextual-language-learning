@@ -840,7 +840,7 @@ export default function App() {
   }
 
   async function fetchCurrentSubtitles(): Promise<void> {
-    if (subtitleBusy) return;
+    if (subtitleBusy || metadataBusy) return;
     setSubtitleBusy(true);
     setSubtitleStatus("");
     setError("");
@@ -891,6 +891,9 @@ export default function App() {
   async function onFile(file: File | undefined): Promise<void> {
     if (!file) return;
     if (file.size > 2_000_000) { setError(t("errorFileSize")); return; }
+    ++metadataRequestRef.current;
+    setMetadataBusy(false);
+    setMetadataStatus("");
     setRaw(await file.text());
     setFileName(file.name);
     setSubtitleStatus("");
@@ -1036,7 +1039,7 @@ export default function App() {
           <h2>{t("subtitleHeading")}</h2>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
             <p className="hint">{subtitleUi.hint}</p>
-            <Button disabled={subtitleBusy || checking || generating}
+            <Button disabled={subtitleBusy || metadataBusy || checking || generating}
               onClick={() => void fetchCurrentSubtitles()}>
               {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
             </Button>
@@ -1047,7 +1050,13 @@ export default function App() {
             <summary>{subtitleUi.manual}</summary>
             <label>{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
             {fileName && <p className="hint">{t("importedFile", { name: fileName })}</p>}
-            <label>{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => { setRaw(event.target.value); setSubtitleStatus(""); }}
+            <label>{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => {
+              ++metadataRequestRef.current;
+              setMetadataBusy(false);
+              setMetadataStatus("");
+              setRaw(event.target.value);
+              setSubtitleStatus("");
+            }}
               placeholder={t("subtitlePlaceholder")} /></label>
           </details>
           <p className="hint">{t("parsedCues", { count: cues.length })}</p>
@@ -1061,6 +1070,8 @@ export default function App() {
           </div>
           {metadataStatus && <p className="hint" role="status">{metadataStatus}</p>}
           <label>{t("videoTitle")} <Input value={title} onChange={event => {
+            ++metadataRequestRef.current;
+            setMetadataBusy(false);
             manuallyEditedTitleRef.current = !!event.target.value.trim();
             setMetadataStatus("");
             setTitle(event.target.value);
