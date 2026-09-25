@@ -739,37 +739,65 @@ export default function App() {
 
       {page === "settings" && <main>
         <Card className="panel">
+          <h2>{t("uiLanguage")} · {t("appearance")}</h2>
+          <label>{t("uiLanguage")}
+            <Select value={localePreference} onChange={event => {
+              const next = event.target.value;
+              if (isLocalePreference(next)) setLocalePreference(next);
+            }}>
+              <option value="auto">{t("browserLanguage")} · {browserLocale}</option>
+              <option value="en">{t("english")}</option>
+              <option value="zh-TW">{t("traditionalChinese")}</option>
+              <option value="zh-CN">{t("simplifiedChinese")}</option>
+              <option value="ja">{t("japanese")}</option>
+              <option value="ko">{t("korean")}</option>
+            </Select>
+          </label>
+          <p className="hint">{t("uiLanguageHint")}</p>
+          <label>{t("appearance")}
+            <Select value={themePreference} onChange={event => {
+              const next = event.target.value;
+              if (isThemePreference(next)) setThemePreference(next);
+            }}>
+              <option value="system">{t("themeSystem")}</option>
+              <option value="light">{t("themeLight")}</option>
+              <option value="dark">{t("themeDark")}</option>
+            </Select>
+          </label>
+          <p className="hint">{t("appearanceHint")}</p>
+        </Card>
+        <Card className="panel">
           <h2>{t("agentHeading")}</h2>
-          <p className="hint">只使用你的本地 CLI 登入狀態；字幕會依所選 CLI 的服務條款傳送給相應模型供應商。</p>
+          <p className="hint">{t("agentHint")}</p>
           <Button variant="outline" className="secondary" onClick={checkHost}>{t("checkHost")}</Button>
           {installed && <div className="status">
-            {agentCatalog.map(entry => entry.label + "：" + (entry.installed ? "已安裝" : "未找到")).join(" · ")}
+            {agentCatalog.map(entry => entry.label + ": " + t(entry.installed ? "agentInstalled" : "agentMissing")).join(" · ")}
           </div>}
-          <label>預設 Agent
+          <label>{t("defaultAgent")}
             <Select value={agent.provider} onChange={event => selectAgent(event.target.value)}>
               {agentCatalog.map(entry =>
-                <option key={entry.id} value={entry.id}>{entry.label}{installed && !entry.installed ? "（未安裝）" : ""}</option>
+                <option key={entry.id} value={entry.id}>{entry.label}{installed && !entry.installed ? t("agentNotInstalled") : ""}</option>
               )}
             </Select>
           </label>
-          <label>預設模型 ID
+          <label>{t("defaultModel")}
             <Input value={agent.modelId} onChange={event => updateAgent({ ...agent, modelId: event.target.value })} placeholder={t("modelPlaceholder")} />
           </label>
-          <label>獨立帳號設定目錄（選填）
+          <label>{t("accountFolder")}
             <Input disabled={!agentCatalog.find(entry => entry.id === agent.provider)?.supportsAccountProfiles} value={agent.accountConfigDir ?? ""} onChange={event => updateAgent({ ...agent, accountConfigDir: event.target.value || undefined })} placeholder={t("accountFolderPlaceholder")} />
           </label>
-          <p className="hint">帳號設定目錄僅供宣告支援獨立 Profile 的 Agent 使用；目錄必須已存在於家目錄內。不支援獨立 Profile 的 Agent 使用目前的 CLI 登入環境。</p>
+          <p className="hint">{t("accountFolderHint")}</p>
           <div className="callout">{t("futureFeaturesDrive")}</div>
         </Card>
         <Card className="panel">
           <h2>{t("driveAccountHeading")}</h2>
           <p className="hint">{t("driveOauthHelp")}</p>
-          <p className="hint">狀態：{driveConfigured ? "已設定 OAuth Client" : "尚未設定 OAuth Client"}</p>
+          <p className="hint">{t("oauthStatus", { status: t(driveConfigured ? "oauthConfigured" : "oauthNotConfigured") })}</p>
           <label>Google Desktop OAuth Client ID
             <Input value={oauthClientId} onChange={event => setOauthClientId(event.target.value)}
               placeholder="123456789-xxx.apps.googleusercontent.com" />
           </label>
-          <label>Desktop Client Secret（若 Google 要求，選填）
+          <label>{t("desktopSecret")}
             <Input type="password" value={oauthClientSecret}
               onChange={event => setOauthClientSecret(event.target.value)}
               placeholder={t("secretPlaceholder")} />
@@ -780,19 +808,19 @@ export default function App() {
             <Button variant="outline" className="secondary" disabled={storageBusy || !driveConfigured}
               onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
           </div>
-          {driveAccounts.map(account => <p className="hint" key={account.id}>已連線：{account.email}</p>)}
+          {driveAccounts.map(account => <p className="hint" key={account.id}>{t("connectedAccount", { email: account.email })}</p>)}
         </Card>
       </main>}
 
       {page === "reader" && <main>
         {!document ? <Card className="panel empty">
-          <h2>{t("emptyHeading")}</h2><p className="hint">先匯入字幕並生成，文件會顯示在這裡。</p>
+          <h2>{t("emptyHeading")}</h2><p className="hint">{t("emptyHint")}</p>
           <Button variant="outline" className="secondary" onClick={() => setPage("create")}>{t("create")}</Button>
         </Card> : <>
           <Card className="panel">
             <Badge className="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
             <h1>{document.source.title}</h1>
-            <p className="hint">{document.sections.length} 個學習章節 · 教學語言 {document.profile.instructionLanguage}</p>
+            <p className="hint">{t("lessonOverview", { count: document.sections.length, language: document.profile.instructionLanguage })}</p>
             {publishedLocation && <p className="hint">{t("publishedTo", { location: publishedLocation })}</p>
             <div className="actions">
               <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "json")}>{t("saveJson")}</Button>
@@ -802,26 +830,26 @@ export default function App() {
           <Card className="panel">
             <h2>{t("videoCompanion")}</h2>
             <div className="twoColumns">
-              <label>循環次數
+              <label>{t("repeatCount")}
                 <Select value={repeat} onChange={event => setRepeat(event.target.value as RepeatOption)}>
                   <option value="2">{t("repeatTwice")}</option><option value="3">{t("repeatThrice")}</option><option value="5">{t("repeatFive")}</option><option value="infinite">{t("repeatForever")}</option>
                 </Select>
               </label>
-              <label>間隔
+              <label>{t("repeatDelay")}
                 <Select value={delay} onChange={event => setDelay(Number(event.target.value))}>
-                  {[0, 1, 2, 3].map(seconds => <option key={seconds} value={seconds}>{seconds} 秒</option>)}
+                  {[0, 1, 2, 3].map(seconds => <option key={seconds} value={seconds}>{t("seconds", { count: seconds })}</option>)}
                 </Select>
               </label>
             </div>
             {readerAdapter.diagnose
               ? <div className="callout">
-                  {readerAdapter.label} 的播放器控制由該平台 Adapter 提供；非公開介面可能更新失效。所有控制皆由你主動操作，不取得字幕。
-                  <div className="actions"><Button variant="outline" className="secondary" onClick={() => void diagnoseVideo()}>檢查 {readerAdapter.label} 播放器</Button></div>
+                  {t("experimentalVideoHint", { name: readerAdapter.label })}
+                  <div className="actions"><Button variant="outline" className="secondary" onClick={() => void diagnoseVideo()}>{t("checkPlayer", { name: readerAdapter.label })}</Button></div>
                   {playbackStatus && <p className="hint" role="status">{playbackStatus}</p>}
                 </div>
               : readerAdapter.loop
-                ? <p className="hint">目前來源：{readerAdapter.label}。循環會控制已開啟的影片分頁，不會重新載入。</p>
-                : <p className="hint">目前來源沒有自動播放器控制；仍可閱讀字幕、查看時間及匯出文件。</p>}
+                ? <p className="hint">{t("youtubeVideoHint", { name: readerAdapter.label })}</p>
+                : <p className="hint">{t("noVideoControl")}</p>}
             {loopActive && <Button variant="outline" className="secondary" onClick={() => void stopLoop()}>{t("stopLoop")}</Button>}
           </Card>
           {document.sections.map(section => <Card className="panel lesson" key={section.id}>
