@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mkdtemp, mkdir, readFile, rm, stat } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { appConfigRoot } from "../platform/paths";
@@ -21,7 +21,7 @@ test("named CLI account profiles save paths only, enforce home containment and n
     await mkdir(profile);
     const saved = await saveAgentProfile("codex", "Work", profile);
     assert.equal(saved.length, 1);
-    assert.equal(saved[0].directory, profile);
+    assert.equal(saved[0].directory, await realpath(profile));
     assert.equal(saved[0].label, "Work");
     assert.deepEqual(await listAgentProfiles(), saved);
     await assert.rejects(saveAgentProfile("agy", "Unsupported", profile), /no isolated/);
