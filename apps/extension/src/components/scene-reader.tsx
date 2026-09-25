@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { nextStudyStep, readSceneProgress, STUDY_STEPS, type StudyStep } from "./scene-navigation";
 import { formatTime, type LearningDocument, type StudyScene, type SubtitleCue } from "@immersive/core";
 import type { UiLocale } from "../i18n/messages";
