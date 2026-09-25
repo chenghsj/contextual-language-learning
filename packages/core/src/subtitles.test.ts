@@ -26,3 +26,11 @@ test("YouTube timestamps use an allowlisted video host", () => {
   assert.equal(youtubeTimeLink("https://evil.example/watch?v=dQw4w9WgXcQ", 125000), null);
   assert.equal(formatTime(125000), "02:05");
 });
+
+test("long plain-text input is split without dropping words", () => {
+  const input = "word ".repeat(800).trim();
+  const cues = parsePlainText(input);
+  assert.ok(cues.length > 1);
+  assert.equal(cues.map(cue => cue.originalText).join(" "), input);
+  assert.ok(cues.every(cue => cue.originalText.length <= 1500));
+});
