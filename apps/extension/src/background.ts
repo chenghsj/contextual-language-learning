@@ -1,5 +1,6 @@
 import { fetchNetflixCaptionText } from "./video/netflix-caption-fetch";
 import { validateNetflixCaptionSender } from "./video/netflix-caption-sender";
+import { installGenerationController } from "./native/generation-controller";
 
 chrome.runtime.onMessage.addListener((incoming: unknown, sender, respond) => {
   if (!incoming || typeof incoming !== "object" ||
@@ -37,3 +38,6 @@ chrome.runtime.onMessage.addListener((incoming: unknown, sender, respond) => {
 void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {
   // Chrome without Side Panel support will report an error when the extension loads.
 });
+
+// Long-running generation must belong to the worker, never to the Side Panel.
+if (chrome.runtime.onConnect?.addListener) installGenerationController();
