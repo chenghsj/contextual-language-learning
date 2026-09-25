@@ -8,3 +8,7 @@ node_modules/
 coverage/
 *.log
 release-assets/
+# Keep pnpm as the single package manager.
+package-lock.json
+npm-shrinkwrap.json
+yarn.lock
