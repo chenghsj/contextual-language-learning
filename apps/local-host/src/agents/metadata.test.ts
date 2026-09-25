@@ -29,3 +29,28 @@ test("AGY JSON catalog accepts normal model IDs and rejects executable-like text
     { id: "../../bin/sh", name: "Invalid" },
   ] })), [{ id: "gemini-3.5-pro", label: "Gemini" }]);
 });
+
+test("AGY 1.2.11 models supports nonbreaking spaces and all available model IDs", () => {
+  const rows = [
+    "gemini-3.8-flash-high     Gemini 3.8 Flash (High)",
+    "gemini-3.8-flash-medium   Gemini 3.8 Flash (Medium)",
+    "gemini-3.8-flash-low      Gemini 3.8 Flash (Low)",
+    "gemini-3.7-flash-high     Gemini 3.7 Flash (High)",
+    "gemini-3.7-flash-medium   Gemini 3.7 Flash (Medium)",
+    "gemini-3.7-flash-low      Gemini 3.7 Flash (Low)",
+    "gemini-3.6-flash-high     Gemini 3.6 Flash (High)",
+    "gemini-3.6-flash-medium   Gemini 3.6 Flash (Medium)",
+    "gemini-3.6-flash-low      Gemini 3.6 Flash (Low)",
+    "gemini-3.1-pro-high       Gemini 3.1 Pro (High)",
+    "gemini-3.1-pro-low        Gemini 3.1 Pro (Low)",
+    "claude-sonnet-4-6        Claude Sonnet 4.6 (Thinking)",
+    "claude-opus-4-6-thinking  Claude Opus 4.6 (Thinking)",
+    "gpt-oss-120b-medium       GPT-OSS 120B (Medium)"
+];
+  const terminalOutput = rows.map(row => row.replace(/ {2,}/g, " \u00a0 \u00a0 ")).join("\n\n");
+  const models = parseAgyModels(terminalOutput);
+  assert.equal(models.length, 14);
+  assert.deepEqual(models[0], { id: "gemini-3.8-flash-high", label: "Gemini 3.8 Flash (High)" });
+  assert.deepEqual(models[12], { id: "claude-opus-4-6-thinking", label: "Claude Opus 4.6 (Thinking)" });
+  assert.deepEqual(models[13], { id: "gpt-oss-120b-medium", label: "GPT-OSS 120B (Medium)" });
+});
