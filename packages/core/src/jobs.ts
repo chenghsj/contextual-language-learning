@@ -34,7 +34,7 @@ export const JobSnapshotSchema = z.object({
   schemaVersion: z.literal(1),
   summary: JobSummarySchema,
   request: GenerationRequestSchema,
-  sections: z.array(z.union([LearningSectionSchema, StudySceneSchema])),
+  sections: z.array(z.union([StudySceneSchema, LearningSectionSchema])),
   scenePlan: ScenePlanSchema.optional(),
 }).superRefine((job, ctx) => {
   if (job.summary.id !== job.request.id) {
