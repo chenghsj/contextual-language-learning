@@ -36,6 +36,17 @@
         "https://m.youtube.com/*"
       ],
       "js": [
+        "youtube-page.js"
+      ],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://m.youtube.com/*"
+      ],
+      "js": [
         "youtube.js"
       ],
       "run_at": "document_idle"
