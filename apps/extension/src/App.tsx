@@ -8,7 +8,10 @@ import {
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
 import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
-import { findVideoTab, getActiveWindowTab, openOrFocusVideoTab } from "./video/tab";
+import {
+  cuePlaybackStart, cuePlaybackWindow,
+  findVideoTab, getActiveWindowTab, openOrFocusVideoTab,
+} from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { BookOpen, Settings2, WandSparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
@@ -782,12 +785,35 @@ export default function App() {
     }
   }
 
+  async function openTimestampCue(cue: SubtitleCue): Promise<void> {
+    if (cue.startMs === null || !document?.source.url) return;
+    setError("");
+    try {
+      const atMs = cuePlaybackStart(cue.startMs);
+      const timestampUrl = readerAdapter.timestampLink?.(document.source.url, atMs);
+      if (!timestampUrl) throw new Error(t("errorVideoOpenUnsupported"));
+      // openOrFocusVideoTab matches the *video ID*, not the timestamp URL: it
+      // will focus an already open watch tab rather than opening a duplicate.
+      const { reused, tab } = await openOrFocusVideoTab(readerAdapter, timestampUrl);
+      if (reused && readerAdapter.seek) {
+        await readerAdapter.seek(document.source.url, atMs);
+      } else if (reused && tab.id !== undefined) {
+        // Future adapters that support timestamp links but not direct seeking.
+        await chrome.tabs.update(tab.id, { url: timestampUrl });
+      }
+      setLoopActive(false);
+      setPlaybackStatus(t(reused ? "statusVideoReused" : "statusVideoOpened"));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("errorVideoOpen"));
+    }
+  }
+
   async function seekCue(cue: SubtitleCue): Promise<void> {
     if (cue.startMs === null) return;
     setError("");
     try {
       if (!readerAdapter.seek || !document?.source.url) throw new Error(t("errorSeekUnsupported"));
-      await readerAdapter.seek(document.source.url, cue.startMs);
+      await readerAdapter.seek(document.source.url, cuePlaybackStart(cue.startMs));
       setLoopActive(false);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("errorSeek"));
@@ -800,7 +826,7 @@ export default function App() {
     try {
       if (!readerAdapter.loop || !document?.source.url) throw new Error(t("errorLoopUnsupported"));
       await readerAdapter.loop(document.source.url, {
-        startMs: cue.startMs, endMs: cue.endMs,
+        ...cuePlaybackWindow(cue.startMs, cue.endMs),
         repeats: repeat === "infinite" ? "infinite" : Number(repeat),
         delaySeconds: delay,
       });
@@ -1207,14 +1233,14 @@ export default function App() {
               const cue = document.cues.find(item => item.id === id);
               if (!cue) return null;
               const link = cue.startMs !== null && document.source.url
-                ? readerAdapter.timestampLink?.(document.source.url, cue.startMs) ?? null : null;
+                ? readerAdapter.timestampLink?.(document.source.url, cuePlaybackStart(cue.startMs)) ?? null : null;
               const canSeek = cue.startMs !== null && !!readerAdapter.seek;
               const canLoop = cue.startMs !== null && cue.endMs !== null && !!readerAdapter.loop;
               return <div className="cue" key={id}>
                 <span className="time">{formatTime(cue.startMs)}</span>
                 <p>{cue.originalText}</p>
                 <div className="actions">
-                  {link && <Button variant="link" className="textButton" onClick={() => void chrome.tabs.create({ url: link })}>{t("openTimestamp")}</Button>}
+                  {link && <Button variant="link" className="textButton" onClick={() => void openTimestampCue(cue)}>{t("openTimestamp")}</Button>}
                   {canSeek && <Button variant="link" className="textButton" onClick={() => void seekCue(cue)}>{t("seekTo")}</Button>}
                   {canLoop && <Button variant="link" className="textButton" onClick={() => void loopCue(cue)}>{t("loopSentence")}</Button>}
                   {!link && cue.startMs !== null && <Button variant="link" className="textButton" onClick={() => void navigator.clipboard.writeText(formatTime(cue.startMs))}>{t("copyTime")}</Button>}
