@@ -170,3 +170,25 @@ export function observedYouTubeCaptionUrls(
     ...matches.filter(entry => !entry.session),
   ].map(entry => entry.url);
 }
+
+/** Accept only a readable body observed on the active player's timedtext request. */
+export function parsePlayerYouTubeCaptionResponse(
+  rawUrl: string, body: string, videoId: string,
+): { videoId: string; language: string; kind: "asr" | "manual"; text: string } | null {
+  if (!body.trim() || body.length > 3_000_000) return null;
+  let url: URL;
+  try { url = allowedYouTubeCaptionUrl(new URL(rawUrl, "https://www.youtube.com/").toString(), videoId); }
+  catch { return null; }
+  if (url.searchParams.get("v") !== videoId || url.searchParams.has("tlang")) return null;
+  const language = (url.searchParams.get("lang") ?? "").toLowerCase();
+  if (!/^[a-z]{2,3}(?:-[a-z0-9]+)*$/.test(language)) return null;
+  try {
+    const text = youtubeTimedTextToVtt(body);
+    if (text.length > 3_000_000 || !text.includes("-->")) return null;
+    return {
+      videoId, language,
+      kind: url.searchParams.get("caps") === "asr" ? "asr" : "manual",
+      text,
+    };
+  } catch { return null; }
+}
