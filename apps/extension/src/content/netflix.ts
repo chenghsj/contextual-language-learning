@@ -2,17 +2,18 @@
 (() => {
   const REQUEST_EVENT = "immersive-learning:netflix:request";
   const RESPONSE_EVENT = "immersive-learning:netflix:response";
-  type Action = "diagnose" | "status" | "seekTo" | "pause" | "play";
+  type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate";
   type PageResponse = {
     source: "immersive-learning"; id: string; ok: boolean; available: boolean;
     currentMs?: number; playing?: boolean | null; sessionId?: string;
-    seekCalled?: boolean; error?: string;
+    seekCalled?: boolean; playbackRate?: number; error?: string;
   };
   type Message =
     | { type: "NETFLIX_DIAGNOSE" }
     | { type: "NETFLIX_SEEK"; timeMs: number }
     | { type: "NETFLIX_LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
-    | { type: "NETFLIX_LOOP_CLEAR" };
+    | { type: "NETFLIX_LOOP_CLEAR" }
+    | { type: "NETFLIX_PLAYBACK_RATE_SET"; rate: number };
   type Loop = {
     startMs: number; endMs: number; repeats: number | "infinite"; delayMs: number;
     count: number; busy: boolean; managedPause: boolean; expectedSeekUntil: number;
@@ -146,6 +147,15 @@
       const diagnostic = await requestPage("diagnose");
       return { ok: diagnostic.ok, error: diagnostic.error, currentMs: diagnostic.currentMs };
     }
+    if (message.type === "NETFLIX_PLAYBACK_RATE_SET") {
+      if (!Number.isFinite(message.rate) || message.rate < 0.5 || message.rate > 2) {
+        return { ok: false, error: "Playback speed must be between 0.5× and 2×." };
+      }
+      // Changing playback rate does not cancel an active sentence loop.
+      const result = await requestPage("setPlaybackRate", message.rate);
+      return { ok: result.ok && typeof result.playbackRate === "number",
+        error: result.error ?? (result.ok ? undefined : "Netflix could not change playback speed.") };
+    }
     if (message.type === "NETFLIX_SEEK") {
       if (!Number.isInteger(message.timeMs) || message.timeMs < 0 || message.timeMs > 43_200_000) {
         return { ok: false, error: "Invalid timestamp." };
@@ -195,7 +205,7 @@
   chrome.runtime.onMessage.addListener((incoming: unknown, _sender, sendResponse) => {
     if (!incoming || typeof incoming !== "object") return false;
     const candidate = incoming as Partial<Message>;
-    if (!["NETFLIX_DIAGNOSE", "NETFLIX_SEEK", "NETFLIX_LOOP_SET", "NETFLIX_LOOP_CLEAR"].includes(candidate.type ?? "")) {
+    if (!["NETFLIX_DIAGNOSE", "NETFLIX_SEEK", "NETFLIX_LOOP_SET", "NETFLIX_LOOP_CLEAR", "NETFLIX_PLAYBACK_RATE_SET"].includes(candidate.type ?? "")) {
       return false;
     }
     void handle(candidate as Message).then(sendResponse).catch(error => {
