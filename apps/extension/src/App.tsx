@@ -1297,7 +1297,7 @@ export default function App() {
               <Button variant="outline" size="sm" onClick={() => {
                 setPage("settings");
                 window.requestAnimationFrame(() => {
-                  const heading = document.getElementById("agent-settings-heading");
+                  const heading = window.document.getElementById("agent-settings-heading");
                   heading?.scrollIntoView({ block: "start" });
                   heading?.focus({ preventScroll: true });
                 });
