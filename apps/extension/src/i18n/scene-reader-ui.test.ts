@@ -116,7 +116,9 @@ test("the mini player is collapsed by default and leaves one full-scene playback
       locale + ": full-scene playback should appear only once");
     assert.ok(html.includes("sceneReadingSettings"), locale + ": study hints beside the steps");
     assert.ok(html.includes("settingInfo"), locale + ": playback subtitle notice is in info help");
-    assert.ok(html.includes(copy.originalSubtitleNotice),
+    const readableMarkup = html.replaceAll("&#x27;", "'").replaceAll("&quot;", '"')
+      .replaceAll("&amp;", "&");
+    assert.ok(readableMarkup.includes(copy.originalSubtitleNotice),
       locale + ": existing subtitle notice remains available on demand");
   }
 });
