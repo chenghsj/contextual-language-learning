@@ -7,7 +7,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
 (() => {
   const REQUEST_EVENT = "immersive-learning:netflix:request";
   const RESPONSE_EVENT = "immersive-learning:netflix:response";
-  const BRIDGE_VERSION = "native-caption-capture-v1";
+  const BRIDGE_VERSION = "netflix-worker-url-check-v2";
   const CAPTION_FETCH_REQUEST_EVENT = "immersive-learning:netflix:caption-fetch-request";
   const CAPTION_FETCH_RESPONSE_EVENT = "immersive-learning:netflix:caption-fetch-response";
   type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
