@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { nextStudyStep, readSceneProgress, STUDY_STEPS, type StudyStep } from "./scene-navigation";
 import { formatTime, type LearningDocument, type StudyScene, type SubtitleCue } from "@immersive/core";
 import type { UiLocale } from "../i18n/messages";
 import { sceneReaderMessages } from "../i18n/scene-reader";
@@ -11,7 +12,6 @@ import { Textarea } from "./ui/textarea";
 
 type SceneDocument = Extract<LearningDocument, { schemaVersion: 2 }>;
 type Mode = "watch" | "learn" | "review";
-type Step = "listen" | "understand" | "practice";
 type Hint = "progressive" | "original" | "bilingual";
 type Repeat = "2" | "3" | "5" | "infinite";
 
@@ -40,7 +40,7 @@ export function SceneReader({
   const c = sceneReaderMessages[locale];
   const [mode, setMode] = useState<Mode>("learn");
   const [sceneIndex, setSceneIndex] = useState(0);
-  const [step, setStep] = useState<Step>("listen");
+  const [stepByScene, setStepByScene] = useState<Record<string, StudyStep>>({});
   const [hint, setHint] = useState<Hint>("progressive");
   const [showOriginal, setShowOriginal] = useState<boolean | null>(null);
   const [showTranslation, setShowTranslation] = useState<boolean | null>(null);
@@ -55,6 +55,7 @@ export function SceneReader({
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const cues = useMemo(() => new Map(document.cues.map(cue => [cue.id, cue])), [document.cues]);
   const scene = document.sections[sceneIndex] ?? document.sections[0];
+  const step: StudyStep = stepByScene[scene.id] ?? "listen";
   const sourceUrl = document.source.url;
   const progressKey = "sceneStudy:" + document.id;
   const hintKey = "sceneHint";
@@ -69,15 +70,14 @@ export function SceneReader({
     let live = true;
     void chrome.storage.local.get([progressKey, hintKey]).then(stored => {
       if (!live) return;
-      const progress = stored[progressKey] as { sceneId?: string; completedIds?: string[] } | undefined;
-      if (progress?.sceneId) {
-        const index = document.sections.findIndex(item => item.id === progress.sceneId);
+      const saved = readSceneProgress(stored[progressKey],
+        document.sections.map(item => item.id));
+      if (saved.sceneId) {
+        const index = document.sections.findIndex(item => item.id === saved.sceneId);
         if (index >= 0) setSceneIndex(index);
       }
-      if (Array.isArray(progress?.completedIds)) {
-        const ids = new Set(document.sections.map(item => item.id));
-        setCompletedIds(progress.completedIds.filter(id => ids.has(id)));
-      }
+      setCompletedIds(saved.completedIds);
+      setStepByScene(saved.steps);
       const previousHint = stored[hintKey];
       if (typeof previousHint === "string" && ["progressive", "original", "bilingual"].includes(previousHint)) {
         setHint(previousHint as Hint);
@@ -89,10 +89,10 @@ export function SceneReader({
   useEffect(() => {
     if (!loaded) return;
     void chrome.storage.local.set({
-      [progressKey]: { sceneId: scene.id, completedIds },
+      [progressKey]: { sceneId: scene.id, completedIds, steps: stepByScene },
       [hintKey]: hint,
     }).catch(() => undefined);
-  }, [loaded, progressKey, scene.id, completedIds, hint, hintKey]);
+  }, [loaded, progressKey, scene.id, completedIds, stepByScene, hint, hintKey]);
 
   useEffect(() => {
     if (mode !== "watch" || !sourceUrl || !adapter.status) return;
@@ -112,12 +112,21 @@ export function SceneReader({
   }, [mode, sourceUrl, adapter]);
 
   function selectScene(index: number): void {
+    if (!Number.isInteger(index) || index < 0 || index >= document.sections.length ||
+      index === sceneIndex) return;
     setSceneIndex(index);
-    setStep("listen");
+    // Each scene keeps its own last visited study step; switching never marks
+    // the previous scene complete or changes the video's playback position.
     setShowOriginal(null);
     setShowTranslation(null);
     setShowAnswer(false);
     setAnswer("");
+    setStatus("");
+  }
+
+  function selectStep(next: StudyStep): void {
+    setStepByScene(previous => ({ ...previous, [scene.id]: next }));
+    setShowAnswer(false);
     setStatus("");
   }
 
@@ -193,8 +202,8 @@ export function SceneReader({
   function finishScene(): void {
     setCompletedIds(previous => previous.includes(scene.id) ? previous : [...previous, scene.id]);
     setStatus(c.stepDone);
-    if (sceneIndex + 1 < document.sections.length) selectScene(sceneIndex + 1);
-    else setMode("review");
+    // Completion and navigation are separate actions. Leave the scene in view
+    // so the learner can review it or choose any other scene explicitly.
   }
 
   function renderOriginal(line: SubtitleCue, index: number) {
@@ -253,18 +262,35 @@ export function SceneReader({
           <span className="chip">{c.scene} {sceneIndex + 1} / {document.sections.length}</span>
           <span className="time">{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
         </div>
+        <div className="scenePicker">
+          <label htmlFor="study-scene-picker">{c.chooseScene}</label>
+          <Select id="study-scene-picker" value={String(sceneIndex)}
+            onChange={event => selectScene(Number(event.target.value))}>
+            {document.sections.map((item, index) => (
+              <option key={item.id} value={index}>
+                {c.scene} {index + 1} · {item.title} ({formatTime(item.startMs)}–{formatTime(item.endMs)})
+                {completedIds.includes(item.id) ? " ✓ " + c.completed : ""}
+              </option>
+            ))}
+          </Select>
+        </div>
         <h2>{scene.title}</h2>
         <p className="hint">{scene.context}</p>
         <p className="sceneGoal"><strong>{c.goal}:</strong> {scene.learningGoal}</p>
-        <div className="sceneSteps" role="tablist" aria-label={c.learn}>
-          {(["listen", "understand", "practice"] as const).map(part =>
+        <nav className="sceneSteps" aria-label={c.studySteps}>
+          {STUDY_STEPS.map((part, index) =>
             <Button key={part} variant={step === part ? "default" : "outline"}
-              size="sm" role="tab" aria-selected={step === part} onClick={() => {
-                setStep(part); setShowAnswer(false); setStatus("");
-              }}>{c[part]}</Button>)}
-        </div>
+              type="button" aria-pressed={step === part}
+              aria-describedby={step === part ? "scene-step-hint" : undefined}
+              onClick={() => selectStep(part)}>
+              <span className="sceneStepNumber" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <span className="sceneStepLabel">{c[part]}</span>
+            </Button>)}
+        </nav>
+        <p className="sceneStepHint" id="scene-step-hint">
+          {step === "listen" ? c.listenHint : step === "understand" ? c.understandHint : c.practiceHint}
+        </p>
         {step === "listen" && <>
-          <p className="hint">{c.listenHint}</p>
           {originalVisible && <div className="sceneDialogue">
             {scene.cueIds.map(id => cues.get(id)).filter((cue): cue is SubtitleCue => !!cue)
               .map((cue, index) => renderOriginal(cue, index))}
@@ -306,16 +332,24 @@ export function SceneReader({
               {showAnswer && <p className="sceneSample" lang={document.profile.targetLanguage}>{exercise.answer}</p>}
             </div>) : <p className="hint">{c.noPractice}</p>}
         </>}
-        <div className="sceneNavigation">
-          <Button variant="outline" size="sm" disabled={sceneIndex === 0} onClick={() => selectScene(sceneIndex - 1)}>
-            {c.previous}
+        <div className="sceneStageNavigation">
+          <Button disabled={step === "practice" && completedIds.includes(scene.id)}
+            onClick={() => {
+              const next = nextStudyStep(step);
+              if (next) selectStep(next);
+              else finishScene();
+            }}>
+            {step === "listen" ? c.toUnderstand : step === "understand" ? c.toPractice
+              : completedIds.includes(scene.id) ? c.sceneCompleted : c.finish}
           </Button>
-          <Button size="sm" onClick={() => {
-            if (step === "listen") setStep("understand");
-            else if (step === "understand") setStep("practice");
-            else finishScene();
-          }}>{step === "practice" ? c.finish : c.next}</Button>
         </div>
+        <nav className="sceneNavigation" aria-label={c.sceneNavigation}>
+          <Button variant="outline" size="sm" disabled={sceneIndex === 0}
+            onClick={() => selectScene(sceneIndex - 1)}>{c.previousScene}</Button>
+          <span className="sceneNavPosition">{sceneIndex + 1} / {document.sections.length}</span>
+          <Button variant="outline" size="sm" disabled={sceneIndex === document.sections.length - 1}
+            onClick={() => selectScene(sceneIndex + 1)}>{c.nextScene}</Button>
+        </nav>
       </Card>
     </>}
 
