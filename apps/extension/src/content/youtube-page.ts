@@ -67,7 +67,7 @@ import {
       entry.videoId === videoId && (entry.language === wanted ||
         entry.language.startsWith(wanted + "-")));
     return matching.find(entry => entry.kind === preferred) ??
-      (matching.length === 1 ? matching[0] : null);
+      (kind === undefined && matching.length === 1 ? matching[0] : null);
   }
 
   const nativeFetch = window.fetch;
@@ -90,7 +90,7 @@ import {
   const nativeOpen = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function (
     this: XMLHttpRequest, method: string, url: string | URL,
-    async = true, username?: string, password?: string,
+    async: boolean = true, username?: string, password?: string,
   ): void {
     const address = String(url);
     const videoId = method.toUpperCase() === "GET" ? requestVideoId(address) : null;
