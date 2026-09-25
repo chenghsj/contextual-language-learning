@@ -147,6 +147,9 @@ export default function App() {
   const controllerPortRef = useRef<chrome.runtime.Port | null>(null);
   const activeRequestIdRef = useRef<string | null>(null);
   const requestRef = useRef<string | null>(null);
+  // Keep the last job across the controller dropping its active connection.
+  const lastJobIdRef = useRef<string | null>(null);
+  const lastJobSummaryRef = useRef<JobSummary | null>(null);
   const lastSelectedVideoKeyRef = useRef<string | null>(null);
   const manuallyEditedTitleRef = useRef(false);
   const metadataRequestRef = useRef(0);
@@ -240,15 +243,13 @@ export default function App() {
         if (message.active) {
           activeRequestIdRef.current = message.active.requestId;
           requestRef.current = message.active.jobId;
+          lastJobIdRef.current = message.active.jobId;
           if (!portRef.current) portRef.current = observer;
-          setGenerating(true);
           if (message.active.summary) {
             updateJob(message.active.summary);
-            setProgress(t("statusProgress", {
-              completed: message.active.summary.completed,
-              total: message.active.summary.total,
-            }));
+            setGenerating(["queued", "running"].includes(message.active.summary.status));
           } else {
+            setGenerating(true);
             setProgress(t("statusResuming"));
           }
         } else {
@@ -264,9 +265,11 @@ export default function App() {
       if (message.type === "job") {
         updateJob(message.job);
       } else if (message.type === "progress") {
-        setProgress(t("statusProgress", {
-          completed: message.completed, total: message.total,
-        }));
+        if (!lastJobSummaryRef.current || ["queued", "running"].includes(lastJobSummaryRef.current.status)) {
+          setProgress(t("statusProgress", {
+            completed: message.completed, total: message.total,
+          }));
+        }
       } else if (message.type === "published") {
         setPublishedLocation(message.location);
       } else if (message.type === "publicationFailed") {
@@ -287,6 +290,9 @@ export default function App() {
       } else if (message.type === "error") {
         setError(message.message);
         setGenerating(false);
+        if (!lastJobSummaryRef.current || ["queued", "running"].includes(lastJobSummaryRef.current.status)) {
+          setProgress(t("jobFailed"));
+        }
         void loadJobs();
       }
     });
@@ -591,9 +597,22 @@ export default function App() {
     setProgress(t("statusSaved"));
   }
 
+  function jobStatusLine(summary: JobSummary): string {
+    return summary.status === "queued" || summary.status === "running"
+      ? t("statusProgress", { completed: summary.completed, total: summary.total })
+      : t("jobProgress", {
+          provider: summary.provider, status: t(jobStatusKeys[summary.status]),
+          completed: summary.completed, total: summary.total,
+        });
+  }
+
   function updateJob(summary: JobSummary): void {
     setJobs(previous => [summary, ...previous.filter(job => job.id !== summary.id)]
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
+    if (summary.id === lastJobIdRef.current) {
+      lastJobSummaryRef.current = summary;
+      setProgress(jobStatusLine(summary));
+    }
   }
 
   function runGeneration(
@@ -610,6 +629,8 @@ export default function App() {
     preflightPortRef.current = null;
     portRef.current = port;
     requestRef.current = jobId;
+    lastJobIdRef.current = jobId;
+    lastJobSummaryRef.current = null;
     activeRequestIdRef.current = id;
     setGenerating(true);
     setProgress(t(input.type === "resume" ? "statusResuming" : "statusConnecting"));
@@ -627,7 +648,9 @@ export default function App() {
       if (message.type === "job") {
         updateJob(message.job);
       } else if (message.type === "progress") {
-        setProgress(t("statusProgress", { completed: message.completed, total: message.total }));
+        if (!lastJobSummaryRef.current || ["queued", "running"].includes(lastJobSummaryRef.current.status)) {
+          setProgress(t("statusProgress", { completed: message.completed, total: message.total }));
+        }
       } else if (message.type === "published") {
         setPublishedLocation(message.location);
       } else if (message.type === "publicationFailed") {
@@ -648,6 +671,9 @@ export default function App() {
         finished = true;
         setError(message.message);
         setGenerating(false);
+        if (!lastJobSummaryRef.current || ["queued", "running"].includes(lastJobSummaryRef.current.status)) {
+          setProgress(t("jobFailed"));
+        }
         port.disconnect();
       }
     });
@@ -719,7 +745,7 @@ export default function App() {
 
   function loadJobs(): void {
     if (loadingJobs) return;
-    setError("");
+    // Refreshing history must never dismiss the Agent error just received.
     setLoadingJobs(true);
     const id = crypto.randomUUID();
     const port = chrome.runtime.connectNative(HOST_NAME);
@@ -729,6 +755,8 @@ export default function App() {
       if (message.type === "jobs") {
         received = true;
         setJobs(message.jobs);
+        const current = message.jobs.find(job => job.id === lastJobIdRef.current);
+        if (current) updateJob(current);
         setLoadingJobs(false);
         port.disconnect();
       } else if (message.type === "error") {
