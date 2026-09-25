@@ -8,6 +8,8 @@ import {
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
 import { titleForVideoTab } from "./video/metadata";
+import { detectCurrentVideoMetadata, metadataSourceSafety } from "./video/metadata-resolver";
+import { videoMetadataMessages } from "./i18n/video-metadata";
 import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
 import {
   cuePlaybackStart, cuePlaybackWindow,
@@ -71,6 +73,8 @@ export default function App() {
   const [fileName, setFileName] = useState("");
   const [subtitleBusy, setSubtitleBusy] = useState(false);
   const [subtitleStatus, setSubtitleStatus] = useState("");
+  const [metadataBusy, setMetadataBusy] = useState(false);
+  const [metadataStatus, setMetadataStatus] = useState("");
   const [title, setTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [activeVideo, setActiveVideo] = useState<{
@@ -82,6 +86,7 @@ export default function App() {
   const [systemDark, setSystemDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
   const uiLocale = localePreference === "auto" ? browserLocale : localePreference;
   const subtitleUi = subtitleAcquisition[uiLocale];
+  const metadataUi = videoMetadataMessages[uiLocale];
   const t = (key: MessageKey, params?: MessageParams) => translate(uiLocale, key, params);
   const [profile, setProfile] = useState<LearningProfile>(() => ({
     ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
@@ -136,6 +141,7 @@ export default function App() {
   const requestRef = useRef<string | null>(null);
   const lastSelectedVideoKeyRef = useRef<string | null>(null);
   const manuallyEditedTitleRef = useRef(false);
+  const metadataRequestRef = useRef(0);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
   const platform = getVideoAdapter(sourceUrl).id;
@@ -794,6 +800,45 @@ export default function App() {
     setProgress(t("statusCancelling"));
   }
 
+  async function fetchCurrentVideoMetadata(): Promise<void> {
+    if (metadataBusy || checking || generating || subtitleBusy) return;
+    const request = ++metadataRequestRef.current;
+    const originalSource = sourceUrl.trim();
+    setMetadataBusy(true);
+    setMetadataStatus("");
+    setError("");
+    try {
+      if (originalSource && getVideoAdapter(originalSource).id === "import") {
+        throw new Error(metadataUi.invalidSource);
+      }
+      const found = await detectCurrentVideoMetadata(originalSource);
+      if (request !== metadataRequestRef.current) return;
+      if (!found) throw new Error(metadataUi.unavailable);
+
+      const safety = metadataSourceSafety(originalSource, raw, found.url);
+      if (safety === "mismatch") throw new Error(metadataUi.mismatch);
+      if (safety === "confirm" && !window.confirm(metadataUi.confirmUnlinked)) return;
+      if (request !== metadataRequestRef.current) return;
+
+      // Never replace an existing URL or a manually edited title; metadata
+      // recovery only fills missing fields or refreshes an auto-detected title.
+      setSourceUrl(current => current.trim() ? current : found.url);
+      if (found.title && !manuallyEditedTitleRef.current) {
+        setTitle(current => current.trim() && manuallyEditedTitleRef.current
+          ? current : found.title ?? current);
+      }
+      setMetadataStatus(found.title ? metadataUi.success : metadataUi.partial);
+    } catch (cause) {
+      if (request === metadataRequestRef.current) {
+        setError(cause instanceof Error && cause.message === "VIDEO_CHANGED"
+          ? metadataUi.changed
+          : cause instanceof Error ? cause.message : metadataUi.unavailable);
+      }
+    } finally {
+      if (request === metadataRequestRef.current) setMetadataBusy(false);
+    }
+  }
+
   async function fetchCurrentSubtitles(): Promise<void> {
     if (subtitleBusy) return;
     setSubtitleBusy(true);
@@ -1006,11 +1051,26 @@ export default function App() {
               placeholder={t("subtitlePlaceholder")} /></label>
           </details>
           <p className="hint">{t("parsedCues", { count: cues.length })}</p>
+          <div className="actions">
+            <Button variant={!title.trim() || !sourceUrl.trim() ? "default" : "outline"}
+              size="sm" disabled={metadataBusy || subtitleBusy || checking || generating}
+              onClick={() => void fetchCurrentVideoMetadata()}>
+              {metadataBusy ? metadataUi.busy :
+                !title.trim() || !sourceUrl.trim() ? metadataUi.get : metadataUi.refresh}
+            </Button>
+          </div>
+          {metadataStatus && <p className="hint" role="status">{metadataStatus}</p>}
           <label>{t("videoTitle")} <Input value={title} onChange={event => {
             manuallyEditedTitleRef.current = !!event.target.value.trim();
+            setMetadataStatus("");
             setTitle(event.target.value);
           }} placeholder={t("titlePlaceholder")} /></label>
-          <label>{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => setSourceUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=…" /></label>
+          <label>{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => {
+            ++metadataRequestRef.current;
+            setMetadataBusy(false);
+            setMetadataStatus("");
+            setSourceUrl(event.target.value);
+          }} placeholder="https://www.youtube.com/watch?v=…" /></label>
           <Badge className="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
         </Card>
 
