@@ -1,6 +1,7 @@
 type LoopMessage =
   | { type: "LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
-  | { type: "LOOP_CLEAR" };
+  | { type: "LOOP_CLEAR" }
+  | { type: "PLAYBACK_RATE_SET"; rate: number };
 
 let active: { video: HTMLVideoElement; start: number; end: number; repeats: number | "infinite"; completed: number; delayMs: number } | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -56,6 +57,29 @@ function onTimeUpdate(): void {
 }
 
 chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) => {
+  if (message.type === "PLAYBACK_RATE_SET") {
+    const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
+      document.querySelector<HTMLVideoElement>("video");
+    if (!video) {
+      respond({ ok: false, error: "YouTube player is not available." });
+      return;
+    }
+    if (!Number.isFinite(message.rate) || message.rate < 0.5 || message.rate > 2) {
+      respond({ ok: false, error: "Playback speed must be between 0.5× and 2×." });
+      return;
+    }
+    try {
+      video.playbackRate = message.rate;
+      if (Math.abs(video.playbackRate - message.rate) > 0.01) {
+        respond({ ok: false, error: "YouTube did not accept this playback speed." });
+      } else {
+        respond({ ok: true, rate: video.playbackRate });
+      }
+    } catch {
+      respond({ ok: false, error: "YouTube could not change playback speed." });
+    }
+    return;
+  }
   if (message.type === "LOOP_CLEAR") {
     clearLoop();
     respond({ ok: true });
