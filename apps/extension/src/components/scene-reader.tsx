@@ -42,8 +42,8 @@ export function SceneReader({
   const [sceneIndex, setSceneIndex] = useState(0);
   const [step, setStep] = useState<Step>("listen");
   const [hint, setHint] = useState<Hint>("progressive");
-  const [showOriginal, setShowOriginal] = useState(false);
-  const [showTranslation, setShowTranslation] = useState(false);
+  const [showOriginal, setShowOriginal] = useState<boolean | null>(null);
+  const [showTranslation, setShowTranslation] = useState<boolean | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [answer, setAnswer] = useState("");
   const [completedIds, setCompletedIds] = useState<string[]>([]);
@@ -51,7 +51,6 @@ export function SceneReader({
   const [status, setStatus] = useState("");
   const [watchTime, setWatchTime] = useState<number | null>(null);
   const [watchAvailable, setWatchAvailable] = useState(false);
-  const [looping, setLooping] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const cues = useMemo(() => new Map(document.cues.map(cue => [cue.id, cue])), [document.cues]);
@@ -61,6 +60,8 @@ export function SceneReader({
   const hintKey = "sceneHint";
   const canPlay = !!sourceUrl && !!adapter.loop && scene.startMs !== null && scene.endMs !== null;
   const selectedFocusCue = focusCue(scene, cues);
+  const originalVisible = showOriginal ?? hint !== "progressive";
+  const translationVisible = showTranslation ?? hint === "bilingual";
   const watchScene = watchTime === null ? undefined : document.sections.find(item =>
     item.startMs !== null && item.endMs !== null && watchTime >= item.startMs && watchTime <= item.endMs);
 
@@ -112,8 +113,8 @@ export function SceneReader({
   function selectScene(index: number): void {
     setSceneIndex(index);
     setStep("listen");
-    setShowOriginal(false);
-    setShowTranslation(false);
+    setShowOriginal(null);
+    setShowTranslation(null);
     setShowAnswer(false);
     setAnswer("");
     setStatus("");
@@ -140,7 +141,6 @@ export function SceneReader({
         startMs: cuePlaybackStart(scene.startMs), endMs: scene.endMs + 400,
         repeats: 1, delaySeconds: 0,
       });
-      setLooping(false);
       setStatus(c.playbackStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
@@ -158,7 +158,6 @@ export function SceneReader({
         repeats: isLoop ? repeat === "infinite" ? "infinite" : Number(repeat) : 1,
         delaySeconds: isLoop ? delay : 0,
       });
-      setLooping(isLoop);
       setStatus(isLoop ? c.loopStarted : c.playbackStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
@@ -171,7 +170,6 @@ export function SceneReader({
     if (!sourceUrl || !adapter.stopLoop) return;
     try {
       await adapter.stopLoop(sourceUrl);
-      setLooping(false);
       setStatus(c.loopStopped);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
@@ -204,7 +202,7 @@ export function SceneReader({
       <span className="sceneLineNumber">{index + 1}</span>
       <div>
         <p lang={document.profile.targetLanguage}>{line.originalText}</p>
-        {showTranslation || hint === "bilingual" && step === "understand"
+        {translationVisible
           ? <p className="sceneTranslation">{translation?.text}</p> : null}
       </div>
     </div>;
@@ -266,12 +264,12 @@ export function SceneReader({
         </div>
         {step === "listen" && <>
           <p className="hint">{c.listenHint}</p>
-          {(showOriginal || hint !== "progressive") && <div className="sceneDialogue">
-            {scene.cueIds.map((id, index) => cues.get(id)).filter((cue): cue is SubtitleCue => !!cue)
+          {originalVisible && <div className="sceneDialogue">
+            {scene.cueIds.map(id => cues.get(id)).filter((cue): cue is SubtitleCue => !!cue)
               .map((cue, index) => renderOriginal(cue, index))}
           </div>}
-          <Button size="sm" variant="outline" onClick={() => setShowOriginal(current => !current)}>
-            {showOriginal ? c.hideOriginal : c.showOriginal}
+          <Button size="sm" variant="outline" onClick={() => setShowOriginal(current => !(current ?? hint !== "progressive"))}>
+            {originalVisible ? c.hideOriginal : c.showOriginal}
           </Button>
         </>}
         {step === "understand" && <>
@@ -279,8 +277,8 @@ export function SceneReader({
             {scene.cueIds.map(id => cues.get(id)).filter((cue): cue is SubtitleCue => !!cue)
               .map((cue, index) => renderOriginal(cue, index))}
           </div>
-          <Button size="sm" variant="outline" onClick={() => setShowTranslation(current => !current)}>
-            {showTranslation ? c.hideTranslation : c.showTranslation}
+          <Button size="sm" variant="outline" onClick={() => setShowTranslation(current => !(current ?? hint === "bilingual"))}>
+            {translationVisible ? c.hideTranslation : c.showTranslation}
           </Button>
           {scene.vocabulary.length > 0 && <div className="sceneFocus">
             <h3>{c.focus}</h3>
@@ -387,7 +385,7 @@ export function SceneReader({
       <p className="hint">{c.originalSubtitleNotice}</p>
       <label>{c.hintLabel}
         <Select value={hint} onChange={event => { setHint(event.target.value as Hint);
-          setShowOriginal(false); setShowTranslation(false); }}>
+          setShowOriginal(null); setShowTranslation(null); }}>
           <option value="progressive">{c.progressive}</option>
           <option value="original">{c.original}</option>
           <option value="bilingual">{c.bilingual}</option>

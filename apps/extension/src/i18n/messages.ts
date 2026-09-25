@@ -3,7 +3,7 @@ export const messages = {
   "en": {
     "navLabel": "Main navigation",
     "create": "Create lesson",
-    "reader": "Reader",
+    "reader": "Study",
     "settings": "Settings",
     "closeError": "Dismiss error",
     "subtitleHeading": "1. Subtitles and video",
@@ -215,7 +215,7 @@ export const messages = {
   "zh-TW": {
     "navLabel": "主要導覽",
     "create": "建立教材",
-    "reader": "閱讀文件",
+    "reader": "學習",
     "settings": "設定",
     "closeError": "關閉錯誤",
     "subtitleHeading": "1. 字幕與影片",

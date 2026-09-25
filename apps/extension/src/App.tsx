@@ -24,6 +24,7 @@ import { Input } from "./components/ui/input";
 import { Select } from "./components/ui/select";
 import { Textarea } from "./components/ui/textarea";
 import { Badge } from "./components/ui/badge";
+import { SceneReader } from "./components/scene-reader";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy } from "./i18n/learning-settings";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
@@ -51,7 +52,11 @@ function downloadDocument(doc: LearningDocument, format: "json" | "md"): void {
       "## " + section.title, "", section.context, "",
       ...section.cueIds.map(id => {
         const cue = doc.cues.find(item => item.id === id);
-        return cue ? "> " + formatTime(cue.startMs) + " " + cue.originalText : "";
+        if (!cue) return "";
+        const translated = "translations" in section
+          ? section.translations.find(item => item.cueId === id)?.text : undefined;
+        return "> " + formatTime(cue.startMs) + " " + cue.originalText +
+          (translated ? "\n> " + translated : "");
       }),
       "", "### Vocabulary",
       ...section.vocabulary.map(word => "- " + word.expression + " — " + word.meaning + ": " + word.explanation),
@@ -1421,7 +1426,12 @@ export default function App() {
         {!document ? <Card className="panel empty">
           <h2>{t("emptyHeading")}</h2><p className="hint">{t("emptyHint")}</p>
           <Button variant="outline" className="secondary" onClick={() => setPage("create")}>{t("create")}</Button>
-        </Card> : <>
+        </Card> : document.schemaVersion === 2 ? <SceneReader key={document.id}
+          document={document} adapter={readerAdapter} locale={uiLocale}
+          repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
+          playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
+          onError={setError} onDownload={format => downloadDocument(document, format)}
+        /> : <>
           <Card className="panel">
             <Badge className="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
             <h1>{document.source.title}</h1>
