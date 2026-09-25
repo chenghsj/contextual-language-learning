@@ -69,7 +69,11 @@ test("settings keep stable saved option values rather than persisting translated
     assert.match(app, new RegExp('value="' + language + '"'));
   }
   for (const field of fields) {
-    assert.ok(app.includes('settingsCopy.fieldHints.' + field), "missing help for " + field);
+    if (field === "level") {
+      assert.match(app, /levelHint\(settingsCopy, profile\.targetLanguage\)/);
+    } else {
+      assert.ok(app.includes('settingsCopy.fieldHints.' + field), "missing help for " + field);
+    }
   }
 });
 
