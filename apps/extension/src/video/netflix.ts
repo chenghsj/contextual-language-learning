@@ -15,6 +15,9 @@ export const netflixAdapter: VideoAdapter = {
   async seek(url, startMs) {
     await sendToVideo(netflixAdapter, url, { type: "NETFLIX_SEEK", timeMs: startMs }, true);
   },
+  async setPlaybackRate(url, rate) {
+    await sendToVideo(netflixAdapter, url, { type: "NETFLIX_PLAYBACK_RATE_SET", rate });
+  },
   async loop(url, options) {
     await sendToVideo(netflixAdapter, url, { type: "NETFLIX_LOOP_SET", ...options }, true);
   },
