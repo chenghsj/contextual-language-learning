@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
+  compactStudyExport, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
   parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
   type Destination, type DriveAccount, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
@@ -64,7 +64,7 @@ function downloadDocument(doc: LearningDocument, format: "json" | "md"): void {
       "", "### Practice", ...section.exercises.map(ex => "- " + ex.question + "\n  - " + ex.answer), "",
     ]),
   ].join("\n");
-  const content = format === "json" ? JSON.stringify(doc, null, 2) : md;
+  const content = format === "json" ? JSON.stringify(compactStudyExport(doc), null, 2) : md;
   const blob = new Blob([content], { type: format === "json" ? "application/json" : "text/markdown" });
   const url = URL.createObjectURL(blob);
   chrome.downloads.download({
@@ -1183,7 +1183,7 @@ export default function App() {
                 <SettingInfo label={t("vocabLimit")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.vocabLimit} />
               </div>
-              <Input id="learning-vocabulary" type="number" min={1} max={30}
+              <Input id="learning-vocabulary" type="number" min={1} max={12}
                 value={profile.maxNewVocabulary}
                 onChange={event => setProfile(current => ({
                   ...current, maxNewVocabulary: Number(event.target.value),
@@ -1195,7 +1195,7 @@ export default function App() {
                 <SettingInfo label={t("exerciseCount")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.exerciseCount} />
               </div>
-              <Input id="learning-exercises" type="number" min={0} max={12}
+              <Input id="learning-exercises" type="number" min={0} max={6}
                 value={profile.exerciseCount}
                 onChange={event => setProfile(current => ({
                   ...current, exerciseCount: Number(event.target.value),

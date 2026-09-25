@@ -30,7 +30,7 @@ type Props = {
 };
 
 function focusCue(scene: StudyScene, cues: ReadonlyMap<string, SubtitleCue>): SubtitleCue | undefined {
-  return scene.focusCueIds.map(id => cues.get(id)).find(cue => cue?.startMs !== null && cue?.endMs !== null);
+  return scene.focusCueIds.map(id => cues.get(id)).find(cue => !!cue && cue.startMs !== null && cue.endMs !== null);
 }
 
 export function SceneReader({
@@ -78,8 +78,9 @@ export function SceneReader({
         const ids = new Set(document.sections.map(item => item.id));
         setCompletedIds(progress.completedIds.filter(id => ids.has(id)));
       }
-      if (["progressive", "original", "bilingual"].includes(stored[hintKey])) {
-        setHint(stored[hintKey] as Hint);
+      const previousHint = stored[hintKey];
+      if (typeof previousHint === "string" && ["progressive", "original", "bilingual"].includes(previousHint)) {
+        setHint(previousHint as Hint);
       }
     }).catch(() => undefined).finally(() => { if (live) setLoaded(true); });
     return () => { live = false; };
