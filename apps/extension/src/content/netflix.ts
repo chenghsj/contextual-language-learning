@@ -212,7 +212,14 @@
       }
       clearLoop();
       const result = await requestPage("seekTo", message.timeMs);
-      return { ok: result.ok && result.seekCalled === true, error: result.error };
+      if (!result.ok || !result.seekCalled) {
+        return { ok: false, error: result.error ?? "Netflix could not seek to the subtitle timestamp." };
+      }
+      // Jump-to-cue is a playback action; merely positioning a paused video
+      // would not let the user hear the sentence.
+      const played = await requestPage("play");
+      return { ok: played.ok, error: played.error ?? (played.ok ? undefined :
+        "Netflix positioned the video, but could not start playback. Press Play in the video tab.") };
     }
     if (message.type !== "NETFLIX_LOOP_SET") return { ok: false, error: "Unsupported action." };
     if (!Number.isInteger(message.startMs) || !Number.isInteger(message.endMs)
