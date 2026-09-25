@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "몰입형 언어 학습"
+  },
+  "extensionDescription": {
+    "message": "로컬 CLI Agent를 사용해 자막으로 학습 자료를 만듭니다."
+  },
+  "actionTitle": {
+    "message": "몰입형 언어 학습 열기"
+  }
+}

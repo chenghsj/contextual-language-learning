@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "沉浸式語言學習"
+  },
+  "extensionDescription": {
+    "message": "使用本地 CLI Agent 將字幕轉成語言學習教材。"
+  },
+  "actionTitle": {
+    "message": "開啟沉浸式語言學習"
+  }
+}

@@ -6,7 +6,7 @@ A local-first Chrome side-panel extension that turns **subtitles you have permis
 
 ## Open source and project status
 
-This repository is currently **private** while the initial MVP is reviewed. Adding a license and contributor files does not make it public. See the [MIT license](LICENSE), [contribution guide](CONTRIBUTING.md), [code of conduct](CODE_OF_CONDUCT.md), [security policy](SECURITY.md), [privacy and data handling](PRIVACY.md), [changelog](CHANGELOG.md), [roadmap](docs/ROADMAP.md) and [open-source readiness checklist](docs/OPEN_SOURCE_CHECKLIST.md).
+This repository remains **private** pending the public-release checklist and live platform testing. Adding a license and contributor files does not make it public. See the [MIT license](LICENSE), [contribution guide](CONTRIBUTING.md), [code of conduct](CODE_OF_CONDUCT.md), [security policy](SECURITY.md), [privacy and data handling](PRIVACY.md), [changelog](CHANGELOG.md), [roadmap](docs/ROADMAP.md) and [open-source readiness checklist](docs/OPEN_SOURCE_CHECKLIST.md).
 
 **No production-ready Google Drive or Netflix compatibility guarantee:** Google OAuth and Netflix's undocumented playback API require manual platform testing before a public stable release. This project is not affiliated with the streaming platforms or model providers.
 
@@ -61,7 +61,6 @@ Prerequisites: Node.js 22+, pnpm 9, Chrome, and at least one **installed and sig
 ~~~sh
 git clone https://github.com/chenghsj/immersive-language-learning.git
 cd immersive-language-learning
-git switch feat/immersive-learning-mvp  # until the pull request is merged
 corepack enable
 pnpm install
 pnpm build
@@ -84,6 +83,12 @@ If Chrome reports a missing native host, verify that `~/Library/Application Supp
 ### Accounts and models
 
 Sign in using each CLI itself first. Model/profile defaults are remembered separately for each Agent in the Side Panel. Switching Agent does not carry over the previous Agent's model ID. A model ID is passed explicitly only when filled in; the extension does **not** fabricate a live model list or silently fall back to another model. To use a separate Claude or Codex profile, create and authenticate that CLI profile first, then enter the existing absolute directory in Agent settings. The profile must be inside your home folder. AGY profile switching remains unavailable pending a supported isolation mechanism.
+
+### Interface language and appearance
+
+The Side Panel automatically uses Chrome's browser UI language on first launch. Supported interface languages are English, Traditional Chinese, Simplified Chinese, Japanese and Korean; unsupported browser languages fall back to English. In **Settings**, choose **Interface language → Automatic (browser language)** or override it manually. This changes only the extension's interface: the language being learned, lesson explanation language, imported subtitle text and saved documents remain independent.
+
+Appearance defaults to **Use system setting**, following macOS/OS light or dark appearance. You can choose Light or Dark in Settings; both language and theme preferences are saved in Chrome extension-local storage. The release ZIP also includes Chrome `_locales` metadata so the extension's displayed name and description follow supported browser languages. Chrome's interface language may require restarting the browser before its extension metadata updates.
 
 ### Video playback speed and sentence loops
 

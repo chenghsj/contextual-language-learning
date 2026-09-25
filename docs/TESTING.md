@@ -8,6 +8,11 @@ Automated CI covers TypeScript, unit tests, extension packaging and Native Messa
 2. Extract the Chromium ZIP and confirm manifest.json is at its root. Load that folder through chrome://extensions.
 3. Open the Side Panel and import a synthetic SRT/VTT with two timed cues; verify original text and timestamps are unchanged.
 4. Test English/Japanese/Korean profiles, instruction-language preferences, document exports and reopening a saved document.
+   - In Settings, switch the interface among English, Traditional Chinese, Simplified Chinese, Japanese and Korean. Check the full Create/Reader/Settings UI, duplicate-confirmation dialogs, Google Drive account labels, job history and playback controls for untranslated text.
+   - Switch interface language without changing the learning target, source subtitles or the explanation language of an existing lesson. Reopen Side Panel and confirm the override persists.
+   - Select browser-language Automatic and test with a supported/unsupported Chrome UI locale (restart Chrome when changing its UI locale). Confirm unsupported languages fall back to English.
+   - Test system, light and dark appearance, change the OS theme while Side Panel is open, and confirm explicit light/dark overrides persist when reopening. Verify no dark-mode flash on first display.
+   - Check the Chromium ZIP contains all five `_locales/*/messages.json` files and the localized extension name/description in Chrome.
 5. With a sample YouTube video already open, test timestamp navigation, two repetitions, manual pause/seek cancellation and switching playback speed from 1× to 0.75× and 1.5× **while playing**. Confirm the speed does not reset the current loop.
 
 ## Netflix (experimental; not part of CI)
