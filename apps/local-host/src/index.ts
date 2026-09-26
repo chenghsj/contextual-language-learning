@@ -120,7 +120,7 @@ async function handle(input: unknown): Promise<void> {
           agents: await removeCustomAgent(request.agentId) });
         break;
       case "customAgentTest": {
-        const label = await testCustomConfig(request.config, request.modelId);
+        const label = await testCustomConfig(request.config, request.modelId, request.accountConfigDir);
         reply({ id: request.id, type: "customAgentTested", label });
         break;
       }

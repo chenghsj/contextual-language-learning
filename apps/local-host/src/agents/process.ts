@@ -102,16 +102,16 @@ export function runCLI(
       child.stdin?.on("error", () => { /* A CLI may close stdin early; close handles its exit. */ });
       child.stdin?.end(options.stdin);
     }
-    child.stdout.setEncoding("utf8");
-    child.stderr.setEncoding("utf8");
-    child.stdout.on("data", (data: string) => {
+    child.stdout?.setEncoding("utf8");
+    child.stderr?.setEncoding("utf8");
+    child.stdout?.on("data", (data: string) => {
       stdout += data;
       if (stdout.length > 2_000_000) {
         exceeded = true;
         child.kill();
       }
     });
-    child.stderr.on("data", (data: string) => {
+    child.stderr?.on("data", (data: string) => {
       stderr = (stderr + data).slice(-16_000);
     });
     child.on("error", error => {
