@@ -26,3 +26,14 @@ test("Google callback does not claim connection succeeded before token storage f
   assert.match(oauth, /session.finish\("error"\)/);
   assert.match(app, /driveConnectError && <p className="jobRowError" role="status">/);
 });
+
+test("saved Google identity is revalidated against the real Drive API before backup is presented as active", () => {
+  assert.match(app, /const \[driveAccess, setDriveAccess\]/);
+  assert.match(app, /type: "driveValidate", accountId \}\.then\(response =>/);
+  assert.match(app, /setDriveAccess\(\{ accountId, status: "verified" \}\)/);
+  assert.match(app, /setBackup\(current => current\.accountId === accountId && current\.enabled/);
+  assert.match(app, /backup\.enabled && !driveAccessVerified/);
+  assert.match(app, /backup\.enabled && driveAccessVerified/);
+  assert.match(app, /t\("retryDriveAccess"\)/);
+  assert.match(app, /driveConnectError && <p className="jobRowError" role="status">/);
+});
