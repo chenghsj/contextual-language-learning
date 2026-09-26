@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LEARNING_LANGUAGES, EXPLANATION_LANGUAGES } from "./languages";
 
 export const SubtitleCueSchema = z.object({
   id: z.string().min(1).max(80),
@@ -18,8 +19,8 @@ export const SourceSchema = z.object({
 export type VideoSource = z.infer<typeof SourceSchema>;
 
 export const LearningProfileSchema = z.object({
-  targetLanguage: z.enum(["en", "ja", "ko"]),
-  instructionLanguage: z.enum(["zh-TW", "zh-CN", "en", "ja", "ko"]),
+  targetLanguage: z.enum(LEARNING_LANGUAGES),
+  instructionLanguage: z.enum(EXPLANATION_LANGUAGES),
   level: z.string().min(1).max(12),
   mode: z.enum(["adaptive", "guided", "immersive"]),
   maxNewVocabulary: z.number().int().min(1).max(30),

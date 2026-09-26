@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BackupSettingsSchema, compactStudyExport, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
+  LEARNING_LANGUAGES, EXPLANATION_LANGUAGES, levelsForTargetLanguage, defaultLevelForTargetLanguage,
   parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
   type BackupSettings, type Destination, type DriveAccount, type DriveLessonSummary, type LessonSummary, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
@@ -31,7 +32,8 @@ import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
-  nativeLanguageName, type LocalePreference, type ThemePreference,
+  nativeLanguageName, learningLanguageName, explanationLanguageName,
+  type LocalePreference, type ThemePreference,
 } from "./i18n/preferences";
 
 const HOST_NAME = "dev.immersive.language_learning";
@@ -1183,10 +1185,7 @@ export default function App() {
     setLoopActive(false);
   }
 
-  const levelOptions = profile.targetLanguage === "en"
-    ? ["A1", "A2", "B1", "B2", "C1", "C2"]
-    : profile.targetLanguage === "ja"
-      ? ["N5", "N4", "N3", "N2", "N1"] : ["1", "2", "3", "4", "5", "6"];
+  const levelOptions = levelsForTargetLanguage(profile.targetLanguage);
 
   const filteredJobs = jobs.filter(job => jobFilter === "completed"
     ? job.status === "completed" : jobFilter === "active" ? job.status !== "completed" : true);
@@ -1294,14 +1293,15 @@ export default function App() {
                   />
               </div>
               <SelectField id="learning-target" ariaLabel={t("targetLanguage")}
-                value={profile.targetLanguage} onValueChange={targetLanguage => {
-                  if (targetLanguage !== "en" && targetLanguage !== "ja" && targetLanguage !== "ko") return;
-                  setProfile(current => ({ ...current, targetLanguage, level: targetLanguage === "en" ? "B1" : targetLanguage === "ja" ? "N4" : "2" }));
-                }} options={[
-                  { value: "en", label: nativeLanguageName("en") },
-                  { value: "ja", label: nativeLanguageName("ja") },
-                  { value: "ko", label: nativeLanguageName("ko") },
-                ]} />
+                value={profile.targetLanguage} onValueChange={next => {
+                  const targetLanguage = LEARNING_LANGUAGES.find(language => language === next);
+                  if (!targetLanguage) return;
+                  setProfile(current => ({
+                    ...current, targetLanguage, level: defaultLevelForTargetLanguage(targetLanguage),
+                  }));
+                }} options={LEARNING_LANGUAGES.map(language => ({
+                  value: language, label: learningLanguageName(language, uiLocale),
+                }))} />
             </div>
             <div className="settingField">
               <div className="settingHeading">
@@ -1333,8 +1333,8 @@ export default function App() {
               onValueChange={instructionLanguage => setProfile(current => ({
                 ...current, instructionLanguage: instructionLanguage as LearningProfile["instructionLanguage"],
               }))}
-              options={(["zh-TW", "zh-CN", "en", "ja", "ko"] as const).map(value => ({
-                value, label: nativeLanguageName(value),
+              options={EXPLANATION_LANGUAGES.map(value => ({
+                value, label: explanationLanguageName(value, uiLocale),
               }))} />
           </div>
           <details className="advancedLessonSettings">

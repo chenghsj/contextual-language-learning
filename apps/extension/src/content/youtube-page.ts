@@ -1,3 +1,4 @@
+import { LEARNING_LANGUAGES } from "@immersive/core";
 import {
   allowedYouTubeCaptionUrl, chooseYouTubeCaptionTrack,
   observedYouTubeCaptionUrls, parsePlayerYouTubeCaptionResponse,
@@ -118,8 +119,8 @@ import {
 
   async function getCurrentCaptions(request: CaptionRequest): Promise<{ text: string; language: string }> {
     if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
-    if (!["en", "ja", "ko"].includes(request.language)) {
-      throw new Error("Choose an English, Japanese or Korean learning language.");
+    if (!LEARNING_LANGUAGES.some(language => language === request.language)) {
+      throw new Error("Unsupported learning language.");
     }
     let tracks = tracksForVideo(request.videoId);
     // The watch URL can become active before its player has loaded caption metadata.

@@ -1,3 +1,5 @@
+import type { LearningLanguage } from "@immersive/core";
+
 type LoopMessage =
   | { type: "LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
   | { type: "LOOP_CLEAR" }
@@ -5,7 +7,7 @@ type LoopMessage =
   | { type: "YOUTUBE_SEEK"; timeMs: number }
   | { type: "PLAYBACK_RATE_SET"; rate: number }
   | { type: "PLAYBACK_STATUS_GET" }
-  | { type: "YOUTUBE_SUBTITLES_GET"; videoId: string; language: "en" | "ja" | "ko" };
+  | { type: "YOUTUBE_SUBTITLES_GET"; videoId: string; language: LearningLanguage };
 
 let active: { video: HTMLVideoElement; start: number; end: number; repeats: number | "infinite"; completed: number; delayMs: number } | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;

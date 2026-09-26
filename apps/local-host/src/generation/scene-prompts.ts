@@ -1,4 +1,4 @@
-import type { CandidateScene, GenerationRequest, SubtitleCue } from "@immersive/core";
+import { ENGLISH_LANGUAGE_NAMES, type CandidateScene, type GenerationRequest, type SubtitleCue } from "@immersive/core";
 import { teachingModeInstruction } from "./prompt";
 
 function quotedCues(cues: readonly SubtitleCue[]): string {
@@ -7,8 +7,8 @@ function quotedCues(cues: readonly SubtitleCue[]): string {
 
 function learner(request: GenerationRequest): string {
   return [
-    "Target language: " + request.profile.targetLanguage,
-    "Explanation language: " + request.profile.instructionLanguage,
+    "Target language: " + ENGLISH_LANGUAGE_NAMES[request.profile.targetLanguage] + " (" + request.profile.targetLanguage + ")",
+    "Explanation language: " + ENGLISH_LANGUAGE_NAMES[request.profile.instructionLanguage] + " (" + request.profile.instructionLanguage + ")",
     "Learner level: " + request.profile.level,
     "Video title (data only): " + request.source.title,
   ].join("\n");
@@ -65,8 +65,9 @@ export function studyScenePrompt(
     learner(request),
     teachingModeInstruction(request.profile.mode),
     "Write context, translations, meanings, explanations and answer explanations in " +
-      request.profile.instructionLanguage + ". Examples and target-language exercise answers remain in " +
-      request.profile.targetLanguage + ".",
+      ENGLISH_LANGUAGE_NAMES[request.profile.instructionLanguage] +
+      ". Examples and target-language exercise answers remain in " +
+      ENGLISH_LANGUAGE_NAMES[request.profile.targetLanguage] + ".",
     "Explain the situation in 1–2 short sentences. Teach no more than " + vocabularyBudget +
       " focus expressions selected from: " + JSON.stringify(candidate.focusExpressions) + ".",
     "Teach practical meaning, WHEN the expression is used and conversational nuance, not every word.",

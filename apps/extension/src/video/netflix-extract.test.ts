@@ -123,3 +123,15 @@ test("a signed allowlisted caption URL reaches the worker boundary without a red
   assert.equal(received, url);
   assert.equal(parseSubtitles(result.text).length, 1);
 });
+
+test("Netflix accepts new learning language codes and checks available tracks", async () => {
+  for (const language of ["es", "fr", "de", "it", "pt"]) {
+    await assert.rejects(
+      () => readNetflixSubtitles({}, null, () => null, language),
+      /No subtitle track in this language/,
+      language + " passes the supported-language validation",
+    );
+  }
+  await assert.rejects(() => readNetflixSubtitles({}, null, () => null, "xx"),
+    /Unsupported learning language/);
+});

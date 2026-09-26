@@ -1,5 +1,6 @@
 import type { UiLocale } from "./messages";
-import type { LearningProfile } from "@immersive/core";
+import type { LearningProfile, LearningLanguage } from "@immersive/core";
+import { learningLanguageName } from "./preferences";
 
 export type LearningSettingKey = "targetLanguage" | "level" | "instructionLanguage" |
   "teachingMode" | "sceneCount" | "vocabLimit" | "exerciseCount";
@@ -14,8 +15,18 @@ export type LearningSettingsCopy = {
   modes: Record<LearningProfile["mode"], SettingOptionInfo>;
 };
 
-/** All option labels and descriptions are localized, but persisted values stay unchanged. */
-export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
+type OriginalTarget = "en" | "ja" | "ko";
+type OriginalExplanation = "zh-TW" | "zh-CN" | OriginalTarget;
+type OriginalLearningSettingsCopy = Omit<LearningSettingsCopy,
+  "levelHints" | "targetDescriptions" | "instructionDescriptions" | "levels"> & {
+    levelHints: Record<OriginalTarget, string>;
+    targetDescriptions: Record<OriginalTarget, string>;
+    instructionDescriptions: Record<OriginalExplanation, string>;
+    levels: Record<OriginalTarget, Record<string, SettingOptionInfo>>;
+  };
+
+/** Keep existing localized guidance while sharing CEFR descriptions for new languages. */
+const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCopy> = {
   "en": {
     "infoLabel": "Information about",
     "fieldHints": {
@@ -612,6 +623,58 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
     }
   }
 };
+
+type AddedLanguage = Exclude<LearningLanguage, OriginalTarget>;
+const ADDED_LANGUAGES: readonly AddedLanguage[] = ["es", "fr", "de", "it", "pt"];
+
+const localizedCEFRHint: Record<UiLocale, (name: string) => string> = {
+  en: name => name + " uses CEFR (A1–C2): A1 is beginner and C2 is proficient. Choose a level that matches the dialogue you can understand.",
+  "zh-TW": name => name + "使用 CEFR（A1～C2）分級，A1 為入門、C2 為精通。請依目前能理解的對話選擇難度。",
+  "zh-CN": name => name + "使用 CEFR（A1～C2）分级，A1 为入门、C2 为精通。请根据目前能理解的对话选择难度。",
+  ja: name => name + "は CEFR（A1～C2）を使います。A1 は入門、C2 は熟達です。理解できる会話に合わせて選んでください。",
+  ko: name => name + "는 CEFR(A1~C2)을 사용합니다. A1은 입문, C2는 숙련 단계입니다. 이해할 수 있는 대화에 맞춰 선택하세요.",
+};
+const localizedTargetDescription: Record<UiLocale, (name: string) => string> = {
+  en: name => "Learn from " + name + " subtitle lines.",
+  "zh-TW": name => "透過" + name + "字幕學習。",
+  "zh-CN": name => "通过" + name + "字幕学习。",
+  ja: name => name + "の字幕から学びます。",
+  ko: name => name + " 자막으로 학습합니다.",
+};
+const localizedInstructionDescription: Record<UiLocale, (name: string) => string> = {
+  en: name => "Explain meanings and grammar in " + name + ".",
+  "zh-TW": name => "使用" + name + "講解詞義和文法。",
+  "zh-CN": name => "使用" + name + "讲解词义和语法。",
+  ja: name => name + "で意味と文法を説明します。",
+  ko: name => name + "로 어휘와 문법을 설명합니다.",
+};
+
+export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = Object.fromEntries(
+  (Object.entries(originalLearningSettingsCopy) as [UiLocale, OriginalLearningSettingsCopy][])
+    .map(([locale, base]) => {
+      const names = ADDED_LANGUAGES.map(language => [language,
+        learningLanguageName(language, locale)] as const);
+      return [locale, {
+        ...base,
+        levelHints: {
+          ...base.levelHints,
+          ...Object.fromEntries(names.map(([code, name]) => [code, localizedCEFRHint[locale](name)])),
+        },
+        targetDescriptions: {
+          ...base.targetDescriptions,
+          ...Object.fromEntries(names.map(([code, name]) => [code, localizedTargetDescription[locale](name)])),
+        },
+        instructionDescriptions: {
+          ...base.instructionDescriptions,
+          ...Object.fromEntries(names.map(([code, name]) => [code, localizedInstructionDescription[locale](name)])),
+        },
+        levels: {
+          ...base.levels,
+          ...Object.fromEntries(ADDED_LANGUAGES.map(code => [code, base.levels.en])),
+        },
+      }];
+    }),
+) as Record<UiLocale, LearningSettingsCopy>;
 
 /** Provide the selected language's level scale without listing unrelated exams. */
 export function levelHint(copy: LearningSettingsCopy, language: LearningProfile["targetLanguage"]): string {
