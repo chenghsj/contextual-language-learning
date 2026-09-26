@@ -7,7 +7,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
 (() => {
   const REQUEST_EVENT = "immersive-learning:netflix:request";
   const RESPONSE_EVENT = "immersive-learning:netflix:response";
-  const BRIDGE_VERSION = "netflix-worker-url-check-v2";
+  const BRIDGE_VERSION = "netflix-worker-url-check-v3";
   const CAPTION_FETCH_REQUEST_EVENT = "immersive-learning:netflix:caption-fetch-request";
   const CAPTION_FETCH_RESPONSE_EVENT = "immersive-learning:netflix:caption-fetch-response";
   type Action = "bridgeHealth" | "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
@@ -65,12 +65,17 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
   };
 
   const selectPlayer = (): { player: Player; sessionId: string; video: HTMLVideoElement | null } | null => {
-    const api = page.netflix?.appContext?.state?.playerApp?.getAPI()?.videoPlayer;
+    let api: PlayerApi | undefined;
+    try { api = page.netflix?.appContext?.state?.playerApp?.getAPI()?.videoPlayer; }
+    catch { return null; } // The internal API may be absent or change between episodes.
     if (!api) return null;
-    const ids = api.getAllPlayerSessionIds();
+    let ids: string[];
+    try { ids = api.getAllPlayerSessionIds(); } catch { return null; }
     const entries = ids.flatMap(sessionId => {
-      const player = api.getVideoPlayerBySessionId(sessionId);
-      return player ? [{ player, sessionId }] : [];
+      try {
+        const player = api.getVideoPlayerBySessionId(sessionId);
+        return player ? [{ player, sessionId }] : [];
+      } catch { return []; }
     });
     if (!entries.length) return null;
     const video = findVideo();
@@ -112,9 +117,15 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
       void (async () => {
         if (!watchId) throw new Error("Open a Netflix watch page first.");
         const chosen = selectPlayer();
-        if (!chosen) throw new Error("Netflix playback session is not ready. Start the video and retry.");
+        const video = chosen?.video ?? findVideo();
+        if (!chosen && !video) {
+          throw new Error("Netflix playback session is not ready. Start the video and retry.");
+        }
+        // Some Netflix builds expose complete HTML text tracks but hide their
+        // undocumented player API. Reuse only already available caption cues;
+        // readNetflixSubtitles refuses partial/empty tracks.
         const subtitle = await readNetflixSubtitles(
-          chosen.player, chosen.video, () => page.netflix?.player?.MediaSession,
+          chosen?.player ?? {}, video, () => page.netflix?.player?.MediaSession,
           request.language ?? "", {
             sameVideo: () => location.pathname.match(/^\/watch\/(\d+)/)?.[1] === watchId,
             fetchDocument: url => requestCaptionDocument(String(url), request.id),
