@@ -231,7 +231,8 @@ test("setting help is label-aligned and does not repeat general explanations bel
   }
   assert.ok(app.includes('relative mb-[6px] flex min-w-0 items-center gap-2'));
   assert.ok(help.includes('className="group m-0 inline-flex size-7'), "info details have no inherited section margins");
-  assert.ok(help.includes('top-[calc(100%+6px)] right-0'), "popover stays aligned to the field's right edge");
+  assert.ok(help.includes("trigger.getBoundingClientRect()") && help.includes("window.innerWidth - width - margin"),
+    "popover follows its own icon and stays inside the viewport");
   assert.ok(help.includes('focus-visible:outline-2'), "info trigger supports visible keyboard focus");
   assert.ok(help.includes('event.key !== "Escape"') && help.includes('document.addEventListener("pointerdown"'),
     "Escape and outside-click close the native details");
