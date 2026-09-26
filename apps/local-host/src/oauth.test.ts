@@ -34,7 +34,7 @@ test("unexpected OAuth errors do not echo arbitrary codes or descriptions", () =
 });
 
 test("optional Desktop client secret is available at build time for code and refresh exchanges", async () => {
-  const build = await readFile(new URL("scripts/build.mjs", import.meta.url), "utf8");
+  const build = await readFile(new URL("../scripts/build.mjs", import.meta.url), "utf8");
   const oauth = await readFile(new URL("drive/oauth.ts", import.meta.url), "utf8");
   assert.match(build, /__GOOGLE_OAUTH_CLIENT_SECRET__: JSON.stringify\(clientSecret\)/);
   assert.equal(oauth.match(/form.set\("client_secret", config.clientSecret\)/g)?.length, 2);
