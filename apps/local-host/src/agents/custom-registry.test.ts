@@ -50,7 +50,7 @@ test("custom Agent argv expansion never constructs a shell command", () => {
 });
 
 test("custom Agent can unwrap structured CLI envelopes before lesson validation", () => {
-  assert.deepEqual(extractCustomAgentPayload({ response: "{\\\"title\\\":\\\"ok\\\"}" }, "response"), { title: "ok" });
+  assert.deepEqual(extractCustomAgentPayload({ response: '{"title":"ok"}' }, "response"), { title: "ok" });
   assert.deepEqual(extractCustomAgentPayload({ data: { answer: { title: "ok" } } }, "data.answer"), { title: "ok" });
   assert.throws(() => extractCustomAgentPayload({}, "response"), /missing configured path/);
 });
@@ -66,8 +66,8 @@ test("stdin/file placeholders and OpenCode-style NDJSON are deterministic", () =
   assert.deepEqual(expandCustomArgs(file, "prompt", "", "/tmp/result.json"), ["--out", "/tmp/result.json", "prompt"]);
   const ndjson = [
     JSON.stringify({ type: "step_start", part: {} }),
-    JSON.stringify({ type: "text", part: { text: "{\\\"title\\\":" } }),
-    JSON.stringify({ type: "text", part: { text: "\\\"ok\\\"}" } }),
+    JSON.stringify({ type: "text", part: { text: '{"title":' } }),
+    JSON.stringify({ type: "text", part: { text: '"ok"}' } }),
   ].join("\n");
   assert.deepEqual(parseCustomAgentNdjson(ndjson, "part.text"), { title: "ok" });
 });
