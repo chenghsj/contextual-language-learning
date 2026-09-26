@@ -2,7 +2,6 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { readLearningDocument, type Destination, type LearningDocument } from "@immersive/core";
 import { toMarkdown } from "../generation/markdown";
-import { publishDriveDocument } from "../drive/api";
 import { validateFolder } from "./folders";
 import type { DocumentPublisher, StoragePorts } from "./ports";
 
@@ -20,9 +19,7 @@ async function writeOnce(path: string, content: string, documentId: string): Pro
 
 export class DestinationPublisher implements DocumentPublisher {
   async publish(document: LearningDocument, markdown: string, destination: Destination): Promise<string> {
-    if (destination.kind === "drive") {
-      return publishDriveDocument(destination.accountId, document, markdown);
-    }
+    if (destination.kind === "drive") throw new Error("Google Drive is a backup, not a primary destination");
     const folder = await validateFolder(destination.directory);
     const jsonPath = join(folder, document.id + ".json");
     const markdownPath = join(folder, document.id + ".md");
@@ -42,7 +39,8 @@ export async function publishSavedJob(
   }
   const document = await storage.documents.get(job.summary.documentId ?? jobId);
   if (!document) throw new Error("Saved learning document not found");
-  const destination = job.request.destination ?? { kind: "local" };
+  const destination: Destination = job.request.destination?.kind === "local"
+    ? job.request.destination : { kind: "local" };
   await storage.jobs.update(jobId, current => ({
     ...current, summary: { ...current.summary,
       publication: { status: "pending" }, updatedAt: new Date().toISOString() },
@@ -51,7 +49,11 @@ export async function publishSavedJob(
     const location = await publisher.publish(document, toMarkdown(document), destination);
     await storage.jobs.update(jobId, current => ({
       ...current, summary: { ...current.summary,
-        publication: { status: "published", location }, updatedAt: new Date().toISOString() },
+        publication: { status: "published", location },
+        ...(current.request.backup?.enabled && !current.summary.backup ? {
+          backup: { status: "pending" as const, accountId: current.request.backup.accountId!, updatedAt: new Date().toISOString() },
+        } : {}),
+        updatedAt: new Date().toISOString() },
     }));
     return location;
   } catch (error) {

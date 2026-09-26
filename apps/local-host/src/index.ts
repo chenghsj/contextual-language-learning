@@ -13,6 +13,7 @@ import { encodeMessage, NativeFramer } from "./protocol";
 import { localStoragePorts } from "./storage/file";
 import { chooseLocalFolder, validateFolder } from "./storage/folders";
 import { publishSavedJob } from "./storage/publish";
+import { backupSavedJob, resumePendingBackups } from "./storage/backup";
 // Keep earlier filesystem/synced-drive compatibility endpoints for existing users.
 import { findExisting } from "./storage/publisher";
 import { listStorageLocations, validateUserStoragePath } from "./storage/locations";
@@ -70,8 +71,18 @@ async function finishDocument(requestId: string, document: LearningDocument): Pr
     const message = error instanceof Error ? error.message : "Publishing failed";
     reply({ id: requestId, type: "publicationFailed", jobId: document.id, message: message.slice(0, 900) });
   }
-  // Publishing is independent of document creation; the canonical local document is preserved.
+  // A complete local lesson is available immediately; the background controller
+  // keeps the Host connected until optional Drive backup has settled.
   deliverDocument(requestId, document);
+  try {
+    const location = await backupSavedJob(storage, document.id);
+    if (location) reply({ id: requestId, type: "backupPublished", jobId: document.id, location });
+  } catch (error) {
+    reply({ id: requestId, type: "backupFailed", jobId: document.id,
+      message: error instanceof Error ? error.message : String(error) });
+  } finally {
+    reply({ id: requestId, type: "generationSettled" });
+  }
 }
 
 async function handle(input: unknown): Promise<void> {
@@ -108,6 +119,10 @@ async function handle(input: unknown): Promise<void> {
         break;
       case "listJobs":
         reply({ id: request.id, type: "jobs", jobs: await manager.list() });
+        break;
+      case "resumeBackups":
+        await resumePendingBackups(storage);
+        reply({ id: request.id, type: "backupsFinished" });
         break;
       case "storageLocations":
         reply({ id: request.id, type: "storageLocations", locations: await listStorageLocations() });
@@ -165,6 +180,17 @@ async function handle(input: unknown): Promise<void> {
         const document = await storage.documents.get(request.documentId);
         if (!document) throw new Error("Saved document not found");
         deliverDocument(request.id, document);
+        break;
+      }
+      case "retryBackup": {
+        try {
+          const location = await backupSavedJob(storage, request.jobId);
+          if (!location) throw new Error("This lesson has no enabled Google Drive backup");
+          reply({ id: request.id, type: "backupPublished", jobId: request.jobId, location });
+        } catch (error) {
+          reply({ id: request.id, type: "backupFailed", jobId: request.jobId,
+            message: error instanceof Error ? error.message : String(error) });
+        }
         break;
       }
       case "publishJob": {

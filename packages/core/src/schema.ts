@@ -41,6 +41,12 @@ export const DestinationSchema = z.discriminatedUnion("kind", [
 ]);
 export type Destination = z.infer<typeof DestinationSchema>;
 
+export const BackupSettingsSchema = z.object({
+  enabled: z.boolean(),
+  accountId: z.string().min(1).max(256).optional(),
+}).refine(value => !value.enabled || !!value.accountId, "A connected Google account is required for backup");
+export type BackupSettings = z.infer<typeof BackupSettingsSchema>;
+
 export const DriveAccountSchema = z.object({
   id: z.string().min(1).max(256),
   email: z.string().email().max(320),
@@ -65,6 +71,7 @@ export const GenerationRequestSchema = z.object({
   profile: LearningProfileSchema,
   agent: AgentSettingsSchema,
   destination: DestinationSchema.optional(),
+  backup: BackupSettingsSchema.optional(),
   cues: z.array(SubtitleCueSchema).min(1).max(3000),
   outputPath: z.string().max(2048).optional(),
   allowRegenerate: z.boolean().optional(),
@@ -187,6 +194,8 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("driveDisconnect"), id: z.string().uuid(), accountId: z.string().min(1).max(256) }),
   z.object({ type: z.literal("driveConnect"), id: z.string().uuid() }),
   z.object({ type: z.literal("publishJob"), id: z.string().uuid(), jobId: z.string().uuid() }),
+  z.object({ type: z.literal("retryBackup"), id: z.string().uuid(), jobId: z.string().uuid() }),
+  z.object({ type: z.literal("resumeBackups"), id: z.string().uuid() }),
 ]);
 export type HostRequest = z.infer<typeof HostRequestSchema>;
 
@@ -215,5 +224,9 @@ export type HostMessage =
   | { id: string; type: "driveDisconnected"; accountId: string }
   | { id: string; type: "published"; jobId: string; location: string }
   | { id: string; type: "publicationFailed"; jobId: string; message: string }
+  | { id: string; type: "backupPublished"; jobId: string; location: string }
+  | { id: string; type: "backupFailed"; jobId: string; message: string }
+  | { id: string; type: "backupsFinished" }
+  | { id: string; type: "generationSettled" }
   | { id: string; type: "cancelled" }
   | { id: string; type: "error"; message: string };
