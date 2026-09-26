@@ -51,7 +51,7 @@ try {
     const platform = platforms[index];
     const hostName = hostNames[index];
     await writeFile(join(hostStage, "README.md"), [
-      "# Immersive Language Learning — " + platform + " Native Host", "",
+      "# AI-powered Contextual Language Learning — " + platform + " Native Host", "",
       "Requires Node.js 22+, at least one installed and signed-in CLI Agent,",
       "and the matching Chromium extension. Windows additionally requires Windows PowerShell 5.1",
       "and .NET Framework to compile the small launcher executable during installation.", "",

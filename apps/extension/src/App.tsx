@@ -1059,7 +1059,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div><span className="brandMark">IL</span><strong>Immersive Learning</strong></div>
+        <div><span className="brandMark">CL</span><strong>AI-powered Contextual Language Learning</strong></div>
         <span className="version">MVP · v0.1</span>
       </header>
       <nav className="tabs" aria-label={t("navLabel")}>
