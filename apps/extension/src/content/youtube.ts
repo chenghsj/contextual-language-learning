@@ -9,6 +9,7 @@ type LoopMessage =
   | { type: "PLAYBACK_RATE_SET"; rate: number }
   | { type: "PLAYBACK_STATUS_GET" }
   | { type: "YOUTUBE_SUBTITLES_GET"; videoId: string; language: LearningLanguage }
+  | { type: "YOUTUBE_CAPTION_TRACKS_GET"; videoId: string }
   | { type: typeof VIDEO_READER_STATUS };
 
 let active: { video: HTMLVideoElement; start: number; end: number; repeats: number | "infinite"; completed: number; delayMs: number } | null = null;
@@ -92,6 +93,32 @@ function requestYouTubeCaptions(videoId: string, language: string): Promise<Capt
   });
 }
 
+function requestYouTubeTrackList(videoId: string): Promise<{
+  source: string; id: string; ok: boolean; bridgeVersion?: string; status?: string;
+  tracks?: { language: string; kind: "manual" | "auto" }[]; error?: string;
+}> {
+  return new Promise(resolve => {
+    const id = crypto.randomUUID();
+    const eventName = "immersive-learning:youtube:track-response";
+    const timer = setTimeout(() => {
+      window.removeEventListener(eventName, receive);
+      resolve({ source: "immersive-learning", id, ok: false, error: "Caption metadata timed out." });
+    }, 4_000);
+    function receive(event: Event): void {
+      const result = (event as CustomEvent<{ source: string; id: string; ok: boolean; bridgeVersion?: string;
+        status?: string; tracks?: { language: string; kind: "manual" | "auto" }[]; error?: string }>).detail;
+      if (result?.source !== "immersive-learning" || result.id !== id) return;
+      clearTimeout(timer);
+      window.removeEventListener(eventName, receive);
+      resolve(result);
+    }
+    window.addEventListener(eventName, receive);
+    window.dispatchEvent(new CustomEvent("immersive-learning:youtube:track-request", {
+      detail: { source: "immersive-learning", id, videoId },
+    }));
+  });
+}
+
 function youtubePageReaderReady(): Promise<boolean> {
   return new Promise(resolve => {
     const id = crypto.randomUUID();
@@ -129,6 +156,24 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
       document.title;
     respond({ ok: true, url: location.href, title });
     return false;
+  }
+  if (message.type === "YOUTUBE_CAPTION_TRACKS_GET") {
+    const videoId = new URL(location.href).searchParams.get("v");
+    if (location.pathname !== "/watch" || videoId !== message.videoId) {
+      respond({ ok: false, error: "The active YouTube video changed." });
+      return false;
+    }
+    void requestYouTubeTrackList(message.videoId).then(result => {
+      if (!result.ok || result.bridgeVersion !== "native-caption-capture-v2") {
+        respond({ ok: false, error: result.error ?? RELOAD_READER_MESSAGE });
+        return;
+      }
+      const tracks = Array.isArray(result.tracks) ? result.tracks.filter(track =>
+        typeof track?.language === "string" && /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(track.language) &&
+        (track.kind === "manual" || track.kind === "auto")).slice(0, 100) : [];
+      respond({ ok: true, status: result.status === "available" ? "available" : "unknown", tracks });
+    }).catch(() => respond({ ok: false, error: "Caption metadata unavailable." }));
+    return true;
   }
   if (message.type === "YOUTUBE_SUBTITLES_GET") {
     const videoId = new URL(location.href).searchParams.get("v");
