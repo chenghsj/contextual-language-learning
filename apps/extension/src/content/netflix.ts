@@ -47,8 +47,11 @@ import {
       const timer = setTimeout(() => {
         pendingCaptionRequests.delete(id);
         window.removeEventListener(RESPONSE_EVENT, onResponse);
-        resolve({ source: "immersive-learning", id, ok: false, available: false, error: "Netflix page bridge did not respond." });
-      }, action === "subtitlesGet" ? 16_000 : action === "bridgeHealth" ? 1_100 : action === "status" ? 900 : 2_000);
+        resolve({ source: "immersive-learning", id, ok: false, available: false,
+          error: action === "subtitlesGet"
+            ? "Netflix subtitle retrieval timed out. Start playback, enable subtitles, then retry on this watch tab."
+            : "Netflix page bridge did not respond." });
+      }, action === "subtitlesGet" ? 22_000 : action === "bridgeHealth" ? 1_100 : action === "status" ? 900 : 2_000);
       function onResponse(event: Event): void {
         const detail = (event as CustomEvent<PageResponse>).detail;
         if (detail?.source !== "immersive-learning" || detail.id !== id) return;
@@ -264,7 +267,7 @@ import {
       if (!result.ok) {
         return { ok: false, error: result.error ?? "Netflix did not provide a readable transcript." };
       }
-      if (result.bridgeVersion !== "netflix-worker-url-check-v2") {
+      if (result.bridgeVersion !== "netflix-worker-url-check-v3") {
         return { ok: false, error: RELOAD_READER_MESSAGE };
       }
       if (!result.text || !result.language) {
@@ -341,7 +344,7 @@ import {
     const candidate = incoming as Partial<Message>;
     if (candidate.type === VIDEO_READER_STATUS) {
       void requestPage("bridgeHealth").then(result => {
-        sendResponse(result.ok && result.bridgeVersion === "netflix-worker-url-check-v2"
+        sendResponse(result.ok && result.bridgeVersion === "netflix-worker-url-check-v3"
           ? { ok: true, platform: "netflix", bridgeVersion: VIDEO_READER_VERSION }
           : { ok: false, error: RELOAD_READER_MESSAGE });
       }).catch(() => sendResponse({ ok: false, error: RELOAD_READER_MESSAGE }));

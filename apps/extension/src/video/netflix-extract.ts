@@ -79,7 +79,8 @@ function browserTextTrack(video: HTMLVideoElement | null, requested: string): Su
     tracks.find(track => languageMatches(track.language, requested));
   if (!selected?.cues?.length) return null;
   const cues = Array.from(selected.cues).map(cue => {
-    const text = cue instanceof VTTCue ? cue.text : (cue as VTTCue).text ?? "";
+    const text = typeof VTTCue !== "undefined" && cue instanceof VTTCue
+      ? cue.text : (cue as VTTCue).text ?? "";
     return { startMs: cue.startTime * 1000, endMs: cue.endTime * 1000, text };
   });
   const duration = video.duration * 1000;

@@ -107,7 +107,7 @@ function youtubePageReaderReady(): Promise<boolean> {
       if (reply?.source !== "immersive-learning" || reply.id !== id) return;
       clearTimeout(timer);
       window.removeEventListener(responseEvent, receive);
-      resolve(reply.bridgeVersion === "native-caption-capture-v1");
+      resolve(reply.bridgeVersion === "native-caption-capture-v2");
     }
     window.addEventListener(responseEvent, receive);
     window.dispatchEvent(new CustomEvent("immersive-learning:youtube:bridge-health-request", {
@@ -137,7 +137,7 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
       return;
     }
     void requestYouTubeCaptions(message.videoId, message.language).then(result => {
-      if (result.bridgeVersion !== "native-caption-capture-v1") {
+      if (result.bridgeVersion !== "native-caption-capture-v2") {
         respond({ ok: false, error: "The YouTube page has an outdated caption reader. Rebuild the extension and reload this video tab before retrying." });
         return;
       }
