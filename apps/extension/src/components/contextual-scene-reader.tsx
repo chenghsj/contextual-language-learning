@@ -513,70 +513,75 @@ export function ContextualSceneReader({
             value: String(rate), label: rate + "×",
           }))} />}
       </div>
-      <Button size="sm" variant="ghost" className="mt-[3px] flex min-h-[30px] w-full justify-center text-[11px] text-muted-foreground"
-        aria-expanded={calibrationOpen} disabled={busy || !selectedRange}
-        onClick={() => setCalibrationOpen(true)}>
-        <SlidersHorizontal aria-hidden="true" />{copy.adjustPosition}
-      </Button>
-      <dialog className="max-h-[min(560px,84vh)] w-[min(370px,calc(100vw-22px))] max-w-[calc(100vw-22px)] overflow-auto rounded-[var(--radius)] border border-border bg-card p-4 text-foreground shadow-[0_20px_60px_#0004] backdrop:bg-[#0008]" ref={calibrationRef}
-        aria-labelledby="contextual-time-dialog-title"
-        onClose={() => setCalibrationOpen(false)}
-        onCancel={() => setCalibrationOpen(false)}>
-        <div className="flex items-center justify-between gap-[10px] [&>h3]:m-0 [&>h3]:text-base [&>button]:shrink-0">
-          <h3 id="contextual-time-dialog-title">{copy.adjustPosition}</h3>
-          <Button size="icon" variant="ghost" aria-label={copy.close}
-            onClick={() => setCalibrationOpen(false)}><X aria-hidden="true" /></Button>
-        </div>
-        <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{timing.loopRangeHint}</p>
-        <div className="my-[14px] grid grid-cols-2 gap-[10px] [&>div]:min-w-0 [&_label]:mb-[5px] [&_label]:mt-0 [&_label]:text-xs [&_[data-slot=select-trigger]]:w-full [&_[data-slot=select-trigger]]:min-w-0">
-          <div>
-            <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="contextual-repeats">{timing.repeat}</label>
-            <SelectField id="contextual-repeats" ariaLabel={timing.repeat} value={repeat}
+      <details className="mt-2 rounded-[var(--radius)] border border-border px-2 py-[6px] text-xs">
+        <summary className="cursor-pointer font-semibold text-muted-foreground">{copy.loopOptions}</summary>
+        <div className="mt-2 grid grid-cols-2 gap-2 [&_[data-slot=select-trigger]]:w-full">
+          <label className="grid gap-1">{timing.repeat}
+            <SelectField ariaLabel={timing.repeat} value={repeat} disabled={busy}
               onValueChange={value => setRepeat(value as Repeat)}
-              options={[
-                { value: "2", label: "2×" }, { value: "3", label: "3×" },
-                { value: "5", label: "5×" }, { value: "infinite", label: "∞" },
-              ]} />
-          </div>
-          <div>
-            <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="contextual-delay">{timing.delay}</label>
-            <SelectField id="contextual-delay" ariaLabel={timing.delay} value={String(delay)}
+              options={[{ value: "2", label: "2×" }, { value: "3", label: "3×" },
+                { value: "5", label: "5×" }, { value: "infinite", label: "∞" }]} />
+          </label>
+          <label className="grid gap-1">{timing.delay}
+            <SelectField ariaLabel={timing.delay} value={String(delay)} disabled={busy}
               onValueChange={value => setDelay(Number(value))}
               options={[0, 1, 2, 3].map(seconds => ({
                 value: String(seconds), label: seconds + "s",
               }))} />
-          </div>
+          </label>
         </div>
-        {selectedRange && <div className="grid gap-4 border-t border-border pt-[10px]">
-          {(["start", "end"] as const).map(boundary => {
-            const point = boundary === "start" ? selectedRange.startMs : selectedRange.endMs;
-            const name = boundary === "start" ? timing.loopStart : timing.loopEnd;
-            return <div key={boundary}>
-              <div className="mb-[9px] flex items-center justify-between gap-2 text-[13px] [&>output]:tabular-nums">
-                <strong>{name}</strong>
-                <output>{formatLoopTimestamp(point)}</output>
-              </div>
-              <div className="grid grid-cols-2 gap-[6px] [&>button]:h-auto [&>button]:min-h-[35px] [&>button]:min-w-0 [&>button]:whitespace-normal [&>button]:p-[6px] [&>button]:text-xs [&>button:last-child]:col-span-full">
-                <Button size="sm" variant="outline" disabled={busy}
-                  aria-label={name + " " + timing.loopEarlier}
-                  onClick={() => void updateRange(boundary, point - 500)}>−0.5s</Button>
-                <Button size="sm" variant="outline" disabled={busy}
-                  aria-label={name + " " + timing.loopLater}
-                  onClick={() => void updateRange(boundary, point + 500)}>+0.5s</Button>
-                <Button size="sm" variant="outline" disabled={busy || !adapter.status}
-                  onClick={() => void updateRange(boundary, "current")}>
-                  {timing.setBoundaryHere}
-                </Button>
-              </div>
-            </div>;
-          })}
-          <Button size="sm" variant="ghost" disabled={busy || !selectedCue ||
-            !loopRanges[selectedCue.id]} onClick={() => void updateRange("reset")}>
-            {timing.loopRangeResetButton}
-          </Button>
-        </div>}
-        {status && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{status}</p>}
-      </dialog>
+      </details>
+      <Button size="sm" variant="ghost" className="mt-[3px] flex min-h-[30px] w-full justify-center text-[11px] text-muted-foreground"
+        aria-expanded={calibrationOpen} aria-controls="contextual-inline-calibration"
+        disabled={busy || !selectedRange || !adapter.status}
+        onClick={() => calibrationOpen ? cancelCalibration() : openCalibration()}>
+        <SlidersHorizontal aria-hidden="true" />{copy.adjustPosition}
+        <ChevronDown aria-hidden="true" className={calibrationOpen ? "rotate-180" : ""} />
+      </Button>
+      {calibrationOpen && selectedRange && <section id="contextual-inline-calibration"
+        className="mt-2 grid gap-2 border-t border-border pt-3 text-xs" aria-label={copy.adjustPosition}>
+        {calibrationStage === "start" && <>
+          <p className="m-0 text-foreground">{copy.calibrateStart}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" disabled={busy} onClick={() => void captureBoundary("start")}>
+              {copy.markStart}
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={cancelCalibration}>
+              {copy.cancelTiming}
+            </Button>
+          </div>
+        </>}
+        {calibrationStage === "end" && <>
+          <p className="m-0 text-foreground">{copy.calibrateEnd}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" disabled={busy} onClick={() => void captureBoundary("end")}>
+              {copy.markEnd}
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={cancelCalibration}>
+              {copy.cancelTiming}
+            </Button>
+          </div>
+        </>}
+        {calibrationStage === "confirm" && <>
+          <p className="m-0 tabular-nums text-muted-foreground">
+            {draftRange ? formatLoopTimestamp(draftRange.startMs) + " – " +
+              formatLoopTimestamp(draftRange.endMs) : copy.restoreTiming}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" disabled={busy} onClick={() => void finishCalibration()}>
+              {copy.saveTiming}
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={cancelCalibration}>
+              {copy.cancelTiming}
+            </Button>
+          </div>
+        </>}
+        {calibrationStage !== "confirm" && selectedCue && loopRanges[selectedCue.id] &&
+          <Button size="sm" variant="ghost" className="w-fit text-muted-foreground"
+            disabled={busy} onClick={() => { setDraftRange(null); setCalibrationStage("confirm"); }}>
+            {copy.restoreTiming}
+          </Button>}
+      </section>}
       {status && <p className="mt-[5px] text-[11px] text-muted-foreground wrap-anywhere" role="status">{status}</p>}
     </div>}
   </div>;
