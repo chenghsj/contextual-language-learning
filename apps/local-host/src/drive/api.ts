@@ -202,3 +202,32 @@ export async function listDriveLessons(accountId: string): Promise<DriveLessonSu
   }
   return [...unique.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
+
+/** Read and validate one app-owned Drive JSON file before importing it locally. */
+export async function getDriveDocument(accountId: string, documentId: string): Promise<LearningDocument> {
+  if (!/^[0-9a-f-]{36}$/i.test(documentId)) throw new Error("Invalid lesson ID");
+  if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
+    throw new Error("Google Drive account is not connected");
+  }
+  const key = createHash("sha256").update(documentId).digest("hex");
+  const files = await listFiles(accountId,
+    "trashed = false and " + propertyMatch("immersiveDocumentKey", key),
+    "id,name,appProperties", 100);
+  const file = files.find(item => item.appProperties?.immersiveFormat === "json" &&
+    item.appProperties?.immersiveDocumentId === documentId);
+  if (!file) throw new Error("Lesson not found in Google Drive");
+  const response = await googleFetch(accountId,
+    API + "/files/" + encodeURIComponent(file.id) + "?alt=media");
+  if (Number(response.headers.get("Content-Length") ?? 0) > 25_000_000) {
+    throw new Error("Drive lesson exceeds the import size limit");
+  }
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length > 25_000_000) throw new Error("Drive lesson exceeds the import size limit");
+  const checksum = file.appProperties?.immersiveContentHash;
+  if (checksum && createHash("sha256").update(bytes).digest("hex") !== checksum) {
+    throw new DriveContentConflict("Drive lesson does not match its recorded checksum");
+  }
+  const document = readLearningDocument(JSON.parse(bytes.toString("utf8")) as unknown);
+  if (document.id !== documentId) throw new DriveContentConflict("Drive lesson ID does not match requested ID");
+  return document;
+}
