@@ -4,7 +4,8 @@ import { readFile } from "node:fs/promises";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { learningSettingsCopy, levelHint, type LearningSettingKey } from "./learning-settings";
-import { nativeLanguageName } from "./preferences";
+import { nativeLanguageName, learningLanguageName, explanationLanguageName } from "./preferences";
+import { LEARNING_LANGUAGES, EXPLANATION_LANGUAGES, levelsForTargetLanguage, defaultLevelForTargetLanguage } from "@immersive/core";
 import { messages, type UiLocale } from "./messages";
 import { SettingInfo } from "../components/setting-info";
 
@@ -66,9 +67,10 @@ test("settings keep stable saved option values rather than persisting translated
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   for (const mode of modes) assert.ok(app.includes('"' + mode + '"'));
   assert.match(app, /\(\["adaptive", "guided", "immersive"\] as const\)\.map/);
-  for (const language of ["en", "ja", "ko"] as const) {
-    assert.ok(app.includes('value: "' + language + '"') || app.includes('["zh-TW", "zh-CN", "en", "ja", "ko"]'));
-  }
+  assert.match(app, /LEARNING_LANGUAGES\.map\(language/);
+  assert.match(app, /EXPLANATION_LANGUAGES\.map\(value/);
+  assert.match(app, /learningLanguageName\(language, uiLocale\)/);
+  assert.match(app, /explanationLanguageName\(value, uiLocale\)/);
   for (const field of fields) {
     if (field === "level") {
       assert.match(app, /levelHint\(settingsCopy, profile\.targetLanguage\)/);
@@ -102,7 +104,7 @@ test("level help follows the selected learning language in every interface local
   }
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   assert.match(app, /explanation=\{levelHint\(settingsCopy, profile\.targetLanguage\)\}/);
-  assert.match(app, /targetLanguage, level: targetLanguage === "en" \? "B1" : targetLanguage === "ja" \? "N4" : "2"/);
+  assert.match(app, /defaultLevelForTargetLanguage\(targetLanguage\)/);
 });
 
 test("each interface locale declares exactly one levelHints block in its own language", async () => {
@@ -157,6 +159,33 @@ test("level tooltip displays the complete scale for the selected language in eve
         assert.ok(html.includes(item.description),
           locale + " " + language + ": description for " + item.value);
       }
+    }
+  }
+});
+
+test("all eight learning languages have localized names, levels and help without changing interface language", () => {
+  const added = ["es", "fr", "de", "it", "pt"] as const;
+  assert.deepEqual(LEARNING_LANGUAGES, ["en", "ja", "ko", ...added]);
+  for (const locale of locales) {
+    const copy = learningSettingsCopy[locale];
+    for (const language of LEARNING_LANGUAGES) {
+      assert.ok(learningLanguageName(language, locale).trim(), locale + " " + language);
+      assert.ok(copy.levelHints[language].trim(), locale + " " + language + " hint");
+      assert.ok(copy.targetDescriptions[language].trim(), locale + " " + language + " target");
+      const options = levelsForTargetLanguage(language);
+      assert.deepEqual(Object.keys(copy.levels[language]), [...options]);
+      for (const level of options) {
+        assert.ok(copy.levels[language][level].label && copy.levels[language][level].description);
+      }
+      assert.ok(options.includes(defaultLevelForTargetLanguage(language)));
+    }
+    for (const language of EXPLANATION_LANGUAGES) {
+      assert.ok(explanationLanguageName(language, locale).trim(), locale + " " + language + " name");
+      assert.ok(copy.instructionDescriptions[language].trim(), locale + " " + language + " explanation");
+    }
+    for (const language of added) {
+      assert.match(levelHint(copy, language), /CEFR/);
+      assert.deepEqual(Object.keys(copy.levels[language]), ["A1", "A2", "B1", "B2", "C1", "C2"]);
     }
   }
 });

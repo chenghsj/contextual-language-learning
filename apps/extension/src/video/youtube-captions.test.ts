@@ -202,3 +202,15 @@ test("final JSON3 event with timed segments is not truncated to two seconds", ()
     [1000, 7200], [7200, 9200],
   ]);
 });
+
+test("caption selection accepts additional language codes and regional tracks", () => {
+  const tracks = [
+    { languageCode: "es-ES", baseUrl: "https://www.youtube.com/api/timedtext?v=123" },
+    { languageCode: "pt-BR", baseUrl: "https://www.youtube.com/api/timedtext?v=123" },
+    { languageCode: "fr", kind: "asr" as const, baseUrl: "https://www.youtube.com/api/timedtext?v=123" },
+  ];
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "es")?.languageCode, "es-ES");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "pt")?.languageCode, "pt-BR");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "fr")?.languageCode, "fr");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "de"), null);
+});
