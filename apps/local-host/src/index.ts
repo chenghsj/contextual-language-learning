@@ -258,6 +258,14 @@ async function handle(input: unknown): Promise<void> {
         deliverDocument(request.id, document);
         break;
       }
+      case "savePlaybackRange": {
+        const updated = await storage.documents.updatePlaybackRange(
+          request.documentId, request.cueId, request.range);
+        if (updated.schemaVersion !== 3) throw new Error("Only V3 lessons support saved playback calibration");
+        reply({ id: request.id, type: "playbackRangeSaved",
+          cueId: request.cueId, range: updated.playbackOverrides?.[request.cueId] ?? null });
+        break;
+      }
       case "retryBackup": {
         try {
           const location = await backupSavedJob(storage, request.jobId);
