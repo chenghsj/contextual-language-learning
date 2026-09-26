@@ -1480,8 +1480,8 @@ export default function App() {
           </div>
           <div className="my-[6px_12px] min-w-0 [&_[data-ui=settingField]]:m-0">
             <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
-              <div className="mb-[6px] flex min-w-0 items-start justify-between gap-[6px] [&_label]:m-0 [&_label]:block [&_label]:min-w-0 [&_label]:pt-[3px] [&_label]:text-xs [&_label]:font-semibold [&_label]:leading-[1.45] [&_label]:wrap-anywhere">
-                <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="learning-target">{t("targetLanguage")}</label>
+              <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="learning-target">{t("targetLanguage")}</label>
                 <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.targetLanguage}
                   />
@@ -1548,8 +1548,8 @@ export default function App() {
           <h2>{t("learningHeading")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground mt-[2px]! mb-3!" data-ui="hint">{t("lessonSettingsIntro")}</p>
           <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
-            <div className="mb-[6px] flex min-w-0 items-start justify-between gap-[6px] [&_label]:m-0 [&_label]:block [&_label]:min-w-0 [&_label]:pt-[3px] [&_label]:text-xs [&_label]:font-semibold [&_label]:leading-[1.45] [&_label]:wrap-anywhere">
-              <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="learning-level">{t("level")}</label>
+            <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+              <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="learning-level">{t("level")}</label>
               <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
                 explanation={levelHint(settingsCopy, profile.targetLanguage)}
                 items={levelOptions.map(value => {
@@ -1564,8 +1564,10 @@ export default function App() {
               }))} />
           </div>
           <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
-            <div className="mb-[6px] flex min-w-0 items-start justify-between gap-[6px] [&_label]:m-0 [&_label]:block [&_label]:min-w-0 [&_label]:pt-[3px] [&_label]:text-xs [&_label]:font-semibold [&_label]:leading-[1.45] [&_label]:wrap-anywhere">
-              <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="learning-length">{t("lessonLength")}</label>
+            <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+              <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="learning-length">{t("lessonLength")}</label>
+              <SettingInfo label={t("lessonLength")} infoLabel={settingsCopy.infoLabel}
+                explanation={t("lessonLengthHint")} />
             </div>
             <SelectField id="learning-length" ariaLabel={t("lessonLength")}
               value={String(profile.sceneCount)}
@@ -1577,11 +1579,12 @@ export default function App() {
                 { value: "4", label: t("lessonLengthStandard") },
                 { value: "6", label: t("lessonLengthRich") },
               ]} />
-            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("lessonLengthHint")}</p>
           </div>
           <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
-            <div className="mb-[6px] flex min-w-0 items-start justify-between gap-[6px] [&_label]:m-0 [&_label]:block [&_label]:min-w-0 [&_label]:pt-[3px] [&_label]:text-xs [&_label]:font-semibold [&_label]:leading-[1.45] [&_label]:wrap-anywhere">
-              <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="contextual-examples">{t("contextualExamples")}</label>
+            <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+              <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="contextual-examples">{t("contextualExamples")}</label>
+              <SettingInfo label={t("contextualExamples")} infoLabel={settingsCopy.infoLabel}
+                explanation={t("contextualExamplesHint")} />
             </div>
             <SelectField id="contextual-examples" ariaLabel={t("contextualExamples")}
               value={String(profile.contextualExampleCount ?? 2)}
@@ -1591,13 +1594,12 @@ export default function App() {
               options={[1, 2, 3].map(value => ({
                 value: String(value), label: t("contextualExamplesValue", { count: value }),
               }))} />
-            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("contextualExamplesHint")}</p>
           </div>
           <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] my-[8px_12px] [&>summary]:text-xs [&>summary]:text-muted-foreground" data-ui="advancedLessonSettings">
             <summary className="cursor-pointer font-semibold">{t("advancedLessonSettings")}</summary>
             <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
-              <div className="mb-[6px] flex min-w-0 items-start justify-between gap-[6px] [&_label]:m-0 [&_label]:block [&_label]:min-w-0 [&_label]:pt-[3px] [&_label]:text-xs [&_label]:font-semibold [&_label]:leading-[1.45] [&_label]:wrap-anywhere">
-                <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
+              <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
                 <SettingInfo label={t("instructionLanguage")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.instructionLanguage} />
               </div>
@@ -1822,8 +1824,12 @@ export default function App() {
       {page === "settings" && <main>
         <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
           <h2>{t("uiLanguage")} · {t("appearance")}</h2>
-          <div className="my-3 min-w-0 [&>label]:mb-[6px] [&>label]:mt-0 [&>label]:block [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
-            <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="ui-language-select">{t("uiLanguage")}</label>
+          <div className="my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
+            <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+              <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="ui-language-select">{t("uiLanguage")}</label>
+              <SettingInfo label={t("uiLanguage")} infoLabel={settingsCopy.infoLabel}
+                explanation={t("uiLanguageHint")} />
+            </div>
             <Select value={localePreference} onValueChange={next => {
               if (isLocalePreference(next)) setLocalePreference(next);
             }}>
@@ -1840,9 +1846,12 @@ export default function App() {
               </SelectContent>
             </Select>
           </div>
-          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("uiLanguageHint")}</p>
-          <div className="my-3 min-w-0 [&>label]:mb-[6px] [&>label]:mt-0 [&>label]:block [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
-            <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="appearance-select">{t("appearance")}</label>
+          <div className="my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
+            <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+              <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="appearance-select">{t("appearance")}</label>
+              <SettingInfo label={t("appearance")} infoLabel={settingsCopy.infoLabel}
+                explanation={t("appearanceHint")} />
+            </div>
             <Select value={themePreference} onValueChange={next => {
               if (isThemePreference(next)) setThemePreference(next);
             }}>
@@ -1856,7 +1865,6 @@ export default function App() {
               </SelectContent>
             </Select>
           </div>
-          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("appearanceHint")}</p>
         </Card>
         <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
@@ -1880,7 +1888,7 @@ export default function App() {
               }))} />
           </label>
           {selectedAgentInfo?.supportsAccountProfiles && <section className="mt-3 border-t border-border pt-[10px]">
-            <div className="flex min-w-0 items-center gap-2 text-xs">
+            <div className="relative flex min-w-0 items-center gap-2 text-xs">
               <strong>{t("useOtherCliAccount")}</strong>
               <SettingInfo label={t("useOtherCliAccount")} infoLabel={settingsCopy.infoLabel}
                 explanation={t("agentProfileInfo")} />
