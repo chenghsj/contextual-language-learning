@@ -33,7 +33,8 @@ export type LearningProfile = z.infer<typeof LearningProfileSchema>;
 export const CustomAgentConfigSchema = z.object({
   id: z.string().regex(/^custom-[a-f0-9]{24}$/),
   label: z.string().trim().min(1).max(80),
-  executable: z.string().trim().min(1).max(1024).refine(value => !/[\r\n\0]/.test(value)),
+  executable: z.string().min(1).max(1024).refine(value => !/[\r\n\0]/.test(value))
+    .transform(value => value.trim()).refine(value => value.length > 0),
   args: z.array(z.string().max(1024).refine(value => !/[\r\n\0]/.test(value))).max(32),
   promptMode: z.enum(["argument", "stdin"]),
   outputMode: z.enum(["stdout-json", "file-json"]),
