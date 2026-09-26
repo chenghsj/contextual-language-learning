@@ -92,6 +92,8 @@ test("V3 reader stays localized in five UI languages and retains source-only dia
     const copy = contextualReaderMessages[locale];
     assert.ok(html.includes(copy.dialogue), locale);
     assert.ok(html.includes(copy.playScene), locale);
+    assert.ok(html.includes(copy.loopScene), locale);
+    assert.ok(html.includes('aria-pressed="false"'), locale);
     assert.ok(html.includes(copy.aiExamples), locale);
     assert.ok(html.includes(copy.previousScene), locale);
     assert.ok(html.includes("What about dinner?"), locale);
@@ -140,4 +142,17 @@ test("V3 keeps playback tracking and uses the requested inline guided calibratio
   assert.ok(!html.includes("<dialog"), "no modal, even while closed");
   assert.ok(!html.includes('id="contextual-inline-calibration"'),
     "calibration is expanded inline only on demand");
+});
+
+
+test("scene-wide repeat reuses sentence loop preferences and cancels previous playback", async () => {
+  const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
+  assert.match(source, /async function toggleSceneLoop\(\)/);
+  assert.match(source, /loopingSceneRef\.current === scene\.id/);
+  assert.match(source, /repeats: repeat === "infinite" \? "infinite" : Number\(repeat\), delaySeconds: delay/);
+  assert.match(source, /if \(activeLoopRef\.current && sourceUrl && adapter\.stopLoop\)/);
+  assert.match(source, /await stopPreviousLoop\(\)/);
+  assert.match(source, /aria-pressed=\{loopingSceneId === scene\.id\}/);
+  const html = render("zh-TW");
+  assert.ok(html.includes(contextualReaderMessages["zh-TW"].loopScene));
 });
