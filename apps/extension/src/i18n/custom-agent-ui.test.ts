@@ -11,6 +11,8 @@ test("BYO Agent onboarding copy is complete in five locales", () => {
       assert.ok((agentOnboardingCopy[locale] as Record<string, string>)[key]?.length);
     }
     assert.ok(agentOnboardingCopy[locale].testing.trim());
+    assert.ok(agentOnboardingCopy[locale].copying.trim());
+    assert.ok(agentOnboardingCopy[locale].copyFailed.trim());
   }
 });
 test("BYO UI uses real Host import/edit/probe/test/remove actions", async () => {
@@ -29,4 +31,21 @@ test("BYO UI uses real Host import/edit/probe/test/remove actions", async () => 
   assert.match(source, /testing === "draft" \? ui\.testing : ui\.test/);
   assert.match(source, /motion-reduce:animate-none/);
   assert.match(source, /aria-live="polite"/);
+});
+
+test("prompt copy shows inline success/error and a timed Lucide icon change", async () => {
+  const source = await readFile(new URL("../components/custom-agent-settings.tsx", import.meta.url), "utf8");
+  assert.match(source, /import \{ Check, Copy \} from "lucide-react"/);
+  assert.match(source, /await navigator\.clipboard\.writeText\(AGENT_CONFIG_PROMPT\)/);
+  assert.match(source, /setCopyFeedback\("copied"\)/);
+  assert.match(source, /copyFeedback === "copied" \? <Check aria-hidden="true" \/> : <Copy aria-hidden="true" \/>/);
+  assert.match(source, /copyFeedback === "copied" \? ui\.copied/);
+  assert.match(source, /window\.setTimeout\(\(\) => \{/);
+  assert.match(source, /\}, 2_000\)/);
+  assert.match(source, /window\.clearTimeout\(copyResetRef\.current\)/);
+  assert.match(source, /setCopyFeedback\("failed"\)/);
+  assert.match(source, /role="alert">\{ui\.copyFailed\}/);
+  assert.match(source, /role="status" aria-live="polite">\{ui\.copied\}/);
+  assert.doesNotMatch(source, /setStatus\(ui\.copied\)/,
+    "copy feedback must be adjacent to the button rather than at the bottom of settings");
 });
