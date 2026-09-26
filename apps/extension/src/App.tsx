@@ -126,8 +126,6 @@ export default function App() {
   const [destination, setDestination] = useState<Destination>({ kind: "local" });
   const [driveAccounts, setDriveAccounts] = useState<DriveAccount[]>([]);
   const [driveConfigured, setDriveConfigured] = useState(false);
-  const [oauthClientId, setOauthClientId] = useState("");
-  const [oauthClientSecret, setOauthClientSecret] = useState("");
   const [storageBusy, setStorageBusy] = useState(false);
   const [checking, setChecking] = useState(false);
   const [publishedLocation, setPublishedLocation] = useState("");
@@ -410,23 +408,6 @@ export default function App() {
     } finally { setStorageBusy(false); }
   }
 
-  async function configureDrive(): Promise<void> {
-    setStorageBusy(true);
-    setError("");
-    try {
-      const response = await nativeOnce({
-        id: crypto.randomUUID(), type: "driveConfigure",
-        clientId: oauthClientId.trim(), ...(oauthClientSecret ? { clientSecret: oauthClientSecret } : {}),
-      });
-      if (response.type !== "driveConfigured") throw new Error("Unexpected OAuth configuration response");
-      setOauthClientSecret("");
-      setDriveConfigured(true);
-      await refreshDriveAccounts();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("oauthError"));
-    } finally { setStorageBusy(false); }
-  }
-
   async function connectDrive(): Promise<void> {
     setStorageBusy(true);
     setError("");
@@ -435,6 +416,20 @@ export default function App() {
       if (response.type !== "driveConnected") throw new Error("Unexpected Google account response");
       setDriveAccounts(current => [...current.filter(item => item.id !== response.account.id), response.account]);
       setDestination({ kind: "drive", accountId: response.account.id });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("connectDriveError"));
+    } finally { setStorageBusy(false); }
+  }
+
+  async function disconnectDrive(accountId: string): Promise<void> {
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveDisconnect", accountId });
+      if (response.type !== "driveDisconnected") throw new Error("Unexpected Drive response");
+      setDriveAccounts(current => current.filter(item => item.id !== accountId));
+      setDestination(current => current.kind === "drive" && current.accountId === accountId
+        ? { kind: "local" } : current);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("connectDriveError"));
     } finally { setStorageBusy(false); }
@@ -1472,23 +1467,16 @@ export default function App() {
         <Card className="panel">
           <h2>{t("driveAccountHeading")}</h2>
           <p className="hint">{t("driveOauthHelp")}</p>
-          <p className="hint">{t("oauthStatus", { status: t(driveConfigured ? "oauthConfigured" : "oauthNotConfigured") })}</p>
-          <label>Google Desktop OAuth Client ID
-            <Input value={oauthClientId} onChange={event => setOauthClientId(event.target.value)}
-              placeholder="123456789-xxx.apps.googleusercontent.com" />
-          </label>
-          <label>{t("desktopSecret")}
-            <Input type="password" value={oauthClientSecret}
-              onChange={event => setOauthClientSecret(event.target.value)}
-              placeholder={t("secretPlaceholder")} />
-          </label>
-          <Button variant="outline" className="secondary" disabled={storageBusy || !oauthClientId.trim()}
-            onClick={() => void configureDrive()}>{t("saveOauth")}</Button>
+          {!driveConfigured && <p className="callout">{t("oauthFirst")}</p>}
           <div className="actions">
             <Button variant="outline" className="secondary" disabled={storageBusy || !driveConfigured}
               onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
           </div>
-          {driveAccounts.map(account => <p className="hint" key={account.id}>{t("connectedAccount", { email: account.email })}</p>)}
+          {driveAccounts.map(account => <div className="actions" key={account.id}>
+            <p className="hint">{t("connectedAccount", { email: account.email })}</p>
+            <Button variant="ghost" size="sm" disabled={storageBusy}
+              onClick={() => void disconnectDrive(account.id)}>{t("disconnectGoogle")}</Button>
+          </div>)}
         </Card>
       </main>}
 
