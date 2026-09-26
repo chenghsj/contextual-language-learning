@@ -186,3 +186,25 @@ test("never mistakes only a currently displayed HTML cue for a full Netflix tran
     pause: async () => {},
   }), /has not exposed subtitle tracks/);
 });
+
+test("browser text-track fallback rejects only late-page cues or unknown video duration", async () => {
+  const atEnd = { language: "en-US", mode: "showing", cues: [
+    { startTime: 96, endTime: 99, text: "Almost over." },
+  ] };
+  for (const duration of [110, Number.NaN]) {
+    const video = { duration, textTracks: [atEnd] } as unknown as HTMLVideoElement;
+    await assert.rejects(() => readNetflixSubtitles({}, video, () => null, "en", {
+      pause: async () => {},
+    }), /has not exposed subtitle tracks/);
+  }
+  const threeLateCues = { language: "en-US", mode: "showing", cues: [
+    { startTime: 80, endTime: 81, text: "Late 1" },
+    { startTime: 90, endTime: 91, text: "Late 2" },
+    { startTime: 100, endTime: 102, text: "Late 3" },
+  ] };
+  await assert.rejects(() => readNetflixSubtitles({}, {
+    duration: 110, textTracks: [threeLateCues],
+  } as unknown as HTMLVideoElement, () => null, "en", {
+    pause: async () => {},
+  }), /has not exposed subtitle tracks/);
+});
