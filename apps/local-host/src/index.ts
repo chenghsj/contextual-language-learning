@@ -2,10 +2,11 @@ import { randomUUID } from "node:crypto";
 import {
   HostRequestSchema, type DuplicateMatch, type GenerationRequest, type HostMessage, type LearningDocument,
 } from "@immersive/core";
-import { getAgentCatalog } from "./agents";
-import { listCustomAgents, saveCustomAgent, removeCustomAgent, testCustomConfig, resolveCustomExecutable } from "./agents/custom";
+import { getAgentCatalog, assertImportedAgentProvider } from "./agents";
+import { listCustomAgents, getCustomAgent, saveCustomAgent, importCustomAgent, removeCustomAgent, testCustomConfig, resolveCustomExecutable } from "./agents/custom";
 import { discoverAgentModels } from "./agents/metadata";
-import { listAgentProfiles, saveAgentProfile, removeAgentProfile } from "./agents/profiles";
+import { listAgentProfiles, saveAgentProfile, removeAgentProfile, removeAgentProfilesByProvider } from "./agents/profiles";
+import { assertAgentMayBeRemoved } from "./agents/remove-guard";
 import { findLocalDuplicates, requestKey } from "./duplicates";
 import { findDriveDuplicates, listDriveLessons, getDriveDocument, publishDriveDocument, validateDriveAccess } from "./drive/api";
 import { accessTokenFor, connectGoogleAccount, disconnectGoogleAccount, googleConfigured, listGoogleAccounts } from "./drive/oauth";
@@ -105,20 +106,46 @@ async function handle(input: unknown): Promise<void> {
       case "health": {
         const agents = await getAgentCatalog();
         reply({ id: request.id, type: "health", agents, version: hostVersion,
-          installed: Object.fromEntries(agents.map(agent => [agent.id, agent.installed])) });
+          agentMode: "imported-only", installed: Object.fromEntries(agents.map(agent => [agent.id, agent.installed])) });
         break;
       }
       case "customAgentList":
         reply({ id: request.id, type: "customAgentList", agents: await listCustomAgents() });
         break;
-      case "customAgentSave":
+      case "customAgentImport": {
+        const imported = await importCustomAgent(request.config);
+        reply({ id: request.id, type: "customAgentImported", ...imported });
+        break;
+      }
+      case "customAgentSave": {
+        // An edit retains the Host-owned ID. Removing profile support must not strand stored environments.
+        const previous = await getCustomAgent(request.config.id);
+        // A checkpoint stores its Agent ID. Do not change execution semantics beneath a resumable job.
+        const executionFields = ["executable", "args", "promptMode", "outputMode",
+          "modelArgument", "modelListArgs", "profileEnvVar"] as const;
+        const executionChanged = executionFields.some(key =>
+          JSON.stringify(previous[key]) !== JSON.stringify(request.config[key]));
+        if (executionChanged) {
+          await manager.recoverInterrupted();
+          assertAgentMayBeRemoved(request.config.id, await storage.jobs.list(Number.MAX_SAFE_INTEGER));
+        }
+        if (previous.profileEnvVar && !request.config.profileEnvVar &&
+            (await listAgentProfiles()).some(profile => profile.provider === request.config.id)) {
+          throw new Error("Remove this Agent's saved account environments before removing profile support.");
+        }
         reply({ id: request.id, type: "customAgentList",
           agents: await saveCustomAgent(request.config) });
         break;
-      case "customAgentRemove":
-        reply({ id: request.id, type: "customAgentList",
-          agents: await removeCustomAgent(request.agentId) });
+      }
+      case "customAgentRemove": {
+        // Include every persisted job, not just the 50 most recent UI summaries.
+        await manager.recoverInterrupted();
+        assertAgentMayBeRemoved(request.agentId, await storage.jobs.list(Number.MAX_SAFE_INTEGER));
+        const agents = await removeCustomAgent(request.agentId);
+        await removeAgentProfilesByProvider(request.agentId);
+        reply({ id: request.id, type: "customAgentList", agents });
         break;
+      }
       case "customAgentTest": {
         const label = await testCustomConfig(request.config, request.modelId, request.accountConfigDir);
         reply({ id: request.id, type: "customAgentTested", label });
@@ -234,6 +261,8 @@ async function handle(input: unknown): Promise<void> {
         break;
       }
       case "generate": {
+        assertImportedAgentProvider(request.payload.agent.provider);
+        await getCustomAgent(request.payload.agent.provider);
         const checked = checks.get(request.checkToken);
         if (!checked || checked.expires < Date.now() ||
           checked.fingerprint !== requestKey(request.payload)) {

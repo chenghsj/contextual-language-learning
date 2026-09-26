@@ -6,7 +6,7 @@ A local-first Chrome side-panel extension that uses your locally installed CLI a
 
 This is **contextual, video-based language learning**, not a promise of full language immersion. AI organizes subtitle excerpts into lessons with grounded explanations, vocabulary and exercises for the learner's level. An interactive reader connects lessons to source timestamps, with optional sentence looping and playback speed controls on supported video platforms.
 
-> MVP status: the working implementation covers subtitle import, three CLI adapters, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Netflix one-click subtitle retrieval is **experimental** and works only when the currently playing session exposes a readable subtitle track; a durable background daemon is **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a developer-configured Desktop OAuth client at build time and live account testing are required. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
+> MVP status: the working implementation covers subtitle import, user-imported CLI Agent JSON, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Netflix one-click subtitle retrieval is **experimental** and works only when the currently playing session exposes a readable subtitle track; a durable background daemon is **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a developer-configured Desktop OAuth client at build time and live account testing are required. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
 
 ## Open source and project status
 
@@ -14,34 +14,66 @@ This repository remains **private** pending the public-release checklist and liv
 
 **No production-ready Google Drive or Netflix compatibility guarantee:** Google OAuth and Netflix's undocumented playback API require manual platform testing before a public stable release. This project is not affiliated with the streaming platforms or model providers.
 
-## Custom CLI Agents
+## Bring your own CLI Agent
 
-The three-phase custom CLI workflow is under Settings → Local CLI Agent → Custom CLI Agents:
+There is **no default Agent** for a new user. Install and sign in to a trusted
+CLI yourself. Open Settings → My Agents, copy the fixed configuration prompt,
+ask your chosen CLI to return a single JSON configuration object, then paste
+the result into the extension. A Codex CLI configuration is one possible
+example, not a preset or a claim of access to a model. The extension validates
+the JSON, shows the executable/argument preview and can check the binary
+without invoking a model. Only your explicit **Test CLI** action makes a test
+request, which may be billable. A passing JSON test is not proof that the CLI
+can produce every lesson schema.
 
-1. Register, edit, remove and test an installed CLI before saving its configuration.
-   A successful test proves the CLI returns JSON, not that it can produce every
-   lesson schema or has an active subscription.
-2. Start from a Gemini CLI preset or generic argument, stdin and file-output
-   presets. Detect the actual executable on this computer.
-3. Configure stdin prompts, the explicit output-file placeholder, model flags,
-   optional model-list arguments, or an isolated account configuration folder
-   through a dedicated profile environment variable.
+On first import, the Native Host generates the Agent ID and stores the CLI
+definition in its local registry. You can edit the JSON (retaining the ID),
+add more Agents, switch between them, or remove an Agent after its running or
+resumable jobs have finished or been cancelled. Deleting a definition never
+uninstalls the CLI or removes login data, saved lessons or history.
 
-The Native Host stores the executable and argv template locally and invokes it
-without a shell. It never copies login credentials, but an added CLI runs with
-your local user permissions. Configure only CLIs you trust; testing may send a
-prompt to the selected model provider. Generated lessons still pass the existing
-Zod schema validation before they are saved.
+Normally each Agent uses the CLI's current login and default model. Optional
+**account environments** refer only to an existing separately authenticated
+configuration directory and are available when the imported CLI supports a
+verified configuration-directory environment variable. Model choices are
+remembered separately for each Agent/environment. The extension does not read,
+copy or store credentials. Generated prompts/subtitles may be sent to the
+selected model provider under that provider's terms.
+
+### Native Host / local connection service
+
+Chrome/Edge cannot execute CLI binaries directly. Install and register the
+matching Native Host package once for your OS and **current browser extension
+ID**. The Side Panel detects the connection and shows OS/browser-aware
+installation instructions, a copyable extension ID and installer command.
+The macOS/Windows/Linux Host packages share one Node.js core but have
+OS-specific launchers; Chrome/Edge/Chromium registrations may differ.
+Adding, editing or removing Agents **does not** require reinstalling Host.
+Changing extension ID or updating an incompatible Host may require
+re-registration. There is currently no silent/graphical one-click installer:
+download the matching ZIP and run its included installation script
+(Node.js 22+ required). The Host executes only directly validated executable
+plus argv, without a shell.
+
+There are **no built-in Claude, Codex or AGY Agent adapters** in the Host. An
+existing completed lesson keeps its original provider metadata and can still be
+read or exported. A prior built-in queued/waiting/failed job is retained in task
+history but cannot resume; import a CLI configuration and generate a new lesson.
+Updating from an older release requires installing the updated Native Host once.
+The extension checks an explicit `imported-only` Host capability as well as its
+version: an older Host with the same version string is still rejected and
+prompted to update. Adding or removing imported Agents afterward does not
+change Host registration.
 
 ## Features
 
 - On the currently selected YouTube watch tab, click **一鍵取得目前影片字幕** to read the video player's available English/Japanese/Korean caption track (including automatic captions when available). The extension reads the track only on request, preserves cue timestamps and never requires a file upload for a readable caption track. YouTube can change its page/player interfaces; if it offers no readable track, use manual import. Switching tabs updates the source of the next empty lesson form without replacing an existing transcript.
 - On an open Netflix watch page, click **一鍵取得目前影片字幕** to read the selected learning language's available timed-text track into the lesson form, without uploading a file. Netflix's signed caption document is requested by the extension worker from allowlisted Netflix delivery domains, not by a cross-origin page fetch. Chrome may ask you to approve the extension's new Netflix delivery-domain permissions after updating; if denied, one-click retrieval cannot work. Manual SRT, VTT and pasted text remain a fallback; original cue times are preserved.
 - Select target language (English/Japanese/Korean), level, **instruction language**, teaching mode, vocabulary cap, and exercises per section.
-- Pick Claude Code, Codex, or AGY. The Native Host queries `agy models` or Codex's experimental `codex debug models` for available model options; Claude Code offers documented aliases rather than an account-specific machine-readable list. You can always use the CLI default or a custom model ID. Catalog entries do not guarantee entitlement.
-- Save named Claude/Codex CLI account Profiles pointing to existing, separately authenticated directories inside your home folder. Selecting one changes `CLAUDE_CONFIG_DIR` or `CODEX_HOME` only for that Agent invocation; profile names/paths are stored locally, never credentials. AGY uses its current CLI login.
+- Import a trusted installed CLI Agent through strict JSON rather than a provider-specific preset. Use its default model or an optional supported model flag; an exposed model catalog never guarantees account entitlement.
+- Optionally save named account environments for CLIs supporting a verified configuration-directory environment variable (for example Codex `CODEX_HOME`). Profiles store names/paths only, never credentials; the normal case is the existing CLI login.
 - Native Messaging bridge to macOS, Windows and Linux Hosts; no API keys or CLI credentials are stored in the extension.
-- Run a checkpointed generation pipeline: chunk subtitles, validate AI sections with Zod, save each successful chapter, then export the JSON/Markdown document. Reopen the Side Panel and use **任務紀錄與恢復** to resume interrupted/failed jobs.
+- Run a checkpointed generation pipeline: chunk subtitles, validate AI sections with Zod, save each successful chapter, then export the JSON/Markdown document. Reopen the Side Panel and use **任務紀錄與恢復** to resume interrupted/failed jobs created with a currently imported Agent; historical built-in jobs require a fresh generation.
 - Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping and user-triggered playback speed (0.5×–2×).
 - Netflix has optional, user-initiated seek, per-sentence looping and playback speed (0.5×–2×) via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). Subtitle retrieval is user-initiated and conditional on Netflix exposing a readable timed-text document in the active session. It does not bypass DRM, intercept keyboard shortcuts or open a second playback session.
 
@@ -82,7 +114,7 @@ A tag push runs the Release workflow and uploads the Chromium ZIP, three OS Host
 
 ## Quick start (macOS / Windows / Linux)
 
-Prerequisites: Node.js 22+, pnpm 9, Chrome / Edge / Chromium, and at least one **installed and signed-in** CLI (Claude Code / Codex / AGY). Windows additionally needs Windows PowerShell 5.1 and .NET Framework for the Host installer.
+Prerequisites: Node.js 22+, pnpm 9, Chrome / Edge / Chromium, and at least one **installed and signed-in** compatible CLI Agent of your choice. Windows additionally needs Windows PowerShell 5.1 and .NET Framework for the Host installer.
 
 ~~~sh
 git clone https://github.com/chenghsj/immersive-language-learning.git
@@ -100,40 +132,53 @@ pnpm build
 pnpm host:install YOUR_EXTENSION_ID
 ~~~
 
-4. Click the extension icon to open the Side Panel. Under **Agent 設定**, select **檢查 Native Host / CLI**.
-5. In **建立教材**, import an SRT/VTT or paste text, set the title and learning profile, then generate. Files are also saved to `~/Documents/Immersive Learning`.
-6. In **閱讀文件**, use **另存新檔** to choose where to download the JSON or Markdown copy.
+4. Open the Side Panel and check the **local connection service / Native Host** in Settings.
+5. In **My Agents**, copy the setup prompt, ask your own installed CLI to produce its JSON configuration, paste it, validate it and save. Test only when you explicitly want a model call.
+6. In **建立教材**, fetch/import subtitles, set the lesson profile and generate. Lessons are also saved to `~/Documents/Immersive Learning`.
+7. In **閱讀文件**, save JSON or Markdown when needed.
 
 If your browser reports a missing Native Host, confirm you installed it for the same browser and its **current extension ID**. The macOS/Linux installer writes a browser-specific NativeMessagingHosts manifest; Windows writes its path to the browser's per-user HKCU NativeMessagingHosts registry key. Re-run `pnpm build` and `pnpm host:install YOUR_EXTENSION_ID` after changing the Node installation or extension ID.
 
-### CLI model discovery and account Profiles
+### Models and optional account environments
 
-In **Settings → Local CLI Agent**, check the Native Host, choose an account Profile and refresh the available CLI models. Choosing a different Profile resets the model choice. Use CLI default or custom Model ID if discovery is unavailable. The Codex debug catalog and Claude aliases are not a guarantee that an account may use the listed model.
+Imported Agents use their CLI's current login and default model unless you
+explicitly choose a model or configure another account environment. A model
+catalog is queried only if the imported definition supplies a supported
+model-list command; it does not prove that your account can use every model.
+The selected model is remembered independently for each Agent and account
+environment. Without a supported model flag, leave the model on CLI default.
 
-Create and authenticate any extra account directories in Terminal before registering them in Settings:
+Extra account environments are **optional** and appear only when the imported
+Agent defines a verified profile environment variable. Create and authenticate
+the separate CLI configuration directory with that CLI before selecting it.
+For example, Codex can use an existing account environment via `CODEX_HOME`:
 
 ~~~sh
-mkdir -p "$HOME/.claude-work" "$HOME/.codex-work"
-CLAUDE_CONFIG_DIR="$HOME/.claude-work" claude
+mkdir -p "$HOME/.codex-work"
 CODEX_HOME="$HOME/.codex-work" codex login
 ~~~
 
-Enter a name and its absolute folder path in Settings, save it, then switch accounts from the dropdown. Only Claude/Codex profiles are supported; AGY remains on its current CLI login. Switching never runs logout, copies credentials, or changes Terminal's selected account. Removing a Profile only removes its label/path entry; the CLI directory remains.
+This is an example only; verify your installed CLI's actual version and flags.
+Saving or deleting a profile only changes the Host's local name/path record.
+It never signs in, signs out, copies credentials or deletes the CLI directory.
 
-The Host invokes a fixed `agy models` or `codex debug models` command with no shell and a timeout. Claude Code exposes `/model` interactively, so this extension offers the `sonnet`, `opus` and `haiku` CLI aliases instead of pretending to fetch account-specific entitlements. All providers retain default and custom model choices.
+### Host installation troubleshooting
 
-If you see **Specified native messaging host not found**, copy the current extension ID from `chrome://extensions` and run these commands from the project root:
+If you see **Specified native messaging host not found**, copy the current
+extension ID from `chrome://extensions` and run these commands from the
+project root:
 
 ~~~sh
 pnpm build
 pnpm host:install YOUR_EXTENSION_ID
 ~~~
 
-Reload the extension. For a Release installation, use `node scripts/install-host.mjs YOUR_EXTENSION_ID` from the extracted OS Host ZIP instead of pnpm. If the extension ID changes, reinstall the Host with the new ID. Extensions cannot silently install Native Messaging Hosts.
-
-### Accounts and models
-
-Sign in using each CLI itself first. Model/profile defaults are remembered separately for each Agent in the Side Panel. Switching Agent does not carry over the previous Agent's model ID. A model ID is passed explicitly only when filled in; the extension queries supported CLI model catalogs when available and does **not** silently fall back to another model. To use a separate Claude or Codex profile, create and authenticate that CLI profile first, then register its existing absolute directory and name in Agent settings. The profile must be inside your home folder. AGY profile switching remains unavailable pending a supported isolation mechanism.
+Reload the extension. For a Release installation, use
+`node scripts/install-host.mjs YOUR_EXTENSION_ID` from the extracted OS Host
+ZIP instead of pnpm. For Edge append `--browser edge`; for Chromium append
+`--browser chromium`. The browser and extension ID must match the Host
+registration; changing the extension ID may require re-registration.
+Extensions cannot silently install a Native Messaging Host.
 
 ### Interface language and appearance
 
@@ -151,7 +196,7 @@ Open the source YouTube watch page in Chrome before clicking **循環此句** in
 
 ## Extensible providers
 
-Video playback and CLI generation use separate Adapter + Registry layers. The Side Panel renders actions based on the current video adapter's supported capabilities, and the Native Host reports registered Agent adapters and installation status. See [Architecture and adding providers](docs/architecture.md) for the exact extension points and per-platform Chrome permission requirements.
+Video playback uses capability-based Video Adapters, while CLI generation uses only user-imported JSON definitions in the Native Host registry. The Side Panel renders video actions based on the current adapter and reports installed status for imported CLI Agents only. See [Architecture and adding providers](docs/architecture.md) for the exact extension points and per-platform Chrome permission requirements.
 
 Adding HBO Max or Apple TV+ requires a purpose-built adapter and an explicit browser permission review; neither service is currently implemented. An unsupported video URL falls back to subtitle import without player control.
 
@@ -165,7 +210,7 @@ pnpm build
 
 Packages:
 - `packages/core`: shared Zod schema, subtitle parsers/chunking, time links.
-- `apps/local-host`: Native Messaging framing, restricted temporary workspace, CLI adapters, Job State Machine, resumable Generation Pipeline and file-backed repository ports.
+- `apps/local-host`: Native Messaging framing, restricted temporary workspace, imported CLI registry/executor, Job State Machine, resumable Generation Pipeline and file-backed repository ports.
 - `apps/extension`: React side panel, settings, reader, and opt-in YouTube loop content script.
 
 Read [Scope and limitations](docs/scope.md) before using an external-model CLI with sensitive or copyrighted transcripts.
@@ -185,7 +230,7 @@ A real-browser test with your Netflix account is required: confirm successful ca
 
 ### Resumable job workflow
 
-The local Host saves snapshots under ~/Documents/Immersive Learning/jobs/ after each **validated** chapter. The Side Panel's **任務紀錄與恢復** button lists saved jobs. If Chrome closes, the Host terminates and stops generating; reopening the Side Panel allows you to continue a waiting/failed job from its checkpoint. Explicitly cancelled jobs do not resume. A completed job's document can be reopened from history. Documents are chunked across Native Messaging responses when needed, respecting Chrome's Host-to-extension message limit.
+The local Host saves snapshots under ~/Documents/Immersive Learning/jobs/ after each **validated** chapter. The Side Panel's **任務紀錄與恢復** button lists saved jobs. If Chrome closes, the Host terminates and stops generating; reopening the Side Panel allows you to continue a waiting/failed job from its checkpoint. Explicitly cancelled jobs do not resume. Historical jobs using removed built-in Agents also cannot resume; they remain visible and require a new generation with an imported Agent. A completed job's document can be reopened from history. Documents are chunked across Native Messaging responses when needed, respecting Chrome's Host-to-extension message limit.
 
 A single Host instance executes one generation at a time. Current file-backed storage is designed for one writer per job, not simultaneous editing across several independent Chrome profiles/processes. Persistent background generation and cross-device synchronization require a separate managed daemon and transactional storage in a later phase. Progress and personal annotations have a separate repository contract; a full learning-progress UI is not yet implemented.
 

@@ -1,208 +1,269 @@
-import { useEffect, useState } from "react";
-import { CustomAgentConfigSchema, type CustomAgentConfig, type HostMessage } from "@immersive/core";
+import { useEffect, useRef, useState } from "react";
+import { Check, Copy } from "lucide-react";
+import { type CustomAgentConfig, type CustomAgentImport, type HostMessage } from "@immersive/core";
+import { AGENT_CONFIG_PROMPT, jsonForEdit, parseAgentImport } from "../agent-import";
+import { agentOnboardingCopy } from "../i18n/agent-onboarding";
+import type { UiLocale } from "../i18n/messages";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { SelectField } from "./ui/select";
-import { translate, type UiLocale } from "../i18n/messages";
 
 type Once = (request: { id: string; type: string; [key: string]: unknown }) => Promise<HostMessage>;
-const templates: Record<string, Partial<CustomAgentConfig>> = {
-  gemini: { label: "Gemini CLI", executable: "gemini", args: ["--output-format", "json"],
-    promptMode: "stdin", outputMode: "stdout-json", modelArgument: "--model" },
-  argument: { label: "", executable: "", args: ["--prompt", "{prompt}"],
-    promptMode: "argument", outputMode: "stdout-json" },
-  stdin: { label: "", executable: "", args: [], promptMode: "stdin", outputMode: "stdout-json" },
-  file: { label: "", executable: "", args: ["--output", "{output}"],
-    promptMode: "stdin", outputMode: "file-json" },
-};
-function fresh(): CustomAgentConfig {
-  return { id: "custom-" + crypto.randomUUID().replaceAll("-", "").slice(0, 24),
-    label: "", executable: "", args: ["--prompt", "{prompt}"],
-    promptMode: "argument", outputMode: "stdout-json" };
-}
-function lines(value: string): string[] {
-  return value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
-}
 
+/** Each Agent is an imported definition; no provider-specific preset is needed. */
 export function CustomAgentSettings({ locale, available, selectedProvider, selectedModelId,
-  selectedProfileDir, nativeOnce, onSaved, onRemoved,
+  selectedProfileDir, nativeOnce, onSaved, onRemoved, onSelect,
 }: {
   locale: UiLocale; available: boolean; selectedProvider: string; selectedModelId: string;
-  selectedProfileDir?: string; nativeOnce: Once; onSaved: (id: string) => void;
-  onRemoved: (id: string) => void;
+  selectedProfileDir?: string; nativeOnce: Once;
+  onSaved: (id: string, created: boolean, config: CustomAgentImport) => void; onRemoved: (id: string) => void;
+  onSelect: (id: string) => void;
 }) {
-  const t = (key: Parameters<typeof translate>[1]) => translate(locale, key);
+  const ui = agentOnboardingCopy[locale];
   const [agents, setAgents] = useState<CustomAgentConfig[]>([]);
-  const [draft, setDraft] = useState<CustomAgentConfig>(fresh);
-  const [argv, setArgv] = useState("--prompt\n{prompt}");
-  const [modelArgv, setModelArgv] = useState("");
-  const [template, setTemplate] = useState("");
+  const [json, setJson] = useState("");
+  const [editing, setEditing] = useState<CustomAgentConfig | null>(null);
+  const [validated, setValidated] = useState<CustomAgentImport | null>(null);
   const [busy, setBusy] = useState(false);
+  const [testing, setTesting] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [failed, setFailed] = useState(false);
-  const update = (patch: Partial<CustomAgentConfig>) => setDraft(previous => ({ ...previous, ...patch }));
-  const config = () => ({ ...draft, args: lines(argv), modelListArgs: lines(modelArgv),
-    modelArgument: draft.modelArgument?.trim() || undefined,
-    profileEnvVar: draft.profileEnvVar?.trim() || undefined });
-  const report = (error: unknown) => {
-    setFailed(true);
-    setStatus(error instanceof Error ? error.message : t("customAgentError"));
-  };
+  const [copyFeedback, setCopyFeedback] = useState<"idle" | "copying" | "copied" | "failed">("idle");
+  const copyResetRef = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (copyResetRef.current !== null) window.clearTimeout(copyResetRef.current);
+  }, []);
 
   useEffect(() => {
     if (!available) return;
     let active = true;
     void nativeOnce({ id: crypto.randomUUID(), type: "customAgentList" }).then(reply => {
       if (active && reply.type === "customAgentList") setAgents(reply.agents);
-    }).catch(error => { if (active) report(error); });
+    }).catch(error => {
+      if (active) {
+        setFailed(true);
+        setStatus(error instanceof Error ? error.message : ui.error);
+      }
+    });
     return () => { active = false; };
-    // Only reload on availability changes, not each parent render of nativeOnce.
+    // Listing is keyed to Host availability, not unstable parent callback identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [available]);
 
-  function edit(value: CustomAgentConfig): void {
-    setDraft(value); setArgv(value.args.join("\n"));
-    setModelArgv((value.modelListArgs ?? []).join("\n"));
-    setTemplate(""); setStatus(""); setFailed(false);
+  function report(error: unknown): void {
+    setFailed(true);
+    setStatus(error instanceof Error ? error.message : ui.error);
   }
-  function chooseTemplate(value: string): void {
-    setTemplate(value);
-    const preset = templates[value];
-    if (!preset) return;
-    update({ modelArgument: undefined, modelListArgs: undefined, profileEnvVar: undefined, ...preset });
-    setArgv((preset.args ?? []).join("\n")); setModelArgv("");
+  function edit(agent: CustomAgentConfig): void {
+    const { id: _id, ...definition } = agent;
+    setEditing(agent);
+    setJson(jsonForEdit(definition));
+    setValidated(null);
+    setStatus("");
+    setFailed(false);
   }
-  async function probe(): Promise<void> {
-    setBusy(true); setStatus(""); setFailed(false);
+  function resetEditor(): void {
+    setEditing(null);
+    setJson("");
+    setValidated(null);
+    setStatus("");
+    setFailed(false);
+  }
+  function validate(): void {
     try {
-      const reply = await nativeOnce({ id: crypto.randomUUID(), type: "customAgentProbe",
-        executable: draft.executable.trim() });
-      if (reply.type !== "customAgentProbed") throw new Error(t("customAgentError"));
-      setStatus(reply.installed ? t("customAgentDetected") + ": " + (reply.resolved ?? draft.executable)
-        : t("customAgentNotFound"));
+      const config = parseAgentImport(json);
+      setValidated(config);
+      setFailed(false);
+      setStatus(ui.valid);
+    } catch (error) {
+      setValidated(null);
+      report(error);
+    }
+  }
+  async function copyPrompt(): Promise<void> {
+    if (copyFeedback === "copying") return;
+    if (copyResetRef.current !== null) {
+      window.clearTimeout(copyResetRef.current);
+      copyResetRef.current = null;
+    }
+    setCopyFeedback("copying");
+    try {
+      await navigator.clipboard.writeText(AGENT_CONFIG_PROMPT);
+      setCopyFeedback("copied");
+      copyResetRef.current = window.setTimeout(() => {
+        setCopyFeedback("idle");
+        copyResetRef.current = null;
+      }, 2_000);
+    } catch {
+      // Clipboard permissions can fail; never claim that the prompt was copied.
+      setCopyFeedback("failed");
+    }
+  }
+  async function detect(): Promise<void> {
+    if (!validated || busy) return;
+    setBusy(true);
+    setStatus("");
+    try {
+      const reply = await nativeOnce({ id: crypto.randomUUID(),
+        type: "customAgentProbe", executable: validated.executable });
+      if (reply.type !== "customAgentProbed") throw new Error(ui.error);
       setFailed(!reply.installed);
+      setStatus(reply.installed ? ui.detected + ": " + (reply.resolved ?? validated.executable) : ui.missing);
     } catch (error) { report(error); }
     finally { setBusy(false); }
   }
-  async function submit(action: "save" | "test"): Promise<void> {
-    const valid = CustomAgentConfigSchema.safeParse(config());
-    if (!valid.success) { report(valid.error.issues[0]?.message ?? t("customAgentError")); return; }
-    setBusy(true); setStatus(""); setFailed(false);
+  async function testAgent(): Promise<void> {
+    if (!validated || !available || busy || !window.confirm(ui.testWarning)) return;
+    setBusy(true);
+    setTesting("draft");
+    setFailed(false);
+    setStatus(ui.testing);
     try {
-      const reply = await nativeOnce(action === "save"
-        ? { id: crypto.randomUUID(), type: "customAgentSave", config: valid.data }
-        : { id: crypto.randomUUID(), type: "customAgentTest", config: valid.data,
-          modelId: selectedProvider === valid.data.id ? selectedModelId : "",
-          ...(selectedProvider === valid.data.id && selectedProfileDir
-            ? { accountConfigDir: selectedProfileDir } : {}) });
-      if (action === "save" && reply.type === "customAgentList") {
-        setAgents(reply.agents); setStatus(t("customAgentSaved")); onSaved(valid.data.id);
-      } else if (action === "test" && reply.type === "customAgentTested") {
-        setStatus(t("customAgentTestPassed") + ": " + reply.label);
-      } else throw new Error(t("customAgentError"));
+      const config: CustomAgentConfig = {
+        ...validated, id: editing?.id ?? "custom-" + crypto.randomUUID().replaceAll("-", "").slice(0, 24),
+      };
+      const reply = await nativeOnce({ id: crypto.randomUUID(), type: "customAgentTest",
+        config, modelId: editing?.id === selectedProvider ? selectedModelId : "",
+        ...(editing?.id === selectedProvider && selectedProfileDir
+          ? { accountConfigDir: selectedProfileDir } : {}) });
+      if (reply.type !== "customAgentTested") throw new Error(ui.error);
+      setFailed(false);
+      setStatus(ui.tested);
+    } catch (error) { report(error); }
+    finally { setTesting(null); setBusy(false); }
+  }
+  async function save(): Promise<void> {
+    if (!validated || !available || busy) return;
+    setBusy(true);
+    setStatus("");
+    try {
+      if (editing) {
+        const reply = await nativeOnce({ id: crypto.randomUUID(), type: "customAgentSave",
+          config: { ...validated, id: editing.id } });
+        if (reply.type !== "customAgentList") throw new Error(ui.error);
+        setAgents(reply.agents);
+        onSaved(editing.id, false, validated);
+        resetEditor();
+        setStatus(ui.updated);
+      } else {
+        const reply = await nativeOnce({ id: crypto.randomUUID(), type: "customAgentImport",
+          config: validated });
+        if (reply.type !== "customAgentImported") throw new Error(ui.error);
+        setAgents(reply.agents);
+        onSaved(reply.agent.id, true, validated);
+        resetEditor();
+        setStatus(ui.saved);
+      }
     } catch (error) { report(error); }
     finally { setBusy(false); }
   }
-  async function remove(value: CustomAgentConfig): Promise<void> {
-    if (!window.confirm(t("customAgentRemoveConfirm"))) return;
-    setBusy(true); setStatus(""); setFailed(false);
+  async function testSavedAgent(agent: CustomAgentConfig): Promise<void> {
+    if (!available || busy || !window.confirm(ui.testWarning)) return;
+    setBusy(true);
+    setTesting(agent.id);
+    setFailed(false);
+    setStatus(ui.testing);
+    try {
+      const reply = await nativeOnce({ id: crypto.randomUUID(), type: "customAgentTest",
+        config: agent, modelId: agent.id === selectedProvider ? selectedModelId : "",
+        ...(agent.id === selectedProvider && selectedProfileDir
+          ? { accountConfigDir: selectedProfileDir } : {}) });
+      if (reply.type !== "customAgentTested") throw new Error(ui.error);
+      setFailed(false);
+      setStatus(ui.tested);
+    } catch (error) { report(error); }
+    finally { setTesting(null); setBusy(false); }
+  }
+  async function remove(agent: CustomAgentConfig): Promise<void> {
+    if (!available || busy || !window.confirm(ui.confirmRemove)) return;
+    setBusy(true);
+    setStatus("");
     try {
       const reply = await nativeOnce({ id: crypto.randomUUID(), type: "customAgentRemove",
-        agentId: value.id });
-      if (reply.type !== "customAgentList") throw new Error(t("customAgentError"));
+        agentId: agent.id });
+      if (reply.type !== "customAgentList") throw new Error(ui.error);
       setAgents(reply.agents);
-      if (draft.id === value.id) edit(fresh());
-      onRemoved(value.id);
-      setStatus(t("customAgentRemoved"));
+      if (editing?.id === agent.id) resetEditor();
+      onRemoved(agent.id);
+      setFailed(false);
+      setStatus(ui.removed);
     } catch (error) { report(error); }
     finally { setBusy(false); }
   }
 
-  return <details className="mt-[15px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
-    <summary className="cursor-pointer font-semibold">{t("customAgentsHeading")}</summary>
-    <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("customAgentsHint")}</p>
-    {agents.length > 0 && <div className="mt-3 grid gap-2">
-      {agents.map(value => <div key={value.id} className="flex min-w-0 flex-wrap items-center justify-between gap-2 border border-border p-2 [&_span]:min-w-0 [&_span]:flex-1 [&_span]:wrap-anywhere [&_strong]:block [&_small]:block [&_small]:text-[11px] [&_small]:text-muted-foreground">
-        <span><strong>{value.label}</strong><small>{value.executable}</small></span>
-        <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-          <Button variant="outline" size="sm" disabled={busy}
-            onClick={() => edit(value)}>{t("customAgentEdit")}</Button>
-          <Button variant="outline" size="sm" disabled={busy}
-            onClick={() => void remove(value)}>{t("customAgentRemove")}</Button>
-        </div>
-      </div>)}
-    </div>}
-    <div className="grid min-w-0 gap-[11px] pt-[11px] [&_label]:min-w-0 [&_label]:gap-[5px] [&_label]:text-xs [&_[data-ui=agentProfileAdvanced]]:m-0 [&_[data-ui=agentProfileAdvanced]>label]:mt-[10px] [&_[data-ui=actions]]:gap-[6px]">
-      <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentTemplate")}
-        <SelectField ariaLabel={t("customAgentTemplate")} disabled={busy}
-          value={template} onValueChange={chooseTemplate} options={[
-            { value: "", label: t("customAgentManual") },
-            { value: "gemini", label: "Gemini CLI" },
-            { value: "argument", label: t("customAgentArgumentTemplate") },
-            { value: "stdin", label: t("customAgentStdinTemplate") },
-            { value: "file", label: t("customAgentFileTemplate") },
-          ]} />
-      </label>
-      <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentName")}
-        <Input disabled={busy} maxLength={80} value={draft.label}
-          placeholder={t("customAgentNamePlaceholder")}
-          onChange={event => update({ label: event.target.value })} />
-      </label>
-      <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentExecutable")}
-        <Input disabled={busy} maxLength={1024} value={draft.executable}
-          placeholder={t("customAgentExecutablePlaceholder")}
-          onChange={event => update({ executable: event.target.value })} />
-      </label>
-      <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-        <Button variant="outline" size="sm" disabled={!available || busy || !draft.executable.trim()}
-          onClick={() => void probe()}>{t("customAgentDetect")}</Button>
+  return <section className="mt-3 grid min-w-0 gap-3" data-ui="customAgentSettings">
+    <h3 className="text-sm font-semibold">{ui.heading}</h3>
+    <p className="text-xs leading-relaxed text-muted-foreground">{ui.hint}</p>
+    {agents.length === 0 && <p className="text-xs text-muted-foreground">{ui.empty}</p>}
+    {agents.map(agent => <div key={agent.id} className="grid min-w-0 gap-2 border border-border p-3">
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <div className="min-w-0"><strong className="block text-sm wrap-anywhere">{agent.label}</strong>
+          <p className="text-xs text-muted-foreground wrap-anywhere">{agent.executable}</p></div>
+        {selectedProvider === agent.id && <span className="shrink-0 text-xs text-primary">{ui.inUse}</span>}
       </div>
-      <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
-        <summary className="cursor-pointer font-semibold">{t("customAgentAdvanced")}</summary>
-        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentPromptMode")}
-          <SelectField ariaLabel={t("customAgentPromptMode")} value={draft.promptMode}
-            disabled={busy} onValueChange={value =>
-              update({ promptMode: value as CustomAgentConfig["promptMode"] })}
-            options={[{ value: "argument", label: t("customAgentArgument") },
-              { value: "stdin", label: t("customAgentStdin") }]} />
-        </label>
-        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentOutputMode")}
-          <SelectField ariaLabel={t("customAgentOutputMode")} value={draft.outputMode}
-            disabled={busy} onValueChange={value =>
-              update({ outputMode: value as CustomAgentConfig["outputMode"] })}
-            options={[{ value: "stdout-json", label: t("customAgentStdout") },
-              { value: "file-json", label: t("customAgentFile") }]} />
-        </label>
-        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentArgs")}
-          <textarea className="block w-full min-w-0 resize-y rounded-[var(--radius)] border border-border bg-background px-[10px] py-[9px] font-mono text-xs leading-[1.5] text-foreground wrap-anywhere focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1" disabled={busy} rows={4}
-            aria-label={t("customAgentArgs")} value={argv}
-            onChange={event => setArgv(event.target.value)} />
-        </label>
-        <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("customAgentPlaceholders")}</p>
-        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentModelArgument")}
-          <Input disabled={busy} maxLength={64} value={draft.modelArgument ?? ""}
-            placeholder="--model" onChange={event => update({ modelArgument: event.target.value })} />
-        </label>
-        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentModelsCommand")}
-          <textarea className="block w-full min-w-0 resize-y rounded-[var(--radius)] border border-border bg-background px-[10px] py-[9px] font-mono text-xs leading-[1.5] text-foreground wrap-anywhere focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1" disabled={busy} rows={2}
-            aria-label={t("customAgentModelsCommand")} value={modelArgv}
-            onChange={event => setModelArgv(event.target.value)} />
-        </label>
-        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentProfileEnv")}
-          <Input disabled={busy} value={draft.profileEnvVar ?? ""} placeholder="GEMINI_CLI_HOME"
-            onChange={event => update({ profileEnvVar: event.target.value })} />
-        </label>
-      </details>
-      <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("customAgentSafety")}</p>
-      <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-        <Button variant="outline" size="sm" disabled={busy} onClick={() => edit(fresh())}>
-          {t("customAgentNew")}</Button>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" disabled={busy || selectedProvider === agent.id}
+          onClick={() => onSelect(agent.id)}>{ui.use}</Button>
+        <Button variant="outline" size="sm" disabled={busy}
+          onClick={() => edit(agent)}>{ui.edit}</Button>
         <Button variant="outline" size="sm" disabled={!available || busy}
-          onClick={() => void submit("test")}>{t("customAgentTest")}</Button>
-        <Button size="sm" disabled={!available || busy}
-          onClick={() => void submit("save")}>{t("customAgentSave")}</Button>
+          aria-busy={testing === agent.id} onClick={() => void testSavedAgent(agent)}>
+          {testing === agent.id && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
+          {testing === agent.id ? ui.testing : ui.test}
+        </Button>
+        <Button variant="outline" size="sm" disabled={!available || busy}
+          onClick={() => void remove(agent)}>{ui.remove}</Button>
       </div>
-      {status && <p className={failed ? "my-[5px] text-[11px] text-destructive wrap-anywhere" : "my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"} data-ui={failed ? undefined : "hint"} role="status">{status}</p>}
-    </div>
-  </details>;
+    </div>)}
+    <details className="min-w-0 border border-border p-3" open={agents.length === 0 ? true : undefined}>
+      <summary className="cursor-pointer text-sm font-semibold">{ui.add}</summary>
+      <div className="mt-3 grid min-w-0 gap-3">
+        <div className="grid gap-2">
+          <strong className="text-xs">{ui.prompt}</strong>
+          <p className="text-xs leading-relaxed text-muted-foreground">{ui.promptHelp}</p>
+          <Button variant="outline" size="sm" disabled={copyFeedback === "copying"}
+            onClick={() => void copyPrompt()}>
+            {copyFeedback === "copied" ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+            {copyFeedback === "copied" ? ui.copied :
+              copyFeedback === "copying" ? ui.copying : ui.copy}
+          </Button>
+          {copyFeedback === "copied" && <span className="sr-only" role="status" aria-live="polite">{ui.copied}</span>}
+          {copyFeedback === "failed" && <p className="text-xs text-destructive" role="alert">{ui.copyFailed}</p>}
+        </div>
+        <div className="grid gap-2">
+          <strong className="text-xs">{ui.import}</strong>
+          <p className="text-xs leading-relaxed text-muted-foreground">{ui.importHelp}</p>
+          <label htmlFor="import-agent-json" className="text-xs font-semibold">{ui.import}</label>
+          <textarea id="import-agent-json" rows={7} value={json} placeholder={ui.placeholder}
+            disabled={busy} onChange={event => {
+              setJson(event.target.value); setValidated(null); setStatus(""); setFailed(false);
+            }}
+            className="w-full min-w-0 resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground focus-visible:outline-2 focus-visible:outline-ring" />
+          <Button variant="outline" size="sm" disabled={busy || !json.trim()}
+            onClick={validate}>{ui.validate}</Button>
+          {validated && <div className="grid min-w-0 gap-1 rounded-[var(--radius)] border border-border p-2 text-xs">
+            <strong>{ui.preview}</strong>
+            <span className="wrap-anywhere">{validated.executable}</span>
+            <pre className="overflow-x-auto whitespace-pre-wrap break-all">{JSON.stringify(validated.args)}</pre>
+          </div>}
+          {!available && <p className="text-xs text-muted-foreground">{ui.noHost}</p>}
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" disabled={!available || busy || !validated}
+              onClick={() => void detect()}>{ui.detect}</Button>
+            <Button variant="outline" size="sm" disabled={!available || busy || !validated}
+              aria-busy={testing === "draft"} onClick={() => void testAgent()}>
+              {testing === "draft" && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
+              {testing === "draft" ? ui.testing : ui.test}
+            </Button>
+            <Button size="sm" disabled={!available || busy || !validated}
+              onClick={() => void save()}>{editing ? ui.saveChanges : ui.save}</Button>
+            {editing && <Button variant="ghost" size="sm" disabled={busy}
+              onClick={resetEditor}>{ui.cancel}</Button>}
+          </div>
+        </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">{ui.safety}</p>
+      </div>
+    </details>
+    {status && <p className={failed ? "text-xs text-destructive wrap-anywhere" :
+      "text-xs text-muted-foreground wrap-anywhere"} role="status" aria-live="polite">{status}</p>}
+  </section>;
 }

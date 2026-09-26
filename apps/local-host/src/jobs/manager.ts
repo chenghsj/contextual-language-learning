@@ -1,5 +1,6 @@
 import { chunkCues, createJob, createSceneJob, transitionJob, type GenerationRequest, type JobSummary, type LearningDocument } from "@immersive/core";
 import { runGenerationPipeline, type PipelineDependencies } from "../generation";
+import { assertImportedAgentProvider } from "../agents";
 import type { StoragePorts } from "../storage/ports";
 import { findExisting, publishDocument } from "../storage/publisher";
 import { validateUserStoragePath } from "../storage/locations";
@@ -45,6 +46,7 @@ export class JobManager {
   }
 
   async start(requestId: string, request: GenerationRequest, signal?: AbortSignal): Promise<LearningDocument> {
+    assertImportedAgentProvider(request.agent.provider);
     if (this.running.size) throw new Error("Another generation is already running in this Host");
     if (request.outputPath) {
       const root = validateUserStoragePath(request.outputPath);
@@ -64,6 +66,8 @@ export class JobManager {
     await this.recoverInterrupted();
     const job = await this.storage.jobs.get(jobId);
     if (!job) throw new Error("Saved job not found");
+    // Leave historical checkpoints intact; removed built-in adapters cannot resume them.
+    assertImportedAgentProvider(job.request.agent.provider);
     if (!["queued", "waiting", "failed"].includes(job.summary.status)) {
       throw new Error("This job cannot be resumed from status: " + job.summary.status);
     }

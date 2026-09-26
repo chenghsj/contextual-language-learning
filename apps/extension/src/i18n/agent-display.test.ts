@@ -4,12 +4,10 @@ import { readFile } from "node:fs/promises";
 import { agentDisplayName, modelDisplayName } from "./agent-display";
 import { messages, type UiLocale } from "./messages";
 
-test("UI uses product names, not internal provider IDs, without changing CLI selection", () => {
-  assert.equal(agentDisplayName("claude", "Claude Code"), "Claude Code");
-  assert.equal(agentDisplayName("codex", "Codex"), "Codex CLI");
-  assert.equal(agentDisplayName("agy", "AGY"), "Antigravity CLI (agy)");
-  assert.equal(agentDisplayName("other", "Another CLI"), "Another CLI");
-  assert.equal(agentDisplayName("other"), "other");
+test("Agent labels come only from imported registry or historical provider IDs", () => {
+  assert.equal(agentDisplayName("custom-" + "a".repeat(24), "My CLI"), "My CLI");
+  assert.equal(agentDisplayName("legacy-provider", "  "), "legacy-provider");
+  assert.equal(agentDisplayName("legacy-provider"), "legacy-provider");
 });
 
 test("generation summary displays the selected model label or the honest CLI default", () => {
@@ -29,7 +27,10 @@ test("generation card shows Agent and model before submitting and links directly
   assert.ok(section.includes('onClick={() => {') && section.includes('setPage("settings")'));
   assert.ok(section.includes('getElementById("agent-settings-heading")'));
   assert.ok(section.indexOf('className="my-3 min-w-0 rounded-[var(--radius)] border border-border bg-muted p-3') < section.indexOf('onClick={startGeneration}'));
-  assert.ok(app.includes('agentDisplayName(entry.id, entry.label)'));
+  // New users select imported Agents; legacy built-in provider IDs are not a picker.
+  const imported = await readFile(new URL("../components/custom-agent-settings.tsx", import.meta.url), "utf8");
+  assert.match(imported, /onSelect\(agent\.id\)/);
+  assert.doesNotMatch(app, /options=\{agentCatalog\.map\(entry =>/);
   assert.ok(app.includes('agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)'));
   assert.match(app, /id="agent-settings-heading" tabIndex=\{-1\}/);
 });
@@ -40,7 +41,7 @@ test("new generation-summary controls are localized in all interface languages",
     for (const key of ["generationSummary", "generationAgentLabel", "generationModelLabel", "editAgentModel"] as const) {
       assert.ok(copy[key].trim(), locale + ": " + key);
     }
-    assert.ok(copy.agentProfileUnsupported.includes("Antigravity CLI (agy)"), locale);
+    assert.ok(copy.legacyJobCannotResume.trim(), locale);
   }
 });
 

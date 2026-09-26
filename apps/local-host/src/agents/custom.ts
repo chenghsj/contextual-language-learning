@@ -4,7 +4,7 @@ import { constants } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import { z } from "zod";
-import { CustomAgentConfigSchema, type CustomAgentConfig, type AgentSettings } from "@immersive/core";
+import { CustomAgentConfigSchema, CustomAgentImportSchema, type CustomAgentConfig, type AgentSettings } from "@immersive/core";
 import { appConfigRoot } from "../platform/paths";
 import { parseAgentJson } from "./json";
 import { findExecutable, profileEnvironment, runCLI } from "./process";
@@ -47,6 +47,18 @@ export async function saveCustomAgent(input: unknown): Promise<CustomAgentConfig
   else updated[existing] = config;
   await writeRegistry(updated);
   return updated;
+}
+/** A new import cannot supply or overwrite a Host-owned Agent ID. */
+export async function importCustomAgent(input: unknown): Promise<{
+  agent: CustomAgentConfig; agents: CustomAgentConfig[];
+}> {
+  const definition = CustomAgentImportSchema.parse(input);
+  if (!(await resolveCustomExecutable(definition.executable))) {
+    throw new Error(definition.label + " CLI executable not found. Install it or correct its path.");
+  }
+  const agent = CustomAgentConfigSchema.parse({ ...definition, id: newCustomAgentId() });
+  const agents = await saveCustomAgent(agent);
+  return { agent, agents };
 }
 export async function removeCustomAgent(id: string): Promise<CustomAgentConfig[]> {
   const current = await listCustomAgents();

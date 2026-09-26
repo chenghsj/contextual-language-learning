@@ -42,7 +42,7 @@ test("candidate and selected-scene checkpoints survive an interrupted generation
       id: randomUUID(), source: { platform: "import", title: "Everyday dialogue" },
       profile: { targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
         mode: "adaptive", sceneCount: 2, maxNewVocabulary: 2, exerciseCount: 1 },
-      agent: { provider: "claude", modelId: "" }, cues: rawCues,
+      agent: { provider: "custom-" + "a".repeat(24), modelId: "" }, cues: rawCues,
     });
     const counts = { candidates: 0, selection: 0, scenes: 0 };
     const deps = {

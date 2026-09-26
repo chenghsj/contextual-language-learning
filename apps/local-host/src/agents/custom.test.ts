@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CustomAgentConfigSchema, type CustomAgentConfig } from "@immersive/core";
 import { customArgs, getCustomAgent, listCustomAgents, removeCustomAgent,
-  resolveCustomExecutable, runCustomConfig, saveCustomAgent, testCustomConfig } from "./custom";
+  resolveCustomExecutable, runCustomConfig, saveCustomAgent, importCustomAgent, testCustomConfig } from "./custom";
 
 const ID = "custom-" + "b".repeat(24);
 const echoScript = "let s=''; process.stdin.setEncoding('utf8'); process.stdin.on('data', c => s+=c);" +
@@ -58,6 +58,30 @@ test("local registry creates, edits and removes custom definitions without touch
     assert.equal((await listCustomAgents())[0].label, "Updated");
     assert.deepEqual(await removeCustomAgent(ID), []);
     await assert.rejects(() => getCustomAgent(ID), /not registered/);
+  } finally {
+    if (previous === undefined) delete process.env.XDG_CONFIG_HOME;
+    else process.env.XDG_CONFIG_HOME = previous;
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("Host creates unique import IDs and rejects supplied IDs and unsafe extra fields", {
+  skip: process.platform !== "linux",
+}, async () => {
+  const temp = await mkdtemp(join(tmpdir(), "custom-agent-import-test-"));
+  const previous = process.env.XDG_CONFIG_HOME;
+  process.env.XDG_CONFIG_HOME = temp;
+  try {
+    const { id: _unused, ...definition } = stdinConfig;
+    const first = await importCustomAgent(definition);
+    const second = await importCustomAgent(definition);
+    assert.match(first.agent.id, /^custom-[a-f0-9]{24}$/);
+    assert.notEqual(first.agent.id, second.agent.id);
+    assert.equal(second.agents.length, 2);
+    await assert.rejects(() => importCustomAgent({ ...definition, id: ID }), /Unrecognized key/);
+    await assert.rejects(() => importCustomAgent({ ...definition, extra: "unsafe" }), /Unrecognized key/);
+    await assert.rejects(() => importCustomAgent({ ...definition, promptMode: "argument" }), /requires/);
+    await assert.rejects(() => importCustomAgent({ ...definition, executable: "not-a-real-cli-agent-test" }), /not found/);
   } finally {
     if (previous === undefined) delete process.env.XDG_CONFIG_HOME;
     else process.env.XDG_CONFIG_HOME = previous;

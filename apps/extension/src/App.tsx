@@ -25,6 +25,10 @@ import {
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { CustomAgentSettings } from "./components/custom-agent-settings";
+import { HostConnectionSettings } from "./components/host-connection-settings";
+import { agentOnboardingCopy } from "./i18n/agent-onboarding";
+import { hostConnectionCopy } from "./i18n/host-connection";
+import { isImportedAgentId, restoreImportedAgentSelection } from "./agent-selection";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
 import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
 import { Button } from "./components/ui/button";
@@ -39,7 +43,7 @@ import { ContextualSceneReader } from "./components/contextual-scene-reader";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
 import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
-import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences } from "./i18n/agent-model-preferences";
+import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences, filterImportedModelPreferences } from "./i18n/agent-model-preferences";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
@@ -58,7 +62,7 @@ const DEFAULT_PROFILE: LearningProfile = {
   mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 0, sceneCount: 4,
   contextualExampleCount: 2,
 };
-const DEFAULT_AGENT: AgentSettings = { provider: "claude", modelId: "" };
+const DEFAULT_AGENT: AgentSettings = { provider: "", modelId: "" };
 
 function downloadDocument(doc: LearningDocument, format: "json" | "md"): void {
   const content = format === "json"
@@ -98,6 +102,8 @@ export default function App() {
   const metadataUi = videoMetadataMessages[uiLocale];
   const settingsCopy = learningSettingsCopy[uiLocale];
   const t = (key: MessageKey, params?: MessageParams) => translate(uiLocale, key, params);
+  const agentUi = agentOnboardingCopy[uiLocale];
+  const hostUi = hostConnectionCopy[uiLocale];
   const [profile, setProfile] = useState<LearningProfile>(() => ({
     ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
   }));
@@ -116,11 +122,10 @@ export default function App() {
   const [customModelMode, setCustomModelMode] = useState(false);
   const [installed, setInstalled] = useState<Installed | null>(null);
   const [hostVersion, setHostVersion] = useState<string | null>(null);
-  const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([
-    { id: "claude", label: "Claude Code", installed: false, supportsAccountProfiles: true },
-    { id: "codex", label: "Codex CLI", installed: false, supportsAccountProfiles: true },
-    { id: "agy", label: "Antigravity CLI (agy)", installed: false, supportsAccountProfiles: false },
-  ]);
+  const [hostImportedOnly, setHostImportedOnly] = useState(false);
+  const [hostStatus, setHostStatus] = useState("");
+  const [hostChecked, setHostChecked] = useState(false);
+  const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([]);
   const [document, setDocument] = useState<LearningDocument | null>(null);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
@@ -187,6 +192,8 @@ export default function App() {
   const selectedDriveId = backup.accountId ?? driveAccounts[0]?.id;
   const driveAccessVerified = !!selectedDriveId && driveAccess?.accountId === selectedDriveId &&
     driveAccess.status === "verified";
+  const hostReady = installed !== null && hostImportedOnly &&
+    hostVersion === chrome.runtime.getManifest().version;
   const selectedAgentInfo = agentCatalog.find(entry => entry.id === agent.provider);
   const selectedSavedProfile = savedAgentProfiles.find(profile =>
     profile.provider === agent.provider && profile.directory === agent.accountConfigDir);
@@ -210,10 +217,18 @@ export default function App() {
       }
       if (isLocalePreference(saved.uiLocalePreference)) setLocalePreference(saved.uiLocalePreference);
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
-      if (saved.agent) setAgent(saved.agent as AgentSettings);
-      if (saved.agentProfiles && typeof saved.agentProfiles === "object") {
-        setAgentProfiles(saved.agentProfiles as Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>);
-      } else if (saved.agent) {
+      // Old built-in selections remain in saved job snapshots, not in BYO onboarding.
+      if (saved.agent) setAgent(restoreImportedAgentSelection(saved.agent));
+      if (saved.agentProfiles && typeof saved.agentProfiles === "object" && !Array.isArray(saved.agentProfiles)) {
+        setAgentProfiles(Object.fromEntries(Object.entries(saved.agentProfiles)
+          .filter(([provider, value]) => isImportedAgentId(provider) && value &&
+            typeof value === "object" && "modelId" in value && typeof value.modelId === "string")
+          .map(([provider, value]) => {
+            const setting = value as Pick<AgentSettings, "modelId" | "accountConfigDir">;
+            return [provider, { modelId: setting.modelId,
+              accountConfigDir: typeof setting.accountConfigDir === "string" ? setting.accountConfigDir : undefined }];
+          })));
+      } else if (saved.agent && isImportedAgentId((saved.agent as AgentSettings).provider)) {
         const previous = saved.agent as AgentSettings;
         setAgentProfiles({ [previous.provider]: { modelId: previous.modelId, accountConfigDir: previous.accountConfigDir } });
       }
@@ -223,9 +238,8 @@ export default function App() {
       const legacyModels = migrateAgentModelPreferences(previousAgent, previousProfiles);
       if (saved.agentModelPreferences && typeof saved.agentModelPreferences === "object" &&
           !Array.isArray(saved.agentModelPreferences)) {
-        const stored = Object.fromEntries(Object.entries(saved.agentModelPreferences)
-          .filter(([key, value]) => key.length < 2048 && typeof value === "string" && value.length <= 120));
-        setAgentModelPreferences({ ...legacyModels, ...stored });
+        const imported = filterImportedModelPreferences(saved.agentModelPreferences);
+        setAgentModelPreferences({ ...legacyModels, ...imported });
       } else {
         setAgentModelPreferences(legacyModels);
       }
@@ -628,6 +642,7 @@ export default function App() {
   }
 
   function selectAgent(provider: string): void {
+    if (!isImportedAgentId(provider)) return;
     setCustomModelMode(false);
     const previous = agentProfiles[provider];
     updateAgent({
@@ -702,7 +717,7 @@ export default function App() {
   }
 
   function checkHost(): void {
-    setError("");
+    setHostStatus("");
     setHostBusy(true);
     const startedAt = performance.now();
     const finishCheck = () => window.setTimeout(() => setHostBusy(false),
@@ -713,9 +728,19 @@ export default function App() {
     port.onMessage.addListener((message: HostMessage) => {
       if (message.id === id && message.type === "health") {
         replied = true;
-        setInstalled(message.installed);
+        setHostChecked(true);
+        // Older Hosts may still advertise built-in adapters despite matching version numbers.
+        const imported = Array.isArray(message.agents)
+          ? message.agents.filter(entry => isImportedAgentId(entry.id)) : [];
+        setInstalled(Object.fromEntries(Object.entries(message.installed)
+          .filter(([id]) => isImportedAgentId(id))));
         setHostVersion(typeof message.version === "string" ? message.version : null);
-        if (Array.isArray(message.agents)) setAgentCatalog(message.agents);
+        setHostImportedOnly(message.agentMode === "imported-only");
+        setAgentCatalog(imported);
+        setAgent(current => current.provider &&
+          (!isImportedAgentId(current.provider) ||
+            !imported.some(entry => entry.id === current.provider))
+          ? DEFAULT_AGENT : current);
         void loadAgentProfiles();
         finishCheck();
         port.disconnect();
@@ -723,10 +748,11 @@ export default function App() {
     });
     port.onDisconnect.addListener(() => {
       if (!replied) {
+        setHostChecked(true);
         setInstalled(null);
         setHostVersion(null);
-        setError((chrome.runtime.lastError?.message ?? "Native Host connection failed.") +
-          " " + t("hostInstallHint", { id: chrome.runtime.id }));
+        setHostImportedOnly(false);
+        setHostStatus(chrome.runtime.lastError?.message ?? "Native Host connection failed.");
         finishCheck();
       }
     });
@@ -734,7 +760,18 @@ export default function App() {
   }
 
   useEffect(() => {
+    if (hydrated) checkHost();
+    // Run the initial health check once after saved settings have been loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
+  useEffect(() => {
     if (!hydrated || installed === null) return;
+    if (!hostReady || !agent.provider) {
+      setModelOptions([]);
+      setModelNotice("");
+      return;
+    }
     if (!installed[agent.provider]) {
       setModelOptions([]);
       setModelNotice(t("agentMissing"));
@@ -765,7 +802,7 @@ export default function App() {
       }, Math.max(0, 500 - (performance.now() - startedAt)));
     });
     return () => { ignore = true; window.clearTimeout(settleTimer); };
-  }, [hydrated, installed, agent.provider, agent.accountConfigDir]);
+  }, [hydrated, installed, hostReady, agent.provider, agent.accountConfigDir]);
 
   function showDocument(raw: unknown): void {
     const parsed = LearningDocumentSchema.safeParse(raw);
@@ -893,6 +930,16 @@ export default function App() {
 
   function startGeneration(): void {
     if (checking || generating) return;
+    if (!hostReady) {
+      setError(installed === null ? agentUi.noHost : hostUi.unsupportedMode);
+      setPage("settings");
+      return;
+    }
+    if (!isImportedAgentId(agent.provider) || installed?.[agent.provider] !== true) {
+      setError(agentUi.empty);
+      setPage("settings");
+      return;
+    }
     if (subtitleBusy || !captionsReady) {
       setError(subtitleMessage(subtitleUi.languageNotReady, {
         language: learningLanguageName(profile.targetLanguage, uiLocale),
@@ -1665,6 +1712,10 @@ export default function App() {
 
         <AppPanel>
           <h2>{t("generationHeading")}</h2>
+          {!agent.provider && <div className="my-3 grid gap-2 border border-border p-3 text-xs" role="status">
+            <p>{agentUi.empty}</p>
+            <Button variant="outline" size="sm" onClick={() => setPage("settings")}>{agentUi.add}</Button>
+          </div>}
           <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("storageLocation")}</label>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("currentFolder", { path: destination.kind === "local"
             ? destination.directory ?? t("defaultFolder") : t("defaultFolder") })}</p>
@@ -1716,7 +1767,7 @@ export default function App() {
           <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere mt-[5px] mb-[14px]">{t("lessonContentSummary", {
             scenes: profile.sceneCount, examples: profile.contextualExampleCount ?? 2,
           })}</p>
-          <div className="my-3 min-w-0 rounded-[var(--radius)] border border-border bg-muted p-3 [&_dl]:mt-[10px] [&_dl]:grid [&_dl]:gap-2 [&_dl>div]:grid [&_dl>div]:grid-cols-[minmax(50px,auto)_minmax(0,1fr)] [&_dl>div]:items-start [&_dl>div]:gap-[10px] [&_dt]:text-xs [&_dt]:text-muted-foreground [&_dd]:m-0 [&_dd]:min-w-0 [&_dd]:text-right [&_dd]:text-xs [&_dd]:font-semibold [&_dd]:wrap-anywhere">
+          {isImportedAgentId(agent.provider) && <div className="my-3 min-w-0 rounded-[var(--radius)] border border-border bg-muted p-3 [&_dl]:mt-[10px] [&_dl]:grid [&_dl]:gap-2 [&_dl>div]:grid [&_dl>div]:grid-cols-[minmax(50px,auto)_minmax(0,1fr)] [&_dl>div]:items-start [&_dl>div]:gap-[10px] [&_dt]:text-xs [&_dt]:text-muted-foreground [&_dd]:m-0 [&_dd]:min-w-0 [&_dd]:text-right [&_dd]:text-xs [&_dd]:font-semibold [&_dd]:wrap-anywhere">
             <div className="flex flex-wrap items-center justify-between gap-2 [&>strong]:text-xs">
               <strong>{t("generationSummary")}</strong>
               <Button variant="outline" size="sm" onClick={() => {
@@ -1729,7 +1780,7 @@ export default function App() {
               }}>{t("editAgentModel")}</Button>
             </div>
             <dl>
-              <div><dt>{t("generationAgentLabel")}</dt><dd>{agentDisplayName(agent.provider, selectedAgentInfo?.label)}</dd></div>
+              <div><dt>{t("generationAgentLabel")}</dt><dd>{agent.provider ? agentDisplayName(agent.provider, selectedAgentInfo?.label) : agentUi.empty}</dd></div>
               {agent.accountConfigDir && <div><dt>{t("agentAccount")}</dt>
                 <dd title={agent.accountConfigDir}>{selectedSavedProfile?.label ?? t("accountLegacy", { path: agent.accountConfigDir })}</dd>
               </div>}
@@ -1737,8 +1788,8 @@ export default function App() {
                 <dd title={agent.modelId || undefined}>{modelDisplayName(agent.modelId, modelOptions, t("cliDefault"))}</dd>
               </div>
             </dl>
-          </div>
-          <Button className="h-auto min-h-10 w-full px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={generating || checking || subtitleBusy || !captionsReady || !cues.length || !title.trim()}>
+          </div>}
+          <Button className="h-auto min-h-10 w-full px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={!hostReady || generating || checking || subtitleBusy || !isImportedAgentId(agent.provider) || installed?.[agent.provider] !== true || !captionsReady || !cues.length || !title.trim()}>
             {(generating || checking) && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
@@ -1780,8 +1831,10 @@ export default function App() {
               {job.error && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere">{job.error}</p>}
               <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
                 {["queued", "waiting", "failed"].includes(job.status) &&
-                  <Button variant="outline" size="sm" disabled={generating}
-                    onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>}
+                  (isImportedAgentId(job.provider)
+                    ? <Button variant="outline" size="sm" disabled={!hostReady || generating}
+                        onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>
+                    : <p role="status" className="text-xs text-muted-foreground">{t("legacyJobCannotResume")}</p>)}
                 {job.documentId && <>
                   <Button variant="outline" size="sm" disabled={generating}
                     onClick={() => openSavedDocument(job.documentId!)}>{t("openLesson")}</Button>
@@ -1906,25 +1959,42 @@ export default function App() {
         <AppPanel>
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("agentHint")}</p>
-          {installed && <Badge>{t(installed[agent.provider] ? "agentInstalled" : "agentMissing")}</Badge>}
-          {installed && hostVersion !== chrome.runtime.getManifest().version && <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere" role="status">
-            <p>{hostVersion ? t("hostVersionMismatch", { version: hostVersion,
-              expected: chrome.runtime.getManifest().version }) : t("hostVersionUnknown")}</p>
-            <Button variant="outline" size="sm"
-              onClick={() => void chrome.tabs.create({
-                url: "https://github.com/chenghsj/immersive-language-learning/releases",
-              })}>{t("hostUpdateDownload")}</Button>
-          </div>}
-          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("defaultAgent")}
-            <SelectField ariaLabel={t("defaultAgent")} value={agent.provider}
-              onValueChange={selectAgent}
-              options={agentCatalog.map(entry => ({
-                value: entry.id,
-                label: agentDisplayName(entry.id, entry.label) +
-                  (installed && !entry.installed ? t("agentNotInstalled") : ""),
-              }))} />
-          </label>
-          {selectedAgentInfo?.supportsAccountProfiles && <section className="mt-3 border-t border-border pt-[10px]">
+          <HostConnectionSettings locale={uiLocale} connected={installed !== null} checked={hostChecked}
+            importedOnly={hostImportedOnly}
+            version={hostVersion} busy={hostBusy} error={hostStatus} onCheck={checkHost} />
+          <CustomAgentSettings locale={uiLocale} available={hostReady}
+            selectedProvider={agent.provider} selectedModelId={agent.modelId}
+            selectedProfileDir={agent.accountConfigDir} nativeOnce={nativeOnce}
+            onSelect={selectAgent}
+            onSaved={(provider, created, config) => {
+              if (created && !agent.provider) selectAgent(provider);
+              if (!created && agent.provider === provider &&
+                  ((!config.profileEnvVar && agent.accountConfigDir) ||
+                   (!config.modelArgument && agent.modelId))) {
+                updateAgent({ ...agent,
+                  accountConfigDir: config.profileEnvVar ? agent.accountConfigDir : undefined,
+                  modelId: config.modelArgument ? agent.modelId : "",
+                });
+              }
+              checkHost();
+            }}
+            onRemoved={provider => {
+              if (agent.provider === provider) setAgent(DEFAULT_AGENT);
+              setSavedAgentProfiles(current => current.filter(item => item.provider !== provider));
+              setAgentProfiles(current => {
+                const next = { ...current }; delete next[provider]; return next;
+              });
+              setAgentModelPreferences(current => {
+                const next = { ...current };
+                for (const key of Object.keys(next)) {
+                  if (key.startsWith("[" + JSON.stringify(provider) + ",")) delete next[key];
+                }
+                return next;
+              });
+              checkHost();
+            }} />
+          {isImportedAgentId(agent.provider) && selectedAgentInfo?.supportsAccountProfiles &&
+            <section className="mt-3 border-t border-border pt-[10px]">
             <div className="relative flex min-w-0 items-center gap-2 text-xs">
               <strong>{t("useOtherCliAccount")}</strong>
               <SettingInfo label={t("useOtherCliAccount")} infoLabel={settingsCopy.infoLabel}
@@ -1965,8 +2035,8 @@ export default function App() {
               {profileStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{profileStatus}</p>}
             </details>
           </section>}
-          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("defaultModel")}
-            <SelectField ariaLabel={t("defaultModel")} disabled={modelBusy} value={modelSelection}
+          {isImportedAgentId(agent.provider) && <><label className="my-3 grid gap-[6px] text-xs font-semibold">{agentUi.modelLabel}
+            <SelectField ariaLabel={agentUi.modelLabel} disabled={modelBusy} value={modelSelection}
               onValueChange={value => {
                 if (value === "__custom__") {
                   setCustomModelMode(true);
@@ -1989,8 +2059,8 @@ export default function App() {
             <Input value={agent.modelId} onChange={event => updateAgent({ ...agent, modelId: event.target.value })}
               placeholder={t("modelPlaceholder")} />
           </label>}
-          {modelNotice && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{modelNotice}</p>}
-          <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+          {modelNotice && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{modelNotice}</p>}</>}
+          {isImportedAgentId(agent.provider) && <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
             <summary className="cursor-pointer font-semibold">{t("agentDiagnostics")}</summary>
             <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
               <Button variant="outline" size="sm" disabled={hostBusy} aria-busy={hostBusy} onClick={checkHost}>{hostBusy && <span aria-hidden="true" className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />}{t("checkHost")}</Button>
@@ -1999,15 +2069,7 @@ export default function App() {
                 {modelBusy && <span aria-hidden="true" className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />}{t("refreshModels")}
               </Button>
             </div>
-          </details>
-          <CustomAgentSettings locale={uiLocale} available={installed !== null}
-            selectedProvider={agent.provider} selectedModelId={agent.modelId}
-            selectedProfileDir={agent.accountConfigDir} nativeOnce={nativeOnce}
-            onSaved={provider => { checkHost(); selectAgent(provider); }}
-            onRemoved={provider => {
-              if (agent.provider === provider) selectAgent("claude");
-              checkHost();
-            }} />
+          </details>}
         </AppPanel>
         <AppPanel>
           <h2>{t("driveAccountHeading")}</h2>
