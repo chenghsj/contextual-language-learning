@@ -770,6 +770,7 @@ export default function App() {
     if (response.type !== "playbackRangeSaved" || response.cueId !== cueId) {
       throw new Error("Native Host did not confirm the playback calibration");
     }
+    if (response.warning) setError(response.warning);
     // The Host persists first; only then update the reader and JSON/Markdown export.
     setDocument(current => {
       if (current?.id !== documentId || current.schemaVersion !== 3) return current;
