@@ -484,7 +484,7 @@ export default function App() {
     if (!driveAccounts.some(account => account.id === accountId)) {
       setDriveAccess({ accountId, status: "failed" });
       setDriveConnectError(t("backupUnknownAccount"));
-      setBackup(current => current.enabled ? { ...current, enabled: false } : current);
+      setBackup({ enabled: false, accountId: driveAccounts[0]?.id });
       return;
     }
     let cancelled = false;
@@ -538,7 +538,6 @@ export default function App() {
       const message = cause instanceof Error ? cause.message : t("connectDriveError");
       setError(message);
       setDriveConnectError(message);
-      setDriveAccess(current => current ? { ...current, status: "failed" } : current);
     } finally { setStorageBusy(false); }
   }
 
