@@ -500,6 +500,101 @@ button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(-
 .twoColumns > .settingField:only-child { grid-column: 1 / -1; }
 .subtitleAcquisitionStatus { margin: 10px 0; line-height: 1.5; }
 
+/* Contextual V3 reader: one document scroll area and an unobtrusive sticky playback row. */
+.contextualReader { min-width: 0; }
+.contextualSceneHeader { padding: 12px; }
+.contextualHeading, .contextualSectionHeading { display: flex; justify-content: space-between; align-items: center; min-width: 0; gap: 8px; }
+.contextualHeaderTitle { min-width: 0; flex: 1; }
+.contextualHeaderTitle > strong { display: block; overflow-wrap: anywhere; font-size: 13px; }
+.contextualHeaderTitle .hint { margin: 3px 0; }
+.contextualScenePicker { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; align-items: end; gap: 7px; margin-top: 10px; }
+.contextualScenePicker > div { min-width: 0; display: grid; gap: 4px; }
+.contextualScenePicker [data-slot="select-trigger"] { width: 100%; }
+.contextualScenePicker > button { width: 36px; height: 36px; }
+.contextualSceneContent { min-width: 0; padding: 14px 12px; }
+.contextualSceneContent h2 { margin: 5px 0 0; font-size: 17px; }
+.contextualSceneContent h3 { margin: 0; font-size: 14px; letter-spacing: 0; text-transform: none; color: var(--foreground); }
+.contextualSituation { margin: 8px 0 12px; color: var(--muted-foreground); font-size: 13px; line-height: 1.6; }
+.contextualWholePlayback { width: 100%; min-height: 38px; }
+.contextualDialogueHeading { margin-top: 18px; }
+.contextualDialogueHeading > button { flex-shrink: 0; }
+.contextualDialogueHeading + .hint { margin: 4px 0 10px; font-size: 11px; }
+.contextualDialogue { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.contextualLine { width: 100%; height: auto; min-width: 0; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto 16px;
+  align-items: start; gap: 7px; padding: 11px 9px; border: 0; border-radius: 0; background: var(--card);
+  text-align: left; font-size: 13px; line-height: 1.65; color: var(--foreground); }
+.contextualLine + .contextualLine { border-top: 1px solid var(--border); }
+.contextualLine:hover { background: var(--muted); }
+.contextualLine:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.contextualLine.selected { background: color-mix(in oklch, var(--primary) 8%, var(--card)); box-shadow: inset 3px 0 var(--primary); }
+.contextualLineNumber { color: var(--muted-foreground); font-size: 11px; font-variant-numeric: tabular-nums; }
+.contextualLineText { min-width: 0; overflow-wrap: anywhere; display: grid; gap: 5px; }
+.contextualTranslation { display: block; color: var(--muted-foreground); font-size: 12px; line-height: 1.55; }
+.contextualFocusMarker { border-radius: var(--radius); border: 1px solid var(--border); padding: 1px 3px;
+  color: var(--muted-foreground); font-size: 10px; white-space: nowrap; }
+.contextualLinePlay { width: 14px; height: 14px; color: var(--muted-foreground); }
+.contextualExpressions { margin-top: 20px; display: grid; gap: 22px; }
+.contextualExpression { min-width: 0; padding-top: 16px; border-top: 1px solid var(--border); }
+.contextualEyebrow { display: block; margin-bottom: 7px; color: var(--muted-foreground); font-size: 11px; font-weight: 650; }
+.contextualExpression > h3 { font-size: 18px; overflow-wrap: anywhere; }
+.contextualMeaning { margin: 5px 0 14px; font-size: 13px; }
+.contextualEvidence { padding: 10px 12px; border-radius: var(--radius); background: var(--muted); font-size: 12px; line-height: 1.65; }
+.contextualEvidence > p { margin: 5px 0 0; }
+.contextualWordNotes { margin: 11px 0; padding: 10px 12px; }
+.contextualWordNotes > summary { font-size: 12px; }
+.contextualWord { padding-top: 11px; font-size: 12px; }
+.contextualWord + .contextualWord { border-top: 1px solid var(--border); margin-top: 10px; }
+.contextualWord > strong { margin-right: 8px; }
+.contextualWord > span { color: var(--muted-foreground); }
+.contextualWord > p { margin: 5px 0 0; }
+.contextualExamples { min-width: 0; margin-top: 16px; }
+.contextualExamples .hint { margin: 4px 0 10px; }
+.contextualExample { padding: 10px 0; border-top: 1px solid var(--border); }
+.contextualExampleSituation { margin: 0 0 8px; color: var(--muted-foreground); font-size: 11px; line-height: 1.6; }
+.contextualExampleLine { margin-bottom: 7px; }
+.contextualExampleLine > p { margin: 0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.contextualExampleLine > .contextualTranslation { font-size: 12px; margin-top: 2px; }
+.contextualExpandExamples { width: 100%; margin-top: 3px; }
+.contextualPlayer { position: sticky; bottom: 0; z-index: 5; min-width: 0; padding: 9px 12px; background: var(--card);
+  border-top: 1px solid var(--border); box-shadow: 0 -6px 18px #00000012; }
+.contextualPlayerTitle { display: grid; gap: 3px; min-width: 0; }
+.contextualPlayerTitle > strong { display: block; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font-size: 12px; line-height: 1.4; }
+.contextualPlayerControls { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px 74px; gap: 5px; align-items: center; margin-top: 8px; }
+.contextualPlayerControls > button { min-width: 0; width: 100%; }
+.contextualPlayerControls > [data-slot="select-trigger"] { min-width: 0; width: 100%; padding-inline: 6px; font-size: 12px; }
+.contextualPlayerLoop { white-space: normal; min-height: 36px; height: auto; padding: 6px; }
+.contextualPlayerStatus { margin: 5px 0 0; color: var(--muted-foreground); font-size: 11px; overflow-wrap: anywhere; }
+@media (max-width: 355px) {
+  .contextualPlayerControls { grid-template-columns: 32px minmax(0, 1fr) 32px 60px; gap: 4px; }
+  .contextualPlayerControls > [data-slot="select-trigger"] { padding-inline: 3px; }
+  .contextualLine { grid-template-columns: 20px minmax(0, 1fr) 12px; }
+  .contextualFocusMarker { grid-column: 2; width: fit-content; }
+  .contextualLinePlay { grid-column: 3; grid-row: 1; width: 12px; }
+}
+
+/* The actual watch-page clock is the only source of the active-line highlight. */
+.contextualLine.chosen:not(.playing) { box-shadow: inset 2px 0 var(--border); }
+.contextualLine.playing { background: color-mix(in oklch, var(--primary) 11%, var(--card)); box-shadow: inset 3px 0 var(--primary); }
+.contextualTimeToggle { display: flex; width: 100%; margin-top: 3px; justify-content: center; min-height: 30px; font-size: 11px; color: var(--muted-foreground); }
+.contextualTimeDialog { width: min(370px, calc(100vw - 22px)); max-width: calc(100vw - 22px); max-height: min(560px, 84vh); overflow: auto;
+  padding: 16px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--card); color: var(--foreground); box-shadow: 0 20px 60px #0004; }
+.contextualTimeDialog::backdrop { background: #0008; }
+.contextualTimeHeading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.contextualTimeHeading > h3 { margin: 0; font-size: 16px; }
+.contextualTimeHeading > button { flex-shrink: 0; }
+.contextualTimeOptions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.contextualTimeOptions > div { min-width: 0; }
+.contextualTimeOptions label { margin: 0 0 5px; font-size: 12px; }
+.contextualTimeOptions [data-slot="select-trigger"] { min-width: 0; width: 100%; }
+.contextualTimeBoundaries { display: grid; gap: 16px; padding-top: 10px; border-top: 1px solid var(--border); }
+.contextualTimeBoundaryHeading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; font-size: 13px; }
+.contextualTimeBoundaryHeading > output { font-variant-numeric: tabular-nums; }
+.contextualTimeActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.contextualTimeActions > button { min-width: 0; height: auto; min-height: 35px; white-space: normal; padding: 6px; font-size: 12px; }
+.contextualTimeActions > button:last-child { grid-column: 1 / -1; }
+
 /* V3 creation flow: source first, then compact single-column lesson controls. */
 .subtitleSourceBlock { min-width: 0; padding-bottom: 12px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
 .subtitleSourceBlock > label { margin: 8px 0; }

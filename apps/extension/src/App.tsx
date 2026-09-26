@@ -34,6 +34,7 @@ import { Select, SelectContent, SelectField, SelectItem, SelectTrigger, SelectVa
 import { Textarea } from "./components/ui/textarea";
 import { Badge } from "./components/ui/badge";
 import { SceneReader } from "./components/scene-reader";
+import { ContextualSceneReader } from "./components/contextual-scene-reader";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
 import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
@@ -1972,7 +1973,12 @@ export default function App() {
         {!document ? <Card className="panel empty">
           <h2>{t("emptyHeading")}</h2><p className="hint">{t("emptyHint")}</p>
           <Button variant="outline" className="secondary" onClick={() => setPage("create")}>{t("create")}</Button>
-        </Card> : document.schemaVersion === 2 ? <SceneReader key={document.id}
+        </Card> : document.schemaVersion === 3 ? <ContextualSceneReader key={document.id}
+          document={document} adapter={readerAdapter} locale={uiLocale}
+          repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
+          playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
+          onError={setError} onDownload={format => downloadDocument(document, format)}
+        /> : document.schemaVersion === 2 ? <SceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
           repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
           playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
