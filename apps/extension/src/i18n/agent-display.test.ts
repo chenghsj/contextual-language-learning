@@ -52,3 +52,10 @@ test("Agent and optional CLI Profile share one persisted model setting", async (
   assert.match(app, /<details className="agentProfileAdvanced">/);
   assert.match(app, /agent.accountConfigDir && <div><dt>\{t\("agentAccount"\)\}/);
 });
+
+test("Drive connection verifies actual API access before enabling backup", async () => {
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const connect = app.slice(app.indexOf("async function connectDrive()"), app.indexOf("async function disconnectDrive"));
+  assert.ok(connect.indexOf('type: "driveValidate"') > connect.indexOf('type: "driveConnect"'));
+  assert.ok(connect.indexOf('type: "driveValidate"') < connect.indexOf("setBackup({ enabled: true"));
+});
