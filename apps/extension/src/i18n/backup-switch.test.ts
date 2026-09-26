@@ -6,18 +6,15 @@ const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
 const oauth = await readFile(new URL("../../../local-host/src/drive/oauth.ts", import.meta.url), "utf8");
 const callbackPage = await readFile(new URL("../../../local-host/src/drive/oauth-callback-page.ts", import.meta.url), "utf8");
 
-test("backup switch uses accessible Tailwind track and thumb states", () => {
+test("backup switch has a compact visual track inside an accessible 44×36 hit target", () => {
   const switchMarkup = app.slice(app.indexOf('role="switch"'));
-  const track = switchMarkup.match(/className="([^"]+)"/)?.[1] ?? "";
-  const thumb = switchMarkup.match(/<span className="([^"]+)"/)?.[1] ?? "";
-  assert.ok(track.includes("justify-start"));
-  assert.ok(track.includes("w-[46px]"));
-  assert.ok(track.includes("h-[27px]"));
-  assert.ok(track.includes("p-[3px]"));
-  assert.ok(track.includes("aria-checked:bg-primary"));
-  assert.ok(thumb.includes("size-[21px]"));
-  assert.ok(thumb.includes("translate-x-0"));
-  assert.ok(thumb.includes("group-aria-checked:translate-x-[19px]"));
+  const hitTarget = switchMarkup.match(/className="([^"]+)"/)?.[1] ?? "";
+  const track = switchMarkup.match(/<span aria-hidden="true" className="([^"]+)"/)?.[1] ?? "";
+  const thumb = switchMarkup.match(/<span className="([^"]+)" \/>/)?.[1] ?? "";
+  assert.ok(hitTarget.includes("h-9") && hitTarget.includes("w-11"));
+  assert.ok(track.includes("h-[22px]") && track.includes("w-[38px]"));
+  assert.ok(track.includes("group-aria-checked:bg-primary"));
+  assert.ok(thumb.includes("size-4") && thumb.includes("group-aria-checked:translate-x-4"));
   assert.match(app, /role="switch" aria-checked=\{backup.enabled\}/);
 });
 
