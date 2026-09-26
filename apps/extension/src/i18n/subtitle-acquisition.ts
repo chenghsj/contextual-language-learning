@@ -4,6 +4,8 @@ export const subtitleAcquisition: Record<UiLocale, {
   button: string; busy: string; hint: string; success: string; manual: string;
   unavailable: string; sourceMismatch: string;
   loadingLanguage: string; languageMismatch: string; languageNotReady: string;
+  tracksChecking: string; tracksAvailable: string; tracksNone: string;
+  tracksMissing: string; tracksUnknown: string; tracksAuto: string;
   manualLanguageChanged: string; manualLanguageReady: string;
   reloadTab: string; reloadingTab: string; reloadedTab: string; reloadFailed: string;
 }> = {
@@ -13,6 +15,12 @@ export const subtitleAcquisition: Record<UiLocale, {
     hint: "Get available subtitles from the video you are watching. Netflix support depends on the active playback session and available subtitle tracks.",
     success: "Loaded {count} subtitle cues ({language}). Review the lesson settings and generate.",
     loadingLanguage: "Getting {language} subtitles from this video…",
+    tracksChecking: "Checking subtitle languages…",
+    tracksAvailable: "Available subtitle languages: {languages}.",
+    tracksNone: "No supported subtitle languages",
+    tracksMissing: "No {language} subtitle track was found. You can try retrieval or import your own captions.",
+    tracksUnknown: "Subtitle languages cannot currently be confirmed. You can still try fetching captions.",
+    tracksAuto: "Auto",
     languageMismatch: "Requested {requested} subtitles, but the video returned {actual}. Choose the matching language or import your own captions.",
     languageNotReady: "The captions do not match this video and selected language. Get {language} subtitles before generating.",
     manualLanguageChanged: "These imported captions belong to another language. Import {language} captions; your previous draft is preserved.",
@@ -31,6 +39,12 @@ export const subtitleAcquisition: Record<UiLocale, {
     hint: "從目前播放的影片讀取可用字幕。Netflix 是否能取得整集字幕，取決於目前播放工作階段與字幕軌。",
     success: "已取得 {count} 段字幕（{language}），確認教材設定後即可生成。",
     loadingLanguage: "正在取得這部影片的{language}字幕…",
+    tracksChecking: "正在確認可用字幕語言…",
+    tracksAvailable: "這部影片的可用字幕語言：{languages}。",
+    tracksNone: "沒有支援的語言",
+    tracksMissing: "目前沒有找到{language}字幕軌；仍可嘗試取得字幕或自行匯入。",
+    tracksUnknown: "目前無法確認字幕語言；仍可嘗試取得字幕。",
+    tracksAuto: "自動",
     languageMismatch: "要求{requested}字幕，但影片回傳的是 {actual}。請選擇相符語言，或匯入自己的字幕。",
     languageNotReady: "目前字幕與影片或所選語言不符。請先取得{language}字幕，才能生成教材。",
     manualLanguageChanged: "已匯入的字幕屬於其他語言。請重新匯入{language}字幕；原草稿會保留。",
@@ -49,6 +63,12 @@ export const subtitleAcquisition: Record<UiLocale, {
     hint: "从当前播放的视频读取可用字幕。Netflix 能否获取整集字幕取决于当前播放会话和字幕轨。",
     success: "已获取 {count} 段字幕（{language}），确认教材设置后即可生成。",
     loadingLanguage: "正在获取这部视频的{language}字幕…",
+    tracksChecking: "正在确认可用字幕语言…",
+    tracksAvailable: "这部视频可用的字幕语言：{languages}。",
+    tracksNone: "没有支持的语言",
+    tracksMissing: "目前没有找到{language}字幕轨；仍可尝试获取字幕或自行导入。",
+    tracksUnknown: "目前无法确认字幕语言；仍可尝试获取字幕。",
+    tracksAuto: "自动",
     languageMismatch: "请求的是{requested}字幕，但视频返回 {actual}。请选择匹配语言或导入自己的字幕。",
     languageNotReady: "当前字幕与视频或所选语言不符。请先获取{language}字幕，再生成教材。",
     manualLanguageChanged: "导入的字幕属于其他语言。请重新导入{language}字幕，原草稿会保留。",
@@ -67,6 +87,12 @@ export const subtitleAcquisition: Record<UiLocale, {
     hint: "再生中の動画で利用可能な字幕を取得します。Netflix では再生セッションと字幕トラックによって取得できない場合があります。",
     success: "字幕 {count} 件（{language}）を取得しました。教材の設定を確認して生成してください。",
     loadingLanguage: "この動画の{language}字幕を取得しています…",
+    tracksChecking: "字幕の言語を確認中…",
+    tracksAvailable: "利用可能な字幕の言語：{languages}。",
+    tracksNone: "対応する言語なし",
+    tracksMissing: "{language}の字幕トラックが見つかりません。取得を試すか字幕を読み込めます。",
+    tracksUnknown: "字幕の言語を確認できません。字幕の取得は試せます。",
+    tracksAuto: "自動",
     languageMismatch: "{requested}字幕を要求しましたが、動画は {actual} を返しました。言語を変更するか、字幕を読み込んでください。",
     languageNotReady: "字幕が選択中の動画または言語と一致しません。教材生成前に{language}字幕を取得してください。",
     manualLanguageChanged: "読み込んだ字幕は別の言語です。元の下書きを残したまま、{language}字幕を読み込んでください。",
@@ -85,6 +111,12 @@ export const subtitleAcquisition: Record<UiLocale, {
     hint: "재생 중인 동영상에서 제공되는 자막을 가져옵니다. Netflix에서는 재생 세션과 자막 트랙에 따라 전체 자막을 가져오지 못할 수 있습니다.",
     success: "자막 {count}개({language})를 가져왔습니다. 학습 설정을 확인한 뒤 생성하세요.",
     loadingLanguage: "이 동영상의 {language} 자막을 가져오는 중…",
+    tracksChecking: "利用 가능한 자막 언어 확인 중…",
+    tracksAvailable: "사용 가능한 자막 언어: {languages}.",
+    tracksNone: "지원 언어 없음",
+    tracksMissing: "{language} 자막 트랙을 찾지 못했습니다. 가져오기를 시도하거나 직접 자막을 불러올 수 있습니다.",
+    tracksUnknown: "현재 자막 언어를 확인할 수 없습니다. 자막 가져오기는 시도할 수 있습니다.",
+    tracksAuto: "자동",
     languageMismatch: "{requested} 자막을 요청했지만 동영상은 {actual} 자막을 반환했습니다. 언어를 변경하거나 자막을 가져오세요.",
     languageNotReady: "현재 자막이 동영상 또는 선택한 언어와 일치하지 않습니다. 생성 전에 {language} 자막을 가져오세요.",
     manualLanguageChanged: "가져온 자막이 다른 언어입니다. 기존 초안을 유지한 채 {language} 자막을 다시 가져오세요.",
