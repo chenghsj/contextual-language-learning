@@ -5,15 +5,19 @@ import { formatTime, type LearningDocument, type StudyScene, type SubtitleCue } 
 import type { UiLocale } from "../i18n/messages";
 import { sceneReaderMessages } from "../i18n/scene-reader";
 import { cuePlaybackStart, cuePlaybackWindow, openOrFocusVideoTab } from "../video/tab";
+import {
+  adjustLoopBoundary, formatLoopTimestamp, readLoopWindows,
+  type LoopBoundary, type LoopWindow,
+} from "../video/loop-window";
 import type { VideoAdapter } from "../video/types";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Select } from "./ui/select";
+import { SelectField } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { SettingInfo } from "./setting-info";
 
 type SceneDocument = Extract<LearningDocument, { schemaVersion: 2 }>;
-type Mode = "watch" | "learn" | "review";
+type Mode = "learn" | "review";
 type Hint = "progressive" | "original" | "bilingual";
 type Repeat = "2" | "3" | "5" | "infinite";
 
@@ -32,7 +36,7 @@ type Props = {
 };
 
 function focusCue(scene: StudyScene, cues: ReadonlyMap<string, SubtitleCue>): SubtitleCue | undefined {
-  return scene.focusCueIds.map(id => cues.get(id)).find(cue => !!cue && cue.startMs !== null && cue.endMs !== null);
+  return scene.focusCueIds.map(id => cues.get(id)).find(cue => !!cue && cue.startMs !== null && cue.endMs !== null && cue.endMs > cue.startMs);
 }
 
 export function SceneReader({
@@ -53,8 +57,7 @@ export function SceneReader({
   const [status, setStatus] = useState("");
   const [playbackSettingsOpen, setPlaybackSettingsOpen] = useState(false);
   const [loopingSceneId, setLoopingSceneId] = useState<string | null>(null);
-  const [watchTime, setWatchTime] = useState<number | null>(null);
-  const [watchAvailable, setWatchAvailable] = useState(false);
+  const [loopRanges, setLoopRanges] = useState<Record<string, LoopWindow>>({});
   const [busy, setBusy] = useState(false);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const cues = useMemo(() => new Map(document.cues.map(cue => [cue.id, cue])), [document.cues]);
@@ -63,17 +66,20 @@ export function SceneReader({
   const sourceUrl = document.source.url;
   const progressKey = "sceneStudy:" + document.id;
   const hintKey = "sceneHint";
+  const loopKey = "sceneLoopRanges:" + document.id;
   const canPlay = !!sourceUrl && !!adapter.loop && scene.startMs !== null && scene.endMs !== null;
   const selectedFocusCue = focusCue(scene, cues);
+  const selectedFocusRange = selectedFocusCue && selectedFocusCue.startMs !== null &&
+    selectedFocusCue.endMs !== null
+    ? loopRanges[selectedFocusCue.id] ?? cuePlaybackWindow(selectedFocusCue.startMs, selectedFocusCue.endMs)
+    : null;
   const focusLoopActive = loopingSceneId === scene.id;
   const originalVisible = showOriginal ?? hint !== "progressive";
   const translationVisible = showTranslation ?? hint === "bilingual";
-  const watchScene = watchTime === null ? undefined : document.sections.find(item =>
-    item.startMs !== null && item.endMs !== null && watchTime >= item.startMs && watchTime <= item.endMs);
 
   useEffect(() => {
     let live = true;
-    void chrome.storage.local.get([progressKey, hintKey]).then(stored => {
+    void chrome.storage.local.get([progressKey, hintKey, loopKey]).then(stored => {
       if (!live) return;
       const saved = readSceneProgress(stored[progressKey],
         document.sections.map(item => item.id));
@@ -83,38 +89,23 @@ export function SceneReader({
       }
       setCompletedIds(saved.completedIds);
       setStepByScene(saved.steps);
+      setLoopRanges(readLoopWindows(stored[loopKey], document.cues.map(cue => cue.id)));
       const previousHint = stored[hintKey];
       if (typeof previousHint === "string" && ["progressive", "original", "bilingual"].includes(previousHint)) {
         setHint(previousHint as Hint);
       }
     }).catch(() => undefined).finally(() => { if (live) setLoaded(true); });
     return () => { live = false; };
-  }, [document.id, document.sections, progressKey]);
+  }, [document.id, document.sections, document.cues, progressKey, loopKey]);
 
   useEffect(() => {
     if (!loaded) return;
     void chrome.storage.local.set({
       [progressKey]: { sceneId: scene.id, completedIds, steps: stepByScene },
       [hintKey]: hint,
+      [loopKey]: loopRanges,
     }).catch(() => undefined);
-  }, [loaded, progressKey, scene.id, completedIds, stepByScene, hint, hintKey]);
-
-  useEffect(() => {
-    if (mode !== "watch" || !sourceUrl || !adapter.status) return;
-    let live = true;
-    const poll = () => {
-      void adapter.status!(sourceUrl).then(result => {
-        if (!live) return;
-        setWatchTime(typeof result.currentMs === "number" ? result.currentMs : null);
-        setWatchAvailable(true);
-      }).catch(() => {
-        if (live) { setWatchAvailable(false); setWatchTime(null); }
-      });
-    };
-    poll();
-    const timer = window.setInterval(poll, 2000);
-    return () => { live = false; window.clearInterval(timer); };
-  }, [mode, sourceUrl, adapter]);
+  }, [loaded, progressKey, scene.id, completedIds, stepByScene, hint, hintKey, loopKey, loopRanges]);
 
   function selectScene(index: number): void {
     if (busy || !Number.isInteger(index) || index < 0 ||
@@ -177,11 +168,11 @@ export function SceneReader({
   }
 
   async function playFocus(cue: SubtitleCue | undefined, isLoop = true): Promise<void> {
-    if (!sourceUrl || !cue || cue.startMs === null || cue.endMs === null || !adapter.loop) return;
+    if (!sourceUrl || !cue || cue.startMs === null || cue.endMs === null || cue.endMs <= cue.startMs || !adapter.loop) return;
     setBusy(true);
     try {
       await adapter.loop(sourceUrl, {
-        ...cuePlaybackWindow(cue.startMs, cue.endMs),
+        ...(loopRanges[cue.id] ?? cuePlaybackWindow(cue.startMs, cue.endMs)),
         repeats: isLoop ? repeat === "infinite" ? "infinite" : Number(repeat) : 1,
         delaySeconds: isLoop ? delay : 0,
       });
@@ -211,6 +202,52 @@ export function SceneReader({
   async function toggleFocusLoop(): Promise<void> {
     if (focusLoopActive) await stopLoop();
     else await playFocus(selectedFocusCue);
+  }
+
+
+  /** A/B edits stop the old loop first, so the player never keeps using stale bounds. */
+  async function updateFocusRange(boundary: LoopBoundary | "reset", position: number | "current" = 0): Promise<void> {
+    if (busy || !selectedFocusCue || !selectedFocusRange) return;
+    setBusy(true);
+    try {
+      let next: LoopWindow | null = null;
+      if (boundary !== "reset") {
+        let target = position;
+        if (position === "current") {
+          if (!sourceUrl || !adapter.status) {
+            setStatus(c.positionUnavailable);
+            return;
+          }
+          const playback = await adapter.status(sourceUrl);
+          if (typeof playback.currentMs !== "number" || !Number.isFinite(playback.currentMs)) {
+            setStatus(c.positionUnavailable);
+            return;
+          }
+          target = playback.currentMs;
+        }
+        next = adjustLoopBoundary(selectedFocusRange, boundary, target as number);
+        if (!next) {
+          setStatus(c.invalidLoopRange);
+          return;
+        }
+      }
+      if (focusLoopActive && sourceUrl && adapter.stopLoop) {
+        await adapter.stopLoop(sourceUrl);
+        setLoopingSceneId(null);
+      }
+      const cueId = selectedFocusCue.id;
+      setLoopRanges(previous => {
+        const updated = { ...previous };
+        if (next) updated[cueId] = next;
+        else delete updated[cueId];
+        return updated;
+      });
+      setStatus(next ? c.loopRangeSaved : c.loopRangeReset);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : c.unavailable);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function changeRate(value: number): Promise<void> {
@@ -258,7 +295,7 @@ export function SceneReader({
         </div>
       </div>
       <div className="sceneTabs" role="tablist" aria-label={c.scene}>
-        {(["watch", "learn", "review"] as const).map(tab =>
+        {(["learn", "review"] as const).map(tab =>
           <Button key={tab} role="tab" aria-selected={mode === tab}
             className={mode === tab ? "selected" : ""}
             onClick={() => { setMode(tab); setStatus(""); }}>
@@ -266,22 +303,6 @@ export function SceneReader({
           </Button>)}
       </div>
     </Card>
-
-    {mode === "watch" && <Card className="panel">
-      <h2>{c.watch}</h2>
-      <p className="hint">{c.watchHint}</p>
-      <p className="hint">{watchAvailable && watchTime !== null ? formatTime(watchTime) : c.watchUnavailable}</p>
-      {watchScene ? <>
-        <span className="chip">{formatTime(watchScene.startMs)}–{formatTime(watchScene.endMs)}</span>
-        <h2>{watchScene.title}</h2>
-        <p>{watchScene.context}</p>
-        <Button onClick={() => {
-          selectScene(document.sections.findIndex(item => item.id === watchScene.id));
-          setMode("learn");
-        }}>{c.studyThis}</Button>
-      </> : <p className="hint">{c.watchNoScene}</p>}
-      {sourceUrl && <Button variant="outline" onClick={() => void openVideo()} disabled={busy}>{c.openVideo}</Button>}
-    </Card>}
 
     {mode === "learn" && <>
       <Card className="panel">
@@ -291,15 +312,15 @@ export function SceneReader({
         </div>
         <div className="scenePicker">
           <label htmlFor="study-scene-picker">{c.chooseScene}</label>
-          <Select id="study-scene-picker" value={String(sceneIndex)} disabled={busy}
-            onChange={event => selectScene(Number(event.target.value))}>
-            {document.sections.map((item, index) => (
-              <option key={item.id} value={index}>
-                {c.scene} {index + 1} · {item.title} ({formatTime(item.startMs)}–{formatTime(item.endMs)})
-                {completedIds.includes(item.id) ? " ✓ " + c.completed : ""}
-              </option>
-            ))}
-          </Select>
+          <SelectField id="study-scene-picker" ariaLabel={c.chooseScene}
+            value={String(sceneIndex)} disabled={busy}
+            onValueChange={value => selectScene(Number(value))}
+            options={document.sections.map((item, index) => ({
+              value: String(index),
+              label: c.scene + " " + (index + 1) + " · " + item.title +
+                " (" + formatTime(item.startMs) + "–" + formatTime(item.endMs) + ")" +
+                (completedIds.includes(item.id) ? " ✓ " + c.completed : ""),
+            }))} />
         </div>
         <h2>{scene.title}</h2>
         <div className="sceneQuickPlay">
@@ -329,15 +350,15 @@ export function SceneReader({
         <details className="sceneReadingSettings">
           <summary>{c.hintLabel} · {c[hint]}</summary>
           <div className="sceneReadingControl">
-            <Select value={hint} aria-label={c.hintLabel} onChange={event => {
-              setHint(event.target.value as Hint);
+            <SelectField ariaLabel={c.hintLabel} value={hint} onValueChange={value => {
+              setHint(value as Hint);
               setShowOriginal(null);
               setShowTranslation(null);
-            }}>
-              <option value="progressive">{c.progressive}</option>
-              <option value="original">{c.original}</option>
-              <option value="bilingual">{c.bilingual}</option>
-            </Select>
+            }} options={[
+              { value: "progressive", label: c.progressive },
+              { value: "original", label: c.original },
+              { value: "bilingual", label: c.bilingual },
+            ]} />
             <SettingInfo label={c.hintLabel} infoLabel={c.hintInfo}
               explanation={c.originalSubtitleNotice} />
           </div>
@@ -461,25 +482,58 @@ export function SceneReader({
         role="region" aria-label={c.playbackOptions}>
         <div className="twoColumns">
           <label>{c.repeat}
-            <Select value={repeat} onChange={event => setRepeat(event.target.value as Repeat)}>
-              <option value="2">2×</option><option value="3">3×</option>
-              <option value="5">5×</option><option value="infinite">∞</option>
-            </Select>
+            <SelectField ariaLabel={c.repeat} value={repeat}
+              onValueChange={value => setRepeat(value as Repeat)}
+              options={[
+                { value: "2", label: "2×" }, { value: "3", label: "3×" },
+                { value: "5", label: "5×" }, { value: "infinite", label: "∞" },
+              ]} />
           </label>
           <label>{c.delay}
-            <Select value={delay} onChange={event => setDelay(Number(event.target.value))}>
-              {[0, 1, 2, 3].map(value =>
-                <option key={value} value={value}>{value}s</option>)}
-            </Select>
+            <SelectField ariaLabel={c.delay} value={delay}
+              onValueChange={value => setDelay(Number(value))}
+              options={[0, 1, 2, 3].map(value => ({ value, label: value + "s" }))} />
           </label>
         </div>
         {adapter.setPlaybackRate && <label>{c.speed}
-          <Select value={playbackRate} disabled={busy}
-            onChange={event => void changeRate(Number(event.target.value))}>
-            {[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5].map(rate =>
-              <option value={rate} key={rate}>{rate}×</option>)}
-          </Select>
+          <SelectField ariaLabel={c.speed} value={playbackRate} disabled={busy}
+            onValueChange={value => void changeRate(Number(value))}
+            options={[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5].map(rate => ({
+              value: rate, label: rate + "×",
+            }))} />
         </label>}
+
+        <div className="sceneLoopRange" role="group" aria-label={c.loopRange}>
+          <div className="sceneLoopRangeTitle">
+            <strong>{c.loopRange}</strong>
+            <Button variant="outline" size="sm" disabled={busy || !selectedFocusCue ||
+              !loopRanges[selectedFocusCue.id]}
+              onClick={() => void updateFocusRange("reset")}>{c.loopRangeResetButton}</Button>
+          </div>
+          <p className="hint">{c.loopRangeHint}</p>
+          {selectedFocusRange ? (["start", "end"] as const).map(boundary => {
+            const point = boundary === "start" ? selectedFocusRange.startMs : selectedFocusRange.endMs;
+            const name = boundary === "start" ? c.loopStart : c.loopEnd;
+            return <div className="sceneLoopBoundary" key={boundary}>
+              <div className="sceneLoopBoundaryTitle">
+                <span>{name}</span>
+                <output>{formatLoopTimestamp(point)}</output>
+              </div>
+              <div className="sceneLoopNudge">
+                <Button variant="outline" size="sm" disabled={busy}
+                  aria-label={name + " " + c.loopEarlier}
+                  onClick={() => void updateFocusRange(boundary, point - 500)}>−0.5s</Button>
+                <Button variant="outline" size="sm" disabled={busy}
+                  aria-label={name + " " + c.loopLater}
+                  onClick={() => void updateFocusRange(boundary, point + 500)}>+0.5s</Button>
+                <Button variant="outline" size="sm" disabled={busy || !adapter.status}
+                  onClick={() => void updateFocusRange(boundary, "current")}>
+                  {c.setBoundaryHere}
+                </Button>
+              </div>
+            </div>;
+          }) : <p className="hint">{c.noTime}</p>}
+        </div>
       </div>}
       {status && <p className="sceneMiniStatus" role="status">{status}</p>}
     </Card>}

@@ -1,3 +1,6 @@
+import { LEARNING_LANGUAGES, type LearningLanguage } from "@immersive/core";
+import { netflixPlayerTitle } from "../video/metadata";
+import { VIDEO_READER_STATUS, VIDEO_READER_VERSION, RELOAD_READER_MESSAGE } from "../video/reader-health";
 import {
   NETFLIX_SEEK_GRACE_MS, NETFLIX_SEEK_TOLERANCE_MS, isManagedNetflixSeek,
   reachedNetflixSeekTarget, netflixLoopReachedEnd,
@@ -11,7 +14,7 @@ import {
   const CAPTION_FETCH_RESPONSE_EVENT = "immersive-learning:netflix:caption-fetch-response";
   const pendingCaptionRequests = new Set<string>();
   const captionRequestsInFlight = new Set<string>();
-  type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
+  type Action = "bridgeHealth" | "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
   type PageResponse = {
     source: "immersive-learning"; id: string; ok: boolean; available: boolean;
     bridgeVersion?: string;
@@ -25,7 +28,8 @@ import {
     | { type: "NETFLIX_LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
     | { type: "NETFLIX_LOOP_CLEAR" }
     | { type: "NETFLIX_PLAYBACK_RATE_SET"; rate: number }
-    | { type: "NETFLIX_SUBTITLES_GET"; language: "en" | "ja" | "ko" };
+    | { type: "NETFLIX_SUBTITLES_GET"; language: LearningLanguage }
+    | { type: typeof VIDEO_READER_STATUS };
   type Loop = {
     startMs: number; endMs: number; repeats: number | "infinite"; delayMs: number;
     count: number; busy: boolean; managedPause: boolean; expectedSeekUntil: number;
@@ -44,7 +48,7 @@ import {
         pendingCaptionRequests.delete(id);
         window.removeEventListener(RESPONSE_EVENT, onResponse);
         resolve({ source: "immersive-learning", id, ok: false, available: false, error: "Netflix page bridge did not respond." });
-      }, action === "subtitlesGet" ? 16_000 : action === "status" ? 900 : 2_000);
+      }, action === "subtitlesGet" ? 16_000 : action === "bridgeHealth" ? 1_100 : action === "status" ? 900 : 2_000);
       function onResponse(event: Event): void {
         const detail = (event as CustomEvent<PageResponse>).detail;
         if (detail?.source !== "immersive-learning" || detail.id !== id) return;
@@ -253,15 +257,18 @@ import {
         ...(typeof diagnostic.playing === "boolean" ? { playing: diagnostic.playing } : {}) };
     }
     if (message.type === "NETFLIX_SUBTITLES_GET") {
-      if (!["en", "ja", "ko"].includes(message.language)) {
+      if (!LEARNING_LANGUAGES.some(language => language === message.language)) {
         return { ok: false, error: "Unsupported subtitle language." };
       }
       const result = await requestPage("subtitlesGet", undefined, message.language);
-      if (result.bridgeVersion !== "netflix-worker-url-check-v2") {
-        return { ok: false, error: "The Netflix page has an outdated caption reader. Rebuild the extension and reload this watch tab before retrying." };
-      }
-      if (!result.ok || !result.text || !result.language) {
+      if (!result.ok) {
         return { ok: false, error: result.error ?? "Netflix did not provide a readable transcript." };
+      }
+      if (result.bridgeVersion !== "netflix-worker-url-check-v2") {
+        return { ok: false, error: RELOAD_READER_MESSAGE };
+      }
+      if (!result.text || !result.language) {
+        return { ok: false, error: "Netflix did not provide a readable transcript." };
       }
       return { ok: true, text: result.text, language: result.language };
     }
@@ -332,13 +339,28 @@ import {
   chrome.runtime.onMessage.addListener((incoming: unknown, _sender, sendResponse) => {
     if (!incoming || typeof incoming !== "object") return false;
     const candidate = incoming as Partial<Message>;
+    if (candidate.type === VIDEO_READER_STATUS) {
+      void requestPage("bridgeHealth").then(result => {
+        sendResponse(result.ok && result.bridgeVersion === "netflix-worker-url-check-v2"
+          ? { ok: true, platform: "netflix", bridgeVersion: VIDEO_READER_VERSION }
+          : { ok: false, error: RELOAD_READER_MESSAGE });
+      }).catch(() => sendResponse({ ok: false, error: RELOAD_READER_MESSAGE }));
+      return true;
+    }
     if (candidate.type === "VIDEO_METADATA_GET") {
-      const title = document.querySelector('[data-uia="video-title"]')?.textContent?.trim() ||
-        document.querySelector('[data-uia="player-title"]')?.textContent?.trim() ||
-        document.querySelector(".video-title h4")?.textContent?.trim() ||
-        document.querySelector('meta[property="og:title"]')?.getAttribute("content") ||
-        document.title;
-      sendResponse({ ok: true, url: location.href, title });
+      const title = netflixPlayerTitle([
+        document.querySelector('[data-uia="video-title"]')?.textContent,
+        document.querySelector('[data-uia="player-title"]')?.textContent,
+        document.querySelector('.video-title h4')?.textContent,
+        document.querySelector('[data-uia="title-info"]')?.textContent,
+        document.querySelector('[data-uia="episode-title"]')?.textContent,
+        document.querySelector('[data-uia="video-title"] [aria-label]')?.getAttribute("aria-label"),
+        // Netflix can update MediaSession later than its player overlays.
+        document.querySelector("video") ? navigator.mediaSession?.metadata?.title : null,
+        // The tab title is a fallback only; SPA meta tags can refer to a prior episode.
+        document.title,
+      ]);
+      sendResponse({ ok: true, url: location.href, title: title ?? undefined });
       return false;
     }
     if (!["NETFLIX_DIAGNOSE", "NETFLIX_SEEK", "NETFLIX_LOOP_SET", "NETFLIX_LOOP_CLEAR", "NETFLIX_PLAYBACK_RATE_SET", "NETFLIX_SUBTITLES_GET"].includes(candidate.type ?? "")) {

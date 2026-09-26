@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import type { DuplicateMatch, GenerationRequest, LearningDocument } from "@immersive/core";
+import { readLearningDocument, type DriveLessonSummary, type DuplicateMatch, type GenerationRequest, type LearningDocument } from "@immersive/core";
 import { settingsKey, sourceKey, transcriptKey } from "../duplicates";
 import { accessTokenFor, listGoogleAccounts } from "./oauth";
 
@@ -16,22 +16,59 @@ const UPLOAD = "https://www.googleapis.com/upload/drive/v3";
 const FOLDER_TYPE = "application/vnd.google-apps.folder";
 const FOLDER_NAME = "Immersive Learning";
 
-async function googleFetch(accountId: string, url: string, init: RequestInit = {}): Promise<Response> {
+/** Never display raw Google responses: they can contain private file metadata or request details. */
+export function driveApiError(status: number, body: unknown, operation: string): Error {
+  const payload = body && typeof body === "object" ? body as Record<string, unknown> : {};
+  const error = payload.error && typeof payload.error === "object"
+    ? payload.error as Record<string, unknown> : {};
+  const reasons = Array.isArray(error.errors)
+    ? error.errors.filter((entry): entry is Record<string, unknown> =>
+        !!entry && typeof entry === "object") : [];
+  const rawReason = reasons.find(entry => typeof entry.reason === "string")?.reason;
+  const rawStatus = typeof error.status === "string" ? error.status : "";
+  const clean = (value: unknown): string => typeof value === "string" &&
+    /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(value) ? value : "";
+  const reason = clean(rawReason) || clean(rawStatus) || "unknown";
+  let hint = "請確認目前帳號的 Google Drive 權限，並重試。";
+  if (reason === "accessNotConfigured" || reason === "SERVICE_DISABLED") {
+    hint = "Google Drive API 尚未啟用；請在 OAuth 用戶端所屬的 Google Cloud 專案啟用 Drive API。";
+  } else if (reason === "insufficientPermissions" || reason === "PERMISSION_DENIED") {
+    hint = "目前授權可能缺少 drive.file 權限；請確認所選帳號與授權範圍後重新連結。";
+  } else if (reason === "appNotAuthorizedToFile" || reason === "forbidden") {
+    hint = "這個 Google 帳號沒有存取此檔案的權限；請確認備份帳號及檔案是否由本應用程式建立。";
+  } else if (["rateLimitExceeded", "userRateLimitExceeded", "quotaExceeded",
+    "dailyLimitExceeded", "RESOURCE_EXHAUSTED"].includes(reason)) {
+    hint = "Google Drive 暫時限制請求量；請稍後再試，不需要重新授權。";
+  } else if (status === 401 || reason === "authError" || reason === "UNAUTHENTICATED") {
+    hint = "Google 授權可能已失效；請重新連結此帳號。";
+  } else if (status === 403) {
+    hint = "Google Drive 拒絕此操作；請確認 Drive API、所選帳號與 drive.file 權限。";
+  }
+  const label = ["驗證 Drive 權限", "列出雲端教材", "讀取雲端教材", "備份教材"].includes(operation)
+    ? operation : "Google Drive 操作";
+  return new Error(label + "失敗（HTTP " + status + "，" + reason + "）。" + hint);
+}
+
+async function googleFetch(accountId: string, url: string, init: RequestInit = {}, operation = "Google Drive 操作"): Promise<Response> {
   const headers = new Headers(init.headers);
   headers.set("Authorization", "Bearer " + await accessTokenFor(accountId));
   const response = await fetch(url, {
     ...init, headers, signal: init.signal ?? AbortSignal.timeout(45_000),
   });
-  if (!response.ok) throw new Error("Google Drive request failed (HTTP " + response.status + "); check account permissions or reconnect");
+  if (!response.ok) {
+    const data: unknown = await response.json().catch(() => null);
+    throw driveApiError(response.status, data, operation);
+  }
   return response;
 }
 
-async function apiJSON<T>(accountId: string, url: string, init: RequestInit = {}): Promise<T> {
-  const response = await googleFetch(accountId, url, init);
+async function apiJSON<T>(accountId: string, url: string, init: RequestInit = {}, operation?: string): Promise<T> {
+  const response = await googleFetch(accountId, url, init, operation);
   return await response.json() as T;
 }
 
-async function listFiles(accountId: string, query: string, fields: string, limit = 100): Promise<DriveFile[]> {
+async function listFiles(accountId: string, query: string, fields: string, limit = 100,
+  operation = "列出雲端教材"): Promise<DriveFile[]> {
   const files: DriveFile[] = [];
   let pageToken: string | undefined;
   do {
@@ -40,11 +77,19 @@ async function listFiles(accountId: string, query: string, fields: string, limit
     url.searchParams.set("fields", "nextPageToken,files(" + fields + ")");
     url.searchParams.set("pageSize", String(Math.min(limit, 1000)));
     if (pageToken) url.searchParams.set("pageToken", pageToken);
-    const page = await apiJSON<DriveList>(accountId, url.toString());
+    const page = await apiJSON<DriveList>(accountId, url.toString(), {}, operation);
     files.push(...(page.files ?? []));
     pageToken = page.nextPageToken;
   } while (pageToken && files.length < limit);
   return files.slice(0, limit);
+}
+
+/** Test the actual Drive API using the selected account; a cached access token is not sufficient. */
+export async function validateDriveAccess(accountId: string): Promise<void> {
+  if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
+    throw new Error("請先連結所選的 Google Drive 帳號");
+  }
+  await listFiles(accountId, "trashed = false", "id", 1, "驗證 Drive 權限");
 }
 
 function propertyMatch(key: string, value: string): string {
@@ -134,6 +179,10 @@ export async function findDriveDuplicates(request: GenerationRequest): Promise<D
     })).filter(match => /^[0-9a-f-]{36}$/i.test(match.documentId));
 }
 
+export class DriveContentConflict extends Error {
+  constructor(message: string) { super(message); this.name = "DriveContentConflict"; }
+}
+
 export async function publishDriveDocument(accountId: string, document: LearningDocument, markdown: string): Promise<string> {
   const account = (await listGoogleAccounts()).find(item => item.id === accountId);
   if (!account) throw new Error("Google Drive 帳號尚未連線");
@@ -145,23 +194,85 @@ export async function publishDriveDocument(accountId: string, document: Learning
     immersiveSettingsKey: settingsKey({ profile: document.profile, agent: document.generation }),
     immersiveDocumentId: document.id,
     immersiveSchemaVersion: String(document.schemaVersion),
+    immersiveTitle: document.source.title.slice(0, 120),
+    immersiveCreatedAt: document.createdAt,
   };
+  const docKey = createHash("sha256").update(document.id).digest("hex");
+  const found = await listFiles(accountId,
+    "trashed = false and " + propertyMatch("immersiveDocumentKey", docKey),
+    "id,name,webViewLink,appProperties", 100);
   let jsonUrl = "";
   for (const format of ["json", "md"] as const) {
-    const found = await listFiles(accountId,
-      "trashed = false and " + propertyMatch("immersiveDocumentKey",
-        // Hash document ID so all query values have a simple, safely escaped alphabet.
-        createHash("sha256").update(document.id).digest("hex")),
-      "id,name,webViewLink,appProperties", 30);
-    const existing = found.find(file => file.appProperties?.immersiveFormat === format);
     const name = "Immersive-" + document.id + "." + format;
-    const file = existing ?? await uploadFile(accountId, folderId, name,
-      format === "json" ? "application/json" : "text/markdown",
-      Buffer.from(format === "json" ? JSON.stringify(document, null, 2) + "\n" : markdown, "utf8"),
-      { ...properties, immersiveFormat: format,
-        immersiveDocumentKey: createHash("sha256").update(document.id).digest("hex") });
+    const content = Buffer.from(format === "json" ? JSON.stringify(document, null, 2) + "\n" : markdown, "utf8");
+    const expectedHash = createHash("sha256").update(content).digest("hex");
+    const existing = found.filter(file => file.appProperties?.immersiveFormat === format);
+    for (const file of existing) {
+      // Earlier versions did not store hashes; compare their actual bytes once.
+      const remoteHash = file.appProperties?.immersiveContentHash ??
+        createHash("sha256").update(Buffer.from(await (await googleFetch(accountId,
+          API + "/files/" + encodeURIComponent(file.id) + "?alt=media")).arrayBuffer())).digest("hex");
+      if (remoteHash !== expectedHash) {
+        throw new DriveContentConflict("雲端教材 " + name + " 的內容不同；已保留兩邊檔案，請先確認版本");
+      }
+    }
+    const file = existing[0] ?? await uploadFile(accountId, folderId, name,
+      format === "json" ? "application/json" : "text/markdown", content,
+      { ...properties, immersiveFormat: format, immersiveDocumentKey: docKey,
+        immersiveContentHash: expectedHash });
     if (format === "json") jsonUrl = file.webViewLink ??
       "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view";
   }
   return jsonUrl;
+}
+
+export async function listDriveLessons(accountId: string): Promise<DriveLessonSummary[]> {
+  if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
+    throw new Error("Google Drive account is not connected");
+  }
+  const files = await listFiles(accountId,
+    "trashed = false and appProperties has { key='immersiveFormat' and value='json' }",
+    "id,name,createdTime,webViewLink,appProperties", 500);
+  const unique = new Map<string, DriveLessonSummary>();
+  for (const file of files) {
+    const id = file.appProperties?.immersiveDocumentId;
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id) || unique.has(id)) continue;
+    unique.set(id, {
+      documentId: id,
+      title: file.appProperties?.immersiveTitle || "Immersive lesson " + id.slice(0, 8),
+      createdAt: file.appProperties?.immersiveCreatedAt || file.createdTime || new Date(0).toISOString(),
+      accountId,
+      url: file.webViewLink || "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view",
+    });
+  }
+  return [...unique.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+/** Read and validate one app-owned Drive JSON file before importing it locally. */
+export async function getDriveDocument(accountId: string, documentId: string): Promise<LearningDocument> {
+  if (!/^[0-9a-f-]{36}$/i.test(documentId)) throw new Error("Invalid lesson ID");
+  if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
+    throw new Error("Google Drive account is not connected");
+  }
+  const key = createHash("sha256").update(documentId).digest("hex");
+  const files = await listFiles(accountId,
+    "trashed = false and " + propertyMatch("immersiveDocumentKey", key),
+    "id,name,appProperties", 100);
+  const file = files.find(item => item.appProperties?.immersiveFormat === "json" &&
+    item.appProperties?.immersiveDocumentId === documentId);
+  if (!file) throw new Error("Lesson not found in Google Drive");
+  const response = await googleFetch(accountId,
+    API + "/files/" + encodeURIComponent(file.id) + "?alt=media");
+  if (Number(response.headers.get("Content-Length") ?? 0) > 25_000_000) {
+    throw new Error("Drive lesson exceeds the import size limit");
+  }
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length > 25_000_000) throw new Error("Drive lesson exceeds the import size limit");
+  const checksum = file.appProperties?.immersiveContentHash;
+  if (checksum && createHash("sha256").update(bytes).digest("hex") !== checksum) {
+    throw new DriveContentConflict("Drive lesson does not match its recorded checksum");
+  }
+  const document = readLearningDocument(JSON.parse(bytes.toString("utf8")) as unknown);
+  if (document.id !== documentId) throw new DriveContentConflict("Drive lesson ID does not match requested ID");
+  return document;
 }

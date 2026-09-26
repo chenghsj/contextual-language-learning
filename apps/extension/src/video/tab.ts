@@ -1,4 +1,5 @@
 import type { VideoAdapter } from "./types";
+import { VIDEO_READER_STATUS, VIDEO_READER_VERSION, RELOAD_READER_MESSAGE } from "./reader-health";
 
 // Start slightly before the subtitle's timestamp so the listener hears the
 // beginning of the utterance, and leave a small tail for inaccurate end times.
@@ -79,6 +80,43 @@ export async function findVideoTab(adapter: VideoAdapter, sourceUrl: string): Pr
   const tab = await chooseExistingVideoTab(await matchingVideoTabs(adapter, sourceUrl));
   if (!tab) throw new Error("請先在 Chrome 開啟教材所屬的影片分頁，或使用「開啟／切換到影片」。");
   return tab;
+}
+
+/** Detect an outdated or missing content/page reader before waiting for a caption request. */
+export async function assertVideoReaderReady(tab: chrome.tabs.Tab, adapter: VideoAdapter): Promise<void> {
+  if (tab.id === undefined || !adapter.getVideoId(tab.url)) {
+    throw new Error("找不到正確的影片分頁，請切換到要學習的影片。");
+  }
+  const current = await chrome.tabs.get(tab.id);
+  if (adapter.getVideoId(current.url) !== adapter.getVideoId(tab.url)) {
+    throw new Error("影片分頁已切換，請在目前播放的影片重試。");
+  }
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const response = await Promise.race([
+      chrome.tabs.sendMessage(tab.id, { type: VIDEO_READER_STATUS }) as Promise<unknown>,
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error(RELOAD_READER_MESSAGE)), 2_200);
+      }),
+    ]) as { ok?: boolean; platform?: string; bridgeVersion?: string } | undefined;
+    if (response?.ok !== true || response.platform !== adapter.id ||
+      response.bridgeVersion !== VIDEO_READER_VERSION) throw new Error(RELOAD_READER_MESSAGE);
+  } catch {
+    throw new Error(RELOAD_READER_MESSAGE);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/** Reload only the already-open, matching watch tab, and only on explicit user action. */
+export async function reloadExistingVideoTab(adapter: VideoAdapter, sourceUrl: string): Promise<void> {
+  const tab = await findVideoTab(adapter, sourceUrl);
+  if (tab.id === undefined) throw new Error("找不到正確的影片分頁。");
+  const current = await chrome.tabs.get(tab.id);
+  if (adapter.getVideoId(current.url) !== adapter.getVideoId(sourceUrl)) {
+    throw new Error("影片分頁已切換，沒有重新載入其他影片。");
+  }
+  await chrome.tabs.reload(tab.id);
 }
 
 /** Reuse a matching watch tab; open at most one new tab only when none exists. */

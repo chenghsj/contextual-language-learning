@@ -6,10 +6,10 @@ import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { DriveAccount } from "@immersive/core";
+import { oauthCallbackHeaders, oauthCallbackPageStart, oauthCallbackPageEnd, type OAuthCallbackOutcome } from "./oauth-callback-page";
 
 const exec = promisify(execFile);
 const root = join(homedir(), "Library", "Application Support", "Immersive Learning");
-const configPath = join(root, "google-oauth.json");
 const accountsPath = join(root, "google-accounts.json");
 const keychainService = "dev.immersive.language-learning.google-drive";
 const clientIdPattern = /^[A-Za-z0-9_.-]+\.apps\.googleusercontent\.com$/;
@@ -30,35 +30,22 @@ async function writePrivate(path: string, value: unknown): Promise<void> {
   }
 }
 
-export async function configureGoogleOAuth(clientId: string, clientSecret?: string): Promise<void> {
-  if (!clientIdPattern.test(clientId)) throw new Error("Expected a Google Desktop OAuth client ID");
-  if (clientSecret && clientSecret.length > 512) throw new Error("OAuth client secret is too long");
-  await writePrivate(configPath, { clientId, ...(clientSecret ? { clientSecret } : {}) });
-}
-
-export async function googleConfigured(): Promise<boolean> {
-  try {
-    await googleConfig();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
+// Desktop OAuth Client ID is injected into the bundled Native Host at build time.
+declare const __GOOGLE_OAUTH_CLIENT_ID__: string;
+declare const __GOOGLE_OAUTH_CLIENT_SECRET__: string;
 async function googleConfig(): Promise<OAuthConfig> {
-  let value: unknown;
-  try {
-    value = JSON.parse(await readFile(configPath, "utf8")) as unknown;
-  } catch {
-    throw new Error("請先在設定中填寫 Google Desktop OAuth Client ID");
+  const clientId = typeof __GOOGLE_OAUTH_CLIENT_ID__ === "string"
+    ? __GOOGLE_OAUTH_CLIENT_ID__ : (process.env.GOOGLE_OAUTH_CLIENT_ID ?? "");
+  const clientSecret = typeof __GOOGLE_OAUTH_CLIENT_SECRET__ === "string"
+    ? __GOOGLE_OAUTH_CLIENT_SECRET__ : (process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "");
+  if (!clientIdPattern.test(clientId)) {
+    throw new Error("此版本尚未設定 Google OAuth Client ID，請更新 Native Host 或聯絡開發者");
   }
-  if (!value || typeof value !== "object") throw new Error("Google OAuth settings are invalid");
-  const config = value as Partial<OAuthConfig>;
-  if (!config.clientId || !clientIdPattern.test(config.clientId) ||
-    (config.clientSecret !== undefined && typeof config.clientSecret !== "string")) {
-    throw new Error("Google OAuth settings are invalid");
-  }
-  return { clientId: config.clientId, clientSecret: config.clientSecret };
+  if (clientSecret.length > 512) throw new Error("Google Desktop OAuth Client Secret 設定無效");
+  return { clientId, ...(clientSecret ? { clientSecret } : {}) };
+}
+export async function googleConfigured(): Promise<boolean> {
+  try { await googleConfig(); return true; } catch { return false; }
 }
 
 export async function listGoogleAccounts(): Promise<DriveAccount[]> {
@@ -104,27 +91,70 @@ async function keychainRead(id: string): Promise<string> {
   }
 }
 
+/**
+ * Report Google's OAuth error code, but never echo token endpoint bodies.
+ * The response may contain identifiers or secrets and is not safe to display verbatim.
+ */
+export function googleTokenError(status: number, response: unknown): Error {
+  const payload = response && typeof response === "object"
+    ? response as Record<string, unknown> : {};
+  const rawCode = typeof payload.error === "string" ? payload.error : "";
+  const code = /^[a-z_]{1,48}$/.test(rawCode) ? rawCode : "unknown";
+  const description = typeof payload.error_description === "string"
+    ? payload.error_description.toLowerCase() : "";
+  let guidance = "請確認 Google Desktop OAuth 用戶端設定後重新授權。";
+  if (/client[_ ]secret/.test(description) &&
+      /missing|required|not present|must be supplied|invalid|incorrect/.test(description)) {
+    guidance = "Google 要求此桌面 OAuth 用戶端的 Client Secret；請在建置環境設定 GOOGLE_OAUTH_CLIENT_SECRET，重新建置並安裝 Native Host 後再授權。";
+  } else if (code === "invalid_client") {
+    guidance = "請確認 Client ID 與 Client Secret（如果設定）來自同一個 Desktop OAuth 用戶端。";
+  } else if (code === "invalid_grant") {
+    guidance = "授權碼可能已失效或被使用，請重新連結 Google 帳號。";
+  }
+  return new Error("Google OAuth Token 交換失敗（HTTP " + status + "，" + code + "）。" + guidance);
+}
+
 async function tokenRequest(form: URLSearchParams): Promise<TokenResponse> {
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: form, signal: AbortSignal.timeout(30_000),
   });
-  const data: unknown = await response.json();
+  const data: unknown = await response.json().catch(() => null);
   if (!response.ok || !data || typeof data !== "object" ||
     typeof (data as { access_token?: unknown }).access_token !== "string") {
-    throw new Error("Google OAuth token exchange failed; verify the Desktop client credentials and reauthorize");
+    throw googleTokenError(response.status, data);
   }
   return data as TokenResponse;
 }
 
-async function authorizationCode(clientId: string): Promise<{ code: string; verifier: string; redirectUri: string }> {
+type AuthorizationSession = {
+  code: string;
+  verifier: string;
+  redirectUri: string;
+  finish: (outcome: OAuthCallbackOutcome) => void;
+};
+
+/**
+ * Stream the local callback page immediately after Google returns. Keep the
+ * response open until token exchange and Keychain persistence have settled,
+ * so the browser cannot report success merely because a code was received.
+ */
+async function authorizationCode(clientId: string): Promise<AuthorizationSession> {
   if (process.platform !== "darwin") throw new Error("Google Drive account login currently supports macOS");
   const verifier = randomBytes(48).toString("base64url");
   const challenge = createHash("sha256").update(verifier).digest("base64url");
   const state = randomBytes(32).toString("base64url");
-  let resolveCode!: (value: string) => void;
+  let resolveCode!: (value: AuthorizationSession) => void;
   let rejectCode!: (error: Error) => void;
-  const result = new Promise<string>((resolve, reject) => { resolveCode = resolve; rejectCode = reject; });
+  const result = new Promise<AuthorizationSession>((resolve, reject) => {
+    resolveCode = resolve;
+    rejectCode = reject;
+  });
+  let redirectUri = "";
+  let handled = false;
+  let closing = false;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
   const server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
     if (req.method !== "GET" || url.pathname !== "/oauth/callback") {
@@ -135,20 +165,51 @@ async function authorizationCode(clientId: string): Promise<{ code: string; veri
     const validState = returnedState.length === state.length &&
       timingSafeEqual(Buffer.from(returnedState), Buffer.from(state));
     if (!validState) { res.writeHead(400).end("Invalid OAuth state"); return; }
+    if (handled) { res.writeHead(409).end("OAuth response already handled"); return; }
+    handled = true;
+
+    const nonce = randomBytes(24).toString("base64url");
+    res.writeHead(200, oauthCallbackHeaders(nonce));
+    res.write(oauthCallbackPageStart(nonce));
+    let finished = false;
+    function finish(outcome: OAuthCallbackOutcome): void {
+      if (finished) return;
+      finished = true;
+      if (timeout) clearTimeout(timeout);
+      if (!res.destroyed && !res.writableEnded) res.end(oauthCallbackPageEnd(nonce, outcome));
+      stopServer();
+    }
+
     const code = url.searchParams.get("code");
-    const error = url.searchParams.get("error");
-    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-    res.end("<!doctype html><meta charset=utf-8><p>已完成 Google Drive 授權，可返回 Immersive Learning。</p>");
-    if (code) resolveCode(code);
-    else rejectCode(new Error(error ? "Google authorization was declined" : "Google did not provide an authorization code"));
+    if (!code) {
+      finish("error");
+      rejectCode(new Error(url.searchParams.has("error")
+        ? "Google authorization was declined" : "Google did not provide an authorization code"));
+      return;
+    }
+    if (timeout) clearTimeout(timeout);
+    // Keep the callback open during token exchange, but never keep the local
+    // HTTP listener alive indefinitely if a downstream operation stalls.
+    timeout = setTimeout(() => finish("error"), 120_000);
+    resolveCode({ code, verifier, redirectUri, finish });
   });
+
+  function stopServer(): void {
+    if (closing) return;
+    closing = true;
+    server.close();
+  }
+
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
     server.listen(0, "127.0.0.1", () => resolve());
   });
   const address = server.address();
-  if (!address || typeof address === "string") throw new Error("Could not start local OAuth callback server");
-  const redirectUri = "http://127.0.0.1:" + address.port + "/oauth/callback";
+  if (!address || typeof address === "string") {
+    stopServer();
+    throw new Error("Could not start local OAuth callback server");
+  }
+  redirectUri = "http://127.0.0.1:" + address.port + "/oauth/callback";
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.search = new URLSearchParams({
     client_id: clientId, redirect_uri: redirectUri, response_type: "code",
@@ -156,45 +217,53 @@ async function authorizationCode(clientId: string): Promise<{ code: string; veri
     access_type: "offline", prompt: "select_account consent",
     code_challenge: challenge, code_challenge_method: "S256", state,
   }).toString();
-  const timeout = setTimeout(() => rejectCode(new Error("Google authorization expired")), 180_000);
+  timeout = setTimeout(() => {
+    rejectCode(new Error("Google authorization expired"));
+    stopServer();
+  }, 180_000);
   try {
     await exec("/usr/bin/open", [url.toString()], { timeout: 10_000, maxBuffer: 4096 });
-    const code = await result;
-    return { code, verifier, redirectUri };
-  } finally {
-    clearTimeout(timeout);
-    server.close();
-    server.closeAllConnections();
+    return await result;
+  } catch (error) {
+    if (timeout) clearTimeout(timeout);
+    stopServer();
+    throw error;
   }
 }
 
 export async function connectGoogleAccount(): Promise<DriveAccount> {
   const config = await googleConfig();
-  const { code, verifier, redirectUri } = await authorizationCode(config.clientId);
-  const form = new URLSearchParams({
-    client_id: config.clientId, code, code_verifier: verifier,
-    redirect_uri: redirectUri, grant_type: "authorization_code",
-  });
-  if (config.clientSecret) form.set("client_secret", config.clientSecret);
-  const token = await tokenRequest(form);
-  const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
-    headers: { Authorization: "Bearer " + token.access_token },
-    signal: AbortSignal.timeout(30_000),
-  });
-  if (!response.ok) throw new Error("Google identity verification failed");
-  const info = await response.json() as Record<string, unknown>;
-  if (typeof info.sub !== "string" || typeof info.email !== "string" || info.email_verified === false) {
-    throw new Error("Google account did not provide a verified identity");
+  const session = await authorizationCode(config.clientId);
+  try {
+    const form = new URLSearchParams({
+      client_id: config.clientId, code: session.code, code_verifier: session.verifier,
+      redirect_uri: session.redirectUri, grant_type: "authorization_code",
+    });
+    if (config.clientSecret) form.set("client_secret", config.clientSecret);
+    const token = await tokenRequest(form);
+    const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+      headers: { Authorization: "Bearer " + token.access_token },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!response.ok) throw new Error("Google identity verification failed");
+    const info = await response.json() as Record<string, unknown>;
+    if (typeof info.sub !== "string" || typeof info.email !== "string" || info.email_verified === false) {
+      throw new Error("Google account did not provide a verified identity");
+    }
+    const account: SavedAccount = { id: info.sub, email: info.email, clientId: config.clientId };
+    const previous = (await savedAccounts()).find(item => item.id === account.id && item.clientId === config.clientId);
+    if (token.refresh_token) await keychainWrite(account.id, token.refresh_token);
+    else if (!previous) throw new Error("Google did not issue a refresh token; reconnect with consent");
+    const accounts = await savedAccounts();
+    await writePrivate(accountsPath, [...accounts.filter(item => item.id !== account.id), account]);
+    accessTokens.set(account.id, { value: token.access_token,
+      expiry: Date.now() + Math.max(token.expires_in - 90, 30) * 1000 });
+    session.finish("success");
+    return { id: account.id, email: account.email };
+  } catch (error) {
+    session.finish("error");
+    throw error;
   }
-  const account: SavedAccount = { id: info.sub, email: info.email, clientId: config.clientId };
-  const previous = (await savedAccounts()).find(item => item.id === account.id);
-  if (token.refresh_token) await keychainWrite(account.id, token.refresh_token);
-  else if (!previous) throw new Error("Google did not issue a refresh token; reconnect with consent");
-  const accounts = await savedAccounts();
-  await writePrivate(accountsPath, [...accounts.filter(item => item.id !== account.id), account]);
-  accessTokens.set(account.id, { value: token.access_token,
-    expiry: Date.now() + Math.max(token.expires_in - 90, 30) * 1000 });
-  return { id: account.id, email: account.email };
 }
 
 export async function accessTokenFor(accountId: string): Promise<string> {
@@ -214,4 +283,16 @@ export async function accessTokenFor(accountId: string): Promise<string> {
   accessTokens.set(accountId, { value: token.access_token,
     expiry: Date.now() + Math.max(token.expires_in - 90, 30) * 1000 });
   return token.access_token;
+}
+
+/** Disconnect locally without deleting the user's Drive files. */
+export async function disconnectGoogleAccount(accountId: string): Promise<void> {
+  const accounts = await savedAccounts();
+  if (!accounts.some(item => item.id === accountId)) throw new Error("Google 帳號尚未連線");
+  accessTokens.delete(accountId);
+  if (process.platform === "darwin") {
+    await exec("/usr/bin/security", ["delete-generic-password", "-s", keychainService, "-a", accountId],
+      { maxBuffer: 4096 }).catch(() => undefined);
+  }
+  await writePrivate(accountsPath, accounts.filter(item => item.id !== accountId));
 }

@@ -57,6 +57,50 @@ function vttTime(milliseconds: number): string {
     "." + String(ms % 1000).padStart(3, "0");
 }
 
+type CaptionPiece = { text: string; offsetMs: number | null };
+type CaptionInterval = { startMs: number; endMs: number; text: string };
+const MIN_SPLIT_MS = 350;
+
+/** Split only on source-provided segment offsets at clear punctuation or long pauses.
+ * If offsets are absent, out of order, or too close together, keep the original
+ * full caption rather than inventing a timestamp for each word or sentence. */
+function splitTimedCaption(
+  pieces: readonly CaptionPiece[], eventStartMs: number, eventEndMs: number,
+): CaptionInterval[] {
+  const timed = pieces.flatMap((piece, index) => piece.text.trim()
+    ? [{ index, offsetMs: piece.offsetMs }] : []);
+  if (timed.length < 2 || timed.some(part => part.offsetMs === null ||
+    !Number.isFinite(part.offsetMs) || part.offsetMs < 0 ||
+    eventStartMs + part.offsetMs >= eventEndMs)) return [];
+  if (timed.some((part, index) => index > 0 && part.offsetMs! < timed[index - 1].offsetMs!)) return [];
+  const result: CaptionInterval[] = [];
+  let firstIndex = 0;
+  let firstOffset = timed[0].offsetMs!;
+  for (let index = 1; index < timed.length; index++) {
+    const previous = timed[index - 1];
+    const next = timed[index];
+    const nextOffset = next.offsetMs!;
+    const previousText = previous.index === 0 ? pieces[0].text : pieces[previous.index].text;
+    const endsSentence = /[。.!?！？…]["'」』）)]?\s*$/.test(previousText);
+    const longPause = nextOffset - previous.offsetMs! >= 1_200;
+    const nextStart = eventStartMs + nextOffset;
+    if (!(endsSentence || longPause) ||
+      nextOffset - firstOffset < MIN_SPLIT_MS || eventEndMs - nextStart < MIN_SPLIT_MS) continue;
+    const text = pieces.slice(firstIndex, next.index).map(piece => piece.text).join("")
+      .replace(/\s+/g, " ").trim();
+    if (!text) continue;
+    result.push({ startMs: eventStartMs + firstOffset, endMs: nextStart, text });
+    firstIndex = next.index;
+    firstOffset = nextOffset;
+  }
+  if (!result.length) return [];
+  const tail = pieces.slice(firstIndex).map(piece => piece.text).join("")
+    .replace(/\s+/g, " ").trim();
+  if (!tail) return [];
+  result.push({ startMs: eventStartMs + firstOffset, endMs: eventEndMs, text: tail });
+  return result;
+}
+
 /** Convert YouTube's JSON3 timed-text events into timestamped WEBVTT for the lesson pipeline. */
 export function youtubeJson3ToVtt(input: string): string {
   if (input.length > 3_000_000) throw new Error("YouTube subtitles exceed the size limit.");
@@ -70,23 +114,51 @@ export function youtubeJson3ToVtt(input: string): string {
   const lines: string[] = ["WEBVTT", ""];
   let count = 0;
   let totalChars = 0;
-  for (const item of events) {
+  for (const [index, item] of events.entries()) {
     if (!item || typeof item !== "object") continue;
     const event = item as Record<string, unknown>;
     if (!Array.isArray(event.segs) || typeof event.tStartMs !== "number" ||
       !Number.isFinite(event.tStartMs) || event.tStartMs < 0) continue;
-    const text = event.segs.map(segment =>
-      segment && typeof segment === "object" && "utf8" in segment &&
-      typeof segment.utf8 === "string" ? segment.utf8 : "").join("")
-      .replace(/\s+/g, " ").trim();
+    const eventStartMs = event.tStartMs;
+    const pieces: CaptionPiece[] = event.segs.map(segment => {
+      const value = segment && typeof segment === "object"
+        ? segment as Record<string, unknown> : {};
+      return {
+        text: typeof value.utf8 === "string" ? value.utf8 : "",
+        offsetMs: typeof value.tOffsetMs === "number" && Number.isFinite(value.tOffsetMs)
+          ? value.tOffsetMs : null,
+      };
+    });
+    const text = pieces.map(piece => piece.text).join("").replace(/\s+/g, " ").trim();
     if (!text) continue;
-    const duration = typeof event.dDurationMs === "number" && Number.isFinite(event.dDurationMs)
-      ? Math.max(1, event.dDurationMs) : 2_000;
-    if (text.length > 1_500 || ++count > MAX_CAPTION_CUES ||
-      (totalChars += text.length) > MAX_CAPTION_CHARS) {
+    // YouTube sometimes omits dDurationMs. The next real caption timestamp is
+    // a safer available upper bound than a hard-coded 2-second truncation.
+    const nextStartMs = events.slice(index + 1).find(next =>
+      next && typeof next === "object" &&
+      typeof (next as Record<string, unknown>).tStartMs === "number" &&
+      Number.isFinite((next as { tStartMs: number }).tStartMs) &&
+      (next as { tStartMs: number }).tStartMs > eventStartMs) as { tStartMs: number } | undefined;
+    const latestTimedOffset = pieces.reduce((latest, piece) =>
+      piece.text.trim() && piece.offsetMs !== null && piece.offsetMs >= 0
+        ? Math.max(latest, piece.offsetMs) : latest, 0);
+    const duration = typeof event.dDurationMs === "number" &&
+      Number.isFinite(event.dDurationMs) && event.dDurationMs > 0
+      ? event.dDurationMs
+      : nextStartMs ? Math.min(20_000, nextStartMs.tStartMs - event.tStartMs)
+        : Math.min(20_000, Math.max(2_000, latestTimedOffset + 2_000));
+    const endMs = event.tStartMs + duration;
+    const segmented = splitTimedCaption(pieces, event.tStartMs, endMs);
+    const intervals = segmented.length
+      ? segmented : [{ startMs: event.tStartMs, endMs, text }];
+    // Preserve the full event's own size limit even if segments would be shorter.
+    if (text.length > 1_500 || count + intervals.length > MAX_CAPTION_CUES ||
+      (totalChars += intervals.reduce((sum, cue) => sum + cue.text.length, 0)) > MAX_CAPTION_CHARS) {
       throw new Error("YouTube subtitles exceed the lesson size limit; use a shorter video.");
     }
-    lines.push(vttTime(event.tStartMs) + " --> " + vttTime(event.tStartMs + duration), text, "");
+    count += intervals.length;
+    for (const cue of intervals) {
+      lines.push(vttTime(cue.startMs) + " --> " + vttTime(cue.endMs), cue.text, "");
+    }
   }
   if (!count) throw new Error("YouTube did not provide any readable subtitle cues.");
   return lines.join("\n");

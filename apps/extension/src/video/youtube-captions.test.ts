@@ -145,3 +145,72 @@ test("a captured player response succeeds even when the unsigned base URL is emp
   assert.equal(parsePlayerYouTubeCaptionResponse(signedUrl + "&tlang=ja", body, videoId), null);
   assert.equal(parsePlayerYouTubeCaptionResponse(signedUrl.replace("youtube.com", "youtube.com.evil.test"), body, videoId), null);
 });
+
+
+test("JSON3 uses actual segment offsets to split separate utterances rather than looping a long overlay", () => {
+  const source = JSON.stringify({ events: [
+    { tStartMs: 1000, dDurationMs: 7200, segs: [
+      { utf8: "うちは商業師ですから。", tOffsetMs: 0 },
+      { utf8: "そうですよね。", tOffsetMs: 2500 },
+      { utf8: "お疲れさまです。", tOffsetMs: 4900 },
+    ] },
+  ] });
+  assert.deepEqual(parseSubtitles(youtubeJson3ToVtt(source)).map(cue =>
+    ({ startMs: cue.startMs, endMs: cue.endMs, text: cue.originalText })), [
+    { startMs: 1000, endMs: 3500, text: "うちは商業師ですから。" },
+    { startMs: 3500, endMs: 5900, text: "そうですよね。" },
+    { startMs: 5900, endMs: 8200, text: "お疲れさまです。" },
+  ]);
+});
+
+test("JSON3 never fabricates sentence timing when offsets are missing or inconsistent", () => {
+  for (const segs of [
+    [{ utf8: "First sentence." }, { utf8: " Second sentence." }],
+    [{ utf8: "First sentence.", tOffsetMs: 2000 }, { utf8: " Second sentence.", tOffsetMs: 1000 }],
+    [{ utf8: "First sentence.", tOffsetMs: 0 }, { utf8: " Second sentence.", tOffsetMs: 200 }],
+  ]) {
+    const cues = parseSubtitles(youtubeJson3ToVtt(JSON.stringify({ events: [
+      { tStartMs: 10_000, dDurationMs: 5000, segs },
+    ] })));
+    assert.equal(cues.length, 1);
+    assert.equal(cues[0].originalText, "First sentence. Second sentence.");
+    assert.equal(cues[0].endMs, 15_000);
+  }
+});
+
+test("missing JSON3 duration uses the next source event time instead of a fixed two seconds", () => {
+  const cues = parseSubtitles(youtubeJson3ToVtt(JSON.stringify({ events: [
+    { tStartMs: 1000, segs: [{ utf8: "Long dialogue with no explicit duration." }] },
+    { tStartMs: 7900, segs: [{ utf8: "Next line." }] },
+  ] })));
+  assert.deepEqual(cues.map(cue => [cue.startMs, cue.endMs]), [
+    [1000, 7900], [7900, 9900],
+  ]);
+});
+
+
+test("final JSON3 event with timed segments is not truncated to two seconds", () => {
+  const cues = parseSubtitles(youtubeJson3ToVtt(JSON.stringify({ events: [
+    { tStartMs: 1000, segs: [
+      { utf8: "First sentence.", tOffsetMs: 0 },
+      { utf8: " Second sentence.", tOffsetMs: 6200 },
+    ] },
+  ] })));
+  // The source timestamps establish sentence starts. The unreported last
+  // endpoint receives a conservative tail and remains manually adjustable.
+  assert.deepEqual(cues.map(cue => [cue.startMs, cue.endMs]), [
+    [1000, 7200], [7200, 9200],
+  ]);
+});
+
+test("caption selection accepts additional language codes and regional tracks", () => {
+  const tracks = [
+    { languageCode: "es-ES", baseUrl: "https://www.youtube.com/api/timedtext?v=123" },
+    { languageCode: "pt-BR", baseUrl: "https://www.youtube.com/api/timedtext?v=123" },
+    { languageCode: "fr", kind: "asr" as const, baseUrl: "https://www.youtube.com/api/timedtext?v=123" },
+  ];
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "es")?.languageCode, "es-ES");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "pt")?.languageCode, "pt-BR");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "fr")?.languageCode, "fr");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "de"), null);
+});

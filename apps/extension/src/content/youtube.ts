@@ -1,3 +1,6 @@
+import type { LearningLanguage } from "@immersive/core";
+import { VIDEO_READER_STATUS, VIDEO_READER_VERSION, RELOAD_READER_MESSAGE } from "../video/reader-health";
+
 type LoopMessage =
   | { type: "LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
   | { type: "LOOP_CLEAR" }
@@ -5,7 +8,8 @@ type LoopMessage =
   | { type: "YOUTUBE_SEEK"; timeMs: number }
   | { type: "PLAYBACK_RATE_SET"; rate: number }
   | { type: "PLAYBACK_STATUS_GET" }
-  | { type: "YOUTUBE_SUBTITLES_GET"; videoId: string; language: "en" | "ja" | "ko" };
+  | { type: "YOUTUBE_SUBTITLES_GET"; videoId: string; language: LearningLanguage }
+  | { type: typeof VIDEO_READER_STATUS };
 
 let active: { video: HTMLVideoElement; start: number; end: number; repeats: number | "infinite"; completed: number; delayMs: number } | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -88,7 +92,37 @@ function requestYouTubeCaptions(videoId: string, language: string): Promise<Capt
   });
 }
 
+function youtubePageReaderReady(): Promise<boolean> {
+  return new Promise(resolve => {
+    const id = crypto.randomUUID();
+    const responseEvent = "immersive-learning:youtube:bridge-health-response";
+    const timer = setTimeout(() => {
+      window.removeEventListener(responseEvent, receive);
+      resolve(false);
+    }, 900);
+    function receive(event: Event): void {
+      const reply = (event as CustomEvent<{
+        source?: string; id?: string; bridgeVersion?: string;
+      }>).detail;
+      if (reply?.source !== "immersive-learning" || reply.id !== id) return;
+      clearTimeout(timer);
+      window.removeEventListener(responseEvent, receive);
+      resolve(reply.bridgeVersion === "native-caption-capture-v1");
+    }
+    window.addEventListener(responseEvent, receive);
+    window.dispatchEvent(new CustomEvent("immersive-learning:youtube:bridge-health-request", {
+      detail: { source: "immersive-learning", id },
+    }));
+  });
+}
+
 chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) => {
+  if (message.type === VIDEO_READER_STATUS) {
+    void youtubePageReaderReady().then(ready => respond(ready
+      ? { ok: true, platform: "youtube", bridgeVersion: VIDEO_READER_VERSION }
+      : { ok: false, error: RELOAD_READER_MESSAGE }));
+    return true;
+  }
   if (message.type === "VIDEO_METADATA_GET") {
     const title = document.querySelector("h1.ytd-watch-metadata yt-formatted-string")?.textContent?.trim() ??
       document.querySelector('meta[property="og:title"]')?.getAttribute("content") ??

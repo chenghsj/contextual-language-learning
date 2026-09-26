@@ -1,5 +1,6 @@
 import type { UiLocale } from "./messages";
-import type { LearningProfile } from "@immersive/core";
+import type { LearningProfile, LearningLanguage } from "@immersive/core";
+import { learningLanguageName } from "./preferences";
 
 export type LearningSettingKey = "targetLanguage" | "level" | "instructionLanguage" |
   "teachingMode" | "sceneCount" | "vocabLimit" | "exerciseCount";
@@ -7,24 +8,40 @@ export type SettingOptionInfo = { label: string; description: string };
 export type LearningSettingsCopy = {
   infoLabel: string;
   fieldHints: Record<LearningSettingKey, string>;
+  levelHints: Record<LearningProfile["targetLanguage"], string>;
   targetDescriptions: Record<LearningProfile["targetLanguage"], string>;
   instructionDescriptions: Record<LearningProfile["instructionLanguage"], string>;
   levels: Record<LearningProfile["targetLanguage"], Record<string, SettingOptionInfo>>;
   modes: Record<LearningProfile["mode"], SettingOptionInfo>;
 };
 
-/** All option labels and descriptions are localized, but persisted values stay unchanged. */
-export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
+type OriginalTarget = "en" | "ja" | "ko";
+type OriginalExplanation = "zh-TW" | "zh-CN" | OriginalTarget;
+type OriginalLearningSettingsCopy = Omit<LearningSettingsCopy,
+  "levelHints" | "targetDescriptions" | "instructionDescriptions" | "levels"> & {
+    levelHints: Record<OriginalTarget, string>;
+    targetDescriptions: Record<OriginalTarget, string>;
+    instructionDescriptions: Record<OriginalExplanation, string>;
+    levels: Record<OriginalTarget, Record<string, SettingOptionInfo>>;
+  };
+
+/** Keep existing localized guidance while sharing CEFR descriptions for new languages. */
+const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCopy> = {
   "en": {
     "infoLabel": "Information about",
     "fieldHints": {
       "targetLanguage": "Choose the language you want to learn. The subtitle phrases and example sentences stay in that language.",
-      "level": "Choose a comfortable starting point. English uses CEFR (A1–C2), Japanese uses JLPT (N5–N1), and Korean uses TOPIK (1–6). This adjusts the requested lesson difficulty; it is not a proficiency test.",
+      "level": "This sets your lesson difficulty; it is not a proficiency test.",
       "instructionLanguage": "Choose the language used to explain meanings, grammar and answers. Original subtitle lines stay in the learning language.",
       "teachingMode": "Choose how the AI explains and practices the subtitle dialogue. The language of explanations remains your selected explanation language.",
       "sceneCount": "Maximum selected scenes for the entire video (1–6). The AI chooses only meaningful conversations and may select fewer.",
       "vocabLimit": "Maximum focus expressions across the entire video (1–12), not per scene. The AI may select fewer.",
       "exerciseCount": "Maximum practice questions across the entire video (0–6), including sentence-building. Enter 0 to skip exercises."
+    },
+    "levelHints": {
+      "en": "English uses CEFR (A1–C2): A1 is beginner and C2 is proficient. Choose a level that matches the dialogue you can currently understand.",
+      "ja": "Japanese uses JLPT (N5–N1): N5 is beginner and N1 is advanced. Choose a level that matches the dialogue you can currently understand.",
+      "ko": "Korean uses TOPIK (1–6): level 1 is beginner and level 6 is advanced. Choose a level that matches the dialogue you can currently understand."
     },
     "targetDescriptions": {
       "en": "Learn from English subtitle lines.",
@@ -133,12 +150,17 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
     "infoLabel": "設定說明：",
     "fieldHints": {
       "targetLanguage": "選擇你要學的語言。字幕原句和學習例句會保留該語言。",
-      "level": "選擇目前適合的難度。英文使用 CEFR（A1～C2）、日文使用 JLPT（N5～N1）、韓文使用 TOPIK（1～6）。這是教材難度設定，不是能力測驗結果。",
+      "level": "這是教材難度設定，不是能力測驗結果。",
       "instructionLanguage": "選擇單字意思、文法與答案解說使用的語言；字幕原句仍保留學習語言。",
       "teachingMode": "選擇 AI 如何解說及安排字幕練習。解說文字仍使用你選的解說語言。",
       "sceneCount": "整部影片最多挑選 1～6 個有上下文的對話場景。若沒有足夠合適的內容，AI 會挑得更少。",
       "vocabLimit": "整部影片合計最多 1～12 個重點表達，不是每個場景各算一次；AI 可以選更少。",
       "exerciseCount": "整部影片合計最多 0～6 題練習，包含替換造句或情境回答。設為 0 就不產生練習題。"
+    },
+    "levelHints": {
+      "en": "英文使用 CEFR（A1～C2）分級，A1 為入門、C2 為精通。請依目前能理解的英文對話選擇難度。",
+      "ja": "日文使用 JLPT（N5～N1）分級，N5 為入門、N1 為進階。請依目前能理解的日文對話選擇難度。",
+      "ko": "韓文使用 TOPIK（1～6）分級，1 級為入門、6 級為進階。請依目前能理解的韓文對話選擇難度。"
     },
     "targetDescriptions": {
       "en": "從英文字幕學英文。",
@@ -247,12 +269,17 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
     "infoLabel": "设置说明：",
     "fieldHints": {
       "targetLanguage": "选择你要学习的语言。字幕原句和学习例句会保留该语言。",
-      "level": "选择适合自己的难度。英语使用 CEFR（A1～C2）、日语使用 JLPT（N5～N1）、韩语使用 TOPIK（1～6）。这是教材难度设置，不是能力测试结果。",
+      "level": "这是教材难度设置，不是能力测试结果。",
       "instructionLanguage": "选择词义、语法和答案讲解使用的语言；字幕原句仍保留学习语言。",
       "teachingMode": "选择 AI 如何讲解及安排字幕练习。讲解文字仍使用你选的讲解语言。",
       "sceneCount": "整部影片最多挑选 1～6 个有上下文的对话场景。没有足够合适的内容时，AI 会选得更少。",
       "vocabLimit": "整部影片合计最多 1～12 个重点表达，所有场景共用上限，AI 可选更少。",
       "exerciseCount": "整部影片合计最多 0～6 道练习，包括造句与情境回答；设为 0 就不生成练习。"
+    },
+    "levelHints": {
+      "en": "英语使用 CEFR（A1～C2）分级，A1 为入门、C2 为精通。请根据目前能理解的英语对话选择难度。",
+      "ja": "日语使用 JLPT（N5～N1）分级，N5 为入门、N1 为高级。请根据目前能理解的日语对话选择难度。",
+      "ko": "韩语使用 TOPIK（1～6）分级，1 级为入门、6 级为高级。请根据目前能理解的韩语对话选择难度。"
     },
     "targetDescriptions": {
       "en": "通过英语字幕学习英语。",
@@ -361,12 +388,17 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
     "infoLabel": "設定の説明：",
     "fieldHints": {
       "targetLanguage": "学習したい言語を選びます。字幕の原文や例文はその言語のままです。",
-      "level": "教材の難しさを選びます。英語は CEFR（A1～C2）、日本語は JLPT（N5～N1）、韓国語は TOPIK（1～6）が目安です。能力試験の結果ではありません。",
+      "level": "教材の難易度を設定します。実際の語学力を判定する試験ではありません。",
       "instructionLanguage": "語彙の意味、文法、解答の説明に使う言語を選びます。字幕の原文は学習言語のままです。",
       "teachingMode": "AI にどのくらい説明や練習を入れてもらうかを選びます。解説の言語は指定したままです。",
       "sceneCount": "動画全体から選ぶ会話シーンの上限（1～6）。適切な場面が少ない場合は、より少ない数を選びます。",
       "vocabLimit": "動画全体で取り上げる重要表現の上限（1～12）。シーンごとではなく、全シーン共通の上限です。",
       "exerciseCount": "動画全体の練習問題の上限（0～6）。文作り・状況に合う返答も含み、0 なら練習を省略します。"
+    },
+    "levelHints": {
+      "en": "英語は CEFR（A1～C2）を使います。A1 は入門、C2 は熟達です。現在理解できる英語の会話に合わせて選んでください。",
+      "ja": "日本語は JLPT（N5～N1）を使います。N5 は入門、N1 は上級です。現在理解できる日本語の会話に合わせて選んでください。",
+      "ko": "韓国語は TOPIK（1～6級）を使います。1級は入門、6級は上級です。現在理解できる韓国語の会話に合わせて選んでください。"
     },
     "targetDescriptions": {
       "en": "英語の字幕から英語を学びます。",
@@ -475,12 +507,17 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
     "infoLabel": "설정 설명:",
     "fieldHints": {
       "targetLanguage": "학습할 언어를 선택합니다. 자막 원문과 예문은 해당 언어로 유지됩니다.",
-      "level": "교재의 난이도를 선택합니다. 영어는 CEFR(A1~C2), 일본어는 JLPT(N5~N1), 한국어는 TOPIK(1~6)을 사용합니다. 실제 능력을 판정하는 시험은 아닙니다.",
+      "level": "교재의 난이도를 설정하는 것이며 실제 언어 능력을 평가하는 시험은 아닙니다.",
       "instructionLanguage": "어휘 의미, 문법 및 정답 설명에 사용할 언어를 선택합니다. 자막 원문은 학습 언어 그대로 유지됩니다.",
       "teachingMode": "AI가 자막 대화를 설명하고 연습을 구성하는 방식을 선택합니다. 설명 언어는 지정한 언어를 유지합니다.",
       "sceneCount": "동영상 전체에서 고를 대화 장면의 상한(1~6개)입니다. 적합한 장면이 적으면 더 적게 선택합니다.",
       "vocabLimit": "동영상 전체에서 배울 핵심 표현의 상한(1~12개)입니다. 장면별이 아닌 전체 합계입니다.",
       "exerciseCount": "동영상 전체 연습 문제 상한(0~6개)입니다. 문장 만들기와 상황별 대답을 포함하며 0이면 생략합니다."
+    },
+    "levelHints": {
+      "en": "영어는 CEFR(A1~C2)을 사용합니다. A1은 입문, C2는 숙련 단계입니다. 현재 이해할 수 있는 영어 대화 수준에 맞춰 선택하세요.",
+      "ja": "일본어는 JLPT(N5~N1)을 사용합니다. N5는 입문, N1은 고급 단계입니다. 현재 이해할 수 있는 일본어 대화 수준에 맞춰 선택하세요.",
+      "ko": "한국어는 TOPIK(1~6급)을 사용합니다. 1급은 입문, 6급은 고급 단계입니다. 현재 이해할 수 있는 한국어 대화 수준에 맞춰 선택하세요."
     },
     "targetDescriptions": {
       "en": "영어 자막으로 영어를 학습합니다.",
@@ -586,3 +623,60 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = {
     }
   }
 };
+
+type AddedLanguage = Exclude<LearningLanguage, OriginalTarget>;
+const ADDED_LANGUAGES: readonly AddedLanguage[] = ["es", "fr", "de", "it", "pt"];
+
+const localizedCEFRHint: Record<UiLocale, (name: string) => string> = {
+  en: name => name + " uses CEFR (A1–C2): A1 is beginner and C2 is proficient. Choose a level that matches the dialogue you can understand.",
+  "zh-TW": name => name + "使用 CEFR（A1～C2）分級，A1 為入門、C2 為精通。請依目前能理解的對話選擇難度。",
+  "zh-CN": name => name + "使用 CEFR（A1～C2）分级，A1 为入门、C2 为精通。请根据目前能理解的对话选择难度。",
+  ja: name => name + "は CEFR（A1～C2）を使います。A1 は入門、C2 は熟達です。理解できる会話に合わせて選んでください。",
+  ko: name => name + "는 CEFR(A1~C2)을 사용합니다. A1은 입문, C2는 숙련 단계입니다. 이해할 수 있는 대화에 맞춰 선택하세요.",
+};
+const localizedTargetDescription: Record<UiLocale, (name: string) => string> = {
+  en: name => "Learn from " + name + " subtitle lines.",
+  "zh-TW": name => "透過" + name + "字幕學習。",
+  "zh-CN": name => "通过" + name + "字幕学习。",
+  ja: name => name + "の字幕から学びます。",
+  ko: name => name + " 자막으로 학습합니다.",
+};
+const localizedInstructionDescription: Record<UiLocale, (name: string) => string> = {
+  en: name => "Explain meanings and grammar in " + name + ".",
+  "zh-TW": name => "使用" + name + "講解詞義和文法。",
+  "zh-CN": name => "使用" + name + "讲解词义和语法。",
+  ja: name => name + "で意味と文法を説明します。",
+  ko: name => name + "로 어휘와 문법을 설명합니다.",
+};
+
+export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = Object.fromEntries(
+  (Object.entries(originalLearningSettingsCopy) as [UiLocale, OriginalLearningSettingsCopy][])
+    .map(([locale, base]) => {
+      const names = ADDED_LANGUAGES.map(language => [language,
+        learningLanguageName(language, locale)] as const);
+      return [locale, {
+        ...base,
+        levelHints: {
+          ...base.levelHints,
+          ...Object.fromEntries(names.map(([code, name]) => [code, localizedCEFRHint[locale](name)])),
+        },
+        targetDescriptions: {
+          ...base.targetDescriptions,
+          ...Object.fromEntries(names.map(([code, name]) => [code, localizedTargetDescription[locale](name)])),
+        },
+        instructionDescriptions: {
+          ...base.instructionDescriptions,
+          ...Object.fromEntries(names.map(([code, name]) => [code, localizedInstructionDescription[locale](name)])),
+        },
+        levels: {
+          ...base.levels,
+          ...Object.fromEntries(ADDED_LANGUAGES.map(code => [code, base.levels.en])),
+        },
+      }];
+    }),
+) as Record<UiLocale, LearningSettingsCopy>;
+
+/** Provide the selected language's level scale without listing unrelated exams. */
+export function levelHint(copy: LearningSettingsCopy, language: LearningProfile["targetLanguage"]): string {
+  return copy.levelHints[language] + " " + copy.fieldHints.level;
+}

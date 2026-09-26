@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -16,6 +18,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -32,54 +35,74 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  /* Preset radius is exactly zero, including existing rounded-* utilities. */
-  --radius-xs: var(--radius);
-  --radius-sm: var(--radius);
-  --radius-md: var(--radius);
+  /* Restore warm preset rounding, including Tailwind rounded-* utilities. */
+  --radius-xs: calc(var(--radius) - 6px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: var(--radius);
-  --radius-2xl: var(--radius);
-  --radius-3xl: var(--radius);
-  --radius-4xl: var(--radius);
-  --radius-full: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-full: 9999px;
 }
 
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+  font-family: Outfit, "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color-scheme: light;
   font-synthesis: none;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.148 0.004 228.8);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.148 0.004 228.8);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.148 0.004 228.8);
-  --primary: oklch(0.511 0.096 186.391);
-  --primary-foreground: oklch(0.984 0.014 180.72);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.963 0.002 197.1);
-  --muted-foreground: oklch(0.56 0.021 213.5);
-  --accent: oklch(0.963 0.002 197.1);
-  --accent-foreground: oklch(0.218 0.008 223.9);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.925 0.005 214.3);
-  --input: oklch(0.925 0.005 214.3);
-  --ring: oklch(0.723 0.014 214.4);
-  --chart-1: oklch(0.872 0.007 219.6);
-  --chart-2: oklch(0.56 0.021 213.5);
-  --chart-3: oklch(0.45 0.017 213.2);
-  --chart-4: oklch(0.378 0.015 216);
-  --chart-5: oklch(0.275 0.011 216.9);
-  --radius: 0;
-  --sidebar: oklch(0.987 0.002 197.1);
-  --sidebar-foreground: oklch(0.148 0.004 228.8);
-  --sidebar-primary: oklch(0.6 0.118 184.704);
-  --sidebar-primary-foreground: oklch(0.984 0.014 180.72);
-  --sidebar-accent: oklch(0.963 0.002 197.1);
-  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
-  --sidebar-border: oklch(0.925 0.005 214.3);
-  --sidebar-ring: oklch(0.723 0.014 214.4);
+  --background: oklch(0.9818 0.0054 95.0986);
+  --foreground: oklch(0.3438 0.0269 95.7226);
+  --card: oklch(0.9665 0.0067 97.3521);
+  --card-foreground: oklch(0.1908 0.0020 106.5859);
+  --popover: oklch(1.0000 0 0);
+  --popover-foreground: oklch(0.2671 0.0196 98.9390);
+  --primary: oklch(0.6171 0.1375 39.0427);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.9245 0.0138 92.9892);
+  --secondary-foreground: oklch(0.4334 0.0177 98.6048);
+  --muted: oklch(0.9341 0.0153 90.2390);
+  --muted-foreground: oklch(0.5341 0.0078 97.4503);
+  --accent: oklch(0.9245 0.0138 92.9892);
+  --accent-foreground: oklch(0.2671 0.0196 98.9390);
+  --destructive: oklch(0.1908 0.0020 106.5859);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0.8847 0.0069 97.3627);
+  --input: oklch(0.7621 0.0156 98.3528);
+  --ring: oklch(0.6171 0.1375 39.0427);
+  --chart-1: oklch(0.5583 0.1276 42.9956);
+  --chart-2: oklch(0.6898 0.1581 290.4107);
+  --chart-3: oklch(0.8816 0.0276 93.1280);
+  --chart-4: oklch(0.8822 0.0403 298.1792);
+  --chart-5: oklch(0.5608 0.1348 42.0584);
+  --sidebar: oklch(0.9663 0.0080 98.8792);
+  --sidebar-foreground: oklch(0.3590 0.0051 106.6524);
+  --sidebar-primary: oklch(0.6171 0.1375 39.0427);
+  --sidebar-primary-foreground: oklch(0.9881 0 0);
+  --sidebar-accent: oklch(0.9245 0.0138 92.9892);
+  --sidebar-accent-foreground: oklch(0.3250 0 0);
+  --sidebar-border: oklch(0.9401 0 0);
+  --sidebar-ring: oklch(0.7731 0 0);
+  --font-sans: Outfit, sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: Geist Mono, ui-monospace, monospace;
+  --radius: 1rem;
+  --shadow-x: 0;
+  --shadow-y: 1px;
+  --shadow-blur: 3px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.1;
+  --shadow-color: oklch(0 0 0);
+  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
+  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
+  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
+  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
 }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: var(--background); color: var(--foreground); line-height: 1.55; -webkit-font-smoothing: antialiased; }
@@ -89,8 +112,8 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .app { max-width: 780px; margin: 0 auto; padding: 0 12px 36px; }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 18px 0; }
 .topbar > div { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.topbar strong { min-width: 0; font-size: 12px; line-height: 1.25; overflow-wrap: break-word; }
-.brandMark { display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: var(--radius); background: var(--primary); color: var(--primary-foreground); font-size: 12px; font-weight: 800; letter-spacing: -.03em; }
+.topbar strong { min-width: 0; font-size: 12px; line-height: 1.25; overflow-wrap: anywhere; }
+.brandMark { display: block; width: 36px; height: 36px; flex-shrink: 0; object-fit: contain; border-radius: var(--radius); }
 .version { color: var(--muted-foreground); font-size: 11px; white-space: nowrap; flex-shrink: 0; }
 .tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; margin-bottom: 16px; padding: 4px; border-radius: var(--radius); background: var(--muted); }
 .tabs button { min-width: 0; padding: 8px 2px; background: transparent; color: var(--muted-foreground); font-size: 12px; box-shadow: none; }
@@ -101,7 +124,11 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .panel h3 { margin: 18px 0 8px; color: var(--muted-foreground); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
 .hint { margin: 7px 0 12px; color: var(--muted-foreground); font-size: 12px; line-height: 1.55; }
 label { display: grid; gap: 6px; margin: 12px 0; font-size: 12px; font-weight: 600; }
-label [data-slot=input], label [data-slot=select], label [data-slot=textarea] { width: 100%; }
+label [data-slot=input], label [data-slot=select-trigger], label [data-slot=textarea] { width: 100%; }
+/* Radix preferences use button triggers instead of browser-native select elements. */
+.uiPreferenceField { margin: 12px 0; min-width: 0; }
+.uiPreferenceField > label { display: block; margin: 0 0 6px; font-size: 12px; font-weight: 600; }
+.uiPreferenceField [data-slot="select-trigger"] { width: 100%; min-width: 0; }
 label input[type=file] { height: auto; min-height: 40px; padding: 7px; font-size: 12px; }
 textarea { resize: vertical; }
 .twoColumns { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
@@ -135,37 +162,56 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 /* The extension already uses data-theme; accept shadcn's .dark as well. */
 :root[data-theme="dark"], :root.dark {
   color-scheme: dark;
-  --background: oklch(0.148 0.004 228.8);
-  --foreground: oklch(0.987 0.002 197.1);
-  --card: oklch(0.218 0.008 223.9);
-  --card-foreground: oklch(0.987 0.002 197.1);
-  --popover: oklch(0.218 0.008 223.9);
-  --popover-foreground: oklch(0.987 0.002 197.1);
-  --primary: oklch(0.437 0.078 188.216);
-  --primary-foreground: oklch(0.984 0.014 180.72);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.275 0.011 216.9);
-  --muted-foreground: oklch(0.723 0.014 214.4);
-  --accent: oklch(0.275 0.011 216.9);
-  --accent-foreground: oklch(0.987 0.002 197.1);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.56 0.021 213.5);
-  --chart-1: oklch(0.872 0.007 219.6);
-  --chart-2: oklch(0.56 0.021 213.5);
-  --chart-3: oklch(0.45 0.017 213.2);
-  --chart-4: oklch(0.378 0.015 216);
-  --chart-5: oklch(0.275 0.011 216.9);
-  --sidebar: oklch(0.218 0.008 223.9);
-  --sidebar-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-primary: oklch(0.704 0.14 182.503);
-  --sidebar-primary-foreground: oklch(0.277 0.046 192.524);
-  --sidebar-accent: oklch(0.275 0.011 216.9);
-  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.56 0.021 213.5);
+  --background: oklch(0.2679 0.0036 106.6427);
+  --foreground: oklch(0.9576 0.0027 106.4494);
+  --card: oklch(0.2928 0.0018 106.5092);
+  --card-foreground: oklch(0.9818 0.0054 95.0986);
+  --popover: oklch(0.3085 0.0035 106.6039);
+  --popover-foreground: oklch(0.9211 0.0040 106.4781);
+  --primary: oklch(0.6724 0.1308 38.7559);
+  --primary-foreground: oklch(0.1908 0.0020 106.5859);
+  --secondary: oklch(0.9818 0.0054 95.0986);
+  --secondary-foreground: oklch(0.3085 0.0035 106.6039);
+  --muted: oklch(0.2213 0.0038 106.7070);
+  --muted-foreground: oklch(0.7713 0.0169 99.0657);
+  --accent: oklch(0.2130 0.0078 95.4245);
+  --accent-foreground: oklch(0.9663 0.0080 98.8792);
+  --destructive: oklch(0.6368 0.2078 25.3313);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0.3618 0.0101 106.8928);
+  --input: oklch(0.4336 0.0113 100.2195);
+  --ring: oklch(0.6724 0.1308 38.7559);
+  --chart-1: oklch(0.5583 0.1276 42.9956);
+  --chart-2: oklch(0.6898 0.1581 290.4107);
+  --chart-3: oklch(0.2130 0.0078 95.4245);
+  --chart-4: oklch(0.3074 0.0516 289.3230);
+  --chart-5: oklch(0.5608 0.1348 42.0584);
+  --sidebar: oklch(0.2357 0.0024 67.7077);
+  --sidebar-foreground: oklch(0.8074 0.0142 93.0137);
+  --sidebar-primary: oklch(0.3250 0 0);
+  --sidebar-primary-foreground: oklch(0.9881 0 0);
+  --sidebar-accent: oklch(0.1680 0.0020 106.6177);
+  --sidebar-accent-foreground: oklch(0.8074 0.0142 93.0137);
+  --sidebar-border: oklch(0.9401 0 0);
+  --sidebar-ring: oklch(0.7731 0 0);
+  --font-sans: Outfit, sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: Geist Mono, ui-monospace, monospace;
+  --radius: 1rem;
+  --shadow-x: 0;
+  --shadow-y: 1px;
+  --shadow-blur: 3px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.1;
+  --shadow-color: oklch(0 0 0);
+  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
+  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
+  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
+  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
 }
 
 /* Narrow Chrome Side Panels must not be widened by long episode titles, paths,
@@ -183,6 +229,14 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
   overflow-wrap: anywhere;
 }
 .actions > * { min-width: 0; max-width: 100%; }
+/* Generation settings stay visible next to the submit action in narrow panels. */
+.generationSummary { min-width: 0; margin: 12px 0; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); }
+.generationSummaryHeading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.generationSummaryHeading > strong { font-size: 12px; }
+.generationSummary dl { display: grid; gap: 8px; margin: 10px 0 0; }
+.generationSummary dl > div { display: grid; grid-template-columns: minmax(50px, auto) minmax(0, 1fr); gap: 10px; align-items: start; }
+.generationSummary dt { color: var(--muted-foreground); font-size: 12px; }
+.generationSummary dd { min-width: 0; margin: 0; text-align: right; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
 .panel :is(pre, code) { max-width: 100%; overflow-x: auto; }
 
 /* Field-level help is opened by click/touch/keyboard, not hover alone.
@@ -190,7 +244,7 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .settingField { min-width: 0; position: relative; margin: 12px 0; }
 .settingHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; min-width: 0; margin-bottom: 6px; }
 .settingHeading label { display: block; min-width: 0; margin: 0; padding-top: 3px; line-height: 1.45; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
-.settingField [data-slot=select], .settingField [data-slot=input] { width: 100%; min-width: 0; }
+.settingField [data-slot=select-trigger], .settingField [data-slot=input] { width: 100%; min-width: 0; }
 .settingInfo { display: block; flex-shrink: 0; width: auto; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .settingInfo summary { display: grid; place-items: center; width: 23px; height: 23px; padding: 0; border-radius: var(--radius); color: var(--muted-foreground); list-style: none; cursor: pointer; }
 .settingInfo summary::-webkit-details-marker { display: none; }
@@ -206,6 +260,11 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 }
 .twoColumns > .settingField:first-child .settingInfoPopover { left: 0; right: auto; }
 .settingInfoPopover p { margin: 0; color: var(--foreground); }
+/* Display the current language's complete proficiency scale without widening the Side Panel. */
+.settingInfoLevels { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+.settingInfoLevels li { min-width: 0; padding-top: 8px; border-top: 1px solid var(--border); }
+.settingInfoLevels strong { display: block; color: var(--foreground); font-size: 12px; font-weight: 650; }
+.settingInfoLevels span { display: block; color: var(--muted-foreground); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 
 /* Curated study keeps a single scene in view, with playback accessible while scrolling. */
 .advancedLessonSettings { margin: 8px 0 12px; }
@@ -219,12 +278,12 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .sceneHeaderTitle .hint { display: block; margin: 2px 0; }
 .sceneExport { display: flex; gap: 5px; }
 .sceneTabs, .sceneSteps { display: grid; gap: 4px; min-width: 0; }
-.sceneTabs { grid-template-columns: repeat(3,minmax(0,1fr)); margin: 12px 0 0; padding: 4px; border-radius: var(--radius); background: var(--muted); }
+.sceneTabs { grid-template-columns: repeat(2,minmax(0,1fr)); margin: 12px 0 0; padding: 4px; border-radius: var(--radius); background: var(--muted); }
 .sceneTabs button { width: 100%; min-width: 0; padding: 6px 2px; font-size: 12px; color: var(--muted-foreground); background: transparent; }
 .sceneTabs button.selected { background: var(--card); color: var(--foreground); box-shadow: 0 1px 4px #0001; }
 .scenePicker { display: grid; gap: 6px; min-width: 0; margin: 12px 0 14px; }
 .scenePicker label { margin: 0; font-size: 12px; font-weight: 600; }
-.scenePicker select { width: 100%; min-width: 0; font-size: 12px; text-overflow: ellipsis; }
+.scenePicker [data-slot="select-trigger"] { width: 100%; min-width: 0; font-size: 12px; text-overflow: ellipsis; }
 .sceneSteps { grid-template-columns: repeat(3,minmax(0,1fr)); margin: 14px 0 8px; gap: 6px; }
 .sceneSteps button {
   display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 66px;
@@ -267,7 +326,7 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .sceneReadingSettings { margin: 8px 0 14px; padding: 8px 10px; }
 .sceneReadingSettings > summary { color: var(--muted-foreground); font-size: 12px; line-height: 1.5; }
 .sceneReadingControl { display: flex; align-items: center; gap: 8px; min-width: 0; margin-top: 10px; position: relative; }
-.sceneReadingControl > select { flex: 1; min-width: 0; width: 100%; }
+.sceneReadingControl > [data-slot="select-trigger"] { flex: 1; min-width: 0; width: 100%; }
 .sceneReadingControl .settingInfoPopover { width: min(260px, calc(100vw - 72px)); max-width: 100%; }
 
 /* Only two compact rows remain sticky; settings open on demand. */
@@ -292,12 +351,22 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
   white-space: normal; overflow-wrap: anywhere;
 }
 .sceneMiniSettings {
-  max-height: min(220px, 38vh); overflow-y: auto;
+  max-height: min(340px, 55vh); overflow-y: auto;
   margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border);
 }
 .sceneMiniSettings .twoColumns { gap: 8px; }
 .sceneMiniSettings label { min-width: 0; margin: 0 0 8px; font-size: 12px; }
-.sceneMiniSettings select { width: 100%; min-width: 0; }
+.sceneMiniSettings [data-slot="select-trigger"] { width: 100%; min-width: 0; }
+.sceneLoopRange { min-width: 0; margin-top: 8px; padding-top: 9px; border-top: 1px solid var(--border); }
+.sceneLoopRangeTitle, .sceneLoopBoundaryTitle { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sceneLoopRangeTitle > strong { font-size: 12px; }
+.sceneLoopRange .hint { margin: 5px 0 8px; font-size: 11px; }
+.sceneLoopBoundary { min-width: 0; margin-top: 10px; }
+.sceneLoopBoundaryTitle { margin-bottom: 5px; font-size: 12px; font-weight: 600; }
+.sceneLoopBoundaryTitle output { font-variant-numeric: tabular-nums; }
+.sceneLoopNudge { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.sceneLoopNudge button { min-width: 0; min-height: 32px; padding: 5px 6px; font-size: 11px; white-space: normal; }
+.sceneLoopNudge button:last-child { grid-column: 1 / -1; }
 .sceneMiniStatus {
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
   max-height: 34px; overflow: hidden; overflow-wrap: anywhere;
@@ -308,19 +377,18 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .jobHistoryList { display: grid; gap: 12px; margin-top: 12px; }
 .jobHistoryList .learningCard { margin-bottom: 0; }
 
-/* Dark preset uses a deep primary for filled buttons; use the brighter sidebar
-   accent for small, unfilled link text to preserve readability. */
+/* Warm dark mode uses the brighter primary color for readable small links. */
 :root[data-theme="dark"] .textButton, :root.dark .textButton {
-  color: var(--sidebar-primary);
+  color: var(--primary);
 }
-/* Use the higher-lightness accent for small text on the dark card surface. */
+/* Keep emphasized learning text legible on the warm dark card surface. */
 :root[data-theme="dark"] .learningCard strong, :root.dark .learningCard strong {
-  color: var(--sidebar-primary);
+  color: var(--primary);
 }
 
 /* Primary actions contain full Chinese/Japanese/Korean phrases in a narrow
    Side Panel. 14px semibold text is clearer than inherited compact labels,
-   while the preset's primary/foreground colors remain unchanged. */
+   while the warm primary/foreground colors remain unchanged. */
 button[data-slot="button"].subtitleFetchButton,
 button[data-slot="button"].primary {
   min-height: 40px;
@@ -333,3 +401,76 @@ button[data-slot="button"].primary {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+/* Every Radix trigger, including the scene picker and account options, fits the narrow Side Panel. */
+[data-slot="select-trigger"] { width: 100%; min-width: 0; max-width: 100%; }
+[data-slot="select-trigger"] [data-slot="select-value"] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-slot="select-content"] { max-width: min(440px, calc(100vw - 24px)); }
+
+/* A compact, accessible backup switch; lessons always save locally first. */
+.backupRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0 4px; }
+.backupDescription { flex: 1; min-width: 0; font-size: 13px; }
+.backupDescription .hint { margin: 4px 0 0; }
+button[data-slot="button"].backupSwitch {
+  position: relative; display: inline-flex; align-items: center; justify-content: flex-start;
+  flex-shrink: 0; width: 46px; height: 27px; padding: 3px; border: 0;
+  border-radius: 999px; background: var(--muted-foreground); transition: background .2s;
+}
+button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(--primary); }
+.backupSwitchThumb {
+  display: block; flex: none; width: 21px; height: 21px; border-radius: 50%;
+  background: white; box-shadow: 0 1px 3px #0003;
+  pointer-events: none; transform: translateX(0); transition: transform .2s;
+}
+.backupSwitch[aria-checked="true"] .backupSwitchThumb { transform: translateX(19px); }
+.backupConnection { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.backupConnection .hint { min-width: 0; overflow-wrap: anywhere; margin: 3px 0; }
+@media (prefers-reduced-motion: reduce) {
+  .backupSwitch, .backupSwitchThumb { transition: none !important; }
+}
+
+/* Real completed-step progress, never a guessed percentage. */
+.generationSpinner { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: generationSpin .85s linear infinite; }
+@keyframes generationSpin { to { transform: rotate(360deg); } }
+.generationProgress { height: 5px; margin: 10px 0 5px; overflow: hidden; border-radius: 999px; background: var(--muted); }
+.generationProgress > span { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width .25s ease; }
+.jobToolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.jobToolbar > [data-slot="select-trigger"] { flex: 1; min-width: 0; }
+.jobHistoryList { display: grid; gap: 7px; margin: 10px 0; }
+.jobRow { min-width: 0; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius); }
+.jobRowHeading { display: flex; justify-content: space-between; align-items: center; min-width: 0; gap: 8px; }
+.jobRowHeading strong { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; }
+.jobRow .hint { margin: 3px 0; font-size: 11px; }
+.jobRow .actions { margin-top: 5px; gap: 5px; }
+.jobRow .actions button { min-height: 28px; height: auto; }
+.jobRowError { margin: 5px 0; color: var(--destructive); font-size: 11px; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) {
+  .generationSpinner { animation: none; }
+  .generationProgress > span { transition: none; }
+}
+
+/* My Lessons combines the local and cloud copies of a document by ID. */
+.tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tabs button { gap: 3px; padding-inline: 1px; font-size: 11px; }
+.tabs button svg { width: 14px; height: 14px; }
+.lessonLibraryList { display: grid; gap: 8px; margin-top: 12px; }
+.lessonRowMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.lessonRowMeta .hint { margin: 0; }
+
+/* Optional CLI profiles stay out of the primary Agent workflow. */
+.agentProfileSection { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.agentProfileHeading { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; }
+.agentProfileHeading .settingInfo { margin: 0; }
+.agentProfileAdvanced { margin: 10px 0 0; padding: 10px 11px; font-size: 12px; }
+.agentProfileAdvanced > summary { font-size: 12px; font-weight: 600; }
+.driveSingleAccount { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; margin: 12px 0; padding: 10px 11px; border: 1px solid var(--border); border-radius: var(--radius); }
+.driveSingleAccount > div { min-width: 0; }
+.driveSingleAccount strong { display: block; overflow-wrap: anywhere; font-size: 12px; }
+.driveSingleAccount .hint { display: block; margin: 2px 0 0; }
+.driveAccountList { display: grid; gap: 5px; margin-top: 10px; }
+.driveAccountItem { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; padding: 5px 0; }
+.driveAccountItem + .driveAccountItem { border-top: 1px solid var(--border); }
+.driveAccountItem span { min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
+.driveExistingBackup { display: grid; justify-items: start; gap: 4px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.driveExistingBackup strong { font-size: 12px; }
+.driveExistingBackup .hint { margin: 0 0 5px; }

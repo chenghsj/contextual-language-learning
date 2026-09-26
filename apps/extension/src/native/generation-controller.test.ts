@@ -115,6 +115,8 @@ test("duplicate check and authorized generation share the same Host process and 
   panel.disconnect();
   assert.equal(app.native.disconnected, false);
   app.native.onMessage.fire({ id: jobId, type: "result", document: {} });
+  assert.equal(app.native.disconnected, false, "backup may still be running after delivery");
+  app.native.onMessage.fire({ id: jobId, type: "generationSettled" });
   assert.equal(app.native.disconnected, true);
 });
 
@@ -152,4 +154,16 @@ test("an internal content-script port cannot run an Agent through the worker", (
   app.onConnect.fire(contentScript);
   assert.equal(contentScript.disconnected, true);
   assert.equal(app.connections, 0);
+});
+
+test("pending Drive backups survive Side Panel closure until the Host finishes", () => {
+  const app = setup();
+  const panel = app.connectPanel();
+  const id = randomUUID();
+  panel.onMessage.fire({ type: "resumeBackups", id });
+  assert.equal(app.connections, 1);
+  panel.disconnect();
+  assert.equal(app.native.disconnected, false);
+  app.native.onMessage.fire({ id, type: "backupsFinished" });
+  assert.equal(app.native.disconnected, true);
 });

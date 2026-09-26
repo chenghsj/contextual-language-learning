@@ -62,15 +62,16 @@ function renderReader(locale: UiLocale, withVideo = false): string {
   }));
 }
 
-test("every locale has a direct scene picker, readable step names and independent scene navigation", () => {
+test("every locale has a direct scene picker, readable step names and independent scene navigation", async () => {
+  const source = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
   for (const locale of Object.keys(messages) as UiLocale[]) {
     const copy = sceneReaderMessages[locale];
     const markup = renderReader(locale);
-    assert.match(markup, /<select[^>]+id="study-scene-picker"/);
-    assert.match(markup, /<option[^>]+value="0"/);
-    assert.match(markup, /<option[^>]+value="1"/);
+    assert.match(markup, /role="combobox"/);
+    assert.match(markup, /id="study-scene-picker"/);
+    assert.match(source, /value: String\(index\)/);
     assert.ok(markup.includes("Asking a favor"));
-    assert.ok(markup.includes("Polite reply"));
+    assert.ok(source.includes('item.title'), locale + ": choices derive from scene titles");
     assert.match(markup, /aria-pressed="true"/);
     assert.match(markup, /class="sceneStepNumber"[^>]*>01/);
     assert.match(markup, /class="sceneStepNumber"[^>]*>02/);
@@ -88,7 +89,7 @@ test("every locale has a direct scene picker, readable step names and independen
 test("scene switching, completion and step progression have separate handlers and readable sizing", async () => {
   const source = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
-  assert.match(source, /onChange=\{event => selectScene\(Number\(event\.target\.value\)\)\}/);
+  assert.match(source, /onValueChange=\{value => selectScene\(Number\(value\)\)\}/);
   assert.match(source, /onClick=\{\(\) => selectStep\(part\)\}/);
   assert.match(source, /const next = nextStudyStep\(step\)/);
   const finish = source.slice(source.indexOf("  function finishScene():"), source.indexOf("  function renderOriginal("));
@@ -139,11 +140,59 @@ test("compact playback keeps original loop settings and removes the old always-v
   assert.match(source, /setLoopingSceneId\(null\)/);
   assert.match(source, /aria-expanded=\{playbackSettingsOpen\}/);
   assert.match(source, /playbackSettingsOpen && <div className="sceneMiniSettings"/);
-  assert.match(source, /<Select value=\{repeat\}/);
-  assert.match(source, /<Select value=\{delay\}/);
-  assert.match(source, /<Select value=\{playbackRate\}/);
+  assert.match(source, /<SelectField ariaLabel=\{c.repeat\} value=\{repeat\}/);
+  assert.match(source, /<SelectField ariaLabel=\{c.delay\} value=\{delay\}/);
+  assert.match(source, /<SelectField ariaLabel=\{c.speed\} value=\{playbackRate\}/);
   assert.doesNotMatch(source, /scenePlaybackSettings/);
   assert.match(css, /\.scenePlayer \{[^}]*padding: 9px 12px/);
   assert.match(css, /\.sceneMiniControls \{[^}]*grid-template-columns:/);
   assert.match(css, /\.sceneReadingSettings \{[^}]*margin:/);
+});
+
+test("reader opens in study with only Study and Review tabs; no watch-along polling", async () => {
+  const source = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(source, /type Mode = "learn" \| "review"/);
+  assert.match(source, /useState<Mode>\("learn"\)/);
+  assert.match(source, /\(\["learn", "review"\] as const\)/);
+  assert.doesNotMatch(source, /watchScene|watchTime|watchAvailable|mode === "watch"|setInterval\(poll/);
+  assert.match(css, /\.sceneTabs \{[^}]*grid-template-columns: repeat\(2,minmax\(0,1fr\)\)/);
+  for (const locale of Object.keys(messages) as UiLocale[]) {
+    const copy = sceneReaderMessages[locale];
+    const html = renderReader(locale, true);
+    assert.equal((html.match(/role="tab"/g) ?? []).length, 2, locale + ": two tabs");
+    assert.ok(html.includes(copy.learn), locale + ": study");
+    assert.ok(html.includes(copy.review), locale + ": review");
+    assert.ok(html.includes('class="scenePicker"'), locale + ": scene picker");
+    assert.ok(html.includes('class="sceneMiniControls"'), locale + ": playback controls");
+    for (const removed of ["watch", "watchHint", "watchNoScene", "watchUnavailable", "studyThis"]) {
+      assert.equal(Object.hasOwn(copy, removed), false, locale + ": obsolete " + removed);
+    }
+  }
+});
+
+
+test("A/B controls are scoped to the expanded player, persisted per document and cue", async () => {
+  const source = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(source, /const loopKey = "sceneLoopRanges:" \+ document\.id/);
+  assert.match(source, /readLoopWindows\(stored\[loopKey\], document\.cues\.map\(cue => cue\.id\)\)/);
+  assert.match(source, /\[loopKey\]: loopRanges/);
+  assert.match(source, /loopRanges\[cue\.id\] \?\? cuePlaybackWindow\(cue\.startMs, cue\.endMs\)/);
+  assert.match(source, /await adapter\.status\(sourceUrl\)/);
+  assert.match(source, /await adapter\.stopLoop\(sourceUrl\)/);
+  assert.match(source, /updateFocusRange\(boundary, "current"\)/);
+  assert.match(source, /updateFocusRange\("reset"\)/);
+  assert.match(source, /formatLoopTimestamp\(point\)/);
+  assert.match(css, /\.sceneLoopNudge \{[^}]*grid-template-columns:/);
+  for (const locale of Object.keys(messages) as UiLocale[]) {
+    const copy = sceneReaderMessages[locale];
+    for (const key of ["loopRange", "loopRangeHint", "loopStart", "loopEnd",
+      "loopEarlier", "loopLater", "setBoundaryHere", "loopRangeResetButton",
+      "loopRangeSaved", "loopRangeReset", "invalidLoopRange", "positionUnavailable"] as const) {
+      assert.ok(copy[key].trim(), locale + " " + key);
+    }
+    assert.doesNotMatch(renderReader(locale, true), /class="sceneLoopRange"/,
+      locale + ": A/B controls stay collapsed until requested");
+  }
 });

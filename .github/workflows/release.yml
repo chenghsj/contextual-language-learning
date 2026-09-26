@@ -84,7 +84,12 @@ jobs:
           pnpm test
 
       - name: Build Extension and bundled Native Host
-        run: pnpm build
+        env:
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+        run: |
+          test -n "$GOOGLE_OAUTH_CLIENT_ID" || { echo "::error::Set GOOGLE_OAUTH_CLIENT_ID for one-click Drive authorization"; exit 1; }
+          pnpm build
 
       - name: Validate Extension and Native Host
         run: |

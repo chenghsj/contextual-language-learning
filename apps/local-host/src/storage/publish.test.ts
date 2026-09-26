@@ -8,6 +8,7 @@ import { GenerationRequestSchema } from "@immersive/core";
 import { JobManager } from "../jobs/manager";
 import { localStoragePorts } from "./file";
 import { publishSavedJob } from "./publish";
+import { backupSavedJob } from "./backup";
 
 test("publication failure preserves finished material; retry never regenerates", async () => {
   const root = await mkdtemp(join(tmpdir(), "immersive-publication-"));
@@ -18,7 +19,8 @@ test("publication failure preserves finished material; retry never regenerates",
       profile: { targetLanguage: "en", instructionLanguage: "en",
         level: "A2", mode: "guided", maxNewVocabulary: 2, exerciseCount: 1 },
       agent: { provider: "claude", modelId: "" },
-      destination: { kind: "drive", accountId: "fake-test-account" },
+      destination: { kind: "local", directory: root },
+      backup: { enabled: true, accountId: "fake-test-account" },
       cues: [{ id: "cue-1", startMs: null, endMs: null, originalText: "Hello" }],
     });
     let generated = 0;
@@ -30,17 +32,24 @@ test("publication failure preserves finished material; retry never regenerates",
     }, () => undefined);
     const document = await manager.start(request.id, request);
     assert.equal(generated, 1);
-    await assert.rejects(publishSavedJob(storage, document.id, {
-      publish: async () => { throw new Error("Drive offline"); },
+    const local = await publishSavedJob(storage, document.id, {
+      publish: async (_document, _markdown, destination) => {
+        assert.equal(destination.kind, "local");
+        return join(root, document.id + ".json");
+      },
+    });
+    assert.match(local, /[.]json$/);
+    assert.equal((await storage.jobs.get(document.id))?.summary.publication?.status, "published");
+    await assert.rejects(backupSavedJob(storage, document.id, async () => {
+      throw new Error("Drive offline");
     }), /Drive offline/);
     assert.equal((await storage.jobs.get(document.id))?.summary.status, "completed");
-    assert.equal((await storage.jobs.get(document.id))?.summary.publication?.status, "failed");
+    assert.equal((await storage.jobs.get(document.id))?.summary.backup?.status, "failed");
     assert.equal((await storage.documents.get(document.id))?.id, document.id);
-    const uri = await publishSavedJob(storage, document.id, {
-      publish: async () => "https://drive.google.com/file/d/example/view",
-    });
+    const uri = await backupSavedJob(storage, document.id, async () =>
+      "https://drive.google.com/file/d/example/view");
     assert.equal(uri, "https://drive.google.com/file/d/example/view");
-    assert.equal((await storage.jobs.get(document.id))?.summary.publication?.status, "published");
+    assert.equal((await storage.jobs.get(document.id))?.summary.backup?.status, "backed-up");
     assert.equal(generated, 1);
   } finally {
     await rm(root, { recursive: true, force: true });

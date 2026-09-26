@@ -6,17 +6,23 @@ import { getAgentCatalog } from "./agents";
 import { discoverAgentModels } from "./agents/metadata";
 import { listAgentProfiles, saveAgentProfile, removeAgentProfile } from "./agents/profiles";
 import { findLocalDuplicates, requestKey } from "./duplicates";
-import { findDriveDuplicates } from "./drive/api";
-import { configureGoogleOAuth, connectGoogleAccount, googleConfigured, listGoogleAccounts } from "./drive/oauth";
+import { findDriveDuplicates, listDriveLessons, getDriveDocument, validateDriveAccess } from "./drive/api";
+import { accessTokenFor, connectGoogleAccount, disconnectGoogleAccount, googleConfigured, listGoogleAccounts } from "./drive/oauth";
 import { JobManager } from "./jobs/manager";
+import { toMarkdown } from "./generation/markdown";
 import { encodeMessage, NativeFramer } from "./protocol";
 import { localStoragePorts } from "./storage/file";
 import { chooseLocalFolder, validateFolder } from "./storage/folders";
 import { publishSavedJob } from "./storage/publish";
+import { backupSavedJob, resumePendingBackups } from "./storage/backup";
 // Keep earlier filesystem/synced-drive compatibility endpoints for existing users.
 import { findExisting } from "./storage/publisher";
 import { listStorageLocations, validateUserStoragePath } from "./storage/locations";
 
+// Bundle-time version from the root release package; an older Host may omit it.
+declare const __IMMERSIVE_HOST_VERSION__: string;
+const hostVersion = typeof __IMMERSIVE_HOST_VERSION__ === "string"
+  ? __IMMERSIVE_HOST_VERSION__ : "dev";
 const storage = localStoragePorts();
 const manager = new JobManager({ storage }, (requestId, job) => {
   reply({ id: requestId, type: "job", job });
@@ -70,8 +76,18 @@ async function finishDocument(requestId: string, document: LearningDocument): Pr
     const message = error instanceof Error ? error.message : "Publishing failed";
     reply({ id: requestId, type: "publicationFailed", jobId: document.id, message: message.slice(0, 900) });
   }
-  // Publishing is independent of document creation; the canonical local document is preserved.
+  // A complete local lesson is available immediately; the background controller
+  // keeps the Host connected until optional Drive backup has settled.
   deliverDocument(requestId, document);
+  try {
+    const location = await backupSavedJob(storage, document.id);
+    if (location) reply({ id: requestId, type: "backupPublished", jobId: document.id, location });
+  } catch (error) {
+    reply({ id: requestId, type: "backupFailed", jobId: document.id,
+      message: error instanceof Error ? error.message : String(error) });
+  } finally {
+    reply({ id: requestId, type: "generationSettled" });
+  }
 }
 
 async function handle(input: unknown): Promise<void> {
@@ -87,7 +103,7 @@ async function handle(input: unknown): Promise<void> {
     switch (request.type) {
       case "health": {
         const agents = await getAgentCatalog();
-        reply({ id: request.id, type: "health", agents,
+        reply({ id: request.id, type: "health", agents, version: hostVersion,
           installed: Object.fromEntries(agents.map(agent => [agent.id, agent.installed])) });
         break;
       }
@@ -109,6 +125,54 @@ async function handle(input: unknown): Promise<void> {
       case "listJobs":
         reply({ id: request.id, type: "jobs", jobs: await manager.list() });
         break;
+      case "listLessons": {
+        const [documents, summaries] = await Promise.all([
+          storage.documents.list(500), storage.jobs.list(5000),
+        ]);
+        const byId = new Map(summaries.map(summary => [summary.documentId, summary]));
+        reply({ id: request.id, type: "lessons", lessons: documents.map(doc => ({
+          documentId: doc.id, title: doc.source.title, createdAt: doc.createdAt,
+          targetLanguage: doc.profile.targetLanguage, level: doc.profile.level,
+          ...(byId.get(doc.id)?.backup ? { backup: byId.get(doc.id)!.backup } : {}),
+        })) });
+        break;
+      }
+      case "listDriveLessons":
+        reply({ id: request.id, type: "driveLessons", lessons: await listDriveLessons(request.accountId) });
+        break;
+      case "restoreDriveLesson": {
+        const document = await getDriveDocument(request.accountId, request.documentId);
+        const existing = await storage.documents.get(document.id);
+        if (existing && JSON.stringify(existing) !== JSON.stringify(document)) {
+          throw new Error("本地已有不同版本的相同教材，請先處理衝突");
+        }
+        if (!existing) await storage.documents.save(document, toMarkdown(document));
+        reply({ id: request.id, type: "driveRestored", documentId: document.id });
+        break;
+      }
+      case "backupExisting": {
+        await accessTokenFor(request.accountId);
+        let count = 0;
+        for (const summary of await storage.jobs.list(5000)) {
+          if (summary.status !== "completed" || !summary.documentId ||
+              summary.publication?.status !== "published" ||
+              (summary.backup?.status === "backed-up" && summary.backup.accountId === request.accountId)) continue;
+          await storage.jobs.update(summary.id, current => ({
+            ...current, request: { ...current.request,
+              backup: { enabled: true, accountId: request.accountId } },
+            summary: { ...current.summary,
+              backup: { status: "pending", accountId: request.accountId,
+                updatedAt: new Date().toISOString() }, updatedAt: new Date().toISOString() },
+          }));
+          count++;
+        }
+        reply({ id: request.id, type: "backupsScheduled", count });
+        break;
+      }
+      case "resumeBackups":
+        await resumePendingBackups(storage);
+        reply({ id: request.id, type: "backupsFinished" });
+        break;
       case "storageLocations":
         reply({ id: request.id, type: "storageLocations", locations: await listStorageLocations() });
         break;
@@ -124,12 +188,16 @@ async function handle(input: unknown): Promise<void> {
         reply({ id: request.id, type: "driveAccounts",
           accounts: await listGoogleAccounts(), configured: await googleConfigured() });
         break;
-      case "driveConfigure":
-        await configureGoogleOAuth(request.clientId, request.clientSecret);
-        reply({ id: request.id, type: "driveConfigured" });
+      case "driveDisconnect":
+        await disconnectGoogleAccount(request.accountId);
+        reply({ id: request.id, type: "driveDisconnected", accountId: request.accountId });
         break;
       case "driveConnect":
         reply({ id: request.id, type: "driveConnected", account: await connectGoogleAccount() });
+        break;
+      case "driveValidate":
+        await validateDriveAccess(request.accountId);
+        reply({ id: request.id, type: "driveValidated", accountId: request.accountId });
         break;
       case "checkDuplicates": {
         const matches = await duplicates(request.payload);
@@ -165,6 +233,17 @@ async function handle(input: unknown): Promise<void> {
         const document = await storage.documents.get(request.documentId);
         if (!document) throw new Error("Saved document not found");
         deliverDocument(request.id, document);
+        break;
+      }
+      case "retryBackup": {
+        try {
+          const location = await backupSavedJob(storage, request.jobId);
+          if (!location) throw new Error("This lesson has no enabled Google Drive backup");
+          reply({ id: request.id, type: "backupPublished", jobId: request.jobId, location });
+        } catch (error) {
+          reply({ id: request.id, type: "backupFailed", jobId: request.jobId,
+            message: error instanceof Error ? error.message : String(error) });
+        }
         break;
       }
       case "publishJob": {

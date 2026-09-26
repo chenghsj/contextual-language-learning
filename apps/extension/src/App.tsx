@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  compactStudyExport, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
+  BackupSettingsSchema, compactStudyExport, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
+  LEARNING_LANGUAGES, EXPLANATION_LANGUAGES, levelsForTargetLanguage, defaultLevelForTargetLanguage,
   parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
-  type Destination, type DriveAccount, type DuplicateMatch,
+  type BackupSettings, type Destination, type DriveAccount, type DriveLessonSummary, type LessonSummary, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
   type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
@@ -11,30 +12,36 @@ import { titleForVideoTab } from "./video/metadata";
 import { detectCurrentVideoMetadata, metadataSourceSafety } from "./video/metadata-resolver";
 import { videoMetadataMessages } from "./i18n/video-metadata";
 import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
+import { needsVideoReaderReload } from "./video/reader-health";
 import {
   cuePlaybackStart, cuePlaybackWindow,
-  findVideoTab, getActiveWindowTab, openOrFocusVideoTab,
+  assertVideoReaderReady, findVideoTab, getActiveWindowTab, openOrFocusVideoTab,
+  reloadExistingVideoTab,
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
-import { BookOpen, Settings2, WandSparkles } from "lucide-react";
+import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
 import { Input } from "./components/ui/input";
-import { Select } from "./components/ui/select";
+import { Select, SelectContent, SelectField, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Textarea } from "./components/ui/textarea";
 import { Badge } from "./components/ui/badge";
 import { SceneReader } from "./components/scene-reader";
 import { SettingInfo } from "./components/setting-info";
-import { learningSettingsCopy } from "./i18n/learning-settings";
+import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
+import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
+import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences } from "./i18n/agent-model-preferences";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
-  nativeLanguageName, type LocalePreference, type ThemePreference,
+  nativeLanguageName, learningLanguageName, explanationLanguageName,
+  type LocalePreference, type ThemePreference,
 } from "./i18n/preferences";
 
 const HOST_NAME = "dev.immersive.language_learning";
-type Page = "create" | "reader" | "settings";
+type Page = "create" | "reader" | "settings" | "lessons";
+type LessonEntry = { documentId: string; title: string; createdAt: string; local?: LessonSummary; drive?: DriveLessonSummary };
 type Installed = Record<string, boolean>;
 type RepeatOption = "2" | "3" | "5" | "infinite";
 
@@ -80,6 +87,8 @@ export default function App() {
   const [fileName, setFileName] = useState("");
   const [subtitleBusy, setSubtitleBusy] = useState(false);
   const [subtitleStatus, setSubtitleStatus] = useState("");
+  const [videoRecoveryUrl, setVideoRecoveryUrl] = useState("");
+  const [reloadingVideoTab, setReloadingVideoTab] = useState(false);
   const [metadataBusy, setMetadataBusy] = useState(false);
   const [metadataStatus, setMetadataStatus] = useState("");
   const [title, setTitle] = useState("");
@@ -101,6 +110,7 @@ export default function App() {
   }));
   const [agent, setAgent] = useState<AgentSettings>(DEFAULT_AGENT);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>>({});
+  const [agentModelPreferences, setAgentModelPreferences] = useState<Record<string, string>>({});
   const [savedAgentProfiles, setSavedAgentProfiles] = useState<AgentProfile[]>([]);
   const [draftProfileName, setDraftProfileName] = useState("");
   const [draftProfileDir, setDraftProfileDir] = useState("");
@@ -111,10 +121,11 @@ export default function App() {
   const [modelNotice, setModelNotice] = useState("");
   const [customModelMode, setCustomModelMode] = useState(false);
   const [installed, setInstalled] = useState<Installed | null>(null);
+  const [hostVersion, setHostVersion] = useState<string | null>(null);
   const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([
     { id: "claude", label: "Claude Code", installed: false, supportsAccountProfiles: true },
-    { id: "codex", label: "Codex", installed: false, supportsAccountProfiles: true },
-    { id: "agy", label: "AGY", installed: false, supportsAccountProfiles: false },
+    { id: "codex", label: "Codex CLI", installed: false, supportsAccountProfiles: true },
+    { id: "agy", label: "Antigravity CLI (agy)", installed: false, supportsAccountProfiles: false },
   ]);
   const [document, setDocument] = useState<LearningDocument | null>(null);
   const [progress, setProgress] = useState("");
@@ -122,11 +133,20 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
+  const [jobFilter, setJobFilter] = useState<"all" | "active" | "completed">("all");
+  const [showAllJobs, setShowAllJobs] = useState(false);
+  const [localLessons, setLocalLessons] = useState<LessonSummary[]>([]);
+  const [cloudLessons, setCloudLessons] = useState<DriveLessonSummary[]>([]);
+  const [lessonFilter, setLessonFilter] = useState<"all" | "local" | "drive">("all");
+  const [lessonsBusy, setLessonsBusy] = useState(false);
+  const [catalogError, setCatalogError] = useState("");
+  const [restoreBusy, setRestoreBusy] = useState<string | null>(null);
   const [destination, setDestination] = useState<Destination>({ kind: "local" });
+  const [backup, setBackup] = useState<BackupSettings>({ enabled: false });
+  const [backupStatus, setBackupStatus] = useState("");
+  const [driveConnectError, setDriveConnectError] = useState("");
   const [driveAccounts, setDriveAccounts] = useState<DriveAccount[]>([]);
   const [driveConfigured, setDriveConfigured] = useState(false);
-  const [oauthClientId, setOauthClientId] = useState("");
-  const [oauthClientSecret, setOauthClientSecret] = useState("");
   const [storageBusy, setStorageBusy] = useState(false);
   const [checking, setChecking] = useState(false);
   const [publishedLocation, setPublishedLocation] = useState("");
@@ -153,6 +173,7 @@ export default function App() {
   const lastSelectedVideoKeyRef = useRef<string | null>(null);
   const manuallyEditedTitleRef = useRef(false);
   const metadataRequestRef = useRef(0);
+  const catalogLoadIdRef = useRef(0);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
   const platform = getVideoAdapter(sourceUrl).id;
@@ -171,7 +192,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference"]).then(saved => {
+    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "agentModelPreferences", "destination", "backup", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference"]).then(saved => {
       if (saved.profile) setProfile({ ...DEFAULT_PROFILE, instructionLanguage: browserLocale, ...(saved.profile as Partial<LearningProfile>) });
       if (isLocalePreference(saved.uiLocalePreference)) setLocalePreference(saved.uiLocalePreference);
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
@@ -182,7 +203,27 @@ export default function App() {
         const previous = saved.agent as AgentSettings;
         setAgentProfiles({ [previous.provider]: { modelId: previous.modelId, accountConfigDir: previous.accountConfigDir } });
       }
-      if (saved.destination) setDestination(saved.destination as Destination);
+      const previousAgent = saved.agent as AgentSettings | undefined;
+      const previousProfiles = saved.agentProfiles && typeof saved.agentProfiles === "object"
+        ? saved.agentProfiles as Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">> : {};
+      const legacyModels = migrateAgentModelPreferences(previousAgent, previousProfiles);
+      if (saved.agentModelPreferences && typeof saved.agentModelPreferences === "object" &&
+          !Array.isArray(saved.agentModelPreferences)) {
+        const stored = Object.fromEntries(Object.entries(saved.agentModelPreferences)
+          .filter(([key, value]) => key.length < 2048 && typeof value === "string" && value.length <= 120));
+        setAgentModelPreferences({ ...legacyModels, ...stored });
+      } else {
+        setAgentModelPreferences(legacyModels);
+      }
+      if (saved.destination) {
+        const previous = saved.destination as Destination;
+        if (previous.kind === "local") setDestination(previous);
+        else if (!saved.backup) setBackup({ enabled: true, accountId: previous.accountId });
+      }
+      if (saved.backup) {
+        const parsed = BackupSettingsSchema.safeParse(saved.backup);
+        if (parsed.success) setBackup(parsed.data);
+      }
       if (saved.repeat) setRepeat(saved.repeat as RepeatOption);
       if (typeof saved.delay === "number") setDelay(saved.delay);
       if (typeof saved.playbackRate === "number" && [0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].includes(saved.playbackRate)) {
@@ -261,7 +302,19 @@ export default function App() {
         }
         return;
       }
+      if (message.type === "backupsFinished") { void loadJobs(); return; }
       if (message.id !== activeRequestIdRef.current) return;
+      if (message.type === "backupPublished") {
+        setBackupStatus(t("backupSaved"));
+        void loadJobs();
+        return;
+      }
+      if (message.type === "backupFailed") {
+        setBackupStatus(t("backupFailedMessage"));
+        void loadJobs();
+        return;
+      }
+      if (message.type === "generationSettled") { void loadJobs(); return; }
       if (message.type === "job") {
         updateJob(message.job);
       } else if (message.type === "progress") {
@@ -297,6 +350,7 @@ export default function App() {
       }
     });
     observer.postMessage({ type: "watch" });
+    observer.postMessage({ type: "resumeBackups", id: crypto.randomUUID() });
     return () => {
       if (controllerPortRef.current === observer) controllerPortRef.current = null;
       observer.disconnect();
@@ -353,12 +407,14 @@ export default function App() {
 
   useEffect(() => {
     window.document.documentElement.lang = uiLocale;
-    window.document.documentElement.dataset.theme = resolveTheme(themePreference, systemDark);
+    const activeTheme = resolveTheme(themePreference, systemDark);
+    window.document.documentElement.dataset.theme = activeTheme;
+    window.document.documentElement.classList.toggle("dark", activeTheme === "dark");
   }, [uiLocale, themePreference, systemDark]);
 
   useEffect(() => {
-    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, destination, repeat, delay, playbackRate, uiLocalePreference: localePreference, themePreference });
-  }, [hydrated, profile, agent, agentProfiles, destination, repeat, delay, playbackRate, localePreference, themePreference]);
+    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, playbackRate, uiLocalePreference: localePreference, themePreference });
+  }, [hydrated, profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, playbackRate, localePreference, themePreference]);
 
   function nativeOnce(request: { id: string; type: string; [key: string]: unknown }): Promise<HostMessage> {
     return new Promise((resolve, reject) => {
@@ -385,9 +441,7 @@ export default function App() {
       if (response.type !== "driveAccounts") throw new Error("Unexpected Drive accounts response");
       setDriveAccounts(response.accounts);
       setDriveConfigured(response.configured);
-      setDestination(current =>
-        current.kind === "drive" && !current.accountId && response.accounts[0]
-          ? { kind: "drive", accountId: response.accounts[0].id } : current);
+      // Account choice no longer changes the local lesson destination.
     } catch (cause) {
       // Local-only use does not require a connected Host or a Google account.
       setDriveAccounts([]);
@@ -407,33 +461,75 @@ export default function App() {
     } finally { setStorageBusy(false); }
   }
 
-  async function configureDrive(): Promise<void> {
-    setStorageBusy(true);
-    setError("");
-    try {
-      const response = await nativeOnce({
-        id: crypto.randomUUID(), type: "driveConfigure",
-        clientId: oauthClientId.trim(), ...(oauthClientSecret ? { clientSecret: oauthClientSecret } : {}),
-      });
-      if (response.type !== "driveConfigured") throw new Error("Unexpected OAuth configuration response");
-      setOauthClientSecret("");
-      setDriveConfigured(true);
-      await refreshDriveAccounts();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("oauthError"));
-    } finally { setStorageBusy(false); }
-  }
-
   async function connectDrive(): Promise<void> {
     setStorageBusy(true);
     setError("");
+    setDriveConnectError("");
     try {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveConnect" });
       if (response.type !== "driveConnected") throw new Error("Unexpected Google account response");
       setDriveAccounts(current => [...current.filter(item => item.id !== response.account.id), response.account]);
-      setDestination({ kind: "drive", accountId: response.account.id });
+      // OAuth proves identity, not Drive API access. Do not turn backup on
+      // until an actual request to the selected Drive account succeeds.
+      const verified = await nativeOnce({
+        id: crypto.randomUUID(), type: "driveValidate", accountId: response.account.id,
+      });
+      if (verified.type !== "driveValidated") throw new Error("Google Drive access could not be verified.");
+      setBackup({ enabled: true, accountId: response.account.id });
+      setDriveConnectError("");
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : t("connectDriveError");
+      setError(message);
+      setDriveConnectError(message);
+    } finally { setStorageBusy(false); }
+  }
+
+  async function disconnectDrive(accountId: string): Promise<void> {
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveDisconnect", accountId });
+      if (response.type !== "driveDisconnected") throw new Error("Unexpected Drive response");
+      const remaining = driveAccounts.filter(item => item.id !== accountId);
+      setDriveAccounts(remaining);
+      setBackup(current => current.accountId === accountId
+        ? { enabled: false, accountId: remaining[0]?.id } : current);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("connectDriveError"));
+    } finally { setStorageBusy(false); }
+  }
+
+  async function enableBackup(): Promise<void> {
+    const accountId = backup.accountId ?? driveAccounts[0]?.id;
+    if (!accountId) { await connectDrive(); return; }
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveValidate", accountId });
+      if (response.type !== "driveValidated") throw new Error("Unexpected Drive validation response");
+      setBackup({ enabled: true, accountId });
+    } catch (cause) {
+      // A valid OAuth session can still lack Drive API access. Never force
+      // another login for quota, disabled API, or file permission errors.
+      const message = cause instanceof Error ? cause.message : t("connectDriveError");
+      setError(message);
+      setDriveConnectError(message);
+    } finally { setStorageBusy(false); }
+  }
+
+  async function retryBackup(jobId: string): Promise<void> {
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "retryBackup", jobId });
+      if (response.type === "backupFailed") throw new Error(response.message);
+      if (response.type !== "backupPublished") throw new Error("Unexpected backup response");
+      setBackupStatus(t("backupSaved"));
+      loadJobs();
+    } catch (cause) {
+      setBackupStatus(t("backupFailedMessage"));
+      setError(cause instanceof Error ? cause.message : t("publicationError"));
+      loadJobs();
     } finally { setStorageBusy(false); }
   }
 
@@ -464,6 +560,9 @@ export default function App() {
       ...previous,
       [next.provider]: { modelId: next.modelId, accountConfigDir: next.accountConfigDir },
     }));
+    setAgentModelPreferences(previous => ({
+      ...previous, [agentModelPreferenceKey(next.provider, next.accountConfigDir)]: next.modelId,
+    }));
   }
 
   function selectAgent(provider: string): void {
@@ -471,7 +570,7 @@ export default function App() {
     const previous = agentProfiles[provider];
     updateAgent({
       provider,
-      modelId: previous?.modelId ?? "",
+      modelId: savedAgentModel(provider, previous?.accountConfigDir, agentModelPreferences, previous?.modelId ?? ""),
       accountConfigDir: previous?.accountConfigDir,
     });
   }
@@ -500,7 +599,8 @@ export default function App() {
       const saved = response.profiles.find(profile =>
         profile.provider === agent.provider && profile.label === draftProfileName.trim());
       if (saved) {
-        updateAgent({ ...agent, accountConfigDir: saved.directory, modelId: "" });
+        updateAgent({ ...agent, accountConfigDir: saved.directory,
+          modelId: savedAgentModel(agent.provider, saved.directory, agentModelPreferences) });
         setCustomModelMode(false);
       }
       setDraftProfileName("");
@@ -521,7 +621,8 @@ export default function App() {
       });
       if (response.type !== "agentProfiles") throw new Error("Unexpected profile response.");
       setSavedAgentProfiles(response.profiles);
-      updateAgent({ ...agent, accountConfigDir: undefined, modelId: "" });
+      updateAgent({ ...agent, accountConfigDir: undefined,
+        modelId: savedAgentModel(agent.provider, undefined, agentModelPreferences) });
       setCustomModelMode(false);
       setProfileStatus(t("profileRemoved"));
     } catch (cause) {
@@ -532,7 +633,8 @@ export default function App() {
   function chooseAgentProfile(id: string): void {
     const entry = savedAgentProfiles.find(profile => profile.id === id && profile.provider === agent.provider);
     if (id !== "" && !entry) return;
-    updateAgent({ ...agent, accountConfigDir: entry?.directory, modelId: "" });
+    updateAgent({ ...agent, accountConfigDir: entry?.directory,
+      modelId: savedAgentModel(agent.provider, entry?.directory, agentModelPreferences) });
     setCustomModelMode(false);
     setProfileStatus("");
   }
@@ -546,6 +648,7 @@ export default function App() {
       if (message.id === id && message.type === "health") {
         replied = true;
         setInstalled(message.installed);
+        setHostVersion(typeof message.version === "string" ? message.version : null);
         if (Array.isArray(message.agents)) setAgentCatalog(message.agents);
         void loadAgentProfiles();
         port.disconnect();
@@ -554,6 +657,7 @@ export default function App() {
     port.onDisconnect.addListener(() => {
       if (!replied) {
         setInstalled(null);
+        setHostVersion(null);
         setError((chrome.runtime.lastError?.message ?? "Native Host connection failed.") +
           " " + t("hostInstallHint", { id: chrome.runtime.id }));
       }
@@ -601,7 +705,7 @@ export default function App() {
     return summary.status === "queued" || summary.status === "running"
       ? t("statusProgress", { completed: summary.completed, total: summary.total })
       : t("jobProgress", {
-          provider: summary.provider, status: t(jobStatusKeys[summary.status]),
+          provider: agentDisplayName(summary.provider), status: t(jobStatusKeys[summary.status]),
           completed: summary.completed, total: summary.total,
         });
   }
@@ -655,6 +759,12 @@ export default function App() {
         setPublishedLocation(message.location);
       } else if (message.type === "publicationFailed") {
         setError(t("publishFailed", { message: message.message }));
+      } else if (message.type === "backupPublished") {
+        setBackupStatus(t("backupSaved"));
+        void loadJobs();
+      } else if (message.type === "backupFailed") {
+        setBackupStatus(t("backupFailedMessage"));
+        void loadJobs();
       } else if (message.type === "result") {
         complete(message.document);
       } else if (message.type === "documentChunk") {
@@ -692,11 +802,12 @@ export default function App() {
     setError("");
     cancelDuplicate();
     setPublishedLocation("");
+    setBackupStatus("");
     try {
       const payload = GenerationRequestSchema.parse({
         id: crypto.randomUUID(),
         source: { platform, title: title.trim(), ...(sourceUrl.trim() ? { url: sourceUrl.trim() } : {}) },
-        profile, agent, destination, cues,
+        profile, agent, destination, backup, cues,
       });
       const port = chrome.runtime.connect({ name: GENERATION_CONTROLLER_PORT });
       preflightPortRef.current = port;
@@ -741,6 +852,67 @@ export default function App() {
     const { payload, token } = duplicateWarning;
     runGeneration({ type: "generate", payload, checkToken: token, confirmRegeneration: true },
       preflightPortRef.current);
+  }
+
+  async function loadLessons(): Promise<void> {
+    const version = ++catalogLoadIdRef.current;
+    setLessonsBusy(true);
+    setCatalogError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "listLessons" });
+      if (response.type !== "lessons") throw new Error("Unexpected lesson catalog response");
+      if (version !== catalogLoadIdRef.current) return;
+      setLocalLessons(response.lessons);
+      const accountId = backup.accountId ?? driveAccounts[0]?.id;
+      if (accountId) {
+        try {
+          const cloud = await nativeOnce({ id: crypto.randomUUID(), type: "listDriveLessons", accountId });
+          if (cloud.type !== "driveLessons") throw new Error("Unexpected Drive catalog response");
+          if (version === catalogLoadIdRef.current) setCloudLessons(cloud.lessons);
+        } catch (cause) {
+          if (version === catalogLoadIdRef.current) {
+            // Keep previously loaded cloud rows visible while the API is
+            // temporarily unavailable; the local lesson catalog remains usable.
+            setCatalogError(cause instanceof Error ? cause.message : t("lessonCatalogError"));
+          }
+        }
+      } else setCloudLessons([]);
+    } catch (cause) {
+      if (version === catalogLoadIdRef.current) setCatalogError(
+        cause instanceof Error ? cause.message : t("lessonCatalogError"));
+    } finally {
+      if (version === catalogLoadIdRef.current) setLessonsBusy(false);
+    }
+  }
+
+  async function restoreLesson(lesson: DriveLessonSummary): Promise<void> {
+    setRestoreBusy(lesson.documentId);
+    setCatalogError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "restoreDriveLesson",
+        accountId: lesson.accountId, documentId: lesson.documentId });
+      if (response.type !== "driveRestored") throw new Error("Unexpected restore response");
+      await loadLessons();
+      openSavedDocument(response.documentId);
+    } catch (cause) {
+      setCatalogError(cause instanceof Error ? cause.message : t("lessonRestoreError"));
+    } finally { setRestoreBusy(null); }
+  }
+
+  async function backupExistingLessons(): Promise<void> {
+    const accountId = backup.accountId ?? driveAccounts[0]?.id;
+    if (!accountId) { await connectDrive(); return; }
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "backupExisting", accountId });
+      if (response.type !== "backupsScheduled") throw new Error("Unexpected backup response");
+      setBackupStatus(t("existingBackupsScheduled", { count: response.count }));
+      controllerPortRef.current?.postMessage({ id: crypto.randomUUID(), type: "resumeBackups" });
+      void loadJobs();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("publicationError"));
+    } finally { setStorageBusy(false); }
   }
 
   function loadJobs(): void {
@@ -828,7 +1000,7 @@ export default function App() {
       setDuplicateWarning(null);
       setChecking(false);
     }
-  }, [raw, title, sourceUrl, profile, agent, destination]);
+  }, [raw, title, sourceUrl, profile, agent, destination, backup]);
 
   function cancelGeneration(): void {
     if (!portRef.current || !requestRef.current) return;
@@ -864,6 +1036,7 @@ export default function App() {
           ? current : found.title ?? current);
       }
       setMetadataStatus(found.title ? metadataUi.success : metadataUi.partial);
+      setVideoRecoveryUrl(found.title ? "" : found.url);
     } catch (cause) {
       if (request === metadataRequestRef.current) {
         setError(cause instanceof Error && cause.message === "VIDEO_CHANGED"
@@ -877,8 +1050,10 @@ export default function App() {
 
   async function fetchCurrentSubtitles(): Promise<void> {
     if (subtitleBusy || metadataBusy) return;
+    let attemptedUrl = "";
     setSubtitleBusy(true);
     setSubtitleStatus("");
+    setVideoRecoveryUrl("");
     setError("");
     try {
       const selected = await getActiveWindowTab();
@@ -898,6 +1073,8 @@ export default function App() {
       // as a fallback. Never send a subtitle request to an unrelated active tab.
       const tab = await findVideoTab(adapter, url);
       const actualUrl = tab.url ?? url;
+      attemptedUrl = actualUrl;
+      await assertVideoReaderReady(tab, adapter);
       const fetched = await adapter.fetchSubtitles(actualUrl, profile.targetLanguage);
       const parsed = parseSubtitles(fetched.text);
       if (!parsed.length || parsed.length > 3_000 ||
@@ -918,9 +1095,27 @@ export default function App() {
         count: parsed.length, language: fetched.language,
       }));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : subtitleUi.unavailable);
+      const message = cause instanceof Error ? cause.message : subtitleUi.unavailable;
+      if (attemptedUrl && needsVideoReaderReload(message)) setVideoRecoveryUrl(attemptedUrl);
+      setError(message);
     } finally {
       setSubtitleBusy(false);
+    }
+  }
+
+  async function reloadVideoReader(): Promise<void> {
+    if (!videoRecoveryUrl || reloadingVideoTab || subtitleBusy || metadataBusy) return;
+    setReloadingVideoTab(true);
+    setError("");
+    try {
+      await reloadExistingVideoTab(getVideoAdapter(videoRecoveryUrl), videoRecoveryUrl);
+      setVideoRecoveryUrl("");
+      setMetadataStatus("");
+      setSubtitleStatus(subtitleUi.reloadedTab);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : subtitleUi.reloadFailed);
+    } finally {
+      setReloadingVideoTab(false);
     }
   }
 
@@ -1051,24 +1246,50 @@ export default function App() {
     setLoopActive(false);
   }
 
-  const levelOptions = profile.targetLanguage === "en"
-    ? ["A1", "A2", "B1", "B2", "C1", "C2"]
-    : profile.targetLanguage === "ja"
-      ? ["N5", "N4", "N3", "N2", "N1"] : ["1", "2", "3", "4", "5", "6"];
+  const levelOptions = levelsForTargetLanguage(profile.targetLanguage);
+
+  const filteredJobs = jobs.filter(job => jobFilter === "completed"
+    ? job.status === "completed" : jobFilter === "active" ? job.status !== "completed" : true);
+  const visibleJobs = showAllJobs ? filteredJobs : jobFilter === "all"
+    ? [...filteredJobs.filter(job => job.status !== "completed"),
+      ...filteredJobs.filter(job => job.status === "completed").slice(0, 3)]
+    : filteredJobs.slice(0, 3);
+  const activeJob = jobs.find(job => job.id === lastJobIdRef.current);
+  const lessonCatalog = useMemo(() => {
+    const entries = new Map<string, LessonEntry>();
+    for (const local of localLessons) entries.set(local.documentId, {
+      documentId: local.documentId, title: local.title, createdAt: local.createdAt, local,
+    });
+    for (const drive of cloudLessons) {
+      const previous = entries.get(drive.documentId);
+      entries.set(drive.documentId, previous
+        ? { ...previous, drive } : {
+          documentId: drive.documentId, title: drive.title, createdAt: drive.createdAt, drive,
+        });
+    }
+    return [...entries.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }, [localLessons, cloudLessons]);
+  const visibleLessons = lessonCatalog.filter(item => lessonFilter === "local"
+    ? !!item.local : lessonFilter === "drive" ? !!item.drive : true);
+
+  useEffect(() => {
+    if (page === "lessons") void loadLessons();
+  }, [page, backup.accountId, driveAccounts.length]);
 
   return (
     <div className="app">
       <header className="topbar">
-        <div><span className="brandMark">CL</span><strong>AI-powered Contextual Language Learning</strong></div>
+        <div><img className="brandMark" src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>AI-powered Contextual Language Learning</strong></div>
         <span className="version">MVP · v0.1</span>
       </header>
       <nav className="tabs" aria-label={t("navLabel")}>
         <Button className={page === "create" ? "selected" : ""} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
         <Button className={page === "reader" ? "selected" : ""} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
+        <Button className={page === "lessons" ? "selected" : ""} onClick={() => setPage("lessons")}><Library aria-hidden="true" />{t("lessonLibrary")}</Button>
         <Button className={page === "settings" ? "selected" : ""} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
       </nav>
 
-      {error && <div className="alert" role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}>×</Button></div>}
+      {error && <div className="alert" role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}><X aria-hidden="true" /></Button></div>}
 
       {page === "create" && <main>
         <Card className="panel">
@@ -1081,6 +1302,13 @@ export default function App() {
               {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
             </Button>
             {subtitleStatus && <p className="hint" role="status">{subtitleStatus}</p>}
+            {videoRecoveryUrl && <div className="actions">
+              <Button variant="outline" size="sm"
+                disabled={reloadingVideoTab || subtitleBusy || metadataBusy}
+                onClick={() => void reloadVideoReader()}>
+                {reloadingVideoTab ? subtitleUi.reloadingTab : subtitleUi.reloadTab}
+              </Button>
+            </div>}
           </>}
           {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className="hint">{t("subtitleHint")}</p>}
           <details open={subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube"}>
@@ -1132,24 +1360,33 @@ export default function App() {
                   explanation={settingsCopy.fieldHints.targetLanguage}
                   />
               </div>
-              <Select id="learning-target" value={profile.targetLanguage} onChange={event => {
-                const targetLanguage = event.target.value as LearningProfile["targetLanguage"];
-                setProfile(current => ({ ...current, targetLanguage, level: targetLanguage === "en" ? "B1" : targetLanguage === "ja" ? "N4" : "2" }));
-              }}><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option></Select>
+              <SelectField id="learning-target" ariaLabel={t("targetLanguage")}
+                value={profile.targetLanguage} onValueChange={next => {
+                  const targetLanguage = LEARNING_LANGUAGES.find(language => language === next);
+                  if (!targetLanguage) return;
+                  setProfile(current => ({
+                    ...current, targetLanguage, level: defaultLevelForTargetLanguage(targetLanguage),
+                  }));
+                }} options={LEARNING_LANGUAGES.map(language => ({
+                  value: language, label: learningLanguageName(language, uiLocale),
+                }))} />
             </div>
             <div className="settingField">
               <div className="settingHeading">
                 <label htmlFor="learning-level">{t("level")}</label>
                 <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
-                  explanation={settingsCopy.fieldHints.level}
+                  explanation={levelHint(settingsCopy, profile.targetLanguage)}
+                  items={levelOptions.map(value => {
+                    const info = settingsCopy.levels[profile.targetLanguage][value];
+                    return { value, label: info?.label ?? value, description: info?.description ?? "" };
+                  })}
                   />
               </div>
-              <Select id="learning-level" value={profile.level}
-                onChange={event => setProfile(current => ({ ...current, level: event.target.value }))}>
-                {levelOptions.map(level => <option key={level} value={level}>
-                  {level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level)}
-                </option>)}
-              </Select>
+              <SelectField id="learning-level" ariaLabel={t("level")} value={profile.level}
+                onValueChange={level => setProfile(current => ({ ...current, level }))}
+                options={levelOptions.map(level => ({
+                  value: level, label: level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
+                }))} />
             </div>
           </div>
           <div className="settingField">
@@ -1159,12 +1396,14 @@ export default function App() {
                 explanation={settingsCopy.fieldHints.instructionLanguage}
                 />
             </div>
-            <Select id="learning-explanation-language" value={profile.instructionLanguage}
-              onChange={event => setProfile(current => ({
-                ...current, instructionLanguage: event.target.value as LearningProfile["instructionLanguage"],
-              }))}>
-              <option value="zh-TW">{nativeLanguageName("zh-TW")}</option><option value="zh-CN">{nativeLanguageName("zh-CN")}</option><option value="en">{nativeLanguageName("en")}</option><option value="ja">{nativeLanguageName("ja")}</option><option value="ko">{nativeLanguageName("ko")}</option>
-            </Select>
+            <SelectField id="learning-explanation-language" ariaLabel={t("instructionLanguage")}
+              value={profile.instructionLanguage}
+              onValueChange={instructionLanguage => setProfile(current => ({
+                ...current, instructionLanguage: instructionLanguage as LearningProfile["instructionLanguage"],
+              }))}
+              options={EXPLANATION_LANGUAGES.map(value => ({
+                value, label: explanationLanguageName(value, uiLocale),
+              }))} />
           </div>
           <details className="advancedLessonSettings">
             <summary>{t("advancedLessonSettings")}</summary>
@@ -1175,14 +1414,12 @@ export default function App() {
                 explanation={settingsCopy.fieldHints.teachingMode}
                 />
             </div>
-            <Select id="learning-mode" value={profile.mode}
-              onChange={event => setProfile(current => ({
-                ...current, mode: event.target.value as LearningProfile["mode"],
-              }))}>
-              <option value="adaptive">{settingsCopy.modes.adaptive.label}</option>
-              <option value="guided">{settingsCopy.modes.guided.label}</option>
-              <option value="immersive">{settingsCopy.modes.immersive.label}</option>
-            </Select>
+            <SelectField id="learning-mode" ariaLabel={t("teachingMode")}
+              value={profile.mode}
+              onValueChange={mode => setProfile(current => ({ ...current, mode: mode as LearningProfile["mode"] }))}
+              options={(["adaptive", "guided", "immersive"] as const).map(value => ({
+                value, label: settingsCopy.modes[value].label,
+              }))} />
           </div>
           </details>
           <div className="settingField">
@@ -1226,46 +1463,35 @@ export default function App() {
 
         <Card className="panel">
           <h2>{t("generationHeading")}</h2>
-          <p className="hint">{t("currentAgent", { provider: agent.provider, model: agent.modelId || t("cliDefault") })}</p>
-          <label>{t("storageLocation")}
-            <Select value={destination.kind} onChange={event => {
-              if (event.target.value === "drive") {
-                setDestination({ kind: "drive", accountId: driveAccounts[0]?.id ?? "" });
-              } else {
-                setDestination({ kind: "local" });
-              }
-              cancelDuplicate();
-            }}>
-              <option value="local">{t("localFolder")}</option>
-              <option value="drive">{t("driveAccountOption")}</option>
-            </Select>
-          </label>
-          {destination.kind === "local" ? <>
-            <p className="hint">{t("currentFolder", { path: destination.directory ?? t("defaultFolder") })}</p>
-            <div className="actions">
-              <Button variant="outline" className="secondary" disabled={storageBusy || generating}
-                onClick={() => void chooseFolder()}>{t("chooseFolder")}</Button>
-              {destination.directory && <Button variant="ghost" size="sm"
-                onClick={() => setDestination({ kind: "local" })}>{t("useDefaultFolder")}</Button>}
+          <label>{t("storageLocation")}</label>
+          <p className="hint">{t("currentFolder", { path: destination.kind === "local"
+            ? destination.directory ?? t("defaultFolder") : t("defaultFolder") })}</p>
+          <div className="actions">
+            <Button variant="outline" className="secondary" disabled={storageBusy || generating}
+              onClick={() => void chooseFolder()}>{t("chooseFolder")}</Button>
+            {destination.kind === "local" && destination.directory && <Button variant="ghost" size="sm"
+              onClick={() => setDestination({ kind: "local" })}>{t("useDefaultFolder")}</Button>}
+          </div>
+          <p className="hint">{t("localAlways")}</p>
+          <div className="backupRow">
+            <div className="backupDescription">
+              <strong>{t("autoBackup")}</strong>
+              <p className="hint">{t("backupHint")}</p>
             </div>
-            <p className="hint">{t("driveDesktopPicker")}</p>
-          </> : <>
-            <label>{t("googleAccount")}
-              <Select value={destination.accountId} onChange={event =>
-                setDestination({ kind: "drive", accountId: event.target.value })}>
-                <option value="">{t("chooseConnected")}</option>
-                {driveAccounts.map(account => <option key={account.id} value={account.id}>{account.email}</option>)}
-              </Select>
-            </label>
-            <div className="actions">
-              <Button variant="outline" className="secondary" disabled={storageBusy || generating}
-                onClick={() => void connectDrive()}>{t("connectAnother")}</Button>
-              <Button variant="ghost" size="sm" disabled={storageBusy}
-                onClick={() => void refreshDriveAccounts()}>{t("refreshAccounts")}</Button>
-            </div>
-            <p className="hint">{t("driveUploadHint")}</p>
-            {!driveConfigured && <p className="callout">{t("oauthFirst")}</p>}
-          </>}
+            <Button role="switch" aria-checked={backup.enabled} aria-label={t("autoBackup")}
+              className="backupSwitch" disabled={storageBusy}
+              onClick={() => backup.enabled ? setBackup(current => ({ ...current, enabled: false }))
+                : void enableBackup()}><span className="backupSwitchThumb" /></Button>
+          </div>
+          {backup.enabled && <div className="backupConnection">
+            <span className="hint">{t("backupConnected", { email:
+              driveAccounts.find(account => account.id === backup.accountId)?.email ?? t("backupUnknownAccount") })}</span>
+            <Button variant="ghost" size="sm" onClick={() => setPage("settings")}>{t("manageDrive")}</Button>
+          </div>}
+          {!backup.enabled && !driveAccounts.length && driveConfigured &&
+            <p className="hint">{t("backupConnectToEnable")}</p>}
+          {driveConnectError && <p className="jobRowError" role="status">{driveConnectError}</p>}
+          {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
           {duplicateWarning && <div className="callout" role="alertdialog" aria-label={t("duplicateConfirmLabel")}>
             <strong>{t("duplicateFound", { count: duplicateWarning.matches.length })}</strong>
             <p className="hint">{t("duplicateNewVersion")}</p>
@@ -1285,9 +1511,37 @@ export default function App() {
               <Button variant="outline" size="sm" onClick={cancelDuplicate}>{t("cancelNoGeneration")}</Button>
             </div>
           </div>}
-          <Button className="primary" onClick={startGeneration} disabled={generating || checking || !cues.length || !title.trim() || (destination.kind === "drive" && !destination.accountId)}>
+          <div className="generationSummary">
+            <div className="generationSummaryHeading">
+              <strong>{t("generationSummary")}</strong>
+              <Button variant="outline" size="sm" onClick={() => {
+                setPage("settings");
+                window.requestAnimationFrame(() => {
+                  const heading = window.document.getElementById("agent-settings-heading");
+                  heading?.scrollIntoView({ block: "start" });
+                  heading?.focus({ preventScroll: true });
+                });
+              }}>{t("editAgentModel")}</Button>
+            </div>
+            <dl>
+              <div><dt>{t("generationAgentLabel")}</dt><dd>{agentDisplayName(agent.provider, selectedAgentInfo?.label)}</dd></div>
+              {agent.accountConfigDir && <div><dt>{t("agentAccount")}</dt>
+                <dd title={agent.accountConfigDir}>{selectedSavedProfile?.label ?? t("accountLegacy", { path: agent.accountConfigDir })}</dd>
+              </div>}
+              <div><dt>{t("generationModelLabel")}</dt>
+                <dd title={agent.modelId || undefined}>{modelDisplayName(agent.modelId, modelOptions, t("cliDefault"))}</dd>
+              </div>
+            </dl>
+          </div>
+          <Button className="primary" onClick={startGeneration} disabled={generating || checking || !cues.length || !title.trim()}>
+            {(generating || checking) && <span className="generationSpinner" aria-hidden="true" />}
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
+          {generating && activeJob && <div className="generationProgress" role="progressbar"
+            aria-label={t("generationProgressLabel")} aria-valuemin={0}
+            aria-valuenow={activeJob.completed} aria-valuemax={activeJob.total}>
+            <span style={{ width: (100 * activeJob.completed / activeJob.total) + "%" }} />
+          </div>}
           {generating && <Button variant="outline" className="secondary" onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
           {progress && <p className="status" role="status">{progress}</p>}
           {publishedLocation && <p className="hint">{t("publishedTo", { location: publishedLocation })}</p>}
@@ -1295,152 +1549,282 @@ export default function App() {
         <Card className="panel">
           <h2>{t("jobHistory")}</h2>
           <p className="hint">{t("jobHistoryHint")}</p>
-          <Button variant="outline" className="secondary" disabled={loadingJobs}
-            onClick={loadJobs}>{loadingJobs ? t("loading") : t("refreshJobs")}</Button>
-          {jobs.length > 0 && <div className="jobHistoryList">
-            {jobs.map(job => <div className="learningCard" key={job.id}>
-            <strong>{job.sourceTitle}</strong>
-            <p>{t("jobProgress", { provider: job.provider, status: t(jobStatusKeys[job.status]), completed: job.completed, total: job.total })}</p>
-            {job.error && <p>{job.error}</p>}
-            <div className="actions">
-              {["queued", "waiting", "failed"].includes(job.status) &&
-                <Button variant="outline" size="sm" disabled={generating}
-                  onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>}
-              {job.documentId && <>
-                <Button variant="outline" size="sm" disabled={generating}
-                  onClick={() => openSavedDocument(job.documentId!)}>{t("openLesson")}</Button>
-                {job.publication?.status !== "published" &&
-                  <Button variant="outline" size="sm" disabled={storageBusy}
-                    onClick={() => void retryPublication(job.id)}>{t("retryPublish")}</Button>}
-              </>}
-            </div>
-          </div>)}
+          <div className="jobToolbar">
+            <SelectField ariaLabel={t("jobFilterLabel")} value={jobFilter}
+              onValueChange={value => {
+                if (value === "all" || value === "active" || value === "completed") setJobFilter(value);
+                setShowAllJobs(false);
+              }} options={[
+                { value: "all", label: t("jobFilterAll") },
+                { value: "active", label: t("jobFilterActive") },
+                { value: "completed", label: t("jobFilterCompleted") },
+              ]} />
+            <Button variant="outline" size="sm" disabled={loadingJobs}
+              onClick={loadJobs}>{loadingJobs ? t("loading") : t("refreshJobs")}</Button>
+          </div>
+          <div className="jobHistoryList">
+            {visibleJobs.map(job => <div className="jobRow" key={job.id}>
+              <div className="jobRowHeading">
+                <strong title={job.sourceTitle}>{job.sourceTitle}</strong>
+                <Badge>{t(jobStatusKeys[job.status])}</Badge>
+              </div>
+              <p className="hint">{agentDisplayName(job.provider)} · {job.completed}/{job.total}
+                {job.backup && " · " + t(job.backup.status === "backed-up"
+                  ? "backupSaved" : ["pending", "uploading"].includes(job.backup.status)
+                    ? "backupProcessing" : "backupFailedMessage")}</p>
+              {job.error && <p className="jobRowError">{job.error}</p>}
+              <div className="actions">
+                {["queued", "waiting", "failed"].includes(job.status) &&
+                  <Button variant="outline" size="sm" disabled={generating}
+                    onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>}
+                {job.documentId && <>
+                  <Button variant="outline" size="sm" disabled={generating}
+                    onClick={() => openSavedDocument(job.documentId!)}>{t("openLesson")}</Button>
+                  {job.publication?.status !== "published" &&
+                    <Button variant="outline" size="sm" disabled={storageBusy}
+                      onClick={() => void retryPublication(job.id)}>{t("retryPublish")}</Button>}
+                  {job.backup && ["failed", "conflict"].includes(job.backup.status) &&
+                    <Button variant="outline" size="sm" disabled={storageBusy}
+                      onClick={() => void retryBackup(job.id)}>{t("retryBackup")}</Button>}
+                </>}
+              </div>
+            </div>)}
+          </div>
+          {filteredJobs.length > visibleJobs.length && <Button variant="ghost" size="sm"
+            onClick={() => setShowAllJobs(true)}>{t("showMoreJobs", { count: filteredJobs.length - visibleJobs.length })}</Button>}
+          {showAllJobs && filteredJobs.length > 3 && <Button variant="ghost" size="sm"
+            onClick={() => setShowAllJobs(false)}>{t("showLessJobs")}</Button>}
+        </Card>
+      </main>}
+
+      {page === "lessons" && <main>
+        <Card className="panel">
+          <h2>{t("lessonLibrary")}</h2>
+          <p className="hint">{t("lessonLibraryHint")}</p>
+          <div className="jobToolbar">
+            <SelectField ariaLabel={t("lessonFilterLabel")} value={lessonFilter}
+              onValueChange={value => {
+                if (value === "all" || value === "local" || value === "drive") setLessonFilter(value);
+              }} options={[
+                { value: "all", label: t("lessonFilterAll") },
+                { value: "local", label: t("lessonFilterLocal") },
+                { value: "drive", label: t("lessonFilterDrive") },
+              ]} />
+            <Button variant="outline" size="sm" disabled={lessonsBusy}
+              onClick={() => void loadLessons()}>{lessonsBusy ? t("loading") : t("refreshJobs")}</Button>
+          </div>
+          {catalogError && <div className="callout" role="alert">
+            <p>{catalogError}</p>
+            <Button variant="outline" size="sm" disabled={lessonsBusy}
+              onClick={() => void loadLessons()}>{t("refreshJobs")}</Button>
           </div>}
+          {lessonFilter === "drive" && !driveAccounts.length && <div className="callout">
+            <p>{t("connectDriveToBrowse")}</p>
+            <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
+              onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
+          </div>}
+          {!lessonsBusy && !catalogError && visibleLessons.length === 0 &&
+            <p className="hint">{t("lessonLibraryEmpty")}</p>}
+          <div className="lessonLibraryList">
+            {visibleLessons.map(lesson => <div className="jobRow" key={lesson.documentId}>
+              <div className="jobRowHeading"><strong title={lesson.title}>{lesson.title}</strong></div>
+              <p className="hint">{new Date(lesson.createdAt).toLocaleString(uiLocale)}
+                {lesson.local && " · " + lesson.local.targetLanguage.toUpperCase() + " · " + lesson.local.level}</p>
+              <div className="lessonRowMeta">
+                {lesson.local && <Badge>{t("localCopy")}</Badge>}
+                {lesson.drive && <Badge>{t("cloudCopy")}</Badge>}
+                {lesson.local?.backup && !lesson.drive &&
+                  <span className="hint">{t(lesson.local.backup.status === "backed-up"
+                    ? "backupSaved" : ["pending", "uploading"].includes(lesson.local.backup.status)
+                      ? "backupProcessing" : "backupFailedMessage")}</span>}
+              </div>
+              <div className="actions">
+                {lesson.local && <Button variant="outline" size="sm" disabled={generating}
+                  onClick={() => openSavedDocument(lesson.documentId)}>{t("openLesson")}</Button>}
+                {lesson.drive && !lesson.local && <Button variant="outline" size="sm"
+                  disabled={restoreBusy !== null || generating}
+                  onClick={() => void restoreLesson(lesson.drive!)}>{restoreBusy === lesson.documentId
+                    ? t("restoringLesson") : t("restoreLesson")}</Button>}
+                {lesson.drive && <Button variant="ghost" size="sm"
+                  onClick={() => void chrome.tabs.create({ url: lesson.drive!.url })}>{t("openInDrive")}</Button>}
+              </div>
+            </div>)}
+          </div>
         </Card>
       </main>}
 
       {page === "settings" && <main>
         <Card className="panel">
           <h2>{t("uiLanguage")} · {t("appearance")}</h2>
-          <label>{t("uiLanguage")}
-            <Select value={localePreference} onChange={event => {
-              const next = event.target.value;
+          <div className="uiPreferenceField">
+            <label htmlFor="ui-language-select">{t("uiLanguage")}</label>
+            <Select value={localePreference} onValueChange={next => {
               if (isLocalePreference(next)) setLocalePreference(next);
             }}>
-              <option value="auto">{t("browserLanguage")} · {nativeLanguageName(browserLocale)}</option>
-              <option value="en">{nativeLanguageName("en")}</option>
-              <option value="zh-TW">{nativeLanguageName("zh-TW")}</option>
-              <option value="zh-CN">{nativeLanguageName("zh-CN")}</option>
-              <option value="ja">{nativeLanguageName("ja")}</option>
-              <option value="ko">{nativeLanguageName("ko")}</option>
+              <SelectTrigger id="ui-language-select" aria-label={t("uiLanguage")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">{t("browserLanguage")} · {nativeLanguageName(browserLocale)}</SelectItem>
+                <SelectItem value="en">{nativeLanguageName("en")}</SelectItem>
+                <SelectItem value="zh-TW">{nativeLanguageName("zh-TW")}</SelectItem>
+                <SelectItem value="zh-CN">{nativeLanguageName("zh-CN")}</SelectItem>
+                <SelectItem value="ja">{nativeLanguageName("ja")}</SelectItem>
+                <SelectItem value="ko">{nativeLanguageName("ko")}</SelectItem>
+              </SelectContent>
             </Select>
-          </label>
+          </div>
           <p className="hint">{t("uiLanguageHint")}</p>
-          <label>{t("appearance")}
-            <Select value={themePreference} onChange={event => {
-              const next = event.target.value;
+          <div className="uiPreferenceField">
+            <label htmlFor="appearance-select">{t("appearance")}</label>
+            <Select value={themePreference} onValueChange={next => {
               if (isThemePreference(next)) setThemePreference(next);
             }}>
-              <option value="system">{t("themeSystem")}</option>
-              <option value="light">{t("themeLight")}</option>
-              <option value="dark">{t("themeDark")}</option>
+              <SelectTrigger id="appearance-select" aria-label={t("appearance")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="system">{t("themeSystem")}</SelectItem>
+                <SelectItem value="light">{t("themeLight")}</SelectItem>
+                <SelectItem value="dark">{t("themeDark")}</SelectItem>
+              </SelectContent>
             </Select>
-          </label>
+          </div>
           <p className="hint">{t("appearanceHint")}</p>
         </Card>
         <Card className="panel">
-          <h2>{t("agentHeading")}</h2>
+          <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
           <p className="hint">{t("agentHint")}</p>
-          <Button variant="outline" className="secondary" onClick={checkHost}>{t("checkHost")}</Button>
-          {installed && <div className="status">
-            {agentCatalog.map(entry => entry.label + ": " + t(entry.installed ? "agentInstalled" : "agentMissing")).join(" · ")}
+          {installed && <Badge>{t(installed[agent.provider] ? "agentInstalled" : "agentMissing")}</Badge>}
+          {installed && hostVersion !== chrome.runtime.getManifest().version && <div className="callout" role="status">
+            <p>{hostVersion ? t("hostVersionMismatch", { version: hostVersion,
+              expected: chrome.runtime.getManifest().version }) : t("hostVersionUnknown")}</p>
+            <Button variant="outline" size="sm"
+              onClick={() => void chrome.tabs.create({
+                url: "https://github.com/chenghsj/immersive-language-learning/releases",
+              })}>{t("hostUpdateDownload")}</Button>
           </div>}
           <label>{t("defaultAgent")}
-            <Select value={agent.provider} onChange={event => selectAgent(event.target.value)}>
-              {agentCatalog.map(entry =>
-                <option key={entry.id} value={entry.id}>{entry.label}{installed && !entry.installed ? t("agentNotInstalled") : ""}</option>
-              )}
-            </Select>
+            <SelectField ariaLabel={t("defaultAgent")} value={agent.provider}
+              onValueChange={selectAgent}
+              options={agentCatalog.map(entry => ({
+                value: entry.id,
+                label: agentDisplayName(entry.id, entry.label) +
+                  (installed && !entry.installed ? t("agentNotInstalled") : ""),
+              }))} />
           </label>
-          {selectedAgentInfo?.supportsAccountProfiles ? <>
-            <label>{t("agentAccount")}
-              <Select value={selectedSavedProfile?.id ?? (agent.accountConfigDir ? "__legacy__" : "")}
-                onChange={event => chooseAgentProfile(event.target.value)}>
-                <option value="">{t("accountDefault")}</option>
-                {agent.accountConfigDir && !selectedSavedProfile &&
-                  <option value="__legacy__">{t("accountLegacy", { path: agent.accountConfigDir })}</option>}
-                {savedAgentProfiles.filter(profile => profile.provider === agent.provider).map(profile =>
-                  <option key={profile.id} value={profile.id}>{profile.label}</option>)}
-              </Select>
-            </label>
-            <p className="hint">{t("accountFolderHint")}</p>
-            <label>{t("profileName")}
-              <Input value={draftProfileName} onChange={event => setDraftProfileName(event.target.value)}
-                placeholder={t("profileNamePlaceholder")} />
-            </label>
-            <label>{t("accountFolder")}
-              <Input value={draftProfileDir} onChange={event => setDraftProfileDir(event.target.value)}
-                placeholder={t("accountFolderPlaceholder")} />
-            </label>
-            <div className="actions">
-              <Button variant="outline" className="secondary"
-                disabled={profileBusy || installed === null || !draftProfileName.trim() || !draftProfileDir.trim()}
-                onClick={() => void saveProfile()}>{t("saveProfile")}</Button>
-              {selectedSavedProfile && <Button variant="outline" className="secondary"
-                disabled={profileBusy || installed === null}
-                onClick={() => void removeProfile()}>{t("removeProfile")}</Button>}
+          {selectedAgentInfo?.supportsAccountProfiles && <section className="agentProfileSection">
+            <div className="agentProfileHeading">
+              <strong>{t("useOtherCliAccount")}</strong>
+              <SettingInfo label={t("useOtherCliAccount")} infoLabel={settingsCopy.infoLabel}
+                explanation={t("agentProfileInfo")} />
             </div>
-            {profileStatus && <p className="hint" role="status">{profileStatus}</p>}
-          </> : <p className="hint">{t("agentProfileUnsupported")}</p>}
+            {(savedAgentProfiles.some(item => item.provider === agent.provider) || !!agent.accountConfigDir) &&
+              <label>{t("agentAccount")}
+                <SelectField ariaLabel={t("agentAccount")}
+                  value={selectedSavedProfile?.id ?? (agent.accountConfigDir ? "__legacy__" : "")}
+                  onValueChange={chooseAgentProfile}
+                  options={[
+                    { value: "", label: t("accountDefault") },
+                    ...(agent.accountConfigDir && !selectedSavedProfile
+                      ? [{ value: "__legacy__", label: t("accountLegacy", { path: agent.accountConfigDir }) }] : []),
+                    ...savedAgentProfiles.filter(item => item.provider === agent.provider)
+                      .map(item => ({ value: item.id, label: item.label })),
+                  ]} />
+              </label>}
+            <details className="agentProfileAdvanced">
+              <summary>{t("manageAgentProfiles")}</summary>
+              <p className="hint">{t("accountFolderHint")}</p>
+              <label>{t("profileName")}
+                <Input value={draftProfileName} onChange={event => setDraftProfileName(event.target.value)}
+                  placeholder={t("profileNamePlaceholder")} />
+              </label>
+              <label>{t("accountFolder")}
+                <Input value={draftProfileDir} onChange={event => setDraftProfileDir(event.target.value)}
+                  placeholder={t("accountFolderPlaceholder")} />
+              </label>
+              <div className="actions">
+                <Button variant="outline" size="sm"
+                  disabled={profileBusy || installed === null || !draftProfileName.trim() || !draftProfileDir.trim()}
+                  onClick={() => void saveProfile()}>{t("saveProfile")}</Button>
+                {selectedSavedProfile && <Button variant="outline" size="sm"
+                  disabled={profileBusy || installed === null}
+                  onClick={() => void removeProfile()}>{t("removeProfile")}</Button>}
+              </div>
+              {profileStatus && <p className="hint" role="status">{profileStatus}</p>}
+            </details>
+          </section>}
           <label>{t("defaultModel")}
-            <Select disabled={modelBusy} value={modelSelection} onChange={event => {
-              const value = event.target.value;
-              if (value === "__custom__") {
-                setCustomModelMode(true);
-                updateAgent({ ...agent, modelId: "" });
-              } else {
-                setCustomModelMode(false);
-                updateAgent({ ...agent, modelId: value });
-              }
-            }}>
-              <option value="">{t("cliDefault")}</option>
-              {modelOptions.map(model => <option key={model.id} value={model.id}>
-                {model.label === model.id ? model.id : model.label + " · " + model.id}
-              </option>)}
-              <option value="__custom__">{t("customModel")}</option>
-            </Select>
+            <SelectField ariaLabel={t("defaultModel")} disabled={modelBusy} value={modelSelection}
+              onValueChange={value => {
+                if (value === "__custom__") {
+                  setCustomModelMode(true);
+                  updateAgent({ ...agent, modelId: "" });
+                } else {
+                  setCustomModelMode(false);
+                  updateAgent({ ...agent, modelId: value });
+                }
+              }}
+              options={[
+                { value: "", label: t("cliDefault") },
+                ...modelOptions.map(model => ({
+                  value: model.id,
+                  label: model.label === model.id ? model.id : model.label + " · " + model.id,
+                })),
+                { value: "__custom__", label: t("customModel") },
+              ]} />
           </label>
           {modelSelection === "__custom__" && <label>{t("modelId")}
             <Input value={agent.modelId} onChange={event => updateAgent({ ...agent, modelId: event.target.value })}
               placeholder={t("modelPlaceholder")} />
           </label>}
-          <div className="actions"><Button variant="outline" className="secondary"
-            disabled={modelBusy || installed === null} onClick={() => {
-              setInstalled(current => current ? { ...current } : current);
-            }}>{modelBusy ? t("modelsLoading") : t("refreshModels")}</Button></div>
           {modelNotice && <p className="hint" role="status">{modelNotice}</p>}
-          <div className="callout">{t("futureFeaturesDrive")}</div>
+          <details className="agentProfileAdvanced">
+            <summary>{t("agentDiagnostics")}</summary>
+            <div className="actions">
+              <Button variant="outline" size="sm" onClick={checkHost}>{t("checkHost")}</Button>
+              <Button variant="outline" size="sm" disabled={modelBusy || installed === null}
+                onClick={() => setInstalled(current => current ? { ...current } : current)}>
+                {modelBusy ? t("modelsLoading") : t("refreshModels")}
+              </Button>
+            </div>
+          </details>
         </Card>
         <Card className="panel">
           <h2>{t("driveAccountHeading")}</h2>
           <p className="hint">{t("driveOauthHelp")}</p>
-          <p className="hint">{t("oauthStatus", { status: t(driveConfigured ? "oauthConfigured" : "oauthNotConfigured") })}</p>
-          <label>Google Desktop OAuth Client ID
-            <Input value={oauthClientId} onChange={event => setOauthClientId(event.target.value)}
-              placeholder="123456789-xxx.apps.googleusercontent.com" />
-          </label>
-          <label>{t("desktopSecret")}
-            <Input type="password" value={oauthClientSecret}
-              onChange={event => setOauthClientSecret(event.target.value)}
-              placeholder={t("secretPlaceholder")} />
-          </label>
-          <Button variant="outline" className="secondary" disabled={storageBusy || !oauthClientId.trim()}
-            onClick={() => void configureDrive()}>{t("saveOauth")}</Button>
+          {!driveConfigured && <p className="callout">{t("oauthFirst")}</p>}
+          {driveAccounts.length === 1 && <div className="driveSingleAccount">
+            <div><strong>{driveAccounts[0].email}</strong><span className="hint">{t("backupAccount")}</span></div>
+            <Badge>{t("driveConnectedStatus")}</Badge>
+          </div>}
+          {driveAccounts.length > 1 && <label>{t("backupAccount")}
+            <SelectField ariaLabel={t("backupAccount")} value={backup.accountId ?? driveAccounts[0].id}
+              onValueChange={accountId => setBackup(current => ({ ...current, accountId }))}
+              options={driveAccounts.map(account => ({ value: account.id, label: account.email }))} />
+          </label>}
           <div className="actions">
-            <Button variant="outline" className="secondary" disabled={storageBusy || !driveConfigured}
-              onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
+            <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
+              onClick={() => void connectDrive()}>{driveAccounts.length ? t("connectAnother") : t("connectGoogle")}</Button>
           </div>
-          {driveAccounts.map(account => <p className="hint" key={account.id}>{t("connectedAccount", { email: account.email })}</p>)}
+          {driveAccounts.length > 0 && <details className="agentProfileAdvanced">
+            <summary>{t("manageDrive")} · {driveAccounts.length}</summary>
+            <div className="driveAccountList">
+              {driveAccounts.map(account => <div className="driveAccountItem" key={account.id}>
+                <span title={account.email}>{account.email}</span>
+                <Button variant="ghost" size="sm" disabled={storageBusy}
+                  onClick={() => void disconnectDrive(account.id)}>{t("disconnectGoogle")}</Button>
+              </div>)}
+            </div>
+          </details>}
+          {driveAccounts.length > 0 && <section className="driveExistingBackup">
+            <strong>{t("backupExisting")}</strong>
+            <p className="hint">{t("backupExistingHint")}</p>
+            <Button variant="outline" size="sm" disabled={storageBusy || !driveAccounts.length}
+              onClick={() => void backupExistingLessons()}>{t("backupExisting")}</Button>
+          </section>}
+          {driveConnectError && <p className="jobRowError" role="status">{driveConnectError}</p>}
+          {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
         </Card>
       </main>}
 
@@ -1475,23 +1859,30 @@ export default function App() {
               </div>}
             <div className="twoColumns">
               <label>{t("repeatCount")}
-                <Select value={repeat} onChange={event => setRepeat(event.target.value as RepeatOption)}>
-                  <option value="2">{t("repeatTwice")}</option><option value="3">{t("repeatThrice")}</option><option value="5">{t("repeatFive")}</option><option value="infinite">{t("repeatForever")}</option>
-                </Select>
+                <SelectField ariaLabel={t("repeatCount")} value={repeat}
+                  onValueChange={value => setRepeat(value as RepeatOption)}
+                  options={[
+                    { value: "2", label: t("repeatTwice") },
+                    { value: "3", label: t("repeatThrice") },
+                    { value: "5", label: t("repeatFive") },
+                    { value: "infinite", label: t("repeatForever") },
+                  ]} />
               </label>
               <label>{t("repeatDelay")}
-                <Select value={delay} onChange={event => setDelay(Number(event.target.value))}>
-                  {[0, 1, 2, 3].map(seconds => <option key={seconds} value={seconds}>{t("seconds", { count: seconds })}</option>)}
-                </Select>
+                <SelectField ariaLabel={t("repeatDelay")} value={delay}
+                  onValueChange={value => setDelay(Number(value))}
+                  options={[0, 1, 2, 3].map(seconds => ({
+                    value: seconds, label: t("seconds", { count: seconds }),
+                  }))} />
               </label>
             </div>
             {readerAdapter.setPlaybackRate && <div className="twoColumns">
               <label>{t("playbackRateLabel")}
-                <Select value={playbackRate} disabled={rateApplying}
-                  onChange={event => setPlaybackRate(Number(event.target.value))}>
-                  {[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map(rate =>
-                    <option value={rate} key={rate}>{rate}×</option>)}
-                </Select>
+                <SelectField ariaLabel={t("playbackRateLabel")} value={playbackRate} disabled={rateApplying}
+                  onValueChange={value => setPlaybackRate(Number(value))}
+                  options={[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map(rate => ({
+                    value: rate, label: rate + "×",
+                  }))} />
               </label>
               <div className="actions" style={{ alignSelf: "center" }}>
                 <Button variant="outline" className="secondary" disabled={rateApplying}

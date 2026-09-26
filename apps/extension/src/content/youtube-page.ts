@@ -1,3 +1,4 @@
+import { LEARNING_LANGUAGES } from "@immersive/core";
 import {
   allowedYouTubeCaptionUrl, chooseYouTubeCaptionTrack,
   observedYouTubeCaptionUrls, parsePlayerYouTubeCaptionResponse,
@@ -10,6 +11,8 @@ import {
   const REQUEST = "immersive-learning:youtube:caption-request";
   const RESPONSE = "immersive-learning:youtube:caption-response";
   const BRIDGE_VERSION = "native-caption-capture-v1";
+  const HEALTH_REQUEST = "immersive-learning:youtube:bridge-health-request";
+  const HEALTH_RESPONSE = "immersive-learning:youtube:bridge-health-response";
   type CaptionRequest = {
     source: "immersive-learning"; id: string; videoId: string; language: string;
   };
@@ -18,6 +21,16 @@ import {
   const page = window as Page;
   if (page.__immersiveYouTubeCaptions) return;
   page.__immersiveYouTubeCaptions = true;
+
+  // Return immediately before any transcript fetch, even while the player loads.
+  window.addEventListener(HEALTH_REQUEST, event => {
+    const request = (event as CustomEvent<{ source?: string; id?: string }>).detail;
+    if (request?.source !== "immersive-learning" ||
+      typeof request.id !== "string" || request.id.length > 100) return;
+    window.dispatchEvent(new CustomEvent(HEALTH_RESPONSE, {
+      detail: { source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION },
+    }));
+  });
 
   function currentVideoId(): string | null {
     if (!["www.youtube.com", "youtube.com", "m.youtube.com"].includes(location.hostname) ||
@@ -118,8 +131,8 @@ import {
 
   async function getCurrentCaptions(request: CaptionRequest): Promise<{ text: string; language: string }> {
     if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
-    if (!["en", "ja", "ko"].includes(request.language)) {
-      throw new Error("Choose an English, Japanese or Korean learning language.");
+    if (!LEARNING_LANGUAGES.some(language => language === request.language)) {
+      throw new Error("Unsupported learning language.");
     }
     let tracks = tracksForVideo(request.videoId);
     // The watch URL can become active before its player has loaded caption metadata.
