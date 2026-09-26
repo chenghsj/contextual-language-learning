@@ -37,7 +37,10 @@ test("named CLI account profiles save paths only, enforce home containment and n
     const content = await readFile(registry, "utf8");
     assert.ok(!content.includes("auth.json"));
     if (process.platform !== "win32") assert.equal((await stat(registry)).mode & 0o777, 0o600);
-    assert.deepEqual(await removeAgentProfile(saved[0].id), []);
+    const afterBuiltInRemoval = await removeAgentProfile(saved[0].id);
+    const customProfile = afterBuiltInRemoval.find(item => item.provider === "custom-profiled");
+    assert.ok(customProfile);
+    assert.deepEqual(await removeAgentProfile(customProfile.id), []);
     assert.equal((await stat(profile)).isDirectory(), true);
   } finally {
     for (const [key, value] of Object.entries(previous)) {
