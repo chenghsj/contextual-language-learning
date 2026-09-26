@@ -258,12 +258,19 @@ export function ContextualSceneReader({
     setDraftRange(null);
   }
 
-  function openCalibration(): void {
-    setCalibrationStage("start");
-    setDraftStartMs(null);
-    setDraftRange(null);
-    setStatus("");
-    setCalibrationOpen(true);
+  async function openCalibration(): Promise<void> {
+    if (busyRef.current) return;
+    markBusy(true);
+    try {
+      await stopPreviousLoop();
+      setCalibrationStage("start");
+      setDraftStartMs(null);
+      setDraftRange(null);
+      setStatus("");
+      setCalibrationOpen(true);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : copy.unavailable);
+    } finally { markBusy(false); }
   }
 
   /** Capture real player time; persist nothing before Done. */
@@ -534,7 +541,7 @@ export function ContextualSceneReader({
       <Button size="sm" variant="ghost" className="mt-[3px] flex min-h-[30px] w-full justify-center text-[11px] text-muted-foreground"
         aria-expanded={calibrationOpen} aria-controls="contextual-inline-calibration"
         disabled={busy || !selectedRange || !adapter.status}
-        onClick={() => calibrationOpen ? cancelCalibration() : openCalibration()}>
+        onClick={() => calibrationOpen ? cancelCalibration() : void openCalibration()}>
         <SlidersHorizontal aria-hidden="true" />{copy.adjustPosition}
         <ChevronDown aria-hidden="true" className={calibrationOpen ? "rotate-180" : ""} />
       </Button>
