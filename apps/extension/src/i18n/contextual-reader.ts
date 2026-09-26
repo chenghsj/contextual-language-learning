@@ -2,7 +2,7 @@ import type { UiLocale } from "./messages";
 
 const en = {
   scene: "Scene", chooseScene: "Jump to scene", previousScene: "Previous scene", nextScene: "Next scene",
-  dialogue: "Original video dialogue", playScene: "Play whole conversation",
+  dialogue: "Original video dialogue", playScene: "Play whole conversation",loopScene:"Loop scene",stopSceneLoop:"Stop scene loop",sceneLoopStarted:"Repeating the whole scene.",sceneLoopStopped:"Scene repeat stopped.",
   focus: "Focus expression", context: "Understand from the video context",
   words: "Words and usage", examples: "Contextual examples", aiExamples: "AI-created examples, not original video captions",
   anotherExamples: "Show {count} more contexts", hideExamples: "Show fewer contexts",
@@ -24,7 +24,7 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
   en,
   "zh-TW": {
     scene:"場景",chooseScene:"直接選擇場景",previousScene:"上一場景",nextScene:"下一場景",
-    dialogue:"影片原始對話",playScene:"播放完整對話",focus:"重點表達",context:"從影片上下文理解",
+    dialogue:"影片原始對話",playScene:"播放完整對話",loopScene:"循環場景",stopSceneLoop:"停止場景循環",sceneLoopStarted:"正在循環完整場景。",sceneLoopStopped:"已停止場景循環。",focus:"重點表達",context:"從影片上下文理解",
     words:"單字與用法",examples:"情境例句",aiExamples:"AI 延伸例句，非影片原始字幕",
     anotherExamples:"再看 {count} 個情境",hideExamples:"收起其他情境",
     translation:"顯示翻譯",hideTranslation:"隱藏翻譯",
@@ -40,7 +40,7 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
   },
   "zh-CN": {
     scene:"场景",chooseScene:"直接选择场景",previousScene:"上一场景",nextScene:"下一场景",
-    dialogue:"视频原始对话",playScene:"播放完整对话",focus:"重点表达",context:"从视频上下文理解",
+    dialogue:"视频原始对话",playScene:"播放完整对话",loopScene:"循环场景",stopSceneLoop:"停止场景循环",sceneLoopStarted:"正在循环整个场景。",sceneLoopStopped:"已停止场景循环。",focus:"重点表达",context:"从视频上下文理解",
     words:"单词与用法",examples:"情境例句",aiExamples:"AI 延伸例句，并非视频原始字幕",
     anotherExamples:"再看 {count} 个情境",hideExamples:"收起其他情境",
     translation:"显示翻译",hideTranslation:"隐藏翻译",
@@ -56,7 +56,7 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
   },
   ja: {
     scene:"シーン",chooseScene:"シーンを選択",previousScene:"前のシーン",nextScene:"次のシーン",
-    dialogue:"動画の元の会話",playScene:"会話全体を再生",focus:"重要な表現",context:"動画の文脈から理解する",
+    dialogue:"動画の元の会話",playScene:"会話全体を再生",loopScene:"シーンを繰り返す",stopSceneLoop:"シーンの繰り返しを停止",sceneLoopStarted:"シーン全体を繰り返し再生中。",sceneLoopStopped:"シーンの繰り返しを停止しました。",focus:"重要な表現",context:"動画の文脈から理解する",
     words:"単語と用法",examples:"場面別の例文",aiExamples:"AI が作成した例文（元の動画には含まれません）",
     anotherExamples:"別の場面を {count} 件表示",hideExamples:"別の場面を閉じる",
     translation:"翻訳を表示",hideTranslation:"翻訳を隠す",
@@ -72,7 +72,7 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
   },
   ko: {
     scene:"장면",chooseScene:"장면 선택",previousScene:"이전 장면",nextScene:"다음 장면",
-    dialogue:"동영상 원본 대화",playScene:"전체 대화 재생",focus:"핵심 표현",context:"동영상 맥락으로 이해하기",
+    dialogue:"동영상 원본 대화",playScene:"전체 대화 재생",loopScene:"장면 반복",stopSceneLoop:"장면 반복 중지",sceneLoopStarted:"전체 장면을 반복 재생 중입니다.",sceneLoopStopped:"장면 반복을 중지했습니다.",focus:"핵심 표현",context:"동영상 맥락으로 이해하기",
     words:"단어와 용법",examples:"상황별 예문",aiExamples:"AI가 생성한 예문이며 원본 영상 자막이 아닙니다",
     anotherExamples:"다른 상황 {count}개 더 보기",hideExamples:"다른 상황 접기",
     translation:"번역 보기",hideTranslation:"번역 숨기기",
