@@ -1,14 +1,14 @@
 import { cn } from "../lib/utils";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Play, Repeat2, SlidersHorizontal, Square, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Play, Repeat2, SlidersHorizontal, Square } from "lucide-react";
 import { formatTime, type LearningDocument, type SubtitleCue } from "@immersive/core";
 import type { UiLocale } from "../i18n/messages";
 import { contextualReaderMessages, contextualText } from "../i18n/contextual-reader";
 import { sceneReaderMessages } from "../i18n/scene-reader";
 import { playingCueAt } from "../video/cue-follow";
 import {
-  adjustLoopBoundary, formatLoopTimestamp, readLoopWindows,
-  type LoopBoundary, type LoopWindow,
+  formatLoopTimestamp, isLoopWindow, readLoopWindows,
+  type LoopWindow,
 } from "../video/loop-window";
 import { cuePlaybackStart, cuePlaybackWindow, openOrFocusVideoTab } from "../video/tab";
 import type { VideoAdapter } from "../video/types";
@@ -30,11 +30,12 @@ type Props = {
   setPlaybackRate: (rate: number) => void;
   onError: (message: string) => void;
   onDownload: (format: "json" | "md") => void;
+  onSaveRange: (cueId: string, range: LoopWindow | null) => Promise<void>;
 };
 
 /** V3 is readable as one cohesive scene. V1/V2 keep their original reader. */
 export function ContextualSceneReader({
-  document, adapter, locale, repeat, setRepeat, delay, setDelay, playbackRate, setPlaybackRate, onError, onDownload,
+  document, adapter, locale, repeat, setRepeat, delay, setDelay, playbackRate, setPlaybackRate, onError, onDownload, onSaveRange,
 }: Props) {
   const copy = contextualReaderMessages[locale];
   const timing = sceneReaderMessages[locale];
@@ -52,7 +53,9 @@ export function ContextualSceneReader({
   const [loopRanges, setLoopRanges] = useState<Record<string, LoopWindow>>({});
   const [calibrationOpen, setCalibrationOpen] = useState(false);
   const calibrationOpenRef = useRef(false);
-  const calibrationRef = useRef<HTMLDialogElement>(null);
+  const [calibrationStage, setCalibrationStage] = useState<"start" | "end" | "confirm">("start");
+  const [draftStartMs, setDraftStartMs] = useState<number | null>(null);
+  const [draftRange, setDraftRange] = useState<LoopWindow | null>(null);
   const [playbackCueId, setPlaybackCueId] = useState<string | null>(null);
   const [playbackKnown, setPlaybackKnown] = useState(false);
   const [status, setStatus] = useState("");
@@ -83,7 +86,8 @@ export function ContextualSceneReader({
         const index = document.sections.findIndex(item => item.id === progress.sceneId);
         if (index >= 0) setSceneIndex(index);
       }
-      setLoopRanges(readLoopWindows(saved[loopKey], document.cues.map(cue => cue.id)));
+      setLoopRanges(readLoopWindows(document.playbackOverrides === undefined
+        ? saved[loopKey] : document.playbackOverrides, document.cues.map(cue => cue.id)));
       if (progress?.selectionByScene && typeof progress.selectionByScene === "object") {
         const valid = Object.fromEntries(document.sections.flatMap(item => {
           const id = progress.selectionByScene?.[item.id];
@@ -105,12 +109,13 @@ export function ContextualSceneReader({
 
   useEffect(() => { loopingCueRef.current = loopingCueId; }, [loopingCueId]);
   useEffect(() => { calibrationOpenRef.current = calibrationOpen; }, [calibrationOpen]);
+  // A scene/cue change must discard an unfinished calibration draft.
   useEffect(() => {
-    const dialog = calibrationRef.current;
-    if (!dialog) return;
-    if (calibrationOpen && !dialog.open) dialog.showModal();
-    if (!calibrationOpen && dialog.open) dialog.close();
-  }, [calibrationOpen]);
+    setCalibrationOpen(false);
+    setCalibrationStage("start");
+    setDraftStartMs(null);
+    setDraftRange(null);
+  }, [scene.id, selectedCueId]);
 
   /** Native video status—not the last clicked line—drives the highlighted subtitle. */
   useEffect(() => {
@@ -246,35 +251,65 @@ export function ContextualSceneReader({
     }
   }
 
-  /** A/B edits use real video time and invalidate the old loop before saving a new window. */
-  async function updateRange(boundary: LoopBoundary | "reset", position: number | "current" = 0): Promise<void> {
-    if (busyRef.current || !selectedCue || !selectedRange) return;
+  function cancelCalibration(): void {
+    setCalibrationOpen(false);
+    setCalibrationStage("start");
+    setDraftStartMs(null);
+    setDraftRange(null);
+  }
+
+  function openCalibration(): void {
+    setCalibrationStage("start");
+    setDraftStartMs(null);
+    setDraftRange(null);
+    setStatus("");
+    setCalibrationOpen(true);
+  }
+
+  /** Capture real player time; persist nothing before Done. */
+  async function captureBoundary(boundary: "start" | "end"): Promise<void> {
+    if (busyRef.current || !sourceUrl || !adapter.status || !selectedCue) return;
     markBusy(true);
     try {
-      let next: LoopWindow | null = null;
-      if (boundary !== "reset") {
-        let target = position;
-        if (target === "current") {
-          if (!sourceUrl || !adapter.status) { setStatus(timing.positionUnavailable); return; }
-          const playback = await adapter.status(sourceUrl);
-          if (typeof playback.currentMs !== "number" || !Number.isFinite(playback.currentMs)) {
-            setStatus(timing.positionUnavailable);
-            return;
-          }
-          target = playback.currentMs;
-        }
-        next = adjustLoopBoundary(selectedRange, boundary, target as number);
-        if (!next) { setStatus(timing.invalidLoopRange); return; }
+      const playback = await adapter.status(sourceUrl);
+      if (typeof playback.currentMs !== "number" || !Number.isFinite(playback.currentMs) ||
+          playback.currentMs < 0) {
+        setStatus(timing.positionUnavailable);
+        return;
       }
+      const position = Math.round(playback.currentMs / 100) * 100;
+      if (boundary === "start") {
+        setDraftStartMs(position);
+        setCalibrationStage("end");
+      } else {
+        if (draftStartMs === null) return;
+        const next = { startMs: draftStartMs, endMs: position };
+        if (!isLoopWindow(next)) { setStatus(timing.invalidLoopRange); return; }
+        setDraftRange(next);
+        setCalibrationStage("confirm");
+      }
+      setStatus("");
+    } catch (error) {
+      onError(error instanceof Error ? error.message : copy.unavailable);
+    } finally { markBusy(false); }
+  }
+
+  async function finishCalibration(): Promise<void> {
+    if (busyRef.current || !selectedCue || calibrationStage !== "confirm") return;
+    if (draftRange && !isLoopWindow(draftRange)) { setStatus(timing.invalidLoopRange); return; }
+    markBusy(true);
+    const cueId = selectedCue.id;
+    try {
       await stopPreviousLoop();
-      const id = selectedCue.id;
+      await onSaveRange(cueId, draftRange);
       setLoopRanges(previous => {
         const updated = { ...previous };
-        if (next) updated[id] = next;
-        else delete updated[id];
+        if (draftRange) updated[cueId] = draftRange;
+        else delete updated[cueId];
         return updated;
       });
-      setStatus(next ? timing.loopRangeSaved : timing.loopRangeReset);
+      setStatus(draftRange ? timing.loopRangeSaved : timing.loopRangeReset);
+      cancelCalibration();
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally { markBusy(false); }
