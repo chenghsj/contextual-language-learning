@@ -4,6 +4,7 @@ export const AGENT_CONFIG_PROMPT = "You are configuring YOUR OWN installed CLI A
 
 /** Accept one JSON object, optionally wrapped in a JSON code fence. Never evaluate AI text. */
 export function parseAgentImport(text: string): CustomAgentImport {
+  if (text.length > 32_000) throw new Error("Agent configuration JSON is too large.");
   const raw = text.trim()
     .replace(/^\x60{3}(?:json)?\s*\r?\n/i, "")
     .replace(/\r?\n\x60{3}\s*$/, "").trim();

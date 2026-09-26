@@ -8,6 +8,6 @@ export function assertAgentMayBeRemoved(
     ["queued", "running", "waiting", "failed"].includes(job.status));
   if (blocked) {
     throw new Error("This Agent has an active or resumable job (" + blocked.status +
-      "). Finish or explicitly cancel the job before removing its configuration.");
+      "). Finish or explicitly cancel the job before changing or removing its configuration.");
   }
 }

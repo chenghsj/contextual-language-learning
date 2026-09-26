@@ -120,6 +120,15 @@ async function handle(input: unknown): Promise<void> {
       case "customAgentSave": {
         // An edit retains the Host-owned ID. Removing profile support must not strand stored environments.
         const previous = await getCustomAgent(request.config.id);
+        // A checkpoint stores its Agent ID. Do not change execution semantics beneath a resumable job.
+        const executionFields = ["executable", "args", "promptMode", "outputMode",
+          "modelArgument", "modelListArgs", "profileEnvVar"] as const;
+        const executionChanged = executionFields.some(key =>
+          JSON.stringify(previous[key]) !== JSON.stringify(request.config[key]));
+        if (executionChanged) {
+          await manager.recoverInterrupted();
+          assertAgentMayBeRemoved(request.config.id, await storage.jobs.list(Number.MAX_SAFE_INTEGER));
+        }
         if (previous.profileEnvVar && !request.config.profileEnvVar &&
             (await listAgentProfiles()).some(profile => profile.provider === request.config.id)) {
           throw new Error("Remove this Agent's saved account environments before removing profile support.");

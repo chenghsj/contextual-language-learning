@@ -19,4 +19,5 @@ test("import rejects AI-supplied IDs, unknown fields and invalid placeholders", 
   assert.throws(() => parseAgentImport(JSON.stringify({...config,id:"custom-"+"a".repeat(24)})),/Unrecognized/);
   assert.throws(() => parseAgentImport(JSON.stringify({...config,args:["exec"]})),/requires/);
   assert.throws(() => parseAgentImport(JSON.stringify({error:"Cannot verify CLI configuration"})),/Cannot verify/);
+  assert.throws(() => parseAgentImport(" ".repeat(32_001)),/too large/);
 });
