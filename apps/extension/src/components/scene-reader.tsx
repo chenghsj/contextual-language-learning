@@ -1,4 +1,3 @@
-import { tw } from "../utility-classes";
 import React, { useEffect, useMemo, useState } from "react";
 import { ExternalLink, Play, Repeat2, SlidersHorizontal, Square } from "lucide-react";
 import { nextStudyStep, readSceneProgress, STUDY_STEPS, type StudyStep } from "./scene-navigation";
@@ -273,32 +272,32 @@ export function SceneReader({
 
   function renderOriginal(line: SubtitleCue, index: number) {
     const translation = scene.translations.find(item => item.cueId === line.id);
-    return <div className={tw("sceneUtterance")} key={line.id}>
-      <span className={tw("sceneLineNumber")}>{index + 1}</span>
+    return <div className="grid grid-cols-[20px_minmax(0,1fr)] gap-2 p-[9px] not-first:border-t not-first:border-border [&>div]:min-w-0 [&>div]:wrap-anywhere [&_p]:mb-1 [&_p]:text-[13px] [&_p]:whitespace-normal [&_p]:wrap-anywhere" key={line.id}>
+      <span className="text-[11px] text-muted-foreground">{index + 1}</span>
       <div>
         <p lang={document.profile.targetLanguage}>{line.originalText}</p>
         {translationVisible
-          ? <p className={tw("sceneTranslation")}>{translation?.text}</p> : null}
+          ? <p className="text-xs text-muted-foreground">{translation?.text}</p> : null}
       </div>
     </div>;
   }
 
-  return <div className={tw("sceneReader")}>
-    <Card className={tw("panel")}>
-      <div className={tw("sceneHeader")}>
-        <div className={tw("sceneHeaderTitle")}>
+  return <div className="min-w-0">
+    <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0 flex-1 wrap-anywhere [&>strong]:block [&>strong]:text-sm [&_strong]:wrap-anywhere [&_[data-ui=hint]]:block [&_[data-ui=hint]]:my-[2px]">
           <strong>{document.source.title}</strong>
-          <span className={tw("hint")}>{document.profile.targetLanguage.toUpperCase()} · {document.profile.level} · {completedIds.length}/{document.sections.length} {c.completed}</span>
+          <span className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level} · {completedIds.length}/{document.sections.length} {c.completed}</span>
         </div>
-        <div className={tw("sceneExport")}>
+        <div className="flex gap-[5px]">
           <Button variant="outline" size="sm" onClick={() => onDownload("json")}>JSON</Button>
           <Button variant="outline" size="sm" onClick={() => onDownload("md")}>MD</Button>
         </div>
       </div>
-      <div className={tw("sceneTabs")} role="tablist" aria-label={c.scene}>
+      <div className="mt-3 grid min-w-0 grid-cols-2 gap-1 rounded-[var(--radius)] bg-muted p-1" role="tablist" aria-label={c.scene}>
         {(["learn", "review"] as const).map(tab =>
           <Button key={tab} role="tab" aria-selected={mode === tab}
-            className={tw(mode === tab ? "sceneTabButton selected" : "sceneTabButton")}
+            className={mode === tab ? "w-full min-w-0 bg-transparent px-[2px] py-[6px] text-xs text-muted-foreground hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "w-full min-w-0 bg-transparent px-[2px] py-[6px] text-xs text-muted-foreground hover:bg-transparent"}
             onClick={() => { setMode(tab); setStatus(""); }}>
             {c[tab]}
           </Button>)}
@@ -306,13 +305,13 @@ export function SceneReader({
     </Card>
 
     {mode === "learn" && <>
-      <Card className={tw("panel")}>
-        <div className={tw("sceneHeading")}>
-          <span className={tw("chip")}>{c.scene} {sceneIndex + 1} / {document.sections.length}</span>
-          <span className={tw("time")}>{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
+      <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="inline-flex w-fit items-center rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_40%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_12%,var(--card))] px-2 py-[3px] text-[11px] font-[650] text-foreground" data-ui="chip">{c.scene} {sceneIndex + 1} / {document.sections.length}</span>
+          <span className="text-[11px] text-muted-foreground tabular-nums">{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
         </div>
-        <div className={tw("scenePicker")}>
-          <label className={tw("labelBase")} htmlFor="study-scene-picker">{c.chooseScene}</label>
+        <div className="my-[12px_14px] grid min-w-0 gap-[6px] [&_label]:m-0 [&_label]:text-xs [&_label]:font-semibold [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=select-trigger]]:text-xs">
+          <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="study-scene-picker">{c.chooseScene}</label>
           <SelectField id="study-scene-picker" ariaLabel={c.chooseScene}
             value={String(sceneIndex)} disabled={busy}
             onValueChange={value => selectScene(Number(value))}
@@ -324,34 +323,34 @@ export function SceneReader({
             }))} />
         </div>
         <h2>{scene.title}</h2>
-        <div className={tw("sceneQuickPlay")}>
+        <div className="my-[6px_12px] [&>button]:h-auto [&>button]:min-h-9 [&>button]:px-3 [&>button]:py-2 [&>button]:text-xs [&>button]:font-semibold [&>.hint]:mt-[6px]">
           <Button size="sm" variant="outline" disabled={busy || !canPlay}
             onClick={() => void playScene()}>
             <Play aria-hidden="true" />{c.playScene}
           </Button>
-          {!canPlay && <p className={tw("hint")}>
+          {!canPlay && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">
             {!sourceUrl || adapter.id === "import" ? c.noVideo : c.noTime}
           </p>}
         </div>
-        <p className={tw("hint")}>{scene.context}</p>
-        <p className={tw("sceneGoal")}><strong>{c.goal}:</strong> {scene.learningGoal}</p>
-        <nav className={tw("sceneSteps")} aria-label={c.studySteps}>
+        <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{scene.context}</p>
+        <p className="rounded-[var(--radius)] bg-muted px-[11px] py-[9px] text-xs"><strong>{c.goal}:</strong> {scene.learningGoal}</p>
+        <nav className="my-[14px_8px] grid min-w-0 grid-cols-3 gap-[6px]" aria-label={c.studySteps}>
           {STUDY_STEPS.map((part, index) =>
             <Button key={part} variant={step === part ? "default" : "outline"}
               type="button" aria-pressed={step === part}
               aria-describedby={step === part ? "scene-step-hint" : undefined}
-              className={tw("sceneStepButton")}
+              className="flex h-auto min-h-[66px] min-w-0 flex-col gap-[3px] px-1 py-2 text-center leading-[1.35] whitespace-normal wrap-anywhere"
               onClick={() => selectStep(part)}>
-              <span className={tw("sceneStepNumber")} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-              <span className={tw("sceneStepLabel")}>{c[part]}</span>
+              <span className="block text-base leading-[1.1] font-[750] tabular-nums" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <span className="block text-xs leading-[1.35] font-[650]">{c[part]}</span>
             </Button>)}
         </nav>
-        <p className={tw("sceneStepHint")} id="scene-step-hint">
+        <p className="mb-[14px] min-h-9 min-w-0 text-xs leading-[1.55] text-muted-foreground wrap-anywhere" id="scene-step-hint">
           {step === "listen" ? c.listenHint : step === "understand" ? c.understandHint : c.practiceHint}
         </p>
-        <details className={tw("detailsBase sceneReadingSettings")}>
-          <summary className={tw("summaryBase")}>{c.hintLabel} · {c[hint]}</summary>
-          <div className={tw("sceneReadingControl")}>
+        <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] my-[8px_14px] px-[10px] py-2 [&>summary]:text-xs [&>summary]:leading-[1.5] [&>summary]:text-muted-foreground">
+          <summary className="cursor-pointer font-semibold">{c.hintLabel} · {c[hint]}</summary>
+          <div className="relative mt-[10px] flex min-w-0 items-center gap-2 [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:w-full [&>[data-slot=select-trigger]]:flex-1">
             <SelectField ariaLabel={c.hintLabel} value={hint} onValueChange={value => {
               setHint(value as Hint);
               setShowOriginal(null);
@@ -366,7 +365,7 @@ export function SceneReader({
           </div>
         </details>
         {step === "listen" && <>
-          {originalVisible && <div className={tw("sceneDialogue")}>
+          {originalVisible && <div className="my-[10px] overflow-hidden rounded-[var(--radius)] border border-border">
             {scene.cueIds.map(id => cues.get(id)).filter((cue): cue is SubtitleCue => !!cue)
               .map((cue, index) => renderOriginal(cue, index))}
           </div>}
@@ -375,39 +374,39 @@ export function SceneReader({
           </Button>
         </>}
         {step === "understand" && <>
-          <div className={tw("sceneDialogue")}>
+          <div className="my-[10px] overflow-hidden rounded-[var(--radius)] border border-border">
             {scene.cueIds.map(id => cues.get(id)).filter((cue): cue is SubtitleCue => !!cue)
               .map((cue, index) => renderOriginal(cue, index))}
           </div>
           <Button size="sm" variant="outline" onClick={() => setShowTranslation(current => !(current ?? hint === "bilingual"))}>
             {translationVisible ? c.hideTranslation : c.showTranslation}
           </Button>
-          {scene.vocabulary.length > 0 && <div className={tw("sceneFocus")}>
+          {scene.vocabulary.length > 0 && <div className="mt-[14px]">
             <h3>{c.focus}</h3>
-            {scene.vocabulary.map(word => <div className={tw("learningCard")} key={word.expression}>
+            {scene.vocabulary.map(word => <div className="mb-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border p-3 text-[13px] wrap-anywhere [&_strong]:mr-2 [&_strong]:text-primary [&_p]:mt-[6px] [&_p]:text-xs [&_p]:text-muted-foreground" key={word.expression}>
               <strong lang={document.profile.targetLanguage}>{word.expression}</strong>
               <span>{word.meaning}</span>
               <p>{word.explanation}</p>
               {word.example && <p lang={document.profile.targetLanguage}>{word.example}</p>}
             </div>)}
           </div>}
-          {scene.insights.length > 0 && <details className={tw("detailsBase")}><summary className={tw("summaryBase")}>{c.insight}</summary>
+          {scene.insights.length > 0 && <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px]"><summary className="cursor-pointer font-semibold">{c.insight}</summary>
             {scene.insights.map((note, index) => <p key={index}>{note}</p>)}
           </details>}
         </>}
         {step === "practice" && <>
           {scene.exercises.length > 0 ? scene.exercises.map((exercise, index) =>
-            <div className={tw("scenePractice")} key={index}>
+            <div className="[&_p]:my-[10px] [&_p]:text-[13px] [&_textarea]:w-full" key={index}>
               <p>{exercise.question}</p>
               <Textarea aria-label={c.answerPlaceholder} rows={3} value={answer}
                 placeholder={c.answerPlaceholder} onChange={event => setAnswer(event.target.value)} />
               <Button variant="outline" size="sm" onClick={() => setShowAnswer(current => !current)}>
                 {showAnswer ? c.hideAnswer : c.showAnswer}
               </Button>
-              {showAnswer && <p className={tw("sceneSample")} lang={document.profile.targetLanguage}>{exercise.answer}</p>}
-            </div>) : <p className={tw("hint")}>{c.noPractice}</p>}
+              {showAnswer && <p className="rounded-[var(--radius)] bg-muted p-[10px] wrap-anywhere" lang={document.profile.targetLanguage}>{exercise.answer}</p>}
+            </div>) : <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{c.noPractice}</p>}
         </>}
-        <div className={tw("sceneStageNavigation")}>
+        <div className="mt-[18px] [&_button]:h-auto [&_button]:min-h-10 [&_button]:w-full [&_button]:px-3 [&_button]:py-[10px] [&_button]:text-sm [&_button]:font-semibold [&_button]:whitespace-normal [&_button]:wrap-anywhere">
           <Button disabled={step === "practice" && completedIds.includes(scene.id)}
             onClick={() => {
               const next = nextStudyStep(step);
@@ -418,10 +417,10 @@ export function SceneReader({
               : completedIds.includes(scene.id) ? c.sceneCompleted : c.finish}
           </Button>
         </div>
-        <nav className={tw("sceneNavigation")} aria-label={c.sceneNavigation}>
+        <nav className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-t border-border pt-[14px] [&_button]:h-auto [&_button]:min-h-9 [&_button]:w-full [&_button]:px-1 [&_button]:py-[7px] [&_button]:text-xs [&_button]:whitespace-normal [&_button]:wrap-anywhere" aria-label={c.sceneNavigation}>
           <Button variant="outline" size="sm" disabled={busy || sceneIndex === 0}
             onClick={() => selectScene(sceneIndex - 1)}>{c.previousScene}</Button>
-          <span className={tw("sceneNavPosition")}>{sceneIndex + 1} / {document.sections.length}</span>
+          <span className="whitespace-nowrap text-xs text-muted-foreground tabular-nums">{sceneIndex + 1} / {document.sections.length}</span>
           <Button variant="outline" size="sm"
             disabled={busy || sceneIndex === document.sections.length - 1}
             onClick={() => selectScene(sceneIndex + 1)}>{c.nextScene}</Button>
@@ -429,16 +428,16 @@ export function SceneReader({
       </Card>
     </>}
 
-    {mode === "review" && <Card className={tw("panel")}>
+    {mode === "review" && <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
       <h2>{c.review}</h2>
-      <p className={tw("hint")}>{c.reviewHint}</p>
-      {document.sections.every(item => item.vocabulary.length === 0) && <p className={tw("hint")}>{c.noExpressions}</p>}
+      <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{c.reviewHint}</p>
+      {document.sections.every(item => item.vocabulary.length === 0) && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{c.noExpressions}</p>}
       {document.sections.flatMap(item => item.vocabulary.map(word => ({ item, word }))).map(({ item, word }) => {
         const key = item.id + ":" + word.expression;
         const line = focusCue(item, cues);
-        return <div className={tw("learningCard")} key={key}>
+        return <div className="mb-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border p-3 text-[13px] wrap-anywhere [&_strong]:mr-2 [&_strong]:text-primary [&_p]:mt-[6px] [&_p]:text-xs [&_p]:text-muted-foreground" key={key}>
           <strong>{item.title}</strong>
-          <div className={tw("actions")}>
+          <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
             <Button size="sm" variant="outline" disabled={busy || !sourceUrl || !adapter.loop || !line}
               onClick={() => void playFocus(line, false)}>{c.playOriginal}</Button>
             <Button size="sm" variant="outline" onClick={() =>
@@ -453,10 +452,10 @@ export function SceneReader({
     </Card>}
 
     {mode === "learn" && sourceUrl && adapter.id !== "import" && <Card
-      className={tw("panel scenePlayer")} aria-label={c.miniPlayer}>
-      <div className={tw("sceneMiniHeader")}>
-        <div className={tw("sceneMiniTitle")}>
-          <span className={tw("time")}>{c.scene} {sceneIndex + 1} · {formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
+      className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto sticky bottom-0 z-[3] mb-0 min-w-0 rounded-[var(--radius)] border-t border-border bg-card px-3 py-[9px] shadow-[0_-6px_18px_#00000012]" aria-label={c.miniPlayer}>
+      <div className="flex min-w-0 items-center justify-between gap-2 [&>button]:size-8 [&>button]:shrink-0">
+        <div className="flex min-w-0 flex-1 flex-col gap-px [&_strong]:block [&_strong]:min-w-0 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-xs [&_strong]:font-[650]">
+          <span className="text-[11px] text-muted-foreground tabular-nums">{c.scene} {sceneIndex + 1} · {formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
           <strong title={scene.title}>{scene.title}</strong>
         </div>
         <Button size="icon" variant="ghost" aria-label={c.openVideo}
@@ -464,7 +463,7 @@ export function SceneReader({
           <ExternalLink aria-hidden="true" />
         </Button>
       </div>
-      <div className={tw("sceneMiniControls")}>
+      <div className="mt-[6px] grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-[6px] [&_button]:h-auto [&_button]:min-h-[35px] [&_button]:w-full [&_button]:min-w-0 [&_button]:p-[6px] [&_button]:text-xs [&_button]:font-semibold [&_button]:leading-[1.35] [&_button]:whitespace-normal [&_button]:wrap-anywhere">
         <Button size="sm" variant={focusLoopActive ? "secondary" : "default"}
           aria-pressed={focusLoopActive}
           disabled={busy || !selectedFocusCue || !adapter.loop ||
@@ -480,10 +479,10 @@ export function SceneReader({
           <SlidersHorizontal aria-hidden="true" />{c.playbackOptions}
         </Button>
       </div>
-      {playbackSettingsOpen && <div className={tw("sceneMiniSettings")} id="scene-playback-options"
+      {playbackSettingsOpen && <div className="mt-[9px] max-h-[min(340px,55vh)] overflow-y-auto border-t border-border pt-[9px] [&_label]:mb-2 [&_label]:mt-0 [&_label]:min-w-0 [&_label]:text-xs [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full" id="scene-playback-options"
         role="region" aria-label={c.playbackOptions}>
-        <div className={tw("twoColumnsCompact")}>
-          <label className={tw("labelBase")}>{c.repeat}
+        <div className="grid grid-cols-2 gap-2">
+          <label className="my-3 grid gap-[6px] text-xs font-semibold">{c.repeat}
             <SelectField ariaLabel={c.repeat} value={repeat}
               onValueChange={value => setRepeat(value as Repeat)}
               options={[
@@ -491,13 +490,13 @@ export function SceneReader({
                 { value: "5", label: "5×" }, { value: "infinite", label: "∞" },
               ]} />
           </label>
-          <label className={tw("labelBase")}>{c.delay}
+          <label className="my-3 grid gap-[6px] text-xs font-semibold">{c.delay}
             <SelectField ariaLabel={c.delay} value={delay}
               onValueChange={value => setDelay(Number(value))}
               options={[0, 1, 2, 3].map(value => ({ value, label: value + "s" }))} />
           </label>
         </div>
-        {adapter.setPlaybackRate && <label className={tw("labelBase")}>{c.speed}
+        {adapter.setPlaybackRate && <label className="my-3 grid gap-[6px] text-xs font-semibold">{c.speed}
           <SelectField ariaLabel={c.speed} value={playbackRate} disabled={busy}
             onValueChange={value => void changeRate(Number(value))}
             options={[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5].map(rate => ({
@@ -505,23 +504,23 @@ export function SceneReader({
             }))} />
         </label>}
 
-        <div className={tw("sceneLoopRange")} role="group" aria-label={c.loopRange}>
-          <div className={tw("sceneLoopRangeTitle")}>
+        <div className="mt-2 min-w-0 border-t border-border pt-[9px] [&_[data-ui=hint]]:mt-[5px] [&_[data-ui=hint]]:mb-2 [&_[data-ui=hint]]:text-[11px]" role="group" aria-label={c.loopRange}>
+          <div className="flex items-center justify-between gap-2 [&>strong]:text-xs">
             <strong>{c.loopRange}</strong>
             <Button variant="outline" size="sm" disabled={busy || !selectedFocusCue ||
               !loopRanges[selectedFocusCue.id]}
               onClick={() => void updateFocusRange("reset")}>{c.loopRangeResetButton}</Button>
           </div>
-          <p className={tw("hint")}>{c.loopRangeHint}</p>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{c.loopRangeHint}</p>
           {selectedFocusRange ? (["start", "end"] as const).map(boundary => {
             const point = boundary === "start" ? selectedFocusRange.startMs : selectedFocusRange.endMs;
             const name = boundary === "start" ? c.loopStart : c.loopEnd;
-            return <div className={tw("sceneLoopBoundary")} key={boundary}>
-              <div className={tw("sceneLoopBoundaryTitle")}>
+            return <div className="mt-[10px] min-w-0" key={boundary}>
+              <div className="mb-[5px] flex items-center justify-between gap-2 text-xs font-semibold [&_output]:tabular-nums">
                 <span>{name}</span>
                 <output>{formatLoopTimestamp(point)}</output>
               </div>
-              <div className={tw("sceneLoopNudge")}>
+              <div className="grid grid-cols-2 gap-[6px] [&_button]:min-h-8 [&_button]:min-w-0 [&_button]:px-[6px] [&_button]:py-[5px] [&_button]:text-[11px] [&_button]:whitespace-normal [&_button:last-child]:col-span-full">
                 <Button variant="outline" size="sm" disabled={busy}
                   aria-label={name + " " + c.loopEarlier}
                   onClick={() => void updateFocusRange(boundary, point - 500)}>−0.5s</Button>
@@ -534,10 +533,10 @@ export function SceneReader({
                 </Button>
               </div>
             </div>;
-          }) : <p className={tw("hint")}>{c.noTime}</p>}
+          }) : <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{c.noTime}</p>}
         </div>
       </div>}
-      {status && <p className={tw("sceneMiniStatus")} role="status">{status}</p>}
+      {status && <p className="mt-[5px] max-h-[34px] overflow-hidden text-[11px] leading-[1.45] text-muted-foreground wrap-anywhere line-clamp-2" role="status">{status}</p>}
     </Card>}
   </div>;
 }

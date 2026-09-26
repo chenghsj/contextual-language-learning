@@ -1,4 +1,3 @@
-import { tw } from "./utility-classes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BackupSettingsSchema, compactStudyExport, learningDocumentToMarkdown, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
@@ -1434,25 +1433,25 @@ export default function App() {
   }, [page, backup.accountId, driveAccounts.length]);
 
   return (
-    <div className={tw("app")}>
-      <header className={tw("topbar")}>
-        <div><img className={tw("brandMark")} src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>AI-powered Contextual Language Learning</strong></div>
-        <span className={tw("version")}>MVP · v0.1</span>
+    <div className="mx-auto min-w-[320px] max-w-[780px] px-3 pb-9 leading-[1.55] antialiased font-[Outfit,'Noto_Sans_TC',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] [color-scheme:light] dark:[color-scheme:dark] [font-synthesis:none]">
+      <header className="flex items-center justify-between gap-2 py-[18px] [&>div]:flex [&>div]:min-w-0 [&>div]:items-center [&>div]:gap-[9px] [&_strong]:min-w-0 [&_strong]:text-xs [&_strong]:leading-[1.25] [&_strong]:wrap-anywhere">
+        <div><img className="block size-9 shrink-0 rounded-[var(--radius)] object-contain" src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>AI-powered Contextual Language Learning</strong></div>
+        <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">MVP · v0.1</span>
       </header>
-      <nav className={tw("tabs")} aria-label={t("navLabel")}>
-        <Button className={tw(page === "create" ? "tabButton selected" : "tabButton")} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
-        <Button className={tw(page === "reader" ? "tabButton selected" : "tabButton")} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
-        <Button className={tw(page === "lessons" ? "tabButton selected" : "tabButton")} onClick={() => setPage("lessons")}><Library aria-hidden="true" />{t("lessonLibrary")}</Button>
-        <Button className={tw(page === "settings" ? "tabButton selected" : "tabButton")} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
+      <nav className="mb-4 grid grid-cols-4 gap-1 rounded-[var(--radius)] bg-muted p-1" aria-label={t("navLabel")}>
+        <Button className={page === "create" ? "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "create" ? "page" : undefined} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
+        <Button className={page === "reader" ? "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "reader" ? "page" : undefined} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
+        <Button className={page === "lessons" ? "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "lessons" ? "page" : undefined} onClick={() => setPage("lessons")}><Library aria-hidden="true" />{t("lessonLibrary")}</Button>
+        <Button className={page === "settings" ? "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "settings" ? "page" : undefined} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
       </nav>
 
-      {error && <div className={tw("alert")} role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}><X aria-hidden="true" /></Button></div>}
+      {error && <div className="my-[10px] flex max-w-full min-w-0 justify-between gap-[10px] rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--destructive)_55%,var(--border))] bg-[color-mix(in_oklch,var(--destructive)_10%,var(--card))] px-3 py-[10px] text-xs text-foreground wrap-anywhere [&_button]:shrink-0" role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}><X aria-hidden="true" /></Button></div>}
 
       {page === "create" && <main>
-        <Card className={tw("panel")}>
+        <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
           <h2>{t("subtitleHeading")}</h2>
-          <div className={tw("subtitleSourceBlock")}>
-          <div className={tw("actions")}>
+          <div className="mb-[10px] min-w-0 border-b border-border pb-3 [&>label]:my-2 [&>.actions]:mt-0 [&>.actions]:mb-[7px] [&_[data-ui=chip]]:mt-[6px]">
+          <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
             <Button variant={!title.trim() || !sourceUrl.trim() ? "default" : "outline"}
               size="sm" disabled={metadataBusy || subtitleBusy || checking || generating}
               onClick={() => void fetchCurrentVideoMetadata()}>
@@ -1460,15 +1459,15 @@ export default function App() {
                 !title.trim() || !sourceUrl.trim() ? metadataUi.get : metadataUi.refresh}
             </Button>
           </div>
-          {metadataStatus && <p className={tw("hint")} role="status">{metadataStatus}</p>}
-          <label className={tw("labelBase")}>{t("videoTitle")} <Input value={title} onChange={event => {
+          {metadataStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{metadataStatus}</p>}
+          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("videoTitle")} <Input value={title} onChange={event => {
             ++metadataRequestRef.current;
             setMetadataBusy(false);
             manuallyEditedTitleRef.current = !!event.target.value.trim();
             setMetadataStatus("");
             setTitle(event.target.value);
           }} placeholder={t("titlePlaceholder")} /></label>
-          <label className={tw("labelBase")}>{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => {
+          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => {
             ++metadataRequestRef.current;
             setMetadataBusy(false);
             setMetadataStatus("");
@@ -1477,12 +1476,12 @@ export default function App() {
             setSourceUrl(event.target.value);
             setSubtitleStatus("");
           }} placeholder="https://www.youtube.com/watch?v=…" /></label>
-          <Badge className={tw("chip")}>{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
+          <Badge className="inline-flex w-fit items-center rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_40%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_12%,var(--card))] px-2 py-[3px] text-[11px] font-[650] text-foreground" data-ui="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
           </div>
-          <div className={tw("subtitleLanguageSetting")}>
-            <div className={tw("settingField")}>
-              <div className={tw("settingHeading")}>
-                <label className={tw("labelBase")} htmlFor="learning-target">{t("targetLanguage")}</label>
+          <div className="my-[6px_12px] min-w-0 [&_[data-ui=settingField]]:m-0">
+            <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
+              <div className="mb-[6px] flex min-w-0 items-start justify-between gap-[6px] [&_label]:m-0 [&_label]:block [&_label]:min-w-0 [&_label]:pt-[3px] [&_label]:text-xs [&_label]:font-semibold [&_label]:leading-[1.45] [&_label]:wrap-anywhere">
+                <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="learning-target">{t("targetLanguage")}</label>
                 <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.targetLanguage}
                   />
@@ -1494,13 +1493,13 @@ export default function App() {
             </div>
           </div>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
-            <p className={tw("hint")}>{subtitleUi.hint}</p>
-            <Button className={tw("subtitleFetchButton")}
+            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{subtitleUi.hint}</p>
+            <Button className="h-auto min-h-10 px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere"
               disabled={subtitleBusy || metadataBusy || checking || generating}
               onClick={() => void fetchCurrentSubtitles()}>
               {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
             </Button>
-            {videoRecoveryUrl && <div className={tw("actions")}>
+            {videoRecoveryUrl && <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
               <Button variant="outline" size="sm"
                 disabled={reloadingVideoTab || subtitleBusy || metadataBusy}
                 onClick={() => void reloadVideoReader()}>
@@ -1508,12 +1507,12 @@ export default function App() {
               </Button>
             </div>}
           </>}
-          {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className={tw("hint")}>{t("subtitleHint")}</p>}
-          <details className={tw("detailsBase")} open={subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube"}>
-            <summary className={tw("summaryBase")}>{subtitleUi.manual}</summary>
-            <label className={tw("labelBase")}>{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
-            {fileName && <p className={tw("hint")}>{t("importedFile", { name: fileName })}</p>}
-            <label className={tw("labelBase")}>{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => {
+          {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("subtitleHint")}</p>}
+          <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px]" open={subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube"}>
+            <summary className="cursor-pointer font-semibold">{subtitleUi.manual}</summary>
+            <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
+            {fileName && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("importedFile", { name: fileName })}</p>}
+            <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => {
               ++metadataRequestRef.current;
               setMetadataBusy(false);
               setMetadataStatus("");
@@ -1536,21 +1535,21 @@ export default function App() {
             }}
               placeholder={t("subtitlePlaceholder")} /></label>
           </details>
-          {subtitleStatus && <p className={tw("status subtitleAcquisitionStatus")} role="status">{subtitleStatus}</p>}
+          {subtitleStatus && <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere my-[10px] leading-[1.5]" role="status">{subtitleStatus}</p>}
           {!!raw.trim() && !captionsReady && !subtitleStatus && !subtitleBusy &&
-            <p className={tw("status subtitleAcquisitionStatus")} role="status">{subtitleMessage(subtitleUi.languageNotReady, {
+            <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere my-[10px] leading-[1.5]" role="status">{subtitleMessage(subtitleUi.languageNotReady, {
               language: learningLanguageName(profile.targetLanguage, uiLocale),
             })}</p>}
-          <p className={tw("hint")}>{t("parsedCues", { count: cues.length })}</p>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("parsedCues", { count: cues.length })}</p>
 
         </Card>
 
-        <Card className={tw("panel lessonSettingsPanel")}>
+        <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto [&_[data-ui=settingField]]:my-[13px] [&_[data-ui=hint]]:my-[4px_9px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:min-h-[38px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:w-full [&_[data-ui=advancedLessonSettings]]:mt-4">
           <h2>{t("learningHeading")}</h2>
-          <p className={tw("hint lessonSettingsIntro")}>{t("lessonSettingsIntro")}</p>
-          <div className={tw("settingField")}>
-            <div className={tw("settingHeading")}>
-              <label className={tw("labelBase")} htmlFor="learning-level">{t("level")}</label>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground mt-[2px]! mb-3!" data-ui="hint">{t("lessonSettingsIntro")}</p>
+          <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
+            <div className="mb-[6px] flex min-w-0 items-start justify-between gap-[6px] [&_label]:m-0 [&_label]:block [&_label]:min-w-0 [&_label]:pt-[3px] [&_label]:text-xs [&_label]:font-semibold [&_label]:leading-[1.45] [&_label]:wrap-anywhere">
+              <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="learning-level">{t("level")}</label>
               <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
                 explanation={levelHint(settingsCopy, profile.targetLanguage)}
                 items={levelOptions.map(value => {
@@ -1564,9 +1563,9 @@ export default function App() {
                 value: level, label: level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
               }))} />
           </div>
-          <div className={tw("settingField")}>
-            <div className={tw("settingHeading")}>
-              <label className={tw("labelBase")} htmlFor="learning-length">{t("lessonLength")}</label>
+          <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
+            <div className="mb-[6px] flex min-w-0 items-start justify-between gap-[6px] [&_label]:m-0 [&_label]:block [&_label]:min-w-0 [&_label]:pt-[3px] [&_label]:text-xs [&_label]:font-semibold [&_label]:leading-[1.45] [&_label]:wrap-anywhere">
+              <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="learning-length">{t("lessonLength")}</label>
             </div>
             <SelectField id="learning-length" ariaLabel={t("lessonLength")}
               value={String(profile.sceneCount)}
@@ -1578,11 +1577,11 @@ export default function App() {
                 { value: "4", label: t("lessonLengthStandard") },
                 { value: "6", label: t("lessonLengthRich") },
               ]} />
-            <p className={tw("hint")}>{t("lessonLengthHint")}</p>
+            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("lessonLengthHint")}</p>
           </div>
-          <div className={tw("settingField")}>
-            <div className={tw("settingHeading")}>
-              <label className={tw("labelBase")} htmlFor="contextual-examples">{t("contextualExamples")}</label>
+          <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
+            <div className="mb-[6px] flex min-w-0 items-start justify-between gap-[6px] [&_label]:m-0 [&_label]:block [&_label]:min-w-0 [&_label]:pt-[3px] [&_label]:text-xs [&_label]:font-semibold [&_label]:leading-[1.45] [&_label]:wrap-anywhere">
+              <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="contextual-examples">{t("contextualExamples")}</label>
             </div>
             <SelectField id="contextual-examples" ariaLabel={t("contextualExamples")}
               value={String(profile.contextualExampleCount ?? 2)}
@@ -1592,13 +1591,13 @@ export default function App() {
               options={[1, 2, 3].map(value => ({
                 value: String(value), label: t("contextualExamplesValue", { count: value }),
               }))} />
-            <p className={tw("hint")}>{t("contextualExamplesHint")}</p>
+            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("contextualExamplesHint")}</p>
           </div>
-          <details className={tw("detailsBase advancedLessonSettings")}>
-            <summary className={tw("summaryBase")}>{t("advancedLessonSettings")}</summary>
-            <div className={tw("settingField")}>
-              <div className={tw("settingHeading")}>
-                <label className={tw("labelBase")} htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
+          <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] my-[8px_12px] [&>summary]:text-xs [&>summary]:text-muted-foreground" data-ui="advancedLessonSettings">
+            <summary className="cursor-pointer font-semibold">{t("advancedLessonSettings")}</summary>
+            <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
+              <div className="mb-[6px] flex min-w-0 items-start justify-between gap-[6px] [&_label]:m-0 [&_label]:block [&_label]:min-w-0 [&_label]:pt-[3px] [&_label]:text-xs [&_label]:font-semibold [&_label]:leading-[1.45] [&_label]:wrap-anywhere">
+                <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
                 <SettingInfo label={t("instructionLanguage")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.instructionLanguage} />
               </div>
@@ -1625,44 +1624,44 @@ export default function App() {
           </details>
         </Card>
 
-        <Card className={tw("panel")}>
+        <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
           <h2>{t("generationHeading")}</h2>
-          <label className={tw("labelBase")}>{t("storageLocation")}</label>
-          <p className={tw("hint")}>{t("currentFolder", { path: destination.kind === "local"
+          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("storageLocation")}</label>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("currentFolder", { path: destination.kind === "local"
             ? destination.directory ?? t("defaultFolder") : t("defaultFolder") })}</p>
-          <div className={tw("actions")}>
-            <Button variant="outline" className={tw("secondary")} disabled={storageBusy || generating}
+          <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
+            <Button variant="outline" className="bg-secondary text-secondary-foreground" disabled={storageBusy || generating}
               onClick={() => void chooseFolder()}>{t("chooseFolder")}</Button>
             {destination.kind === "local" && destination.directory && <Button variant="ghost" size="sm"
               onClick={() => setDestination({ kind: "local" })}>{t("useDefaultFolder")}</Button>}
           </div>
-          <p className={tw("hint")}>{t("localAlways")}</p>
-          <div className={tw("backupRow")}>
-            <div className={tw("backupDescription")}>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("localAlways")}</p>
+          <div className="my-[12px_4px] flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1 text-[13px] [&_[data-ui=hint]]:mt-1 [&_[data-ui=hint]]:mb-0">
               <strong>{t("autoBackup")}</strong>
-              <p className={tw("hint")}>{t("backupHint")}</p>
+              <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupHint")}</p>
             </div>
             <Button role="switch" aria-checked={backup.enabled} aria-label={t("autoBackup")}
-              className={tw("backupSwitch")} disabled={storageBusy}
+              className="group relative inline-flex h-[27px] w-[46px] shrink-0 items-center justify-start rounded-full border-0 bg-muted-foreground p-[3px] transition-colors duration-200 aria-checked:bg-primary motion-reduce:transition-none" disabled={storageBusy}
               onClick={() => backup.enabled ? setBackup(current => ({ ...current, enabled: false }))
-                : void enableBackup()}><span className={tw("backupSwitchThumb")} /></Button>
+                : void enableBackup()}><span className="pointer-events-none block size-[21px] shrink-0 translate-x-0 rounded-full bg-white shadow-[0_1px_3px_#0003] transition-transform duration-200 group-aria-checked:translate-x-[19px] motion-reduce:transition-none" /></Button>
           </div>
-          {backup.enabled && driveAccessVerified && <div className={tw("backupConnection")}>
-            <span className={tw("hint")}>{t("backupConnected", { email:
+          {backup.enabled && driveAccessVerified && <div className="flex items-center justify-between gap-2 [&_[data-ui=hint]]:my-[3px] [&_[data-ui=hint]]:min-w-0 [&_[data-ui=hint]]:wrap-anywhere">
+            <span className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupConnected", { email:
               driveAccounts.find(account => account.id === backup.accountId)?.email ?? t("backupUnknownAccount") })}</span>
             <Button variant="ghost" size="sm" onClick={() => setPage("settings")}>{t("manageDrive")}</Button>
           </div>}
           {!backup.enabled && !driveAccounts.length && driveConfigured &&
-            <p className={tw("hint")}>{t("backupConnectToEnable")}</p>}
-          {driveConnectError && <p className={tw("jobRowError")} role="status">{driveConnectError}</p>}
-          {backupStatus && <p className={tw("hint")} role="status">{backupStatus}</p>}
-          {duplicateWarning && <div className={tw("callout")} role="alertdialog" aria-label={t("duplicateConfirmLabel")}>
+            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupConnectToEnable")}</p>}
+          {driveConnectError && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere" role="status">{driveConnectError}</p>}
+          {backupStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{backupStatus}</p>}
+          {duplicateWarning && <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere" role="alertdialog" aria-label={t("duplicateConfirmLabel")}>
             <strong>{t("duplicateFound", { count: duplicateWarning.matches.length })}</strong>
-            <p className={tw("hint")}>{t("duplicateNewVersion")}</p>
-            {duplicateWarning.matches.map(match => <div className={tw("learningCard")} key={match.documentId}>
+            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("duplicateNewVersion")}</p>
+            {duplicateWarning.matches.map(match => <div className="mb-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border p-3 text-[13px] wrap-anywhere [&_strong]:mr-2 [&_strong]:text-primary [&_p]:mt-[6px] [&_p]:text-xs [&_p]:text-muted-foreground" key={match.documentId}>
               <strong>{match.title}</strong>
               <p>{new Date(match.createdAt).toLocaleString(uiLocale)} · {match.destination} · {t(match.exactSettings ? "sameSettings" : "differentSettings")}{match.jobStatus ? " · " + match.jobStatus : ""}</p>
-              <div className={tw("actions")}>
+              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
                 {match.local && <Button variant="outline" size="sm" onClick={() => {
                   cancelDuplicate();
                   openSavedDocument(match.documentId);
@@ -1670,16 +1669,16 @@ export default function App() {
                 {match.url && <Button variant="outline" size="sm" onClick={() => void chrome.tabs.create({ url: match.url })}>{t("openInDrive")}</Button>}
               </div>
             </div>)}
-            <div className={tw("actions")}>
+            <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
               <Button variant="destructive" size="sm" onClick={confirmRegeneration}>{t("confirmNewVersion")}</Button>
               <Button variant="outline" size="sm" onClick={cancelDuplicate}>{t("cancelNoGeneration")}</Button>
             </div>
           </div>}
-          <p className={tw("status lessonGenerationPreview")}>{t("lessonContentSummary", {
+          <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere mt-[5px] mb-[14px]">{t("lessonContentSummary", {
             scenes: profile.sceneCount, examples: profile.contextualExampleCount ?? 2,
           })}</p>
-          <div className={tw("generationSummary")}>
-            <div className={tw("generationSummaryHeading")}>
+          <div className="my-3 min-w-0 rounded-[var(--radius)] border border-border bg-muted p-3 [&_dl]:mt-[10px] [&_dl]:grid [&_dl]:gap-2 [&_dl>div]:grid [&_dl>div]:grid-cols-[minmax(50px,auto)_minmax(0,1fr)] [&_dl>div]:items-start [&_dl>div]:gap-[10px] [&_dt]:text-xs [&_dt]:text-muted-foreground [&_dd]:m-0 [&_dd]:min-w-0 [&_dd]:text-right [&_dd]:text-xs [&_dd]:font-semibold [&_dd]:wrap-anywhere">
+            <div className="flex flex-wrap items-center justify-between gap-2 [&>strong]:text-xs">
               <strong>{t("generationSummary")}</strong>
               <Button variant="outline" size="sm" onClick={() => {
                 setPage("settings");
@@ -1700,23 +1699,23 @@ export default function App() {
               </div>
             </dl>
           </div>
-          <Button className={tw("primary")} onClick={startGeneration} disabled={generating || checking || subtitleBusy || !captionsReady || !cues.length || !title.trim()}>
-            {(generating || checking) && <span className={tw("generationSpinner")} aria-hidden="true" />}
+          <Button className="h-auto min-h-10 w-full px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={generating || checking || subtitleBusy || !captionsReady || !cues.length || !title.trim()}>
+            {(generating || checking) && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
-          {generating && activeJob && <div className={tw("generationProgress")} role="progressbar"
+          {generating && activeJob && <div className="my-[10px_5px] h-[5px] overflow-hidden rounded-full bg-muted [&>span]:block [&>span]:h-full [&>span]:rounded-[inherit] [&>span]:bg-primary [&>span]:transition-[width] [&>span]:duration-200 motion-reduce:[&>span]:transition-none" role="progressbar"
             aria-label={t("generationProgressLabel")} aria-valuemin={0}
             aria-valuenow={activeJob.completed} aria-valuemax={activeJob.total}>
             <span style={{ width: (100 * activeJob.completed / activeJob.total) + "%" }} />
           </div>}
-          {generating && <Button variant="outline" className={tw("secondary")} onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
-          {progress && <p className={tw("status")} role="status">{progress}</p>}
-          {publishedLocation && <p className={tw("hint")}>{t("publishedTo", { location: publishedLocation })}</p>}
+          {generating && <Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
+          {progress && <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere" role="status">{progress}</p>}
+          {publishedLocation && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("publishedTo", { location: publishedLocation })}</p>}
         </Card>
-        <Card className={tw("panel")}>
+        <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
           <h2>{t("jobHistory")}</h2>
-          <p className={tw("hint")}>{t("jobHistoryHint")}</p>
-          <div className={tw("jobToolbar")}>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("jobHistoryHint")}</p>
+          <div className="flex items-center justify-between gap-2 [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:flex-1">
             <SelectField ariaLabel={t("jobFilterLabel")} value={jobFilter}
               onValueChange={value => {
                 if (value === "all" || value === "active" || value === "completed") setJobFilter(value);
@@ -1729,18 +1728,18 @@ export default function App() {
             <Button variant="outline" size="sm" disabled={loadingJobs}
               onClick={loadJobs}>{loadingJobs ? t("loading") : t("refreshJobs")}</Button>
           </div>
-          <div className={tw("jobHistoryList")}>
-            {visibleJobs.map(job => <div className={tw("jobRow")} key={job.id}>
-              <div className={tw("jobRowHeading")}>
+          <div className="my-[10px] grid gap-[7px]">
+            {visibleJobs.map(job => <div className="min-w-0 rounded-[var(--radius)] border border-border px-[11px] py-[9px] [&_p]:my-[3px] [&_p]:text-[11px] [&_[data-ui=actions]]:mt-[5px] [&_[data-ui=actions]]:gap-[5px] [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-7" key={job.id}>
+              <div className="flex min-w-0 items-center justify-between gap-2 [&_strong]:min-w-0 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-xs">
                 <strong title={job.sourceTitle}>{job.sourceTitle}</strong>
                 <Badge>{t(jobStatusKeys[job.status])}</Badge>
               </div>
-              <p className={tw("hint")}>{agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)} · {job.completed}/{job.total}
+              <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)} · {job.completed}/{job.total}
                 {job.backup && " · " + t(job.backup.status === "backed-up"
                   ? "backupSaved" : ["pending", "uploading"].includes(job.backup.status)
                     ? "backupProcessing" : "backupFailedMessage")}</p>
-              {job.error && <p className={tw("jobRowError")}>{job.error}</p>}
-              <div className={tw("actions")}>
+              {job.error && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere">{job.error}</p>}
+              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
                 {["queued", "waiting", "failed"].includes(job.status) &&
                   <Button variant="outline" size="sm" disabled={generating}
                     onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>}
@@ -1765,10 +1764,10 @@ export default function App() {
       </main>}
 
       {page === "lessons" && <main>
-        <Card className={tw("panel")}>
+        <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
           <h2>{t("lessonLibrary")}</h2>
-          <p className={tw("hint")}>{t("lessonLibraryHint")}</p>
-          <div className={tw("jobToolbar")}>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("lessonLibraryHint")}</p>
+          <div className="flex items-center justify-between gap-2 [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:flex-1">
             <SelectField ariaLabel={t("lessonFilterLabel")} value={lessonFilter}
               onValueChange={value => {
                 if (value === "all" || value === "local" || value === "drive") setLessonFilter(value);
@@ -1780,32 +1779,32 @@ export default function App() {
             <Button variant="outline" size="sm" disabled={lessonsBusy}
               onClick={() => void loadLessons()}>{lessonsBusy ? t("loading") : t("refreshJobs")}</Button>
           </div>
-          {catalogError && <div className={tw("callout")} role="alert">
+          {catalogError && <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere" role="alert">
             <p>{catalogError}</p>
             <Button variant="outline" size="sm" disabled={lessonsBusy}
               onClick={() => void loadLessons()}>{t("refreshJobs")}</Button>
           </div>}
-          {lessonFilter === "drive" && !driveAccounts.length && <div className={tw("callout")}>
+          {lessonFilter === "drive" && !driveAccounts.length && <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere">
             <p>{t("connectDriveToBrowse")}</p>
             <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
               onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
           </div>}
           {!lessonsBusy && !catalogError && visibleLessons.length === 0 &&
-            <p className={tw("hint")}>{t("lessonLibraryEmpty")}</p>}
-          <div className={tw("lessonLibraryList")}>
-            {visibleLessons.map(lesson => <div className={tw("jobRow")} key={lesson.documentId}>
-              <div className={tw("jobRowHeading")}><strong title={lesson.title}>{lesson.title}</strong></div>
-              <p className={tw("hint")}>{new Date(lesson.createdAt).toLocaleString(uiLocale)}
+            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("lessonLibraryEmpty")}</p>}
+          <div className="mt-3 grid gap-2">
+            {visibleLessons.map(lesson => <div className="min-w-0 rounded-[var(--radius)] border border-border px-[11px] py-[9px] [&_p]:my-[3px] [&_p]:text-[11px] [&_[data-ui=actions]]:mt-[5px] [&_[data-ui=actions]]:gap-[5px] [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-7" key={lesson.documentId}>
+              <div className="flex min-w-0 items-center justify-between gap-2 [&_strong]:min-w-0 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-xs"><strong title={lesson.title}>{lesson.title}</strong></div>
+              <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{new Date(lesson.createdAt).toLocaleString(uiLocale)}
                 {lesson.local && " · " + lesson.local.targetLanguage.toUpperCase() + " · " + lesson.local.level}</p>
-              <div className={tw("lessonRowMeta")}>
+              <div className="flex flex-wrap items-center gap-[6px] [&_[data-ui=hint]]:m-0">
                 {lesson.local && <Badge>{t("localCopy")}</Badge>}
                 {lesson.drive && <Badge>{t("cloudCopy")}</Badge>}
                 {lesson.local?.backup && !lesson.drive &&
-                  <span className={tw("hint")}>{t(lesson.local.backup.status === "backed-up"
+                  <span className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t(lesson.local.backup.status === "backed-up"
                     ? "backupSaved" : ["pending", "uploading"].includes(lesson.local.backup.status)
                       ? "backupProcessing" : "backupFailedMessage")}</span>}
               </div>
-              <div className={tw("actions")}>
+              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
                 {lesson.local && <Button variant="outline" size="sm" disabled={generating}
                   onClick={() => openSavedDocument(lesson.documentId)}>{t("openLesson")}</Button>}
                 {lesson.drive && !lesson.local && <Button variant="outline" size="sm"
@@ -1821,10 +1820,10 @@ export default function App() {
       </main>}
 
       {page === "settings" && <main>
-        <Card className={tw("panel")}>
+        <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
           <h2>{t("uiLanguage")} · {t("appearance")}</h2>
-          <div className={tw("uiPreferenceField")}>
-            <label className={tw("labelBase")} htmlFor="ui-language-select">{t("uiLanguage")}</label>
+          <div className="my-3 min-w-0 [&>label]:mb-[6px] [&>label]:mt-0 [&>label]:block [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
+            <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="ui-language-select">{t("uiLanguage")}</label>
             <Select value={localePreference} onValueChange={next => {
               if (isLocalePreference(next)) setLocalePreference(next);
             }}>
@@ -1841,9 +1840,9 @@ export default function App() {
               </SelectContent>
             </Select>
           </div>
-          <p className={tw("hint")}>{t("uiLanguageHint")}</p>
-          <div className={tw("uiPreferenceField")}>
-            <label className={tw("labelBase")} htmlFor="appearance-select">{t("appearance")}</label>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("uiLanguageHint")}</p>
+          <div className="my-3 min-w-0 [&>label]:mb-[6px] [&>label]:mt-0 [&>label]:block [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
+            <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="appearance-select">{t("appearance")}</label>
             <Select value={themePreference} onValueChange={next => {
               if (isThemePreference(next)) setThemePreference(next);
             }}>
@@ -1857,13 +1856,13 @@ export default function App() {
               </SelectContent>
             </Select>
           </div>
-          <p className={tw("hint")}>{t("appearanceHint")}</p>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("appearanceHint")}</p>
         </Card>
-        <Card className={tw("panel")}>
+        <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
-          <p className={tw("hint")}>{t("agentHint")}</p>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("agentHint")}</p>
           {installed && <Badge>{t(installed[agent.provider] ? "agentInstalled" : "agentMissing")}</Badge>}
-          {installed && hostVersion !== chrome.runtime.getManifest().version && <div className={tw("callout")} role="status">
+          {installed && hostVersion !== chrome.runtime.getManifest().version && <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere" role="status">
             <p>{hostVersion ? t("hostVersionMismatch", { version: hostVersion,
               expected: chrome.runtime.getManifest().version }) : t("hostVersionUnknown")}</p>
             <Button variant="outline" size="sm"
@@ -1871,7 +1870,7 @@ export default function App() {
                 url: "https://github.com/chenghsj/immersive-language-learning/releases",
               })}>{t("hostUpdateDownload")}</Button>
           </div>}
-          <label className={tw("labelBase")}>{t("defaultAgent")}
+          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("defaultAgent")}
             <SelectField ariaLabel={t("defaultAgent")} value={agent.provider}
               onValueChange={selectAgent}
               options={agentCatalog.map(entry => ({
@@ -1880,14 +1879,14 @@ export default function App() {
                   (installed && !entry.installed ? t("agentNotInstalled") : ""),
               }))} />
           </label>
-          {selectedAgentInfo?.supportsAccountProfiles && <section className={tw("agentProfileSection")}>
-            <div className={tw("agentProfileHeading")}>
+          {selectedAgentInfo?.supportsAccountProfiles && <section className="mt-3 border-t border-border pt-[10px]">
+            <div className="flex min-w-0 items-center gap-2 text-xs">
               <strong>{t("useOtherCliAccount")}</strong>
               <SettingInfo label={t("useOtherCliAccount")} infoLabel={settingsCopy.infoLabel}
                 explanation={t("agentProfileInfo")} />
             </div>
             {(savedAgentProfiles.some(item => item.provider === agent.provider) || !!agent.accountConfigDir) &&
-              <label className={tw("labelBase")}>{t("agentAccount")}
+              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("agentAccount")}
                 <SelectField ariaLabel={t("agentAccount")}
                   value={selectedSavedProfile?.id ?? (agent.accountConfigDir ? "__legacy__" : "")}
                   onValueChange={chooseAgentProfile}
@@ -1899,18 +1898,18 @@ export default function App() {
                       .map(item => ({ value: item.id, label: item.label })),
                   ]} />
               </label>}
-            <details className={tw("detailsBase agentProfileAdvanced")}>
-              <summary className={tw("summaryBase")}>{t("manageAgentProfiles")}</summary>
-              <p className={tw("hint")}>{t("accountFolderHint")}</p>
-              <label className={tw("labelBase")}>{t("profileName")}
+            <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&>summary]:text-xs [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+              <summary className="cursor-pointer font-semibold">{t("manageAgentProfiles")}</summary>
+              <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("accountFolderHint")}</p>
+              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("profileName")}
                 <Input value={draftProfileName} onChange={event => setDraftProfileName(event.target.value)}
                   placeholder={t("profileNamePlaceholder")} />
               </label>
-              <label className={tw("labelBase")}>{t("accountFolder")}
+              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("accountFolder")}
                 <Input value={draftProfileDir} onChange={event => setDraftProfileDir(event.target.value)}
                   placeholder={t("accountFolderPlaceholder")} />
               </label>
-              <div className={tw("actions")}>
+              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
                 <Button variant="outline" size="sm"
                   disabled={profileBusy || installed === null || !draftProfileName.trim() || !draftProfileDir.trim()}
                   onClick={() => void saveProfile()}>{t("saveProfile")}</Button>
@@ -1918,10 +1917,10 @@ export default function App() {
                   disabled={profileBusy || installed === null}
                   onClick={() => void removeProfile()}>{t("removeProfile")}</Button>}
               </div>
-              {profileStatus && <p className={tw("hint")} role="status">{profileStatus}</p>}
+              {profileStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{profileStatus}</p>}
             </details>
           </section>}
-          <label className={tw("labelBase")}>{t("defaultModel")}
+          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("defaultModel")}
             <SelectField ariaLabel={t("defaultModel")} disabled={modelBusy} value={modelSelection}
               onValueChange={value => {
                 if (value === "__custom__") {
@@ -1941,14 +1940,14 @@ export default function App() {
                 { value: "__custom__", label: t("customModel") },
               ]} />
           </label>
-          {modelSelection === "__custom__" && <label className={tw("labelBase")}>{t("modelId")}
+          {modelSelection === "__custom__" && <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("modelId")}
             <Input value={agent.modelId} onChange={event => updateAgent({ ...agent, modelId: event.target.value })}
               placeholder={t("modelPlaceholder")} />
           </label>}
-          {modelNotice && <p className={tw("hint")} role="status">{modelNotice}</p>}
-          <details className={tw("detailsBase agentProfileAdvanced")}>
-            <summary className={tw("summaryBase")}>{t("agentDiagnostics")}</summary>
-            <div className={tw("actions")}>
+          {modelNotice && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{modelNotice}</p>}
+          <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&>summary]:text-xs [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+            <summary className="cursor-pointer font-semibold">{t("agentDiagnostics")}</summary>
+            <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
               <Button variant="outline" size="sm" onClick={checkHost}>{t("checkHost")}</Button>
               <Button variant="outline" size="sm" disabled={modelBusy || installed === null}
                 onClick={() => setInstalled(current => current ? { ...current } : current)}>
@@ -1965,56 +1964,56 @@ export default function App() {
               checkHost();
             }} />
         </Card>
-        <Card className={tw("panel")}>
+        <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
           <h2>{t("driveAccountHeading")}</h2>
-          <p className={tw("hint")}>{t("driveOauthHelp")}</p>
-          {!driveConfigured && <p className={tw("callout")}>{t("oauthFirst")}</p>}
-          {driveAccounts.length === 1 && <div className={tw("driveSingleAccount")}>
-            <div><strong>{driveAccounts[0].email}</strong><span className={tw("hint")}>{t("backupAccount")}</span></div>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("driveOauthHelp")}</p>
+          {!driveConfigured && <p className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere">{t("oauthFirst")}</p>}
+          {driveAccounts.length === 1 && <div className="my-3 flex min-w-0 items-center justify-between gap-2 rounded-[var(--radius)] border border-border px-[11px] py-[10px] [&>div]:min-w-0 [&_strong]:block [&_strong]:text-xs [&_strong]:wrap-anywhere [&_[data-ui=hint]]:mt-[2px] [&_[data-ui=hint]]:mb-0 [&_[data-ui=hint]]:block">
+            <div><strong>{driveAccounts[0].email}</strong><span className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupAccount")}</span></div>
             <Badge>{t("driveConnectedStatus")}</Badge>
           </div>}
-          {driveAccounts.length > 1 && <label className={tw("labelBase")}>{t("backupAccount")}
+          {driveAccounts.length > 1 && <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("backupAccount")}
             <SelectField ariaLabel={t("backupAccount")} value={backup.accountId ?? driveAccounts[0].id}
               onValueChange={accountId => setBackup(current => ({ ...current, accountId }))}
               options={driveAccounts.map(account => ({ value: account.id, label: account.email }))} />
           </label>}
-          {selectedDriveId && <p className={tw("hint")} role="status">{
+          {selectedDriveId && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{
             driveAccess?.accountId === selectedDriveId && driveAccess.status === "checking"
               ? t("driveAccessChecking") : driveAccessVerified
                 ? t("driveAccessVerified") : t("driveAccessNotVerified")
           }</p>}
-          <div className={tw("actions")}>
+          <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
             <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
               onClick={() => void connectDrive()}>{driveAccounts.length ? t("connectAnother") : t("connectGoogle")}</Button>
             {selectedDriveId && !driveAccessVerified && <Button variant="outline" size="sm"
               disabled={storageBusy || driveAccess?.status === "checking"}
               onClick={() => void enableBackup()}>{t("retryDriveAccess")}</Button>}
           </div>
-          {driveAccounts.length > 0 && <details className={tw("detailsBase agentProfileAdvanced")}>
-            <summary className={tw("summaryBase")}>{t("manageDrive")} · {driveAccounts.length}</summary>
-            <div className={tw("driveAccountList")}>
-              {driveAccounts.map(account => <div className={tw("driveAccountItem")} key={account.id}>
+          {driveAccounts.length > 0 && <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&>summary]:text-xs [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+            <summary className="cursor-pointer font-semibold">{t("manageDrive")} · {driveAccounts.length}</summary>
+            <div className="mt-[10px] grid gap-[5px]">
+              {driveAccounts.map(account => <div className="flex min-w-0 items-center justify-between gap-2 py-[5px] not-first:border-t not-first:border-border [&_span]:min-w-0 [&_span]:text-xs [&_span]:wrap-anywhere" key={account.id}>
                 <span title={account.email}>{account.email}</span>
                 <Button variant="ghost" size="sm" disabled={storageBusy}
                   onClick={() => void disconnectDrive(account.id)}>{t("disconnectGoogle")}</Button>
               </div>)}
             </div>
           </details>}
-          {driveAccounts.length > 0 && <section className={tw("driveExistingBackup")}>
+          {driveAccounts.length > 0 && <section className="mt-[14px] grid justify-items-start gap-1 border-t border-border pt-3 [&_strong]:text-xs [&_[data-ui=hint]]:mt-0 [&_[data-ui=hint]]:mb-[5px]">
             <strong>{t("backupExisting")}</strong>
-            <p className={tw("hint")}>{t("backupExistingHint")}</p>
+            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupExistingHint")}</p>
             <Button variant="outline" size="sm" disabled={storageBusy || !driveAccounts.length}
               onClick={() => void backupExistingLessons()}>{t("backupExisting")}</Button>
           </section>}
-          {driveConnectError && <p className={tw("jobRowError")} role="status">{driveConnectError}</p>}
-          {backupStatus && <p className={tw("hint")} role="status">{backupStatus}</p>}
+          {driveConnectError && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere" role="status">{driveConnectError}</p>}
+          {backupStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{backupStatus}</p>}
         </Card>
       </main>}
 
       {page === "reader" && <main>
-        {!document ? <Card className={tw("panel empty")}>
-          <h2>{t("emptyHeading")}</h2><p className={tw("hint")}>{t("emptyHint")}</p>
-          <Button variant="outline" className={tw("secondary")} onClick={() => setPage("create")}>{t("create")}</Button>
+        {!document ? <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto px-[18px] py-8 text-center">
+          <h2>{t("emptyHeading")}</h2><p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("emptyHint")}</p>
+          <Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={() => setPage("create")}>{t("create")}</Button>
         </Card> : document.schemaVersion === 3 ? <ContextualSceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
           repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
@@ -2026,27 +2025,27 @@ export default function App() {
           playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
           onError={setError} onDownload={format => downloadDocument(document, format)}
         /> : <>
-          <Card className={tw("panel")}>
-            <Badge className={tw("chip")}>{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
+          <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
+            <Badge className="inline-flex w-fit items-center rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_40%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_12%,var(--card))] px-2 py-[3px] text-[11px] font-[650] text-foreground" data-ui="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
             <h1>{document.source.title}</h1>
-            <p className={tw("hint")}>{t("lessonOverview", { count: document.sections.length, language: document.profile.instructionLanguage })}</p>
-            {publishedLocation && <p className={tw("hint")}>{t("publishedTo", { location: publishedLocation })}</p>}
-            <div className={tw("actions")}>
-              <Button variant="outline" className={tw("secondary")} onClick={() => downloadDocument(document, "json")}>{t("saveJson")}</Button>
-              <Button variant="outline" className={tw("secondary")} onClick={() => downloadDocument(document, "md")}>{t("saveMarkdown")}</Button>
+            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("lessonOverview", { count: document.sections.length, language: document.profile.instructionLanguage })}</p>
+            {publishedLocation && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("publishedTo", { location: publishedLocation })}</p>}
+            <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
+              <Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={() => downloadDocument(document, "json")}>{t("saveJson")}</Button>
+              <Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={() => downloadDocument(document, "md")}>{t("saveMarkdown")}</Button>
             </div>
           </Card>
-          <Card className={tw("panel")}>
+          <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
             <h2>{t("videoCompanion")}</h2>
             {document.source.url && readerAdapter.id !== "import" &&
-              <div className={tw("actions")}>
-                <Button variant="outline" className={tw("secondary")} disabled={openingVideo}
+              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
+                <Button variant="outline" className="bg-secondary text-secondary-foreground" disabled={openingVideo}
                   onClick={() => void openVideo()}>
                   {openingVideo ? t("openingVideo") : t("openOrFocusVideo")}
                 </Button>
               </div>}
-            <div className={tw("twoColumns")}>
-              <label className={tw("labelBase")}>{t("repeatCount")}
+            <div className="grid grid-cols-2 gap-[10px]">
+              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("repeatCount")}
                 <SelectField ariaLabel={t("repeatCount")} value={repeat}
                   onValueChange={value => setRepeat(value as RepeatOption)}
                   options={[
@@ -2056,7 +2055,7 @@ export default function App() {
                     { value: "infinite", label: t("repeatForever") },
                   ]} />
               </label>
-              <label className={tw("labelBase")}>{t("repeatDelay")}
+              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("repeatDelay")}
                 <SelectField ariaLabel={t("repeatDelay")} value={delay}
                   onValueChange={value => setDelay(Number(value))}
                   options={[0, 1, 2, 3].map(seconds => ({
@@ -2064,35 +2063,35 @@ export default function App() {
                   }))} />
               </label>
             </div>
-            {readerAdapter.setPlaybackRate && <div className={tw("twoColumns")}>
-              <label className={tw("labelBase")}>{t("playbackRateLabel")}
+            {readerAdapter.setPlaybackRate && <div className="grid grid-cols-2 gap-[10px]">
+              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("playbackRateLabel")}
                 <SelectField ariaLabel={t("playbackRateLabel")} value={playbackRate} disabled={rateApplying}
                   onValueChange={value => setPlaybackRate(Number(value))}
                   options={[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map(rate => ({
                     value: rate, label: rate + "×",
                   }))} />
               </label>
-              <div className={tw("actions")} style={{ alignSelf: "center" }}>
-                <Button variant="outline" className={tw("secondary")} disabled={rateApplying}
+              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions" style={{ alignSelf: "center" }}>
+                <Button variant="outline" className="bg-secondary text-secondary-foreground" disabled={rateApplying}
                   onClick={() => void applyPlaybackRate()}>
                   {rateApplying ? t("applyingRate") : t("applyPlaybackRate")}
                 </Button>
               </div>
             </div>}
-            {readerAdapter.setPlaybackRate && <p className={tw("hint")}>{t("ratePreferenceHint")}</p>}
+            {readerAdapter.setPlaybackRate && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("ratePreferenceHint")}</p>}
             {readerAdapter.diagnose
-              ? <div className={tw("callout")}>
+              ? <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere">
                   {t("experimentalVideoHint", { name: readerAdapter.label })}
-                  <div className={tw("actions")}><Button variant="outline" className={tw("secondary")} onClick={() => void diagnoseVideo()}>{t("checkPlayer", { name: readerAdapter.label })}</Button></div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions"><Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={() => void diagnoseVideo()}>{t("checkPlayer", { name: readerAdapter.label })}</Button></div>
                 </div>
               : readerAdapter.loop
-                ? <p className={tw("hint")}>{t("youtubeVideoHint", { name: readerAdapter.label })}</p>
-                : <p className={tw("hint")}>{t("noVideoControl")}</p>}
-            {playbackStatus && <p className={tw("hint")} role="status">{playbackStatus}</p>}
-            {loopActive && <Button variant="outline" className={tw("secondary")} onClick={() => void stopLoop()}>{t("stopLoop")}</Button>}
+                ? <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("youtubeVideoHint", { name: readerAdapter.label })}</p>
+                : <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("noVideoControl")}</p>}
+            {playbackStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{playbackStatus}</p>}
+            {loopActive && <Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={() => void stopLoop()}>{t("stopLoop")}</Button>}
           </Card>
-          {document.sections.map(section => <Card className={tw("panel lesson")} key={section.id}>
-            <Badge className={tw("chip")}>{formatTime(section.startMs)}–{formatTime(section.endMs)}</Badge>
+          {document.sections.map(section => <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto pt-5 [&>p]:text-[13px] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:text-[13px] [&_li]:mb-[6px]" key={section.id}>
+            <Badge className="inline-flex w-fit items-center rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_40%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_12%,var(--card))] px-2 py-[3px] text-[11px] font-[650] text-foreground" data-ui="chip">{formatTime(section.startMs)}–{formatTime(section.endMs)}</Badge>
             <h2>{section.title}</h2>
             <p>{section.context}</p>
             <h3>{t("originalSubtitles")}</h3>
@@ -2103,25 +2102,25 @@ export default function App() {
                 ? readerAdapter.timestampLink?.(document.source.url, cuePlaybackStart(cue.startMs)) ?? null : null;
               const canSeek = cue.startMs !== null && !!readerAdapter.seek;
               const canLoop = cue.startMs !== null && cue.endMs !== null && !!readerAdapter.loop;
-              return <div className={tw("cue")} key={id}>
-                <span className={tw("time")}>{formatTime(cue.startMs)}</span>
+              return <div className="my-2 max-w-full min-w-0 rounded-[var(--radius)] border-l-[3px] border-primary bg-muted p-3 wrap-anywhere [&_p]:my-1 [&_p]:text-sm" key={id}>
+                <span className="text-[11px] text-muted-foreground tabular-nums">{formatTime(cue.startMs)}</span>
                 <p>{cue.originalText}</p>
-                <div className={tw("actions")}>
-                  {link && <Button variant="link" className={tw("textButton")} onClick={() => void openTimestampCue(cue)}>{t("openTimestamp")}</Button>}
-                  {canSeek && <Button variant="link" className={tw("textButton")} onClick={() => void seekCue(cue)}>{t("seekTo")}</Button>}
-                  {canLoop && <Button variant="link" className={tw("textButton")} onClick={() => void loopCue(cue)}>{t("loopSentence")}</Button>}
-                  {!link && cue.startMs !== null && <Button variant="link" className={tw("textButton")} onClick={() => void navigator.clipboard.writeText(formatTime(cue.startMs))}>{t("copyTime")}</Button>}
+                <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
+                  {link && <Button variant="link" className="h-auto px-0 py-[2px] text-xs text-primary underline underline-offset-[3px] dark:text-primary" onClick={() => void openTimestampCue(cue)}>{t("openTimestamp")}</Button>}
+                  {canSeek && <Button variant="link" className="h-auto px-0 py-[2px] text-xs text-primary underline underline-offset-[3px] dark:text-primary" onClick={() => void seekCue(cue)}>{t("seekTo")}</Button>}
+                  {canLoop && <Button variant="link" className="h-auto px-0 py-[2px] text-xs text-primary underline underline-offset-[3px] dark:text-primary" onClick={() => void loopCue(cue)}>{t("loopSentence")}</Button>}
+                  {!link && cue.startMs !== null && <Button variant="link" className="h-auto px-0 py-[2px] text-xs text-primary underline underline-offset-[3px] dark:text-primary" onClick={() => void navigator.clipboard.writeText(formatTime(cue.startMs))}>{t("copyTime")}</Button>}
                 </div>
               </div>;
             })}
             {section.vocabulary.length > 0 && <><h3>{t("vocabulary")}</h3>
-              {section.vocabulary.map((word, index) => <div className={tw("learningCard")} key={word.expression + index}>
+              {section.vocabulary.map((word, index) => <div className="mb-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border p-3 text-[13px] wrap-anywhere [&_strong]:mr-2 [&_strong]:text-primary [&_p]:mt-[6px] [&_p]:text-xs [&_p]:text-muted-foreground" key={word.expression + index}>
                 <strong>{word.expression}</strong><span>{word.meaning}</span>
-                <p>{word.explanation}</p>{word.example && <p className={tw("example")}>{word.example}</p>}
+                <p>{word.explanation}</p>{word.example && <p className="italic">{word.example}</p>}
               </div>)}</>}
             {section.insights.length > 0 && <><h3>{t("insights")}</h3><ul>{section.insights.map((insight, index) => <li key={index}>{insight}</li>)}</ul></>}
             {section.exercises.length > 0 && <><h3>{t("exercises")}</h3>
-              {section.exercises.map((exercise, index) => <details className={tw("detailsBase")} key={index}><summary className={tw("summaryBase")}>{exercise.question}</summary><p>{exercise.answer}</p></details>)}</>}
+              {section.exercises.map((exercise, index) => <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px]" key={index}><summary className="cursor-pointer font-semibold">{exercise.question}</summary><p>{exercise.answer}</p></details>)}</>}
           </Card>)}
         </>}
       </main>}
