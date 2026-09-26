@@ -13,7 +13,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
 }: {
   locale: UiLocale; available: boolean; selectedProvider: string; selectedModelId: string;
   selectedProfileDir?: string; nativeOnce: Once;
-  onSaved: (id: string, created: boolean) => void; onRemoved: (id: string) => void;
+  onSaved: (id: string, created: boolean, config: CustomAgentImport) => void; onRemoved: (id: string) => void;
   onSelect: (id: string) => void;
 }) {
   const ui = agentOnboardingCopy[locale];
@@ -119,7 +119,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
           config: { ...validated, id: editing.id } });
         if (reply.type !== "customAgentList") throw new Error(ui.error);
         setAgents(reply.agents);
-        onSaved(editing.id, false);
+        onSaved(editing.id, false, validated);
         resetEditor();
         setStatus(ui.updated);
       } else {
@@ -127,10 +127,25 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
           config: validated });
         if (reply.type !== "customAgentImported") throw new Error(ui.error);
         setAgents(reply.agents);
-        onSaved(reply.agent.id, true);
+        onSaved(reply.agent.id, true, validated);
         resetEditor();
         setStatus(ui.saved);
       }
+    } catch (error) { report(error); }
+    finally { setBusy(false); }
+  }
+  async function testSavedAgent(agent: CustomAgentConfig): Promise<void> {
+    if (!available || busy || !window.confirm(ui.testWarning)) return;
+    setBusy(true);
+    setStatus("");
+    try {
+      const reply = await nativeOnce({ id: crypto.randomUUID(), type: "customAgentTest",
+        config: agent, modelId: agent.id === selectedProvider ? selectedModelId : "",
+        ...(agent.id === selectedProvider && selectedProfileDir
+          ? { accountConfigDir: selectedProfileDir } : {}) });
+      if (reply.type !== "customAgentTested") throw new Error(ui.error);
+      setFailed(false);
+      setStatus(ui.tested);
     } catch (error) { report(error); }
     finally { setBusy(false); }
   }
@@ -166,7 +181,9 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
           onClick={() => onSelect(agent.id)}>{ui.use}</Button>
         <Button variant="outline" size="sm" disabled={busy}
           onClick={() => edit(agent)}>{ui.edit}</Button>
-        <Button variant="outline" size="sm" disabled={busy}
+        <Button variant="outline" size="sm" disabled={!available || busy}
+          onClick={() => void testSavedAgent(agent)}>{ui.test}</Button>
+        <Button variant="outline" size="sm" disabled={!available || busy}
           onClick={() => void remove(agent)}>{ui.remove}</Button>
       </div>
     </div>)}

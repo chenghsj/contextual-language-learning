@@ -1923,8 +1923,16 @@ export default function App() {
             selectedProvider={agent.provider} selectedModelId={agent.modelId}
             selectedProfileDir={agent.accountConfigDir} nativeOnce={nativeOnce}
             onSelect={selectAgent}
-            onSaved={(provider, created) => {
+            onSaved={(provider, created, config) => {
               if (created && !agent.provider) selectAgent(provider);
+              if (!created && agent.provider === provider &&
+                  ((!config.profileEnvVar && agent.accountConfigDir) ||
+                   (!config.modelArgument && agent.modelId))) {
+                updateAgent({ ...agent,
+                  accountConfigDir: config.profileEnvVar ? agent.accountConfigDir : undefined,
+                  modelId: config.modelArgument ? agent.modelId : "",
+                });
+              }
               checkHost();
             }}
             onRemoved={provider => {

@@ -3,7 +3,7 @@ import {
   HostRequestSchema, type DuplicateMatch, type GenerationRequest, type HostMessage, type LearningDocument,
 } from "@immersive/core";
 import { getAgentCatalog } from "./agents";
-import { listCustomAgents, saveCustomAgent, importCustomAgent, removeCustomAgent, testCustomConfig, resolveCustomExecutable } from "./agents/custom";
+import { listCustomAgents, getCustomAgent, saveCustomAgent, importCustomAgent, removeCustomAgent, testCustomConfig, resolveCustomExecutable } from "./agents/custom";
 import { discoverAgentModels } from "./agents/metadata";
 import { listAgentProfiles, saveAgentProfile, removeAgentProfile, removeAgentProfilesByProvider } from "./agents/profiles";
 import { assertAgentMayBeRemoved } from "./agents/remove-guard";
@@ -117,10 +117,17 @@ async function handle(input: unknown): Promise<void> {
         reply({ id: request.id, type: "customAgentImported", ...imported });
         break;
       }
-      case "customAgentSave":
+      case "customAgentSave": {
+        // An edit retains the Host-owned ID. Removing profile support must not strand stored environments.
+        const previous = await getCustomAgent(request.config.id);
+        if (previous.profileEnvVar && !request.config.profileEnvVar &&
+            (await listAgentProfiles()).some(profile => profile.provider === request.config.id)) {
+          throw new Error("Remove this Agent's saved account environments before removing profile support.");
+        }
         reply({ id: request.id, type: "customAgentList",
           agents: await saveCustomAgent(request.config) });
         break;
+      }
       case "customAgentRemove": {
         // Include every persisted job, not just the 50 most recent UI summaries.
         await manager.recoverInterrupted();

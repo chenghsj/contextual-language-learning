@@ -18,4 +18,5 @@ test("BYO UI uses real Host import/edit/probe/test/remove actions", async () => 
     "customAgentProbe", "customAgentRemove"]) assert.ok(source.includes(name), name);
   assert.match(source, /parseAgentImport\(json\)/);
   assert.match(source, /window\.confirm\(ui\.testWarning\)/);
+  assert.match(source, /testSavedAgent\(agent\)/);
 });
