@@ -197,7 +197,7 @@ export function isPlaybackOnlyDriveRevision(before: LearningDocument, after: Lea
   const { playbackOverrides: oldRanges, ...oldContent } = before;
   const { playbackOverrides: newRanges, ...newContent } = after;
   return JSON.stringify(oldContent) === JSON.stringify(newContent) &&
-    JSON.stringify(oldRanges ?? {}) !== JSON.stringify(newRanges ?? {});
+    JSON.stringify(oldRanges) !== JSON.stringify(newRanges);
 }
 
 async function updateOwnedPlaybackBackup(
