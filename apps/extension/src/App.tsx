@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BackupSettingsSchema, compactStudyExport, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
   parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
-  type BackupSettings, type Destination, type DriveAccount, type DuplicateMatch,
+  type BackupSettings, type Destination, type DriveAccount, type DriveLessonSummary, type LessonSummary, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
   type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
@@ -17,7 +17,7 @@ import {
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
-import { BookOpen, Settings2, WandSparkles } from "lucide-react";
+import { BookOpen, Library, Settings2, WandSparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
 import { Input } from "./components/ui/input";
@@ -35,7 +35,8 @@ import {
 } from "./i18n/preferences";
 
 const HOST_NAME = "dev.immersive.language_learning";
-type Page = "create" | "reader" | "settings";
+type Page = "create" | "reader" | "settings" | "lessons";
+type LessonEntry = { documentId: string; title: string; createdAt: string; local?: LessonSummary; drive?: DriveLessonSummary };
 type Installed = Record<string, boolean>;
 type RepeatOption = "2" | "3" | "5" | "infinite";
 
@@ -125,6 +126,12 @@ export default function App() {
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [jobFilter, setJobFilter] = useState<"all" | "active" | "completed">("all");
   const [showAllJobs, setShowAllJobs] = useState(false);
+  const [localLessons, setLocalLessons] = useState<LessonSummary[]>([]);
+  const [cloudLessons, setCloudLessons] = useState<DriveLessonSummary[]>([]);
+  const [lessonFilter, setLessonFilter] = useState<"all" | "local" | "drive">("all");
+  const [lessonsBusy, setLessonsBusy] = useState(false);
+  const [catalogError, setCatalogError] = useState("");
+  const [restoreBusy, setRestoreBusy] = useState<string | null>(null);
   const [destination, setDestination] = useState<Destination>({ kind: "local" });
   const [backup, setBackup] = useState<BackupSettings>({ enabled: false });
   const [backupStatus, setBackupStatus] = useState("");
@@ -156,6 +163,7 @@ export default function App() {
   const lastSelectedVideoKeyRef = useRef<string | null>(null);
   const manuallyEditedTitleRef = useRef(false);
   const metadataRequestRef = useRef(0);
+  const catalogLoadIdRef = useRef(0);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
   const platform = getVideoAdapter(sourceUrl).id;
@@ -802,6 +810,66 @@ export default function App() {
       preflightPortRef.current);
   }
 
+  async function loadLessons(): Promise<void> {
+    const version = ++catalogLoadIdRef.current;
+    setLessonsBusy(true);
+    setCatalogError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "listLessons" });
+      if (response.type !== "lessons") throw new Error("Unexpected lesson catalog response");
+      if (version !== catalogLoadIdRef.current) return;
+      setLocalLessons(response.lessons);
+      const accountId = backup.accountId ?? driveAccounts[0]?.id;
+      if (accountId) {
+        try {
+          const cloud = await nativeOnce({ id: crypto.randomUUID(), type: "listDriveLessons", accountId });
+          if (cloud.type !== "driveLessons") throw new Error("Unexpected Drive catalog response");
+          if (version === catalogLoadIdRef.current) setCloudLessons(cloud.lessons);
+        } catch (cause) {
+          if (version === catalogLoadIdRef.current) {
+            setCloudLessons([]);
+            setCatalogError(cause instanceof Error ? cause.message : t("lessonCatalogError"));
+          }
+        }
+      } else setCloudLessons([]);
+    } catch (cause) {
+      if (version === catalogLoadIdRef.current) setCatalogError(
+        cause instanceof Error ? cause.message : t("lessonCatalogError"));
+    } finally {
+      if (version === catalogLoadIdRef.current) setLessonsBusy(false);
+    }
+  }
+
+  async function restoreLesson(lesson: DriveLessonSummary): Promise<void> {
+    setRestoreBusy(lesson.documentId);
+    setCatalogError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "restoreDriveLesson",
+        accountId: lesson.accountId, documentId: lesson.documentId });
+      if (response.type !== "driveRestored") throw new Error("Unexpected restore response");
+      await loadLessons();
+      openSavedDocument(response.documentId);
+    } catch (cause) {
+      setCatalogError(cause instanceof Error ? cause.message : t("lessonRestoreError"));
+    } finally { setRestoreBusy(null); }
+  }
+
+  async function backupExistingLessons(): Promise<void> {
+    const accountId = backup.accountId ?? driveAccounts[0]?.id;
+    if (!accountId) { await connectDrive(); return; }
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "backupExisting", accountId });
+      if (response.type !== "backupsScheduled") throw new Error("Unexpected backup response");
+      setBackupStatus(t("existingBackupsScheduled", { count: response.count }));
+      controllerPortRef.current?.postMessage({ id: crypto.randomUUID(), type: "resumeBackups" });
+      void loadJobs();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("publicationError"));
+    } finally { setStorageBusy(false); }
+  }
+
   function loadJobs(): void {
     if (loadingJobs) return;
     // Refreshing history must never dismiss the Agent error just received.
@@ -1122,6 +1190,26 @@ export default function App() {
       ...filteredJobs.filter(job => job.status === "completed").slice(0, 3)]
     : filteredJobs.slice(0, 3);
   const activeJob = jobs.find(job => job.id === lastJobIdRef.current);
+  const lessonCatalog = useMemo(() => {
+    const entries = new Map<string, LessonEntry>();
+    for (const local of localLessons) entries.set(local.documentId, {
+      documentId: local.documentId, title: local.title, createdAt: local.createdAt, local,
+    });
+    for (const drive of cloudLessons) {
+      const previous = entries.get(drive.documentId);
+      entries.set(drive.documentId, previous
+        ? { ...previous, drive } : {
+          documentId: drive.documentId, title: drive.title, createdAt: drive.createdAt, drive,
+        });
+    }
+    return [...entries.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }, [localLessons, cloudLessons]);
+  const visibleLessons = lessonCatalog.filter(item => lessonFilter === "local"
+    ? !!item.local : lessonFilter === "drive" ? !!item.drive : true);
+
+  useEffect(() => {
+    if (page === "lessons") void loadLessons();
+  }, [page, backup.accountId, driveAccounts.length]);
 
   return (
     <div className="app">
