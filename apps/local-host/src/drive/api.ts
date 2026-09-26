@@ -16,22 +16,59 @@ const UPLOAD = "https://www.googleapis.com/upload/drive/v3";
 const FOLDER_TYPE = "application/vnd.google-apps.folder";
 const FOLDER_NAME = "Immersive Learning";
 
-async function googleFetch(accountId: string, url: string, init: RequestInit = {}): Promise<Response> {
+/** Never display raw Google responses: they can contain private file metadata or request details. */
+export function driveApiError(status: number, body: unknown, operation: string): Error {
+  const payload = body && typeof body === "object" ? body as Record<string, unknown> : {};
+  const error = payload.error && typeof payload.error === "object"
+    ? payload.error as Record<string, unknown> : {};
+  const reasons = Array.isArray(error.errors)
+    ? error.errors.filter((entry): entry is Record<string, unknown> =>
+        !!entry && typeof entry === "object") : [];
+  const rawReason = reasons.find(entry => typeof entry.reason === "string")?.reason;
+  const rawStatus = typeof error.status === "string" ? error.status : "";
+  const clean = (value: unknown): string => typeof value === "string" &&
+    /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(value) ? value : "";
+  const reason = clean(rawReason) || clean(rawStatus) || "unknown";
+  let hint = "請確認目前帳號的 Google Drive 權限，並重試。";
+  if (reason === "accessNotConfigured" || reason === "SERVICE_DISABLED") {
+    hint = "Google Drive API 尚未啟用；請在 OAuth 用戶端所屬的 Google Cloud 專案啟用 Drive API。";
+  } else if (reason === "insufficientPermissions" || reason === "PERMISSION_DENIED") {
+    hint = "目前授權可能缺少 drive.file 權限；請確認所選帳號與授權範圍後重新連結。";
+  } else if (reason === "appNotAuthorizedToFile" || reason === "forbidden") {
+    hint = "這個 Google 帳號沒有存取此檔案的權限；請確認備份帳號及檔案是否由本應用程式建立。";
+  } else if (["rateLimitExceeded", "userRateLimitExceeded", "quotaExceeded",
+    "dailyLimitExceeded", "RESOURCE_EXHAUSTED"].includes(reason)) {
+    hint = "Google Drive 暫時限制請求量；請稍後再試，不需要重新授權。";
+  } else if (status === 401 || reason === "authError" || reason === "UNAUTHENTICATED") {
+    hint = "Google 授權可能已失效；請重新連結此帳號。";
+  } else if (status === 403) {
+    hint = "Google Drive 拒絕此操作；請確認 Drive API、所選帳號與 drive.file 權限。";
+  }
+  const label = ["驗證 Drive 權限", "列出雲端教材", "讀取雲端教材", "備份教材"].includes(operation)
+    ? operation : "Google Drive 操作";
+  return new Error(label + "失敗（HTTP " + status + "，" + reason + "）。" + hint);
+}
+
+async function googleFetch(accountId: string, url: string, init: RequestInit = {}, operation = "Google Drive 操作"): Promise<Response> {
   const headers = new Headers(init.headers);
   headers.set("Authorization", "Bearer " + await accessTokenFor(accountId));
   const response = await fetch(url, {
     ...init, headers, signal: init.signal ?? AbortSignal.timeout(45_000),
   });
-  if (!response.ok) throw new Error("Google Drive request failed (HTTP " + response.status + "); check account permissions or reconnect");
+  if (!response.ok) {
+    const data: unknown = await response.json().catch(() => null);
+    throw driveApiError(response.status, data, operation);
+  }
   return response;
 }
 
-async function apiJSON<T>(accountId: string, url: string, init: RequestInit = {}): Promise<T> {
-  const response = await googleFetch(accountId, url, init);
+async function apiJSON<T>(accountId: string, url: string, init: RequestInit = {}, operation?: string): Promise<T> {
+  const response = await googleFetch(accountId, url, init, operation);
   return await response.json() as T;
 }
 
-async function listFiles(accountId: string, query: string, fields: string, limit = 100): Promise<DriveFile[]> {
+async function listFiles(accountId: string, query: string, fields: string, limit = 100,
+  operation = "列出雲端教材"): Promise<DriveFile[]> {
   const files: DriveFile[] = [];
   let pageToken: string | undefined;
   do {
@@ -40,11 +77,19 @@ async function listFiles(accountId: string, query: string, fields: string, limit
     url.searchParams.set("fields", "nextPageToken,files(" + fields + ")");
     url.searchParams.set("pageSize", String(Math.min(limit, 1000)));
     if (pageToken) url.searchParams.set("pageToken", pageToken);
-    const page = await apiJSON<DriveList>(accountId, url.toString());
+    const page = await apiJSON<DriveList>(accountId, url.toString(), {}, operation);
     files.push(...(page.files ?? []));
     pageToken = page.nextPageToken;
   } while (pageToken && files.length < limit);
   return files.slice(0, limit);
+}
+
+/** Test the actual Drive API using the selected account; a cached access token is not sufficient. */
+export async function validateDriveAccess(accountId: string): Promise<void> {
+  if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
+    throw new Error("請先連結所選的 Google Drive 帳號");
+  }
+  await listFiles(accountId, "trashed = false", "id", 1, "驗證 Drive 權限");
 }
 
 function propertyMatch(key: string, value: string): string {
