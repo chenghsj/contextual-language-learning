@@ -18,9 +18,12 @@ const originalBlobShas = {
 } as const;
 
 function gitBlobSha(source: string): string {
+  // GitHub blobs use LF. Windows checkout can materialize identical files as
+  // CRLF, so hash canonical Git contents rather than platform line endings.
+  const canonical = source.replace(/\r\n/g, "\n");
   return createHash("sha1")
-    .update("blob " + Buffer.byteLength(source, "utf8") + "\0")
-    .update(source, "utf8")
+    .update("blob " + Buffer.byteLength(canonical, "utf8") + "\0")
+    .update(canonical, "utf8")
     .digest("hex");
 }
 
