@@ -26,6 +26,8 @@ export const LearningProfileSchema = z.object({
   maxNewVocabulary: z.number().int().min(1).max(30),
   exerciseCount: z.number().int().min(0).max(12),
   sceneCount: z.number().int().min(1).max(6).default(4),
+  /** AI-created situations per focus expression; legacy profiles may omit this. */
+  contextualExampleCount: z.number().int().min(1).max(3).optional(),
 });
 export type LearningProfile = z.infer<typeof LearningProfileSchema>;
 
@@ -107,6 +109,8 @@ export const GenerationRequestSchema = z.object({
   id: z.string().uuid(),
   source: SourceSchema,
   profile: LearningProfileSchema,
+  /** Explicit opt-in keeps in-progress V2 generation checkpoints compatible. */
+  lessonFormat: z.enum(["classic-v2", "contextual-v3"]).optional(),
   agent: AgentSettingsSchema,
   destination: DestinationSchema.optional(),
   backup: BackupSettingsSchema.optional(),
@@ -185,6 +189,41 @@ export const StudySceneSchema = StudySceneContentSchema.extend({
 });
 export type StudyScene = z.infer<typeof StudySceneSchema>;
 
+/** V3 preserves V2's cue/timing and vocabulary fields for safe older-reader fallback. */
+export const ContextualWordNoteSchema = z.object({
+  surface: z.string().min(1).max(160),
+  meaning: z.string().min(1).max(400),
+  explanation: z.string().min(1).max(700),
+});
+export const ContextualDialogueLineSchema = z.object({
+  text: z.string().min(1).max(500),
+  translation: z.string().min(1).max(700),
+});
+export const ContextualExampleSchema = z.object({
+  situation: z.string().min(1).max(450),
+  dialogue: z.array(ContextualDialogueLineSchema).min(2).max(3),
+});
+export const ContextualFocusSchema = z.object({
+  expression: z.string().min(1).max(160),
+  sourceCueIds: z.array(z.string().min(1)).min(1).max(10),
+  meaning: z.string().min(1).max(400),
+  contextExplanation: z.string().min(1).max(1400),
+  contextCueIds: z.array(z.string().min(1)).min(1).max(10),
+  wordNotes: z.array(ContextualWordNoteSchema).max(3),
+  examples: z.array(ContextualExampleSchema).min(1).max(3),
+});
+/** Model output has semantic content only; original IDs and timestamps come from the Host. */
+export const ContextualSceneContentSchema = z.object({
+  title: z.string().min(1).max(180),
+  context: z.string().min(1).max(2400),
+  translations: z.array(StudyTranslationSchema).min(1).max(10),
+  focusItems: z.array(ContextualFocusSchema).min(1).max(2),
+});
+export const StudySceneV3Schema = StudySceneSchema.extend({
+  focusItems: z.array(ContextualFocusSchema).min(1).max(2),
+});
+export type StudySceneV3 = z.infer<typeof StudySceneV3Schema>;
+
 const DocumentCommonSchema = z.object({
   id: z.string().uuid(),
   createdAt: z.string().datetime(),
@@ -201,8 +240,12 @@ export const LearningDocumentV2Schema = DocumentCommonSchema.extend({
   schemaVersion: z.literal(2),
   sections: z.array(StudySceneSchema).min(1).max(6),
 });
+export const LearningDocumentV3Schema = DocumentCommonSchema.extend({
+  schemaVersion: z.literal(3),
+  sections: z.array(StudySceneV3Schema).min(1).max(6),
+});
 export const LearningDocumentSchema = z.discriminatedUnion("schemaVersion", [
-  LearningDocumentV1Schema, LearningDocumentV2Schema,
+  LearningDocumentV1Schema, LearningDocumentV2Schema, LearningDocumentV3Schema,
 ]);
 export type LearningDocument = z.infer<typeof LearningDocumentSchema>;
 
