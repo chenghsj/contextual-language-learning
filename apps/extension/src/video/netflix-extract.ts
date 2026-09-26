@@ -1,4 +1,4 @@
-import { LEARNING_LANGUAGES } from "@immersive/core";
+import { LEARNING_LANGUAGES, parseSubtitles } from "@immersive/core";
 import {
   MAX_SUBTITLE_BYTES, normalizeNetflixTimedText,
   normalizedVttCues, subtitleUrlFromTrack, type SubtitleDocument,
@@ -103,7 +103,19 @@ export async function readNetflixSubtitles(
   let textTracks: NetflixCaptionTrack[] = [];
   try { timedTracks = player.getTimedTextTrackList?.() ?? []; } catch { /* unavailable */ }
   try { textTracks = player.getTextTrackList?.() ?? []; } catch { /* unavailable */ }
-  const tracks = [...timedTracks, ...textTracks];
+  let tracks = [...timedTracks, ...textTracks];
+  // Netflix can expose the HTML video before its internal subtitle catalog.
+  // Wait briefly only for an actual playing/loading video; never fabricate tracks.
+  if (!tracks.length && video) {
+    const pause = options.pause ?? (ms => new Promise<void>(resolve => setTimeout(resolve, ms)));
+    for (let attempt = 0; attempt < 4 && !tracks.length; attempt++) {
+      if (!sameVideo()) throw new Error("The Netflix watch page changed. Try again.");
+      await pause(300);
+      try { timedTracks = player.getTimedTextTrackList?.() ?? []; } catch { timedTracks = []; }
+      try { textTracks = player.getTextTrackList?.() ?? []; } catch { textTracks = []; }
+      tracks = [...timedTracks, ...textTracks];
+    }
+  }
   const candidates = tracks.filter(track => !track.isNoneTrack &&
     !track.isForcedNarrative && [track.bcp47, track.language].some(
       language => languageMatches(language, requestedLanguage),
@@ -112,7 +124,9 @@ export async function readNetflixSubtitles(
   if (!chosen) {
     const native = browserTextTrack(video, requestedLanguage);
     if (native) return native;
-    throw new Error("No subtitle track in this language is exposed by the current Netflix player.");
+    throw new Error(tracks.length
+      ? "Netflix has subtitle tracks, but none match the selected learning language. Choose an available subtitle language and retry."
+      : "Netflix player has not exposed subtitle tracks. Start playback, enable subtitles, then retry.");
   }
   const id = trackId(chosen);
   let original: NetflixCaptionTrack | null = null;
@@ -163,7 +177,11 @@ export async function readNetflixSubtitles(
     }
     const body = await response.text();
     if (!sameVideo()) throw new Error("The Netflix watch page changed. Try again.");
-    return { text: normalizeNetflixTimedText(body), language: chosen.bcp47 ?? chosen.language ?? requestedLanguage };
+    const normalized = normalizeNetflixTimedText(body);
+    if (!parseSubtitles(normalized).length) {
+      throw new Error("Netflix delivered a subtitle document, but it contains no usable timed cues. Try another subtitle track or import a caption file.");
+    }
+    return { text: normalized, language: chosen.bcp47 ?? chosen.language ?? requestedLanguage };
   } finally {
     if (changed && previous) {
       try { selectTrack(previous); }

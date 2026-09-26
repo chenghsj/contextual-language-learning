@@ -1,4 +1,5 @@
 import { LEARNING_LANGUAGES, type LearningLanguage } from "@immersive/core";
+import { netflixPlayerTitle } from "../video/metadata";
 import {
   NETFLIX_SEEK_GRACE_MS, NETFLIX_SEEK_TOLERANCE_MS, isManagedNetflixSeek,
   reachedNetflixSeekTarget, netflixLoopReachedEnd,
@@ -334,12 +335,19 @@ import {
     if (!incoming || typeof incoming !== "object") return false;
     const candidate = incoming as Partial<Message>;
     if (candidate.type === "VIDEO_METADATA_GET") {
-      const title = document.querySelector('[data-uia="video-title"]')?.textContent?.trim() ||
-        document.querySelector('[data-uia="player-title"]')?.textContent?.trim() ||
-        document.querySelector(".video-title h4")?.textContent?.trim() ||
-        document.querySelector('meta[property="og:title"]')?.getAttribute("content") ||
-        document.title;
-      sendResponse({ ok: true, url: location.href, title });
+      const title = netflixPlayerTitle([
+        document.querySelector('[data-uia="video-title"]')?.textContent,
+        document.querySelector('[data-uia="player-title"]')?.textContent,
+        document.querySelector('.video-title h4')?.textContent,
+        document.querySelector('[data-uia="title-info"]')?.textContent,
+        document.querySelector('[data-uia="episode-title"]')?.textContent,
+        document.querySelector('[data-uia="video-title"] [aria-label]')?.getAttribute("aria-label"),
+        // Netflix can update MediaSession later than its player overlays.
+        document.querySelector("video") ? navigator.mediaSession?.metadata?.title : null,
+        // The tab title is a fallback only; SPA meta tags can refer to a prior episode.
+        document.title,
+      ]);
+      sendResponse({ ok: true, url: location.href, title: title ?? undefined });
       return false;
     }
     if (!["NETFLIX_DIAGNOSE", "NETFLIX_SEEK", "NETFLIX_LOOP_SET", "NETFLIX_LOOP_CLEAR", "NETFLIX_PLAYBACK_RATE_SET", "NETFLIX_SUBTITLES_GET"].includes(candidate.type ?? "")) {
