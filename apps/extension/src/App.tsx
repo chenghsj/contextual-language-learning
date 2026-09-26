@@ -29,6 +29,7 @@ import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./
 import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { AppPanel } from "./components/app-panel";
+import { Card } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Select, SelectContent, SelectField, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Textarea } from "./components/ui/textarea";
