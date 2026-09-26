@@ -51,5 +51,5 @@ test("Radix popup and trigger follow the warm theme without an unstyled native d
   assert.match(select, /focus:bg-accent focus:text-accent-foreground/);
   assert.match(css, /--primary: oklch\(0\.6171 0\.1375 39\.0427\)/);
   assert.match(select, /data-slot="select-trigger"/);
-  assert.match(await readFile(new URL("../utility-classes.ts", import.meta.url), "utf8"), /uiPreferenceField/);
+  assert.ok((await readFile(new URL("../App.tsx", import.meta.url), "utf8")).includes("[&_[data-slot=select-trigger]]:w-full"));
 });

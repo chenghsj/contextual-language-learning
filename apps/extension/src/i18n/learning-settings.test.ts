@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { tw } from "../utility-classes";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { learningSettingsCopy, levelHint, type LearningSettingKey } from "./learning-settings";
@@ -85,15 +84,14 @@ test("settings keep stable saved option values rather than persisting translated
 test("task cards use one Tailwind layout below the refresh control", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
-  assert.match(app, /className=\{tw\("jobHistoryList"\)\}/);
-  assert.ok(tw("jobHistoryList").includes("my-[10px]"));
-  assert.ok(tw("jobHistoryList").includes("gap-[7px]"));
+  assert.ok(app.includes('className="my-[10px] grid gap-[7px]"'), "task layout uses direct Tailwind classes");
   assert.doesNotMatch(css, /\.jobHistoryList\s*\{/);
 });
 
-test("navigation uses compact four-column Tailwind utilities", () => {
-  const classes = tw("tabs");
-  const button = tw("tabButton");
+test("navigation uses compact four-column Tailwind utilities", async () => {
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const classes = app.match(/<nav className="([^"]+)" aria-label=\{t\("navLabel"\)\}/)?.[1] ?? "";
+  const button = app.match(/page === "create" \? "([^"]+)"/)?.[1] ?? "";
   assert.ok(classes.includes("grid-cols-4"));
   assert.ok(button.includes("text-[11px]"));
   assert.ok(button.includes("gap-[3px]"));
@@ -106,10 +104,12 @@ test("the supplied dark tokens and both lesson readers retain Tailwind utilities
   const dark = css.match(/^\.dark \{([\s\S]*?)^\}/m)?.[1];
   assert.ok(light && dark, "light and dark theme token blocks must exist");
   assert.match(dark, /--primary:\s*oklch\(0\.6724 0\.1308 38\.7559\)/);
-  assert.ok(tw("sceneSteps").includes("grid-cols-3"));
-  assert.ok(tw("contextualDialogue").includes("border-border"));
-  assert.ok(tw("scenePlayer").includes("sticky"));
-  assert.ok(tw("contextualPlayer").includes("sticky"));
+  const legacy = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
+  const contextual = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
+  assert.ok(legacy.includes("grid-cols-3"), "saved V1/V2 study steps retain their layout");
+  assert.ok(contextual.includes("border border-border"), "V3 source dialogue remains styled");
+  assert.ok(legacy.includes("sticky bottom-0"), "V1/V2 player stays sticky");
+  assert.ok(contextual.includes("sticky bottom-0"), "V3 player stays sticky");
   assert.doesNotMatch(css, /^\.scene/m);
 });
 
@@ -162,7 +162,8 @@ test("level tooltip displays the complete scale for the selected language in eve
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   assert.match(app, /items=\{levelOptions\.map\(value => \{/);
   assert.match(app, /settingsCopy\.levels\[profile\.targetLanguage\]\[value\]/);
-  assert.ok(tw("settingInfoLevels").includes("grid"));
+  const infoSource = await readFile(new URL("../components/setting-info.tsx", import.meta.url), "utf8");
+  assert.ok(infoSource.includes('className="mt-[10px] grid'));
   for (const locale of locales) {
     const copy = learningSettingsCopy[locale];
     for (const language of ["en", "ja", "ko"] as const) {
@@ -215,4 +216,23 @@ test("all eight learning languages have localized names, levels and help without
       assert.deepEqual(Object.keys(copy.levels[language]), ["A1", "A2", "B1", "B2", "C1", "C2"]);
     }
   }
+});
+
+
+test("setting help is label-aligned and does not repeat general explanations below selects", async () => {
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const help = await readFile(new URL("../components/setting-info.tsx", import.meta.url), "utf8");
+  for (const id of ["learning-target", "learning-level", "learning-length", "contextual-examples", "learning-explanation-language", "ui-language-select", "appearance-select"]) {
+    assert.ok(app.includes('htmlFor="' + id + '"'), id + " must have a real label");
+  }
+  for (const key of ["lessonLengthHint", "contextualExamplesHint", "uiLanguageHint", "appearanceHint"]) {
+    assert.ok(app.includes('explanation={t("' + key + '")}'), key + " belongs in info help");
+    assert.ok(!app.includes('>{t("' + key + '")}</p>'), key + " must not be duplicated under the select");
+  }
+  assert.ok(app.includes('relative mb-[6px] flex min-w-0 items-center gap-2'));
+  assert.ok(help.includes('className="group m-0 inline-flex size-7'), "info details have no inherited section margins");
+  assert.ok(help.includes('top-[calc(100%+6px)] right-0'), "popover stays aligned to the field's right edge");
+  assert.ok(help.includes('focus-visible:outline-2'), "info trigger supports visible keyboard focus");
+  assert.ok(help.includes('event.key !== "Escape"') && help.includes('document.addEventListener("pointerdown"'),
+    "Escape and outside-click close the native details");
 });
