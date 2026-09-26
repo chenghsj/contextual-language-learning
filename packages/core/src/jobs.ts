@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { chunkCues } from "./subtitles";
 import {
-  CandidateSceneSchema, GenerationRequestSchema, LearningDocumentSchema, LearningSectionSchema, StudySceneSchema,
+  CandidateSceneSchema, GenerationRequestSchema, LearningDocumentSchema, LearningSectionSchema, StudySceneSchema, StudySceneV3Schema,
   type GenerationRequest, type LearningDocument, type LearningSection,
 } from "./schema";
 
@@ -39,7 +39,7 @@ export const JobSnapshotSchema = z.object({
   schemaVersion: z.literal(1),
   summary: JobSummarySchema,
   request: GenerationRequestSchema,
-  sections: z.array(z.union([StudySceneSchema, LearningSectionSchema])),
+  sections: z.array(z.union([StudySceneV3Schema, StudySceneSchema, LearningSectionSchema])),
   scenePlan: ScenePlanSchema.optional(),
 }).superRefine((job, ctx) => {
   if (job.summary.id !== job.request.id) {
@@ -103,7 +103,7 @@ export function readLearningDocument(value: unknown): LearningDocument {
     throw new Error("Learning document is missing its schema version");
   }
   const version = (value as { schemaVersion: unknown }).schemaVersion;
-  if (version !== 1 && version !== 2) throw new Error("Unsupported learning document schema version: " + String(version));
+  if (version !== 1 && version !== 2 && version !== 3) throw new Error("Unsupported learning document schema version: " + String(version));
   return LearningDocumentSchema.parse(value);
 }
 
