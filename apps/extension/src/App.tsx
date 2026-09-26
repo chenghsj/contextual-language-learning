@@ -464,6 +464,12 @@ export default function App() {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveConnect" });
       if (response.type !== "driveConnected") throw new Error("Unexpected Google account response");
       setDriveAccounts(current => [...current.filter(item => item.id !== response.account.id), response.account]);
+      // OAuth proves identity, not Drive API access. Do not turn backup on
+      // until an actual request to the selected Drive account succeeds.
+      const verified = await nativeOnce({
+        id: crypto.randomUUID(), type: "driveValidate", accountId: response.account.id,
+      });
+      if (verified.type !== "driveValidated") throw new Error("Google Drive access could not be verified.");
       setBackup({ enabled: true, accountId: response.account.id });
       setDriveConnectError("");
     } catch (cause) {
@@ -479,9 +485,10 @@ export default function App() {
     try {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveDisconnect", accountId });
       if (response.type !== "driveDisconnected") throw new Error("Unexpected Drive response");
-      setDriveAccounts(current => current.filter(item => item.id !== accountId));
+      const remaining = driveAccounts.filter(item => item.id !== accountId);
+      setDriveAccounts(remaining);
       setBackup(current => current.accountId === accountId
-        ? { enabled: false } : current);
+        ? { enabled: false, accountId: remaining[0]?.id } : current);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("connectDriveError"));
     } finally { setStorageBusy(false); }
@@ -1744,7 +1751,7 @@ export default function App() {
           {!driveConfigured && <p className="callout">{t("oauthFirst")}</p>}
           {driveAccounts.length === 1 && <div className="driveSingleAccount">
             <div><strong>{driveAccounts[0].email}</strong><span className="hint">{t("backupAccount")}</span></div>
-            <Badge>{t("agentInstalled")}</Badge>
+            <Badge>{t("driveConnectedStatus")}</Badge>
           </div>}
           {driveAccounts.length > 1 && <label>{t("backupAccount")}
             <SelectField ariaLabel={t("backupAccount")} value={backup.accountId ?? driveAccounts[0].id}
