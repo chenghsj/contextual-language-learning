@@ -455,3 +455,21 @@ button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(-
 .lessonLibraryList { display: grid; gap: 8px; margin-top: 12px; }
 .lessonRowMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .lessonRowMeta .hint { margin: 0; }
+
+/* Optional CLI profiles stay out of the primary Agent workflow. */
+.agentProfileSection { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.agentProfileHeading { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; }
+.agentProfileHeading .settingInfo { margin: 0; }
+.agentProfileAdvanced { margin: 10px 0 0; padding: 10px 11px; font-size: 12px; }
+.agentProfileAdvanced > summary { font-size: 12px; font-weight: 600; }
+.driveSingleAccount { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; margin: 12px 0; padding: 10px 11px; border: 1px solid var(--border); border-radius: var(--radius); }
+.driveSingleAccount > div { min-width: 0; }
+.driveSingleAccount strong { display: block; overflow-wrap: anywhere; font-size: 12px; }
+.driveSingleAccount .hint { display: block; margin: 2px 0 0; }
+.driveAccountList { display: grid; gap: 5px; margin-top: 10px; }
+.driveAccountItem { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; padding: 5px 0; }
+.driveAccountItem + .driveAccountItem { border-top: 1px solid var(--border); }
+.driveAccountItem span { min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
+.driveExistingBackup { display: grid; justify-items: start; gap: 4px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.driveExistingBackup strong { font-size: 12px; }
+.driveExistingBackup .hint { margin: 0 0 5px; }
