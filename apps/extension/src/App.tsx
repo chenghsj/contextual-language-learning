@@ -1712,7 +1712,7 @@ export default function App() {
             <Button variant="outline" size="sm" disabled={storageBusy || !backup.accountId}
               onClick={() => void backupExistingLessons()}>{t("backupExisting")}</Button>
           </div>}
-          {backupStatus && <p className="hint" role="status">{backupStatus}</p>
+          {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
         </Card>
       </main>}
 
