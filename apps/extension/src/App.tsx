@@ -1049,6 +1049,15 @@ export default function App() {
 
       // Never replace an existing URL or a manually edited title; metadata
       // recovery only fills missing fields or refreshes an auto-detected title.
+      // An explicitly confirmed metadata link can bind an imported transcript to this video.
+      // Editing a video URL directly never silently rebinds an unrelated subtitle file.
+      if (!originalSource && captionSource?.origin === "manual" && raw.trim()) {
+        const source: CaptionProvenance = { ...captionSource, sourceKey: videoSourceKey(found.url) };
+        setCaptionSource(source);
+        captionDraftsRef.current.set(captionCacheKey(found.url, profile.targetLanguage), {
+          raw, fileName, source,
+        });
+      }
       setSourceUrl(current => current.trim() ? current : found.url);
       if (found.title && !manuallyEditedTitleRef.current) {
         setTitle(current => current.trim() && manuallyEditedTitleRef.current
