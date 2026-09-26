@@ -295,12 +295,6 @@ export default function App() {
         setPublishedLocation(message.location);
       } else if (message.type === "publicationFailed") {
         setError(t("publishFailed", { message: message.message }));
-      } else if (message.type === "backupPublished") {
-        setBackupStatus(t("backupSaved"));
-        void loadJobs();
-      } else if (message.type === "backupFailed") {
-        setBackupStatus(t("backupFailedMessage"));
-        void loadJobs();
       } else if (message.type === "result") {
         try { showDocument(message.document); }
         catch { void loadJobs(); }
