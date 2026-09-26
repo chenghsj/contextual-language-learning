@@ -52,3 +52,65 @@ test("compact V3 JSON keeps focus content but removes transcript cues outside se
   assert.deepEqual(compact.cues.map(cue => cue.id), ["q", "a"]);
   assert.equal(compact.sections[0].focusItems[0].examples.length, 1);
 });
+
+
+const legacyProfile = {
+  targetLanguage: "en" as const, instructionLanguage: "zh-TW" as const, level: "B1",
+  mode: "adaptive" as const, maxNewVocabulary: 2, exerciseCount: 1, sceneCount: 2,
+};
+const legacyBase = {
+  id: v3.id, createdAt: v3.createdAt, source: v3.source, generation: v3.generation,
+  profile: legacyProfile, cues: v3.cues,
+};
+const legacyVocabulary = [{
+  expression: "decide", meaning: "決定", explanation: "Choose an option.",
+  example: "Let's decide tomorrow.",
+}];
+
+test("saved V1 lessons still parse and export without dropping historical cues or practice", () => {
+  const v1 = LearningDocumentSchema.parse({
+    ...legacyBase, schemaVersion: 1,
+    sections: [{
+      id: "00000000-0000-4000-8000-000000000002", title: "Old study card",
+      context: "The dinner conversation.", cueIds: ["q", "a"],
+      startMs: 1000, endMs: 3300,
+      vocabulary: legacyVocabulary, insights: ["Still deciding"],
+      exercises: [{ question: "What is undecided?", answer: "Dinner" }],
+    }],
+  });
+  const compact = compactStudyExport(v1);
+  assert.equal(compact.schemaVersion, 1);
+  assert.equal(compact.cues.length, 3, "V1 keeps its complete original transcript");
+  assert.equal(LearningDocumentSchema.parse(JSON.parse(JSON.stringify(compact))).schemaVersion, 1);
+  const md = learningDocumentToMarkdown(v1);
+  assert.match(md, /Old study card/);
+  assert.match(md, /### Vocabulary/);
+  assert.match(md, /decide/);
+  assert.match(md, /### Practice/);
+  assert.match(md, /What is undecided/);
+  assert.doesNotMatch(md, /AI-created contextual examples/);
+});
+
+test("saved V2 lessons still parse and export translations and exercises without V3 focus items", () => {
+  const v2 = LearningDocumentSchema.parse({
+    ...legacyBase, schemaVersion: 2,
+    sections: [{
+      id: "00000000-0000-4000-8000-000000000002", title: "Old contextual scene",
+      context: "The dinner conversation.", learningGoal: "Understand a decision.",
+      cueIds: ["q", "a"], focusCueIds: ["a"], startMs: 1000, endMs: 3300,
+      translations: [{ cueId: "a", text: "我還沒決定。" }],
+      vocabulary: legacyVocabulary, insights: ["Still deciding"],
+      exercises: [{ type: "situational", question: "What is undecided?", answer: "Dinner" }],
+    }],
+  });
+  const compact = compactStudyExport(v2);
+  assert.equal(compact.schemaVersion, 2);
+  assert.deepEqual(compact.cues.map(cue => cue.id), ["q", "a"]);
+  assert.equal(LearningDocumentSchema.parse(JSON.parse(JSON.stringify(compact))).schemaVersion, 2);
+  const md = learningDocumentToMarkdown(v2);
+  assert.match(md, /Old contextual scene/);
+  assert.match(md, /我還沒決定/);
+  assert.match(md, /### Vocabulary/);
+  assert.match(md, /### Practice/);
+  assert.doesNotMatch(md, /AI-created contextual examples/);
+});
