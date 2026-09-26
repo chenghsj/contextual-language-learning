@@ -84,8 +84,12 @@ function browserTextTrack(video: HTMLVideoElement | null, requested: string): Su
     return { startMs: cue.startTime * 1000, endMs: cue.endTime * 1000, text };
   });
   const duration = video.duration * 1000;
-  if (Number.isFinite(duration) && duration > 60_000 &&
-      Math.max(...cues.map(cue => cue.endMs)) < duration * 0.7) return null;
+  // HTML textTracks on Netflix may expose only currently displayed cues. A
+  // cue near the end is not evidence that the entire transcript is available.
+  if (!Number.isFinite(duration) || duration <= 0) return null;
+  if (duration > 60_000 && (cues.length < 3 ||
+      Math.min(...cues.map(cue => cue.startMs)) > duration * 0.3 ||
+      Math.max(...cues.map(cue => cue.endMs)) < duration * 0.7)) return null;
   return { text: normalizedVttCues(cues), language: selected.language };
 }
 
