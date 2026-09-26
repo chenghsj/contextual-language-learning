@@ -123,6 +123,8 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
+  const [jobFilter, setJobFilter] = useState<"all" | "active" | "completed">("all");
+  const [showAllJobs, setShowAllJobs] = useState(false);
   const [destination, setDestination] = useState<Destination>({ kind: "local" });
   const [backup, setBackup] = useState<BackupSettings>({ enabled: false });
   const [backupStatus, setBackupStatus] = useState("");
@@ -1113,6 +1115,14 @@ export default function App() {
     : profile.targetLanguage === "ja"
       ? ["N5", "N4", "N3", "N2", "N1"] : ["1", "2", "3", "4", "5", "6"];
 
+  const filteredJobs = jobs.filter(job => jobFilter === "completed"
+    ? job.status === "completed" : jobFilter === "active" ? job.status !== "completed" : true);
+  const visibleJobs = showAllJobs ? filteredJobs : jobFilter === "all"
+    ? [...filteredJobs.filter(job => job.status !== "completed"),
+      ...filteredJobs.filter(job => job.status === "completed").slice(0, 3)]
+    : filteredJobs.slice(0, 3);
+  const activeJob = jobs.find(job => job.id === lastJobIdRef.current);
+
   return (
     <div className="app">
       <header className="topbar">
@@ -1358,8 +1368,14 @@ export default function App() {
             </dl>
           </div>
           <Button className="primary" onClick={startGeneration} disabled={generating || checking || !cues.length || !title.trim()}>
+            {(generating || checking) && <span className="generationSpinner" aria-hidden="true" />}
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
+          {generating && activeJob && <div className="generationProgress" role="progressbar"
+            aria-label={t("generationProgressLabel")} aria-valuemin={0}
+            aria-valuenow={activeJob.completed} aria-valuemax={activeJob.total}>
+            <span style={{ width: (100 * activeJob.completed / activeJob.total) + "%" }} />
+          </div>}
           {generating && <Button variant="outline" className="secondary" onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
           {progress && <p className="status" role="status">{progress}</p>}
           {publishedLocation && <p className="hint">{t("publishedTo", { location: publishedLocation })}</p>}
@@ -1367,33 +1383,51 @@ export default function App() {
         <Card className="panel">
           <h2>{t("jobHistory")}</h2>
           <p className="hint">{t("jobHistoryHint")}</p>
-          <Button variant="outline" className="secondary" disabled={loadingJobs}
-            onClick={loadJobs}>{loadingJobs ? t("loading") : t("refreshJobs")}</Button>
-          {jobs.length > 0 && <div className="jobHistoryList">
-            {jobs.map(job => <div className="learningCard" key={job.id}>
-            <strong>{job.sourceTitle}</strong>
-            <p>{t("jobProgress", { provider: agentDisplayName(job.provider), status: t(jobStatusKeys[job.status]), completed: job.completed, total: job.total })}</p>
-            {job.error && <p>{job.error}</p>}
-            <div className="actions">
-              {["queued", "waiting", "failed"].includes(job.status) &&
-                <Button variant="outline" size="sm" disabled={generating}
-                  onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>}
-              {job.documentId && <>
-                <Button variant="outline" size="sm" disabled={generating}
-                  onClick={() => openSavedDocument(job.documentId!)}>{t("openLesson")}</Button>
-                {job.publication?.status !== "published" &&
-                  <Button variant="outline" size="sm" disabled={storageBusy}
-                    onClick={() => void retryPublication(job.id)}>{t("retryPublish")}</Button>}
-                {job.backup && <span className="hint">{t(job.backup.status === "backed-up"
-                  ? "backupSaved" : job.backup.status === "uploading" || job.backup.status === "pending"
-                    ? "backupProcessing" : "backupFailedMessage")}</span>}
-                {job.backup && ["failed", "conflict"].includes(job.backup.status) &&
-                  <Button variant="outline" size="sm" disabled={storageBusy}
-                    onClick={() => void retryBackup(job.id)}>{t("retryBackup")}</Button>}
-              </>}
-            </div>
-          </div>)}
-          </div>}
+          <div className="jobToolbar">
+            <SelectField ariaLabel={t("jobFilterLabel")} value={jobFilter}
+              onValueChange={value => {
+                if (value === "all" || value === "active" || value === "completed") setJobFilter(value);
+                setShowAllJobs(false);
+              }} options={[
+                { value: "all", label: t("jobFilterAll") },
+                { value: "active", label: t("jobFilterActive") },
+                { value: "completed", label: t("jobFilterCompleted") },
+              ]} />
+            <Button variant="outline" size="sm" disabled={loadingJobs}
+              onClick={loadJobs}>{loadingJobs ? t("loading") : t("refreshJobs")}</Button>
+          </div>
+          <div className="jobHistoryList">
+            {visibleJobs.map(job => <div className="jobRow" key={job.id}>
+              <div className="jobRowHeading">
+                <strong title={job.sourceTitle}>{job.sourceTitle}</strong>
+                <Badge variant="secondary">{t(jobStatusKeys[job.status])}</Badge>
+              </div>
+              <p className="hint">{agentDisplayName(job.provider)} · {job.completed}/{job.total}
+                {job.backup && " · " + t(job.backup.status === "backed-up"
+                  ? "backupSaved" : ["pending", "uploading"].includes(job.backup.status)
+                    ? "backupProcessing" : "backupFailedMessage")}</p>
+              {job.error && <p className="jobRowError">{job.error}</p>}
+              <div className="actions">
+                {["queued", "waiting", "failed"].includes(job.status) &&
+                  <Button variant="outline" size="sm" disabled={generating}
+                    onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>}
+                {job.documentId && <>
+                  <Button variant="outline" size="sm" disabled={generating}
+                    onClick={() => openSavedDocument(job.documentId!)}>{t("openLesson")}</Button>
+                  {job.publication?.status !== "published" &&
+                    <Button variant="outline" size="sm" disabled={storageBusy}
+                      onClick={() => void retryPublication(job.id)}>{t("retryPublish")}</Button>}
+                  {job.backup && ["failed", "conflict"].includes(job.backup.status) &&
+                    <Button variant="outline" size="sm" disabled={storageBusy}
+                      onClick={() => void retryBackup(job.id)}>{t("retryBackup")}</Button>}
+                </>}
+              </div>
+            </div>)}
+          </div>
+          {filteredJobs.length > visibleJobs.length && <Button variant="ghost" size="sm"
+            onClick={() => setShowAllJobs(true)}>{t("showMoreJobs", { count: filteredJobs.length - visibleJobs.length })}</Button>}
+          {showAllJobs && filteredJobs.length > 3 && <Button variant="ghost" size="sm"
+            onClick={() => setShowAllJobs(false)}>{t("showLessJobs")}</Button>}
         </Card>
       </main>}
 
