@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { tw } from "../utility-classes";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { LearningDocument } from "@immersive/core";
@@ -94,9 +93,9 @@ test("scene switching, completion and step progression have separate handlers an
   assert.match(source, /const next = nextStudyStep\(step\)/);
   const finish = source.slice(source.indexOf("  function finishScene():"), source.indexOf("  function renderOriginal("));
   assert.doesNotMatch(finish, /selectScene\(|setMode\(/);
-  assert.ok(tw("sceneStepNumber").includes("text-base"));
-  assert.ok(tw("sceneStepButton").includes("min-h-[66px]"));
-  assert.ok(tw("sceneNavigation").includes("grid-cols-["));
+  assert.ok(source.includes("block text-base"));
+  assert.ok(source.includes("min-h-[66px]"));
+  assert.ok(source.includes("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"));
 });
 
 test("the mini player is collapsed by default and leaves one full-scene playback action in the scene header", () => {
@@ -105,7 +104,7 @@ test("the mini player is collapsed by default and leaves one full-scene playback
     const html = renderReader(locale, true);
     assert.ok(html.includes("my-[6px_12px]"));
     assert.ok(html.includes("sticky bottom-0 z-[3]"));
-    assert.ok(tw("sceneMiniHeader").includes("justify-between"), locale + ": compact player title");
+    assert.ok(html.includes("flex min-w-0 items-center justify-between gap-2"), locale + ": compact player title");
     assert.ok(html.includes("grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]"), locale + ": compact controls");
     assert.ok(html.includes(copy.repeatFocus), locale + ": focus loop toggle");
     assert.ok(html.includes(copy.repeatFocus), locale + ": focus loop label");
@@ -138,14 +137,14 @@ test("compact playback keeps original loop settings and removes the old always-v
   assert.match(source, /else await playFocus\(selectedFocusCue\)/);
   assert.match(source, /setLoopingSceneId\(null\)/);
   assert.match(source, /aria-expanded=\{playbackSettingsOpen\}/);
-  assert.match(source, /playbackSettingsOpen && <div className=\{tw\("sceneMiniSettings"\)\}/);
+  assert.ok(source.includes('playbackSettingsOpen && <div className="mt-[9px] max-h-[min(340px,55vh)]'));
   assert.match(source, /<SelectField ariaLabel=\{c.repeat\} value=\{repeat\}/);
   assert.match(source, /<SelectField ariaLabel=\{c.delay\} value=\{delay\}/);
   assert.match(source, /<SelectField ariaLabel=\{c.speed\} value=\{playbackRate\}/);
   assert.doesNotMatch(source, /scenePlaybackSettings/);
-  assert.ok(tw("scenePlayer").includes("py-[9px]"));
-  assert.ok(tw("sceneMiniControls").includes("grid-cols-["));
-  assert.ok(tw("sceneReadingSettings").includes("my-[8px_14px]"));
+  assert.ok(source.includes("py-[9px]"));
+  assert.ok(source.includes("grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]"));
+  assert.ok(source.includes("my-[8px_14px]"));
 });
 
 test("reader opens in study with only Study and Review tabs; no watch-along polling", async () => {
@@ -154,7 +153,7 @@ test("reader opens in study with only Study and Review tabs; no watch-along poll
   assert.match(source, /useState<Mode>\("learn"\)/);
   assert.match(source, /\(\["learn", "review"\] as const\)/);
   assert.doesNotMatch(source, /watchScene|watchTime|watchAvailable|mode === "watch"|setInterval\(poll/);
-  assert.ok(tw("sceneTabs").includes("grid-cols-2"));
+  assert.ok(source.includes("grid-cols-2"));
   for (const locale of Object.keys(messages) as UiLocale[]) {
     const copy = sceneReaderMessages[locale];
     const html = renderReader(locale, true);
@@ -181,7 +180,7 @@ test("A/B controls are scoped to the expanded player, persisted per document and
   assert.match(source, /updateFocusRange\(boundary, "current"\)/);
   assert.match(source, /updateFocusRange\("reset"\)/);
   assert.match(source, /formatLoopTimestamp\(point\)/);
-  assert.ok(tw("sceneLoopNudge").includes("grid-cols-2"));
+  assert.ok(source.includes("grid-cols-2"));
   for (const locale of Object.keys(messages) as UiLocale[]) {
     const copy = sceneReaderMessages[locale];
     for (const key of ["loopRange", "loopRangeHint", "loopStart", "loopEnd",

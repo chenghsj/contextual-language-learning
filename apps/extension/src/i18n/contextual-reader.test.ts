@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { tw } from "../utility-classes";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { LearningDocument } from "@immersive/core";
@@ -105,9 +104,9 @@ test("V3 route keeps V2 unchanged, original cue refs and export actions availabl
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   assert.match(app, /document\.schemaVersion === 3 \? <ContextualSceneReader/);
   assert.match(app, /document\.schemaVersion === 2 \? <SceneReader/);
-  assert.ok(tw("contextualPlayer").includes("sticky bottom-0"));
-  assert.ok(tw("contextualLine").includes("focus-visible:outline-2"));
   const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
+  assert.ok(source.includes("sticky bottom-0"));
+  assert.ok(source.includes("focus-visible:outline-2"));
   assert.match(source, /scene\.cueIds\.map\(id => cues\.get\(id\)\)/);
   assert.match(source, /item\.sourceCueIds/);
   assert.match(source, /onDownload\("json"\)/);
@@ -129,7 +128,7 @@ test("V3 follows actual playback time while keeping A/B edits per source cue", a
   assert.match(source, /updateRange\("reset"\)/);
   assert.match(source, /formatLoopTimestamp\(point\)/);
   assert.match(source, /calibrationRef\.current/);
-  assert.ok(tw("contextualTimeDialog").includes("backdrop:bg-[#0008]"));
+  assert.ok(source.includes("backdrop:bg-[#0008]"));
   const html = render("zh-TW");
   assert.ok(html.includes(contextualReaderMessages["zh-TW"].adjustPosition));
   assert.ok(html.includes("<dialog"));

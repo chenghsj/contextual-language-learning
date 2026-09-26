@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { tw, utilityClasses } from "../utility-classes";
 
 const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
 const button = await readFile(new URL("../components/ui/button.tsx", import.meta.url), "utf8");
 const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+const card = await readFile(new URL("../components/ui/card.tsx", import.meta.url), "utf8");
+const info = await readFile(new URL("../components/setting-info.tsx", import.meta.url), "utf8");
+const legacy = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
+const contextual = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
 
 function declarations(block: string): Record<string, string> {
   return Object.fromEntries(
@@ -56,11 +59,11 @@ test("cards, tooltips and compact player use warm rounded Tailwind utilities", (
     ["xl", "calc(var(--radius) + 4px)"],
   ]) assert.ok(css.includes("--radius-" + token + ": " + expected + ";"), token);
   assert.doesNotMatch(css, /--radius:\s*0;/);
-  assert.ok(tw("panel").includes("rounded-[var(--radius)]"));
-  assert.ok(tw("settingInfoPopover").includes("bg-popover"));
-  assert.ok(tw("sceneMiniControls").includes("grid"));
-  assert.ok(tw("textButton").includes("dark:text-primary"));
-  assert.ok(tw("contextualTimeDialog").includes("backdrop:bg-[#0008]"));
+  assert.ok(card.includes("rounded-[var(--radius)]"));
+  assert.ok(info.includes("bg-popover"));
+  assert.ok(legacy.includes("grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]"));
+  assert.ok(app.includes("dark:text-primary"));
+  assert.ok(contextual.includes("backdrop:bg-[#0008]"));
 });
 
 test("button variants and utility feedback use theme tokens instead of the old fixed palette", () => {
@@ -72,28 +75,27 @@ test("button variants and utility feedback use theme tokens instead of the old f
   ]) assert.ok(button.includes(value), "button variant missing " + value);
   assert.doesNotMatch(button, /bg-red-600|bg-red-700/);
   assert.doesNotMatch(css, /#(?:f8faf9|17231f|e7f4ec|f3c0b5|fff0ec|e9f4fb|79b18d)/i);
-  assert.ok(tw("status").includes("var(--primary)"));
-  assert.ok(tw("alert").includes("var(--destructive)"));
+  assert.ok(app.includes("var(--primary)_35%"));
+  assert.ok(app.includes("var(--destructive)_55%"));
   assert.match(css, /@layer base \{/);
   assert.doesNotMatch(css, /^\.(?!dark\b)[A-Za-z][\w-]*\s*\{/gm,
     "component selectors must be replaced by Tailwind v4 utilities");
 });
 
 test("primary Side Panel action utilities keep readable labels and the warm palette", () => {
-  assert.match(app, /<Button className=\{tw\("subtitleFetchButton"\)\}/);
-  assert.match(app, /<Button className=\{tw\("primary"\)\} onClick=\{startGeneration\}/);
-  for (const name of ["primary", "subtitleFetchButton"]) {
-    const classes = tw(name);
-    assert.ok(classes.includes("min-h-10"), name);
-    assert.ok(classes.includes("text-sm"), name);
-    assert.ok(classes.includes("font-semibold"), name);
-    assert.ok(classes.includes("whitespace-normal"), name);
+  const actions = [...app.matchAll(/<Button className="([^"]+)"[^>]*>/g)]
+    .map(match => match[1]).filter(classes => classes.includes("min-h-10"));
+  assert.ok(actions.length >= 2, "subtitle and generation actions remain legible");
+  for (const classes of actions) {
+    assert.ok(classes.includes("text-sm"));
+    assert.ok(classes.includes("font-semibold"));
+    assert.ok(classes.includes("whitespace-normal"));
     assert.doesNotMatch(classes, /\bbg-(?:red|green)/);
   }
   assert.equal(light.primary, "oklch(0.6171 0.1375 39.0427)");
   assert.equal(light["primary-foreground"], "oklch(1.0000 0 0)");
   assert.match(css, /@custom-variant dark \(&:is\(\.dark \*\)\);/);
-  assert.ok(Object.keys(utilityClasses).length > 100, "both legacy and V3 styles are migrated");
+  assert.doesNotMatch(app + legacy + contextual + info, /tw\(|utility-classes/, "views use Tailwind directly");
 });
 
 

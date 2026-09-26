@@ -1,4 +1,3 @@
-import { tw } from "../utility-classes";
 import { useEffect, useState } from "react";
 import { CustomAgentConfigSchema, type CustomAgentConfig, type HostMessage } from "@immersive/core";
 import { Button } from "./ui/button";
@@ -119,13 +118,13 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
     finally { setBusy(false); }
   }
 
-  return <details className={tw("detailsBase agentProfileAdvanced customAgentSection")}>
-    <summary className={tw("summaryBase")}>{t("customAgentsHeading")}</summary>
-    <p className={tw("hint")}>{t("customAgentsHint")}</p>
-    {agents.length > 0 && <div className={tw("customAgentList")}>
-      {agents.map(value => <div key={value.id} className={tw("customAgentRow")}>
+  return <details className="mt-[15px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+    <summary className="cursor-pointer font-semibold">{t("customAgentsHeading")}</summary>
+    <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("customAgentsHint")}</p>
+    {agents.length > 0 && <div className="mt-3 grid gap-2">
+      {agents.map(value => <div key={value.id} className="flex min-w-0 flex-wrap items-center justify-between gap-2 border border-border p-2 [&_span]:min-w-0 [&_span]:flex-1 [&_span]:wrap-anywhere [&_strong]:block [&_small]:block [&_small]:text-[11px] [&_small]:text-muted-foreground">
         <span><strong>{value.label}</strong><small>{value.executable}</small></span>
-        <div className={tw("actions")}>
+        <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
           <Button variant="outline" size="sm" disabled={busy}
             onClick={() => edit(value)}>{t("customAgentEdit")}</Button>
           <Button variant="outline" size="sm" disabled={busy}
@@ -133,8 +132,8 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
         </div>
       </div>)}
     </div>}
-    <div className={tw("customAgentFields")}>
-      <label className={tw("labelBase")}>{t("customAgentTemplate")}
+    <div className="grid min-w-0 gap-[11px] pt-[11px] [&_label]:min-w-0 [&_label]:gap-[5px] [&_label]:text-xs [&_[data-ui=agentProfileAdvanced]]:m-0 [&_[data-ui=agentProfileAdvanced]>label]:mt-[10px] [&_[data-ui=actions]]:gap-[6px]">
+      <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentTemplate")}
         <SelectField ariaLabel={t("customAgentTemplate")} disabled={busy}
           value={template} onValueChange={chooseTemplate} options={[
             { value: "", label: t("customAgentManual") },
@@ -144,58 +143,58 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
             { value: "file", label: t("customAgentFileTemplate") },
           ]} />
       </label>
-      <label className={tw("labelBase")}>{t("customAgentName")}
+      <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentName")}
         <Input disabled={busy} maxLength={80} value={draft.label}
           placeholder={t("customAgentNamePlaceholder")}
           onChange={event => update({ label: event.target.value })} />
       </label>
-      <label className={tw("labelBase")}>{t("customAgentExecutable")}
+      <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentExecutable")}
         <Input disabled={busy} maxLength={1024} value={draft.executable}
           placeholder={t("customAgentExecutablePlaceholder")}
           onChange={event => update({ executable: event.target.value })} />
       </label>
-      <div className={tw("actions")}>
+      <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
         <Button variant="outline" size="sm" disabled={!available || busy || !draft.executable.trim()}
           onClick={() => void probe()}>{t("customAgentDetect")}</Button>
       </div>
-      <details className={tw("detailsBase agentProfileAdvanced")}>
-        <summary className={tw("summaryBase")}>{t("customAgentAdvanced")}</summary>
-        <label className={tw("labelBase")}>{t("customAgentPromptMode")}
+      <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+        <summary className="cursor-pointer font-semibold">{t("customAgentAdvanced")}</summary>
+        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentPromptMode")}
           <SelectField ariaLabel={t("customAgentPromptMode")} value={draft.promptMode}
             disabled={busy} onValueChange={value =>
               update({ promptMode: value as CustomAgentConfig["promptMode"] })}
             options={[{ value: "argument", label: t("customAgentArgument") },
               { value: "stdin", label: t("customAgentStdin") }]} />
         </label>
-        <label className={tw("labelBase")}>{t("customAgentOutputMode")}
+        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentOutputMode")}
           <SelectField ariaLabel={t("customAgentOutputMode")} value={draft.outputMode}
             disabled={busy} onValueChange={value =>
               update({ outputMode: value as CustomAgentConfig["outputMode"] })}
             options={[{ value: "stdout-json", label: t("customAgentStdout") },
               { value: "file-json", label: t("customAgentFile") }]} />
         </label>
-        <label className={tw("labelBase")}>{t("customAgentArgs")}
-          <textarea className={tw("customAgentTextarea")} disabled={busy} rows={4}
+        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentArgs")}
+          <textarea className="block w-full min-w-0 resize-y rounded-[var(--radius)] border border-border bg-background px-[10px] py-[9px] font-mono text-xs leading-[1.5] text-foreground wrap-anywhere focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1" disabled={busy} rows={4}
             aria-label={t("customAgentArgs")} value={argv}
             onChange={event => setArgv(event.target.value)} />
         </label>
-        <p className={tw("hint")}>{t("customAgentPlaceholders")}</p>
-        <label className={tw("labelBase")}>{t("customAgentModelArgument")}
+        <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("customAgentPlaceholders")}</p>
+        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentModelArgument")}
           <Input disabled={busy} maxLength={64} value={draft.modelArgument ?? ""}
             placeholder="--model" onChange={event => update({ modelArgument: event.target.value })} />
         </label>
-        <label className={tw("labelBase")}>{t("customAgentModelsCommand")}
-          <textarea className={tw("customAgentTextarea")} disabled={busy} rows={2}
+        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentModelsCommand")}
+          <textarea className="block w-full min-w-0 resize-y rounded-[var(--radius)] border border-border bg-background px-[10px] py-[9px] font-mono text-xs leading-[1.5] text-foreground wrap-anywhere focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1" disabled={busy} rows={2}
             aria-label={t("customAgentModelsCommand")} value={modelArgv}
             onChange={event => setModelArgv(event.target.value)} />
         </label>
-        <label className={tw("labelBase")}>{t("customAgentProfileEnv")}
+        <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentProfileEnv")}
           <Input disabled={busy} value={draft.profileEnvVar ?? ""} placeholder="GEMINI_CLI_HOME"
             onChange={event => update({ profileEnvVar: event.target.value })} />
         </label>
       </details>
-      <p className={tw("hint")}>{t("customAgentSafety")}</p>
-      <div className={tw("actions")}>
+      <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("customAgentSafety")}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
         <Button variant="outline" size="sm" disabled={busy} onClick={() => edit(fresh())}>
           {t("customAgentNew")}</Button>
         <Button variant="outline" size="sm" disabled={!available || busy}
@@ -203,7 +202,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
         <Button size="sm" disabled={!available || busy}
           onClick={() => void submit("save")}>{t("customAgentSave")}</Button>
       </div>
-      {status && <p className={tw(failed ? "jobRowError" : "hint")} role="status">{status}</p>}
+      {status && <p className={failed ? "my-[5px] text-[11px] text-destructive wrap-anywhere" : "my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"} data-ui={failed ? undefined : "hint"} role="status">{status}</p>}
     </div>
   </details>;
 }
