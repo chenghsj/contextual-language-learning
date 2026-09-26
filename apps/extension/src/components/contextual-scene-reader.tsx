@@ -514,7 +514,7 @@ export function ContextualSceneReader({
           {(["start", "end"] as const).map(boundary => {
             const point = boundary === "start" ? selectedRange.startMs : selectedRange.endMs;
             const name = boundary === "start" ? timing.loopStart : timing.loopEnd;
-            return <div className={tw("contextualTimeBoundary")} key={boundary}>
+            return <div key={boundary}>
               <div className={tw("contextualTimeBoundaryHeading")}>
                 <strong>{name}</strong>
                 <output>{formatLoopTimestamp(point)}</output>

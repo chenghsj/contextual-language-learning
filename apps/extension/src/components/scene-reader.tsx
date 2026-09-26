@@ -465,7 +465,7 @@ export function SceneReader({
         </Button>
       </div>
       <div className={tw("sceneMiniControls")}>
-        <Button size="sm" className={tw("sceneMiniLoop")} variant={focusLoopActive ? "secondary" : "default"}
+        <Button size="sm" variant={focusLoopActive ? "secondary" : "default"}
           aria-pressed={focusLoopActive}
           disabled={busy || !selectedFocusCue || !adapter.loop ||
             (focusLoopActive && !adapter.stopLoop)}
@@ -473,7 +473,7 @@ export function SceneReader({
           {focusLoopActive ? <Square aria-hidden="true" /> : <Repeat2 aria-hidden="true" />}
           {focusLoopActive ? c.stopLoop : c.repeatFocus}
         </Button>
-        <Button size="sm" variant="outline" className={tw("sceneMiniSettingsToggle")}
+        <Button size="sm" variant="outline"
           aria-expanded={playbackSettingsOpen}
           aria-controls={playbackSettingsOpen ? "scene-playback-options" : undefined}
           onClick={() => setPlaybackSettingsOpen(open => !open)}>
