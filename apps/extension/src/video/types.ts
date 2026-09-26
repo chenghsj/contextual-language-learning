@@ -10,6 +10,11 @@ export type LoopSettings = {
 };
 
 export type PlaybackStatus = { currentMs?: number; message: string };
+/** Track metadata contains no caption URLs, tokens or transcript payload. */
+export type SubtitleTrackAvailability = {
+  status: "available" | "unknown";
+  tracks: { language: string; kind: "manual" | "auto" }[];
+};
 
 export interface VideoAdapter {
   readonly id: string;
@@ -23,6 +28,7 @@ export interface VideoAdapter {
   seek?(url: string, startMs: number): Promise<void>;
   setPlaybackRate?(url: string, rate: number): Promise<void>;
   fetchSubtitles?(url: string, language: LearningLanguage): Promise<{ text: string; language: string }>;
+  availableSubtitleTracks?(url: string): Promise<SubtitleTrackAvailability>;
   loop?(url: string, options: LoopSettings): Promise<void>;
   stopLoop?(url: string): Promise<void>;
 }
