@@ -201,7 +201,9 @@ import {
         // while one of our fallback URLs fails or returns an empty body.
         const playerCaptions = fromPlayer(request.videoId, track.languageCode, track.kind);
         if (playerCaptions) return { text: playerCaptions.text, language: playerCaptions.language };
-        lastError = error instanceof Error ? error : new Error("YouTube subtitle request failed.");
+        lastError = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")
+          ? new Error("A YouTube subtitle request timed out. Enable CC, play the video and retry.")
+          : error instanceof Error ? error : new Error("YouTube subtitle request failed.");
       }
     }
     // The player's cloned response may finish after our fallback requests.
