@@ -307,7 +307,7 @@ export function ContextualSceneReader({
   }
 
   return <div className="min-w-0">
-    <Card className="p-3">
+    <Card className="mb-3 min-w-0 max-w-full p-3 wrap-anywhere">
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="min-w-0 flex-1 [&>strong]:block [&>strong]:text-[13px] [&>strong]:wrap-anywhere [&_[data-ui=hint]]:my-[3px]">
           <strong>{document.source.title}</strong>
@@ -340,7 +340,7 @@ export function ContextualSceneReader({
       </div>
     </Card>
 
-    <Card className="min-w-0 px-3 py-[14px] [&_h2]:mt-[5px] [&_h2]:mb-0 [&_h2]:text-[17px] [&_h3]:m-0 [&_h3]:text-sm [&_h3]:normal-case [&_h3]:tracking-normal [&_h3]:text-foreground">
+    <Card className="mb-3 min-w-0 max-w-full px-3 py-[14px] wrap-anywhere [&_h2]:mt-[5px] [&_h2]:mb-0 [&_h2]:text-[17px] [&_h3]:m-0 [&_h3]:text-sm [&_h3]:normal-case [&_h3]:tracking-normal [&_h3]:text-foreground">
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div>
           <span className="text-[11px] text-muted-foreground tabular-nums">{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>

@@ -28,7 +28,7 @@ import { CustomAgentSettings } from "./components/custom-agent-settings";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
 import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
 import { Button } from "./components/ui/button";
-import { Card } from "./components/ui/card";
+import { AppPanel } from "./components/app-panel";
 import { Input } from "./components/ui/input";
 import { Select, SelectContent, SelectField, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Textarea } from "./components/ui/textarea";
@@ -1448,7 +1448,7 @@ export default function App() {
       {error && <div className="my-[10px] flex max-w-full min-w-0 justify-between gap-[10px] rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--destructive)_55%,var(--border))] bg-[color-mix(in_oklch,var(--destructive)_10%,var(--card))] px-3 py-[10px] text-xs text-foreground wrap-anywhere [&_button]:shrink-0" role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}><X aria-hidden="true" /></Button></div>}
 
       {page === "create" && <main>
-        <Card>
+        <AppPanel>
           <h2>{t("subtitleHeading")}</h2>
           <div className="mb-[10px] min-w-0 border-b border-border pb-3 [&>label]:my-2 [&>.actions]:mt-0 [&>.actions]:mb-[7px] [&_[data-ui=chip]]:mt-[6px]">
           <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
@@ -1476,7 +1476,7 @@ export default function App() {
             setSourceUrl(event.target.value);
             setSubtitleStatus("");
           }} placeholder="https://www.youtube.com/watch?v=…" /></label>
-          <Badge className="inline-flex w-fit items-center rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_40%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_12%,var(--card))] px-2 py-[3px] text-[11px] font-[650] text-foreground" data-ui="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
+          <Badge data-ui="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
           </div>
           <div className="my-[6px_12px] min-w-0 [&_[data-ui=settingField]]:m-0">
             <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
@@ -1510,9 +1510,9 @@ export default function App() {
           <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px]" open={subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube"}>
             <summary className="cursor-pointer font-semibold">{subtitleUi.manual}</summary>
             {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("subtitleHint")}</p>}
-            <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
+            <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("subtitleFile")} <Input type="file" className="h-auto min-h-10 p-[7px] text-xs" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
             {fileName && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("importedFile", { name: fileName })}</p>}
-            <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => {
+            <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("pasteSubtitles")} <Textarea className="resize-y" rows={5} value={raw} onChange={event => {
               ++metadataRequestRef.current;
               setMetadataBusy(false);
               setMetadataStatus("");
@@ -1542,9 +1542,9 @@ export default function App() {
             })}</p>}
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("parsedCues", { count: cues.length })}</p>
 
-        </Card>
+        </AppPanel>
 
-        <Card className="[&_[data-ui=settingField]]:my-[13px] [&_[data-ui=hint]]:my-[4px_9px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:min-h-[38px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:w-full [&_[data-ui=advancedLessonSettings]]:mt-4">
+        <AppPanel className="[&_[data-ui=settingField]]:my-[13px] [&_[data-ui=hint]]:my-[4px_9px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:min-h-[38px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:w-full [&_[data-ui=advancedLessonSettings]]:mt-4">
           <h2>{t("learningHeading")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground mt-[2px]! mb-3!" data-ui="hint">{t("lessonSettingsIntro")}</p>
           <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
@@ -1624,15 +1624,15 @@ export default function App() {
                 ]} />
             </div>
           </details>
-        </Card>
+        </AppPanel>
 
-        <Card>
+        <AppPanel>
           <h2>{t("generationHeading")}</h2>
           <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("storageLocation")}</label>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("currentFolder", { path: destination.kind === "local"
             ? destination.directory ?? t("defaultFolder") : t("defaultFolder") })}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-            <Button variant="outline" className="bg-secondary text-secondary-foreground" disabled={storageBusy || generating}
+            <Button variant="outline" disabled={storageBusy || generating}
               onClick={() => void chooseFolder()}>{t("chooseFolder")}</Button>
             {destination.kind === "local" && destination.directory && <Button variant="ghost" size="sm"
               onClick={() => setDestination({ kind: "local" })}>{t("useDefaultFolder")}</Button>}
@@ -1710,11 +1710,11 @@ export default function App() {
             aria-valuenow={activeJob.completed} aria-valuemax={activeJob.total}>
             <span style={{ width: (100 * activeJob.completed / activeJob.total) + "%" }} />
           </div>}
-          {generating && <Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
+          {generating && <Button variant="outline" onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
           {progress && <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere" role="status">{progress}</p>}
           {publishedLocation && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("publishedTo", { location: publishedLocation })}</p>}
-        </Card>
-        <Card>
+        </AppPanel>
+        <AppPanel>
           <h2>{t("jobHistory")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("jobHistoryHint")}</p>
           <div className="flex items-center justify-between gap-2 [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:flex-1">
@@ -1762,11 +1762,11 @@ export default function App() {
             onClick={() => setShowAllJobs(true)}>{t("showMoreJobs", { count: filteredJobs.length - visibleJobs.length })}</Button>}
           {showAllJobs && filteredJobs.length > 3 && <Button variant="ghost" size="sm"
             onClick={() => setShowAllJobs(false)}>{t("showLessJobs")}</Button>}
-        </Card>
+        </AppPanel>
       </main>}
 
       {page === "lessons" && <main>
-        <Card>
+        <AppPanel>
           <h2>{t("lessonLibrary")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("lessonLibraryHint")}</p>
           <div className="flex items-center justify-between gap-2 [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:flex-1">
@@ -1818,11 +1818,11 @@ export default function App() {
               </div>
             </div>)}
           </div>
-        </Card>
+        </AppPanel>
       </main>}
 
       {page === "settings" && <main>
-        <Card>
+        <AppPanel>
           <h2>{t("uiLanguage")} · {t("appearance")}</h2>
           <div className="my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
             <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
@@ -1865,8 +1865,8 @@ export default function App() {
               </SelectContent>
             </Select>
           </div>
-        </Card>
-        <Card>
+        </AppPanel>
+        <AppPanel>
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("agentHint")}</p>
           {installed && <Badge>{t(installed[agent.provider] ? "agentInstalled" : "agentMissing")}</Badge>}
@@ -1971,8 +1971,8 @@ export default function App() {
               if (agent.provider === provider) selectAgent("claude");
               checkHost();
             }} />
-        </Card>
-        <Card>
+        </AppPanel>
+        <AppPanel>
           <h2>{t("driveAccountHeading")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("driveOauthHelp")}</p>
           {!driveConfigured && <p className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere">{t("oauthFirst")}</p>}
@@ -2015,14 +2015,14 @@ export default function App() {
           </section>}
           {driveConnectError && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere" role="status">{driveConnectError}</p>}
           {backupStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{backupStatus}</p>}
-        </Card>
+        </AppPanel>
       </main>}
 
       {page === "reader" && <main>
-        {!document ? <Card className="px-[18px] py-8 text-center">
+        {!document ? <AppPanel className="px-[18px] py-8 text-center">
           <h2>{t("emptyHeading")}</h2><p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("emptyHint")}</p>
-          <Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={() => setPage("create")}>{t("create")}</Button>
-        </Card> : document.schemaVersion === 3 ? <ContextualSceneReader key={document.id}
+          <Button variant="outline" onClick={() => setPage("create")}>{t("create")}</Button>
+        </AppPanel> : document.schemaVersion === 3 ? <ContextualSceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
           repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
           playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
@@ -2033,21 +2033,21 @@ export default function App() {
           playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
           onError={setError} onDownload={format => downloadDocument(document, format)}
         /> : <>
-          <Card>
-            <Badge className="inline-flex w-fit items-center rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_40%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_12%,var(--card))] px-2 py-[3px] text-[11px] font-[650] text-foreground" data-ui="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
+          <AppPanel>
+            <Badge data-ui="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
             <h1>{document.source.title}</h1>
             <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("lessonOverview", { count: document.sections.length, language: document.profile.instructionLanguage })}</p>
             {publishedLocation && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("publishedTo", { location: publishedLocation })}</p>}
             <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-              <Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={() => downloadDocument(document, "json")}>{t("saveJson")}</Button>
-              <Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={() => downloadDocument(document, "md")}>{t("saveMarkdown")}</Button>
+              <Button variant="outline" onClick={() => downloadDocument(document, "json")}>{t("saveJson")}</Button>
+              <Button variant="outline" onClick={() => downloadDocument(document, "md")}>{t("saveMarkdown")}</Button>
             </div>
-          </Card>
-          <Card>
+          </AppPanel>
+          <AppPanel>
             <h2>{t("videoCompanion")}</h2>
             {document.source.url && readerAdapter.id !== "import" &&
               <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-                <Button variant="outline" className="bg-secondary text-secondary-foreground" disabled={openingVideo}
+                <Button variant="outline" disabled={openingVideo}
                   onClick={() => void openVideo()}>
                   {openingVideo ? t("openingVideo") : t("openOrFocusVideo")}
                 </Button>
@@ -2080,7 +2080,7 @@ export default function App() {
                   }))} />
               </label>
               <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions" style={{ alignSelf: "center" }}>
-                <Button variant="outline" className="bg-secondary text-secondary-foreground" disabled={rateApplying}
+                <Button variant="outline" disabled={rateApplying}
                   onClick={() => void applyPlaybackRate()}>
                   {rateApplying ? t("applyingRate") : t("applyPlaybackRate")}
                 </Button>
@@ -2090,16 +2090,16 @@ export default function App() {
             {readerAdapter.diagnose
               ? <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere">
                   {t("experimentalVideoHint", { name: readerAdapter.label })}
-                  <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions"><Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={() => void diagnoseVideo()}>{t("checkPlayer", { name: readerAdapter.label })}</Button></div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions"><Button variant="outline" onClick={() => void diagnoseVideo()}>{t("checkPlayer", { name: readerAdapter.label })}</Button></div>
                 </div>
               : readerAdapter.loop
                 ? <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("youtubeVideoHint", { name: readerAdapter.label })}</p>
                 : <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("noVideoControl")}</p>}
             {playbackStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{playbackStatus}</p>}
-            {loopActive && <Button variant="outline" className="bg-secondary text-secondary-foreground" onClick={() => void stopLoop()}>{t("stopLoop")}</Button>}
-          </Card>
-          {document.sections.map(section => <Card className="pt-5 [&>p]:text-[13px] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:text-[13px] [&_li]:mb-[6px]" key={section.id}>
-            <Badge className="inline-flex w-fit items-center rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_40%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_12%,var(--card))] px-2 py-[3px] text-[11px] font-[650] text-foreground" data-ui="chip">{formatTime(section.startMs)}–{formatTime(section.endMs)}</Badge>
+            {loopActive && <Button variant="outline" onClick={() => void stopLoop()}>{t("stopLoop")}</Button>}
+          </AppPanel>
+          {document.sections.map(section => <AppPanel className="pt-5 [&>p]:text-[13px] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:text-[13px] [&_li]:mb-[6px]" key={section.id}>
+            <Badge data-ui="chip">{formatTime(section.startMs)}–{formatTime(section.endMs)}</Badge>
             <h2>{section.title}</h2>
             <p>{section.context}</p>
             <h3>{t("originalSubtitles")}</h3>
@@ -2129,7 +2129,7 @@ export default function App() {
             {section.insights.length > 0 && <><h3>{t("insights")}</h3><ul>{section.insights.map((insight, index) => <li key={index}>{insight}</li>)}</ul></>}
             {section.exercises.length > 0 && <><h3>{t("exercises")}</h3>
               {section.exercises.map((exercise, index) => <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px]" key={index}><summary className="cursor-pointer font-semibold">{exercise.question}</summary><p>{exercise.answer}</p></details>)}</>}
-          </Card>)}
+          </AppPanel>)}
         </>}
       </main>}
     </div>

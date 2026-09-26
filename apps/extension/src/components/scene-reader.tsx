@@ -12,6 +12,7 @@ import {
 import type { VideoAdapter } from "../video/types";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
+import { AppPanel } from "./app-panel";
 import { SelectField } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { SettingInfo } from "./setting-info";
@@ -283,7 +284,7 @@ export function SceneReader({
   }
 
   return <div className="min-w-0">
-    <Card>
+    <AppPanel>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0 flex-1 wrap-anywhere [&>strong]:block [&>strong]:text-sm [&_strong]:wrap-anywhere [&_[data-ui=hint]]:block [&_[data-ui=hint]]:my-[2px]">
           <strong>{document.source.title}</strong>
@@ -302,12 +303,12 @@ export function SceneReader({
             {c[tab]}
           </Button>)}
       </div>
-    </Card>
+    </AppPanel>
 
     {mode === "learn" && <>
-      <Card>
+      <AppPanel>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="inline-flex w-fit items-center rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_40%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_12%,var(--card))] px-2 py-[3px] text-[11px] font-[650] text-foreground" data-ui="chip">{c.scene} {sceneIndex + 1} / {document.sections.length}</span>
+          <span data-ui="chip">{c.scene} {sceneIndex + 1} / {document.sections.length}</span>
           <span className="text-[11px] text-muted-foreground tabular-nums">{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
         </div>
         <div className="my-[12px_14px] grid min-w-0 gap-[6px] [&_label]:m-0 [&_label]:text-xs [&_label]:font-semibold [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=select-trigger]]:text-xs">
@@ -425,10 +426,10 @@ export function SceneReader({
             disabled={busy || sceneIndex === document.sections.length - 1}
             onClick={() => selectScene(sceneIndex + 1)}>{c.nextScene}</Button>
         </nav>
-      </Card>
+      </AppPanel>
     </>}
 
-    {mode === "review" && <Card>
+    {mode === "review" && <AppPanel>
       <h2>{c.review}</h2>
       <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{c.reviewHint}</p>
       {document.sections.every(item => item.vocabulary.length === 0) && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{c.noExpressions}</p>}
@@ -449,10 +450,10 @@ export function SceneReader({
         </div>;
       })}
       <Button variant="outline" size="sm" onClick={() => setMode("learn")}>{c.returnStudy}</Button>
-    </Card>}
+    </AppPanel>}
 
     {mode === "learn" && sourceUrl && adapter.id !== "import" && <Card
-      className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto sticky bottom-0 z-[3] mb-0 min-w-0 rounded-[var(--radius)] border-t border-border bg-card px-3 py-[9px] shadow-[0_-6px_18px_#00000012]" aria-label={c.miniPlayer}>
+      className="sticky bottom-0 z-[3] mb-0 min-w-0 px-3 py-[9px]" aria-label={c.miniPlayer}>
       <div className="flex min-w-0 items-center justify-between gap-2 [&>button]:size-8 [&>button]:shrink-0">
         <div className="flex min-w-0 flex-1 flex-col gap-px [&_strong]:block [&_strong]:min-w-0 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-xs [&_strong]:font-[650]">
           <span className="text-[11px] text-muted-foreground tabular-nums">{c.scene} {sceneIndex + 1} · {formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>

@@ -59,7 +59,7 @@ test("cards, tooltips and compact player use warm rounded Tailwind utilities", (
     ["xl", "calc(var(--radius) + 4px)"],
   ]) assert.ok(css.includes("--radius-" + token + ": " + expected + ";"), token);
   assert.doesNotMatch(css, /--radius:\s*0;/);
-  assert.ok(card.includes("rounded-[var(--radius)]"));
+  assert.ok(card.includes("rounded-xl border border-border bg-card text-card-foreground shadow-sm"));
   assert.ok(info.includes("bg-popover"));
   assert.ok(legacy.includes("grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]"));
   assert.ok(app.includes("dark:text-primary"));
