@@ -135,6 +135,7 @@ export default function App() {
   const [destination, setDestination] = useState<Destination>({ kind: "local" });
   const [backup, setBackup] = useState<BackupSettings>({ enabled: false });
   const [backupStatus, setBackupStatus] = useState("");
+  const [driveConnectError, setDriveConnectError] = useState("");
   const [driveAccounts, setDriveAccounts] = useState<DriveAccount[]>([]);
   const [driveConfigured, setDriveConfigured] = useState(false);
   const [storageBusy, setStorageBusy] = useState(false);
@@ -442,13 +443,17 @@ export default function App() {
   async function connectDrive(): Promise<void> {
     setStorageBusy(true);
     setError("");
+    setDriveConnectError("");
     try {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveConnect" });
       if (response.type !== "driveConnected") throw new Error("Unexpected Google account response");
       setDriveAccounts(current => [...current.filter(item => item.id !== response.account.id), response.account]);
       setBackup({ enabled: true, accountId: response.account.id });
+      setDriveConnectError("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("connectDriveError"));
+      const message = cause instanceof Error ? cause.message : t("connectDriveError");
+      setError(message);
+      setDriveConnectError(message);
     } finally { setStorageBusy(false); }
   }
 
@@ -1417,6 +1422,7 @@ export default function App() {
           </div>}
           {!backup.enabled && !driveAccounts.length && driveConfigured &&
             <p className="hint">{t("backupConnectToEnable")}</p>}
+          {driveConnectError && <p className="jobRowError" role="status">{driveConnectError}</p>}
           {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
           {duplicateWarning && <div className="callout" role="alertdialog" aria-label={t("duplicateConfirmLabel")}>
             <strong>{t("duplicateFound", { count: duplicateWarning.matches.length })}</strong>
@@ -1712,6 +1718,7 @@ export default function App() {
             <Button variant="outline" size="sm" disabled={storageBusy || !backup.accountId}
               onClick={() => void backupExistingLessons()}>{t("backupExisting")}</Button>
           </div>}
+          {driveConnectError && <p className="jobRowError" role="status">{driveConnectError}</p>}
           {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
         </Card>
       </main>}

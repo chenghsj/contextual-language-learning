@@ -411,11 +411,16 @@ button[data-slot="button"].primary {
 .backupDescription { flex: 1; min-width: 0; font-size: 13px; }
 .backupDescription .hint { margin: 4px 0 0; }
 button[data-slot="button"].backupSwitch {
-  position: relative; flex-shrink: 0; width: 46px; height: 27px; padding: 3px;
+  position: relative; display: inline-flex; align-items: center; justify-content: flex-start;
+  flex-shrink: 0; width: 46px; height: 27px; padding: 3px; border: 0;
   border-radius: 999px; background: var(--muted-foreground); transition: background .2s;
 }
 button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(--primary); }
-.backupSwitchThumb { display: block; width: 21px; height: 21px; border-radius: 50%; background: white; box-shadow: 0 1px 3px #0003; transition: transform .2s; }
+.backupSwitchThumb {
+  display: block; flex: none; width: 21px; height: 21px; border-radius: 50%;
+  background: white; box-shadow: 0 1px 3px #0003;
+  pointer-events: none; transform: translateX(0); transition: transform .2s;
+}
 .backupSwitch[aria-checked="true"] .backupSwitchThumb { transform: translateX(19px); }
 .backupConnection { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .backupConnection .hint { min-width: 0; overflow-wrap: anywhere; margin: 3px 0; }
