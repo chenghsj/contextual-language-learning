@@ -51,7 +51,7 @@ export const CustomAgentConfigSchema = z.object({
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "File mode requires {output} in argv" });
   if (config.outputMode === "stdout-json" && hasOutput)
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "stdout mode must not reference {output}" });
-  if (config.args.some(arg => [...arg.matchAll(/\{([^{}]+)\}/g)].some(match =>
+  if (config.args.some(arg => [...arg.matchAll(/\{([a-z][a-z0-9_]*)\}/gi)].some(match =>
     match[1] !== "prompt" && match[1] !== "output")))
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Unknown argv placeholder" });
 });
