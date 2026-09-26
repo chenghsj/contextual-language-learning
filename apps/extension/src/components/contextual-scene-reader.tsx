@@ -22,7 +22,9 @@ type Props = {
   adapter: VideoAdapter;
   locale: UiLocale;
   repeat: Repeat;
+  setRepeat: (repeat: Repeat) => void;
   delay: number;
+  setDelay: (delay: number) => void;
   playbackRate: number;
   setPlaybackRate: (rate: number) => void;
   onError: (message: string) => void;
@@ -31,7 +33,7 @@ type Props = {
 
 /** V3 is readable as one cohesive scene. V1/V2 keep their original reader. */
 export function ContextualSceneReader({
-  document, adapter, locale, repeat, delay, playbackRate, setPlaybackRate, onError, onDownload,
+  document, adapter, locale, repeat, setRepeat, delay, setDelay, playbackRate, setPlaybackRate, onError, onDownload,
 }: Props) {
   const copy = contextualReaderMessages[locale];
   const timing = sceneReaderMessages[locale];
@@ -365,9 +367,12 @@ export function ContextualSceneReader({
         {lines.map((cue, index) => {
           const focused = scene.focusItems.some(item => item.sourceCueIds.includes(cue.id));
           const selected = selectedCueId === cue.id;
+          const playing = playbackKnown && playbackCueId === cue.id;
           const translation = scene.translations.find(row => row.cueId === cue.id);
           return <button key={cue.id} type="button"
-            className={"contextualLine" + (selected ? " selected" : "")}
+            className={"contextualLine" + (selected ? " chosen" : "") +
+              (playing ? " playing" : "") + (!playbackKnown && selected ? " selected" : "")}
+            aria-current={playing ? "true" : undefined}
             aria-pressed={selected} disabled={busy} onClick={() => void selectCue(cue.id)}>
             <span className="contextualLineNumber">{String(index + 1).padStart(2, "0")}</span>
             <span className="contextualLineText">
@@ -468,6 +473,70 @@ export function ContextualSceneReader({
             value: String(rate), label: rate + "×",
           }))} />}
       </div>
+      <Button size="sm" variant="ghost" className="contextualTimeToggle"
+        aria-expanded={calibrationOpen} disabled={busy || !selectedRange}
+        onClick={() => setCalibrationOpen(true)}>
+        <SlidersHorizontal aria-hidden="true" />{copy.adjustPosition}
+      </Button>
+      <dialog className="contextualTimeDialog" ref={calibrationRef}
+        aria-labelledby="contextual-time-dialog-title"
+        onClose={() => setCalibrationOpen(false)}
+        onCancel={() => setCalibrationOpen(false)}>
+        <div className="contextualTimeHeading">
+          <h3 id="contextual-time-dialog-title">{copy.adjustPosition}</h3>
+          <Button size="icon" variant="ghost" aria-label={copy.close}
+            onClick={() => setCalibrationOpen(false)}><X aria-hidden="true" /></Button>
+        </div>
+        <p className="hint">{timing.loopRangeHint}</p>
+        <div className="contextualTimeOptions">
+          <div>
+            <label htmlFor="contextual-repeats">{timing.repeat}</label>
+            <SelectField id="contextual-repeats" ariaLabel={timing.repeat} value={repeat}
+              onValueChange={value => setRepeat(value as Repeat)}
+              options={[
+                { value: "2", label: "2×" }, { value: "3", label: "3×" },
+                { value: "5", label: "5×" }, { value: "infinite", label: "∞" },
+              ]} />
+          </div>
+          <div>
+            <label htmlFor="contextual-delay">{timing.delay}</label>
+            <SelectField id="contextual-delay" ariaLabel={timing.delay} value={String(delay)}
+              onValueChange={value => setDelay(Number(value))}
+              options={[0, 1, 2, 3].map(seconds => ({
+                value: String(seconds), label: seconds + "s",
+              }))} />
+          </div>
+        </div>
+        {selectedRange && <div className="contextualTimeBoundaries">
+          {(["start", "end"] as const).map(boundary => {
+            const point = boundary === "start" ? selectedRange.startMs : selectedRange.endMs;
+            const name = boundary === "start" ? timing.loopStart : timing.loopEnd;
+            return <div className="contextualTimeBoundary" key={boundary}>
+              <div className="contextualTimeBoundaryHeading">
+                <strong>{name}</strong>
+                <output>{formatLoopTimestamp(point)}</output>
+              </div>
+              <div className="contextualTimeActions">
+                <Button size="sm" variant="outline" disabled={busy}
+                  aria-label={name + " " + timing.loopEarlier}
+                  onClick={() => void updateRange(boundary, point - 500)}>−0.5s</Button>
+                <Button size="sm" variant="outline" disabled={busy}
+                  aria-label={name + " " + timing.loopLater}
+                  onClick={() => void updateRange(boundary, point + 500)}>+0.5s</Button>
+                <Button size="sm" variant="outline" disabled={busy || !adapter.status}
+                  onClick={() => void updateRange(boundary, "current")}>
+                  {timing.setBoundaryHere}
+                </Button>
+              </div>
+            </div>;
+          })}
+          <Button size="sm" variant="ghost" disabled={busy || !selectedCue ||
+            !loopRanges[selectedCue.id]} onClick={() => void updateRange("reset")}>
+            {timing.loopRangeResetButton}
+          </Button>
+        </div>}
+        {status && <p className="hint" role="status">{status}</p>}
+      </dialog>
       {status && <p className="contextualPlayerStatus" role="status">{status}</p>}
     </div>}
   </div>;

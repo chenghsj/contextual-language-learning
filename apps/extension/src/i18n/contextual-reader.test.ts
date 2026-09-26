@@ -60,7 +60,8 @@ const document: Extract<LearningDocument, { schemaVersion: 3 }> = {
 function render(locale: UiLocale, doc: typeof document = document): string {
   return renderToStaticMarkup(createElement(ContextualSceneReader, {
     document: doc, adapter: getVideoAdapter(doc.source.url), locale,
-    repeat: "2", delay: 0, playbackRate: 1, setPlaybackRate: () => undefined,
+    repeat: "2", setRepeat: () => undefined, delay: 0, setDelay: () => undefined,
+    playbackRate: 1, setPlaybackRate: () => undefined,
     onError: () => undefined, onDownload: () => undefined,
   }));
 }
