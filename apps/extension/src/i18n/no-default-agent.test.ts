@@ -10,6 +10,7 @@ test("new and upgrading users never receive a built-in default Agent/model", asy
   assert.match(source, /!isImportedAgentId\(current\.provider\)/);
   assert.doesNotMatch(source, /\{t\("defaultAgent"\)\}:/);
   assert.doesNotMatch(source, /\{t\("defaultModel"\)\}/);
+  assert.match(source, /legacyJobCannotResume/);
   assert.match(source, /isImportedAgentId\(agent\.provider\) && <><label/);
   assert.match(source, /isImportedAgentId\(agent\.provider\) && <div/);
   assert.doesNotMatch(source, /options=\{agentCatalog\.map\(entry =>/);

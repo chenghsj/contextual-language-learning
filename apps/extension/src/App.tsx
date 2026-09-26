@@ -42,7 +42,7 @@ import { ContextualSceneReader } from "./components/contextual-scene-reader";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
 import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
-import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences } from "./i18n/agent-model-preferences";
+import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences, filterImportedModelPreferences } from "./i18n/agent-model-preferences";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
@@ -214,9 +214,16 @@ export default function App() {
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
       // Old built-in selections remain in saved job snapshots, not in BYO onboarding.
       if (saved.agent) setAgent(restoreImportedAgentSelection(saved.agent));
-      if (saved.agentProfiles && typeof saved.agentProfiles === "object") {
-        setAgentProfiles(saved.agentProfiles as Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>);
-      } else if (saved.agent) {
+      if (saved.agentProfiles && typeof saved.agentProfiles === "object" && !Array.isArray(saved.agentProfiles)) {
+        setAgentProfiles(Object.fromEntries(Object.entries(saved.agentProfiles)
+          .filter(([provider, value]) => isImportedAgentId(provider) && value &&
+            typeof value === "object" && "modelId" in value && typeof value.modelId === "string")
+          .map(([provider, value]) => {
+            const setting = value as Pick<AgentSettings, "modelId" | "accountConfigDir">;
+            return [provider, { modelId: setting.modelId,
+              accountConfigDir: typeof setting.accountConfigDir === "string" ? setting.accountConfigDir : undefined }];
+          })));
+      } else if (saved.agent && isImportedAgentId((saved.agent as AgentSettings).provider)) {
         const previous = saved.agent as AgentSettings;
         setAgentProfiles({ [previous.provider]: { modelId: previous.modelId, accountConfigDir: previous.accountConfigDir } });
       }
@@ -226,9 +233,8 @@ export default function App() {
       const legacyModels = migrateAgentModelPreferences(previousAgent, previousProfiles);
       if (saved.agentModelPreferences && typeof saved.agentModelPreferences === "object" &&
           !Array.isArray(saved.agentModelPreferences)) {
-        const stored = Object.fromEntries(Object.entries(saved.agentModelPreferences)
-          .filter(([key, value]) => key.length < 2048 && typeof value === "string" && value.length <= 120));
-        setAgentModelPreferences({ ...legacyModels, ...stored });
+        const imported = filterImportedModelPreferences(saved.agentModelPreferences);
+        setAgentModelPreferences({ ...legacyModels, ...imported });
       } else {
         setAgentModelPreferences(legacyModels);
       }
@@ -1791,8 +1797,10 @@ export default function App() {
               {job.error && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere">{job.error}</p>}
               <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
                 {["queued", "waiting", "failed"].includes(job.status) &&
-                  <Button variant="outline" size="sm" disabled={generating}
-                    onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>}
+                  (isImportedAgentId(job.provider)
+                    ? <Button variant="outline" size="sm" disabled={generating}
+                        onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>
+                    : <p role="status" className="text-xs text-muted-foreground">{t("legacyJobCannotResume")}</p>)}
                 {job.documentId && <>
                   <Button variant="outline" size="sm" disabled={generating}
                     onClick={() => openSavedDocument(job.documentId!)}>{t("openLesson")}</Button>

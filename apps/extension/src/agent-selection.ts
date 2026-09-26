@@ -1,6 +1,6 @@
 import type { AgentSettings } from "@immersive/core";
 
-/** BYO setup has no built-in provider; previous adapters remain for saved job snapshots. */
+/** BYO setup has no built-in providers; historical snapshots retain their original IDs. */
 export const EMPTY_AGENT_SELECTION: AgentSettings = { provider: "", modelId: "" };
 
 export function isImportedAgentId(provider: unknown): provider is string {
