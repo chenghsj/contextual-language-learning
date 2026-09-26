@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { driveApiError } from "./drive/api";
+import { driveApiError } from "./api";
 
 test("Drive permission diagnostics show safe reason and relevant next action", () => {
   const error = driveApiError(403, {
@@ -25,8 +25,8 @@ test("Drive errors distinguish rate limits, missing scopes and unexpected values
 });
 
 test("Drive validation calls the Drive API rather than only refreshing OAuth", async () => {
-  const index = await readFile(new URL("index.ts", import.meta.url), "utf8");
-  const api = await readFile(new URL("drive/api.ts", import.meta.url), "utf8");
+  const index = await readFile(new URL("../index.ts", import.meta.url), "utf8");
+  const api = await readFile(new URL("api.ts", import.meta.url), "utf8");
   assert.match(index, /case "driveValidate":\s*await validateDriveAccess\(request.accountId\)/);
   assert.match(api, /await listFiles\(accountId, "trashed = false", "id", 1, "驗證 Drive 權限"\)/);
 });
