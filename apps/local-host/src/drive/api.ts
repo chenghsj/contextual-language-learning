@@ -134,6 +134,10 @@ export async function findDriveDuplicates(request: GenerationRequest): Promise<D
     })).filter(match => /^[0-9a-f-]{36}$/i.test(match.documentId));
 }
 
+export class DriveContentConflict extends Error {
+  constructor(message: string) { super(message); this.name = "DriveContentConflict"; }
+}
+
 export async function publishDriveDocument(accountId: string, document: LearningDocument, markdown: string): Promise<string> {
   const account = (await listGoogleAccounts()).find(item => item.id === accountId);
   if (!account) throw new Error("Google Drive 帳號尚未連線");
@@ -146,20 +150,29 @@ export async function publishDriveDocument(accountId: string, document: Learning
     immersiveDocumentId: document.id,
     immersiveSchemaVersion: String(document.schemaVersion),
   };
+  const docKey = createHash("sha256").update(document.id).digest("hex");
+  const found = await listFiles(accountId,
+    "trashed = false and " + propertyMatch("immersiveDocumentKey", docKey),
+    "id,name,webViewLink,appProperties", 100);
   let jsonUrl = "";
   for (const format of ["json", "md"] as const) {
-    const found = await listFiles(accountId,
-      "trashed = false and " + propertyMatch("immersiveDocumentKey",
-        // Hash document ID so all query values have a simple, safely escaped alphabet.
-        createHash("sha256").update(document.id).digest("hex")),
-      "id,name,webViewLink,appProperties", 30);
-    const existing = found.find(file => file.appProperties?.immersiveFormat === format);
     const name = "Immersive-" + document.id + "." + format;
-    const file = existing ?? await uploadFile(accountId, folderId, name,
-      format === "json" ? "application/json" : "text/markdown",
-      Buffer.from(format === "json" ? JSON.stringify(document, null, 2) + "\n" : markdown, "utf8"),
-      { ...properties, immersiveFormat: format,
-        immersiveDocumentKey: createHash("sha256").update(document.id).digest("hex") });
+    const content = Buffer.from(format === "json" ? JSON.stringify(document, null, 2) + "\n" : markdown, "utf8");
+    const expectedHash = createHash("sha256").update(content).digest("hex");
+    const existing = found.filter(file => file.appProperties?.immersiveFormat === format);
+    for (const file of existing) {
+      // Earlier versions did not store hashes; compare their actual bytes once.
+      const remoteHash = file.appProperties?.immersiveContentHash ??
+        createHash("sha256").update(Buffer.from(await (await googleFetch(accountId,
+          API + "/files/" + encodeURIComponent(file.id) + "?alt=media")).arrayBuffer())).digest("hex");
+      if (remoteHash !== expectedHash) {
+        throw new DriveContentConflict("雲端教材 " + name + " 的內容不同；已保留兩邊檔案，請先確認版本");
+      }
+    }
+    const file = existing[0] ?? await uploadFile(accountId, folderId, name,
+      format === "json" ? "application/json" : "text/markdown", content,
+      { ...properties, immersiveFormat: format, immersiveDocumentKey: docKey,
+        immersiveContentHash: expectedHash });
     if (format === "json") jsonUrl = file.webViewLink ??
       "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view";
   }
