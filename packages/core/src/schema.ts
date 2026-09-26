@@ -280,7 +280,7 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("customAgentProbe"), id: z.string().uuid(),
     executable: z.string().min(1).max(1024) }),
   z.object({ type: z.literal("agentProfileSave"), id: z.string().uuid(),
-    provider: z.string().regex(/^(?:claude|codex|custom-[a-f0-9]{24})$/), label: z.string().min(1).max(80),
+    provider: z.string().regex(/^custom-[a-f0-9]{24}$/), label: z.string().min(1).max(80),
     directory: z.string().min(1).max(1024) }),
   z.object({ type: z.literal("agentProfileRemove"), id: z.string().uuid(), profileId: z.string().uuid() }),
   z.object({ type: z.literal("generate"), id: z.string().uuid(), payload: GenerationRequestSchema,

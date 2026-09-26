@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   HostRequestSchema, type DuplicateMatch, type GenerationRequest, type HostMessage, type LearningDocument,
 } from "@immersive/core";
-import { getAgentCatalog } from "./agents";
+import { getAgentCatalog, assertImportedAgentProvider } from "./agents";
 import { listCustomAgents, getCustomAgent, saveCustomAgent, importCustomAgent, removeCustomAgent, testCustomConfig, resolveCustomExecutable } from "./agents/custom";
 import { discoverAgentModels } from "./agents/metadata";
 import { listAgentProfiles, saveAgentProfile, removeAgentProfile, removeAgentProfilesByProvider } from "./agents/profiles";
@@ -261,6 +261,8 @@ async function handle(input: unknown): Promise<void> {
         break;
       }
       case "generate": {
+        assertImportedAgentProvider(request.payload.agent.provider);
+        await getCustomAgent(request.payload.agent.provider);
         const checked = checks.get(request.checkToken);
         if (!checked || checked.expires < Date.now() ||
           checked.fingerprint !== requestKey(request.payload)) {
