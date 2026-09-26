@@ -283,7 +283,7 @@ export function SceneReader({
   }
 
   return <div className="min-w-0">
-    <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
+    <Card>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0 flex-1 wrap-anywhere [&>strong]:block [&>strong]:text-sm [&_strong]:wrap-anywhere [&_[data-ui=hint]]:block [&_[data-ui=hint]]:my-[2px]">
           <strong>{document.source.title}</strong>
@@ -305,7 +305,7 @@ export function SceneReader({
     </Card>
 
     {mode === "learn" && <>
-      <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
+      <Card>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="inline-flex w-fit items-center rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_40%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_12%,var(--card))] px-2 py-[3px] text-[11px] font-[650] text-foreground" data-ui="chip">{c.scene} {sceneIndex + 1} / {document.sections.length}</span>
           <span className="text-[11px] text-muted-foreground tabular-nums">{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
@@ -428,7 +428,7 @@ export function SceneReader({
       </Card>
     </>}
 
-    {mode === "review" && <Card className="mb-3 min-w-0 max-w-full rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-[0_1px_3px_#00000008] wrap-anywhere [&_h1]:my-2 [&_h1]:text-[21px] [&_h1]:font-[650] [&_h1]:leading-[1.35] [&_h2]:mb-[10px] [&_h2]:text-base [&_h2]:font-[650] [&_h3]:my-[18px_8px] [&_h3]:text-xs [&_h3]:font-bold [&_h3]:uppercase [&_h3]:tracking-[.05em] [&_h3]:text-muted-foreground [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_code]:max-w-full [&_code]:overflow-x-auto">
+    {mode === "review" && <Card>
       <h2>{c.review}</h2>
       <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{c.reviewHint}</p>
       {document.sections.every(item => item.vocabulary.length === 0) && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{c.noExpressions}</p>}
