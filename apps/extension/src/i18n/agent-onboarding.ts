@@ -1,6 +1,7 @@
 /** Bring-your-own-Agent onboarding; legacy settings messages stay compatible. */
 export const agentOnboardingCopy = {
   "en": {
+    "modelLabel": "Agent model (optional)",
     "heading": "My Agents",
     "hint": "Ask your installed CLI to create a configuration JSON. No credentials are stored.",
     "prompt": "1. Ask your Agent",
@@ -38,6 +39,7 @@ export const agentOnboardingCopy = {
     "error": "Agent setup failed."
   },
   "zh-TW": {
+    "modelLabel": "此 Agent 的模型（選填）",
     "heading": "我的 Agents",
     "hint": "請已安裝的 CLI 產生設定 JSON。插件不會儲存登入憑證。",
     "prompt": "1. 向自己的 Agent 取得設定",
@@ -75,6 +77,7 @@ export const agentOnboardingCopy = {
     "error": "Agent 設定失敗。"
   },
   "zh-CN": {
+    "modelLabel": "此 Agent 的模型（选填）",
     "heading": "我的 Agents",
     "hint": "让已安装的 CLI 生成配置 JSON。扩展不保存登录凭证。",
     "prompt": "1. 向自己的 Agent 获取配置",
@@ -112,6 +115,7 @@ export const agentOnboardingCopy = {
     "error": "Agent 配置失败。"
   },
   "ja": {
+    "modelLabel": "この Agent のモデル（任意）",
     "heading": "マイ Agent",
     "hint": "インストール済みの CLI に設定 JSON を生成させます。認証情報は保存しません。",
     "prompt": "1. Agent に設定を尋ねる",
@@ -149,6 +153,7 @@ export const agentOnboardingCopy = {
     "error": "Agent 設定に失敗しました。"
   },
   "ko": {
+    "modelLabel": "이 Agent의 모델 (선택)",
     "heading": "내 Agent",
     "hint": "설치된 CLI에서 설정 JSON을 생성하세요. 인증 정보는 저장하지 않습니다.",
     "prompt": "1. Agent에 설정 요청",
