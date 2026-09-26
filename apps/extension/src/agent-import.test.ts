@@ -34,8 +34,9 @@ test("Codex documented final-message file transport is not mistaken for JSONL ev
     modelArgument: "--model", profileEnvVar: "CODEX_HOME",
   };
   assert.deepEqual(parseAgentImport(JSON.stringify(documented)), documented);
-  const argsLine = JSON.stringify(documented.args);
-  assert.ok(AGENT_CONFIG_PROMPT.includes(argsLine));
+  assert.ok(AGENT_CONFIG_PROMPT.includes(
+    '"args": ["exec", "--sandbox", "read-only", "--skip-git-repo-check", "--output-last-message", "{output}", "-"]'
+  ));
 });
 
 test("import accepts a JSON object and fenced JSON", () => {
