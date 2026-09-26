@@ -28,6 +28,10 @@ export function CustomAgentSettings(props: {
   const [modelArgument, setModelArgument] = useState("");
   const [responsePath, setResponsePath] = useState("");
   const [templateId, setTemplateId] = useState("blank");
+  const [promptMode, setPromptMode] = useState<"argument" | "stdin">("argument");
+  const [outputMode, setOutputMode] = useState<"stdout-json" | "file-json" | "ndjson-text">("stdout-json");
+  const [profileEnvVar, setProfileEnvVar] = useState("");
+  const [timeoutSeconds, setTimeoutSeconds] = useState(180);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
 
@@ -38,7 +42,10 @@ export function CustomAgentSettings(props: {
     args: argsText.split("\n").map(value => value.trim()).filter(Boolean),
     ...(modelArgument.trim() ? { modelArgument: modelArgument.trim() } : {}),
     ...(responsePath.trim() ? { responsePath: responsePath.trim() } : {}),
-  }), [editingId, label, executable, argsText, modelArgument, responsePath]);
+    promptMode, outputMode,
+    ...(profileEnvVar.trim() ? { profileEnvVar: profileEnvVar.trim() } : {}),
+    timeoutSeconds,
+  }), [editingId, label, executable, argsText, modelArgument, responsePath, promptMode, outputMode, profileEnvVar, timeoutSeconds]);
 
   async function load(): Promise<void> {
     const response = await nativeRequest({ id: crypto.randomUUID(), type: "customAgents" });
@@ -56,6 +63,10 @@ export function CustomAgentSettings(props: {
     setModelArgument(agent?.modelArgument ?? "");
     setResponsePath(agent?.responsePath ?? "");
     setTemplateId("blank");
+    setPromptMode(agent?.promptMode ?? "argument");
+    setOutputMode(agent?.outputMode ?? "stdout-json");
+    setProfileEnvVar(agent?.profileEnvVar ?? "");
+    setTimeoutSeconds(agent?.timeoutSeconds ?? 180);
     setStatus("");
   }
 
@@ -69,6 +80,10 @@ export function CustomAgentSettings(props: {
     setArgsText(template.definition.args.join("\\n"));
     setModelArgument(template.definition.modelArgument ?? "");
     setResponsePath(template.definition.responsePath ?? "");
+    setPromptMode(template.definition.promptMode ?? "argument");
+    setOutputMode(template.definition.outputMode ?? "stdout-json");
+    setProfileEnvVar(template.definition.profileEnvVar ?? "");
+    setTimeoutSeconds(template.definition.timeoutSeconds ?? 180);
     setStatus("");
     try {
       const response = await nativeRequest({ id: crypto.randomUUID(), type: "customAgentTest", definition: template.definition });
@@ -112,6 +127,7 @@ export function CustomAgentSettings(props: {
         onValueChange={value => void applyTemplate(value)} options={[
           { value: "blank", label: t("customAgentTemplateCustom") },
           { value: "gemini", label: t("customAgentTemplateGemini") },
+          { value: "opencode", label: t("customAgentTemplateOpenCode") },
         ]} />
     </label>
     <label>{t("customAgentName")}
@@ -132,10 +148,38 @@ export function CustomAgentSettings(props: {
       <Input value={modelArgument} onChange={event => setModelArgument(event.target.value)}
         placeholder={t("customAgentModelArgumentPlaceholder")} />
     </label>
-    <label>{t("customAgentResponsePath")}
-      <Input value={responsePath} onChange={event => setResponsePath(event.target.value)} placeholder="response" />
-      <span className="hint">{t("customAgentResponsePathHint")}</span>
-    </label>
+    <details className="agentProfileAdvanced">
+      <summary>{t("customAgentAdvanced")}</summary>
+      <label>{t("customAgentPromptMode")}
+        <SelectField ariaLabel={t("customAgentPromptMode")} value={promptMode}
+          onValueChange={value => setPromptMode(value === "stdin" ? "stdin" : "argument")} options={[
+            { value: "argument", label: t("customAgentPromptArgument") },
+            { value: "stdin", label: t("customAgentPromptStdin") },
+          ]} />
+      </label>
+      <label>{t("customAgentOutputMode")}
+        <SelectField ariaLabel={t("customAgentOutputMode")} value={outputMode}
+          onValueChange={value => setOutputMode(value === "file-json" ? "file-json" : value === "ndjson-text" ? "ndjson-text" : "stdout-json")} options={[
+            { value: "stdout-json", label: t("customAgentOutputStdout") },
+            { value: "file-json", label: t("customAgentOutputFile") },
+            { value: "ndjson-text", label: t("customAgentOutputNdjson") },
+          ]} />
+      </label>
+      <label>{t("customAgentResponsePath")}
+        <Input value={responsePath} onChange={event => setResponsePath(event.target.value)}
+          placeholder={outputMode === "ndjson-text" ? "part.text" : "response"} />
+        <span className="hint">{t("customAgentResponsePathHint")}</span>
+      </label>
+      <label>{t("customAgentProfileEnv")}
+        <Input value={profileEnvVar} onChange={event => setProfileEnvVar(event.target.value)} placeholder="MY_AGENT_HOME" />
+        <span className="hint">{t("customAgentProfileEnvHint")}</span>
+      </label>
+      <label>{t("customAgentTimeout")}
+        <Input type="number" min={10} max={600} value={timeoutSeconds}
+          onChange={event => setTimeoutSeconds(Math.min(600, Math.max(10, Number(event.target.value) || 180)))} />
+      </label>
+      {outputMode === "file-json" && <p className="hint">{t("customAgentOutputFileHint")}</p>}
+    </details>
     <div className="actions">
       <Button variant="outline" size="sm" disabled={busy || !label.trim() || !executable.trim()}
         onClick={() => void act("customAgentTest")}>{t("customAgentCheck")}</Button>

@@ -1,7 +1,7 @@
 import type { CustomAgentDefinition } from "@immersive/core";
 
 export interface CustomAgentTemplate {
-  id: "gemini";
+  id: "gemini" | "opencode";
   definition: CustomAgentDefinition;
 }
 
@@ -21,5 +21,21 @@ export const CUSTOM_AGENT_TEMPLATES: readonly CustomAgentTemplate[] = [{
     args: ["-p", "{prompt}", "--output-format", "json"],
     modelArgument: "--model",
     responsePath: "response",
+    promptMode: "argument",
+    outputMode: "stdout-json",
+    timeoutSeconds: 180,
+  },
+}, {
+  id: "opencode",
+  definition: {
+    id: "custom-opencode",
+    label: "OpenCode",
+    executable: "opencode",
+    args: ["run", "--format", "json", "{prompt}"],
+    modelArgument: "--model",
+    responsePath: "part.text",
+    promptMode: "argument",
+    outputMode: "ndjson-text",
+    timeoutSeconds: 180,
   },
 }];

@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { appConfigRoot } from "../platform/paths";
 import { listAgentProfiles, removeAgentProfile, saveAgentProfile } from "./profiles";
+import { saveCustomAgent } from "./custom-registry";
 
 test("named CLI account profiles save paths only, enforce home containment and never delete login data", async () => {
   const home = await mkdtemp(join(tmpdir(), "immersive-profiles-"));
@@ -25,6 +26,12 @@ test("named CLI account profiles save paths only, enforce home containment and n
     assert.equal(saved[0].label, "Work");
     assert.deepEqual(await listAgentProfiles(), saved);
     await assert.rejects(saveAgentProfile("agy", "Unsupported", profile), /no isolated/);
+    await saveCustomAgent({
+      id: "custom-profiled", label: "Profiled", executable: process.execPath,
+      args: ["-e", "process.stdout.write('{}')"], profileEnvVar: "MY_AGENT_HOME",
+    });
+    const custom = await saveAgentProfile("custom-profiled", "Custom login", profile);
+    assert.equal(custom.some(item => item.provider === "custom-profiled"), true);
     await assert.rejects(saveAgentProfile("codex", "Outside", tmpdir()), /home folder/);
     const registry = join(appConfigRoot(), "agent-profiles.json");
     const content = await readFile(registry, "utf8");

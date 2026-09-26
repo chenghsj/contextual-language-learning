@@ -7,7 +7,7 @@ export interface AgentExecution {
   readonly env: NodeJS.ProcessEnv;
   readonly workDir: string;
   readonly signal: AbortSignal;
-  run(args: string[]): Promise<string>;
+  run(args: string[], input?: string, timeoutMs?: number): Promise<string>;
 }
 
 export interface AgentAdapter {

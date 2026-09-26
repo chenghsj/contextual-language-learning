@@ -59,7 +59,7 @@ export async function generateWithAgent(
   try {
     return await adapter.generate({
       command, prompt, modelId: settings.modelId, env, workDir, signal,
-      run: args => runCLI(command, args, env, workDir, signal),
+      run: (args, input, timeoutMs) => runCLI(command, args, env, workDir, signal, input, timeoutMs),
     });
   } finally {
     await rm(workDir, { recursive: true, force: true });

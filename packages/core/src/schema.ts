@@ -44,12 +44,33 @@ export const CustomAgentDefinitionSchema = z.object({
     .refine(value => !value.includes("\\0"), "Executable cannot contain NUL bytes"),
   args: z.array(CustomAgentArgSchema).max(24).default([]),
   modelArgument: z.string().regex(/^--?[A-Za-z0-9][A-Za-z0-9-]{0,63}$/).optional(),
-  responsePath: z.string().regex(/^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,5}$/).optional(),
+  responsePath: z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,5}$/).optional(),
+  promptMode: z.enum(["argument", "stdin"]).optional(),
+  outputMode: z.enum(["stdout-json", "file-json", "ndjson-text"]).optional(),
+  profileEnvVar: z.string().regex(/^[A-Z_][A-Z0-9_]{0,63}$/).optional(),
+  timeoutSeconds: z.number().int().min(10).max(600).optional(),
 }).superRefine((value, ctx) => {
   const promptSlots = value.args.filter(arg => arg.includes("{prompt}")).length;
   const modelSlots = value.args.filter(arg => arg.includes("{model}")).length;
+  const outputSlots = value.args.filter(arg => arg.includes("{output}")).length;
   if (promptSlots > 1) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Use at most one {prompt} placeholder" });
   if (modelSlots > 1) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Use at most one {model} placeholder" });
+  if ((value.promptMode ?? "argument") === "stdin" && promptSlots) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "stdin prompt mode cannot also use {prompt}" });
+  }
+  if ((value.outputMode ?? "stdout-json") === "file-json" && outputSlots !== 1) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "file-json output requires exactly one {output} placeholder" });
+  }
+  if ((value.outputMode ?? "stdout-json") !== "file-json" && outputSlots) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "{output} is only valid for file-json output" });
+  }
+  if ((value.outputMode ?? "stdout-json") === "ndjson-text" && !value.responsePath) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "ndjson-text output requires a response path" });
+  }
+  const blocked = new Set(["PATH", "NODE_OPTIONS", "LD_PRELOAD", "DYLD_INSERT_LIBRARIES", "HOME", "USERPROFILE", "APPDATA", "SHELL", "COMSPEC"]);
+  if (value.profileEnvVar && blocked.has(value.profileEnvVar)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Unsafe profile environment variable" });
+  }
 });
 export type CustomAgentDefinition = z.infer<typeof CustomAgentDefinitionSchema>;
 
@@ -207,7 +228,7 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("customAgentTest"), id: z.string().uuid(), definition: CustomAgentDefinitionSchema }),
   z.object({ type: z.literal("agentProfiles"), id: z.string().uuid() }),
   z.object({ type: z.literal("agentProfileSave"), id: z.string().uuid(),
-    provider: z.enum(["claude", "codex"]), label: z.string().min(1).max(80),
+    provider: z.string().regex(/^[a-z][a-z0-9-]{0,39}$/), label: z.string().min(1).max(80),
     directory: z.string().min(1).max(1024) }),
   z.object({ type: z.literal("agentProfileRemove"), id: z.string().uuid(), profileId: z.string().uuid() }),
   z.object({ type: z.literal("generate"), id: z.string().uuid(), payload: GenerationRequestSchema,

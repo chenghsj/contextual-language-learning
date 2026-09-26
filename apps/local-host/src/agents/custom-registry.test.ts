@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { appConfigRoot } from "../platform/paths";
 import { listCustomAgents, removeCustomAgent, saveCustomAgent, testCustomAgentExecutable } from "./custom-registry";
-import { expandCustomArgs, extractCustomAgentPayload } from "./custom";
+import { expandCustomArgs, extractCustomAgentPayload, parseCustomAgentNdjson } from "./custom";
 
 test("custom Agent registry stores definitions only and resolves a safe executable", async () => {
   const home = await mkdtemp(join(tmpdir(), "contextual-custom-agent-"));
@@ -53,4 +53,21 @@ test("custom Agent can unwrap structured CLI envelopes before lesson validation"
   assert.deepEqual(extractCustomAgentPayload({ response: "{\\\"title\\\":\\\"ok\\\"}" }, "response"), { title: "ok" });
   assert.deepEqual(extractCustomAgentPayload({ data: { answer: { title: "ok" } } }, "data.answer"), { title: "ok" });
   assert.throws(() => extractCustomAgentPayload({}, "response"), /missing configured path/);
+});
+
+test("stdin/file placeholders and OpenCode-style NDJSON are deterministic", () => {
+  const stdin = {
+    id: "custom-stdin", label: "stdin", executable: "tool", args: [], promptMode: "stdin" as const,
+  };
+  assert.deepEqual(expandCustomArgs(stdin, "prompt", ""), []);
+  const file = {
+    id: "custom-file", label: "file", executable: "tool", args: ["--out", "{output}", "{prompt}"], outputMode: "file-json" as const,
+  };
+  assert.deepEqual(expandCustomArgs(file, "prompt", "", "/tmp/result.json"), ["--out", "/tmp/result.json", "prompt"]);
+  const ndjson = [
+    JSON.stringify({ type: "step_start", part: {} }),
+    JSON.stringify({ type: "text", part: { text: "{\\\"title\\\":" } }),
+    JSON.stringify({ type: "text", part: { text: "\\\"ok\\\"}" } }),
+  ].join("\n");
+  assert.deepEqual(parseCustomAgentNdjson(ndjson, "part.text"), { title: "ok" });
 });

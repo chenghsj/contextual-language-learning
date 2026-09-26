@@ -79,10 +79,16 @@ export function cliInvocation(command: string, args: readonly string[]): {
 }
 
 export async function profileEnvironment(
-  settings: AgentSettings, environmentVariable: "CLAUDE_CONFIG_DIR" | "CODEX_HOME" | null,
+  settings: AgentSettings, environmentVariable: string | null,
 ): Promise<NodeJS.ProcessEnv> {
   const env = { ...process.env };
   if (!settings.accountConfigDir) return env;
+  if (environmentVariable !== null) {
+    const blocked = new Set(["PATH", "NODE_OPTIONS", "LD_PRELOAD", "DYLD_INSERT_LIBRARIES", "HOME", "USERPROFILE", "APPDATA", "SHELL", "COMSPEC"]);
+    if (!/^[A-Z_][A-Z0-9_]{0,63}$/.test(environmentVariable) || blocked.has(environmentVariable)) {
+      throw new Error("Unsafe account profile environment variable.");
+    }
+  }
   if (environmentVariable === null) {
     throw new Error(settings.provider + " does not support isolated account configuration");
   }
@@ -100,18 +106,28 @@ export async function profileEnvironment(
 
 export function runCLI(
   command: string, args: readonly string[], env: NodeJS.ProcessEnv, cwd: string, signal: AbortSignal,
+  input?: string, timeoutMs?: number,
 ): Promise<string> {
+  if (input !== undefined && Buffer.byteLength(input, "utf8") > 1_000_000) {
+    return Promise.reject(new Error("CLI stdin exceeds the 1 MB safety limit"));
+  }
   return new Promise((resolveOutput, reject) => {
     let stdout = "";
     let stderr = "";
     let done = false;
     let exceeded = false;
+    let timedOut = false;
     const { executable, argv } = cliInvocation(command, args);
     const child = spawn(executable, argv, {
-      cwd, env, signal, stdio: ["ignore", "pipe", "pipe"], shell: false, windowsHide: true,
+      cwd, env, signal, stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"], shell: false, windowsHide: true,
     });
+    const timer = timeoutMs && timeoutMs > 0 ? setTimeout(() => {
+      timedOut = true;
+      child.kill();
+    }, timeoutMs) : undefined;
     child.stdout.setEncoding("utf8");
     child.stderr.setEncoding("utf8");
+    if (input !== undefined) child.stdin?.end(input);
     child.stdout.on("data", (data: string) => {
       stdout += data;
       if (stdout.length > 2_000_000) {
@@ -123,12 +139,14 @@ export function runCLI(
       stderr = (stderr + data).slice(-16_000);
     });
     child.on("error", error => {
-      if (!done) { done = true; reject(error); }
+      if (!done) { done = true; if (timer) clearTimeout(timer); reject(error); }
     });
     child.on("close", code => {
       if (done) return;
       done = true;
-      if (exceeded) reject(new Error("CLI output exceeded the size limit"));
+      if (timer) clearTimeout(timer);
+      if (timedOut) reject(new Error("CLI execution timed out"));
+      else if (exceeded) reject(new Error("CLI output exceeded the size limit"));
       else if (code !== 0) reject(new Error((stderr || "CLI exited with status " + code).slice(-1200)));
       else resolveOutput(stdout);
     });
