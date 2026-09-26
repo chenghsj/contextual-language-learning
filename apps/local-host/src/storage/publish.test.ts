@@ -32,7 +32,12 @@ test("publication failure preserves finished material; retry never regenerates",
     }, () => undefined);
     const document = await manager.start(request.id, request);
     assert.equal(generated, 1);
-    const local = await publishSavedJob(storage, document.id);
+    const local = await publishSavedJob(storage, document.id, {
+      publish: async (_document, _markdown, destination) => {
+        assert.equal(destination.kind, "local");
+        return join(root, document.id + ".json");
+      },
+    });
     assert.match(local, /[.]json$/);
     assert.equal((await storage.jobs.get(document.id))?.summary.publication?.status, "published");
     await assert.rejects(backupSavedJob(storage, document.id, async () => {
