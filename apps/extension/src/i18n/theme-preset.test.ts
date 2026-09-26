@@ -13,8 +13,8 @@ function declarations(block: string): Record<string, string> {
   );
 }
 const lightMatch = css.match(/:root \{([\s\S]*?)\n\}/);
-const darkMatch = css.match(/:root\[data-theme="dark"\], :root\.dark \{([\s\S]*?)\n\}/);
-if (!lightMatch || !darkMatch) throw new Error("Theme must support both app data-theme and shadcn dark class.");
+const darkMatch = css.match(/\.dark \{([\s\S]*?)\n\}/);
+if (!lightMatch || !darkMatch) throw new Error("Theme must provide the supplied :root and .dark tokens.");
 const light = declarations(lightMatch[1]), dark = declarations(darkMatch[1]);
 // CSS custom properties not overridden by :root.dark inherit from the base :root.
 const effectiveDark = { ...light, ...dark };
