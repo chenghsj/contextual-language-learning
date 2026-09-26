@@ -68,12 +68,13 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
     let api: PlayerApi | undefined;
     try { api = page.netflix?.appContext?.state?.playerApp?.getAPI()?.videoPlayer; }
     catch { return null; } // The internal API may be absent or change between episodes.
-    if (!api) return null;
+    const playerApi = api;
+    if (!playerApi) return null;
     let ids: string[];
-    try { ids = api.getAllPlayerSessionIds(); } catch { return null; }
+    try { ids = playerApi.getAllPlayerSessionIds(); } catch { return null; }
     const entries = ids.flatMap(sessionId => {
       try {
-        const player = api.getVideoPlayerBySessionId(sessionId);
+        const player = playerApi.getVideoPlayerBySessionId(sessionId);
         return player ? [{ player, sessionId }] : [];
       } catch { return []; }
     });
