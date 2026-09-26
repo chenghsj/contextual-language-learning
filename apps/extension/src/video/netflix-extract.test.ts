@@ -141,7 +141,7 @@ test("rejects header-only captions at extraction stage instead of reporting succ
     getTimedTextTrackList: () => [{ ...en, urls: [{ url }] }],
   };
   await assert.rejects(() => readNetflixSubtitles(player, null, () => null, "en", {
-    fetchDocument: async () => new Response("WEBVTT\\n\\n", { status: 200 }),
+    fetchDocument: async () => new Response("WEBVTT\n\n", { status: 200 }),
   }), /contains no usable timed cues/);
 });
 
