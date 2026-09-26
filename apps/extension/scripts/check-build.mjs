@@ -1,6 +1,7 @@
 import { readFile, access } from "node:fs/promises";
 import { resolve } from "node:path";
 import assert from "node:assert/strict";
+import { Script } from "node:vm";
 
 const dist = resolve(import.meta.dirname, "../dist");
 const manifest = JSON.parse(await readFile(resolve(dist, "manifest.json"), "utf8"));
@@ -23,7 +24,15 @@ for (const file of ["background.js", "youtube.js", "youtube-page.js", "netflix-p
 for (const script of manifest.content_scripts) {
   for (const path of script.js) {
     const source = await readFile(resolve(dist, path), "utf8");
-    assert.ok(!/^\s*import\s+.*from\s+["']/m.test(source), path + " has an unbundled import");
+    // Content scripts, including MAIN-world page bridges, are loaded as classic
+    // scripts by the Manifest. A shared Rollup chunk leaves `import{...}`
+    // in minified entrypoints; the former regex missed this exact failure.
+    // Parse the actual compiled bytes as a classic script, not as a module.
+    assert.doesNotThrow(() => new Script(source, { filename: path }),
+      path + " must be standalone classic JavaScript; check for ESM imports/exports");
+    assert.ok(!/\bimport\s*\(/.test(source),
+      path + " must not load dynamic modules in a content script");
+
   }
 }
 assert.ok(manifest.content_scripts.some(script => script.world === "MAIN" && script.js.includes("netflix-page.js")));
