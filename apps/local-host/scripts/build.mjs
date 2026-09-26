@@ -1,9 +1,13 @@
 import { build } from "esbuild";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const { version: hostVersion } = JSON.parse(readFileSync(resolve(root, "../../package.json"), "utf8"));
+if (typeof hostVersion !== "string" || !/^\d+\.\d+\.\d+/.test(hostVersion)) {
+  throw new Error("Invalid Native Host package version");
+}
 const envFile = resolve(root, "../../.env");
 if (existsSync(envFile)) process.loadEnvFile(envFile);
 const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID ?? "";
@@ -23,6 +27,7 @@ await build({
   define: {
     __GOOGLE_OAUTH_CLIENT_ID__: JSON.stringify(clientId),
     __GOOGLE_OAUTH_CLIENT_SECRET__: JSON.stringify(clientSecret),
+    __IMMERSIVE_HOST_VERSION__: JSON.stringify(hostVersion),
   },
   logLevel: "info",
 });

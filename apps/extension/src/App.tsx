@@ -117,6 +117,7 @@ export default function App() {
   const [modelNotice, setModelNotice] = useState("");
   const [customModelMode, setCustomModelMode] = useState(false);
   const [installed, setInstalled] = useState<Installed | null>(null);
+  const [hostVersion, setHostVersion] = useState<string | null>(null);
   const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([
     { id: "claude", label: "Claude Code", installed: false, supportsAccountProfiles: true },
     { id: "codex", label: "Codex CLI", installed: false, supportsAccountProfiles: true },
@@ -643,6 +644,7 @@ export default function App() {
       if (message.id === id && message.type === "health") {
         replied = true;
         setInstalled(message.installed);
+        setHostVersion(typeof message.version === "string" ? message.version : null);
         if (Array.isArray(message.agents)) setAgentCatalog(message.agents);
         void loadAgentProfiles();
         port.disconnect();
@@ -651,6 +653,7 @@ export default function App() {
     port.onDisconnect.addListener(() => {
       if (!replied) {
         setInstalled(null);
+        setHostVersion(null);
         setError((chrome.runtime.lastError?.message ?? "Native Host connection failed.") +
           " " + t("hostInstallHint", { id: chrome.runtime.id }));
       }
@@ -1659,6 +1662,14 @@ export default function App() {
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
           <p className="hint">{t("agentHint")}</p>
           {installed && <Badge>{t(installed[agent.provider] ? "agentInstalled" : "agentMissing")}</Badge>}
+          {installed && hostVersion !== chrome.runtime.getManifest().version && <div className="callout" role="status">
+            <p>{hostVersion ? t("hostVersionMismatch", { version: hostVersion,
+              expected: chrome.runtime.getManifest().version }) : t("hostVersionUnknown")}</p>
+            <Button variant="outline" size="sm"
+              onClick={() => void chrome.tabs.create({
+                url: "https://github.com/chenghsj/immersive-language-learning/releases",
+              })}>{t("hostUpdateDownload")}</Button>
+          </div>}
           <label>{t("defaultAgent")}
             <SelectField ariaLabel={t("defaultAgent")} value={agent.provider}
               onValueChange={selectAgent}
