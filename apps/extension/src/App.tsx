@@ -25,6 +25,8 @@ import {
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { CustomAgentSettings } from "./components/custom-agent-settings";
+import { HostConnectionSettings } from "./components/host-connection-settings";
+import { agentOnboardingCopy } from "./i18n/agent-onboarding";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
 import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
 import { Button } from "./components/ui/button";
@@ -58,7 +60,7 @@ const DEFAULT_PROFILE: LearningProfile = {
   mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 0, sceneCount: 4,
   contextualExampleCount: 2,
 };
-const DEFAULT_AGENT: AgentSettings = { provider: "claude", modelId: "" };
+const DEFAULT_AGENT: AgentSettings = { provider: "", modelId: "" };
 
 function downloadDocument(doc: LearningDocument, format: "json" | "md"): void {
   const content = format === "json"
@@ -98,6 +100,7 @@ export default function App() {
   const metadataUi = videoMetadataMessages[uiLocale];
   const settingsCopy = learningSettingsCopy[uiLocale];
   const t = (key: MessageKey, params?: MessageParams) => translate(uiLocale, key, params);
+  const agentUi = agentOnboardingCopy[uiLocale];
   const [profile, setProfile] = useState<LearningProfile>(() => ({
     ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
   }));
@@ -116,11 +119,9 @@ export default function App() {
   const [customModelMode, setCustomModelMode] = useState(false);
   const [installed, setInstalled] = useState<Installed | null>(null);
   const [hostVersion, setHostVersion] = useState<string | null>(null);
-  const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([
-    { id: "claude", label: "Claude Code", installed: false, supportsAccountProfiles: true },
-    { id: "codex", label: "Codex CLI", installed: false, supportsAccountProfiles: true },
-    { id: "agy", label: "Antigravity CLI (agy)", installed: false, supportsAccountProfiles: false },
-  ]);
+  const [hostStatus, setHostStatus] = useState("");
+  const [hostChecked, setHostChecked] = useState(false);
+  const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([]);
   const [document, setDocument] = useState<LearningDocument | null>(null);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
@@ -702,7 +703,7 @@ export default function App() {
   }
 
   function checkHost(): void {
-    setError("");
+    setHostStatus("");
     setHostBusy(true);
     const startedAt = performance.now();
     const finishCheck = () => window.setTimeout(() => setHostBusy(false),
@@ -713,9 +714,14 @@ export default function App() {
     port.onMessage.addListener((message: HostMessage) => {
       if (message.id === id && message.type === "health") {
         replied = true;
+        setHostChecked(true);
         setInstalled(message.installed);
         setHostVersion(typeof message.version === "string" ? message.version : null);
-        if (Array.isArray(message.agents)) setAgentCatalog(message.agents);
+        if (Array.isArray(message.agents)) {
+          setAgentCatalog(message.agents);
+          setAgent(current => current.provider.startsWith("custom-") &&
+            !message.agents?.some(entry => entry.id === current.provider) ? DEFAULT_AGENT : current);
+        }
         void loadAgentProfiles();
         finishCheck();
         port.disconnect();
@@ -723,10 +729,10 @@ export default function App() {
     });
     port.onDisconnect.addListener(() => {
       if (!replied) {
+        setHostChecked(true);
         setInstalled(null);
         setHostVersion(null);
-        setError((chrome.runtime.lastError?.message ?? "Native Host connection failed.") +
-          " " + t("hostInstallHint", { id: chrome.runtime.id }));
+        setHostStatus(chrome.runtime.lastError?.message ?? "Native Host connection failed.");
         finishCheck();
       }
     });
@@ -734,7 +740,18 @@ export default function App() {
   }
 
   useEffect(() => {
+    if (hydrated) checkHost();
+    // Run the initial health check once after saved settings have been loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
+  useEffect(() => {
     if (!hydrated || installed === null) return;
+    if (!agent.provider) {
+      setModelOptions([]);
+      setModelNotice("");
+      return;
+    }
     if (!installed[agent.provider]) {
       setModelOptions([]);
       setModelNotice(t("agentMissing"));
@@ -873,6 +890,11 @@ export default function App() {
 
   function startGeneration(): void {
     if (checking || generating) return;
+    if (!agent.provider || installed?.[agent.provider] !== true) {
+      setError(agentUi.empty);
+      setPage("settings");
+      return;
+    }
     if (subtitleBusy || !captionsReady) {
       setError(subtitleMessage(subtitleUi.languageNotReady, {
         language: learningLanguageName(profile.targetLanguage, uiLocale),
@@ -1645,6 +1667,10 @@ export default function App() {
 
         <AppPanel>
           <h2>{t("generationHeading")}</h2>
+          {!agent.provider && <div className="my-3 grid gap-2 border border-border p-3 text-xs" role="status">
+            <p>{agentUi.empty}</p>
+            <Button variant="outline" size="sm" onClick={() => setPage("settings")}>{agentUi.add}</Button>
+          </div>}
           <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("storageLocation")}</label>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("currentFolder", { path: destination.kind === "local"
             ? destination.directory ?? t("defaultFolder") : t("defaultFolder") })}</p>
@@ -1709,7 +1735,7 @@ export default function App() {
               }}>{t("editAgentModel")}</Button>
             </div>
             <dl>
-              <div><dt>{t("generationAgentLabel")}</dt><dd>{agentDisplayName(agent.provider, selectedAgentInfo?.label)}</dd></div>
+              <div><dt>{t("generationAgentLabel")}</dt><dd>{agent.provider ? agentDisplayName(agent.provider, selectedAgentInfo?.label) : agentUi.empty}</dd></div>
               {agent.accountConfigDir && <div><dt>{t("agentAccount")}</dt>
                 <dd title={agent.accountConfigDir}>{selectedSavedProfile?.label ?? t("accountLegacy", { path: agent.accountConfigDir })}</dd>
               </div>}
@@ -1718,7 +1744,7 @@ export default function App() {
               </div>
             </dl>
           </div>
-          <Button className="h-auto min-h-10 w-full px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={generating || checking || subtitleBusy || !captionsReady || !cues.length || !title.trim()}>
+          <Button className="h-auto min-h-10 w-full px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={generating || checking || subtitleBusy || !agent.provider || installed?.[agent.provider] !== true || !captionsReady || !cues.length || !title.trim()}>
             {(generating || checking) && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
@@ -1886,24 +1912,44 @@ export default function App() {
         <AppPanel>
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("agentHint")}</p>
-          {installed && <Badge>{t(installed[agent.provider] ? "agentInstalled" : "agentMissing")}</Badge>}
-          {installed && hostVersion !== chrome.runtime.getManifest().version && <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere" role="status">
-            <p>{hostVersion ? t("hostVersionMismatch", { version: hostVersion,
-              expected: chrome.runtime.getManifest().version }) : t("hostVersionUnknown")}</p>
-            <Button variant="outline" size="sm"
-              onClick={() => void chrome.tabs.create({
-                url: "https://github.com/chenghsj/immersive-language-learning/releases",
-              })}>{t("hostUpdateDownload")}</Button>
-          </div>}
-          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("defaultAgent")}
-            <SelectField ariaLabel={t("defaultAgent")} value={agent.provider}
-              onValueChange={selectAgent}
-              options={agentCatalog.map(entry => ({
-                value: entry.id,
-                label: agentDisplayName(entry.id, entry.label) +
-                  (installed && !entry.installed ? t("agentNotInstalled") : ""),
-              }))} />
-          </label>
+          <HostConnectionSettings locale={uiLocale} connected={installed !== null} checked={hostChecked}
+            version={hostVersion} busy={hostBusy} error={hostStatus} onCheck={checkHost} />
+          {agent.provider && !agent.provider.startsWith("custom-") &&
+            <p className="my-3 text-xs text-muted-foreground" role="status">
+              {t("defaultAgent")}: {agentDisplayName(agent.provider, selectedAgentInfo?.label)}
+            </p>}
+          <CustomAgentSettings locale={uiLocale} available={installed !== null &&
+            hostVersion === chrome.runtime.getManifest().version}
+            selectedProvider={agent.provider} selectedModelId={agent.modelId}
+            selectedProfileDir={agent.accountConfigDir} nativeOnce={nativeOnce}
+            onSelect={selectAgent}
+            onSaved={(provider, created, config) => {
+              if (created && !agent.provider) selectAgent(provider);
+              if (!created && agent.provider === provider &&
+                  ((!config.profileEnvVar && agent.accountConfigDir) ||
+                   (!config.modelArgument && agent.modelId))) {
+                updateAgent({ ...agent,
+                  accountConfigDir: config.profileEnvVar ? agent.accountConfigDir : undefined,
+                  modelId: config.modelArgument ? agent.modelId : "",
+                });
+              }
+              checkHost();
+            }}
+            onRemoved={provider => {
+              if (agent.provider === provider) setAgent(DEFAULT_AGENT);
+              setSavedAgentProfiles(current => current.filter(item => item.provider !== provider));
+              setAgentProfiles(current => {
+                const next = { ...current }; delete next[provider]; return next;
+              });
+              setAgentModelPreferences(current => {
+                const next = { ...current };
+                for (const key of Object.keys(next)) {
+                  if (key.startsWith("[" + JSON.stringify(provider) + ",")) delete next[key];
+                }
+                return next;
+              });
+              checkHost();
+            }} />
           {selectedAgentInfo?.supportsAccountProfiles && <section className="mt-3 border-t border-border pt-[10px]">
             <div className="relative flex min-w-0 items-center gap-2 text-xs">
               <strong>{t("useOtherCliAccount")}</strong>
@@ -1945,7 +1991,7 @@ export default function App() {
               {profileStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{profileStatus}</p>}
             </details>
           </section>}
-          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("defaultModel")}
+          {agent.provider && <><label className="my-3 grid gap-[6px] text-xs font-semibold">{t("defaultModel")}
             <SelectField ariaLabel={t("defaultModel")} disabled={modelBusy} value={modelSelection}
               onValueChange={value => {
                 if (value === "__custom__") {
@@ -1969,8 +2015,8 @@ export default function App() {
             <Input value={agent.modelId} onChange={event => updateAgent({ ...agent, modelId: event.target.value })}
               placeholder={t("modelPlaceholder")} />
           </label>}
-          {modelNotice && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{modelNotice}</p>}
-          <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+          {modelNotice && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{modelNotice}</p>}</>}
+          {agent.provider && <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
             <summary className="cursor-pointer font-semibold">{t("agentDiagnostics")}</summary>
             <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
               <Button variant="outline" size="sm" disabled={hostBusy} aria-busy={hostBusy} onClick={checkHost}>{hostBusy && <span aria-hidden="true" className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />}{t("checkHost")}</Button>
@@ -1979,15 +2025,7 @@ export default function App() {
                 {modelBusy && <span aria-hidden="true" className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />}{t("refreshModels")}
               </Button>
             </div>
-          </details>
-          <CustomAgentSettings locale={uiLocale} available={installed !== null}
-            selectedProvider={agent.provider} selectedModelId={agent.modelId}
-            selectedProfileDir={agent.accountConfigDir} nativeOnce={nativeOnce}
-            onSaved={provider => { checkHost(); selectAgent(provider); }}
-            onRemoved={provider => {
-              if (agent.provider === provider) selectAgent("claude");
-              checkHost();
-            }} />
+          </details>}
         </AppPanel>
         <AppPanel>
           <h2>{t("driveAccountHeading")}</h2>

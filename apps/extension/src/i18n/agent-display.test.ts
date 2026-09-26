@@ -29,7 +29,10 @@ test("generation card shows Agent and model before submitting and links directly
   assert.ok(section.includes('onClick={() => {') && section.includes('setPage("settings")'));
   assert.ok(section.includes('getElementById("agent-settings-heading")'));
   assert.ok(section.indexOf('className="my-3 min-w-0 rounded-[var(--radius)] border border-border bg-muted p-3') < section.indexOf('onClick={startGeneration}'));
-  assert.ok(app.includes('agentDisplayName(entry.id, entry.label)'));
+  // New users select imported Agents; legacy built-in provider IDs are not a picker.
+  const imported = await readFile(new URL("../components/custom-agent-settings.tsx", import.meta.url), "utf8");
+  assert.match(imported, /onSelect\(agent\.id\)/);
+  assert.doesNotMatch(app, /options=\{agentCatalog\.map\(entry =>/);
   assert.ok(app.includes('agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)'));
   assert.match(app, /id="agent-settings-heading" tabIndex=\{-1\}/);
 });
