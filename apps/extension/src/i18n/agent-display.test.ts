@@ -30,7 +30,7 @@ test("generation card shows Agent and model before submitting and links directly
   assert.ok(section.includes('getElementById("agent-settings-heading")'));
   assert.ok(section.indexOf('className="generationSummary"') < section.indexOf('onClick={startGeneration}'));
   assert.ok(app.includes('agentDisplayName(entry.id, entry.label)'));
-  assert.ok(app.includes('agentDisplayName(job.provider)'));
+  assert.ok(app.includes('agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)'));
   assert.match(app, /id="agent-settings-heading" tabIndex=\{-1\}/);
 });
 
