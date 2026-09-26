@@ -1279,7 +1279,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div><img className="brandMark" src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>Immersive Learning</strong></div>
+        <div><img className="brandMark" src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>AI-powered Contextual Language Learning</strong></div>
         <span className="version">MVP · v0.1</span>
       </header>
       <nav className="tabs" aria-label={t("navLabel")}>

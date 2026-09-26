@@ -1,11 +1,11 @@
 {
   "extensionName": {
-    "message": "Immersive Language Learning"
+    "message": "AI-powered Contextual Language Learning"
   },
   "extensionDescription": {
-    "message": "Generate language lessons from subtitles using your local CLI agent."
+    "message": "Turn video subtitles into level-appropriate AI lessons with dialogue context and focused listening practice."
   },
   "actionTitle": {
-    "message": "Open Immersive Learning"
+    "message": "Open AI-powered Contextual Language Learning"
   }
 }
