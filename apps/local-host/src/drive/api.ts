@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import type { DuplicateMatch, GenerationRequest, LearningDocument } from "@immersive/core";
+import { readLearningDocument, type DriveLessonSummary, type DuplicateMatch, type GenerationRequest, type LearningDocument } from "@immersive/core";
 import { settingsKey, sourceKey, transcriptKey } from "../duplicates";
 import { accessTokenFor, listGoogleAccounts } from "./oauth";
 
@@ -149,6 +149,8 @@ export async function publishDriveDocument(accountId: string, document: Learning
     immersiveSettingsKey: settingsKey({ profile: document.profile, agent: document.generation }),
     immersiveDocumentId: document.id,
     immersiveSchemaVersion: String(document.schemaVersion),
+    immersiveTitle: document.source.title.slice(0, 120),
+    immersiveCreatedAt: document.createdAt,
   };
   const docKey = createHash("sha256").update(document.id).digest("hex");
   const found = await listFiles(accountId,
@@ -177,4 +179,26 @@ export async function publishDriveDocument(accountId: string, document: Learning
       "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view";
   }
   return jsonUrl;
+}
+
+export async function listDriveLessons(accountId: string): Promise<DriveLessonSummary[]> {
+  if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
+    throw new Error("Google Drive account is not connected");
+  }
+  const files = await listFiles(accountId,
+    "trashed = false and appProperties has { key='immersiveFormat' and value='json' }",
+    "id,name,createdTime,webViewLink,appProperties", 500);
+  const unique = new Map<string, DriveLessonSummary>();
+  for (const file of files) {
+    const id = file.appProperties?.immersiveDocumentId;
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id) || unique.has(id)) continue;
+    unique.set(id, {
+      documentId: id,
+      title: file.appProperties?.immersiveTitle || "Immersive lesson " + id.slice(0, 8),
+      createdAt: file.appProperties?.immersiveCreatedAt || file.createdTime || new Date(0).toISOString(),
+      accountId,
+      url: file.webViewLink || "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view",
+    });
+  }
+  return [...unique.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
