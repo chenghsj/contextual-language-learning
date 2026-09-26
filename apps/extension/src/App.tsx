@@ -29,6 +29,7 @@ import { SceneReader } from "./components/scene-reader";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
 import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
+import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences } from "./i18n/agent-model-preferences";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
@@ -105,6 +106,7 @@ export default function App() {
   }));
   const [agent, setAgent] = useState<AgentSettings>(DEFAULT_AGENT);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>>({});
+  const [agentModelPreferences, setAgentModelPreferences] = useState<Record<string, string>>({});
   const [savedAgentProfiles, setSavedAgentProfiles] = useState<AgentProfile[]>([]);
   const [draftProfileName, setDraftProfileName] = useState("");
   const [draftProfileDir, setDraftProfileDir] = useState("");
@@ -185,7 +187,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "backup", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference"]).then(saved => {
+    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "agentModelPreferences", "destination", "backup", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference"]).then(saved => {
       if (saved.profile) setProfile({ ...DEFAULT_PROFILE, instructionLanguage: browserLocale, ...(saved.profile as Partial<LearningProfile>) });
       if (isLocalePreference(saved.uiLocalePreference)) setLocalePreference(saved.uiLocalePreference);
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
@@ -195,6 +197,18 @@ export default function App() {
       } else if (saved.agent) {
         const previous = saved.agent as AgentSettings;
         setAgentProfiles({ [previous.provider]: { modelId: previous.modelId, accountConfigDir: previous.accountConfigDir } });
+      }
+      const previousAgent = saved.agent as AgentSettings | undefined;
+      const previousProfiles = saved.agentProfiles && typeof saved.agentProfiles === "object"
+        ? saved.agentProfiles as Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">> : {};
+      const legacyModels = migrateAgentModelPreferences(previousAgent, previousProfiles);
+      if (saved.agentModelPreferences && typeof saved.agentModelPreferences === "object" &&
+          !Array.isArray(saved.agentModelPreferences)) {
+        const stored = Object.fromEntries(Object.entries(saved.agentModelPreferences)
+          .filter(([key, value]) => key.length < 2048 && typeof value === "string" && value.length <= 120));
+        setAgentModelPreferences({ ...legacyModels, ...stored });
+      } else {
+        setAgentModelPreferences(legacyModels);
       }
       if (saved.destination) {
         const previous = saved.destination as Destination;
@@ -394,8 +408,8 @@ export default function App() {
   }, [uiLocale, themePreference, systemDark]);
 
   useEffect(() => {
-    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, destination, backup, repeat, delay, playbackRate, uiLocalePreference: localePreference, themePreference });
-  }, [hydrated, profile, agent, agentProfiles, destination, backup, repeat, delay, playbackRate, localePreference, themePreference]);
+    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, playbackRate, uiLocalePreference: localePreference, themePreference });
+  }, [hydrated, profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, playbackRate, localePreference, themePreference]);
 
   function nativeOnce(request: { id: string; type: string; [key: string]: unknown }): Promise<HostMessage> {
     return new Promise((resolve, reject) => {
@@ -534,6 +548,9 @@ export default function App() {
       ...previous,
       [next.provider]: { modelId: next.modelId, accountConfigDir: next.accountConfigDir },
     }));
+    setAgentModelPreferences(previous => ({
+      ...previous, [agentModelPreferenceKey(next.provider, next.accountConfigDir)]: next.modelId,
+    }));
   }
 
   function selectAgent(provider: string): void {
@@ -541,7 +558,7 @@ export default function App() {
     const previous = agentProfiles[provider];
     updateAgent({
       provider,
-      modelId: previous?.modelId ?? "",
+      modelId: savedAgentModel(provider, previous?.accountConfigDir, agentModelPreferences, previous?.modelId ?? ""),
       accountConfigDir: previous?.accountConfigDir,
     });
   }
@@ -570,7 +587,8 @@ export default function App() {
       const saved = response.profiles.find(profile =>
         profile.provider === agent.provider && profile.label === draftProfileName.trim());
       if (saved) {
-        updateAgent({ ...agent, accountConfigDir: saved.directory, modelId: "" });
+        updateAgent({ ...agent, accountConfigDir: saved.directory,
+          modelId: savedAgentModel(agent.provider, saved.directory, agentModelPreferences) });
         setCustomModelMode(false);
       }
       setDraftProfileName("");
@@ -591,7 +609,8 @@ export default function App() {
       });
       if (response.type !== "agentProfiles") throw new Error("Unexpected profile response.");
       setSavedAgentProfiles(response.profiles);
-      updateAgent({ ...agent, accountConfigDir: undefined, modelId: "" });
+      updateAgent({ ...agent, accountConfigDir: undefined,
+        modelId: savedAgentModel(agent.provider, undefined, agentModelPreferences) });
       setCustomModelMode(false);
       setProfileStatus(t("profileRemoved"));
     } catch (cause) {
@@ -602,7 +621,8 @@ export default function App() {
   function chooseAgentProfile(id: string): void {
     const entry = savedAgentProfiles.find(profile => profile.id === id && profile.provider === agent.provider);
     if (id !== "" && !entry) return;
-    updateAgent({ ...agent, accountConfigDir: entry?.directory, modelId: "" });
+    updateAgent({ ...agent, accountConfigDir: entry?.directory,
+      modelId: savedAgentModel(agent.provider, entry?.directory, agentModelPreferences) });
     setCustomModelMode(false);
     setProfileStatus("");
   }
@@ -1461,6 +1481,9 @@ export default function App() {
             </div>
             <dl>
               <div><dt>{t("generationAgentLabel")}</dt><dd>{agentDisplayName(agent.provider, selectedAgentInfo?.label)}</dd></div>
+              {agent.accountConfigDir && <div><dt>{t("agentAccount")}</dt>
+                <dd title={agent.accountConfigDir}>{selectedSavedProfile?.label ?? t("accountLegacy", { path: agent.accountConfigDir })}</dd>
+              </div>}
               <div><dt>{t("generationModelLabel")}</dt>
                 <dd title={agent.modelId || undefined}>{modelDisplayName(agent.modelId, modelOptions, t("cliDefault"))}</dd>
               </div>
@@ -1628,10 +1651,7 @@ export default function App() {
         <Card className="panel">
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
           <p className="hint">{t("agentHint")}</p>
-          <Button variant="outline" className="secondary" onClick={checkHost}>{t("checkHost")}</Button>
-          {installed && <div className="status">
-            {agentCatalog.map(entry => agentDisplayName(entry.id, entry.label) + ": " + t(entry.installed ? "agentInstalled" : "agentMissing")).join(" · ")}
-          </div>}
+          {installed && <Badge>{t(installed[agent.provider] ? "agentInstalled" : "agentMissing")}</Badge>}
           <label>{t("defaultAgent")}
             <SelectField ariaLabel={t("defaultAgent")} value={agent.provider}
               onValueChange={selectAgent}
@@ -1641,39 +1661,47 @@ export default function App() {
                   (installed && !entry.installed ? t("agentNotInstalled") : ""),
               }))} />
           </label>
-          {selectedAgentInfo?.supportsAccountProfiles ? <>
-            <label>{t("agentAccount")}
-              <SelectField ariaLabel={t("agentAccount")}
-                value={selectedSavedProfile?.id ?? (agent.accountConfigDir ? "__legacy__" : "")}
-                onValueChange={chooseAgentProfile}
-                options={[
-                  { value: "", label: t("accountDefault") },
-                  ...(agent.accountConfigDir && !selectedSavedProfile
-                    ? [{ value: "__legacy__", label: t("accountLegacy", { path: agent.accountConfigDir }) }]
-                    : []),
-                  ...savedAgentProfiles.filter(profile => profile.provider === agent.provider)
-                    .map(profile => ({ value: profile.id, label: profile.label })),
-                ]} />
-            </label>
-            <p className="hint">{t("accountFolderHint")}</p>
-            <label>{t("profileName")}
-              <Input value={draftProfileName} onChange={event => setDraftProfileName(event.target.value)}
-                placeholder={t("profileNamePlaceholder")} />
-            </label>
-            <label>{t("accountFolder")}
-              <Input value={draftProfileDir} onChange={event => setDraftProfileDir(event.target.value)}
-                placeholder={t("accountFolderPlaceholder")} />
-            </label>
-            <div className="actions">
-              <Button variant="outline" className="secondary"
-                disabled={profileBusy || installed === null || !draftProfileName.trim() || !draftProfileDir.trim()}
-                onClick={() => void saveProfile()}>{t("saveProfile")}</Button>
-              {selectedSavedProfile && <Button variant="outline" className="secondary"
-                disabled={profileBusy || installed === null}
-                onClick={() => void removeProfile()}>{t("removeProfile")}</Button>}
+          {selectedAgentInfo?.supportsAccountProfiles && <section className="agentProfileSection">
+            <div className="agentProfileHeading">
+              <strong>{t("useOtherCliAccount")}</strong>
+              <SettingInfo label={t("useOtherCliAccount")} infoLabel={settingsCopy.infoLabel}
+                explanation={t("agentProfileInfo")} />
             </div>
-            {profileStatus && <p className="hint" role="status">{profileStatus}</p>}
-          </> : <p className="hint">{t("agentProfileUnsupported")}</p>}
+            {(savedAgentProfiles.some(item => item.provider === agent.provider) || !!agent.accountConfigDir) &&
+              <label>{t("agentAccount")}
+                <SelectField ariaLabel={t("agentAccount")}
+                  value={selectedSavedProfile?.id ?? (agent.accountConfigDir ? "__legacy__" : "")}
+                  onValueChange={chooseAgentProfile}
+                  options={[
+                    { value: "", label: t("accountDefault") },
+                    ...(agent.accountConfigDir && !selectedSavedProfile
+                      ? [{ value: "__legacy__", label: t("accountLegacy", { path: agent.accountConfigDir }) }] : []),
+                    ...savedAgentProfiles.filter(item => item.provider === agent.provider)
+                      .map(item => ({ value: item.id, label: item.label })),
+                  ]} />
+              </label>}
+            <details className="agentProfileAdvanced">
+              <summary>{t("manageAgentProfiles")}</summary>
+              <p className="hint">{t("accountFolderHint")}</p>
+              <label>{t("profileName")}
+                <Input value={draftProfileName} onChange={event => setDraftProfileName(event.target.value)}
+                  placeholder={t("profileNamePlaceholder")} />
+              </label>
+              <label>{t("accountFolder")}
+                <Input value={draftProfileDir} onChange={event => setDraftProfileDir(event.target.value)}
+                  placeholder={t("accountFolderPlaceholder")} />
+              </label>
+              <div className="actions">
+                <Button variant="outline" size="sm"
+                  disabled={profileBusy || installed === null || !draftProfileName.trim() || !draftProfileDir.trim()}
+                  onClick={() => void saveProfile()}>{t("saveProfile")}</Button>
+                {selectedSavedProfile && <Button variant="outline" size="sm"
+                  disabled={profileBusy || installed === null}
+                  onClick={() => void removeProfile()}>{t("removeProfile")}</Button>}
+              </div>
+              {profileStatus && <p className="hint" role="status">{profileStatus}</p>}
+            </details>
+          </section>}
           <label>{t("defaultModel")}
             <SelectField ariaLabel={t("defaultModel")} disabled={modelBusy} value={modelSelection}
               onValueChange={value => {
@@ -1698,35 +1726,51 @@ export default function App() {
             <Input value={agent.modelId} onChange={event => updateAgent({ ...agent, modelId: event.target.value })}
               placeholder={t("modelPlaceholder")} />
           </label>}
-          <div className="actions"><Button variant="outline" className="secondary"
-            disabled={modelBusy || installed === null} onClick={() => {
-              setInstalled(current => current ? { ...current } : current);
-            }}>{modelBusy ? t("modelsLoading") : t("refreshModels")}</Button></div>
           {modelNotice && <p className="hint" role="status">{modelNotice}</p>}
-          <div className="callout">{t("futureFeaturesDrive")}</div>
+          <details className="agentProfileAdvanced">
+            <summary>{t("agentDiagnostics")}</summary>
+            <div className="actions">
+              <Button variant="outline" size="sm" onClick={checkHost}>{t("checkHost")}</Button>
+              <Button variant="outline" size="sm" disabled={modelBusy || installed === null}
+                onClick={() => setInstalled(current => current ? { ...current } : current)}>
+                {modelBusy ? t("modelsLoading") : t("refreshModels")}
+              </Button>
+            </div>
+          </details>
         </Card>
         <Card className="panel">
           <h2>{t("driveAccountHeading")}</h2>
           <p className="hint">{t("driveOauthHelp")}</p>
-          {driveAccounts.length > 0 && <label>{t("backupAccount")}
-            <SelectField ariaLabel={t("backupAccount")} value={backup.accountId ?? ""}
+          {!driveConfigured && <p className="callout">{t("oauthFirst")}</p>}
+          {driveAccounts.length === 1 && <div className="driveSingleAccount">
+            <div><strong>{driveAccounts[0].email}</strong><span className="hint">{t("backupAccount")}</span></div>
+            <Badge>{t("agentInstalled")}</Badge>
+          </div>}
+          {driveAccounts.length > 1 && <label>{t("backupAccount")}
+            <SelectField ariaLabel={t("backupAccount")} value={backup.accountId ?? driveAccounts[0].id}
               onValueChange={accountId => setBackup(current => ({ ...current, accountId }))}
               options={driveAccounts.map(account => ({ value: account.id, label: account.email }))} />
           </label>}
-          {!driveConfigured && <p className="callout">{t("oauthFirst")}</p>}
           <div className="actions">
-            <Button variant="outline" className="secondary" disabled={storageBusy || !driveConfigured}
-              onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
+            <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
+              onClick={() => void connectDrive()}>{driveAccounts.length ? t("connectAnother") : t("connectGoogle")}</Button>
           </div>
-          {driveAccounts.map(account => <div className="actions" key={account.id}>
-            <p className="hint">{t("connectedAccount", { email: account.email })}</p>
-            <Button variant="ghost" size="sm" disabled={storageBusy}
-              onClick={() => void disconnectDrive(account.id)}>{t("disconnectGoogle")}</Button>
-          </div>)}
-          {driveAccounts.length > 0 && <div className="actions">
-            <Button variant="outline" size="sm" disabled={storageBusy || !backup.accountId}
+          {driveAccounts.length > 0 && <details className="agentProfileAdvanced">
+            <summary>{t("manageDrive")} · {driveAccounts.length}</summary>
+            <div className="driveAccountList">
+              {driveAccounts.map(account => <div className="driveAccountItem" key={account.id}>
+                <span title={account.email}>{account.email}</span>
+                <Button variant="ghost" size="sm" disabled={storageBusy}
+                  onClick={() => void disconnectDrive(account.id)}>{t("disconnectGoogle")}</Button>
+              </div>)}
+            </div>
+          </details>}
+          {driveAccounts.length > 0 && <section className="driveExistingBackup">
+            <strong>{t("backupExisting")}</strong>
+            <p className="hint">{t("backupExistingHint")}</p>
+            <Button variant="outline" size="sm" disabled={storageBusy || !driveAccounts.length}
               onClick={() => void backupExistingLessons()}>{t("backupExisting")}</Button>
-          </div>}
+          </section>}
           {driveConnectError && <p className="jobRowError" role="status">{driveConnectError}</p>}
           {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
         </Card>

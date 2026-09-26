@@ -43,3 +43,12 @@ test("new generation-summary controls are localized in all interface languages",
     assert.ok(copy.agentProfileUnsupported.includes("Antigravity CLI (agy)"), locale);
   }
 });
+
+test("Agent and optional CLI Profile share one persisted model setting", async () => {
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  assert.match(app, /agentModelPreferences/);
+  assert.match(app, /savedAgentModel\(agent.provider, entry\?\.directory, agentModelPreferences\)/);
+  assert.match(app, /<SettingInfo label=\{t\("useOtherCliAccount"\)\}/);
+  assert.match(app, /<details className="agentProfileAdvanced">/);
+  assert.match(app, /agent.accountConfigDir && <div><dt>\{t\("agentAccount"\)\}/);
+});
