@@ -11,6 +11,8 @@ import {
   const REQUEST = "immersive-learning:youtube:caption-request";
   const RESPONSE = "immersive-learning:youtube:caption-response";
   const BRIDGE_VERSION = "native-caption-capture-v1";
+  const HEALTH_REQUEST = "immersive-learning:youtube:bridge-health-request";
+  const HEALTH_RESPONSE = "immersive-learning:youtube:bridge-health-response";
   type CaptionRequest = {
     source: "immersive-learning"; id: string; videoId: string; language: string;
   };
@@ -19,6 +21,16 @@ import {
   const page = window as Page;
   if (page.__immersiveYouTubeCaptions) return;
   page.__immersiveYouTubeCaptions = true;
+
+  // Return immediately before any transcript fetch, even while the player loads.
+  window.addEventListener(HEALTH_REQUEST, event => {
+    const request = (event as CustomEvent<{ source?: string; id?: string }>).detail;
+    if (request?.source !== "immersive-learning" ||
+      typeof request.id !== "string" || request.id.length > 100) return;
+    window.dispatchEvent(new CustomEvent(HEALTH_RESPONSE, {
+      detail: { source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION },
+    }));
+  });
 
   function currentVideoId(): string | null {
     if (!["www.youtube.com", "youtube.com", "m.youtube.com"].includes(location.hostname) ||

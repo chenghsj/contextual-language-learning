@@ -10,7 +10,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
   const BRIDGE_VERSION = "netflix-worker-url-check-v2";
   const CAPTION_FETCH_REQUEST_EVENT = "immersive-learning:netflix:caption-fetch-request";
   const CAPTION_FETCH_RESPONSE_EVENT = "immersive-learning:netflix:caption-fetch-response";
-  type Action = "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
+  type Action = "bridgeHealth" | "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
   type Request = { source: "immersive-learning"; id: string; action: Action; value?: number; language?: string };
   type Player = NetflixCaptionPlayer & { seek(ms: number): void; getCurrentTime(): number; pause(): void; play(): void };
   type PlayerApi = {
@@ -94,12 +94,19 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
     const candidate = value as Partial<Request>;
     return candidate.source === "immersive-learning"
       && typeof candidate.id === "string" && candidate.id.length < 100
-      && ["diagnose", "status", "seekTo", "pause", "play", "setPlaybackRate", "subtitlesGet"].includes(candidate.action ?? "");
+      && ["bridgeHealth", "diagnose", "status", "seekTo", "pause", "play", "setPlaybackRate", "subtitlesGet"].includes(candidate.action ?? "");
   };
 
   window.addEventListener(REQUEST_EVENT, (event: Event) => {
     const request = (event as CustomEvent<unknown>).detail;
     if (!isRequest(request)) return;
+    if (request.action === "bridgeHealth") {
+      window.dispatchEvent(new CustomEvent(RESPONSE_EVENT, {
+        detail: { source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION,
+          ok: true, available: true },
+      }));
+      return;
+    }
     if (request.action === "subtitlesGet") {
       const watchId = location.pathname.match(/^\/watch\/(\d+)/)?.[1];
       void (async () => {

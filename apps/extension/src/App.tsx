@@ -12,9 +12,11 @@ import { titleForVideoTab } from "./video/metadata";
 import { detectCurrentVideoMetadata, metadataSourceSafety } from "./video/metadata-resolver";
 import { videoMetadataMessages } from "./i18n/video-metadata";
 import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
+import { needsVideoReaderReload } from "./video/reader-health";
 import {
   cuePlaybackStart, cuePlaybackWindow,
-  findVideoTab, getActiveWindowTab, openOrFocusVideoTab,
+  assertVideoReaderReady, findVideoTab, getActiveWindowTab, openOrFocusVideoTab,
+  reloadExistingVideoTab,
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
@@ -85,6 +87,8 @@ export default function App() {
   const [fileName, setFileName] = useState("");
   const [subtitleBusy, setSubtitleBusy] = useState(false);
   const [subtitleStatus, setSubtitleStatus] = useState("");
+  const [videoRecoveryUrl, setVideoRecoveryUrl] = useState("");
+  const [reloadingVideoTab, setReloadingVideoTab] = useState(false);
   const [metadataBusy, setMetadataBusy] = useState(false);
   const [metadataStatus, setMetadataStatus] = useState("");
   const [title, setTitle] = useState("");
@@ -1032,6 +1036,7 @@ export default function App() {
           ? current : found.title ?? current);
       }
       setMetadataStatus(found.title ? metadataUi.success : metadataUi.partial);
+      setVideoRecoveryUrl(found.title ? "" : found.url);
     } catch (cause) {
       if (request === metadataRequestRef.current) {
         setError(cause instanceof Error && cause.message === "VIDEO_CHANGED"
@@ -1045,8 +1050,10 @@ export default function App() {
 
   async function fetchCurrentSubtitles(): Promise<void> {
     if (subtitleBusy || metadataBusy) return;
+    let attemptedUrl = "";
     setSubtitleBusy(true);
     setSubtitleStatus("");
+    setVideoRecoveryUrl("");
     setError("");
     try {
       const selected = await getActiveWindowTab();
@@ -1066,6 +1073,8 @@ export default function App() {
       // as a fallback. Never send a subtitle request to an unrelated active tab.
       const tab = await findVideoTab(adapter, url);
       const actualUrl = tab.url ?? url;
+      attemptedUrl = actualUrl;
+      await assertVideoReaderReady(tab, adapter);
       const fetched = await adapter.fetchSubtitles(actualUrl, profile.targetLanguage);
       const parsed = parseSubtitles(fetched.text);
       if (!parsed.length || parsed.length > 3_000 ||
@@ -1086,9 +1095,27 @@ export default function App() {
         count: parsed.length, language: fetched.language,
       }));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : subtitleUi.unavailable);
+      const message = cause instanceof Error ? cause.message : subtitleUi.unavailable;
+      if (attemptedUrl && needsVideoReaderReload(message)) setVideoRecoveryUrl(attemptedUrl);
+      setError(message);
     } finally {
       setSubtitleBusy(false);
+    }
+  }
+
+  async function reloadVideoReader(): Promise<void> {
+    if (!videoRecoveryUrl || reloadingVideoTab || subtitleBusy || metadataBusy) return;
+    setReloadingVideoTab(true);
+    setError("");
+    try {
+      await reloadExistingVideoTab(getVideoAdapter(videoRecoveryUrl), videoRecoveryUrl);
+      setVideoRecoveryUrl("");
+      setMetadataStatus("");
+      setSubtitleStatus(subtitleUi.reloadedTab);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : subtitleUi.reloadFailed);
+    } finally {
+      setReloadingVideoTab(false);
     }
   }
 
@@ -1275,6 +1302,13 @@ export default function App() {
               {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
             </Button>
             {subtitleStatus && <p className="hint" role="status">{subtitleStatus}</p>}
+            {videoRecoveryUrl && <div className="actions">
+              <Button variant="outline" size="sm"
+                disabled={reloadingVideoTab || subtitleBusy || metadataBusy}
+                onClick={() => void reloadVideoReader()}>
+                {reloadingVideoTab ? subtitleUi.reloadingTab : subtitleUi.reloadTab}
+              </Button>
+            </div>}
           </>}
           {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className="hint">{t("subtitleHint")}</p>}
           <details open={subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube"}>
