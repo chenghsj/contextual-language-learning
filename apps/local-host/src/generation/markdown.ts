@@ -20,6 +20,26 @@ export function toMarkdown(doc: LearningDocument): string {
       parts.push("> " + time + safeMarkdown(cue.originalText));
       if (translation) parts.push("> " + safeMarkdown(translation));
     }
+    if ("focusItems" in section) {
+      parts.push("", "### Focus expressions", "");
+      for (const focus of section.focusItems) {
+        parts.push("#### " + safeMarkdown(focus.expression),
+          "", safeMarkdown(focus.meaning), "", safeMarkdown(focus.contextExplanation),
+          "", "Evidence cues: " + focus.contextCueIds.map(safeMarkdown).join(", "), "");
+        if (focus.wordNotes.length) parts.push("**Word notes**", "");
+        for (const note of focus.wordNotes) parts.push("- **" + safeMarkdown(note.surface) +
+          "** — " + safeMarkdown(note.meaning) + ": " + safeMarkdown(note.explanation));
+        parts.push("", "**AI-created contextual examples**", "");
+        for (const example of focus.examples) {
+          parts.push("- " + safeMarkdown(example.situation));
+          for (const line of example.dialogue) {
+            parts.push("  - " + safeMarkdown(line.text) + " — " + safeMarkdown(line.translation));
+          }
+        }
+        parts.push("");
+      }
+      continue;
+    }
     parts.push("", "### Vocabulary", "");
     for (const word of section.vocabulary) {
       parts.push("- **" + safeMarkdown(word.expression) + "** — " +
