@@ -113,3 +113,26 @@ test("V3 route keeps V2 unchanged, original cue refs and export actions availabl
   assert.match(source, /onDownload\("json"\)/);
   assert.match(source, /onDownload\("md"\)/);
 });
+
+test("V3 follows actual playback time while keeping A/B edits per source cue", async () => {
+  const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(source, /playingCueAt\(scene\.cueIds, cues, ms\)/);
+  assert.match(source, /aria-current=\{playing \? "true" : undefined\}/);
+  assert.match(source, /const resumeLoop = !!loopingCueRef\.current/);
+  assert.match(source, /await stopPreviousLoop\(\)/);
+  assert.match(source, /const loopKey = "sceneLoopRanges:" \+ document\.id/);
+  assert.match(source, /readLoopWindows\(saved\[loopKey\], document\.cues\.map/);
+  assert.match(source, /\[loopKey\]: loopRanges/);
+  assert.match(source, /loopRanges\[selectedCue\.id\] \?\? cuePlaybackWindow/);
+  assert.match(source, /adapter\.status\(sourceUrl\)/);
+  assert.match(source, /updateRange\(boundary, "current"\)/);
+  assert.match(source, /updateRange\("reset"\)/);
+  assert.match(source, /formatLoopTimestamp\(point\)/);
+  assert.match(source, /calibrationRef\.current/);
+  assert.match(css, /\.contextualTimeDialog::backdrop/);
+  const html = render("zh-TW");
+  assert.ok(html.includes(contextualReaderMessages["zh-TW"].adjustPosition));
+  assert.ok(html.includes("<dialog"));
+  assert.ok(!html.includes("<dialog open"), "calibration opens only when requested");
+});

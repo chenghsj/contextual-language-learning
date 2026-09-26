@@ -50,6 +50,7 @@ export function ContextualSceneReader({
   const loopingCueRef = useRef<string | null>(null);
   const [loopRanges, setLoopRanges] = useState<Record<string, LoopWindow>>({});
   const [calibrationOpen, setCalibrationOpen] = useState(false);
+  const calibrationOpenRef = useRef(false);
   const calibrationRef = useRef<HTMLDialogElement>(null);
   const [playbackCueId, setPlaybackCueId] = useState<string | null>(null);
   const [playbackKnown, setPlaybackKnown] = useState(false);
@@ -102,6 +103,7 @@ export function ContextualSceneReader({
   }, [loaded, progressKey, loopKey, loopRanges, scene.id, selectionByScene]);
 
   useEffect(() => { loopingCueRef.current = loopingCueId; }, [loopingCueId]);
+  useEffect(() => { calibrationOpenRef.current = calibrationOpen; }, [calibrationOpen]);
   useEffect(() => {
     const dialog = calibrationRef.current;
     if (!dialog) return;
@@ -133,7 +135,7 @@ export function ContextualSceneReader({
         const cueId = playingCueAt(scene.cueIds, cues, ms);
         setPlaybackKnown(true);
         setPlaybackCueId(cueId);
-        if (cueId && !loopingCueRef.current) {
+        if (cueId && !loopingCueRef.current && !calibrationOpenRef.current) {
           setSelectionByScene(previous => previous[scene.id] === cueId ? previous
             : { ...previous, [scene.id]: cueId });
         }
