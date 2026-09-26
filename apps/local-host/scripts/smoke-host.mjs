@@ -87,8 +87,11 @@ try {
   const health = await send({ type: "health", id: randomUUID() });
   assert.equal(health.type, "health");
   assert.equal(health.agentMode, "imported-only");
-  assert.deepEqual(health.agents, [], "a fresh Host has no preinstalled Agent definitions");
-  assert.deepEqual(health.installed, {}, "built-in CLI executables are never offered by health");
+  // Installer smoke invokes the Host again; its imported CLI registry may already persist.
+  assert.ok(health.agents.every(entry => /^custom-[a-f0-9]{24}$/.test(entry.id)),
+    "Host must expose only user-imported CLI definitions");
+  assert.deepEqual(Object.keys(health.installed).sort(), health.agents.map(entry => entry.id).sort(),
+    "no removed built-in provider can appear in the Host catalog");
   const registration = await send({ id: randomUUID(), type: "customAgentImport", config: {
     label: "Smoke CLI", executable: process.execPath,
     args: ["-e", "process.stdout.write(JSON.stringify({ok:true}))"],
@@ -98,7 +101,7 @@ try {
   assert.match(registration.agent.id, /^custom-[a-f0-9]{24}$/);
   const agent = { provider: registration.agent.id, modelId: "" };
   const afterImport = await send({ type: "health", id: randomUUID() });
-  assert.deepEqual(afterImport.agents.map(entry => entry.id), [agent.provider]);
+  assert.ok(afterImport.agents.some(entry => entry.id === agent.provider));
   assert.equal(afterImport.installed[agent.provider], true);
   const legacyModel = await send({ type: "agentModels", id: randomUUID(),
     settings: legacyAgent });
