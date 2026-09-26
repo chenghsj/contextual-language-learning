@@ -99,7 +99,7 @@ test("duplicate check and authorized generation share the same Host process and 
       targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
       mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3, sceneCount: 4,
     },
-    agent: { provider: "claude", modelId: "" },
+    agent: { provider: "custom-" + "a".repeat(24), modelId: "" },
     cues: [{ id: "line-1", startMs: 1_000, endMs: 2_000, originalText: "Hello" }],
   };
   panel.onMessage.fire({ type: "checkDuplicates", id: checkId, payload });

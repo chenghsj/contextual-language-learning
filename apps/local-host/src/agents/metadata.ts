@@ -1,24 +1,24 @@
 import { spawn } from "node:child_process";
 import type { AgentSettings, AgentModel, AgentModelSource } from "@immersive/core";
-import { getAgentAdapter } from "../agents";
-import { cliInvocation, findExecutable, profileEnvironment } from "./process";
+import { assertImportedAgentProvider } from "../agents";
+import { cliInvocation, profileEnvironment } from "./process";
 import { getCustomAgent, resolveCustomExecutable } from "./custom";
 
 const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/;
 const MODEL_LIMIT = 80;
 
-export function parseAgyModels(stdout: string): AgentModel[] {
-  // Strip terminal control sequences and normalize whitespace seen in AGY 1.2.11 output.
+export function parseCliModelTable(stdout: string): AgentModel[] {
+  // Strip terminal control sequences and normalize whitespace seen in generic CLI table output.
   const cleaned = stdout.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "").replace(/\u00a0/g, " ").trim();
   try {
     const data: unknown = JSON.parse(cleaned);
     if (Array.isArray(data) || (data && typeof data === "object" && "models" in data)) {
       return parseCatalogModels(data);
     }
-  } catch { /* AGY normally prints a human-readable model table. */ }
+  } catch { /* Some CLIs print a human-readable model table. */ }
   const found = new Map<string, AgentModel>();
   for (const row of cleaned.split(/[\r\n]+/)) {
-    // AGY columns may be separated by ordinary spaces, tabs, or nonbreaking spaces.
+    // CLI table columns may be separated by ordinary spaces, tabs, or nonbreaking spaces.
     const match = row.trim().match(/^([A-Za-z0-9][A-Za-z0-9._-]{0,119})\s+(.+)$/);
     if (!match || ["model", "slug", "id"].includes(match[1].toLowerCase())) continue;
     if (!match[1].includes("-") && !match[1].includes(".")) continue;
@@ -86,58 +86,22 @@ export function probeCli(command: string, args: readonly string[], env: NodeJS.P
 export async function discoverAgentModels(settings: AgentSettings): Promise<{
   models: AgentModel[]; source: AgentModelSource; notice?: string;
 }> {
-  if (settings.provider.startsWith("custom-")) {
-    const config = await getCustomAgent(settings.provider);
-    const executable = await resolveCustomExecutable(config.executable);
-    if (!executable) return { models: [], source: "unavailable", notice: "Custom CLI not found." };
-    if (!config.modelListArgs?.length) return { models: [], source: "unavailable",
-      notice: "Use CLI default or enter a model ID. Optional model discovery is not configured." };
-    try {
-      const env = await profileEnvironment(settings, config.profileEnvVar ?? null);
-      const output = await probeCli(executable, config.modelListArgs, env);
-      let models: AgentModel[] = [];
-      try { models = parseCatalogModels(JSON.parse(output.stdout) as unknown); }
-      catch { models = parseAgyModels(output.stdout || output.stderr); }
-      return models.length ? { models, source: "cli" as const }
-        : { models: [], source: "unavailable" as const, notice: "No parseable models. Enter a model ID manually." };
-    } catch {
-      return { models: [], source: "unavailable" as const, notice: "Model discovery failed. Enter a model ID manually." };
-    }
+  assertImportedAgentProvider(settings.provider);
+  const config = await getCustomAgent(settings.provider);
+  const executable = await resolveCustomExecutable(config.executable);
+  if (!executable) return { models: [], source: "unavailable", notice: "Imported CLI not found." };
+  if (!config.modelListArgs?.length) return { models: [], source: "unavailable",
+    notice: "Use CLI default or enter a model ID. Optional model discovery is not configured." };
+  try {
+    const env = await profileEnvironment(settings, config.profileEnvVar ?? null);
+    const output = await probeCli(executable, config.modelListArgs, env);
+    let models: AgentModel[] = [];
+    try { models = parseCatalogModels(JSON.parse(output.stdout) as unknown); }
+    catch { /* A CLI may produce a plain text table instead of a JSON catalog. */ }
+    if (!models.length) models = parseCliModelTable(output.stdout || output.stderr);
+    return models.length ? { models, source: "cli" as const }
+      : { models: [], source: "unavailable" as const, notice: "No parseable models. Enter a model ID manually." };
+  } catch {
+    return { models: [], source: "unavailable" as const, notice: "Model discovery failed. Enter a model ID manually." };
   }
-  const adapter = getAgentAdapter(settings.provider);
-  const executable = await findExecutable(adapter.executableName);
-  if (!executable) return { models: [], source: "unavailable", notice: adapter.label + " CLI is not installed." };
-  const env = await adapter.configureEnvironment(settings);
-  if (settings.provider === "agy") {
-    try {
-      // AGY can print a human-readable catalog to stderr in some environments.
-      // Parse streams separately so stderr notices cannot break JSON on stdout.
-      const output = await probeCli(executable, ["models"], env);
-      const fromStdout = parseAgyModels(output.stdout);
-      const models = fromStdout.length ? fromStdout : parseAgyModels(output.stderr);
-      return models.length
-        ? { models, source: "cli", notice: "Models reported by the current AGY CLI; availability depends on its active login." }
-        : { models: [], source: "unavailable", notice: "AGY did not return a parseable model list. Enter a model ID manually." };
-    } catch {
-      return { models: [], source: "unavailable", notice: "AGY models command failed. Check the CLI login or enter a model ID manually." };
-    }
-  }
-  if (settings.provider === "codex") {
-    try {
-      const output = await probeCli(executable, ["debug", "models"], env);
-      const models = parseCatalogModels(JSON.parse(output.stdout) as unknown);
-      if (models.length) return { models, source: "cli", notice: "Codex CLI catalog; model access depends on the selected login and CLI version." };
-    } catch { /* Older Codex versions may not support the experimental debug command. */ }
-    return { models: [], source: "unavailable", notice: "This Codex CLI cannot expose a model catalog. Choose CLI default or enter a model ID." };
-  }
-  if (settings.provider === "claude") {
-    // Claude Code documents /model as an interactive command, not a machine-readable CLI API.
-    // These CLI aliases are options, NOT an account-specific entitlement list.
-    return { models: [
-      { id: "sonnet", label: "Sonnet (CLI alias)" },
-      { id: "opus", label: "Opus (CLI alias)" },
-      { id: "haiku", label: "Haiku (CLI alias)" },
-    ], source: "aliases", notice: "Claude Code /model is interactive. These aliases are not a verified list of models available to this account." };
-  }
-  return { models: [], source: "unavailable", notice: "No automated model catalog is available for this CLI." };
 }

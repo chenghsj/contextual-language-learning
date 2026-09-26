@@ -15,12 +15,13 @@ const profile = {
   targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
   mode: "guided", maxNewVocabulary: 3, exerciseCount: 1,
 };
-const agent = { provider: "claude", modelId: "" };
+// Old document metadata remains readable even though the built-in adapter is removed.
+const legacyAgent = { provider: "claude", modelId: "" };
 const cues = [{ id: "cue-1", startMs: null, endMs: null, originalText: "Good morning." }];
 await writeFile(join(library, existingId + ".json"), JSON.stringify({
   id: existingId, schemaVersion: 1, createdAt: new Date().toISOString(),
   source: { platform: "import", title: "Existing lesson" },
-  profile, generation: agent, cues,
+  profile, generation: legacyAgent, cues,
   sections: [{
     id: randomUUID(), title: "Introduction", context: "Greetings",
     cueIds: ["cue-1"], startMs: null, endMs: null,
@@ -85,9 +86,27 @@ const deadline = setTimeout(() => {
 try {
   const health = await send({ type: "health", id: randomUUID() });
   assert.equal(health.type, "health");
-  for (const name of ["claude", "codex", "agy"]) {
-    assert.equal(typeof health.installed[name], "boolean");
-  }
+  assert.equal(health.agentMode, "imported-only");
+  // Installer smoke invokes the Host again; its imported CLI registry may already persist.
+  assert.ok(health.agents.every(entry => /^custom-[a-f0-9]{24}$/.test(entry.id)),
+    "Host must expose only user-imported CLI definitions");
+  assert.deepEqual(Object.keys(health.installed).sort(), health.agents.map(entry => entry.id).sort(),
+    "no removed built-in provider can appear in the Host catalog");
+  const registration = await send({ id: randomUUID(), type: "customAgentImport", config: {
+    label: "Smoke CLI", executable: process.execPath,
+    args: ["-e", "process.stdout.write(JSON.stringify({ok:true}))"],
+    promptMode: "stdin", outputMode: "stdout-json",
+  } });
+  assert.equal(registration.type, "customAgentImported");
+  assert.match(registration.agent.id, /^custom-[a-f0-9]{24}$/);
+  const agent = { provider: registration.agent.id, modelId: "" };
+  const afterImport = await send({ type: "health", id: randomUUID() });
+  assert.ok(afterImport.agents.some(entry => entry.id === agent.provider));
+  assert.equal(afterImport.installed[agent.provider], true);
+  const legacyModel = await send({ type: "agentModels", id: randomUUID(),
+    settings: legacyAgent });
+  assert.equal(legacyModel.type, "error");
+  assert.match(legacyModel.message, /no longer supported/);
   const payload = {
     id: randomUUID(), source: { platform: "import", title: "Same subtitle, new title" },
     profile, agent, destination: { kind: "local" }, cues,
@@ -111,7 +130,7 @@ try {
   assert.equal(invalidTicket.type, "error");
   assert.match(invalidTicket.message, /檢查/);
   await assert.rejects(access(join(library, "jobs", payload.id + ".json")), { code: "ENOENT" });
-  process.stdout.write("Native Host health, duplicate check and regeneration confirmation OK\n");
+  process.stdout.write("Native Host imported-only health, historical duplicates and regeneration confirmation OK\n");
 } finally {
   clearTimeout(deadline);
   child.kill();

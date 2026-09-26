@@ -18,8 +18,8 @@ function detectedBrowser(): Browser {
 }
 
 /** Browser registration is per extension ID; installing new Agents does not change it. */
-export function HostConnectionSettings({ locale, connected, checked, version, busy, error, onCheck }: {
-  locale: UiLocale; connected: boolean; checked: boolean; version: string | null;
+export function HostConnectionSettings({ locale, connected, checked, importedOnly, version, busy, error, onCheck }: {
+  locale: UiLocale; connected: boolean; checked: boolean; importedOnly: boolean; version: string | null;
   busy: boolean; error: string; onCheck: () => void;
 }) {
   const ui = hostConnectionCopy[locale];
@@ -37,19 +37,20 @@ export function HostConnectionSettings({ locale, connected, checked, version, bu
   return <section className="grid min-w-0 gap-3 border border-border p-3" data-ui="hostConnection">
     <div className="flex min-w-0 items-center justify-between gap-2">
       <strong className="text-sm">{ui.title}</strong>
-      <span className={connected && versionMatches ? "text-xs text-primary" : "text-xs text-muted-foreground"}>
-        {connected ? ui.connected : checked ? ui.disconnected : ui.checking}
+      <span className={connected && versionMatches && importedOnly ? "text-xs text-primary" : "text-xs text-muted-foreground"}>
+        {connected ? (versionMatches && importedOnly ? ui.connected : ui.updateNeeded) : checked ? ui.disconnected : ui.checking}
       </span>
     </div>
     <details className="text-xs text-muted-foreground">
       <summary className="cursor-pointer">{ui.name}</summary>
       <p className="mt-2 leading-relaxed">{ui.help}</p>
     </details>
-    {connected && versionMatches && <p className="text-xs text-muted-foreground">
+    {connected && versionMatches && importedOnly && <p className="text-xs text-muted-foreground">
       {ui.version}: {version}</p>}
     {connected && !versionMatches && <p className="text-xs text-destructive" role="status">
       {ui.mismatch} {ui.version}: {version ?? "unknown"}</p>}
-    {checked && (!connected || !versionMatches) && <div className="grid min-w-0 gap-3">
+    {connected && versionMatches && !importedOnly && <p className="text-xs text-destructive" role="status">{ui.unsupportedMode}</p>}
+    {checked && (!connected || !versionMatches || !importedOnly) && <div className="grid min-w-0 gap-3">
       <strong className="text-xs">{ui.install}</strong>
       <label className="grid gap-1 text-xs">{ui.chooseOS}
         <SelectField ariaLabel={ui.chooseOS} value={os} onValueChange={value => setOS(value as OS)}

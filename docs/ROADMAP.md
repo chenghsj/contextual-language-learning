@@ -5,7 +5,7 @@ This is a planning aid, not a promise of release dates. Please verify a feature 
 ## MVP implemented in the development branch
 
 - Vite/React Chrome Side Panel, local SRT/VTT/plain-text import and original-cue preservation.
-- Level/instruction-language settings, Agent adapters, structured lesson generation and local JSON/Markdown export.
+- Level/instruction-language settings, user-imported CLI Agent registry, structured lesson generation and local JSON/Markdown export.
 - Checkpointed generation with explicit resume; no daemon running after Chrome closes.
 - YouTube video time links, sentence looping and user-triggered playback speed.
 - Experimental Netflix diagnose, seek, loop and playback speed via an undocumented player interface, with manual timestamp fallback.
@@ -25,7 +25,7 @@ This is a planning aid, not a promise of release dates. Please verify a feature 
 - Persistent background daemon and transactional multi-process job storage.
 - Learning progress UI, review scheduling and export/import of progress.
 - Optional provider adapters for other video domains **only where playback access is permitted and feasible**.
-- Additional CLI adapters with explicit capabilities and test coverage.
+- Additional generic CLI JSON transport/profile capabilities with explicit test coverage; no built-in provider adapters.
 - Google Drive sync/conflict management and account-disconnect flow.
 - Published browser store builds and wider platform support, subject to release readiness.
 

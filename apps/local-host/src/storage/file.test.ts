@@ -15,7 +15,7 @@ test("job records survive repository restarts and invalid IDs cannot traverse di
       id, source: { platform: "import", title: "Save test" },
       profile: { targetLanguage: "en", instructionLanguage: "en", level: "B1",
         mode: "guided", maxNewVocabulary: 2, exerciseCount: 1 },
-      agent: { provider: "claude", modelId: "" },
+      agent: { provider: "custom-" + "a".repeat(24), modelId: "" },
       cues: [{ id: "cue-1", startMs: null, endMs: null, originalText: "Hello" }],
     }), 1);
     await new FileJobRepository(root).create(job);

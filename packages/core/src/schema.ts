@@ -264,7 +264,7 @@ export const LearningDocumentSchema = z.discriminatedUnion("schemaVersion", [
 export type LearningDocument = z.infer<typeof LearningDocumentSchema>;
 
 export interface AgentModel { id: string; label: string }
-export type AgentModelSource = "cli" | "aliases" | "unavailable";
+export type AgentModelSource = "cli" | "unavailable";
 export interface AgentProfile { id: string; provider: string; label: string; directory: string }
 
 export const HostRequestSchema = z.discriminatedUnion("type", [
@@ -280,7 +280,7 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("customAgentProbe"), id: z.string().uuid(),
     executable: z.string().min(1).max(1024) }),
   z.object({ type: z.literal("agentProfileSave"), id: z.string().uuid(),
-    provider: z.string().regex(/^(?:claude|codex|custom-[a-f0-9]{24})$/), label: z.string().min(1).max(80),
+    provider: z.string().regex(/^custom-[a-f0-9]{24}$/), label: z.string().min(1).max(80),
     directory: z.string().min(1).max(1024) }),
   z.object({ type: z.literal("agentProfileRemove"), id: z.string().uuid(), profileId: z.string().uuid() }),
   z.object({ type: z.literal("generate"), id: z.string().uuid(), payload: GenerationRequestSchema,
@@ -316,7 +316,8 @@ export interface AgentInfo {
 }
 
 export type HostMessage =
-  | { id: string; type: "health"; installed: Record<string, boolean>; agents: AgentInfo[]; version?: string }
+  | { id: string; type: "health"; installed: Record<string, boolean>; agents: AgentInfo[];
+    version?: string; agentMode?: "imported-only" }
   | { id: string; type: "agentModels"; models: AgentModel[]; source: AgentModelSource; notice?: string }
   | { id: string; type: "agentProfiles"; profiles: AgentProfile[] }
   | { id: string; type: "customAgentList"; agents: CustomAgentConfig[] }

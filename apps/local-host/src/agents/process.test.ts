@@ -11,13 +11,13 @@ test("Windows npm shim is resolved to Node entry without a command shell", {
   const root = await mkdtemp(join(tmpdir(), "immersive-cli-shim-"));
   const originalPath = process.env.PATH;
   try {
-    const script = join(root, "node_modules", "@openai", "codex", "bin", "codex.js");
-    await mkdir(join(root, "node_modules", "@openai", "codex", "bin"), { recursive: true });
+    const script = join(root, "node_modules", "@example", "samplecli", "bin", "samplecli.js");
+    await mkdir(join(root, "node_modules", "@example", "samplecli", "bin"), { recursive: true });
     await writeFile(script, "process.stdout.write('safe');\n");
-    await writeFile(join(root, "codex.cmd"),
-      '@IF EXIST "%~dp0\\node.exe" ( "%~dp0\\node.exe" "%~dp0\\node_modules\\@openai\\codex\\bin\\codex.js" %* ) ELSE ( node "%~dp0\\node_modules\\@openai\\codex\\bin\\codex.js" %* )\n');
+    await writeFile(join(root, "samplecli.cmd"),
+      '@IF EXIST "%~dp0\\node.exe" ( "%~dp0\\node.exe" "%~dp0\\node_modules\\@example\\samplecli\\bin\\samplecli.js" %* ) ELSE ( node "%~dp0\\node_modules\\@example\\samplecli\\bin\\samplecli.js" %* )\n');
     process.env.PATH = root + delimiter + (originalPath ?? "");
-    const discovered = await findExecutable("codex");
+    const discovered = await findExecutable("samplecli");
     assert.equal(discovered, script);
     const invocation = cliInvocation(discovered!, ["exec", "a & whoami > exploit.txt"]);
     assert.equal(invocation.executable, process.execPath);

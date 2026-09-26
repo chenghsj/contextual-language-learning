@@ -19,7 +19,7 @@ test("existing video is found despite URL tracking parameters, and model/level v
       },
       profile: { targetLanguage: "en", instructionLanguage: "zh-TW",
         level: "B1", mode: "guided", maxNewVocabulary: 3, exerciseCount: 1 },
-      agent: { provider: "claude", modelId: "" }, destination: { kind: "local" },
+      agent: { provider: "custom-" + "a".repeat(24), modelId: "" }, destination: { kind: "local" },
       cues: [{ id: "cue-1", startMs: 1000, endMs: 2000, originalText: "Try again." }],
     });
     const doc = LearningDocumentSchema.parse({

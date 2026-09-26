@@ -27,6 +27,7 @@ import { DocumentChunkAssembler } from "./native/document-chunks";
 import { CustomAgentSettings } from "./components/custom-agent-settings";
 import { HostConnectionSettings } from "./components/host-connection-settings";
 import { agentOnboardingCopy } from "./i18n/agent-onboarding";
+import { hostConnectionCopy } from "./i18n/host-connection";
 import { isImportedAgentId, restoreImportedAgentSelection } from "./agent-selection";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
 import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
@@ -42,7 +43,7 @@ import { ContextualSceneReader } from "./components/contextual-scene-reader";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
 import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
-import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences } from "./i18n/agent-model-preferences";
+import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences, filterImportedModelPreferences } from "./i18n/agent-model-preferences";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
@@ -102,6 +103,7 @@ export default function App() {
   const settingsCopy = learningSettingsCopy[uiLocale];
   const t = (key: MessageKey, params?: MessageParams) => translate(uiLocale, key, params);
   const agentUi = agentOnboardingCopy[uiLocale];
+  const hostUi = hostConnectionCopy[uiLocale];
   const [profile, setProfile] = useState<LearningProfile>(() => ({
     ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
   }));
@@ -120,6 +122,7 @@ export default function App() {
   const [customModelMode, setCustomModelMode] = useState(false);
   const [installed, setInstalled] = useState<Installed | null>(null);
   const [hostVersion, setHostVersion] = useState<string | null>(null);
+  const [hostImportedOnly, setHostImportedOnly] = useState(false);
   const [hostStatus, setHostStatus] = useState("");
   const [hostChecked, setHostChecked] = useState(false);
   const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([]);
@@ -189,6 +192,8 @@ export default function App() {
   const selectedDriveId = backup.accountId ?? driveAccounts[0]?.id;
   const driveAccessVerified = !!selectedDriveId && driveAccess?.accountId === selectedDriveId &&
     driveAccess.status === "verified";
+  const hostReady = installed !== null && hostImportedOnly &&
+    hostVersion === chrome.runtime.getManifest().version;
   const selectedAgentInfo = agentCatalog.find(entry => entry.id === agent.provider);
   const selectedSavedProfile = savedAgentProfiles.find(profile =>
     profile.provider === agent.provider && profile.directory === agent.accountConfigDir);
@@ -214,9 +219,16 @@ export default function App() {
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
       // Old built-in selections remain in saved job snapshots, not in BYO onboarding.
       if (saved.agent) setAgent(restoreImportedAgentSelection(saved.agent));
-      if (saved.agentProfiles && typeof saved.agentProfiles === "object") {
-        setAgentProfiles(saved.agentProfiles as Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>);
-      } else if (saved.agent) {
+      if (saved.agentProfiles && typeof saved.agentProfiles === "object" && !Array.isArray(saved.agentProfiles)) {
+        setAgentProfiles(Object.fromEntries(Object.entries(saved.agentProfiles)
+          .filter(([provider, value]) => isImportedAgentId(provider) && value &&
+            typeof value === "object" && "modelId" in value && typeof value.modelId === "string")
+          .map(([provider, value]) => {
+            const setting = value as Pick<AgentSettings, "modelId" | "accountConfigDir">;
+            return [provider, { modelId: setting.modelId,
+              accountConfigDir: typeof setting.accountConfigDir === "string" ? setting.accountConfigDir : undefined }];
+          })));
+      } else if (saved.agent && isImportedAgentId((saved.agent as AgentSettings).provider)) {
         const previous = saved.agent as AgentSettings;
         setAgentProfiles({ [previous.provider]: { modelId: previous.modelId, accountConfigDir: previous.accountConfigDir } });
       }
@@ -226,9 +238,8 @@ export default function App() {
       const legacyModels = migrateAgentModelPreferences(previousAgent, previousProfiles);
       if (saved.agentModelPreferences && typeof saved.agentModelPreferences === "object" &&
           !Array.isArray(saved.agentModelPreferences)) {
-        const stored = Object.fromEntries(Object.entries(saved.agentModelPreferences)
-          .filter(([key, value]) => key.length < 2048 && typeof value === "string" && value.length <= 120));
-        setAgentModelPreferences({ ...legacyModels, ...stored });
+        const imported = filterImportedModelPreferences(saved.agentModelPreferences);
+        setAgentModelPreferences({ ...legacyModels, ...imported });
       } else {
         setAgentModelPreferences(legacyModels);
       }
@@ -718,15 +729,18 @@ export default function App() {
       if (message.id === id && message.type === "health") {
         replied = true;
         setHostChecked(true);
-        setInstalled(message.installed);
+        // Older Hosts may still advertise built-in adapters despite matching version numbers.
+        const imported = Array.isArray(message.agents)
+          ? message.agents.filter(entry => isImportedAgentId(entry.id)) : [];
+        setInstalled(Object.fromEntries(Object.entries(message.installed)
+          .filter(([id]) => isImportedAgentId(id))));
         setHostVersion(typeof message.version === "string" ? message.version : null);
-        if (Array.isArray(message.agents)) {
-          setAgentCatalog(message.agents);
-          setAgent(current => current.provider &&
-            (!isImportedAgentId(current.provider) ||
-              !message.agents?.some(entry => entry.id === current.provider))
-            ? DEFAULT_AGENT : current);
-        }
+        setHostImportedOnly(message.agentMode === "imported-only");
+        setAgentCatalog(imported);
+        setAgent(current => current.provider &&
+          (!isImportedAgentId(current.provider) ||
+            !imported.some(entry => entry.id === current.provider))
+          ? DEFAULT_AGENT : current);
         void loadAgentProfiles();
         finishCheck();
         port.disconnect();
@@ -737,6 +751,7 @@ export default function App() {
         setHostChecked(true);
         setInstalled(null);
         setHostVersion(null);
+        setHostImportedOnly(false);
         setHostStatus(chrome.runtime.lastError?.message ?? "Native Host connection failed.");
         finishCheck();
       }
@@ -752,7 +767,7 @@ export default function App() {
 
   useEffect(() => {
     if (!hydrated || installed === null) return;
-    if (!agent.provider) {
+    if (!hostReady || !agent.provider) {
       setModelOptions([]);
       setModelNotice("");
       return;
@@ -787,7 +802,7 @@ export default function App() {
       }, Math.max(0, 500 - (performance.now() - startedAt)));
     });
     return () => { ignore = true; window.clearTimeout(settleTimer); };
-  }, [hydrated, installed, agent.provider, agent.accountConfigDir]);
+  }, [hydrated, installed, hostReady, agent.provider, agent.accountConfigDir]);
 
   function showDocument(raw: unknown): void {
     const parsed = LearningDocumentSchema.safeParse(raw);
@@ -895,6 +910,11 @@ export default function App() {
 
   function startGeneration(): void {
     if (checking || generating) return;
+    if (!hostReady) {
+      setError(installed === null ? agentUi.noHost : hostUi.unsupportedMode);
+      setPage("settings");
+      return;
+    }
     if (!isImportedAgentId(agent.provider) || installed?.[agent.provider] !== true) {
       setError(agentUi.empty);
       setPage("settings");
@@ -1749,7 +1769,7 @@ export default function App() {
               </div>
             </dl>
           </div>}
-          <Button className="h-auto min-h-10 w-full px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={generating || checking || subtitleBusy || !isImportedAgentId(agent.provider) || installed?.[agent.provider] !== true || !captionsReady || !cues.length || !title.trim()}>
+          <Button className="h-auto min-h-10 w-full px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={!hostReady || generating || checking || subtitleBusy || !isImportedAgentId(agent.provider) || installed?.[agent.provider] !== true || !captionsReady || !cues.length || !title.trim()}>
             {(generating || checking) && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
@@ -1791,8 +1811,10 @@ export default function App() {
               {job.error && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere">{job.error}</p>}
               <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
                 {["queued", "waiting", "failed"].includes(job.status) &&
-                  <Button variant="outline" size="sm" disabled={generating}
-                    onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>}
+                  (isImportedAgentId(job.provider)
+                    ? <Button variant="outline" size="sm" disabled={!hostReady || generating}
+                        onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>
+                    : <p role="status" className="text-xs text-muted-foreground">{t("legacyJobCannotResume")}</p>)}
                 {job.documentId && <>
                   <Button variant="outline" size="sm" disabled={generating}
                     onClick={() => openSavedDocument(job.documentId!)}>{t("openLesson")}</Button>
@@ -1918,9 +1940,9 @@ export default function App() {
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("agentHint")}</p>
           <HostConnectionSettings locale={uiLocale} connected={installed !== null} checked={hostChecked}
+            importedOnly={hostImportedOnly}
             version={hostVersion} busy={hostBusy} error={hostStatus} onCheck={checkHost} />
-          <CustomAgentSettings locale={uiLocale} available={installed !== null &&
-            hostVersion === chrome.runtime.getManifest().version}
+          <CustomAgentSettings locale={uiLocale} available={hostReady}
             selectedProvider={agent.provider} selectedModelId={agent.modelId}
             selectedProfileDir={agent.accountConfigDir} nativeOnce={nativeOnce}
             onSelect={selectAgent}
