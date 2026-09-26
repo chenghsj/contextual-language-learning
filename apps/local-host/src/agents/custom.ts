@@ -29,6 +29,18 @@ export function expandCustomArgs(
   return args;
 }
 
+export function extractCustomAgentPayload(value: unknown, path?: string): unknown {
+  if (!path) return value;
+  let current: unknown = value;
+  for (const segment of path.split(".")) {
+    if (!current || typeof current !== "object" || !(segment in current)) {
+      throw new Error("Custom Agent response is missing configured path: " + path);
+    }
+    current = (current as Record<string, unknown>)[segment];
+  }
+  return typeof current === "string" ? parseAgentJson(current, "Custom Agent response") : current;
+}
+
 export function customAgentAdapter(definition: CustomAgentDefinition): AgentAdapter {
   return {
     id: definition.id,
@@ -40,7 +52,7 @@ export function customAgentAdapter(definition: CustomAgentDefinition): AgentAdap
     configureEnvironment: settings => profileEnvironment(settings, null),
     async generate({ prompt, modelId, run }) {
       const output = await run(expandCustomArgs(definition, prompt, modelId));
-      return parseAgentJson(output, definition.label);
+      return extractCustomAgentPayload(parseAgentJson(output, definition.label), definition.responsePath);
     },
   };
 }

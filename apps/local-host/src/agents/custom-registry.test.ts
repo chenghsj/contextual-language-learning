@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { appConfigRoot } from "../platform/paths";
 import { listCustomAgents, removeCustomAgent, saveCustomAgent, testCustomAgentExecutable } from "./custom-registry";
-import { expandCustomArgs } from "./custom";
+import { expandCustomArgs, extractCustomAgentPayload } from "./custom";
 
 test("custom Agent registry stores definitions only and resolves a safe executable", async () => {
   const home = await mkdtemp(join(tmpdir(), "contextual-custom-agent-"));
@@ -47,4 +47,10 @@ test("custom Agent argv expansion never constructs a shell command", () => {
     ["run", "--json", "hello; rm -rf /", "--model", "model-x"]);
   assert.throws(() => expandCustomArgs({ ...definition, modelArgument: undefined }, "hi", "model-x"),
     /no model argument/);
+});
+
+test("custom Agent can unwrap structured CLI envelopes before lesson validation", () => {
+  assert.deepEqual(extractCustomAgentPayload({ response: "{\\\"title\\\":\\\"ok\\\"}" }, "response"), { title: "ok" });
+  assert.deepEqual(extractCustomAgentPayload({ data: { answer: { title: "ok" } } }, "data.answer"), { title: "ok" });
+  assert.throws(() => extractCustomAgentPayload({}, "response"), /missing configured path/);
 });

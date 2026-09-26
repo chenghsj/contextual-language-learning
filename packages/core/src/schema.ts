@@ -44,6 +44,7 @@ export const CustomAgentDefinitionSchema = z.object({
     .refine(value => !value.includes("\\0"), "Executable cannot contain NUL bytes"),
   args: z.array(CustomAgentArgSchema).max(24).default([]),
   modelArgument: z.string().regex(/^--?[A-Za-z0-9][A-Za-z0-9-]{0,63}$/).optional(),
+  responsePath: z.string().regex(/^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,5}$/).optional(),
 }).superRefine((value, ctx) => {
   const promptSlots = value.args.filter(arg => arg.includes("{prompt}")).length;
   const modelSlots = value.args.filter(arg => arg.includes("{model}")).length;

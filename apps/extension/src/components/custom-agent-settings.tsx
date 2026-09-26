@@ -4,6 +4,8 @@ import type { MessageKey, MessageParams } from "../i18n/messages";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { SelectField } from "./ui/select";
+import { CUSTOM_AGENT_TEMPLATES } from "../custom-agent-templates";
 
 type NativeRequest = (request: { id: string; type: string; [key: string]: unknown }) => Promise<HostMessage>;
 type T = (key: MessageKey, params?: MessageParams) => string;
@@ -24,6 +26,8 @@ export function CustomAgentSettings(props: {
   const [executable, setExecutable] = useState("");
   const [argsText, setArgsText] = useState("");
   const [modelArgument, setModelArgument] = useState("");
+  const [responsePath, setResponsePath] = useState("");
+  const [templateId, setTemplateId] = useState("blank");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
 
@@ -33,7 +37,8 @@ export function CustomAgentSettings(props: {
     executable: executable.trim(),
     args: argsText.split("\n").map(value => value.trim()).filter(Boolean),
     ...(modelArgument.trim() ? { modelArgument: modelArgument.trim() } : {}),
-  }), [editingId, label, executable, argsText, modelArgument]);
+    ...(responsePath.trim() ? { responsePath: responsePath.trim() } : {}),
+  }), [editingId, label, executable, argsText, modelArgument, responsePath]);
 
   async function load(): Promise<void> {
     const response = await nativeRequest({ id: crypto.randomUUID(), type: "customAgents" });
@@ -49,7 +54,27 @@ export function CustomAgentSettings(props: {
     setExecutable(agent?.executable ?? "");
     setArgsText(agent?.args.join("\n") ?? "");
     setModelArgument(agent?.modelArgument ?? "");
+    setResponsePath(agent?.responsePath ?? "");
+    setTemplateId("blank");
     setStatus("");
+  }
+
+  async function applyTemplate(id: string): Promise<void> {
+    setTemplateId(id);
+    const template = CUSTOM_AGENT_TEMPLATES.find(item => item.id === id);
+    if (!template) { edit(); return; }
+    setEditingId("");
+    setLabel(template.definition.label);
+    setExecutable(template.definition.executable);
+    setArgsText(template.definition.args.join("\\n"));
+    setModelArgument(template.definition.modelArgument ?? "");
+    setResponsePath(template.definition.responsePath ?? "");
+    setStatus("");
+    try {
+      const response = await nativeRequest({ id: crypto.randomUUID(), type: "customAgentTest", definition: template.definition });
+      setStatus(response.type === "customAgentTest"
+        ? t("customAgentTemplateDetected") : t("customAgentTemplateMissing"));
+    } catch { setStatus(t("customAgentTemplateMissing")); }
   }
 
   async function act(type: "customAgentSave" | "customAgentTest" | "customAgentRemove"): Promise<void> {
@@ -82,6 +107,13 @@ export function CustomAgentSettings(props: {
         onClick={() => edit(item)}>{item.label} · {item.executable}</Button>)}
     </div>}
     <Button variant="outline" size="sm" onClick={() => edit()}>{t("customAgentAdd")}</Button>
+    <label>{t("customAgentTemplate")}
+      <SelectField ariaLabel={t("customAgentTemplate")} value={templateId}
+        onValueChange={value => void applyTemplate(value)} options={[
+          { value: "blank", label: t("customAgentTemplateCustom") },
+          { value: "gemini", label: t("customAgentTemplateGemini") },
+        ]} />
+    </label>
     <label>{t("customAgentName")}
       <Input value={label} onChange={event => {
         if (!editingId) setEditingId("");
@@ -99,6 +131,10 @@ export function CustomAgentSettings(props: {
     <label>{t("customAgentModelArgument")}
       <Input value={modelArgument} onChange={event => setModelArgument(event.target.value)}
         placeholder={t("customAgentModelArgumentPlaceholder")} />
+    </label>
+    <label>{t("customAgentResponsePath")}
+      <Input value={responsePath} onChange={event => setResponsePath(event.target.value)} placeholder="response" />
+      <span className="hint">{t("customAgentResponsePathHint")}</span>
     </label>
     <div className="actions">
       <Button variant="outline" size="sm" disabled={busy || !label.trim() || !executable.trim()}
