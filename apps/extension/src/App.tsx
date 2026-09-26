@@ -1207,9 +1207,22 @@ export default function App() {
     ++metadataRequestRef.current;
     setMetadataBusy(false);
     setMetadataStatus("");
-    setRaw(await file.text());
+    const request = ++captionRequestRef.current;
+    setSubtitleBusy(false);
+    const text = await file.text();
+    if (request !== captionRequestRef.current) return;
+    const source: CaptionProvenance = {
+      origin: "manual", sourceKey: videoSourceKey(sourceUrl), language: profile.targetLanguage,
+    };
+    captionDraftsRef.current.set(captionCacheKey(sourceUrl, profile.targetLanguage), {
+      raw: text, fileName: file.name, source,
+    });
+    setRaw(text);
+    setCaptionSource(source);
     setFileName(file.name);
-    setSubtitleStatus("");
+    setSubtitleStatus(subtitleMessage(subtitleUi.manualLanguageReady, {
+      language: learningLanguageName(profile.targetLanguage, uiLocale),
+    }));
     if (!title) {
       manuallyEditedTitleRef.current = true;
       setTitle(file.name.replace(/\.(srt|vtt|txt)$/i, ""));
@@ -1376,6 +1389,20 @@ export default function App() {
       {page === "create" && <main>
         <Card className="panel">
           <h2>{t("subtitleHeading")}</h2>
+          <div className="subtitleLanguageSetting">
+            <div className="settingField">
+              <div className="settingHeading">
+                <label htmlFor="learning-target">{t("targetLanguage")}</label>
+                <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
+                  explanation={settingsCopy.fieldHints.targetLanguage}
+                  />
+              </div>
+              <SelectField id="learning-target" ariaLabel={t("targetLanguage")}
+                value={profile.targetLanguage} onValueChange={chooseLearningLanguage} disabled={checking || generating} options={LEARNING_LANGUAGES.map(language => ({
+                  value: language, label: learningLanguageName(language, uiLocale),
+                }))} />
+            </div>
+          </div>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
             <p className="hint">{subtitleUi.hint}</p>
             <Button className="subtitleFetchButton"
@@ -1383,7 +1410,6 @@ export default function App() {
               onClick={() => void fetchCurrentSubtitles()}>
               {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
             </Button>
-            {subtitleStatus && <p className="hint" role="status">{subtitleStatus}</p>}
             {videoRecoveryUrl && <div className="actions">
               <Button variant="outline" size="sm"
                 disabled={reloadingVideoTab || subtitleBusy || metadataBusy}
@@ -1401,11 +1427,30 @@ export default function App() {
               ++metadataRequestRef.current;
               setMetadataBusy(false);
               setMetadataStatus("");
+              ++captionRequestRef.current;
+              setSubtitleBusy(false);
+              const source: CaptionProvenance = {
+                origin: "manual", sourceKey: videoSourceKey(sourceUrl), language: profile.targetLanguage,
+              };
               setRaw(event.target.value);
-              setSubtitleStatus("");
+              setCaptionSource(event.target.value.trim() ? source : null);
+              setFileName("");
+              if (event.target.value.trim()) captionDraftsRef.current.set(
+                captionCacheKey(sourceUrl, profile.targetLanguage),
+                { raw: event.target.value, fileName: "", source },
+              );
+              setSubtitleStatus(event.target.value.trim()
+                ? subtitleMessage(subtitleUi.manualLanguageReady, {
+                    language: learningLanguageName(profile.targetLanguage, uiLocale),
+                  }) : "");
             }}
               placeholder={t("subtitlePlaceholder")} /></label>
           </details>
+          {subtitleStatus && <p className="status subtitleAcquisitionStatus" role="status">{subtitleStatus}</p>}
+          {!!raw.trim() && !captionsReady && !subtitleStatus && !subtitleBusy &&
+            <p className="status subtitleAcquisitionStatus" role="status">{subtitleMessage(subtitleUi.languageNotReady, {
+              language: learningLanguageName(profile.targetLanguage, uiLocale),
+            })}</p>}
           <p className="hint">{t("parsedCues", { count: cues.length })}</p>
           <div className="actions">
             <Button variant={!title.trim() || !sourceUrl.trim() ? "default" : "outline"}
@@ -1427,7 +1472,10 @@ export default function App() {
             ++metadataRequestRef.current;
             setMetadataBusy(false);
             setMetadataStatus("");
+            ++captionRequestRef.current;
+            setSubtitleBusy(false);
             setSourceUrl(event.target.value);
+            setSubtitleStatus("");
           }} placeholder="https://www.youtube.com/watch?v=…" /></label>
           <Badge className="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
         </Card>
@@ -1435,24 +1483,6 @@ export default function App() {
         <Card className="panel">
           <h2>{t("learningHeading")}</h2>
           <div className="twoColumns">
-            <div className="settingField">
-              <div className="settingHeading">
-                <label htmlFor="learning-target">{t("targetLanguage")}</label>
-                <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
-                  explanation={settingsCopy.fieldHints.targetLanguage}
-                  />
-              </div>
-              <SelectField id="learning-target" ariaLabel={t("targetLanguage")}
-                value={profile.targetLanguage} onValueChange={next => {
-                  const targetLanguage = LEARNING_LANGUAGES.find(language => language === next);
-                  if (!targetLanguage) return;
-                  setProfile(current => ({
-                    ...current, targetLanguage, level: defaultLevelForTargetLanguage(targetLanguage),
-                  }));
-                }} options={LEARNING_LANGUAGES.map(language => ({
-                  value: language, label: learningLanguageName(language, uiLocale),
-                }))} />
-            </div>
             <div className="settingField">
               <div className="settingHeading">
                 <label htmlFor="learning-level">{t("level")}</label>
@@ -1615,7 +1645,7 @@ export default function App() {
               </div>
             </dl>
           </div>
-          <Button className="primary" onClick={startGeneration} disabled={generating || checking || !cues.length || !title.trim()}>
+          <Button className="primary" onClick={startGeneration} disabled={generating || checking || subtitleBusy || !captionsReady || !cues.length || !title.trim()}>
             {(generating || checking) && <span className="generationSpinner" aria-hidden="true" />}
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
