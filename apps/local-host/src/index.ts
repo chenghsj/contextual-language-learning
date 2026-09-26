@@ -19,6 +19,10 @@ import { backupSavedJob, resumePendingBackups } from "./storage/backup";
 import { findExisting } from "./storage/publisher";
 import { listStorageLocations, validateUserStoragePath } from "./storage/locations";
 
+// Bundle-time version from the root release package; an older Host may omit it.
+declare const __IMMERSIVE_HOST_VERSION__: string;
+const hostVersion = typeof __IMMERSIVE_HOST_VERSION__ === "string"
+  ? __IMMERSIVE_HOST_VERSION__ : "dev";
 const storage = localStoragePorts();
 const manager = new JobManager({ storage }, (requestId, job) => {
   reply({ id: requestId, type: "job", job });
@@ -99,7 +103,7 @@ async function handle(input: unknown): Promise<void> {
     switch (request.type) {
       case "health": {
         const agents = await getAgentCatalog();
-        reply({ id: request.id, type: "health", agents,
+        reply({ id: request.id, type: "health", agents, version: hostVersion,
           installed: Object.fromEntries(agents.map(agent => [agent.id, agent.installed])) });
         break;
       }
