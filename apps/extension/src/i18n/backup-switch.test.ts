@@ -25,7 +25,7 @@ test("Google callback does not claim connection succeeded before token storage f
   assert.doesNotMatch(callbackPage, /已完成 Google Drive 授權/);
   assert.match(oauth, /session.finish\("success"\)/);
   assert.match(oauth, /session.finish\("error"\)/);
-  assert.match(app, /driveConnectError && <p className={tw("jobRowError")} role="status">/);
+  assert.ok(app.includes('driveConnectError && <p className={tw("jobRowError")} role="status">'));
 });
 
 test("saved Google identity is revalidated against the real Drive API before backup is presented as active", () => {
@@ -36,5 +36,5 @@ test("saved Google identity is revalidated against the real Drive API before bac
   assert.match(app, /backup\.enabled && !driveAccessVerified/);
   assert.match(app, /backup\.enabled && driveAccessVerified/);
   assert.match(app, /t\("retryDriveAccess"\)/);
-  assert.match(app, /driveConnectError && <p className={tw("jobRowError")} role="status">/);
+  assert.ok(app.includes('driveConnectError && <p className={tw("jobRowError")} role="status">'));
 });
