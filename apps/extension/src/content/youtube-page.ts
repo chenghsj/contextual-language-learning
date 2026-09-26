@@ -11,6 +11,8 @@ import {
 (() => {
   const REQUEST = "immersive-learning:youtube:caption-request";
   const RESPONSE = "immersive-learning:youtube:caption-response";
+  const TRACK_REQUEST = "immersive-learning:youtube:track-request";
+  const TRACK_RESPONSE = "immersive-learning:youtube:track-response";
   const BRIDGE_VERSION = "native-caption-capture-v2";
   const HEALTH_REQUEST = "immersive-learning:youtube:bridge-health-request";
   const HEALTH_RESPONSE = "immersive-learning:youtube:bridge-health-response";
@@ -225,6 +227,35 @@ import {
     }
     throw lastError ?? new Error("YouTube subtitles are unavailable.");
   }
+
+  // Metadata-only: never expose player-provided signed URLs or caption text.
+  window.addEventListener(TRACK_REQUEST, event => {
+    const request = (event as CustomEvent<{ source?: string; id?: string; videoId?: string }>).detail;
+    if (request?.source !== "immersive-learning" || typeof request.id !== "string" ||
+        request.id.length > 100 || typeof request.videoId !== "string") return;
+    void (async () => {
+      if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed.");
+      let tracks = tracksForVideo(request.videoId);
+      for (let attempt = 0; !tracks.length && attempt < 8; attempt++) {
+        await new Promise<void>(resolve => setTimeout(resolve, 250));
+        if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed.");
+        tracks = tracksForVideo(request.videoId);
+      }
+      return { status: tracks.length ? "available" : "unknown",
+        tracks: tracks.map(track => ({ language: track.languageCode,
+          kind: track.kind === "asr" ? "auto" : "manual" })) };
+    })().then(result => {
+      window.dispatchEvent(new CustomEvent(TRACK_RESPONSE, { detail: {
+        source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION,
+        ok: true, ...result,
+      } }));
+    }).catch(error => {
+      window.dispatchEvent(new CustomEvent(TRACK_RESPONSE, { detail: {
+        source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION,
+        ok: false, error: error instanceof Error ? error.message : "Caption tracks unavailable.",
+      } }));
+    });
+  });
 
   window.addEventListener(REQUEST, event => {
     const request = (event as CustomEvent<CaptionRequest>).detail;
