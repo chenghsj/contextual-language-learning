@@ -5,6 +5,7 @@ import {
   allowedYouTubeCaptionUrl, chooseYouTubeCaptionTrack,
   observedYouTubeCaptionUrls, parsePlayerYouTubeCaptionResponse, readYouTubeCaptionTracks,
   youtubeJson3ToVtt, youtubeTimedTextToVtt, youtubeXmlToVtt,
+  youtubeCaptionCandidates, YOUTUBE_CAPTION_FETCH_BUDGET_MS, YOUTUBE_CAPTION_FETCH_ATTEMPT_MS,
 } from "./youtube-captions";
 
 const videoId = "dQw4w9WgXcQ";
@@ -213,4 +214,23 @@ test("caption selection accepts additional language codes and regional tracks", 
   assert.equal(chooseYouTubeCaptionTrack(tracks, "pt")?.languageCode, "pt-BR");
   assert.equal(chooseYouTubeCaptionTrack(tracks, "fr")?.languageCode, "fr");
   assert.equal(chooseYouTubeCaptionTrack(tracks, "de"), null);
+});
+
+test("YouTube retries stay inside the content bridge deadline and preserve signed URL priority", () => {
+  const track = "https://www.youtube.com/api/timedtext?v=" + videoId + "&lang=ja";
+  const signed = [
+    track + "&pot=first&fmt=json3",
+    track + "&pot=second&fmt=json3",
+    track + "&pot=third&fmt=json3",
+  ];
+  assert.deepEqual(youtubeCaptionCandidates(
+    signed, track + "&fmt=json3", track,
+  ), [signed[0], signed[1], track + "&fmt=json3", track]);
+  assert.deepEqual(youtubeCaptionCandidates(
+    [track, track], track, track,
+  ), [track]);
+  // Track discovery (8 x 250ms) and clone grace (4 x 200ms) also fit
+  // before the isolated-world bridge gives up after 32 seconds.
+  assert.ok(YOUTUBE_CAPTION_FETCH_ATTEMPT_MS < YOUTUBE_CAPTION_FETCH_BUDGET_MS);
+  assert.ok(2_000 + YOUTUBE_CAPTION_FETCH_BUDGET_MS + 800 < 32_000);
 });
