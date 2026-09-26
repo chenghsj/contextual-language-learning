@@ -193,6 +193,7 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("driveAccounts"), id: z.string().uuid() }),
   z.object({ type: z.literal("driveDisconnect"), id: z.string().uuid(), accountId: z.string().min(1).max(256) }),
   z.object({ type: z.literal("driveConnect"), id: z.string().uuid() }),
+  z.object({ type: z.literal("driveValidate"), id: z.string().uuid(), accountId: z.string().min(1).max(256) }),
   z.object({ type: z.literal("publishJob"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({ type: z.literal("retryBackup"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({ type: z.literal("resumeBackups"), id: z.string().uuid() }),
@@ -221,6 +222,7 @@ export type HostMessage =
   | { id: string; type: "folder"; directory: string }
   | { id: string; type: "driveAccounts"; accounts: DriveAccount[]; configured: boolean }
   | { id: string; type: "driveConnected"; account: DriveAccount }
+  | { id: string; type: "driveValidated"; accountId: string }
   | { id: string; type: "driveDisconnected"; accountId: string }
   | { id: string; type: "published"; jobId: string; location: string }
   | { id: string; type: "publicationFailed"; jobId: string; message: string }

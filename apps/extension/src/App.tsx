@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  compactStudyExport, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
+  BackupSettingsSchema, compactStudyExport, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
   parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
-  type Destination, type DriveAccount, type DuplicateMatch,
+  type BackupSettings, type Destination, type DriveAccount, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
   type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
@@ -124,6 +124,8 @@ export default function App() {
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [destination, setDestination] = useState<Destination>({ kind: "local" });
+  const [backup, setBackup] = useState<BackupSettings>({ enabled: false });
+  const [backupStatus, setBackupStatus] = useState("");
   const [driveAccounts, setDriveAccounts] = useState<DriveAccount[]>([]);
   const [driveConfigured, setDriveConfigured] = useState(false);
   const [storageBusy, setStorageBusy] = useState(false);
@@ -170,7 +172,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference"]).then(saved => {
+    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "destination", "backup", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference"]).then(saved => {
       if (saved.profile) setProfile({ ...DEFAULT_PROFILE, instructionLanguage: browserLocale, ...(saved.profile as Partial<LearningProfile>) });
       if (isLocalePreference(saved.uiLocalePreference)) setLocalePreference(saved.uiLocalePreference);
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
@@ -181,7 +183,15 @@ export default function App() {
         const previous = saved.agent as AgentSettings;
         setAgentProfiles({ [previous.provider]: { modelId: previous.modelId, accountConfigDir: previous.accountConfigDir } });
       }
-      if (saved.destination) setDestination(saved.destination as Destination);
+      if (saved.destination) {
+        const previous = saved.destination as Destination;
+        if (previous.kind === "local") setDestination(previous);
+        else if (!saved.backup) setBackup({ enabled: true, accountId: previous.accountId });
+      }
+      if (saved.backup) {
+        const parsed = BackupSettingsSchema.safeParse(saved.backup);
+        if (parsed.success) setBackup(parsed.data);
+      }
       if (saved.repeat) setRepeat(saved.repeat as RepeatOption);
       if (typeof saved.delay === "number") setDelay(saved.delay);
       if (typeof saved.playbackRate === "number" && [0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].includes(saved.playbackRate)) {
@@ -260,7 +270,19 @@ export default function App() {
         }
         return;
       }
+      if (message.type === "backupsFinished") { void loadJobs(); return; }
       if (message.id !== activeRequestIdRef.current) return;
+      if (message.type === "backupPublished") {
+        setBackupStatus(t("backupSaved"));
+        void loadJobs();
+        return;
+      }
+      if (message.type === "backupFailed") {
+        setBackupStatus(t("backupFailedMessage"));
+        void loadJobs();
+        return;
+      }
+      if (message.type === "generationSettled") { void loadJobs(); return; }
       if (message.type === "job") {
         updateJob(message.job);
       } else if (message.type === "progress") {
@@ -273,6 +295,12 @@ export default function App() {
         setPublishedLocation(message.location);
       } else if (message.type === "publicationFailed") {
         setError(t("publishFailed", { message: message.message }));
+      } else if (message.type === "backupPublished") {
+        setBackupStatus(t("backupSaved"));
+        void loadJobs();
+      } else if (message.type === "backupFailed") {
+        setBackupStatus(t("backupFailedMessage"));
+        void loadJobs();
       } else if (message.type === "result") {
         try { showDocument(message.document); }
         catch { void loadJobs(); }
@@ -296,6 +324,7 @@ export default function App() {
       }
     });
     observer.postMessage({ type: "watch" });
+    observer.postMessage({ type: "resumeBackups", id: crypto.randomUUID() });
     return () => {
       if (controllerPortRef.current === observer) controllerPortRef.current = null;
       observer.disconnect();
@@ -358,8 +387,8 @@ export default function App() {
   }, [uiLocale, themePreference, systemDark]);
 
   useEffect(() => {
-    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, destination, repeat, delay, playbackRate, uiLocalePreference: localePreference, themePreference });
-  }, [hydrated, profile, agent, agentProfiles, destination, repeat, delay, playbackRate, localePreference, themePreference]);
+    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, destination, backup, repeat, delay, playbackRate, uiLocalePreference: localePreference, themePreference });
+  }, [hydrated, profile, agent, agentProfiles, destination, backup, repeat, delay, playbackRate, localePreference, themePreference]);
 
   function nativeOnce(request: { id: string; type: string; [key: string]: unknown }): Promise<HostMessage> {
     return new Promise((resolve, reject) => {
@@ -386,9 +415,7 @@ export default function App() {
       if (response.type !== "driveAccounts") throw new Error("Unexpected Drive accounts response");
       setDriveAccounts(response.accounts);
       setDriveConfigured(response.configured);
-      setDestination(current =>
-        current.kind === "drive" && !current.accountId && response.accounts[0]
-          ? { kind: "drive", accountId: response.accounts[0].id } : current);
+      // Account choice no longer changes the local lesson destination.
     } catch (cause) {
       // Local-only use does not require a connected Host or a Google account.
       setDriveAccounts([]);
@@ -415,7 +442,7 @@ export default function App() {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveConnect" });
       if (response.type !== "driveConnected") throw new Error("Unexpected Google account response");
       setDriveAccounts(current => [...current.filter(item => item.id !== response.account.id), response.account]);
-      setDestination({ kind: "drive", accountId: response.account.id });
+      setBackup({ enabled: true, accountId: response.account.id });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("connectDriveError"));
     } finally { setStorageBusy(false); }
@@ -428,10 +455,41 @@ export default function App() {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveDisconnect", accountId });
       if (response.type !== "driveDisconnected") throw new Error("Unexpected Drive response");
       setDriveAccounts(current => current.filter(item => item.id !== accountId));
-      setDestination(current => current.kind === "drive" && current.accountId === accountId
-        ? { kind: "local" } : current);
+      setBackup(current => current.accountId === accountId
+        ? { enabled: false } : current);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("connectDriveError"));
+    } finally { setStorageBusy(false); }
+  }
+
+  async function enableBackup(): Promise<void> {
+    const accountId = backup.accountId ?? driveAccounts[0]?.id;
+    if (!accountId) { await connectDrive(); return; }
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveValidate", accountId });
+      if (response.type !== "driveValidated") throw new Error("Unexpected Drive validation response");
+      setBackup({ enabled: true, accountId });
+    } catch {
+      setStorageBusy(false);
+      await connectDrive();
+    } finally { setStorageBusy(false); }
+  }
+
+  async function retryBackup(jobId: string): Promise<void> {
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "retryBackup", jobId });
+      if (response.type === "backupFailed") throw new Error(response.message);
+      if (response.type !== "backupPublished") throw new Error("Unexpected backup response");
+      setBackupStatus(t("backupSaved"));
+      loadJobs();
+    } catch (cause) {
+      setBackupStatus(t("backupFailedMessage"));
+      setError(cause instanceof Error ? cause.message : t("publicationError"));
+      loadJobs();
     } finally { setStorageBusy(false); }
   }
 
@@ -653,6 +711,12 @@ export default function App() {
         setPublishedLocation(message.location);
       } else if (message.type === "publicationFailed") {
         setError(t("publishFailed", { message: message.message }));
+      } else if (message.type === "backupPublished") {
+        setBackupStatus(t("backupSaved"));
+        void loadJobs();
+      } else if (message.type === "backupFailed") {
+        setBackupStatus(t("backupFailedMessage"));
+        void loadJobs();
       } else if (message.type === "result") {
         complete(message.document);
       } else if (message.type === "documentChunk") {
@@ -690,11 +754,12 @@ export default function App() {
     setError("");
     cancelDuplicate();
     setPublishedLocation("");
+    setBackupStatus("");
     try {
       const payload = GenerationRequestSchema.parse({
         id: crypto.randomUUID(),
         source: { platform, title: title.trim(), ...(sourceUrl.trim() ? { url: sourceUrl.trim() } : {}) },
-        profile, agent, destination, cues,
+        profile, agent, destination, backup, cues,
       });
       const port = chrome.runtime.connect({ name: GENERATION_CONTROLLER_PORT });
       preflightPortRef.current = port;
@@ -826,7 +891,7 @@ export default function App() {
       setDuplicateWarning(null);
       setChecking(false);
     }
-  }, [raw, title, sourceUrl, profile, agent, destination]);
+  }, [raw, title, sourceUrl, profile, agent, destination, backup]);
 
   function cancelGeneration(): void {
     if (!portRef.current || !requestRef.current) return;
@@ -1232,47 +1297,34 @@ export default function App() {
 
         <Card className="panel">
           <h2>{t("generationHeading")}</h2>
-          <label>{t("storageLocation")}
-            <SelectField ariaLabel={t("storageLocation")} value={destination.kind}
-              onValueChange={kind => {
-                if (kind === "drive") {
-                  setDestination({ kind: "drive", accountId: driveAccounts[0]?.id ?? "" });
-                } else {
-                  setDestination({ kind: "local" });
-                }
-                cancelDuplicate();
-              }} options={[
-                { value: "local", label: t("localFolder") },
-                { value: "drive", label: t("driveAccountOption") },
-              ]} />
-          </label>
-          {destination.kind === "local" ? <>
-            <p className="hint">{t("currentFolder", { path: destination.directory ?? t("defaultFolder") })}</p>
-            <div className="actions">
-              <Button variant="outline" className="secondary" disabled={storageBusy || generating}
-                onClick={() => void chooseFolder()}>{t("chooseFolder")}</Button>
-              {destination.directory && <Button variant="ghost" size="sm"
-                onClick={() => setDestination({ kind: "local" })}>{t("useDefaultFolder")}</Button>}
+          <label>{t("storageLocation")}</label>
+          <p className="hint">{t("currentFolder", { path: destination.kind === "local"
+            ? destination.directory ?? t("defaultFolder") : t("defaultFolder") })}</p>
+          <div className="actions">
+            <Button variant="outline" className="secondary" disabled={storageBusy || generating}
+              onClick={() => void chooseFolder()}>{t("chooseFolder")}</Button>
+            {destination.kind === "local" && destination.directory && <Button variant="ghost" size="sm"
+              onClick={() => setDestination({ kind: "local" })}>{t("useDefaultFolder")}</Button>}
+          </div>
+          <p className="hint">{t("localAlways")}</p>
+          <div className="backupRow">
+            <div className="backupDescription">
+              <strong>{t("autoBackup")}</strong>
+              <p className="hint">{t("backupHint")}</p>
             </div>
-            <p className="hint">{t("driveDesktopPicker")}</p>
-          </> : <>
-            <label>{t("googleAccount")}
-              <SelectField ariaLabel={t("googleAccount")} value={destination.accountId}
-                onValueChange={accountId => setDestination({ kind: "drive", accountId })}
-                options={[
-                  { value: "", label: t("chooseConnected") },
-                  ...driveAccounts.map(account => ({ value: account.id, label: account.email })),
-                ]} />
-            </label>
-            <div className="actions">
-              <Button variant="outline" className="secondary" disabled={storageBusy || generating}
-                onClick={() => void connectDrive()}>{t("connectAnother")}</Button>
-              <Button variant="ghost" size="sm" disabled={storageBusy}
-                onClick={() => void refreshDriveAccounts()}>{t("refreshAccounts")}</Button>
-            </div>
-            <p className="hint">{t("driveUploadHint")}</p>
-            {!driveConfigured && <p className="callout">{t("oauthFirst")}</p>}
-          </>}
+            <Button role="switch" aria-checked={backup.enabled} aria-label={t("autoBackup")}
+              className="backupSwitch" disabled={storageBusy}
+              onClick={() => backup.enabled ? setBackup(current => ({ ...current, enabled: false }))
+                : void enableBackup()}><span className="backupSwitchThumb" /></Button>
+          </div>
+          {backup.enabled && <div className="backupConnection">
+            <span className="hint">{t("backupConnected", { email:
+              driveAccounts.find(account => account.id === backup.accountId)?.email ?? t("backupUnknownAccount") })}</span>
+            <Button variant="ghost" size="sm" onClick={() => setPage("settings")}>{t("manageDrive")}</Button>
+          </div>}
+          {!backup.enabled && !driveAccounts.length && driveConfigured &&
+            <p className="hint">{t("backupConnectToEnable")}</p>}
+          {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
           {duplicateWarning && <div className="callout" role="alertdialog" aria-label={t("duplicateConfirmLabel")}>
             <strong>{t("duplicateFound", { count: duplicateWarning.matches.length })}</strong>
             <p className="hint">{t("duplicateNewVersion")}</p>
@@ -1311,7 +1363,7 @@ export default function App() {
               </div>
             </dl>
           </div>
-          <Button className="primary" onClick={startGeneration} disabled={generating || checking || !cues.length || !title.trim() || (destination.kind === "drive" && !destination.accountId)}>
+          <Button className="primary" onClick={startGeneration} disabled={generating || checking || !cues.length || !title.trim()}>
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
           {generating && <Button variant="outline" className="secondary" onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
@@ -1338,6 +1390,12 @@ export default function App() {
                 {job.publication?.status !== "published" &&
                   <Button variant="outline" size="sm" disabled={storageBusy}
                     onClick={() => void retryPublication(job.id)}>{t("retryPublish")}</Button>}
+                {job.backup && <span className="hint">{t(job.backup.status === "backed-up"
+                  ? "backupSaved" : job.backup.status === "uploading" || job.backup.status === "pending"
+                    ? "backupProcessing" : "backupFailedMessage")}</span>}
+                {job.backup && ["failed", "conflict"].includes(job.backup.status) &&
+                  <Button variant="outline" size="sm" disabled={storageBusy}
+                    onClick={() => void retryBackup(job.id)}>{t("retryBackup")}</Button>}
               </>}
             </div>
           </div>)}
@@ -1467,6 +1525,11 @@ export default function App() {
         <Card className="panel">
           <h2>{t("driveAccountHeading")}</h2>
           <p className="hint">{t("driveOauthHelp")}</p>
+          {driveAccounts.length > 0 && <label>{t("backupAccount")}
+            <SelectField ariaLabel={t("backupAccount")} value={backup.accountId ?? ""}
+              onValueChange={accountId => setBackup(current => ({ ...current, accountId }))}
+              options={driveAccounts.map(account => ({ value: account.id, label: account.email }))} />
+          </label>}
           {!driveConfigured && <p className="callout">{t("oauthFirst")}</p>}
           <div className="actions">
             <Button variant="outline" className="secondary" disabled={storageBusy || !driveConfigured}
