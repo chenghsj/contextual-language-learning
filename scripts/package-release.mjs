@@ -23,6 +23,13 @@ assert.ok(!Object.hasOwn(extensionManifest, "key"), "Release manifest must not e
 for (const name of ["manifest.json", "sidepanel.html", "background.js", "youtube.js", "netflix.js", "netflix-page.js"]) {
   await access(join(extensionDist, name));
 }
+for (const size of [16, 32, 48, 128]) {
+  const path = "icons/icon" + size + ".png";
+  assert.equal(extensionManifest.icons?.[size], path, "Manifest icon missing for " + size);
+  assert.equal(extensionManifest.action?.default_icon?.[size], path,
+    "Toolbar icon missing for " + size);
+  await access(join(extensionDist, path));
+}
 await access(hostDist);
 const installerFiles = ["install-host.mjs", "native-host-platform.mjs", "windows-launcher.cs", "compile-launcher.ps1"];
 for (const name of installerFiles) await access(join(hostRoot, "scripts", name));
@@ -78,6 +85,10 @@ try {
   const names = output => output.stdout.split(/\r?\n/).map(value => value.replace(/^\.\//, ""));
   const chromiumContents = names(await exec("unzip", ["-Z", "-1", join(assetDir, chromiumName)]));
   assert.ok(chromiumContents.includes("manifest.json"), "Chromium ZIP lacks root manifest.json");
+  for (const size of [16, 32, 48, 128]) {
+    assert.ok(chromiumContents.includes("icons/icon" + size + ".png"),
+      "Chromium ZIP lacks icon" + size + ".png");
+  }
   assert.ok(!chromiumContents.some(path => path.startsWith("apps/") || path.startsWith("node_modules/")),
     "Chromium ZIP contains unexpected project directories");
   for (const hostName of hostNames) {
