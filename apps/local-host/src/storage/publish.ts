@@ -1,4 +1,5 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, rename, rm, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { readLearningDocument, type Destination, type LearningDocument } from "@immersive/core";
 import { toMarkdown } from "../generation/markdown";
@@ -27,6 +28,50 @@ export class DestinationPublisher implements DocumentPublisher {
     await writeOnce(markdownPath, markdown, document.id);
     return jsonPath;
   }
+}
+
+/** Update only an app-published local copy, never an unrelated or user-edited file.
+ * The repository copy was already saved on explicit Done. */
+export async function syncPublishedPlayback(
+  storage: StoragePorts, previous: LearningDocument, updated: LearningDocument,
+): Promise<void> {
+  if (previous.id !== updated.id || previous.schemaVersion !== 3 || updated.schemaVersion !== 3) {
+    throw new Error("Playback sync requires the same saved V3 document");
+  }
+  const job = await storage.jobs.get(updated.id);
+  if (!job || job.summary.publication?.status !== "published" ||
+      !job.summary.publication.location) return;
+  const folder = await validateFolder(job.request.destination?.kind === "local"
+    ? job.request.destination.directory : undefined);
+  const jsonPath = join(folder, updated.id + ".json");
+  const mdPath = join(folder, updated.id + ".md");
+  if (job.summary.publication.location !== jsonPath) {
+    throw new Error("Published lesson destination no longer matches the verified local folder");
+  }
+  const oldJson = JSON.stringify(previous, null, 2) + "\n";
+  const newJson = JSON.stringify(updated, null, 2) + "\n";
+  const oldMd = toMarkdown(previous);
+  const newMd = toMarkdown(updated);
+  const currentJson = await readFile(jsonPath, "utf8");
+  if (currentJson !== oldJson && currentJson !== newJson) {
+    throw new Error("Published lesson was changed independently; local export was left untouched");
+  }
+  const currentMd = await readFile(mdPath, "utf8");
+  if (currentMd !== oldMd && currentMd !== newMd) {
+    throw new Error("Published Markdown was changed independently; local export was left untouched");
+  }
+  const writeIfChanged = async (path: string, current: string, next: string): Promise<void> => {
+    if (current === next) return;
+    const temporary = path + "." + randomUUID() + ".tmp";
+    try {
+      await writeFile(temporary, next, { flag: "wx", mode: 0o600 });
+      await rename(temporary, path);
+    } finally {
+      await rm(temporary, { force: true }).catch(() => undefined);
+    }
+  };
+  await writeIfChanged(jsonPath, currentJson, newJson);
+  await writeIfChanged(mdPath, currentMd, newMd);
 }
 
 export async function publishSavedJob(
