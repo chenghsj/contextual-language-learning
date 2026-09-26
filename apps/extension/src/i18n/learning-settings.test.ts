@@ -104,7 +104,8 @@ test("level help follows the selected learning language in every interface local
   }
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   assert.match(app, /explanation=\{levelHint\(settingsCopy, profile\.targetLanguage\)\}/);
-  assert.match(app, /defaultLevelForTargetLanguage\(targetLanguage\)/);
+  assert.match(app, /defaultLevelForTargetLanguage\(language\)/);
+  assert.match(app, /onValueChange=\{chooseLearningLanguage\}/);
 });
 
 test("each interface locale declares exactly one levelHints block in its own language", async () => {

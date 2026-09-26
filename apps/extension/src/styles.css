@@ -493,3 +493,9 @@ button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(-
 .customAgentRow span { min-width: 0; flex: 1; overflow-wrap: anywhere; }
 .customAgentRow strong, .customAgentRow small { display: block; }
 .customAgentRow small { color: var(--muted-foreground); font-size: 11px; }
+
+/* Language must be chosen before subtitle acquisition; keep each control full width in a narrow Side Panel. */
+.subtitleLanguageSetting { margin: 6px 0 12px; min-width: 0; }
+.subtitleLanguageSetting .settingField { margin: 0; }
+.twoColumns > .settingField:only-child { grid-column: 1 / -1; }
+.subtitleAcquisitionStatus { margin: 10px 0; line-height: 1.5; }
