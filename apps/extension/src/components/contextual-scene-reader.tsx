@@ -50,6 +50,9 @@ export function ContextualSceneReader({
   function markBusy(next: boolean): void { busyRef.current = next; setBusy(next); }
   const [loopingCueId, setLoopingCueId] = useState<string | null>(null);
   const loopingCueRef = useRef<string | null>(null);
+  const [loopingSceneId, setLoopingSceneId] = useState<string | null>(null);
+  const loopingSceneRef = useRef<string | null>(null);
+  const activeLoopRef = useRef(false);
   const [loopRanges, setLoopRanges] = useState<Record<string, LoopWindow>>({});
   const [calibrationOpen, setCalibrationOpen] = useState(false);
   const calibrationOpenRef = useRef(false);
@@ -108,6 +111,14 @@ export function ContextualSceneReader({
   }, [loaded, progressKey, loopKey, loopRanges, scene.id, selectionByScene]);
 
   useEffect(() => { loopingCueRef.current = loopingCueId; }, [loopingCueId]);
+  useEffect(() => { loopingSceneRef.current = loopingSceneId; }, [loopingSceneId]);
+  useEffect(() => () => {
+    // An old scene/line loop must not seek back after this reader unmounts.
+    if (activeLoopRef.current && sourceUrl && adapter.stopLoop) {
+      void adapter.stopLoop(sourceUrl).catch(() => undefined);
+      activeLoopRef.current = false;
+    }
+  }, [sourceUrl, adapter]);
   useEffect(() => { calibrationOpenRef.current = calibrationOpen; }, [calibrationOpen]);
   // A scene/cue change must discard an unfinished calibration draft.
   useEffect(() => {
@@ -157,10 +168,13 @@ export function ContextualSceneReader({
   }, [sourceUrl, adapter, scene.id, scene.cueIds, cues]);
 
   async function stopPreviousLoop(): Promise<void> {
-    if (!loopingCueRef.current) return;
-    if (sourceUrl && adapter.stopLoop) await adapter.stopLoop(sourceUrl);
+    // Stop scene one-shot/repeat and sentence loops, not just the active cue loop.
+    if (activeLoopRef.current && sourceUrl && adapter.stopLoop) await adapter.stopLoop(sourceUrl);
+    activeLoopRef.current = false;
     loopingCueRef.current = null;
     setLoopingCueId(null);
+    loopingSceneRef.current = null;
+    setLoopingSceneId(null);
   }
 
   async function selectScene(index: number): Promise<void> {
@@ -189,12 +203,36 @@ export function ContextualSceneReader({
         startMs: cuePlaybackStart(scene.startMs), endMs: scene.endMs + 400,
         repeats: 1, delaySeconds: 0,
       });
+      activeLoopRef.current = true;
       setStatus(copy.playbackStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally {
       markBusy(false);
     }
+  }
+
+  async function toggleSceneLoop(): Promise<void> {
+    if (!sourceUrl || !adapter.loop || scene.startMs === null || scene.endMs === null || busyRef.current) return;
+    markBusy(true);
+    try {
+      if (loopingSceneRef.current === scene.id) {
+        await stopPreviousLoop();
+        setStatus(copy.sceneLoopStopped);
+      } else {
+        await stopPreviousLoop();
+        await adapter.loop(sourceUrl, {
+          startMs: cuePlaybackStart(scene.startMs), endMs: scene.endMs + 400,
+          repeats: repeat === "infinite" ? "infinite" : Number(repeat), delaySeconds: delay,
+        });
+        activeLoopRef.current = true;
+        loopingSceneRef.current = scene.id;
+        setLoopingSceneId(scene.id);
+        setStatus(copy.sceneLoopStarted);
+      }
+    } catch (error) {
+      onError(error instanceof Error ? error.message : copy.unavailable);
+    } finally { markBusy(false); }
   }
 
   async function selectCue(id: string, play = true): Promise<void> {
@@ -212,6 +250,7 @@ export function ContextualSceneReader({
           repeats: resumeLoop ? repeat === "infinite" ? "infinite" : Number(repeat) : 1,
           delaySeconds: resumeLoop ? delay : 0,
         });
+        activeLoopRef.current = true;
         if (resumeLoop) { loopingCueRef.current = cue.id; setLoopingCueId(cue.id); }
         setStatus(resumeLoop ? copy.loopStarted : copy.playbackStarted);
       } else if (play && !supportsCue(cue)) {
@@ -240,6 +279,7 @@ export function ContextualSceneReader({
           repeats: repeat === "infinite" ? "infinite" : Number(repeat),
           delaySeconds: delay,
         });
+        activeLoopRef.current = true;
         loopingCueRef.current = selectedCue.id;
         setLoopingCueId(selectedCue.id);
         setStatus(copy.loopStarted);
@@ -394,10 +434,19 @@ export function ContextualSceneReader({
         </Button>}
       </div>
       <p className="my-[8px_12px] text-[13px] leading-[1.6] text-muted-foreground">{scene.context}</p>
-      <Button variant="outline" className="min-h-[38px] w-full" disabled={busy || !canLoop ||
-        scene.startMs === null || scene.endMs === null} onClick={() => void playScene()}>
-        <Play aria-hidden="true" />{copy.playScene}
-      </Button>
+      <div className="grid min-w-0 grid-cols-2 gap-2 [&>button]:min-h-[38px] [&>button]:min-w-0 [&>button]:h-auto [&>button]:whitespace-normal">
+        <Button variant="outline" disabled={busy || !canLoop ||
+          scene.startMs === null || scene.endMs === null} onClick={() => void playScene()}>
+          <Play aria-hidden="true" />{copy.playScene}
+        </Button>
+        <Button variant={loopingSceneId === scene.id ? "secondary" : "outline"}
+          aria-pressed={loopingSceneId === scene.id} title={copy.loopOptions}
+          disabled={busy || !canLoop || scene.startMs === null || scene.endMs === null}
+          onClick={() => void toggleSceneLoop()}>
+          {loopingSceneId === scene.id ? <Square aria-hidden="true" /> : <Repeat2 aria-hidden="true" />}
+          {loopingSceneId === scene.id ? copy.stopSceneLoop : copy.loopScene + " · " + (repeat === "infinite" ? "∞" : repeat + "×")}
+        </Button>
+      </div>
       {!canLoop && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{copy.noVideo}</p>}
 
       <div className="flex min-w-0 items-center justify-between gap-2 mt-[18px] [&>button]:shrink-0 [&+.hint]:mt-1 [&+.hint]:mb-[10px] [&+.hint]:text-[11px]">
