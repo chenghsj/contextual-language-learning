@@ -348,7 +348,7 @@ export function SceneReader({
         <p className="mb-[14px] min-h-9 min-w-0 text-xs leading-[1.55] text-muted-foreground wrap-anywhere" id="scene-step-hint">
           {step === "listen" ? c.listenHint : step === "understand" ? c.understandHint : c.practiceHint}
         </p>
-        <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] my-[8px_14px] px-[10px] py-2 [&>summary]:text-xs [&>summary]:leading-[1.5] [&>summary]:text-muted-foreground">
+        <details className="my-[8px_14px] rounded-[var(--radius)] border border-border px-[10px] py-2 text-[13px] [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:text-xs [&>summary]:leading-[1.5] [&>summary]:text-muted-foreground">
           <summary className="cursor-pointer font-semibold">{c.hintLabel} · {c[hint]}</summary>
           <div className="relative mt-[10px] flex min-w-0 items-center gap-2 [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:w-full [&>[data-slot=select-trigger]]:flex-1">
             <SelectField ariaLabel={c.hintLabel} value={hint} onValueChange={value => {

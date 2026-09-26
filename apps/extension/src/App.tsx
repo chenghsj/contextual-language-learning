@@ -1493,12 +1493,12 @@ export default function App() {
             </div>
           </div>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
-            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{subtitleUi.hint}</p>
             <Button className="h-auto min-h-10 px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere"
               disabled={subtitleBusy || metadataBusy || checking || generating}
               onClick={() => void fetchCurrentSubtitles()}>
               {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
             </Button>
+            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{subtitleUi.hint}</p>
             {videoRecoveryUrl && <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
               <Button variant="outline" size="sm"
                 disabled={reloadingVideoTab || subtitleBusy || metadataBusy}
@@ -1507,9 +1507,9 @@ export default function App() {
               </Button>
             </div>}
           </>}
-          {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("subtitleHint")}</p>}
           <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px]" open={subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube"}>
             <summary className="cursor-pointer font-semibold">{subtitleUi.manual}</summary>
+            {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("subtitleHint")}</p>}
             <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
             {fileName && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("importedFile", { name: fileName })}</p>}
             <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => {
@@ -1595,7 +1595,7 @@ export default function App() {
                 value: String(value), label: t("contextualExamplesValue", { count: value }),
               }))} />
           </div>
-          <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] my-[8px_12px] [&>summary]:text-xs [&>summary]:text-muted-foreground" data-ui="advancedLessonSettings">
+          <details className="my-[8px_12px] rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:text-xs [&>summary]:text-muted-foreground" data-ui="advancedLessonSettings">
             <summary className="cursor-pointer font-semibold">{t("advancedLessonSettings")}</summary>
             <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
               <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
@@ -1906,7 +1906,7 @@ export default function App() {
                       .map(item => ({ value: item.id, label: item.label })),
                   ]} />
               </label>}
-            <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&>summary]:text-xs [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+            <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
               <summary className="cursor-pointer font-semibold">{t("manageAgentProfiles")}</summary>
               <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("accountFolderHint")}</p>
               <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("profileName")}
@@ -1953,7 +1953,7 @@ export default function App() {
               placeholder={t("modelPlaceholder")} />
           </label>}
           {modelNotice && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{modelNotice}</p>}
-          <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&>summary]:text-xs [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+          <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
             <summary className="cursor-pointer font-semibold">{t("agentDiagnostics")}</summary>
             <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
               <Button variant="outline" size="sm" onClick={checkHost}>{t("checkHost")}</Button>
@@ -1997,7 +1997,7 @@ export default function App() {
               disabled={storageBusy || driveAccess?.status === "checking"}
               onClick={() => void enableBackup()}>{t("retryDriveAccess")}</Button>}
           </div>
-          {driveAccounts.length > 0 && <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&>summary]:text-xs [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+          {driveAccounts.length > 0 && <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
             <summary className="cursor-pointer font-semibold">{t("manageDrive")} · {driveAccounts.length}</summary>
             <div className="mt-[10px] grid gap-[5px]">
               {driveAccounts.map(account => <div className="flex min-w-0 items-center justify-between gap-2 py-[5px] not-first:border-t not-first:border-border [&_span]:min-w-0 [&_span]:text-xs [&_span]:wrap-anywhere" key={account.id}>

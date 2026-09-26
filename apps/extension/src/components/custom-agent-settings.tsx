@@ -118,7 +118,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
     finally { setBusy(false); }
   }
 
-  return <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&>summary]:text-xs [&>summary]:font-semibold mt-[15px] border-t border-border" data-ui="agentProfileAdvanced">
+  return <details className="mt-[15px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
     <summary className="cursor-pointer font-semibold">{t("customAgentsHeading")}</summary>
     <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("customAgentsHint")}</p>
     {agents.length > 0 && <div className="mt-3 grid gap-2">
@@ -157,7 +157,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
         <Button variant="outline" size="sm" disabled={!available || busy || !draft.executable.trim()}
           onClick={() => void probe()}>{t("customAgentDetect")}</Button>
       </div>
-      <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&>summary]:text-xs [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
+      <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
         <summary className="cursor-pointer font-semibold">{t("customAgentAdvanced")}</summary>
         <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("customAgentPromptMode")}
           <SelectField ariaLabel={t("customAgentPromptMode")} value={draft.promptMode}
