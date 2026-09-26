@@ -52,6 +52,23 @@ export async function findExecutable(name: string): Promise<string | null> {
   return null;
 }
 
+/** Resolve either a safe executable basename from PATH or an explicit absolute executable path. */
+export async function resolveConfiguredExecutable(value: string): Promise<string | null> {
+  if (!value || value.includes("\\0")) throw new Error("Invalid custom Agent executable.");
+  if (!isAbsolute(value)) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._+-]{0,79}$/.test(value)) {
+      throw new Error("Custom Agent executable must be a command name or an absolute path.");
+    }
+    return findExecutable(value);
+  }
+  const actual = await realpath(resolve(value));
+  const info = await stat(actual);
+  if (!info.isFile()) throw new Error("Custom Agent executable must be a file.");
+  if (process.platform === "win32" && /\\.m?js$/i.test(actual)) await access(actual, constants.R_OK);
+  else await access(actual, constants.X_OK);
+  return actual;
+}
+
 export function cliInvocation(command: string, args: readonly string[]): {
   executable: string; argv: string[];
 } {

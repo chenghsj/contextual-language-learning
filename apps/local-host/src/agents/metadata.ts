@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import type { AgentSettings, AgentModel, AgentModelSource } from "@immersive/core";
-import { getAgentAdapter } from "../agents";
+import { resolveAgentAdapter, resolveAgentExecutable } from "../agents";
 import { cliInvocation, findExecutable } from "./process";
 
 const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/;
@@ -85,8 +85,8 @@ export function probeCli(command: string, args: readonly string[], env: NodeJS.P
 export async function discoverAgentModels(settings: AgentSettings): Promise<{
   models: AgentModel[]; source: AgentModelSource; notice?: string;
 }> {
-  const adapter = getAgentAdapter(settings.provider);
-  const executable = await findExecutable(adapter.executableName);
+  const adapter = await resolveAgentAdapter(settings.provider);
+  const executable = await resolveAgentExecutable(adapter);
   if (!executable) return { models: [], source: "unavailable", notice: adapter.label + " CLI is not installed." };
   const env = await adapter.configureEnvironment(settings);
   if (settings.provider === "agy") {
@@ -120,5 +120,7 @@ export async function discoverAgentModels(settings: AgentSettings): Promise<{
       { id: "haiku", label: "Haiku (CLI alias)" },
     ], source: "aliases", notice: "Claude Code /model is interactive. These aliases are not a verified list of models available to this account." };
   }
-  return { models: [], source: "unavailable", notice: "No automated model catalog is available for this CLI." };
+  return { models: [], source: "unavailable", notice: adapter.custom
+    ? "This custom Agent does not expose an automatic model catalog. Use its CLI default or enter a model ID."
+    : "No automated model catalog is available for this CLI." };
 }

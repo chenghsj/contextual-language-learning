@@ -474,3 +474,10 @@ button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(-
 .driveExistingBackup { display: grid; justify-items: start; gap: 4px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
 .driveExistingBackup strong { font-size: 12px; }
 .driveExistingBackup .hint { margin: 0 0 5px; }
+
+.customAgentManager { margin: 12px 0; padding: 12px; border: 1px solid var(--border); background: var(--muted); }
+.customAgentManager > summary { cursor: pointer; font-weight: 650; }
+.customAgentManager label { display: grid; gap: 5px; margin-top: 10px; }
+.customAgentList { display: grid; gap: 6px; margin: 10px 0; }
+.customAgentList button { width: 100%; justify-content: flex-start; overflow-wrap: anywhere; }
+.customAgentSecurity { margin-top: 10px; padding: 8px; border: 1px solid var(--border); background: var(--background); color: var(--muted-foreground); font-size: 12px; }

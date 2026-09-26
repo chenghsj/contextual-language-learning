@@ -15,6 +15,8 @@ export interface AgentAdapter {
   readonly label: string;
   readonly executableName: string;
   readonly supportsAccountProfiles: boolean;
+  readonly custom?: boolean;
+  resolveExecutable?(): Promise<string | null>;
   configureEnvironment(settings: AgentSettings): Promise<NodeJS.ProcessEnv>;
   generate(execution: AgentExecution): Promise<unknown>;
 }

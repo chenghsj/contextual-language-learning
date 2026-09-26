@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { getAgentAdapter, getAgentCatalog } from "./agents";
 
-test("provider IDs resolve through the trusted registry", () => {
+test("built-in provider IDs resolve through the trusted registry", () => {
   assert.equal(getAgentAdapter("claude").label, "Claude Code");
   assert.equal(getAgentAdapter("codex").supportsAccountProfiles, true);
   assert.equal(getAgentAdapter("agy").supportsAccountProfiles, false);
-  assert.throws(() => getAgentAdapter("../../bin/sh"), /Unsupported Agent/);
+  assert.throws(() => getAgentAdapter("../../bin/sh"), /Unsupported built-in Agent/);
 });
 
 test("catalog presents providers with explicit capabilities and installation status", async () => {

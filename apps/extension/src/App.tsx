@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectField, SelectItem, SelectTrigger, SelectVa
 import { Textarea } from "./components/ui/textarea";
 import { Badge } from "./components/ui/badge";
 import { SceneReader } from "./components/scene-reader";
+import { CustomAgentSettings } from "./components/custom-agent-settings";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
 import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
@@ -649,7 +650,10 @@ export default function App() {
         replied = true;
         setInstalled(message.installed);
         setHostVersion(typeof message.version === "string" ? message.version : null);
-        if (Array.isArray(message.agents)) setAgentCatalog(message.agents);
+        if (Array.isArray(message.agents)) {
+          setAgentCatalog(message.agents);
+          setAgent(current => message.agents.some(item => item.id === current.provider) ? current : DEFAULT_AGENT);
+        }
         void loadAgentProfiles();
         port.disconnect();
       }
@@ -1713,6 +1717,7 @@ export default function App() {
                   (installed && !entry.installed ? t("agentNotInstalled") : ""),
               }))} />
           </label>
+          <CustomAgentSettings nativeRequest={nativeOnce} onCatalogChanged={checkHost} t={t} />
           {selectedAgentInfo?.supportsAccountProfiles && <section className="agentProfileSection">
             <div className="agentProfileHeading">
               <strong>{t("useOtherCliAccount")}</strong>

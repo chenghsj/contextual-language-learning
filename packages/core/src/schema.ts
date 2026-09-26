@@ -36,6 +36,22 @@ export const AgentSettingsSchema = z.object({
 });
 export type AgentSettings = z.infer<typeof AgentSettingsSchema>;
 
+const CustomAgentArgSchema = z.string().max(500).refine(value => !value.includes("\\0"), "Agent arguments cannot contain NUL bytes");
+export const CustomAgentDefinitionSchema = z.object({
+  id: z.string().regex(/^custom-[a-z0-9][a-z0-9-]{0,31}$/),
+  label: z.string().trim().min(1).max(80),
+  executable: z.string().trim().min(1).max(1024)
+    .refine(value => !value.includes("\\0"), "Executable cannot contain NUL bytes"),
+  args: z.array(CustomAgentArgSchema).max(24).default([]),
+  modelArgument: z.string().regex(/^--?[A-Za-z0-9][A-Za-z0-9-]{0,63}$/).optional(),
+}).superRefine((value, ctx) => {
+  const promptSlots = value.args.filter(arg => arg.includes("{prompt}")).length;
+  const modelSlots = value.args.filter(arg => arg.includes("{model}")).length;
+  if (promptSlots > 1) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Use at most one {prompt} placeholder" });
+  if (modelSlots > 1) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Use at most one {model} placeholder" });
+});
+export type CustomAgentDefinition = z.infer<typeof CustomAgentDefinitionSchema>;
+
 export const DestinationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("local"), directory: z.string().min(1).max(2048).optional() }),
   z.object({ kind: z.literal("drive"), accountId: z.string().min(1).max(256) }),
@@ -179,11 +195,15 @@ export type LearningDocument = z.infer<typeof LearningDocumentSchema>;
 
 export interface AgentModel { id: string; label: string }
 export type AgentModelSource = "cli" | "aliases" | "unavailable";
-export interface AgentProfile { id: string; provider: "claude" | "codex"; label: string; directory: string }
+export interface AgentProfile { id: string; provider: string; label: string; directory: string }
 
 export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("health"), id: z.string().uuid() }),
   z.object({ type: z.literal("agentModels"), id: z.string().uuid(), settings: AgentSettingsSchema }),
+  z.object({ type: z.literal("customAgents"), id: z.string().uuid() }),
+  z.object({ type: z.literal("customAgentSave"), id: z.string().uuid(), definition: CustomAgentDefinitionSchema }),
+  z.object({ type: z.literal("customAgentRemove"), id: z.string().uuid(), agentId: z.string().regex(/^custom-[a-z0-9][a-z0-9-]{0,31}$/) }),
+  z.object({ type: z.literal("customAgentTest"), id: z.string().uuid(), definition: CustomAgentDefinitionSchema }),
   z.object({ type: z.literal("agentProfiles"), id: z.string().uuid() }),
   z.object({ type: z.literal("agentProfileSave"), id: z.string().uuid(),
     provider: z.enum(["claude", "codex"]), label: z.string().min(1).max(80),
@@ -218,11 +238,14 @@ export interface AgentInfo {
   label: string;
   installed: boolean;
   supportsAccountProfiles: boolean;
+  custom?: boolean;
 }
 
 export type HostMessage =
   | { id: string; type: "health"; installed: Record<string, boolean>; agents: AgentInfo[]; version?: string }
   | { id: string; type: "agentModels"; models: AgentModel[]; source: AgentModelSource; notice?: string }
+  | { id: string; type: "customAgents"; agents: CustomAgentDefinition[] }
+  | { id: string; type: "customAgentTest"; ok: true; executable: string }
   | { id: string; type: "agentProfiles"; profiles: AgentProfile[] }
   | { id: string; type: "progress"; jobId: string; completed: number; total: number }
   | { id: string; type: "job"; job: import("./jobs").JobSummary }

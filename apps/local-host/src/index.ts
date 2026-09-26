@@ -3,6 +3,7 @@ import {
   HostRequestSchema, type DuplicateMatch, type GenerationRequest, type HostMessage, type LearningDocument,
 } from "@immersive/core";
 import { getAgentCatalog } from "./agents";
+import { listCustomAgents, removeCustomAgent, saveCustomAgent, testCustomAgentExecutable } from "./agents/custom-registry";
 import { discoverAgentModels } from "./agents/metadata";
 import { listAgentProfiles, saveAgentProfile, removeAgentProfile } from "./agents/profiles";
 import { findLocalDuplicates, requestKey } from "./duplicates";
@@ -110,6 +111,22 @@ async function handle(input: unknown): Promise<void> {
       case "agentModels": {
         const result = await discoverAgentModels(request.settings);
         reply({ id: request.id, type: "agentModels", ...result });
+        break;
+      }
+      case "customAgents":
+        reply({ id: request.id, type: "customAgents", agents: await listCustomAgents() });
+        break;
+      case "customAgentSave":
+        await saveCustomAgent(request.definition);
+        reply({ id: request.id, type: "customAgents", agents: await listCustomAgents() });
+        break;
+      case "customAgentRemove":
+        await removeCustomAgent(request.agentId);
+        reply({ id: request.id, type: "customAgents", agents: await listCustomAgents() });
+        break;
+      case "customAgentTest": {
+        const executable = await testCustomAgentExecutable(request.definition);
+        reply({ id: request.id, type: "customAgentTest", ok: true, executable });
         break;
       }
       case "agentProfiles":
