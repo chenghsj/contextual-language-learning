@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
+import { tw } from "../utility-classes";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { learningSettingsCopy, levelHint, type LearningSettingKey } from "./learning-settings";
@@ -55,7 +56,7 @@ test("setting help shows only the concise field explanation, without repeating a
     label: "Level", infoLabel: "About",
     explanation: "Choose a comfortable starting point.",
   }));
-  assert.match(markup, /<details[^>]*class="settingInfo"/);
+  assert.match(markup, /<details[^>]*class="[^"]*group/);
   assert.match(markup, /<summary[^>]*aria-label="About Level"/);
   assert.match(markup, /aria-controls="/);
   assert.match(markup, /role="note"/);
@@ -81,43 +82,35 @@ test("settings keep stable saved option values rather than persisting translated
   assert.match(app, /t\("contextualExamples"\)/);
 });
 
-test("task cards use one effective spacing rule below the refresh control", async () => {
+test("task cards use one Tailwind layout below the refresh control", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
-  assert.match(app, /className="jobHistoryList"/);
-  const rules = [...css.matchAll(/^\.jobHistoryList\s*\{([^{}]*)\}/gm)];
-  assert.equal(rules.length, 1, "a later declaration must not silently override the tested spacing");
-  assert.match(rules[0][1], /\bmargin:\s*10px 0;/);
-  assert.match(rules[0][1], /\bgap:\s*7px;/);
+  assert.match(app, /className=\{tw\("jobHistoryList"\)\}/);
+  assert.ok(tw("jobHistoryList").includes("my-[10px]"));
+  assert.ok(tw("jobHistoryList").includes("gap-[7px]"));
+  assert.doesNotMatch(css, /\.jobHistoryList\s*\{/);
 });
 
-test("navigation has one four-column style and keeps compact tab labels", async () => {
-  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
-  const tabRules = [...css.matchAll(/^\.tabs\s*\{([^{}]*)\}/gm)];
-  const buttonRules = [...css.matchAll(/^\.tabs button\s*\{([^{}]*)\}/gm)];
-  assert.equal(tabRules.length, 1, "four-column navigation must have a single source of truth");
-  assert.equal(buttonRules.length, 1, "tab labels must not depend on late overrides");
-  assert.match(tabRules[0][1], /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\);/);
-  assert.match(buttonRules[0][1], /font-size:\s*11px;/);
-  assert.match(buttonRules[0][1], /padding:\s*8px 1px;/);
-  assert.match(buttonRules[0][1], /gap:\s*3px;/);
+test("navigation uses compact four-column Tailwind utilities", () => {
+  const classes = tw("tabs");
+  const button = tw("tabButton");
+  assert.ok(classes.includes("grid-cols-4"));
+  assert.ok(button.includes("text-[11px]"));
+  assert.ok(button.includes("gap-[3px]"));
+  assert.ok(button.includes("py-2"));
 });
 
-test("dark theme inherits unchanged tokens and both lesson readers retain styles", async () => {
+test("the supplied dark tokens and both lesson readers retain Tailwind utilities", async () => {
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   const light = css.match(/^:root \{([\s\S]*?)^\}/m)?.[1];
-  const dark = css.match(/^:root\[data-theme="dark"\], :root\.dark \{([\s\S]*?)^\}/m)?.[1];
-  assert.ok(light, "the base design tokens must exist");
-  assert.ok(dark, "the dark theme overrides must exist");
-  const variables = (block: string) => new Map(
-    [...block.matchAll(/^\s*(--[\w-]+):\s*([^;]+);/gm)].map(match => [match[1], match[2].trim()]),
-  );
-  const lightTokens = variables(light);
-  for (const [name, value] of variables(dark)) {
-    assert.notEqual(value, lightTokens.get(name), name + " must inherit identical base values");
-  }
-  assert.match(css, /^\.sceneSteps\s*\{/m, "saved V1/V2 study steps must retain their styles");
-  assert.match(css, /^\.contextualDialogue\s*\{/m, "V3 source dialogue must retain its styles");
+  const dark = css.match(/^\.dark \{([\s\S]*?)^\}/m)?.[1];
+  assert.ok(light && dark, "light and dark theme token blocks must exist");
+  assert.match(dark, /--primary:\s*oklch\(0\.6724 0\.1308 38\.7559\)/);
+  assert.ok(tw("sceneSteps").includes("grid-cols-3"));
+  assert.ok(tw("contextualDialogue").includes("border-border"));
+  assert.ok(tw("scenePlayer").includes("sticky"));
+  assert.ok(tw("contextualPlayer").includes("sticky"));
+  assert.doesNotMatch(css, /^\.scene/m);
 });
 
 test("level help follows the selected learning language in every interface locale", async () => {
@@ -169,7 +162,7 @@ test("level tooltip displays the complete scale for the selected language in eve
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   assert.match(app, /items=\{levelOptions\.map\(value => \{/);
   assert.match(app, /settingsCopy\.levels\[profile\.targetLanguage\]\[value\]/);
-  assert.match(css, /\.settingInfoLevels \{[^}]*display: grid/);
+  assert.ok(tw("settingInfoLevels").includes("grid"));
   for (const locale of locales) {
     const copy = learningSettingsCopy[locale];
     for (const language of ["en", "ja", "ko"] as const) {
@@ -184,7 +177,7 @@ test("level tooltip displays the complete scale for the selected language in eve
         explanation: levelHint(copy, language),
         items,
       }));
-      assert.match(html, /class="settingInfoLevels"/);
+      assert.match(html, /<ul[^>]*class="[^"]*grid/);
       assert.equal((html.match(/<li>/g) ?? []).length, items.length,
         locale + " " + language + ": one entry per level");
       for (const item of items) {
