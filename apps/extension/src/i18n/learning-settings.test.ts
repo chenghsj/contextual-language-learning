@@ -65,19 +65,20 @@ test("setting help shows only the concise field explanation, without repeating a
 
 test("settings keep stable saved option values rather than persisting translated labels", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  for (const mode of modes) assert.ok(app.includes('"' + mode + '"'));
-  assert.match(app, /\(\["adaptive", "guided", "immersive"\] as const\)\.map/);
+  assert.match(app, /lessonFormat: "contextual-v3"/);
+  assert.match(app, /contextualGenerationProfile\(profile\)/);
+  assert.doesNotMatch(app, /id="learning-mode"/);
+  assert.doesNotMatch(app, /id="learning-exercises"/);
+  assert.doesNotMatch(app, /id="learning-vocabulary"/);
   assert.match(app, /LEARNING_LANGUAGES\.map\(language/);
   assert.match(app, /EXPLANATION_LANGUAGES\.map\(value/);
   assert.match(app, /learningLanguageName\(language, uiLocale\)/);
   assert.match(app, /explanationLanguageName\(value, uiLocale\)/);
-  for (const field of fields) {
-    if (field === "level") {
-      assert.match(app, /levelHint\(settingsCopy, profile\.targetLanguage\)/);
-    } else {
-      assert.ok(app.includes('settingsCopy.fieldHints.' + field), "missing help for " + field);
-    }
-  }
+  assert.match(app, /levelHint\(settingsCopy, profile\.targetLanguage\)/);
+  assert.match(app, /settingsCopy.fieldHints.targetLanguage/);
+  assert.match(app, /settingsCopy.fieldHints.instructionLanguage/);
+  assert.match(app, /t\("lessonLength"\)/);
+  assert.match(app, /t\("contextualExamples"\)/);
 });
 
 test("task cards start below the refresh control with consistent spacing", async () => {
