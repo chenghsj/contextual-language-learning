@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
 const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
 const oauth = await readFile(new URL("../../../local-host/src/drive/oauth.ts", import.meta.url), "utf8");
+const callbackPage = await readFile(new URL("../../../local-host/src/drive/oauth-callback-page.ts", import.meta.url), "utf8");
 
 test("backup switch starts at the left and moves inside its track only when enabled", () => {
   const rule = css.match(/button\[data-slot="button"\]\.backupSwitch \{([^}]+)\}/)?.[1] ?? "";
@@ -19,7 +20,9 @@ test("backup switch starts at the left and moves inside its track only when enab
 });
 
 test("Google callback does not claim connection succeeded before token storage finishes", () => {
-  assert.match(oauth, /已收到 Google 授權回應，正在完成帳號連結/);
-  assert.doesNotMatch(oauth, /已完成 Google Drive 授權/);
+  assert.match(callbackPage, /已收到 Google 授權回應，正在驗證帳號/);
+  assert.doesNotMatch(callbackPage, /已完成 Google Drive 授權/);
+  assert.match(oauth, /session.finish\("success"\)/);
+  assert.match(oauth, /session.finish\("error"\)/);
   assert.match(app, /driveConnectError && <p className="jobRowError" role="status">/);
 });
