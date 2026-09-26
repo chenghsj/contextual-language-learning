@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BackupSettingsSchema, compactStudyExport, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
   parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
-  type BackupSettings, type Destination, type DriveAccount, type DuplicateMatch,
+  type BackupSettings, type Destination, type DriveAccount, type DriveLessonSummary, type LessonSummary, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
   type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
@@ -17,7 +17,7 @@ import {
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
-import { BookOpen, Settings2, WandSparkles } from "lucide-react";
+import { BookOpen, Library, Settings2, WandSparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
 import { Input } from "./components/ui/input";
@@ -35,7 +35,8 @@ import {
 } from "./i18n/preferences";
 
 const HOST_NAME = "dev.immersive.language_learning";
-type Page = "create" | "reader" | "settings";
+type Page = "create" | "reader" | "settings" | "lessons";
+type LessonEntry = { documentId: string; title: string; createdAt: string; local?: LessonSummary; drive?: DriveLessonSummary };
 type Installed = Record<string, boolean>;
 type RepeatOption = "2" | "3" | "5" | "infinite";
 
@@ -125,9 +126,16 @@ export default function App() {
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [jobFilter, setJobFilter] = useState<"all" | "active" | "completed">("all");
   const [showAllJobs, setShowAllJobs] = useState(false);
+  const [localLessons, setLocalLessons] = useState<LessonSummary[]>([]);
+  const [cloudLessons, setCloudLessons] = useState<DriveLessonSummary[]>([]);
+  const [lessonFilter, setLessonFilter] = useState<"all" | "local" | "drive">("all");
+  const [lessonsBusy, setLessonsBusy] = useState(false);
+  const [catalogError, setCatalogError] = useState("");
+  const [restoreBusy, setRestoreBusy] = useState<string | null>(null);
   const [destination, setDestination] = useState<Destination>({ kind: "local" });
   const [backup, setBackup] = useState<BackupSettings>({ enabled: false });
   const [backupStatus, setBackupStatus] = useState("");
+  const [driveConnectError, setDriveConnectError] = useState("");
   const [driveAccounts, setDriveAccounts] = useState<DriveAccount[]>([]);
   const [driveConfigured, setDriveConfigured] = useState(false);
   const [storageBusy, setStorageBusy] = useState(false);
@@ -156,6 +164,7 @@ export default function App() {
   const lastSelectedVideoKeyRef = useRef<string | null>(null);
   const manuallyEditedTitleRef = useRef(false);
   const metadataRequestRef = useRef(0);
+  const catalogLoadIdRef = useRef(0);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
   const platform = getVideoAdapter(sourceUrl).id;
@@ -434,13 +443,17 @@ export default function App() {
   async function connectDrive(): Promise<void> {
     setStorageBusy(true);
     setError("");
+    setDriveConnectError("");
     try {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveConnect" });
       if (response.type !== "driveConnected") throw new Error("Unexpected Google account response");
       setDriveAccounts(current => [...current.filter(item => item.id !== response.account.id), response.account]);
       setBackup({ enabled: true, accountId: response.account.id });
+      setDriveConnectError("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("connectDriveError"));
+      const message = cause instanceof Error ? cause.message : t("connectDriveError");
+      setError(message);
+      setDriveConnectError(message);
     } finally { setStorageBusy(false); }
   }
 
@@ -802,6 +815,66 @@ export default function App() {
       preflightPortRef.current);
   }
 
+  async function loadLessons(): Promise<void> {
+    const version = ++catalogLoadIdRef.current;
+    setLessonsBusy(true);
+    setCatalogError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "listLessons" });
+      if (response.type !== "lessons") throw new Error("Unexpected lesson catalog response");
+      if (version !== catalogLoadIdRef.current) return;
+      setLocalLessons(response.lessons);
+      const accountId = backup.accountId ?? driveAccounts[0]?.id;
+      if (accountId) {
+        try {
+          const cloud = await nativeOnce({ id: crypto.randomUUID(), type: "listDriveLessons", accountId });
+          if (cloud.type !== "driveLessons") throw new Error("Unexpected Drive catalog response");
+          if (version === catalogLoadIdRef.current) setCloudLessons(cloud.lessons);
+        } catch (cause) {
+          if (version === catalogLoadIdRef.current) {
+            setCloudLessons([]);
+            setCatalogError(cause instanceof Error ? cause.message : t("lessonCatalogError"));
+          }
+        }
+      } else setCloudLessons([]);
+    } catch (cause) {
+      if (version === catalogLoadIdRef.current) setCatalogError(
+        cause instanceof Error ? cause.message : t("lessonCatalogError"));
+    } finally {
+      if (version === catalogLoadIdRef.current) setLessonsBusy(false);
+    }
+  }
+
+  async function restoreLesson(lesson: DriveLessonSummary): Promise<void> {
+    setRestoreBusy(lesson.documentId);
+    setCatalogError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "restoreDriveLesson",
+        accountId: lesson.accountId, documentId: lesson.documentId });
+      if (response.type !== "driveRestored") throw new Error("Unexpected restore response");
+      await loadLessons();
+      openSavedDocument(response.documentId);
+    } catch (cause) {
+      setCatalogError(cause instanceof Error ? cause.message : t("lessonRestoreError"));
+    } finally { setRestoreBusy(null); }
+  }
+
+  async function backupExistingLessons(): Promise<void> {
+    const accountId = backup.accountId ?? driveAccounts[0]?.id;
+    if (!accountId) { await connectDrive(); return; }
+    setStorageBusy(true);
+    setError("");
+    try {
+      const response = await nativeOnce({ id: crypto.randomUUID(), type: "backupExisting", accountId });
+      if (response.type !== "backupsScheduled") throw new Error("Unexpected backup response");
+      setBackupStatus(t("existingBackupsScheduled", { count: response.count }));
+      controllerPortRef.current?.postMessage({ id: crypto.randomUUID(), type: "resumeBackups" });
+      void loadJobs();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : t("publicationError"));
+    } finally { setStorageBusy(false); }
+  }
+
   function loadJobs(): void {
     if (loadingJobs) return;
     // Refreshing history must never dismiss the Agent error just received.
@@ -1122,6 +1195,26 @@ export default function App() {
       ...filteredJobs.filter(job => job.status === "completed").slice(0, 3)]
     : filteredJobs.slice(0, 3);
   const activeJob = jobs.find(job => job.id === lastJobIdRef.current);
+  const lessonCatalog = useMemo(() => {
+    const entries = new Map<string, LessonEntry>();
+    for (const local of localLessons) entries.set(local.documentId, {
+      documentId: local.documentId, title: local.title, createdAt: local.createdAt, local,
+    });
+    for (const drive of cloudLessons) {
+      const previous = entries.get(drive.documentId);
+      entries.set(drive.documentId, previous
+        ? { ...previous, drive } : {
+          documentId: drive.documentId, title: drive.title, createdAt: drive.createdAt, drive,
+        });
+    }
+    return [...entries.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }, [localLessons, cloudLessons]);
+  const visibleLessons = lessonCatalog.filter(item => lessonFilter === "local"
+    ? !!item.local : lessonFilter === "drive" ? !!item.drive : true);
+
+  useEffect(() => {
+    if (page === "lessons") void loadLessons();
+  }, [page, backup.accountId, driveAccounts.length]);
 
   return (
     <div className="app">
@@ -1132,6 +1225,7 @@ export default function App() {
       <nav className="tabs" aria-label={t("navLabel")}>
         <Button className={page === "create" ? "selected" : ""} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
         <Button className={page === "reader" ? "selected" : ""} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
+        <Button className={page === "lessons" ? "selected" : ""} onClick={() => setPage("lessons")}><Library aria-hidden="true" />{t("lessonLibrary")}</Button>
         <Button className={page === "settings" ? "selected" : ""} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
       </nav>
 
@@ -1328,6 +1422,7 @@ export default function App() {
           </div>}
           {!backup.enabled && !driveAccounts.length && driveConfigured &&
             <p className="hint">{t("backupConnectToEnable")}</p>}
+          {driveConnectError && <p className="jobRowError" role="status">{driveConnectError}</p>}
           {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
           {duplicateWarning && <div className="callout" role="alertdialog" aria-label={t("duplicateConfirmLabel")}>
             <strong>{t("duplicateFound", { count: duplicateWarning.matches.length })}</strong>
@@ -1400,7 +1495,7 @@ export default function App() {
             {visibleJobs.map(job => <div className="jobRow" key={job.id}>
               <div className="jobRowHeading">
                 <strong title={job.sourceTitle}>{job.sourceTitle}</strong>
-                <Badge variant="secondary">{t(jobStatusKeys[job.status])}</Badge>
+                <Badge>{t(jobStatusKeys[job.status])}</Badge>
               </div>
               <p className="hint">{agentDisplayName(job.provider)} · {job.completed}/{job.total}
                 {job.backup && " · " + t(job.backup.status === "backed-up"
@@ -1428,6 +1523,57 @@ export default function App() {
             onClick={() => setShowAllJobs(true)}>{t("showMoreJobs", { count: filteredJobs.length - visibleJobs.length })}</Button>}
           {showAllJobs && filteredJobs.length > 3 && <Button variant="ghost" size="sm"
             onClick={() => setShowAllJobs(false)}>{t("showLessJobs")}</Button>}
+        </Card>
+      </main>}
+
+      {page === "lessons" && <main>
+        <Card className="panel">
+          <h2>{t("lessonLibrary")}</h2>
+          <p className="hint">{t("lessonLibraryHint")}</p>
+          <div className="jobToolbar">
+            <SelectField ariaLabel={t("lessonFilterLabel")} value={lessonFilter}
+              onValueChange={value => {
+                if (value === "all" || value === "local" || value === "drive") setLessonFilter(value);
+              }} options={[
+                { value: "all", label: t("lessonFilterAll") },
+                { value: "local", label: t("lessonFilterLocal") },
+                { value: "drive", label: t("lessonFilterDrive") },
+              ]} />
+            <Button variant="outline" size="sm" disabled={lessonsBusy}
+              onClick={() => void loadLessons()}>{lessonsBusy ? t("loading") : t("refreshJobs")}</Button>
+          </div>
+          {catalogError && <p className="callout" role="alert">{catalogError}</p>}
+          {lessonFilter === "drive" && !driveAccounts.length && <div className="callout">
+            <p>{t("connectDriveToBrowse")}</p>
+            <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
+              onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
+          </div>}
+          {!lessonsBusy && visibleLessons.length === 0 && <p className="hint">{t("lessonLibraryEmpty")}</p>}
+          <div className="lessonLibraryList">
+            {visibleLessons.map(lesson => <div className="jobRow" key={lesson.documentId}>
+              <div className="jobRowHeading"><strong title={lesson.title}>{lesson.title}</strong></div>
+              <p className="hint">{new Date(lesson.createdAt).toLocaleString(uiLocale)}
+                {lesson.local && " · " + lesson.local.targetLanguage.toUpperCase() + " · " + lesson.local.level}</p>
+              <div className="lessonRowMeta">
+                {lesson.local && <Badge>{t("localCopy")}</Badge>}
+                {lesson.drive && <Badge>{t("cloudCopy")}</Badge>}
+                {lesson.local?.backup && !lesson.drive &&
+                  <span className="hint">{t(lesson.local.backup.status === "backed-up"
+                    ? "backupSaved" : ["pending", "uploading"].includes(lesson.local.backup.status)
+                      ? "backupProcessing" : "backupFailedMessage")}</span>}
+              </div>
+              <div className="actions">
+                {lesson.local && <Button variant="outline" size="sm" disabled={generating}
+                  onClick={() => openSavedDocument(lesson.documentId)}>{t("openLesson")}</Button>}
+                {lesson.drive && !lesson.local && <Button variant="outline" size="sm"
+                  disabled={restoreBusy !== null || generating}
+                  onClick={() => void restoreLesson(lesson.drive!)}>{restoreBusy === lesson.documentId
+                    ? t("restoringLesson") : t("restoreLesson")}</Button>}
+                {lesson.drive && <Button variant="ghost" size="sm"
+                  onClick={() => void chrome.tabs.create({ url: lesson.drive!.url })}>{t("openInDrive")}</Button>}
+              </div>
+            </div>)}
+          </div>
         </Card>
       </main>}
 
@@ -1568,6 +1714,12 @@ export default function App() {
             <Button variant="ghost" size="sm" disabled={storageBusy}
               onClick={() => void disconnectDrive(account.id)}>{t("disconnectGoogle")}</Button>
           </div>)}
+          {driveAccounts.length > 0 && <div className="actions">
+            <Button variant="outline" size="sm" disabled={storageBusy || !backup.accountId}
+              onClick={() => void backupExistingLessons()}>{t("backupExisting")}</Button>
+          </div>}
+          {driveConnectError && <p className="jobRowError" role="status">{driveConnectError}</p>}
+          {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
         </Card>
       </main>}
 

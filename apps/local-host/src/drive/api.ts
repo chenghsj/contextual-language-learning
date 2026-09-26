@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import type { DuplicateMatch, GenerationRequest, LearningDocument } from "@immersive/core";
+import { readLearningDocument, type DriveLessonSummary, type DuplicateMatch, type GenerationRequest, type LearningDocument } from "@immersive/core";
 import { settingsKey, sourceKey, transcriptKey } from "../duplicates";
 import { accessTokenFor, listGoogleAccounts } from "./oauth";
 
@@ -149,6 +149,8 @@ export async function publishDriveDocument(accountId: string, document: Learning
     immersiveSettingsKey: settingsKey({ profile: document.profile, agent: document.generation }),
     immersiveDocumentId: document.id,
     immersiveSchemaVersion: String(document.schemaVersion),
+    immersiveTitle: document.source.title.slice(0, 120),
+    immersiveCreatedAt: document.createdAt,
   };
   const docKey = createHash("sha256").update(document.id).digest("hex");
   const found = await listFiles(accountId,
@@ -177,4 +179,55 @@ export async function publishDriveDocument(accountId: string, document: Learning
       "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view";
   }
   return jsonUrl;
+}
+
+export async function listDriveLessons(accountId: string): Promise<DriveLessonSummary[]> {
+  if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
+    throw new Error("Google Drive account is not connected");
+  }
+  const files = await listFiles(accountId,
+    "trashed = false and appProperties has { key='immersiveFormat' and value='json' }",
+    "id,name,createdTime,webViewLink,appProperties", 500);
+  const unique = new Map<string, DriveLessonSummary>();
+  for (const file of files) {
+    const id = file.appProperties?.immersiveDocumentId;
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id) || unique.has(id)) continue;
+    unique.set(id, {
+      documentId: id,
+      title: file.appProperties?.immersiveTitle || "Immersive lesson " + id.slice(0, 8),
+      createdAt: file.appProperties?.immersiveCreatedAt || file.createdTime || new Date(0).toISOString(),
+      accountId,
+      url: file.webViewLink || "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view",
+    });
+  }
+  return [...unique.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+/** Read and validate one app-owned Drive JSON file before importing it locally. */
+export async function getDriveDocument(accountId: string, documentId: string): Promise<LearningDocument> {
+  if (!/^[0-9a-f-]{36}$/i.test(documentId)) throw new Error("Invalid lesson ID");
+  if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
+    throw new Error("Google Drive account is not connected");
+  }
+  const key = createHash("sha256").update(documentId).digest("hex");
+  const files = await listFiles(accountId,
+    "trashed = false and " + propertyMatch("immersiveDocumentKey", key),
+    "id,name,appProperties", 100);
+  const file = files.find(item => item.appProperties?.immersiveFormat === "json" &&
+    item.appProperties?.immersiveDocumentId === documentId);
+  if (!file) throw new Error("Lesson not found in Google Drive");
+  const response = await googleFetch(accountId,
+    API + "/files/" + encodeURIComponent(file.id) + "?alt=media");
+  if (Number(response.headers.get("Content-Length") ?? 0) > 25_000_000) {
+    throw new Error("Drive lesson exceeds the import size limit");
+  }
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length > 25_000_000) throw new Error("Drive lesson exceeds the import size limit");
+  const checksum = file.appProperties?.immersiveContentHash;
+  if (checksum && createHash("sha256").update(bytes).digest("hex") !== checksum) {
+    throw new DriveContentConflict("Drive lesson does not match its recorded checksum");
+  }
+  const document = readLearningDocument(JSON.parse(bytes.toString("utf8")) as unknown);
+  if (document.id !== documentId) throw new DriveContentConflict("Drive lesson ID does not match requested ID");
+  return document;
 }

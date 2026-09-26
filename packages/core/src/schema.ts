@@ -53,6 +53,14 @@ export const DriveAccountSchema = z.object({
 });
 export type DriveAccount = z.infer<typeof DriveAccountSchema>;
 
+export interface LessonSummary {
+  documentId: string; title: string; createdAt: string; targetLanguage: string; level: string;
+  backup?: { status: string; accountId: string; location?: string; error?: string };
+}
+export interface DriveLessonSummary {
+  documentId: string; title: string; createdAt: string; accountId: string; url: string;
+}
+
 export const DuplicateMatchSchema = z.object({
   documentId: z.string().uuid(),
   title: z.string(),
@@ -184,6 +192,10 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
     checkToken: z.string().uuid(), confirmRegeneration: z.boolean() }),
   z.object({ type: z.literal("cancel"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({ type: z.literal("listJobs"), id: z.string().uuid() }),
+  z.object({ type: z.literal("listLessons"), id: z.string().uuid() }),
+  z.object({ type: z.literal("listDriveLessons"), id: z.string().uuid(), accountId: z.string().min(1).max(256) }),
+  z.object({ type: z.literal("restoreDriveLesson"), id: z.string().uuid(), accountId: z.string().min(1).max(256), documentId: z.string().uuid() }),
+  z.object({ type: z.literal("backupExisting"), id: z.string().uuid(), accountId: z.string().min(1).max(256) }),
   z.object({ type: z.literal("resume"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({ type: z.literal("getDocument"), id: z.string().uuid(), documentId: z.string().uuid() }),
   z.object({ type: z.literal("storageLocations"), id: z.string().uuid() }),
@@ -214,6 +226,10 @@ export type HostMessage =
   | { id: string; type: "progress"; jobId: string; completed: number; total: number }
   | { id: string; type: "job"; job: import("./jobs").JobSummary }
   | { id: string; type: "jobs"; jobs: import("./jobs").JobSummary[] }
+  | { id: string; type: "lessons"; lessons: LessonSummary[] }
+  | { id: string; type: "driveLessons"; lessons: DriveLessonSummary[] }
+  | { id: string; type: "driveRestored"; documentId: string }
+  | { id: string; type: "backupsScheduled"; count: number }
   | { id: string; type: "documentChunk"; documentId: string; index: number; total: number; dataBase64: string }
   | { id: string; type: "storageLocations"; locations: { id: string; kind: "local" | "google-drive-desktop"; label: string; path: string; account?: string }[] }
   | { id: string; type: "preflight"; existing: { id: string; title: string; createdAt: string; path: string }[] }

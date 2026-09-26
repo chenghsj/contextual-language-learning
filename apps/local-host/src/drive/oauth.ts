@@ -120,7 +120,9 @@ async function authorizationCode(clientId: string): Promise<{ code: string; veri
     const code = url.searchParams.get("code");
     const error = url.searchParams.get("error");
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-    res.end("<!doctype html><meta charset=utf-8><p>已完成 Google Drive 授權，可返回 Immersive Learning。</p>");
+    res.end(code
+      ? "<!doctype html><meta charset=utf-8><p>已收到 Google 授權回應，正在完成帳號連結。請返回 Immersive Learning 確認結果。</p>"
+      : "<!doctype html><meta charset=utf-8><p>Google 授權未完成，請返回 Immersive Learning 查看錯誤訊息。</p>");
     if (code) resolveCode(code);
     else rejectCode(new Error(error ? "Google authorization was declined" : "Google did not provide an authorization code"));
   });
