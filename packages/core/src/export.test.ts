@@ -37,7 +37,7 @@ const v3 = LearningDocumentSchema.parse({
 
 test("V3 Markdown includes original context, word notes and clearly labeled AI examples", () => {
   const md = learningDocumentToMarkdown(v3);
-  assert.match(md, /Context \\* lesson/);
+  assert.ok(md.includes("Context \\* lesson"));
   assert.match(md, /> \[1s\] What about dinner\?/);
   assert.match(md, /### Focus expressions/);
   assert.match(md, /The question shows what is still undecided/);
