@@ -120,6 +120,7 @@ export default function App() {
   const [installed, setInstalled] = useState<Installed | null>(null);
   const [hostVersion, setHostVersion] = useState<string | null>(null);
   const [hostStatus, setHostStatus] = useState("");
+  const [hostChecked, setHostChecked] = useState(false);
   const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([]);
   const [document, setDocument] = useState<LearningDocument | null>(null);
   const [progress, setProgress] = useState("");
@@ -713,6 +714,7 @@ export default function App() {
     port.onMessage.addListener((message: HostMessage) => {
       if (message.id === id && message.type === "health") {
         replied = true;
+        setHostChecked(true);
         setInstalled(message.installed);
         setHostVersion(typeof message.version === "string" ? message.version : null);
         if (Array.isArray(message.agents)) {
@@ -727,6 +729,7 @@ export default function App() {
     });
     port.onDisconnect.addListener(() => {
       if (!replied) {
+        setHostChecked(true);
         setInstalled(null);
         setHostVersion(null);
         setHostStatus(chrome.runtime.lastError?.message ?? "Native Host connection failed.");
@@ -1909,7 +1912,7 @@ export default function App() {
         <AppPanel>
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("agentHint")}</p>
-          <HostConnectionSettings locale={uiLocale} connected={installed !== null}
+          <HostConnectionSettings locale={uiLocale} connected={installed !== null} checked={hostChecked}
             version={hostVersion} busy={hostBusy} error={hostStatus} onCheck={checkHost} />
           {agent.provider && !agent.provider.startsWith("custom-") &&
             <p className="my-3 text-xs text-muted-foreground" role="status">

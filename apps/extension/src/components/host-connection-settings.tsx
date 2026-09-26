@@ -18,8 +18,8 @@ function detectedBrowser(): Browser {
 }
 
 /** Browser registration is per extension ID; installing new Agents does not change it. */
-export function HostConnectionSettings({ locale, connected, version, busy, error, onCheck }: {
-  locale: UiLocale; connected: boolean; version: string | null;
+export function HostConnectionSettings({ locale, connected, checked, version, busy, error, onCheck }: {
+  locale: UiLocale; connected: boolean; checked: boolean; version: string | null;
   busy: boolean; error: string; onCheck: () => void;
 }) {
   const ui = hostConnectionCopy[locale];
@@ -38,7 +38,7 @@ export function HostConnectionSettings({ locale, connected, version, busy, error
     <div className="flex min-w-0 items-center justify-between gap-2">
       <strong className="text-sm">{ui.title}</strong>
       <span className={connected && versionMatches ? "text-xs text-primary" : "text-xs text-muted-foreground"}>
-        {connected ? ui.connected : ui.disconnected}
+        {connected ? ui.connected : checked ? ui.disconnected : ui.checking}
       </span>
     </div>
     <details className="text-xs text-muted-foreground">
@@ -49,15 +49,15 @@ export function HostConnectionSettings({ locale, connected, version, busy, error
       {ui.version}: {version}</p>}
     {connected && !versionMatches && <p className="text-xs text-destructive" role="status">
       {ui.mismatch} {ui.version}: {version ?? "unknown"}</p>}
-    {(!connected || !versionMatches) && <div className="grid min-w-0 gap-3">
+    {checked && (!connected || !versionMatches) && <div className="grid min-w-0 gap-3">
       <strong className="text-xs">{ui.install}</strong>
       <label className="grid gap-1 text-xs">{ui.chooseOS}
-        <SelectField value={os} onValueChange={value => setOS(value as OS)}
+        <SelectField ariaLabel={ui.chooseOS} value={os} onValueChange={value => setOS(value as OS)}
           options={[{ value:"macos",label:"macOS" },{ value:"windows",label:"Windows" },
             { value:"linux",label:"Linux" }]} />
       </label>
       <label className="grid gap-1 text-xs">{ui.chooseBrowser}
-        <SelectField value={browser} onValueChange={value => setBrowser(value as Browser)}
+        <SelectField ariaLabel={ui.chooseBrowser} value={browser} onValueChange={value => setBrowser(value as Browser)}
           options={[{ value:"chrome",label:"Chrome" },{ value:"edge",label:"Edge" },
             { value:"chromium",label:"Chromium" }]} />
       </label>
