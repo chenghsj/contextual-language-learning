@@ -101,3 +101,22 @@ test("all interface languages explain manual recovery without suggesting another
     assert.ok(copy.reloadFailed.trim(), locale);
   }
 });
+
+test("Netflix subtitle bridge has room for track discovery, worker fetch and a full response", async () => {
+  const [isolated, page, youTube, youTubePage] = await Promise.all([
+    readFile(new URL("../content/netflix.ts", import.meta.url), "utf8"),
+    readFile(new URL("../content/netflix-page.ts", import.meta.url), "utf8"),
+    readFile(new URL("../content/youtube.ts", import.meta.url), "utf8"),
+    readFile(new URL("../content/youtube-page.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(isolated, /action === "subtitlesGet" \? 22_000/);
+  assert.match(page, /12_500/);
+  assert.match(isolated, /Netflix subtitle retrieval timed out/);
+  assert.match(page, /chosen\?\.player \?\? \{\}, video/);
+  assert.match(isolated, /netflix-worker-url-check-v3/);
+  assert.match(page, /netflix-worker-url-check-v3/);
+  assert.match(youTube, /native-caption-capture-v2/);
+  assert.match(youTubePage, /native-caption-capture-v2/);
+  assert.equal(VIDEO_READER_VERSION, "reader-health-v2");
+  assert.ok(1_200 + 3_000 + 12_500 < 22_000);
+});
