@@ -1,23 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { messages } from "./messages";
+import { agentOnboardingCopy } from "./agent-onboarding";
 
-test("custom Agent UI has the same complete 37-message catalog in five languages", () => {
-  const keys = Object.keys(messages.en).filter(key => key.startsWith("customAgent"));
-  assert.equal(keys.length, 37);
+test("BYO Agent onboarding copy is complete in five locales", () => {
+  const keys = Object.keys(agentOnboardingCopy.en).sort();
   for (const locale of ["zh-TW", "zh-CN", "ja", "ko"] as const) {
+    assert.deepEqual(Object.keys(agentOnboardingCopy[locale]).sort(), keys);
     for (const key of keys) {
-      const copy = messages[locale] as Record<string, string>;
-      assert.ok(copy[key]?.length, locale + " missing " + key);
+      assert.ok((agentOnboardingCopy[locale] as Record<string, string>)[key]?.length);
     }
   }
 });
-test("custom Agent UI requires explicit verification and uses Native Host protocol", async () => {
+test("BYO UI uses real Host import/edit/probe/test/remove actions", async () => {
   const source = await readFile(new URL("../components/custom-agent-settings.tsx", import.meta.url), "utf8");
-  for (const name of ["customAgentProbe", "customAgentSave", "customAgentTest", "customAgentRemove"]) {
-    assert.ok(source.includes(name), name + " must have a real Host request");
-  }
-  assert.match(source, /CustomAgentConfigSchema\.safeParse\(config\(\)\)/);
-  assert.match(source, /disabled=\{!available \|\| busy\}/);
+  for (const name of ["customAgentImport", "customAgentSave", "customAgentTest",
+    "customAgentProbe", "customAgentRemove"]) assert.ok(source.includes(name), name);
+  assert.match(source, /parseAgentImport\(json\)/);
+  assert.match(source, /window\.confirm\(ui\.testWarning\)/);
 });
