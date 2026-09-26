@@ -19,6 +19,7 @@ import {
   reloadExistingVideoTab,
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
+import { CustomAgentSettings } from "./components/custom-agent-settings";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
 import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
 import { Button } from "./components/ui/button";
@@ -1789,6 +1790,14 @@ export default function App() {
               </Button>
             </div>
           </details>
+          <CustomAgentSettings locale={uiLocale} available={installed !== null}
+            selectedProvider={agent.provider} selectedModelId={agent.modelId}
+            selectedProfileDir={agent.accountConfigDir} nativeOnce={nativeOnce}
+            onSaved={provider => { checkHost(); selectAgent(provider); }}
+            onRemoved={provider => {
+              if (agent.provider === provider) selectAgent("claude");
+              checkHost();
+            }} />
         </Card>
         <Card className="panel">
           <h2>{t("driveAccountHeading")}</h2>
