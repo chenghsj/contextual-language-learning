@@ -108,7 +108,7 @@ test("V3 route keeps V2 unchanged, original cue refs and export actions availabl
   assert.match(css, /\.contextualLine:focus-visible/);
   const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
   assert.match(source, /scene\.cueIds\.map\(id => cues\.get\(id\)\)/);
-  assert.match(source, /focus\.sourceCueIds/);
+  assert.match(source, /item\.sourceCueIds/);
   assert.match(source, /onDownload\("json"\)/);
   assert.match(source, /onDownload\("md"\)/);
 });

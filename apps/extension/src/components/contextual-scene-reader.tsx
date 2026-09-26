@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Play, Repeat2, Square } from "lucide-react";
 import { formatTime, type LearningDocument, type SubtitleCue } from "@immersive/core";
 import type { UiLocale } from "../i18n/messages";
