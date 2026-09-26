@@ -422,3 +422,23 @@ button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(-
 @media (prefers-reduced-motion: reduce) {
   .backupSwitch, .backupSwitchThumb { transition: none !important; }
 }
+
+/* Real completed-step progress, never a guessed percentage. */
+.generationSpinner { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: generationSpin .85s linear infinite; }
+@keyframes generationSpin { to { transform: rotate(360deg); } }
+.generationProgress { height: 5px; margin: 10px 0 5px; overflow: hidden; border-radius: 999px; background: var(--muted); }
+.generationProgress > span { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width .25s ease; }
+.jobToolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.jobToolbar > [data-slot="select-trigger"] { flex: 1; min-width: 0; }
+.jobHistoryList { display: grid; gap: 7px; margin: 10px 0; }
+.jobRow { min-width: 0; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius); }
+.jobRowHeading { display: flex; justify-content: space-between; align-items: center; min-width: 0; gap: 8px; }
+.jobRowHeading strong { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; }
+.jobRow .hint { margin: 3px 0; font-size: 11px; }
+.jobRow .actions { margin-top: 5px; gap: 5px; }
+.jobRow .actions button { min-height: 28px; height: auto; }
+.jobRowError { margin: 5px 0; color: var(--destructive); font-size: 11px; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) {
+  .generationSpinner { animation: none; }
+  .generationProgress > span { transition: none; }
+}
