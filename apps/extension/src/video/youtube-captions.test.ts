@@ -234,3 +234,20 @@ test("YouTube retries stay inside the content bridge deadline and preserve signe
   assert.ok(YOUTUBE_CAPTION_FETCH_ATTEMPT_MS < YOUTUBE_CAPTION_FETCH_BUDGET_MS);
   assert.ok(2_000 + YOUTUBE_CAPTION_FETCH_BUDGET_MS + 800 < 32_000);
 });
+
+
+test("subtitle language availability uses exact/regional track matching without exposing caption URLs", async () => {
+  const tracks = [
+    { languageCode: "ja-JP", baseUrl: "https://www.youtube.com/api/timedtext?v=" + videoId },
+    { languageCode: "en", kind: "asr", baseUrl: "https://www.youtube.com/api/timedtext?v=" + videoId },
+  ];
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "ja")?.languageCode, "ja-JP");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "ko"), null);
+  const { readFile } = await import("node:fs/promises");
+  const page = await readFile(new URL("../content/youtube-page.ts", import.meta.url), "utf8");
+  const bridge = await readFile(new URL("../content/youtube.ts", import.meta.url), "utf8");
+  assert.match(page, /TRACK_REQUEST/);
+  assert.match(page, /track\.languageCode/);
+  assert.match(bridge, /YOUTUBE_CAPTION_TRACKS_GET/);
+  assert.doesNotMatch(page.match(/window\.addEventListener\(TRACK_REQUEST[\s\S]*?window\.addEventListener\(REQUEST/)?.[0] ?? "", /baseUrl:\s*track\.baseUrl/);
+});
