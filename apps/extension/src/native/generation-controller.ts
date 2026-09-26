@@ -6,7 +6,7 @@ export const GENERATION_CONTROLLER_PORT = "immersive:background-generation";
 const HOST_NAME = "dev.immersive.language_learning";
 
 type ForwardedRequest = Extract<HostRequest, {
-  type: "checkDuplicates" | "generate" | "resume" | "cancel";
+  type: "checkDuplicates" | "generate" | "resume" | "cancel" | "resumeBackups";
 }>;
 
 export type GenerationControllerState = {
@@ -60,11 +60,11 @@ export function installGenerationController(
       if (active && message.id === active.requestId && message.type === "job") {
         active = { ...active, summary: message.job };
       }
-      // Do not close a generating Host after publication or progress messages.
-      // Only a result, complete chunk stream, or error ends the active request.
-      const terminal = message.type === "error" || message.type === "result" ||
-        message.type === "duplicates" || message.type === "cancelled" ||
-        (message.type === "documentChunk" && message.index === message.total - 1);
+      // Delivery is not the end of a generation request: optional Drive backup
+      // continues after the lesson has been returned to the Side Panel.
+      const terminal = message.type === "error" || message.type === "generationSettled" ||
+        message.type === "backupsFinished" || message.type === "duplicates" ||
+        message.type === "cancelled";
       if (terminal) {
         pending.delete(message.id);
         if (active && message.id === active.requestId &&
@@ -121,7 +121,7 @@ export function installGenerationController(
       const checked = HostRequestSchema.safeParse(raw);
       const id = raw && typeof raw === "object" && "id" in raw &&
         typeof raw.id === "string" ? raw.id : "invalid-request";
-      if (!checked.success || !["checkDuplicates", "generate", "resume", "cancel"].includes(checked.data.type)) {
+      if (!checked.success || !["checkDuplicates", "generate", "resume", "cancel", "resumeBackups"].includes(checked.data.type)) {
         client.postMessage({ id, type: "error", message: "Unsupported background generation request." });
         return;
       }
