@@ -51,7 +51,7 @@ function request() {
     profile: { targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
       mode: "adaptive", sceneCount: 1, maxNewVocabulary: 1, exerciseCount: 0,
       contextualExampleCount: 2 },
-    agent: { provider: "claude", modelId: "" },
+    agent: { provider: "custom-" + "a".repeat(24), modelId: "" },
   });
 }
 
@@ -65,7 +65,7 @@ test("V3 maps contextual learning to original cue times, counts and saved docume
   const doc = LearningDocumentSchema.parse({
     id: randomUUID(), schemaVersion: 3, createdAt: new Date().toISOString(),
     source: { platform: "import", title: "Example" }, profile: request().profile,
-    generation: { provider: "claude", modelId: "" }, cues, sections: [section],
+    generation: { provider: "custom-" + "a".repeat(24), modelId: "" }, cues, sections: [section],
   });
   if (doc.schemaVersion !== 3) throw new Error("Unexpected lesson version");
   assert.equal(readLearningDocument(doc).schemaVersion, 3);
