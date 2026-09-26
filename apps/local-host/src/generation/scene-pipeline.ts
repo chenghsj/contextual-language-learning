@@ -66,13 +66,18 @@ function validatedCandidate(
 
 /** Only source-backed candidates may become scenes. Never accept model timestamps. */
 export function validateCandidateBatch(
-  chunk: SubtitleCue[], raw: unknown, chunkIndex: number,
+  chunk: SubtitleCue[], raw: unknown, chunkIndex: number, requireNeighbors = false,
 ): CandidateScene[] {
   const parsed = CandidateBatchSchema.parse(raw);
   const result: CandidateScene[] = [];
   const occupied = new Set<string>();
   for (const [index, candidate] of parsed.candidates.entries()) {
     const validated = validatedCandidate(chunk, candidate, chunkIndex, index);
+    // A V3 context explanation needs a real source line *outside* its focus phrase.
+    // Reject unusable candidates before writing the candidate/selection checkpoint.
+    const selected = validated.cueIds.map(id => chunk.find(cue => cue.id === id)!);
+    if (requireNeighbors && validated.focusExpressions.some(expression =>
+      expressionCueIds(selected, expression).length >= validated.cueIds.length)) continue;
     if (validated.cueIds.some(id => occupied.has(id))) continue;
     for (const id of validated.cueIds) occupied.add(id);
     result.push(validated);
@@ -249,7 +254,7 @@ export async function runSceneGenerationPipeline(
           job.request.agent, candidatePrompt(job.request, normalized, index, chunks.length), signal)
       : { candidates: [] };
     assertRunning(signal);
-    const candidates = validateCandidateBatch(normalized, raw, index);
+    const candidates = validateCandidateBatch(normalized, raw, index, contextual);
     job = await storage.jobs.update(jobId, current => {
       assertRunning(signal);
       if (!current.scenePlan || current.summary.status !== "running" ||
@@ -305,13 +310,43 @@ export async function runSceneGenerationPipeline(
       job.request.profile.maxNewVocabulary - usedVocabulary);
     const exerciseBudget = Math.min(1, job.request.profile.exerciseCount - usedExercises);
     const exampleCount = job.request.profile.contextualExampleCount ?? 2;
-    const raw = await generate(job.request.agent,
-      contextual ? contextualScenePrompt(job.request, candidate, cues, vocabularyBudget, exampleCount)
-        : studyScenePrompt(job.request, candidate, cues, vocabularyBudget, exerciseBudget), signal);
-    assertRunning(signal);
-    const section = contextual
-      ? assembleContextualScene(candidate, job.request.cues, raw, vocabularyBudget, exampleCount)
-      : assembleStudyScene(candidate, job.request.cues, raw, vocabularyBudget, exerciseBudget);
+    let section: StudyScene | StudySceneV3 | undefined;
+    if (contextual) {
+      // A failed saved scene must not discard completed sections. Retry only
+      // the current scene when an agent's evidence IDs violate source grounding.
+      const allowedNeighbors = candidate.focusExpressions.slice(0, vocabularyBudget).map(expression => {
+        const focusIds = new Set(expressionCueIds(cues, expression));
+        return { expression, cueIds: candidate.cueIds.filter(id => !focusIds.has(id)) };
+      });
+      if (allowedNeighbors.some(item => !item.cueIds.length)) {
+        throw new Error("Selected scene lacks real neighboring dialogue for its focus expression. Choose a longer source-backed scene.");
+      }
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const prompt = contextualScenePrompt(job.request, candidate, cues, vocabularyBudget, exampleCount) +
+          (attempt === 0 ? "" : "\nVALIDATION REPAIR: Previous JSON failed source-evidence validation. " +
+            "Return the complete corrected scene JSON. For each focus expression, contextCueIds MUST " +
+            "include at least one of its actual neighboring cue IDs from this allowed list: " +
+            JSON.stringify(allowedNeighbors) + ". Only reference these original cue IDs; never invent dialogue.");
+        const raw = await generate(job.request.agent, prompt, signal);
+        assertRunning(signal);
+        try {
+          section = assembleContextualScene(candidate, job.request.cues, raw, vocabularyBudget, exampleCount);
+          break;
+        } catch (error) {
+          if (!(error instanceof Error) ||
+              !error.message.includes("Context evidence must reference real neighboring dialogue cues")) throw error;
+          if (attempt === 1) {
+            throw new Error("Context evidence is still invalid after one targeted retry: " + error.message);
+          }
+        }
+      }
+    } else {
+      const raw = await generate(job.request.agent,
+        studyScenePrompt(job.request, candidate, cues, vocabularyBudget, exerciseBudget), signal);
+      assertRunning(signal);
+      section = assembleStudyScene(candidate, job.request.cues, raw, vocabularyBudget, exerciseBudget);
+    }
+    if (!section) throw new Error("Scene generation returned no validated content");
     job = await storage.jobs.update(jobId, current => {
       assertRunning(signal);
       if (current.summary.status !== "running" || !current.scenePlan?.selected ||
