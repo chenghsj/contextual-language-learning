@@ -1,3 +1,4 @@
+import { tw } from "./utility-classes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BackupSettingsSchema, compactStudyExport, learningDocumentToMarkdown, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
@@ -1433,25 +1434,25 @@ export default function App() {
   }, [page, backup.accountId, driveAccounts.length]);
 
   return (
-    <div className="app">
-      <header className="topbar">
-        <div><img className="brandMark" src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>AI-powered Contextual Language Learning</strong></div>
-        <span className="version">MVP · v0.1</span>
+    <div className={tw("app")}>
+      <header className={tw("topbar")}>
+        <div><img className={tw("brandMark")} src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>AI-powered Contextual Language Learning</strong></div>
+        <span className={tw("version")}>MVP · v0.1</span>
       </header>
-      <nav className="tabs" aria-label={t("navLabel")}>
-        <Button className={page === "create" ? "selected" : ""} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
-        <Button className={page === "reader" ? "selected" : ""} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
-        <Button className={page === "lessons" ? "selected" : ""} onClick={() => setPage("lessons")}><Library aria-hidden="true" />{t("lessonLibrary")}</Button>
-        <Button className={page === "settings" ? "selected" : ""} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
+      <nav className={tw("tabs")} aria-label={t("navLabel")}>
+        <Button className={tw(page === "create" ? "tabButton selected" : "tabButton")} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
+        <Button className={tw(page === "reader" ? "tabButton selected" : "tabButton")} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
+        <Button className={tw(page === "lessons" ? "tabButton selected" : "tabButton")} onClick={() => setPage("lessons")}><Library aria-hidden="true" />{t("lessonLibrary")}</Button>
+        <Button className={tw(page === "settings" ? "tabButton selected" : "tabButton")} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
       </nav>
 
-      {error && <div className="alert" role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}><X aria-hidden="true" /></Button></div>}
+      {error && <div className={tw("alert")} role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}><X aria-hidden="true" /></Button></div>}
 
       {page === "create" && <main>
-        <Card className="panel">
+        <Card className={tw("panel")}>
           <h2>{t("subtitleHeading")}</h2>
-          <div className="subtitleSourceBlock">
-          <div className="actions">
+          <div className={tw("subtitleSourceBlock")}>
+          <div className={tw("actions")}>
             <Button variant={!title.trim() || !sourceUrl.trim() ? "default" : "outline"}
               size="sm" disabled={metadataBusy || subtitleBusy || checking || generating}
               onClick={() => void fetchCurrentVideoMetadata()}>
@@ -1459,15 +1460,15 @@ export default function App() {
                 !title.trim() || !sourceUrl.trim() ? metadataUi.get : metadataUi.refresh}
             </Button>
           </div>
-          {metadataStatus && <p className="hint" role="status">{metadataStatus}</p>}
-          <label>{t("videoTitle")} <Input value={title} onChange={event => {
+          {metadataStatus && <p className={tw("hint")} role="status">{metadataStatus}</p>}
+          <label className={tw("labelBase")}>{t("videoTitle")} <Input value={title} onChange={event => {
             ++metadataRequestRef.current;
             setMetadataBusy(false);
             manuallyEditedTitleRef.current = !!event.target.value.trim();
             setMetadataStatus("");
             setTitle(event.target.value);
           }} placeholder={t("titlePlaceholder")} /></label>
-          <label>{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => {
+          <label className={tw("labelBase")}>{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => {
             ++metadataRequestRef.current;
             setMetadataBusy(false);
             setMetadataStatus("");
@@ -1476,12 +1477,12 @@ export default function App() {
             setSourceUrl(event.target.value);
             setSubtitleStatus("");
           }} placeholder="https://www.youtube.com/watch?v=…" /></label>
-          <Badge className="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
+          <Badge className={tw("chip")}>{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
           </div>
-          <div className="subtitleLanguageSetting">
-            <div className="settingField">
-              <div className="settingHeading">
-                <label htmlFor="learning-target">{t("targetLanguage")}</label>
+          <div className={tw("subtitleLanguageSetting")}>
+            <div className={tw("settingField")}>
+              <div className={tw("settingHeading")}>
+                <label className={tw("labelBase")} htmlFor="learning-target">{t("targetLanguage")}</label>
                 <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.targetLanguage}
                   />
@@ -1493,13 +1494,13 @@ export default function App() {
             </div>
           </div>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
-            <p className="hint">{subtitleUi.hint}</p>
-            <Button className="subtitleFetchButton"
+            <p className={tw("hint")}>{subtitleUi.hint}</p>
+            <Button className={tw("subtitleFetchButton")}
               disabled={subtitleBusy || metadataBusy || checking || generating}
               onClick={() => void fetchCurrentSubtitles()}>
               {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
             </Button>
-            {videoRecoveryUrl && <div className="actions">
+            {videoRecoveryUrl && <div className={tw("actions")}>
               <Button variant="outline" size="sm"
                 disabled={reloadingVideoTab || subtitleBusy || metadataBusy}
                 onClick={() => void reloadVideoReader()}>
@@ -1507,12 +1508,12 @@ export default function App() {
               </Button>
             </div>}
           </>}
-          {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className="hint">{t("subtitleHint")}</p>}
-          <details open={subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube"}>
-            <summary>{subtitleUi.manual}</summary>
-            <label>{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
-            {fileName && <p className="hint">{t("importedFile", { name: fileName })}</p>}
-            <label>{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => {
+          {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className={tw("hint")}>{t("subtitleHint")}</p>}
+          <details className={tw("detailsBase")} open={subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube"}>
+            <summary className={tw("summaryBase")}>{subtitleUi.manual}</summary>
+            <label className={tw("labelBase")}>{t("subtitleFile")} <Input type="file" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
+            {fileName && <p className={tw("hint")}>{t("importedFile", { name: fileName })}</p>}
+            <label className={tw("labelBase")}>{t("pasteSubtitles")} <Textarea rows={5} value={raw} onChange={event => {
               ++metadataRequestRef.current;
               setMetadataBusy(false);
               setMetadataStatus("");
@@ -1535,21 +1536,21 @@ export default function App() {
             }}
               placeholder={t("subtitlePlaceholder")} /></label>
           </details>
-          {subtitleStatus && <p className="status subtitleAcquisitionStatus" role="status">{subtitleStatus}</p>}
+          {subtitleStatus && <p className={tw("status subtitleAcquisitionStatus")} role="status">{subtitleStatus}</p>}
           {!!raw.trim() && !captionsReady && !subtitleStatus && !subtitleBusy &&
-            <p className="status subtitleAcquisitionStatus" role="status">{subtitleMessage(subtitleUi.languageNotReady, {
+            <p className={tw("status subtitleAcquisitionStatus")} role="status">{subtitleMessage(subtitleUi.languageNotReady, {
               language: learningLanguageName(profile.targetLanguage, uiLocale),
             })}</p>}
-          <p className="hint">{t("parsedCues", { count: cues.length })}</p>
+          <p className={tw("hint")}>{t("parsedCues", { count: cues.length })}</p>
 
         </Card>
 
-        <Card className="panel lessonSettingsPanel">
+        <Card className={tw("panel lessonSettingsPanel")}>
           <h2>{t("learningHeading")}</h2>
-          <p className="hint lessonSettingsIntro">{t("lessonSettingsIntro")}</p>
-          <div className="settingField">
-            <div className="settingHeading">
-              <label htmlFor="learning-level">{t("level")}</label>
+          <p className={tw("hint lessonSettingsIntro")}>{t("lessonSettingsIntro")}</p>
+          <div className={tw("settingField")}>
+            <div className={tw("settingHeading")}>
+              <label className={tw("labelBase")} htmlFor="learning-level">{t("level")}</label>
               <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
                 explanation={levelHint(settingsCopy, profile.targetLanguage)}
                 items={levelOptions.map(value => {
@@ -1563,9 +1564,9 @@ export default function App() {
                 value: level, label: level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
               }))} />
           </div>
-          <div className="settingField">
-            <div className="settingHeading">
-              <label htmlFor="learning-length">{t("lessonLength")}</label>
+          <div className={tw("settingField")}>
+            <div className={tw("settingHeading")}>
+              <label className={tw("labelBase")} htmlFor="learning-length">{t("lessonLength")}</label>
             </div>
             <SelectField id="learning-length" ariaLabel={t("lessonLength")}
               value={String(profile.sceneCount)}
@@ -1577,11 +1578,11 @@ export default function App() {
                 { value: "4", label: t("lessonLengthStandard") },
                 { value: "6", label: t("lessonLengthRich") },
               ]} />
-            <p className="hint">{t("lessonLengthHint")}</p>
+            <p className={tw("hint")}>{t("lessonLengthHint")}</p>
           </div>
-          <div className="settingField">
-            <div className="settingHeading">
-              <label htmlFor="contextual-examples">{t("contextualExamples")}</label>
+          <div className={tw("settingField")}>
+            <div className={tw("settingHeading")}>
+              <label className={tw("labelBase")} htmlFor="contextual-examples">{t("contextualExamples")}</label>
             </div>
             <SelectField id="contextual-examples" ariaLabel={t("contextualExamples")}
               value={String(profile.contextualExampleCount ?? 2)}
@@ -1591,13 +1592,13 @@ export default function App() {
               options={[1, 2, 3].map(value => ({
                 value: String(value), label: t("contextualExamplesValue", { count: value }),
               }))} />
-            <p className="hint">{t("contextualExamplesHint")}</p>
+            <p className={tw("hint")}>{t("contextualExamplesHint")}</p>
           </div>
-          <details className="advancedLessonSettings">
-            <summary>{t("advancedLessonSettings")}</summary>
-            <div className="settingField">
-              <div className="settingHeading">
-                <label htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
+          <details className={tw("detailsBase advancedLessonSettings")}>
+            <summary className={tw("summaryBase")}>{t("advancedLessonSettings")}</summary>
+            <div className={tw("settingField")}>
+              <div className={tw("settingHeading")}>
+                <label className={tw("labelBase")} htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
                 <SettingInfo label={t("instructionLanguage")} infoLabel={settingsCopy.infoLabel}
                   explanation={settingsCopy.fieldHints.instructionLanguage} />
               </div>
@@ -1624,44 +1625,44 @@ export default function App() {
           </details>
         </Card>
 
-        <Card className="panel">
+        <Card className={tw("panel")}>
           <h2>{t("generationHeading")}</h2>
-          <label>{t("storageLocation")}</label>
-          <p className="hint">{t("currentFolder", { path: destination.kind === "local"
+          <label className={tw("labelBase")}>{t("storageLocation")}</label>
+          <p className={tw("hint")}>{t("currentFolder", { path: destination.kind === "local"
             ? destination.directory ?? t("defaultFolder") : t("defaultFolder") })}</p>
-          <div className="actions">
-            <Button variant="outline" className="secondary" disabled={storageBusy || generating}
+          <div className={tw("actions")}>
+            <Button variant="outline" className={tw("secondary")} disabled={storageBusy || generating}
               onClick={() => void chooseFolder()}>{t("chooseFolder")}</Button>
             {destination.kind === "local" && destination.directory && <Button variant="ghost" size="sm"
               onClick={() => setDestination({ kind: "local" })}>{t("useDefaultFolder")}</Button>}
           </div>
-          <p className="hint">{t("localAlways")}</p>
-          <div className="backupRow">
-            <div className="backupDescription">
+          <p className={tw("hint")}>{t("localAlways")}</p>
+          <div className={tw("backupRow")}>
+            <div className={tw("backupDescription")}>
               <strong>{t("autoBackup")}</strong>
-              <p className="hint">{t("backupHint")}</p>
+              <p className={tw("hint")}>{t("backupHint")}</p>
             </div>
             <Button role="switch" aria-checked={backup.enabled} aria-label={t("autoBackup")}
-              className="backupSwitch" disabled={storageBusy}
+              className={tw("backupSwitch")} disabled={storageBusy}
               onClick={() => backup.enabled ? setBackup(current => ({ ...current, enabled: false }))
-                : void enableBackup()}><span className="backupSwitchThumb" /></Button>
+                : void enableBackup()}><span className={tw("backupSwitchThumb")} /></Button>
           </div>
-          {backup.enabled && driveAccessVerified && <div className="backupConnection">
-            <span className="hint">{t("backupConnected", { email:
+          {backup.enabled && driveAccessVerified && <div className={tw("backupConnection")}>
+            <span className={tw("hint")}>{t("backupConnected", { email:
               driveAccounts.find(account => account.id === backup.accountId)?.email ?? t("backupUnknownAccount") })}</span>
             <Button variant="ghost" size="sm" onClick={() => setPage("settings")}>{t("manageDrive")}</Button>
           </div>}
           {!backup.enabled && !driveAccounts.length && driveConfigured &&
-            <p className="hint">{t("backupConnectToEnable")}</p>}
-          {driveConnectError && <p className="jobRowError" role="status">{driveConnectError}</p>}
-          {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
-          {duplicateWarning && <div className="callout" role="alertdialog" aria-label={t("duplicateConfirmLabel")}>
+            <p className={tw("hint")}>{t("backupConnectToEnable")}</p>}
+          {driveConnectError && <p className={tw("jobRowError")} role="status">{driveConnectError}</p>}
+          {backupStatus && <p className={tw("hint")} role="status">{backupStatus}</p>}
+          {duplicateWarning && <div className={tw("callout")} role="alertdialog" aria-label={t("duplicateConfirmLabel")}>
             <strong>{t("duplicateFound", { count: duplicateWarning.matches.length })}</strong>
-            <p className="hint">{t("duplicateNewVersion")}</p>
-            {duplicateWarning.matches.map(match => <div className="learningCard" key={match.documentId}>
+            <p className={tw("hint")}>{t("duplicateNewVersion")}</p>
+            {duplicateWarning.matches.map(match => <div className={tw("learningCard")} key={match.documentId}>
               <strong>{match.title}</strong>
               <p>{new Date(match.createdAt).toLocaleString(uiLocale)} · {match.destination} · {t(match.exactSettings ? "sameSettings" : "differentSettings")}{match.jobStatus ? " · " + match.jobStatus : ""}</p>
-              <div className="actions">
+              <div className={tw("actions")}>
                 {match.local && <Button variant="outline" size="sm" onClick={() => {
                   cancelDuplicate();
                   openSavedDocument(match.documentId);
@@ -1669,16 +1670,16 @@ export default function App() {
                 {match.url && <Button variant="outline" size="sm" onClick={() => void chrome.tabs.create({ url: match.url })}>{t("openInDrive")}</Button>}
               </div>
             </div>)}
-            <div className="actions">
+            <div className={tw("actions")}>
               <Button variant="destructive" size="sm" onClick={confirmRegeneration}>{t("confirmNewVersion")}</Button>
               <Button variant="outline" size="sm" onClick={cancelDuplicate}>{t("cancelNoGeneration")}</Button>
             </div>
           </div>}
-          <p className="status lessonGenerationPreview">{t("lessonContentSummary", {
+          <p className={tw("status lessonGenerationPreview")}>{t("lessonContentSummary", {
             scenes: profile.sceneCount, examples: profile.contextualExampleCount ?? 2,
           })}</p>
-          <div className="generationSummary">
-            <div className="generationSummaryHeading">
+          <div className={tw("generationSummary")}>
+            <div className={tw("generationSummaryHeading")}>
               <strong>{t("generationSummary")}</strong>
               <Button variant="outline" size="sm" onClick={() => {
                 setPage("settings");
@@ -1699,23 +1700,23 @@ export default function App() {
               </div>
             </dl>
           </div>
-          <Button className="primary" onClick={startGeneration} disabled={generating || checking || subtitleBusy || !captionsReady || !cues.length || !title.trim()}>
-            {(generating || checking) && <span className="generationSpinner" aria-hidden="true" />}
+          <Button className={tw("primary")} onClick={startGeneration} disabled={generating || checking || subtitleBusy || !captionsReady || !cues.length || !title.trim()}>
+            {(generating || checking) && <span className={tw("generationSpinner")} aria-hidden="true" />}
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
-          {generating && activeJob && <div className="generationProgress" role="progressbar"
+          {generating && activeJob && <div className={tw("generationProgress")} role="progressbar"
             aria-label={t("generationProgressLabel")} aria-valuemin={0}
             aria-valuenow={activeJob.completed} aria-valuemax={activeJob.total}>
             <span style={{ width: (100 * activeJob.completed / activeJob.total) + "%" }} />
           </div>}
-          {generating && <Button variant="outline" className="secondary" onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
-          {progress && <p className="status" role="status">{progress}</p>}
-          {publishedLocation && <p className="hint">{t("publishedTo", { location: publishedLocation })}</p>}
+          {generating && <Button variant="outline" className={tw("secondary")} onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
+          {progress && <p className={tw("status")} role="status">{progress}</p>}
+          {publishedLocation && <p className={tw("hint")}>{t("publishedTo", { location: publishedLocation })}</p>}
         </Card>
-        <Card className="panel">
+        <Card className={tw("panel")}>
           <h2>{t("jobHistory")}</h2>
-          <p className="hint">{t("jobHistoryHint")}</p>
-          <div className="jobToolbar">
+          <p className={tw("hint")}>{t("jobHistoryHint")}</p>
+          <div className={tw("jobToolbar")}>
             <SelectField ariaLabel={t("jobFilterLabel")} value={jobFilter}
               onValueChange={value => {
                 if (value === "all" || value === "active" || value === "completed") setJobFilter(value);
@@ -1728,18 +1729,18 @@ export default function App() {
             <Button variant="outline" size="sm" disabled={loadingJobs}
               onClick={loadJobs}>{loadingJobs ? t("loading") : t("refreshJobs")}</Button>
           </div>
-          <div className="jobHistoryList">
-            {visibleJobs.map(job => <div className="jobRow" key={job.id}>
-              <div className="jobRowHeading">
+          <div className={tw("jobHistoryList")}>
+            {visibleJobs.map(job => <div className={tw("jobRow")} key={job.id}>
+              <div className={tw("jobRowHeading")}>
                 <strong title={job.sourceTitle}>{job.sourceTitle}</strong>
                 <Badge>{t(jobStatusKeys[job.status])}</Badge>
               </div>
-              <p className="hint">{agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)} · {job.completed}/{job.total}
+              <p className={tw("hint")}>{agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)} · {job.completed}/{job.total}
                 {job.backup && " · " + t(job.backup.status === "backed-up"
                   ? "backupSaved" : ["pending", "uploading"].includes(job.backup.status)
                     ? "backupProcessing" : "backupFailedMessage")}</p>
-              {job.error && <p className="jobRowError">{job.error}</p>}
-              <div className="actions">
+              {job.error && <p className={tw("jobRowError")}>{job.error}</p>}
+              <div className={tw("actions")}>
                 {["queued", "waiting", "failed"].includes(job.status) &&
                   <Button variant="outline" size="sm" disabled={generating}
                     onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>}
@@ -1764,10 +1765,10 @@ export default function App() {
       </main>}
 
       {page === "lessons" && <main>
-        <Card className="panel">
+        <Card className={tw("panel")}>
           <h2>{t("lessonLibrary")}</h2>
-          <p className="hint">{t("lessonLibraryHint")}</p>
-          <div className="jobToolbar">
+          <p className={tw("hint")}>{t("lessonLibraryHint")}</p>
+          <div className={tw("jobToolbar")}>
             <SelectField ariaLabel={t("lessonFilterLabel")} value={lessonFilter}
               onValueChange={value => {
                 if (value === "all" || value === "local" || value === "drive") setLessonFilter(value);
@@ -1779,32 +1780,32 @@ export default function App() {
             <Button variant="outline" size="sm" disabled={lessonsBusy}
               onClick={() => void loadLessons()}>{lessonsBusy ? t("loading") : t("refreshJobs")}</Button>
           </div>
-          {catalogError && <div className="callout" role="alert">
+          {catalogError && <div className={tw("callout")} role="alert">
             <p>{catalogError}</p>
             <Button variant="outline" size="sm" disabled={lessonsBusy}
               onClick={() => void loadLessons()}>{t("refreshJobs")}</Button>
           </div>}
-          {lessonFilter === "drive" && !driveAccounts.length && <div className="callout">
+          {lessonFilter === "drive" && !driveAccounts.length && <div className={tw("callout")}>
             <p>{t("connectDriveToBrowse")}</p>
             <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
               onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
           </div>}
           {!lessonsBusy && !catalogError && visibleLessons.length === 0 &&
-            <p className="hint">{t("lessonLibraryEmpty")}</p>}
-          <div className="lessonLibraryList">
-            {visibleLessons.map(lesson => <div className="jobRow" key={lesson.documentId}>
-              <div className="jobRowHeading"><strong title={lesson.title}>{lesson.title}</strong></div>
-              <p className="hint">{new Date(lesson.createdAt).toLocaleString(uiLocale)}
+            <p className={tw("hint")}>{t("lessonLibraryEmpty")}</p>}
+          <div className={tw("lessonLibraryList")}>
+            {visibleLessons.map(lesson => <div className={tw("jobRow")} key={lesson.documentId}>
+              <div className={tw("jobRowHeading")}><strong title={lesson.title}>{lesson.title}</strong></div>
+              <p className={tw("hint")}>{new Date(lesson.createdAt).toLocaleString(uiLocale)}
                 {lesson.local && " · " + lesson.local.targetLanguage.toUpperCase() + " · " + lesson.local.level}</p>
-              <div className="lessonRowMeta">
+              <div className={tw("lessonRowMeta")}>
                 {lesson.local && <Badge>{t("localCopy")}</Badge>}
                 {lesson.drive && <Badge>{t("cloudCopy")}</Badge>}
                 {lesson.local?.backup && !lesson.drive &&
-                  <span className="hint">{t(lesson.local.backup.status === "backed-up"
+                  <span className={tw("hint")}>{t(lesson.local.backup.status === "backed-up"
                     ? "backupSaved" : ["pending", "uploading"].includes(lesson.local.backup.status)
                       ? "backupProcessing" : "backupFailedMessage")}</span>}
               </div>
-              <div className="actions">
+              <div className={tw("actions")}>
                 {lesson.local && <Button variant="outline" size="sm" disabled={generating}
                   onClick={() => openSavedDocument(lesson.documentId)}>{t("openLesson")}</Button>}
                 {lesson.drive && !lesson.local && <Button variant="outline" size="sm"
@@ -1820,10 +1821,10 @@ export default function App() {
       </main>}
 
       {page === "settings" && <main>
-        <Card className="panel">
+        <Card className={tw("panel")}>
           <h2>{t("uiLanguage")} · {t("appearance")}</h2>
-          <div className="uiPreferenceField">
-            <label htmlFor="ui-language-select">{t("uiLanguage")}</label>
+          <div className={tw("uiPreferenceField")}>
+            <label className={tw("labelBase")} htmlFor="ui-language-select">{t("uiLanguage")}</label>
             <Select value={localePreference} onValueChange={next => {
               if (isLocalePreference(next)) setLocalePreference(next);
             }}>
@@ -1840,9 +1841,9 @@ export default function App() {
               </SelectContent>
             </Select>
           </div>
-          <p className="hint">{t("uiLanguageHint")}</p>
-          <div className="uiPreferenceField">
-            <label htmlFor="appearance-select">{t("appearance")}</label>
+          <p className={tw("hint")}>{t("uiLanguageHint")}</p>
+          <div className={tw("uiPreferenceField")}>
+            <label className={tw("labelBase")} htmlFor="appearance-select">{t("appearance")}</label>
             <Select value={themePreference} onValueChange={next => {
               if (isThemePreference(next)) setThemePreference(next);
             }}>
@@ -1856,13 +1857,13 @@ export default function App() {
               </SelectContent>
             </Select>
           </div>
-          <p className="hint">{t("appearanceHint")}</p>
+          <p className={tw("hint")}>{t("appearanceHint")}</p>
         </Card>
-        <Card className="panel">
+        <Card className={tw("panel")}>
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
-          <p className="hint">{t("agentHint")}</p>
+          <p className={tw("hint")}>{t("agentHint")}</p>
           {installed && <Badge>{t(installed[agent.provider] ? "agentInstalled" : "agentMissing")}</Badge>}
-          {installed && hostVersion !== chrome.runtime.getManifest().version && <div className="callout" role="status">
+          {installed && hostVersion !== chrome.runtime.getManifest().version && <div className={tw("callout")} role="status">
             <p>{hostVersion ? t("hostVersionMismatch", { version: hostVersion,
               expected: chrome.runtime.getManifest().version }) : t("hostVersionUnknown")}</p>
             <Button variant="outline" size="sm"
@@ -1870,7 +1871,7 @@ export default function App() {
                 url: "https://github.com/chenghsj/immersive-language-learning/releases",
               })}>{t("hostUpdateDownload")}</Button>
           </div>}
-          <label>{t("defaultAgent")}
+          <label className={tw("labelBase")}>{t("defaultAgent")}
             <SelectField ariaLabel={t("defaultAgent")} value={agent.provider}
               onValueChange={selectAgent}
               options={agentCatalog.map(entry => ({
@@ -1879,14 +1880,14 @@ export default function App() {
                   (installed && !entry.installed ? t("agentNotInstalled") : ""),
               }))} />
           </label>
-          {selectedAgentInfo?.supportsAccountProfiles && <section className="agentProfileSection">
-            <div className="agentProfileHeading">
+          {selectedAgentInfo?.supportsAccountProfiles && <section className={tw("agentProfileSection")}>
+            <div className={tw("agentProfileHeading")}>
               <strong>{t("useOtherCliAccount")}</strong>
               <SettingInfo label={t("useOtherCliAccount")} infoLabel={settingsCopy.infoLabel}
                 explanation={t("agentProfileInfo")} />
             </div>
             {(savedAgentProfiles.some(item => item.provider === agent.provider) || !!agent.accountConfigDir) &&
-              <label>{t("agentAccount")}
+              <label className={tw("labelBase")}>{t("agentAccount")}
                 <SelectField ariaLabel={t("agentAccount")}
                   value={selectedSavedProfile?.id ?? (agent.accountConfigDir ? "__legacy__" : "")}
                   onValueChange={chooseAgentProfile}
@@ -1898,18 +1899,18 @@ export default function App() {
                       .map(item => ({ value: item.id, label: item.label })),
                   ]} />
               </label>}
-            <details className="agentProfileAdvanced">
-              <summary>{t("manageAgentProfiles")}</summary>
-              <p className="hint">{t("accountFolderHint")}</p>
-              <label>{t("profileName")}
+            <details className={tw("detailsBase agentProfileAdvanced")}>
+              <summary className={tw("summaryBase")}>{t("manageAgentProfiles")}</summary>
+              <p className={tw("hint")}>{t("accountFolderHint")}</p>
+              <label className={tw("labelBase")}>{t("profileName")}
                 <Input value={draftProfileName} onChange={event => setDraftProfileName(event.target.value)}
                   placeholder={t("profileNamePlaceholder")} />
               </label>
-              <label>{t("accountFolder")}
+              <label className={tw("labelBase")}>{t("accountFolder")}
                 <Input value={draftProfileDir} onChange={event => setDraftProfileDir(event.target.value)}
                   placeholder={t("accountFolderPlaceholder")} />
               </label>
-              <div className="actions">
+              <div className={tw("actions")}>
                 <Button variant="outline" size="sm"
                   disabled={profileBusy || installed === null || !draftProfileName.trim() || !draftProfileDir.trim()}
                   onClick={() => void saveProfile()}>{t("saveProfile")}</Button>
@@ -1917,10 +1918,10 @@ export default function App() {
                   disabled={profileBusy || installed === null}
                   onClick={() => void removeProfile()}>{t("removeProfile")}</Button>}
               </div>
-              {profileStatus && <p className="hint" role="status">{profileStatus}</p>}
+              {profileStatus && <p className={tw("hint")} role="status">{profileStatus}</p>}
             </details>
           </section>}
-          <label>{t("defaultModel")}
+          <label className={tw("labelBase")}>{t("defaultModel")}
             <SelectField ariaLabel={t("defaultModel")} disabled={modelBusy} value={modelSelection}
               onValueChange={value => {
                 if (value === "__custom__") {
@@ -1940,14 +1941,14 @@ export default function App() {
                 { value: "__custom__", label: t("customModel") },
               ]} />
           </label>
-          {modelSelection === "__custom__" && <label>{t("modelId")}
+          {modelSelection === "__custom__" && <label className={tw("labelBase")}>{t("modelId")}
             <Input value={agent.modelId} onChange={event => updateAgent({ ...agent, modelId: event.target.value })}
               placeholder={t("modelPlaceholder")} />
           </label>}
-          {modelNotice && <p className="hint" role="status">{modelNotice}</p>}
-          <details className="agentProfileAdvanced">
-            <summary>{t("agentDiagnostics")}</summary>
-            <div className="actions">
+          {modelNotice && <p className={tw("hint")} role="status">{modelNotice}</p>}
+          <details className={tw("detailsBase agentProfileAdvanced")}>
+            <summary className={tw("summaryBase")}>{t("agentDiagnostics")}</summary>
+            <div className={tw("actions")}>
               <Button variant="outline" size="sm" onClick={checkHost}>{t("checkHost")}</Button>
               <Button variant="outline" size="sm" disabled={modelBusy || installed === null}
                 onClick={() => setInstalled(current => current ? { ...current } : current)}>
@@ -1964,56 +1965,56 @@ export default function App() {
               checkHost();
             }} />
         </Card>
-        <Card className="panel">
+        <Card className={tw("panel")}>
           <h2>{t("driveAccountHeading")}</h2>
-          <p className="hint">{t("driveOauthHelp")}</p>
-          {!driveConfigured && <p className="callout">{t("oauthFirst")}</p>}
-          {driveAccounts.length === 1 && <div className="driveSingleAccount">
-            <div><strong>{driveAccounts[0].email}</strong><span className="hint">{t("backupAccount")}</span></div>
+          <p className={tw("hint")}>{t("driveOauthHelp")}</p>
+          {!driveConfigured && <p className={tw("callout")}>{t("oauthFirst")}</p>}
+          {driveAccounts.length === 1 && <div className={tw("driveSingleAccount")}>
+            <div><strong>{driveAccounts[0].email}</strong><span className={tw("hint")}>{t("backupAccount")}</span></div>
             <Badge>{t("driveConnectedStatus")}</Badge>
           </div>}
-          {driveAccounts.length > 1 && <label>{t("backupAccount")}
+          {driveAccounts.length > 1 && <label className={tw("labelBase")}>{t("backupAccount")}
             <SelectField ariaLabel={t("backupAccount")} value={backup.accountId ?? driveAccounts[0].id}
               onValueChange={accountId => setBackup(current => ({ ...current, accountId }))}
               options={driveAccounts.map(account => ({ value: account.id, label: account.email }))} />
           </label>}
-          {selectedDriveId && <p className="hint" role="status">{
+          {selectedDriveId && <p className={tw("hint")} role="status">{
             driveAccess?.accountId === selectedDriveId && driveAccess.status === "checking"
               ? t("driveAccessChecking") : driveAccessVerified
                 ? t("driveAccessVerified") : t("driveAccessNotVerified")
           }</p>}
-          <div className="actions">
+          <div className={tw("actions")}>
             <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
               onClick={() => void connectDrive()}>{driveAccounts.length ? t("connectAnother") : t("connectGoogle")}</Button>
             {selectedDriveId && !driveAccessVerified && <Button variant="outline" size="sm"
               disabled={storageBusy || driveAccess?.status === "checking"}
               onClick={() => void enableBackup()}>{t("retryDriveAccess")}</Button>}
           </div>
-          {driveAccounts.length > 0 && <details className="agentProfileAdvanced">
-            <summary>{t("manageDrive")} · {driveAccounts.length}</summary>
-            <div className="driveAccountList">
-              {driveAccounts.map(account => <div className="driveAccountItem" key={account.id}>
+          {driveAccounts.length > 0 && <details className={tw("detailsBase agentProfileAdvanced")}>
+            <summary className={tw("summaryBase")}>{t("manageDrive")} · {driveAccounts.length}</summary>
+            <div className={tw("driveAccountList")}>
+              {driveAccounts.map(account => <div className={tw("driveAccountItem")} key={account.id}>
                 <span title={account.email}>{account.email}</span>
                 <Button variant="ghost" size="sm" disabled={storageBusy}
                   onClick={() => void disconnectDrive(account.id)}>{t("disconnectGoogle")}</Button>
               </div>)}
             </div>
           </details>}
-          {driveAccounts.length > 0 && <section className="driveExistingBackup">
+          {driveAccounts.length > 0 && <section className={tw("driveExistingBackup")}>
             <strong>{t("backupExisting")}</strong>
-            <p className="hint">{t("backupExistingHint")}</p>
+            <p className={tw("hint")}>{t("backupExistingHint")}</p>
             <Button variant="outline" size="sm" disabled={storageBusy || !driveAccounts.length}
               onClick={() => void backupExistingLessons()}>{t("backupExisting")}</Button>
           </section>}
-          {driveConnectError && <p className="jobRowError" role="status">{driveConnectError}</p>}
-          {backupStatus && <p className="hint" role="status">{backupStatus}</p>}
+          {driveConnectError && <p className={tw("jobRowError")} role="status">{driveConnectError}</p>}
+          {backupStatus && <p className={tw("hint")} role="status">{backupStatus}</p>}
         </Card>
       </main>}
 
       {page === "reader" && <main>
-        {!document ? <Card className="panel empty">
-          <h2>{t("emptyHeading")}</h2><p className="hint">{t("emptyHint")}</p>
-          <Button variant="outline" className="secondary" onClick={() => setPage("create")}>{t("create")}</Button>
+        {!document ? <Card className={tw("panel empty")}>
+          <h2>{t("emptyHeading")}</h2><p className={tw("hint")}>{t("emptyHint")}</p>
+          <Button variant="outline" className={tw("secondary")} onClick={() => setPage("create")}>{t("create")}</Button>
         </Card> : document.schemaVersion === 3 ? <ContextualSceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
           repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
@@ -2025,27 +2026,27 @@ export default function App() {
           playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
           onError={setError} onDownload={format => downloadDocument(document, format)}
         /> : <>
-          <Card className="panel">
-            <Badge className="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
+          <Card className={tw("panel")}>
+            <Badge className={tw("chip")}>{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
             <h1>{document.source.title}</h1>
-            <p className="hint">{t("lessonOverview", { count: document.sections.length, language: document.profile.instructionLanguage })}</p>
-            {publishedLocation && <p className="hint">{t("publishedTo", { location: publishedLocation })}</p>}
-            <div className="actions">
-              <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "json")}>{t("saveJson")}</Button>
-              <Button variant="outline" className="secondary" onClick={() => downloadDocument(document, "md")}>{t("saveMarkdown")}</Button>
+            <p className={tw("hint")}>{t("lessonOverview", { count: document.sections.length, language: document.profile.instructionLanguage })}</p>
+            {publishedLocation && <p className={tw("hint")}>{t("publishedTo", { location: publishedLocation })}</p>}
+            <div className={tw("actions")}>
+              <Button variant="outline" className={tw("secondary")} onClick={() => downloadDocument(document, "json")}>{t("saveJson")}</Button>
+              <Button variant="outline" className={tw("secondary")} onClick={() => downloadDocument(document, "md")}>{t("saveMarkdown")}</Button>
             </div>
           </Card>
-          <Card className="panel">
+          <Card className={tw("panel")}>
             <h2>{t("videoCompanion")}</h2>
             {document.source.url && readerAdapter.id !== "import" &&
-              <div className="actions">
-                <Button variant="outline" className="secondary" disabled={openingVideo}
+              <div className={tw("actions")}>
+                <Button variant="outline" className={tw("secondary")} disabled={openingVideo}
                   onClick={() => void openVideo()}>
                   {openingVideo ? t("openingVideo") : t("openOrFocusVideo")}
                 </Button>
               </div>}
-            <div className="twoColumns">
-              <label>{t("repeatCount")}
+            <div className={tw("twoColumns")}>
+              <label className={tw("labelBase")}>{t("repeatCount")}
                 <SelectField ariaLabel={t("repeatCount")} value={repeat}
                   onValueChange={value => setRepeat(value as RepeatOption)}
                   options={[
@@ -2055,7 +2056,7 @@ export default function App() {
                     { value: "infinite", label: t("repeatForever") },
                   ]} />
               </label>
-              <label>{t("repeatDelay")}
+              <label className={tw("labelBase")}>{t("repeatDelay")}
                 <SelectField ariaLabel={t("repeatDelay")} value={delay}
                   onValueChange={value => setDelay(Number(value))}
                   options={[0, 1, 2, 3].map(seconds => ({
@@ -2063,35 +2064,35 @@ export default function App() {
                   }))} />
               </label>
             </div>
-            {readerAdapter.setPlaybackRate && <div className="twoColumns">
-              <label>{t("playbackRateLabel")}
+            {readerAdapter.setPlaybackRate && <div className={tw("twoColumns")}>
+              <label className={tw("labelBase")}>{t("playbackRateLabel")}
                 <SelectField ariaLabel={t("playbackRateLabel")} value={playbackRate} disabled={rateApplying}
                   onValueChange={value => setPlaybackRate(Number(value))}
                   options={[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map(rate => ({
                     value: rate, label: rate + "×",
                   }))} />
               </label>
-              <div className="actions" style={{ alignSelf: "center" }}>
-                <Button variant="outline" className="secondary" disabled={rateApplying}
+              <div className={tw("actions")} style={{ alignSelf: "center" }}>
+                <Button variant="outline" className={tw("secondary")} disabled={rateApplying}
                   onClick={() => void applyPlaybackRate()}>
                   {rateApplying ? t("applyingRate") : t("applyPlaybackRate")}
                 </Button>
               </div>
             </div>}
-            {readerAdapter.setPlaybackRate && <p className="hint">{t("ratePreferenceHint")}</p>}
+            {readerAdapter.setPlaybackRate && <p className={tw("hint")}>{t("ratePreferenceHint")}</p>}
             {readerAdapter.diagnose
-              ? <div className="callout">
+              ? <div className={tw("callout")}>
                   {t("experimentalVideoHint", { name: readerAdapter.label })}
-                  <div className="actions"><Button variant="outline" className="secondary" onClick={() => void diagnoseVideo()}>{t("checkPlayer", { name: readerAdapter.label })}</Button></div>
+                  <div className={tw("actions")}><Button variant="outline" className={tw("secondary")} onClick={() => void diagnoseVideo()}>{t("checkPlayer", { name: readerAdapter.label })}</Button></div>
                 </div>
               : readerAdapter.loop
-                ? <p className="hint">{t("youtubeVideoHint", { name: readerAdapter.label })}</p>
-                : <p className="hint">{t("noVideoControl")}</p>}
-            {playbackStatus && <p className="hint" role="status">{playbackStatus}</p>}
-            {loopActive && <Button variant="outline" className="secondary" onClick={() => void stopLoop()}>{t("stopLoop")}</Button>}
+                ? <p className={tw("hint")}>{t("youtubeVideoHint", { name: readerAdapter.label })}</p>
+                : <p className={tw("hint")}>{t("noVideoControl")}</p>}
+            {playbackStatus && <p className={tw("hint")} role="status">{playbackStatus}</p>}
+            {loopActive && <Button variant="outline" className={tw("secondary")} onClick={() => void stopLoop()}>{t("stopLoop")}</Button>}
           </Card>
-          {document.sections.map(section => <Card className="panel lesson" key={section.id}>
-            <Badge className="chip">{formatTime(section.startMs)}–{formatTime(section.endMs)}</Badge>
+          {document.sections.map(section => <Card className={tw("panel lesson")} key={section.id}>
+            <Badge className={tw("chip")}>{formatTime(section.startMs)}–{formatTime(section.endMs)}</Badge>
             <h2>{section.title}</h2>
             <p>{section.context}</p>
             <h3>{t("originalSubtitles")}</h3>
@@ -2102,25 +2103,25 @@ export default function App() {
                 ? readerAdapter.timestampLink?.(document.source.url, cuePlaybackStart(cue.startMs)) ?? null : null;
               const canSeek = cue.startMs !== null && !!readerAdapter.seek;
               const canLoop = cue.startMs !== null && cue.endMs !== null && !!readerAdapter.loop;
-              return <div className="cue" key={id}>
-                <span className="time">{formatTime(cue.startMs)}</span>
+              return <div className={tw("cue")} key={id}>
+                <span className={tw("time")}>{formatTime(cue.startMs)}</span>
                 <p>{cue.originalText}</p>
-                <div className="actions">
-                  {link && <Button variant="link" className="textButton" onClick={() => void openTimestampCue(cue)}>{t("openTimestamp")}</Button>}
-                  {canSeek && <Button variant="link" className="textButton" onClick={() => void seekCue(cue)}>{t("seekTo")}</Button>}
-                  {canLoop && <Button variant="link" className="textButton" onClick={() => void loopCue(cue)}>{t("loopSentence")}</Button>}
-                  {!link && cue.startMs !== null && <Button variant="link" className="textButton" onClick={() => void navigator.clipboard.writeText(formatTime(cue.startMs))}>{t("copyTime")}</Button>}
+                <div className={tw("actions")}>
+                  {link && <Button variant="link" className={tw("textButton")} onClick={() => void openTimestampCue(cue)}>{t("openTimestamp")}</Button>}
+                  {canSeek && <Button variant="link" className={tw("textButton")} onClick={() => void seekCue(cue)}>{t("seekTo")}</Button>}
+                  {canLoop && <Button variant="link" className={tw("textButton")} onClick={() => void loopCue(cue)}>{t("loopSentence")}</Button>}
+                  {!link && cue.startMs !== null && <Button variant="link" className={tw("textButton")} onClick={() => void navigator.clipboard.writeText(formatTime(cue.startMs))}>{t("copyTime")}</Button>}
                 </div>
               </div>;
             })}
             {section.vocabulary.length > 0 && <><h3>{t("vocabulary")}</h3>
-              {section.vocabulary.map((word, index) => <div className="learningCard" key={word.expression + index}>
+              {section.vocabulary.map((word, index) => <div className={tw("learningCard")} key={word.expression + index}>
                 <strong>{word.expression}</strong><span>{word.meaning}</span>
-                <p>{word.explanation}</p>{word.example && <p className="example">{word.example}</p>}
+                <p>{word.explanation}</p>{word.example && <p className={tw("example")}>{word.example}</p>}
               </div>)}</>}
             {section.insights.length > 0 && <><h3>{t("insights")}</h3><ul>{section.insights.map((insight, index) => <li key={index}>{insight}</li>)}</ul></>}
             {section.exercises.length > 0 && <><h3>{t("exercises")}</h3>
-              {section.exercises.map((exercise, index) => <details key={index}><summary>{exercise.question}</summary><p>{exercise.answer}</p></details>)}</>}
+              {section.exercises.map((exercise, index) => <details className={tw("detailsBase")} key={index}><summary className={tw("summaryBase")}>{exercise.question}</summary><p>{exercise.answer}</p></details>)}</>}
           </Card>)}
         </>}
       </main>}

@@ -1,3 +1,4 @@
+import { tw } from "../utility-classes";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Play, Repeat2, SlidersHorizontal, Square, X } from "lucide-react";
 import { formatTime, type LearningDocument, type SubtitleCue } from "@immersive/core";
@@ -305,25 +306,25 @@ export function ContextualSceneReader({
     }
   }
 
-  return <div className="contextualReader">
-    <Card className="panel contextualSceneHeader">
-      <div className="contextualHeading">
-        <div className="contextualHeaderTitle">
+  return <div className={tw("contextualReader")}>
+    <Card className={tw("panel contextualSceneHeader")}>
+      <div className={tw("contextualHeading")}>
+        <div className={tw("contextualHeaderTitle")}>
           <strong>{document.source.title}</strong>
-          <span className="hint">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</span>
+          <span className={tw("hint")}>{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</span>
         </div>
-        <div className="sceneExport">
+        <div className={tw("sceneExport")}>
           <Button size="sm" variant="outline" onClick={() => onDownload("json")}>JSON</Button>
           <Button size="sm" variant="outline" onClick={() => onDownload("md")}>MD</Button>
         </div>
       </div>
-      <div className="contextualScenePicker">
+      <div className={tw("contextualScenePicker")}>
         <Button variant="outline" size="icon" aria-label={copy.previousScene}
           disabled={busy || sceneIndex === 0} onClick={() => void selectScene(sceneIndex - 1)}>
           <ChevronLeft aria-hidden="true" />
         </Button>
         <div>
-          <span className="time">{copy.scene} {sceneIndex + 1} / {document.sections.length}</span>
+          <span className={tw("time")}>{copy.scene} {sceneIndex + 1} / {document.sections.length}</span>
           <SelectField id="contextual-scene-picker" ariaLabel={copy.chooseScene}
             value={String(sceneIndex)} disabled={busy} onValueChange={value => void selectScene(Number(value))}
             options={document.sections.map((item, index) => ({
@@ -339,10 +340,10 @@ export function ContextualSceneReader({
       </div>
     </Card>
 
-    <Card className="panel contextualSceneContent">
-      <div className="contextualSectionHeading">
+    <Card className={tw("panel contextualSceneContent")}>
+      <div className={tw("contextualSectionHeading")}>
         <div>
-          <span className="time">{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
+          <span className={tw("time")}>{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
           <h2>{scene.title}</h2>
         </div>
         {sourceUrl && adapter.id !== "import" && <Button size="icon" variant="ghost"
@@ -350,80 +351,80 @@ export function ContextualSceneReader({
           <ExternalLink aria-hidden="true" />
         </Button>}
       </div>
-      <p className="contextualSituation">{scene.context}</p>
-      <Button variant="outline" className="contextualWholePlayback" disabled={busy || !canLoop ||
+      <p className={tw("contextualSituation")}>{scene.context}</p>
+      <Button variant="outline" className={tw("contextualWholePlayback")} disabled={busy || !canLoop ||
         scene.startMs === null || scene.endMs === null} onClick={() => void playScene()}>
         <Play aria-hidden="true" />{copy.playScene}
       </Button>
-      {!canLoop && <p className="hint">{copy.noVideo}</p>}
+      {!canLoop && <p className={tw("hint")}>{copy.noVideo}</p>}
 
-      <div className="contextualSectionHeading contextualDialogueHeading">
+      <div className={tw("contextualSectionHeading contextualDialogueHeading")}>
         <h3>{copy.dialogue}</h3>
         <Button size="sm" variant="ghost" onClick={() => setTranslationVisible(value => !value)}>
           {translationVisible ? copy.hideTranslation : copy.translation}
           <ChevronDown aria-hidden="true" />
         </Button>
       </div>
-      <p className="hint">{copy.subtitleNotice}</p>
-      <div className="contextualDialogue" role="group" aria-label={copy.dialogue}>
+      <p className={tw("hint")}>{copy.subtitleNotice}</p>
+      <div className={tw("contextualDialogue")} role="group" aria-label={copy.dialogue}>
         {lines.map((cue, index) => {
           const focused = scene.focusItems.some(item => item.sourceCueIds.includes(cue.id));
           const selected = selectedCueId === cue.id;
           const playing = playbackKnown && playbackCueId === cue.id;
           const translation = scene.translations.find(row => row.cueId === cue.id);
           return <button key={cue.id} type="button"
-            className={"contextualLine" + (selected ? " chosen" : "") +
-              (playing ? " playing" : "") + (!playbackKnown && selected ? " selected" : "")}
+            className={tw("contextualLine" + (selected && !playing ? " chosen" : "") +
+              (playing ? " playing" : "") + (!playbackKnown && selected ? " selectedLine" : ""))}
             aria-current={playing ? "true" : undefined}
             aria-pressed={selected} disabled={busy} onClick={() => void selectCue(cue.id)}>
-            <span className="contextualLineNumber">{String(index + 1).padStart(2, "0")}</span>
-            <span className="contextualLineText">
+            <span className={tw("contextualLineNumber")}>{String(index + 1).padStart(2, "0")}</span>
+            <span className={tw("contextualLineText")}>
               <span lang={document.profile.targetLanguage}>{cue.originalText}</span>
-              {translationVisible && translation && <span className="contextualTranslation">{translation.text}</span>}
+              {translationVisible && translation && <span className={tw("contextualTranslation")}>{translation.text}</span>}
             </span>
-            {focused && <span className="contextualFocusMarker">{copy.focus}</span>}
-            <Play aria-hidden="true" className="contextualLinePlay" />
+            {focused && <span className={tw("contextualFocusMarker")}>{copy.focus}</span>}
+            <Play aria-hidden="true" className={tw("contextualLinePlay")} />
           </button>;
         })}
       </div>
 
-      <div className="contextualExpressions">
+      <div className={tw("contextualExpressions")}>
         {scene.focusItems.map((focus, focusIndex) => {
           const key = scene.id + ":" + focusIndex;
           const more = expandedExamples[key] ?? false;
           const visibleExamples = more ? focus.examples : focus.examples.slice(0, 1);
-          return <section className="contextualExpression" key={key}>
-            <span className="contextualEyebrow">{copy.focus} {focusIndex + 1} / {scene.focusItems.length}</span>
+          return <section className={tw("contextualExpression")} key={key}>
+            <span className={tw("contextualEyebrow")}>{copy.focus} {focusIndex + 1} / {scene.focusItems.length}</span>
             <h3 lang={document.profile.targetLanguage}>{focus.expression}</h3>
-            <p className="contextualMeaning">{focus.meaning}</p>
-            <div className="contextualEvidence">
+            <p className={tw("contextualMeaning")}>{focus.meaning}</p>
+            <div className={tw("contextualEvidence")}>
               <strong>{copy.context}</strong>
               <p>{focus.contextExplanation}</p>
             </div>
-            {focus.wordNotes.length > 0 && <details className="contextualWordNotes">
-              <summary>{copy.words}</summary>
+            {focus.wordNotes.length > 0 && <details className={tw("detailsBase contextualWordNotes")}>
+              <summary className={tw("summaryBase")}>{copy.words}</summary>
               {focus.wordNotes.map((word, index) =>
-                <div className="contextualWord" key={index}>
+                <div className={tw("contextualWord")} key={index}>
                   <strong lang={document.profile.targetLanguage}>{word.surface}</strong>
                   <span>{word.meaning}</span>
                   <p>{word.explanation}</p>
                 </div>)}
             </details>}
-            <div className="contextualExamples">
-              <div className="contextualSectionHeading">
+            <div className={tw("contextualExamples")}>
+              <div className={tw("contextualSectionHeading")}>
                 <h4>{copy.examples}</h4>
-                <span className="time">{focus.examples.length}</span>
+                <span className={tw("time")}>{focus.examples.length}</span>
               </div>
-              <p className="hint">{copy.aiExamples}</p>
+              <p className={tw("hint")}>{copy.aiExamples}</p>
               {visibleExamples.map((example, exampleIndex) => {
                 const exampleKey = key + ":" + exampleIndex;
                 const show = exampleTranslations[exampleKey] ?? false;
-                return <div className="contextualExample" key={exampleKey}>
-                  <p className="contextualExampleSituation">{example.situation}</p>
+                return <div className={tw("contextualExample")} key={exampleKey}>
+                  <p className={tw("contextualExampleSituation")}>{example.situation}</p>
                   {example.dialogue.map((line, index) =>
-                    <div key={index} className="contextualExampleLine">
+                    <div key={index} className={tw("contextualExampleLine")}>
                       <p lang={document.profile.targetLanguage}>{line.text}</p>
-                      {show && <p className="contextualTranslation">{line.translation}</p>}
+                      {show && <p className={tw("contextualTranslation")}>{line.translation}</p>}
                     </div>)}
                   <Button size="sm" variant="ghost" onClick={() => setExampleTranslations(previous => ({
                     ...previous, [exampleKey]: !show,
@@ -431,7 +432,7 @@ export function ContextualSceneReader({
                 </div>;
               })}
               {focus.examples.length > 1 && <Button size="sm" variant="ghost"
-                className="contextualExpandExamples"
+                className={tw("contextualExpandExamples")}
                 onClick={() => setExpandedExamples(previous => ({ ...previous, [key]: !more }))}>
                 {more ? copy.hideExamples : contextualText(copy.anotherExamples, {
                   count: focus.examples.length - 1,
@@ -444,20 +445,20 @@ export function ContextualSceneReader({
       </div>
     </Card>
 
-    {sourceUrl && adapter.id !== "import" && adapter.loop && <div className="contextualPlayer"
+    {sourceUrl && adapter.id !== "import" && adapter.loop && <div className={tw("contextualPlayer")}
       role="region" aria-label={copy.playback}>
-      <div className="contextualPlayerTitle">
-        <span className="time">{copy.selected} · {selectedIndex + 1} / {scene.cueIds.length}</span>
+      <div className={tw("contextualPlayerTitle")}>
+        <span className={tw("time")}>{copy.selected} · {selectedIndex + 1} / {scene.cueIds.length}</span>
         <strong lang={document.profile.targetLanguage} title={selectedCue?.originalText}>
           {selectedCue?.originalText}
         </strong>
       </div>
-      <div className="contextualPlayerControls">
+      <div className={tw("contextualPlayerControls")}>
         <Button size="icon" variant="outline" aria-label={copy.previousCue}
           disabled={busy || selectedIndex === 0} onClick={() => void selectCue(scene.cueIds[selectedIndex - 1])}>
           <ChevronLeft aria-hidden="true" />
         </Button>
-        <Button className="contextualPlayerLoop" size="sm"
+        <Button className={tw("contextualPlayerLoop")} size="sm"
           variant={loopingCueId === selectedCueId ? "secondary" : "default"}
           disabled={busy || !supportsCue(selectedCue)}
           aria-pressed={loopingCueId === selectedCueId} onClick={() => void toggleLoop()}>
@@ -475,24 +476,24 @@ export function ContextualSceneReader({
             value: String(rate), label: rate + "×",
           }))} />}
       </div>
-      <Button size="sm" variant="ghost" className="contextualTimeToggle"
+      <Button size="sm" variant="ghost" className={tw("contextualTimeToggle")}
         aria-expanded={calibrationOpen} disabled={busy || !selectedRange}
         onClick={() => setCalibrationOpen(true)}>
         <SlidersHorizontal aria-hidden="true" />{copy.adjustPosition}
       </Button>
-      <dialog className="contextualTimeDialog" ref={calibrationRef}
+      <dialog className={tw("contextualTimeDialog")} ref={calibrationRef}
         aria-labelledby="contextual-time-dialog-title"
         onClose={() => setCalibrationOpen(false)}
         onCancel={() => setCalibrationOpen(false)}>
-        <div className="contextualTimeHeading">
+        <div className={tw("contextualTimeHeading")}>
           <h3 id="contextual-time-dialog-title">{copy.adjustPosition}</h3>
           <Button size="icon" variant="ghost" aria-label={copy.close}
             onClick={() => setCalibrationOpen(false)}><X aria-hidden="true" /></Button>
         </div>
-        <p className="hint">{timing.loopRangeHint}</p>
-        <div className="contextualTimeOptions">
+        <p className={tw("hint")}>{timing.loopRangeHint}</p>
+        <div className={tw("contextualTimeOptions")}>
           <div>
-            <label htmlFor="contextual-repeats">{timing.repeat}</label>
+            <label className={tw("labelBase")} htmlFor="contextual-repeats">{timing.repeat}</label>
             <SelectField id="contextual-repeats" ariaLabel={timing.repeat} value={repeat}
               onValueChange={value => setRepeat(value as Repeat)}
               options={[
@@ -501,7 +502,7 @@ export function ContextualSceneReader({
               ]} />
           </div>
           <div>
-            <label htmlFor="contextual-delay">{timing.delay}</label>
+            <label className={tw("labelBase")} htmlFor="contextual-delay">{timing.delay}</label>
             <SelectField id="contextual-delay" ariaLabel={timing.delay} value={String(delay)}
               onValueChange={value => setDelay(Number(value))}
               options={[0, 1, 2, 3].map(seconds => ({
@@ -509,16 +510,16 @@ export function ContextualSceneReader({
               }))} />
           </div>
         </div>
-        {selectedRange && <div className="contextualTimeBoundaries">
+        {selectedRange && <div className={tw("contextualTimeBoundaries")}>
           {(["start", "end"] as const).map(boundary => {
             const point = boundary === "start" ? selectedRange.startMs : selectedRange.endMs;
             const name = boundary === "start" ? timing.loopStart : timing.loopEnd;
-            return <div className="contextualTimeBoundary" key={boundary}>
-              <div className="contextualTimeBoundaryHeading">
+            return <div className={tw("contextualTimeBoundary")} key={boundary}>
+              <div className={tw("contextualTimeBoundaryHeading")}>
                 <strong>{name}</strong>
                 <output>{formatLoopTimestamp(point)}</output>
               </div>
-              <div className="contextualTimeActions">
+              <div className={tw("contextualTimeActions")}>
                 <Button size="sm" variant="outline" disabled={busy}
                   aria-label={name + " " + timing.loopEarlier}
                   onClick={() => void updateRange(boundary, point - 500)}>−0.5s</Button>
@@ -537,9 +538,9 @@ export function ContextualSceneReader({
             {timing.loopRangeResetButton}
           </Button>
         </div>}
-        {status && <p className="hint" role="status">{status}</p>}
+        {status && <p className={tw("hint")} role="status">{status}</p>}
       </dialog>
-      {status && <p className="contextualPlayerStatus" role="status">{status}</p>}
+      {status && <p className={tw("contextualPlayerStatus")} role="status">{status}</p>}
     </div>}
   </div>;
 }
