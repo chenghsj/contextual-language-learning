@@ -119,8 +119,7 @@ export async function runCustomConfig(config: CustomAgentConfig, settings: Agent
 export async function generateCustomAgent(settings: AgentSettings, prompt: string, signal: AbortSignal): Promise<unknown> {
   return runCustomConfig(await getCustomAgent(settings.provider), settings, prompt, signal);
 }
-export async function testCustomAgent(id: string, modelId: string): Promise<string> {
-  const config = await getCustomAgent(id);
+export async function testCustomConfig(config: CustomAgentConfig, modelId: string): Promise<string> {
   const result = await runCustomConfig(config, { provider: id, modelId },
     'Return exactly one JSON object: {"customAgentTest":"ok"}. Do not include Markdown.', new AbortController().signal, true);
   if (!result || typeof result !== "object" || Array.isArray(result)) throw new Error("Custom Agent test did not return JSON.");

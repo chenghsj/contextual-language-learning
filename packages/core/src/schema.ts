@@ -216,7 +216,7 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("customAgentList"), id: z.string().uuid() }),
   z.object({ type: z.literal("customAgentSave"), id: z.string().uuid(), config: CustomAgentConfigSchema }),
   z.object({ type: z.literal("customAgentRemove"), id: z.string().uuid(), agentId: z.string().regex(/^custom-[a-f0-9]{24}$/) }),
-  z.object({ type: z.literal("customAgentTest"), id: z.string().uuid(), agentId: z.string().regex(/^custom-[a-f0-9]{24}$/),
+  z.object({ type: z.literal("customAgentTest"), id: z.string().uuid(), config: CustomAgentConfigSchema,
     modelId: z.string().max(120) }),
   z.object({ type: z.literal("customAgentProbe"), id: z.string().uuid(),
     executable: z.string().min(1).max(1024) }),
