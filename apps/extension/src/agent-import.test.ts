@@ -18,6 +18,27 @@ test("fixed BYO prompt explains placeholders without collecting credentials", ()
   assert.match(AGENT_CONFIG_PROMPT, /"missing": \[/);
   assert.doesNotMatch(AGENT_CONFIG_PROMPT, /Determine the actual executable.*--help/);
 });
+test("Codex documented final-message file transport is not mistaken for JSONL events", () => {
+  assert.match(AGENT_CONFIG_PROMPT, /If YOU ARE Codex CLI/);
+  assert.match(AGENT_CONFIG_PROMPT, /--output-last-message/);
+  assert.match(AGENT_CONFIG_PROMPT, /LAST ASSISTANT MESSAGE/);
+  assert.match(AGENT_CONFIG_PROMPT, /Do not add "--json"/);
+  assert.match(AGENT_CONFIG_PROMPT, /Do not invent "modelListArgs" for Codex/);
+  assert.match(AGENT_CONFIG_PROMPT, /The extension checks that the resulting message is valid JSON/);
+  const documented = {
+    label: "Codex CLI",
+    executable: "codex",
+    args: ["exec", "--sandbox", "read-only", "--skip-git-repo-check",
+      "--output-last-message", "{output}", "-"],
+    promptMode: "stdin", outputMode: "file-json",
+    modelArgument: "--model", profileEnvVar: "CODEX_HOME",
+  };
+  assert.deepEqual(parseAgentImport(JSON.stringify(documented)), documented);
+  assert.ok(AGENT_CONFIG_PROMPT.includes(
+    '"args": ["exec", "--sandbox", "read-only", "--skip-git-repo-check", "--output-last-message", "{output}", "-"]'
+  ));
+});
+
 test("import accepts a JSON object and fenced JSON", () => {
   assert.equal(parseAgentImport(JSON.stringify(config)).executable,"codex");
   const fence=String.fromCharCode(96).repeat(3);
