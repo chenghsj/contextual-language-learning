@@ -60,7 +60,10 @@ existing completed lesson keeps its original provider metadata and can still be
 read or exported. A prior built-in queued/waiting/failed job is retained in task
 history but cannot resume; import a CLI configuration and generate a new lesson.
 Updating from an older release requires installing the updated Native Host once.
-Adding or removing imported Agents afterward does not change Host registration.
+The extension checks an explicit `imported-only` Host capability as well as its
+version: an older Host with the same version string is still rejected and
+prompted to update. Adding or removing imported Agents afterward does not
+change Host registration.
 
 ## Features
 

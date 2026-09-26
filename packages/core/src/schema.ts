@@ -264,7 +264,7 @@ export const LearningDocumentSchema = z.discriminatedUnion("schemaVersion", [
 export type LearningDocument = z.infer<typeof LearningDocumentSchema>;
 
 export interface AgentModel { id: string; label: string }
-export type AgentModelSource = "cli" | "aliases" | "unavailable";
+export type AgentModelSource = "cli" | "unavailable";
 export interface AgentProfile { id: string; provider: string; label: string; directory: string }
 
 export const HostRequestSchema = z.discriminatedUnion("type", [

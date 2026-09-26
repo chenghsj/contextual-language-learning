@@ -71,9 +71,12 @@ the old checkpoint and completed documents. Users can create a new lesson
 after importing their CLI JSON; no job is silently re-assigned.
 
 Host setup/status handles registration and version compatibility across
-macOS, Windows and Linux and Chrome, Edge and Chromium. Updating an older
-Host version requires installing the new Host once; future Agent imports
-never change Host registration or require reinstalling it.
+macOS, Windows and Linux and Chrome, Edge and Chromium. The health response
+explicitly advertises `agentMode: "imported-only"`. A newer extension refuses
+generation and Agent mutation when connected to a Host without that capability,
+even when an older Host reports the same package version. Updating an older
+Host requires installing the new Host once; future Agent imports never change
+Host registration or require reinstalling it.
 
 No plugin code is loaded dynamically from a webpage, subtitle or model
 response. Imported JSON is configuration data, not executable JavaScript.

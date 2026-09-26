@@ -32,7 +32,7 @@ Automated CI covers TypeScript, unit tests, extension packaging and Native Messa
 ## Native Host / Agent / publishing
 
 1. On macOS, Windows and Linux, extract each matching OS Host ZIP; verify `dist/native-host.mjs`, `scripts/install-host.mjs` and its platform helpers. Load the extension into Chrome and Edge, install the Host for the **current extension ID**, then check Host/CLI diagnostics.
-   - Confirm Chrome and Edge have separate manifest/registry locations. Changing extension ID must require registration of the new ID.
+   - Confirm Chrome and Edge have separate manifest/registry locations. Changing extension ID must require registration of the new ID. A same-version older Host lacking `agentMode: "imported-only"` must show an update prompt and block generation/import; replacing the Host clears this gate.
    - On Windows, confirm per-user HKCU registration, PowerShell/.NET compilation of the native `.exe`, and raw Native Messaging health/duplicate protocol through that executable. Test a path containing spaces and non-ASCII characters, and an npm-installed Agent CLI shim. No user text should be passed through `cmd.exe`.
    - On Linux, verify XDG_CONFIG_HOME/XDG_DATA_HOME paths, `launch.sh` executable permissions, and zenity/kdialog folder selection. Try both GNOME and KDE where available; missing GUI pickers must fail with a useful message.
    - On macOS, confirm existing Host storage and Chrome manifest paths remain compatible.
