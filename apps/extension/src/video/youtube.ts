@@ -19,6 +19,16 @@ export const youtubeAdapter: VideoAdapter = {
   async seek(url, startMs) {
     await sendToVideo(youtubeAdapter, url, { type: "YOUTUBE_SEEK", timeMs: startMs }, true);
   },
+  async availableSubtitleTracks(url) {
+    const videoId = videoIdFromUrl(url);
+    if (!videoId) throw new Error("Open a supported YouTube watch page first.");
+    const result = await sendToVideo<{
+      ok: boolean; error?: string; status?: "available" | "unknown";
+      tracks?: { language: string; kind: "manual" | "auto" }[];
+    }>(youtubeAdapter, url, { type: "YOUTUBE_CAPTION_TRACKS_GET", videoId });
+    return { status: result.status === "available" ? "available" as const : "unknown" as const,
+      tracks: result.tracks ?? [] };
+  },
   async fetchSubtitles(url, language) {
     const videoId = videoIdFromUrl(url);
     if (!videoId) throw new Error("Open a supported YouTube watch page first.");
