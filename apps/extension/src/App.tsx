@@ -1964,7 +1964,8 @@ export default function App() {
           <Button variant="outline" className="secondary" onClick={() => setPage("create")}>{t("create")}</Button>
         </Card> : document.schemaVersion === 3 ? <ContextualSceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
-          repeat={repeat} delay={delay} playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
+          repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
+          playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
           onError={setError} onDownload={format => downloadDocument(document, format)}
         /> : document.schemaVersion === 2 ? <SceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
