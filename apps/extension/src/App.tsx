@@ -5,7 +5,7 @@ import {
   parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
   type BackupSettings, type Destination, type DriveAccount, type DriveLessonSummary, type LessonSummary, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
-  type LearningProfile, type SubtitleCue,
+  type LearningLanguage, type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
 import { titleForVideoTab } from "./video/metadata";
@@ -13,6 +13,10 @@ import { detectCurrentVideoMetadata, metadataSourceSafety } from "./video/metada
 import { videoMetadataMessages } from "./i18n/video-metadata";
 import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
 import { needsVideoReaderReload } from "./video/reader-health";
+import {
+  captionCacheKey, isCurrentCaption, subtitleLanguageMatches, videoSourceKey,
+  type CaptionProvenance,
+} from "./video/caption-provenance";
 import {
   cuePlaybackStart, cuePlaybackWindow,
   assertVideoReaderReady, findVideoTab, getActiveWindowTab, openOrFocusVideoTab,
@@ -88,6 +92,7 @@ export default function App() {
   const [fileName, setFileName] = useState("");
   const [subtitleBusy, setSubtitleBusy] = useState(false);
   const [subtitleStatus, setSubtitleStatus] = useState("");
+  const [captionSource, setCaptionSource] = useState<CaptionProvenance | null>(null);
   const [videoRecoveryUrl, setVideoRecoveryUrl] = useState("");
   const [reloadingVideoTab, setReloadingVideoTab] = useState(false);
   const [metadataBusy, setMetadataBusy] = useState(false);
@@ -174,9 +179,14 @@ export default function App() {
   const lastSelectedVideoKeyRef = useRef<string | null>(null);
   const manuallyEditedTitleRef = useRef(false);
   const metadataRequestRef = useRef(0);
+  const captionRequestRef = useRef(0);
+  const captionDraftsRef = useRef(new Map<string, {
+    raw: string; fileName: string; source: CaptionProvenance;
+  }>());
   const catalogLoadIdRef = useRef(0);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
+  const captionsReady = !!raw.trim() && isCurrentCaption(captionSource, profile.targetLanguage, sourceUrl);
   const platform = getVideoAdapter(sourceUrl).id;
   // A valid saved source remains actionable when the Side Panel temporarily loses its tab context.
   const subtitlePlatform = getVideoAdapter(activeVideo?.url ?? sourceUrl).id;
@@ -395,6 +405,8 @@ export default function App() {
       ? adapter.id + ":" + adapter.getVideoId(activeVideo.url) : null;
     if (key === lastSelectedVideoKeyRef.current) return;
     lastSelectedVideoKeyRef.current = key;
+    ++captionRequestRef.current;
+    setSubtitleBusy(false);
     setError("");
     setSubtitleStatus("");
   }, [activeVideo?.url]);
@@ -800,6 +812,12 @@ export default function App() {
 
   function startGeneration(): void {
     if (checking || generating) return;
+    if (subtitleBusy || !captionsReady) {
+      setError(subtitleMessage(subtitleUi.languageNotReady, {
+        language: learningLanguageName(profile.targetLanguage, uiLocale),
+      }));
+      return;
+    }
     setError("");
     cancelDuplicate();
     setPublishedLocation("");
@@ -1049,15 +1067,62 @@ export default function App() {
     }
   }
 
-  async function fetchCurrentSubtitles(): Promise<void> {
-    if (subtitleBusy || metadataBusy) return;
+  function chooseLearningLanguage(next: string): void {
+    const language = LEARNING_LANGUAGES.find(value => value === next);
+    if (!language || language === profile.targetLanguage || checking || generating) return;
+    ++captionRequestRef.current; // Supersede a previous language/video request immediately.
+    setSubtitleBusy(false);
+    setProfile(current => ({
+      ...current, targetLanguage: language, level: defaultLevelForTargetLanguage(language),
+    }));
+    setError("");
+    setVideoRecoveryUrl("");
+    const cached = captionDraftsRef.current.get(captionCacheKey(sourceUrl, language));
+    if (cached) {
+      setRaw(cached.raw);
+      setFileName(cached.fileName);
+      setCaptionSource(cached.source);
+    } else {
+      // Keep the old draft visible; its source-language identity prevents generation.
+      setCaptionSource(null);
+    }
+    if (cached?.source.origin === "manual") {
+      setSubtitleStatus(subtitleMessage(subtitleUi.manualLanguageReady, {
+        language: learningLanguageName(language, uiLocale),
+      }));
+      return;
+    }
+    if (!cached && captionSource?.origin === "manual" && raw.trim()) {
+      setSubtitleStatus(subtitleMessage(subtitleUi.manualLanguageChanged, {
+        language: learningLanguageName(language, uiLocale),
+      }));
+      return;
+    }
+    if (!getVideoAdapter(activeVideo?.url ?? sourceUrl).fetchSubtitles) {
+      setSubtitleStatus(subtitleMessage(subtitleUi.languageNotReady, {
+        language: learningLanguageName(language, uiLocale),
+      }));
+      return;
+    }
+    void fetchCurrentSubtitles(language, true);
+  }
+
+  async function fetchCurrentSubtitles(
+    language: LearningLanguage = profile.targetLanguage, replacing = false,
+  ): Promise<void> {
+    if ((!replacing && (subtitleBusy || metadataBusy)) || checking || generating) return;
+    const request = ++captionRequestRef.current;
     let attemptedUrl = "";
+    setCaptionSource(null);
     setSubtitleBusy(true);
-    setSubtitleStatus("");
+    setSubtitleStatus(subtitleMessage(subtitleUi.loadingLanguage, {
+      language: learningLanguageName(language, uiLocale),
+    }));
     setVideoRecoveryUrl("");
     setError("");
     try {
       const selected = await getActiveWindowTab();
+      if (request !== captionRequestRef.current) return;
       const selectedUrl = selected?.url ?? "";
       const currentAdapter = getVideoAdapter(selectedUrl);
       const formUrl = sourceUrl.trim();
@@ -1070,24 +1135,39 @@ export default function App() {
       const url = currentAdapter.fetchSubtitles ? selectedUrl : formUrl;
       const adapter = getVideoAdapter(url);
       if (!adapter.fetchSubtitles) throw new Error(subtitleUi.unavailable);
-      // Revalidate against a real, matching watch tab even when using the form URL
-      // as a fallback. Never send a subtitle request to an unrelated active tab.
       const tab = await findVideoTab(adapter, url);
+      if (request !== captionRequestRef.current) return;
       const actualUrl = tab.url ?? url;
       attemptedUrl = actualUrl;
       await assertVideoReaderReady(tab, adapter);
-      const fetched = await adapter.fetchSubtitles(actualUrl, profile.targetLanguage);
+      if (request !== captionRequestRef.current) return;
+      const fetched = await adapter.fetchSubtitles(actualUrl, language);
+      if (request !== captionRequestRef.current) return;
+      if (!subtitleLanguageMatches(language, fetched.language)) {
+        throw new Error(subtitleMessage(subtitleUi.languageMismatch, {
+          requested: learningLanguageName(language, uiLocale), actual: fetched.language,
+        }));
+      }
       const parsed = parseSubtitles(fetched.text);
       if (!parsed.length || parsed.length > 3_000 ||
         parsed.reduce((sum, cue) => sum + cue.originalText.length, 0) > 220_000) {
         throw new Error("The current video did not return a usable transcript within the lesson size limit.");
       }
-      // Never combine cues from a previous video with the currently selected video.
+      const sourceKey = videoSourceKey(actualUrl);
+      if (!sourceKey) throw new Error(subtitleUi.sourceMismatch);
       const fromDifferentVideo = formAdapter.id !== adapter.id ||
         formAdapter.getVideoId(formUrl) !== adapter.getVideoId(actualUrl);
       const videoTitle = await titleForVideoTab(tab, adapter);
+      if (request !== captionRequestRef.current) return;
+      const source: CaptionProvenance = {
+        sourceKey, language, origin: "video", actualLanguage: fetched.language,
+      };
+      captionDraftsRef.current.set(captionCacheKey(actualUrl, language), {
+        raw: fetched.text, fileName: "", source,
+      });
       if (fromDifferentVideo) manuallyEditedTitleRef.current = false;
       setRaw(fetched.text);
+      setCaptionSource(source);
       setFileName("");
       setSourceUrl(actualUrl);
       if (videoTitle && !manuallyEditedTitleRef.current) setTitle(videoTitle);
@@ -1096,11 +1176,12 @@ export default function App() {
         count: parsed.length, language: fetched.language,
       }));
     } catch (cause) {
+      if (request !== captionRequestRef.current) return;
       const message = cause instanceof Error ? cause.message : subtitleUi.unavailable;
       if (attemptedUrl && needsVideoReaderReload(message)) setVideoRecoveryUrl(attemptedUrl);
-      setError(message);
+      setSubtitleStatus(message);
     } finally {
-      setSubtitleBusy(false);
+      if (request === captionRequestRef.current) setSubtitleBusy(false);
     }
   }
 
