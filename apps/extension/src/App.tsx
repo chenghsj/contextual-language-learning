@@ -1664,7 +1664,7 @@ export default function App() {
           {selectedAgentInfo?.supportsAccountProfiles && <section className="agentProfileSection">
             <div className="agentProfileHeading">
               <strong>{t("useOtherCliAccount")}</strong>
-              <SettingInfo label={t("useOtherCliAccount")} infoLabel={t("infoLabel")}
+              <SettingInfo label={t("useOtherCliAccount")} infoLabel={settingsCopy.infoLabel}
                 explanation={t("agentProfileInfo")} />
             </div>
             {(savedAgentProfiles.some(item => item.provider === agent.provider) || !!agent.accountConfigDir) &&
