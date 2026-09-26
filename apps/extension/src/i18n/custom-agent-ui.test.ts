@@ -10,6 +10,7 @@ test("BYO Agent onboarding copy is complete in five locales", () => {
     for (const key of keys) {
       assert.ok((agentOnboardingCopy[locale] as Record<string, string>)[key]?.length);
     }
+    assert.ok(agentOnboardingCopy[locale].testing.trim());
   }
 });
 test("BYO UI uses real Host import/edit/probe/test/remove actions", async () => {
@@ -19,4 +20,13 @@ test("BYO UI uses real Host import/edit/probe/test/remove actions", async () => 
   assert.match(source, /parseAgentImport\(json\)/);
   assert.match(source, /window\.confirm\(ui\.testWarning\)/);
   assert.match(source, /testSavedAgent\(agent\)/);
+  assert.match(source, /setTesting\("draft"\)/);
+  assert.match(source, /setTesting\(agent\.id\)/);
+  assert.match(source, /finally \{ setTesting\(null\); setBusy\(false\); \}/);
+  assert.match(source, /aria-busy=\{testing === agent\.id\}/);
+  assert.match(source, /aria-busy=\{testing === "draft"\}/);
+  assert.match(source, /testing === agent\.id \? ui\.testing : ui\.test/);
+  assert.match(source, /testing === "draft" \? ui\.testing : ui\.test/);
+  assert.match(source, /motion-reduce:animate-none/);
+  assert.match(source, /aria-live="polite"/);
 });

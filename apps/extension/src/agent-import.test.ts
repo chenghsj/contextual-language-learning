@@ -9,6 +9,14 @@ test("fixed BYO prompt explains placeholders without collecting credentials", ()
   assert.match(AGENT_CONFIG_PROMPT, /{output}/);
   assert.match(AGENT_CONFIG_PROMPT, /modelListArgs/);
   assert.match(AGENT_CONFIG_PROMPT, /credentials/);
+  assert.match(AGENT_CONFIG_PROMPT, /Do NOT use tools, run shell commands/);
+  assert.match(AGENT_CONFIG_PROMPT, /read documentation or --help/);
+  assert.match(AGENT_CONFIG_PROMPT, /Do not execute anything/);
+  assert.match(AGENT_CONFIG_PROMPT, /Return exactly ONE valid JSON object/);
+  assert.match(AGENT_CONFIG_PROMPT, /"promptMode": "argument"/);
+  assert.match(AGENT_CONFIG_PROMPT, /"outputMode": "stdout-json"/);
+  assert.match(AGENT_CONFIG_PROMPT, /"missing": \[/);
+  assert.doesNotMatch(AGENT_CONFIG_PROMPT, /Determine the actual executable.*--help/);
 });
 test("import accepts a JSON object and fenced JSON", () => {
   assert.equal(parseAgentImport(JSON.stringify(config)).executable,"codex");
