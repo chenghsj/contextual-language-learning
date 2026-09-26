@@ -11,18 +11,6 @@ import { findExecutable, profileEnvironment, runCLI } from "./process";
 
 const registryFile = () => join(appConfigRoot(), "custom-agents.json");
 const registrySchema = z.array(CustomAgentConfigSchema).max(20);
-export const CUSTOM_AGENT_TEMPLATES = [
-  { id: "gemini", label: "Gemini CLI", executable: "gemini",
-    args: ["--output-format", "json"], promptMode: "stdin", outputMode: "stdout-json",
-    modelArgument: "--model" },
-  { id: "argument-json", label: "Generic JSON CLI (prompt argument)", executable: "",
-    args: ["--prompt", "{prompt}"], promptMode: "argument", outputMode: "stdout-json" },
-  { id: "stdin-json", label: "Generic JSON CLI (stdin)", executable: "",
-    args: [], promptMode: "stdin", outputMode: "stdout-json" },
-  { id: "file-json", label: "Generic JSON CLI (output file)", executable: "",
-    args: ["--output", "{output}"], promptMode: "stdin", outputMode: "file-json" },
-] as const;
-
 export function newCustomAgentId(): string {
   return "custom-" + randomBytes(12).toString("hex");
 }

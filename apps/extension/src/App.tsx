@@ -706,7 +706,7 @@ export default function App() {
     return summary.status === "queued" || summary.status === "running"
       ? t("statusProgress", { completed: summary.completed, total: summary.total })
       : t("jobProgress", {
-          provider: agentDisplayName(summary.provider), status: t(jobStatusKeys[summary.status]),
+          provider: agentDisplayName(summary.provider, agentCatalog.find(item => item.id === summary.provider)?.label), status: t(jobStatusKeys[summary.status]),
           completed: summary.completed, total: summary.total,
         });
   }
@@ -1569,7 +1569,7 @@ export default function App() {
                 <strong title={job.sourceTitle}>{job.sourceTitle}</strong>
                 <Badge>{t(jobStatusKeys[job.status])}</Badge>
               </div>
-              <p className="hint">{agentDisplayName(job.provider)} · {job.completed}/{job.total}
+              <p className="hint">{agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)} · {job.completed}/{job.total}
                 {job.backup && " · " + t(job.backup.status === "backed-up"
                   ? "backupSaved" : ["pending", "uploading"].includes(job.backup.status)
                     ? "backupProcessing" : "backupFailedMessage")}</p>
