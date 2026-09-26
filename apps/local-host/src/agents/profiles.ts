@@ -5,12 +5,13 @@ import { isAbsolute, join, resolve, sep } from "node:path";
 import { appConfigRoot } from "../platform/paths";
 import { z } from "zod";
 import type { AgentProfile } from "@immersive/core";
+import { getCustomAgent } from "./custom";
 
 const registryRoot = () => appConfigRoot();
 const registryFile = () => join(registryRoot(), "agent-profiles.json");
 const profileSchema = z.array(z.object({
   id: z.string().uuid(),
-  provider: z.enum(["claude", "codex"]),
+  provider: z.string().regex(/^(?:claude|codex|custom-[a-f0-9]{24})$/),
   label: z.string().min(1).max(80),
   directory: z.string().min(1).max(1024),
 })).max(30);
@@ -26,7 +27,10 @@ export async function listAgentProfiles(): Promise<AgentProfile[]> {
 
 /** Save names and paths only. Never read, copy, export or serialize CLI credentials. */
 export async function saveAgentProfile(provider: string, label: string, directory: string): Promise<AgentProfile[]> {
-  if (provider !== "claude" && provider !== "codex") throw new Error("This Agent has no isolated CLI profile support.");
+  if (provider !== "claude" && provider !== "codex" &&
+      !(provider.startsWith("custom-") && (await getCustomAgent(provider)).profileEnvVar)) {
+    throw new Error("This Agent has no isolated CLI profile support.");
+  }
   const name = label.trim();
   if (!name || name.length > 80) throw new Error("Profile name must be 1–80 characters.");
   if (!isAbsolute(directory)) throw new Error("Profile directory must be an absolute path inside your home folder.");

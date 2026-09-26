@@ -29,6 +29,34 @@ export const LearningProfileSchema = z.object({
 });
 export type LearningProfile = z.infer<typeof LearningProfileSchema>;
 
+/** Configured by the user, stored only by the local Native Host. Never contains credentials. */
+export const CustomAgentConfigSchema = z.object({
+  id: z.string().regex(/^custom-[a-f0-9]{24}$/),
+  label: z.string().trim().min(1).max(80),
+  executable: z.string().trim().min(1).max(1024).refine(value => !/[\r\n\0]/.test(value)),
+  args: z.array(z.string().max(1024).refine(value => !/[\r\n\0]/.test(value))).max(32),
+  promptMode: z.enum(["argument", "stdin"]),
+  outputMode: z.enum(["stdout-json", "file-json"]),
+  modelArgument: z.string().regex(/^--?[A-Za-z][A-Za-z0-9-]*$/).max(64).optional(),
+  modelListArgs: z.array(z.string().max(128).regex(/^[^\r\n\0{}]*$/)).max(8).optional(),
+  profileEnvVar: z.string().regex(/^[A-Z][A-Z0-9_]{0,55}(?:_HOME|_CONFIG_DIR)$/).optional(),
+}).superRefine((config, ctx) => {
+  const hasPrompt = config.args.some(arg => arg.includes("{prompt}"));
+  const hasOutput = config.args.some(arg => arg.includes("{output}"));
+  if (config.promptMode === "argument" && !hasPrompt)
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Argument mode requires {prompt} in argv" });
+  if (config.promptMode === "stdin" && hasPrompt)
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "stdin mode must not duplicate {prompt} in argv" });
+  if (config.outputMode === "file-json" && !hasOutput)
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "File mode requires {output} in argv" });
+  if (config.outputMode === "stdout-json" && hasOutput)
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "stdout mode must not reference {output}" });
+  if (config.args.some(arg => [...arg.matchAll(/\{([^{}]+)\}/g)].some(match =>
+    match[1] !== "prompt" && match[1] !== "output")))
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Unknown argv placeholder" });
+});
+export type CustomAgentConfig = z.infer<typeof CustomAgentConfigSchema>;
+
 export const AgentSettingsSchema = z.object({
   provider: z.string().regex(/^[a-z][a-z0-9-]{0,39}$/),
   modelId: z.string().max(120),
@@ -179,14 +207,21 @@ export type LearningDocument = z.infer<typeof LearningDocumentSchema>;
 
 export interface AgentModel { id: string; label: string }
 export type AgentModelSource = "cli" | "aliases" | "unavailable";
-export interface AgentProfile { id: string; provider: "claude" | "codex"; label: string; directory: string }
+export interface AgentProfile { id: string; provider: string; label: string; directory: string }
 
 export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("health"), id: z.string().uuid() }),
   z.object({ type: z.literal("agentModels"), id: z.string().uuid(), settings: AgentSettingsSchema }),
   z.object({ type: z.literal("agentProfiles"), id: z.string().uuid() }),
+  z.object({ type: z.literal("customAgentList"), id: z.string().uuid() }),
+  z.object({ type: z.literal("customAgentSave"), id: z.string().uuid(), config: CustomAgentConfigSchema }),
+  z.object({ type: z.literal("customAgentRemove"), id: z.string().uuid(), agentId: z.string().regex(/^custom-[a-f0-9]{24}$/) }),
+  z.object({ type: z.literal("customAgentTest"), id: z.string().uuid(), agentId: z.string().regex(/^custom-[a-f0-9]{24}$/),
+    modelId: z.string().max(120) }),
+  z.object({ type: z.literal("customAgentProbe"), id: z.string().uuid(),
+    executable: z.string().min(1).max(1024) }),
   z.object({ type: z.literal("agentProfileSave"), id: z.string().uuid(),
-    provider: z.enum(["claude", "codex"]), label: z.string().min(1).max(80),
+    provider: z.string().regex(/^(?:claude|codex|custom-[a-f0-9]{24})$/), label: z.string().min(1).max(80),
     directory: z.string().min(1).max(1024) }),
   z.object({ type: z.literal("agentProfileRemove"), id: z.string().uuid(), profileId: z.string().uuid() }),
   z.object({ type: z.literal("generate"), id: z.string().uuid(), payload: GenerationRequestSchema,
@@ -218,12 +253,16 @@ export interface AgentInfo {
   label: string;
   installed: boolean;
   supportsAccountProfiles: boolean;
+  custom?: boolean;
 }
 
 export type HostMessage =
   | { id: string; type: "health"; installed: Record<string, boolean>; agents: AgentInfo[]; version?: string }
   | { id: string; type: "agentModels"; models: AgentModel[]; source: AgentModelSource; notice?: string }
   | { id: string; type: "agentProfiles"; profiles: AgentProfile[] }
+  | { id: string; type: "customAgentList"; agents: CustomAgentConfig[] }
+  | { id: string; type: "customAgentTested"; label: string }
+  | { id: string; type: "customAgentProbed"; installed: boolean; resolved?: string }
   | { id: string; type: "progress"; jobId: string; completed: number; total: number }
   | { id: string; type: "job"; job: import("./jobs").JobSummary }
   | { id: string; type: "jobs"; jobs: import("./jobs").JobSummary[] }

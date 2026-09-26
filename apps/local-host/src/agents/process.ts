@@ -62,7 +62,7 @@ export function cliInvocation(command: string, args: readonly string[]): {
 }
 
 export async function profileEnvironment(
-  settings: AgentSettings, environmentVariable: "CLAUDE_CONFIG_DIR" | "CODEX_HOME" | null,
+  settings: AgentSettings, environmentVariable: string | null,
 ): Promise<NodeJS.ProcessEnv> {
   const env = { ...process.env };
   if (!settings.accountConfigDir) return env;
@@ -83,16 +83,25 @@ export async function profileEnvironment(
 
 export function runCLI(
   command: string, args: readonly string[], env: NodeJS.ProcessEnv, cwd: string, signal: AbortSignal,
+  options: { stdin?: string; timeoutMs?: number } = {},
 ): Promise<string> {
   return new Promise((resolveOutput, reject) => {
     let stdout = "";
     let stderr = "";
     let done = false;
     let exceeded = false;
+    let timedOut = false;
     const { executable, argv } = cliInvocation(command, args);
     const child = spawn(executable, argv, {
-      cwd, env, signal, stdio: ["ignore", "pipe", "pipe"], shell: false, windowsHide: true,
+      cwd, env, signal, stdio: [options.stdin === undefined ? "ignore" : "pipe", "pipe", "pipe"],
+      shell: false, windowsHide: true,
     });
+    const timer = options.timeoutMs
+      ? setTimeout(() => { timedOut = true; child.kill(); }, options.timeoutMs) : null;
+    if (options.stdin !== undefined) {
+      child.stdin?.on("error", () => { /* A CLI may close stdin early; close handles its exit. */ });
+      child.stdin?.end(options.stdin);
+    }
     child.stdout.setEncoding("utf8");
     child.stderr.setEncoding("utf8");
     child.stdout.on("data", (data: string) => {
@@ -106,12 +115,14 @@ export function runCLI(
       stderr = (stderr + data).slice(-16_000);
     });
     child.on("error", error => {
-      if (!done) { done = true; reject(error); }
+      if (!done) { done = true; if (timer) clearTimeout(timer); reject(error); }
     });
     child.on("close", code => {
       if (done) return;
       done = true;
-      if (exceeded) reject(new Error("CLI output exceeded the size limit"));
+      if (timer) clearTimeout(timer);
+      if (timedOut) reject(new Error("Custom CLI timed out"));
+      else if (exceeded) reject(new Error("CLI output exceeded the size limit"));
       else if (code !== 0) reject(new Error((stderr || "CLI exited with status " + code).slice(-1200)));
       else resolveOutput(stdout);
     });
