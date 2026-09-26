@@ -6,9 +6,10 @@ import { getAgentCatalog } from "./agents";
 import { discoverAgentModels } from "./agents/metadata";
 import { listAgentProfiles, saveAgentProfile, removeAgentProfile } from "./agents/profiles";
 import { findLocalDuplicates, requestKey } from "./duplicates";
-import { findDriveDuplicates } from "./drive/api";
+import { findDriveDuplicates, listDriveLessons, getDriveDocument } from "./drive/api";
 import { accessTokenFor, connectGoogleAccount, disconnectGoogleAccount, googleConfigured, listGoogleAccounts } from "./drive/oauth";
 import { JobManager } from "./jobs/manager";
+import { toMarkdown } from "./generation/markdown";
 import { encodeMessage, NativeFramer } from "./protocol";
 import { localStoragePorts } from "./storage/file";
 import { chooseLocalFolder, validateFolder } from "./storage/folders";
@@ -120,6 +121,50 @@ async function handle(input: unknown): Promise<void> {
       case "listJobs":
         reply({ id: request.id, type: "jobs", jobs: await manager.list() });
         break;
+      case "listLessons": {
+        const [documents, summaries] = await Promise.all([
+          storage.documents.list(500), storage.jobs.list(5000),
+        ]);
+        const byId = new Map(summaries.map(summary => [summary.documentId, summary]));
+        reply({ id: request.id, type: "lessons", lessons: documents.map(doc => ({
+          documentId: doc.id, title: doc.source.title, createdAt: doc.createdAt,
+          targetLanguage: doc.profile.targetLanguage, level: doc.profile.level,
+          ...(byId.get(doc.id)?.backup ? { backup: byId.get(doc.id)!.backup } : {}),
+        })) });
+        break;
+      }
+      case "listDriveLessons":
+        reply({ id: request.id, type: "driveLessons", lessons: await listDriveLessons(request.accountId) });
+        break;
+      case "restoreDriveLesson": {
+        const document = await getDriveDocument(request.accountId, request.documentId);
+        const existing = await storage.documents.get(document.id);
+        if (existing && JSON.stringify(existing) !== JSON.stringify(document)) {
+          throw new Error("本地已有不同版本的相同教材，請先處理衝突");
+        }
+        if (!existing) await storage.documents.save(document, toMarkdown(document));
+        reply({ id: request.id, type: "driveRestored", documentId: document.id });
+        break;
+      }
+      case "backupExisting": {
+        await accessTokenFor(request.accountId);
+        let count = 0;
+        for (const summary of await storage.jobs.list(5000)) {
+          if (summary.status !== "completed" || !summary.documentId ||
+              summary.publication?.status !== "published" ||
+              (summary.backup?.status === "backed-up" && summary.backup.accountId === request.accountId)) continue;
+          await storage.jobs.update(summary.id, current => ({
+            ...current, request: { ...current.request,
+              backup: { enabled: true, accountId: request.accountId } },
+            summary: { ...current.summary,
+              backup: { status: "pending", accountId: request.accountId,
+                updatedAt: new Date().toISOString() }, updatedAt: new Date().toISOString() },
+          }));
+          count++;
+        }
+        reply({ id: request.id, type: "backupsScheduled", count });
+        break;
+      }
       case "resumeBackups":
         await resumePendingBackups(storage);
         reply({ id: request.id, type: "backupsFinished" });
