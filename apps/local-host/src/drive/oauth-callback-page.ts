@@ -1,10 +1,12 @@
 /**
  * Self-contained OAuth callback UI. The Native Host serves this directly over
  * localhost, so it cannot depend on Chrome extension assets or network fonts.
- * shadcn-style Card / Badge / Alert / Button primitives reuse the app's warm
+ * shadcn-style Card / Badge / Alert primitives reuse the app's warm
  * color tokens without loading React inside the Native Messaging process.
  */
 export type OAuthCallbackOutcome = "success" | "error";
+/** Embedded at build time: the localhost OAuth page cannot load Chrome extension assets. */
+const BRAND_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAABgFBMVEXOXEAAAADMVjnVYkb9+vX617n65NL0xq7428mqVVXOWz7ahm7/f3//AADWdVroqI7OWz9/fwDssZrvzsLelYHNWj7PW0DilXnGSi7PW0Ddkn7SXEDQW0HYfGPjnof/VVX57OO/Pz/suqf//wDQWUbQYzf/fwD/fz/KWTvNWz3QWz7LWT7NW0B/f3+qVSraSEjaYUjgZUbgj3IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADbzr8mAAAAgHRSTlP9AP3+/v7+/f0DM/0CAf39uAL+/v7Btf39wv5zMP39A/4E/gEQDgIEE0R1mpICBgcV//4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAF2vLb8AAALqSURBVHjanZaJeqIwEICTmVwUSSq2ghWsq3Xb7r37/g+3kxBudI/5PhVh/mTuwHgv51WyKKvzQIm1F9mHjF+VwcMWeKbPpaqquyW5RIUeyNb8Zb9jV2W3f+NZ1gN0uWeI1wF6tg9qDZBl3+5vaEdm+xIIArLk+aY+QCS+J1kAEv7l5y392nkCGH4mVQISXmG31lwYHGRQJ+qdlBlf8WgQAM6E3AVtLLCDRsBHiiZb8SqqH4yaiVD4y5i8RK0K2uKOJ+yVf/IbAG7EXI4nTCVJUaLXxz1/ZR8ai+Ak1CGdClpnPCDztAkUf2YJ3xIAVoi6nDpcFkoFfalU7UP1yFfkQwCehIEukKxLiy0aoGjuPPKPrAkSAZsIAKYIfZxRk74tmb+Fy0AqVAotgmClTMs093cIWC8ADxQe3W4C1uaSIJXfBsTxCeJ+J1sAOln/ARDiAM0O4pB6v6IP63mUItDEMcRbdRU7AsY7OBZNIsB0PXHVJG2hc5qA9g/uFgGr+6gC1EqZIvLLPvhsdTmn8PjCkLTlJHFkx8O8e2rZ1J6UxodpaJL3VJmh0D8dlk/TUIGUyjFwzF2eh08efp0RpKi1RqQvqRxMnDZTewqh1SGWfOmU79Fd7zSZZPRYfC9oVxTOMXRknYWJSWYstIL3oGDS0frB7WHiCJhuEACpqcLTGKdJlIbT4hjKKaTAluCUZ+3IhyehBqufTAtQTRW2pJ6QGkaJQzJ5mIRQsZKiVJ+UdDTNqAs9sKIxs8VBFwwlpCGYL7VPA8N7GjNxkPnW2uiw8CaKMeRBsJ6+i1BLfpAlcVSykB7qzbQdStboAtNc+2z42qOa9KOSf+U7bCeEE6YfMWgD6EcyNAN/d16Hcf+ObXs96L6027aErtyxGff+QOmGykB/dKiEHeOBQkfWZRv3gKnW+JCLRxaddW8hecOOgxFId3B7aQ/F6bG7ZNX42KXL878d7PHN4Mfie0N1V73MXh3+4+Xkr19/fgN8+jVwJwwNOwAAAABJRU5ErkJggg==";
 
 const styles = `
   :root {
@@ -29,20 +31,16 @@ const styles = `
     background: var(--background); color: var(--foreground);
     line-height: 1.55; -webkit-font-smoothing: antialiased;
   }
-  main { width: min(100%, 490px); }
+  main { width: min(100%, 420px); }
   .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-  .brand-mark {
-    display: grid; place-items: center; width: 38px; height: 38px;
-    border-radius: 12px; background: var(--primary);
-    color: var(--primary-foreground); font-size: 12px; font-weight: 800;
-  }
+  .brand-mark { display: block; width: 34px; height: 34px; object-fit: contain; border-radius: 10px; }
   .brand-name { font-size: 14px; font-weight: 700; letter-spacing: -.015em; }
   .brand-sub { display: block; font-size: 12px; color: var(--muted-foreground); font-weight: 400; }
   [data-slot="card"] {
     overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--card); box-shadow: 0 8px 30px #32271a0c, 0 2px 5px #32271a06;
   }
-  .card-body { padding: clamp(22px, 5vw, 32px); }
+  .card-body { padding: clamp(18px, 5vw, 24px); }
   .topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   [data-slot="badge"] {
     display: inline-flex; align-items: center; gap: 6px; width: fit-content;
@@ -52,46 +50,39 @@ const styles = `
   }
   .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
   .symbol {
-    display: grid; place-items: center; width: 58px; height: 58px;
-    border-radius: 18px; margin-top: 29px;
+    display: grid; place-items: center; width: 40px; height: 40px;
+    border-radius: 12px; margin-top: 16px;
     background: color-mix(in oklch, var(--primary) 12%, var(--card));
     color: var(--primary);
   }
-  .symbol svg { display: none; width: 28px; height: 28px; }
+  .symbol svg { display: none; width: 21px; height: 21px; }
   [data-state="pending"] .symbol .pending-icon,
   [data-state="success"] .symbol .success-icon,
   [data-state="error"] .symbol .error-icon { display: block; }
   [data-state="pending"] .symbol .pending-icon { animation: rotate 1.15s linear infinite; }
-  [data-state="success"] .symbol {
-    background: #edf8f0; color: #197a42;
-  }
+  [data-state="success"] .symbol { display: none; }
   [data-state="error"] .symbol {
     background: #fff0ed; color: #b94131;
   }
-  h1 { margin: 17px 0 8px; font-size: clamp(21px, 5vw, 25px); line-height: 1.3; letter-spacing: -.035em; }
+  h1 { margin: 12px 0 6px; font-size: clamp(20px, 5vw, 23px); line-height: 1.3; letter-spacing: -.035em; }
   .description { margin: 0; color: var(--muted-foreground); font-size: 13px; }
   [data-slot="alert"] {
-    display: flex; align-items: flex-start; gap: 11px; margin-top: 26px;
+    display: flex; align-items: flex-start; gap: 11px; margin-top: 15px;
     padding: 14px; border: 1px solid var(--border); border-radius: 12px;
     background: var(--muted);
   }
   .alert-icon { flex-shrink: 0; width: 17px; height: 17px; margin-top: 2px; color: var(--primary); }
   .alert-heading { font-size: 12px; font-weight: 700; }
   .alert-copy { margin: 3px 0 0; color: var(--muted-foreground); font-size: 12px; }
+  [data-state="pending"] [data-slot="alert"],
+  [data-state="success"] [data-slot="alert"] { display: none; }
   [data-state="error"] [data-slot="alert"] { background: #fff8f6; border-color: #efc8bf; }
   [data-state="error"] .alert-icon { color: #b94131; }
-  .separator { height: 1px; margin: 24px 0 18px; background: var(--border); }
+  .separator { height: 1px; margin: 18px 0 13px; background: var(--border); }
+  [data-state="success"] .separator { display: none; }
+  [data-state="success"] .footer { margin-top: 17px; }
   .footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
   .footnote { margin: 0; font-size: 11px; color: var(--muted-foreground); }
-  [data-slot="button"] {
-    min-height: 36px; padding: 8px 15px; border: 1px solid transparent;
-    border-radius: 10px; background: var(--primary);
-    color: var(--primary-foreground); font: inherit; font-size: 12px;
-    font-weight: 650; cursor: pointer;
-  }
-  [data-slot="button"]:hover { filter: brightness(.96); }
-  [data-slot="button"]:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
-  [data-slot="button"][hidden] { display: none; }
   [data-state="success"] .badge-dot { background: #197a42; }
   [data-state="error"] .badge-dot { background: #b94131; }
   @keyframes rotate { to { transform: rotate(360deg); } }
@@ -133,7 +124,7 @@ export function oauthCallbackPageStart(nonce: string): string {
 <body data-state="pending">
 <main>
   <header class="brand">
-    <span class="brand-mark" aria-hidden="true">IL</span>
+    <img class="brand-mark" src="${BRAND_ICON}" alt="" aria-hidden="true">
     <span class="brand-name">Immersive Learning<span class="brand-sub">Google Drive 帳號連結</span></span>
   </header>
   <section data-slot="card" aria-labelledby="oauth-title">
@@ -160,7 +151,7 @@ export function oauthCallbackPageStart(nonce: string): string {
       <div class="separator"></div>
       <footer class="footer">
         <p class="footnote" id="oauth-footnote">此頁面不會顯示或儲存你的 Google 憑證。</p>
-        <button data-slot="button" id="oauth-close" type="button" hidden>關閉此分頁</button>
+        <span class="footnote" id="oauth-shortcut">完成後按 ⌘W 關閉分頁</span>
       </footer>
     </div>
   </section>
@@ -175,14 +166,14 @@ export function oauthCallbackPageStart(nonce: string): string {
       title: "Google Drive 已連結",
       description: "帳號已驗證，授權已安全儲存在本機。你現在可以使用 Google Drive 自動備份。",
       next: "回到 Immersive Learning 側邊欄，即可看到已連結的 Google 帳號。",
-      footnote: "如果分頁沒有自動關閉，可以手動關閉。",
+      footnote: "連結完成後，可以回到 Immersive Learning 側邊欄。",
       pageTitle: "Google Drive 已連結 · Immersive Learning"
     } : {
       badge: "連結未完成",
       title: "無法完成 Google 帳號連結",
       description: "授權過程未能完成。你的本地教材不受影響。",
       next: "請返回 Immersive Learning 側邊欄查看具體錯誤，再重新連結。",
-      footnote: "如果分頁無法自動關閉，可以手動關閉。",
+      footnote: "返回側邊欄查看錯誤與重新連結方式。",
       pageTitle: "Google Drive 連結失敗 · Immersive Learning"
     };
     document.body.dataset.state = state;
@@ -191,12 +182,8 @@ export function oauthCallbackPageStart(nonce: string): string {
     document.getElementById("oauth-description").textContent = copy.description;
     document.getElementById("oauth-next-step").textContent = copy.next;
     document.getElementById("oauth-footnote").textContent = copy.footnote;
-    document.getElementById("oauth-close").hidden = false;
     document.title = copy.pageTitle;
   };
-  document.getElementById("oauth-close").addEventListener("click", function () {
-    window.close();
-  });
 </script>
 `;
 }
@@ -220,6 +207,7 @@ export function oauthCallbackHeaders(nonce: string): Record<string, string> {
       "default-src 'none'",
       "script-src 'nonce-" + safeNonce + "'",
       "style-src 'nonce-" + safeNonce + "'",
+      "img-src data:",
       "base-uri 'none'",
       "form-action 'none'",
       "frame-ancestors 'none'",

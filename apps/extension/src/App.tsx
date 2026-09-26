@@ -18,7 +18,7 @@ import {
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
-import { BookOpen, Library, Settings2, WandSparkles } from "lucide-react";
+import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
 import { Input } from "./components/ui/input";
@@ -1242,7 +1242,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div><span className="brandMark">IL</span><strong>Immersive Learning</strong></div>
+        <div><img className="brandMark" src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>Immersive Learning</strong></div>
         <span className="version">MVP · v0.1</span>
       </header>
       <nav className="tabs" aria-label={t("navLabel")}>
@@ -1252,7 +1252,7 @@ export default function App() {
         <Button className={page === "settings" ? "selected" : ""} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
       </nav>
 
-      {error && <div className="alert" role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}>×</Button></div>}
+      {error && <div className="alert" role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}><X aria-hidden="true" /></Button></div>}
 
       {page === "create" && <main>
         <Card className="panel">
