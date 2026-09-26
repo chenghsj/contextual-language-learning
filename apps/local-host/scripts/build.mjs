@@ -5,7 +5,7 @@ import { dirname, resolve } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const { version: hostVersion } = JSON.parse(readFileSync(resolve(root, "../../package.json"), "utf8"));
-if (typeof hostVersion !== "string" || !/^\d+\\.\d+\\.\d+/.test(hostVersion)) {
+if (typeof hostVersion !== "string" || !/^\d+\.\d+\.\d+/.test(hostVersion)) {
   throw new Error("Invalid Native Host package version");
 }
 const envFile = resolve(root, "../../.env");
