@@ -3,7 +3,7 @@
 ## Supported now
 
 - User-initiated one-click Netflix subtitle acquisition when the active player exposes a readable timed-text track; local SRT/VTT/text import remains available. Input is size-limited and the generated sections have durable checkpoints and job recovery.
-- Claude Code, Codex and AGY noninteractive CLI adapters. No password or token handling.
+- User-imported noninteractive CLI Agents via strict JSON configuration and a generic Native Host executor. No built-in provider presets or password/token handling.
 - Level + target language + instruction language + per-section learning load.
 - Zod-validated structured sections; saved JSON and Markdown documents.
 - Vite + React + Tailwind CSS and local shadcn-style UI components. Side Panel document reading, YouTube time links, and opt-in per-cue looping on an already open YouTube watch tab.
@@ -19,7 +19,7 @@
 
 ## Security notes
 
-The subtitle file is untrusted input. The CLI prompt explicitly marks it as source data; the host executes a fixed command with an argument array (never a shell string), in a temporary workspace. Claude is invoked with an empty tools allowlist, Codex with a read-only sandbox, and AGY with its sandbox flag. These are **defense in depth**, not a guarantee against all tool execution or disclosure on every version/configuration; review your CLI permission configuration and don't submit secrets. No "dangerously skip permissions" flags are used.
+The subtitle file and Agent configuration JSON are untrusted inputs. The host validates the imported executable and argument-array schema and invokes that CLI directly (never through a shell string), in a temporary workspace. **There is no universal sandbox for arbitrary imported CLIs.** A CLI can still access local files or run tools depending on its own permissions and user-supplied flags. Review its actual settings and install only trusted CLI programs; the extension cannot guarantee model-provider data handling or prevent a trusted executable from performing its own actions. Do not include credentials or secrets in imported settings or transcripts.
 
 The host validates all messages and all generated section JSON. Its Native Messaging manifest permits only the specific installed Extension ID. Messages from host to Chrome are bounded below Chrome's 1 MB maximum.
 

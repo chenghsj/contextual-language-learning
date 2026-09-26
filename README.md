@@ -6,7 +6,7 @@ A local-first Chrome side-panel extension that uses your locally installed CLI a
 
 This is **contextual, video-based language learning**, not a promise of full language immersion. AI organizes subtitle excerpts into lessons with grounded explanations, vocabulary and exercises for the learner's level. An interactive reader connects lessons to source timestamps, with optional sentence looping and playback speed controls on supported video platforms.
 
-> MVP status: the working implementation covers subtitle import, three CLI adapters, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Netflix one-click subtitle retrieval is **experimental** and works only when the currently playing session exposes a readable subtitle track; a durable background daemon is **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a developer-configured Desktop OAuth client at build time and live account testing are required. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
+> MVP status: the working implementation covers subtitle import, user-imported CLI Agent JSON, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Netflix one-click subtitle retrieval is **experimental** and works only when the currently playing session exposes a readable subtitle track; a durable background daemon is **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a developer-configured Desktop OAuth client at build time and live account testing are required. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
 
 ## Open source and project status
 
@@ -55,8 +55,12 @@ download the matching ZIP and run its included installation script
 (Node.js 22+ required). The Host executes only directly validated executable
 plus argv, without a shell.
 
-Legacy built-in Agent adapters are retained internally so existing saved
-jobs and documents remain compatible; they are no longer the first-run picker.
+There are **no built-in Claude, Codex or AGY Agent adapters** in the Host. An
+existing completed lesson keeps its original provider metadata and can still be
+read or exported. A prior built-in queued/waiting/failed job is retained in task
+history but cannot resume; import a CLI configuration and generate a new lesson.
+Updating from an older release requires installing the updated Native Host once.
+Adding or removing imported Agents afterward does not change Host registration.
 
 ## Features
 
@@ -66,7 +70,7 @@ jobs and documents remain compatible; they are no longer the first-run picker.
 - Import a trusted installed CLI Agent through strict JSON rather than a provider-specific preset. Use its default model or an optional supported model flag; an exposed model catalog never guarantees account entitlement.
 - Optionally save named account environments for CLIs supporting a verified configuration-directory environment variable (for example Codex `CODEX_HOME`). Profiles store names/paths only, never credentials; the normal case is the existing CLI login.
 - Native Messaging bridge to macOS, Windows and Linux Hosts; no API keys or CLI credentials are stored in the extension.
-- Run a checkpointed generation pipeline: chunk subtitles, validate AI sections with Zod, save each successful chapter, then export the JSON/Markdown document. Reopen the Side Panel and use **任務紀錄與恢復** to resume interrupted/failed jobs.
+- Run a checkpointed generation pipeline: chunk subtitles, validate AI sections with Zod, save each successful chapter, then export the JSON/Markdown document. Reopen the Side Panel and use **任務紀錄與恢復** to resume interrupted/failed jobs created with a currently imported Agent; historical built-in jobs require a fresh generation.
 - Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping and user-triggered playback speed (0.5×–2×).
 - Netflix has optional, user-initiated seek, per-sentence looping and playback speed (0.5×–2×) via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). Subtitle retrieval is user-initiated and conditional on Netflix exposing a readable timed-text document in the active session. It does not bypass DRM, intercept keyboard shortcuts or open a second playback session.
 
@@ -189,7 +193,7 @@ Open the source YouTube watch page in Chrome before clicking **循環此句** in
 
 ## Extensible providers
 
-Video playback and CLI generation use separate Adapter + Registry layers. The Side Panel renders actions based on the current video adapter's supported capabilities, and the Native Host reports registered Agent adapters and installation status. See [Architecture and adding providers](docs/architecture.md) for the exact extension points and per-platform Chrome permission requirements.
+Video playback uses capability-based Video Adapters, while CLI generation uses only user-imported JSON definitions in the Native Host registry. The Side Panel renders video actions based on the current adapter and reports installed status for imported CLI Agents only. See [Architecture and adding providers](docs/architecture.md) for the exact extension points and per-platform Chrome permission requirements.
 
 Adding HBO Max or Apple TV+ requires a purpose-built adapter and an explicit browser permission review; neither service is currently implemented. An unsupported video URL falls back to subtitle import without player control.
 
@@ -203,7 +207,7 @@ pnpm build
 
 Packages:
 - `packages/core`: shared Zod schema, subtitle parsers/chunking, time links.
-- `apps/local-host`: Native Messaging framing, restricted temporary workspace, CLI adapters, Job State Machine, resumable Generation Pipeline and file-backed repository ports.
+- `apps/local-host`: Native Messaging framing, restricted temporary workspace, imported CLI registry/executor, Job State Machine, resumable Generation Pipeline and file-backed repository ports.
 - `apps/extension`: React side panel, settings, reader, and opt-in YouTube loop content script.
 
 Read [Scope and limitations](docs/scope.md) before using an external-model CLI with sensitive or copyrighted transcripts.
@@ -223,7 +227,7 @@ A real-browser test with your Netflix account is required: confirm successful ca
 
 ### Resumable job workflow
 
-The local Host saves snapshots under ~/Documents/Immersive Learning/jobs/ after each **validated** chapter. The Side Panel's **任務紀錄與恢復** button lists saved jobs. If Chrome closes, the Host terminates and stops generating; reopening the Side Panel allows you to continue a waiting/failed job from its checkpoint. Explicitly cancelled jobs do not resume. A completed job's document can be reopened from history. Documents are chunked across Native Messaging responses when needed, respecting Chrome's Host-to-extension message limit.
+The local Host saves snapshots under ~/Documents/Immersive Learning/jobs/ after each **validated** chapter. The Side Panel's **任務紀錄與恢復** button lists saved jobs. If Chrome closes, the Host terminates and stops generating; reopening the Side Panel allows you to continue a waiting/failed job from its checkpoint. Explicitly cancelled jobs do not resume. Historical jobs using removed built-in Agents also cannot resume; they remain visible and require a new generation with an imported Agent. A completed job's document can be reopened from history. Documents are chunked across Native Messaging responses when needed, respecting Chrome's Host-to-extension message limit.
 
 A single Host instance executes one generation at a time. Current file-backed storage is designed for one writer per job, not simultaneous editing across several independent Chrome profiles/processes. Persistent background generation and cross-device synchronization require a separate managed daemon and transactional storage in a later phase. Progress and personal annotations have a separate repository contract; a full learning-progress UI is not yet implemented.
 
