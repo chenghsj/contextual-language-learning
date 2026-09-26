@@ -63,8 +63,8 @@ jobs and documents remain compatible; they are no longer the first-run picker.
 - On the currently selected YouTube watch tab, click **一鍵取得目前影片字幕** to read the video player's available English/Japanese/Korean caption track (including automatic captions when available). The extension reads the track only on request, preserves cue timestamps and never requires a file upload for a readable caption track. YouTube can change its page/player interfaces; if it offers no readable track, use manual import. Switching tabs updates the source of the next empty lesson form without replacing an existing transcript.
 - On an open Netflix watch page, click **一鍵取得目前影片字幕** to read the selected learning language's available timed-text track into the lesson form, without uploading a file. Netflix's signed caption document is requested by the extension worker from allowlisted Netflix delivery domains, not by a cross-origin page fetch. Chrome may ask you to approve the extension's new Netflix delivery-domain permissions after updating; if denied, one-click retrieval cannot work. Manual SRT, VTT and pasted text remain a fallback; original cue times are preserved.
 - Select target language (English/Japanese/Korean), level, **instruction language**, teaching mode, vocabulary cap, and exercises per section.
-- Pick Claude Code, Codex, or AGY. The Native Host queries `agy models` or Codex's experimental `codex debug models` for available model options; Claude Code offers documented aliases rather than an account-specific machine-readable list. You can always use the CLI default or a custom model ID. Catalog entries do not guarantee entitlement.
-- Save named Claude/Codex CLI account Profiles pointing to existing, separately authenticated directories inside your home folder. Selecting one changes `CLAUDE_CONFIG_DIR` or `CODEX_HOME` only for that Agent invocation; profile names/paths are stored locally, never credentials. AGY uses its current CLI login.
+- Import a trusted installed CLI Agent through strict JSON rather than a provider-specific preset. Use its default model or an optional supported model flag; an exposed model catalog never guarantees account entitlement.
+- Optionally save named account environments for CLIs supporting a verified configuration-directory environment variable (for example Codex `CODEX_HOME`). Profiles store names/paths only, never credentials; the normal case is the existing CLI login.
 - Native Messaging bridge to macOS, Windows and Linux Hosts; no API keys or CLI credentials are stored in the extension.
 - Run a checkpointed generation pipeline: chunk subtitles, validate AI sections with Zod, save each successful chapter, then export the JSON/Markdown document. Reopen the Side Panel and use **任務紀錄與恢復** to resume interrupted/failed jobs.
 - Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping and user-triggered playback speed (0.5×–2×).
@@ -132,34 +132,46 @@ pnpm host:install YOUR_EXTENSION_ID
 
 If your browser reports a missing Native Host, confirm you installed it for the same browser and its **current extension ID**. The macOS/Linux installer writes a browser-specific NativeMessagingHosts manifest; Windows writes its path to the browser's per-user HKCU NativeMessagingHosts registry key. Re-run `pnpm build` and `pnpm host:install YOUR_EXTENSION_ID` after changing the Node installation or extension ID.
 
-### CLI model discovery and account Profiles
+### Models and optional account environments
 
-In **Settings → Local CLI Agent**, check the Native Host, choose an account Profile and refresh the available CLI models. Choosing a different Profile resets the model choice. Use CLI default or custom Model ID if discovery is unavailable. The Codex debug catalog and Claude aliases are not a guarantee that an account may use the listed model.
+Imported Agents use their CLI's current login and default model unless you
+explicitly choose a model or configure another account environment. A model
+catalog is queried only if the imported definition supplies a supported
+model-list command; it does not prove that your account can use every model.
+The selected model is remembered independently for each Agent and account
+environment. Without a supported model flag, leave the model on CLI default.
 
-Create and authenticate any extra account directories in Terminal before registering them in Settings:
+Extra account environments are **optional** and appear only when the imported
+Agent defines a verified profile environment variable. Create and authenticate
+the separate CLI configuration directory with that CLI before selecting it.
+For example, Codex can use an existing account environment via `CODEX_HOME`:
 
 ~~~sh
-mkdir -p "$HOME/.claude-work" "$HOME/.codex-work"
-CLAUDE_CONFIG_DIR="$HOME/.claude-work" claude
+mkdir -p "$HOME/.codex-work"
 CODEX_HOME="$HOME/.codex-work" codex login
 ~~~
 
-Enter a name and its absolute folder path in Settings, save it, then switch accounts from the dropdown. Only Claude/Codex profiles are supported; AGY remains on its current CLI login. Switching never runs logout, copies credentials, or changes Terminal's selected account. Removing a Profile only removes its label/path entry; the CLI directory remains.
+This is an example only; verify your installed CLI's actual version and flags.
+Saving or deleting a profile only changes the Host's local name/path record.
+It never signs in, signs out, copies credentials or deletes the CLI directory.
 
-The Host invokes a fixed `agy models` or `codex debug models` command with no shell and a timeout. Claude Code exposes `/model` interactively, so this extension offers the `sonnet`, `opus` and `haiku` CLI aliases instead of pretending to fetch account-specific entitlements. All providers retain default and custom model choices.
+### Host installation troubleshooting
 
-If you see **Specified native messaging host not found**, copy the current extension ID from `chrome://extensions` and run these commands from the project root:
+If you see **Specified native messaging host not found**, copy the current
+extension ID from `chrome://extensions` and run these commands from the
+project root:
 
 ~~~sh
 pnpm build
 pnpm host:install YOUR_EXTENSION_ID
 ~~~
 
-Reload the extension. For a Release installation, use `node scripts/install-host.mjs YOUR_EXTENSION_ID` from the extracted OS Host ZIP instead of pnpm. If the extension ID changes, reinstall the Host with the new ID. Extensions cannot silently install Native Messaging Hosts.
-
-### Accounts and models
-
-Sign in using each CLI itself first. Model/profile defaults are remembered separately for each Agent in the Side Panel. Switching Agent does not carry over the previous Agent's model ID. A model ID is passed explicitly only when filled in; the extension queries supported CLI model catalogs when available and does **not** silently fall back to another model. To use a separate Claude or Codex profile, create and authenticate that CLI profile first, then register its existing absolute directory and name in Agent settings. The profile must be inside your home folder. AGY profile switching remains unavailable pending a supported isolation mechanism.
+Reload the extension. For a Release installation, use
+`node scripts/install-host.mjs YOUR_EXTENSION_ID` from the extracted OS Host
+ZIP instead of pnpm. For Edge append `--browser edge`; for Chromium append
+`--browser chromium`. The browser and extension ID must match the Host
+registration; changing the extension ID may require re-registration.
+Extensions cannot silently install a Native Messaging Host.
 
 ### Interface language and appearance
 
