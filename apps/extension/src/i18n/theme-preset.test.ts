@@ -84,7 +84,7 @@ test("button variants and utility feedback use theme tokens instead of the old f
 
 test("primary Side Panel action utilities keep readable labels and the warm palette", () => {
   const actions = [...app.matchAll(/<Button className="([^"]+)"[^>]*>/g)]
-    .map(match => match[1]).filter(classes => classes.includes("min-h-10"));
+    .map(match => match[1]).filter(classes => classes.includes("font-semibold") && classes.includes("whitespace-normal"));
   assert.ok(actions.length >= 2, "subtitle and generation actions remain legible");
   for (const classes of actions) {
     assert.ok(classes.includes("text-sm"));
