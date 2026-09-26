@@ -1555,7 +1555,7 @@ export default function App() {
                 ...current, contextualExampleCount: Number(value),
               }))}
               options={[1, 2, 3].map(value => ({
-                value: String(value), label: value + " " + (uiLocale === "en" ? "examples" : ""),
+                value: String(value), label: t("contextualExamplesValue", { count: value }),
               }))} />
             <p className="hint">{t("contextualExamplesHint")}</p>
           </div>
