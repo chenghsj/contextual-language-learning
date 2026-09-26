@@ -49,6 +49,13 @@ export async function saveAgentProfile(provider: string, label: string, director
   return next;
 }
 
+/** Delete only Host-owned profile references, not the CLI's folder or credentials. */
+export async function removeAgentProfilesByProvider(provider: string): Promise<AgentProfile[]> {
+  const saved = await listAgentProfiles();
+  const next = saved.filter(profile => profile.provider !== provider);
+  if (next.length !== saved.length) await writeProfiles(next);
+  return next;
+}
 export async function removeAgentProfile(id: string): Promise<AgentProfile[]> {
   if (!z.string().uuid().safeParse(id).success) throw new Error("Invalid profile ID.");
   const saved = await listAgentProfiles();

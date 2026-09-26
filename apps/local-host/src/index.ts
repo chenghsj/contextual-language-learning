@@ -3,9 +3,10 @@ import {
   HostRequestSchema, type DuplicateMatch, type GenerationRequest, type HostMessage, type LearningDocument,
 } from "@immersive/core";
 import { getAgentCatalog } from "./agents";
-import { listCustomAgents, saveCustomAgent, removeCustomAgent, testCustomConfig, resolveCustomExecutable } from "./agents/custom";
+import { listCustomAgents, saveCustomAgent, importCustomAgent, removeCustomAgent, testCustomConfig, resolveCustomExecutable } from "./agents/custom";
 import { discoverAgentModels } from "./agents/metadata";
-import { listAgentProfiles, saveAgentProfile, removeAgentProfile } from "./agents/profiles";
+import { listAgentProfiles, saveAgentProfile, removeAgentProfile, removeAgentProfilesByProvider } from "./agents/profiles";
+import { assertAgentMayBeRemoved } from "./agents/remove-guard";
 import { findLocalDuplicates, requestKey } from "./duplicates";
 import { findDriveDuplicates, listDriveLessons, getDriveDocument, validateDriveAccess } from "./drive/api";
 import { accessTokenFor, connectGoogleAccount, disconnectGoogleAccount, googleConfigured, listGoogleAccounts } from "./drive/oauth";
@@ -111,14 +112,24 @@ async function handle(input: unknown): Promise<void> {
       case "customAgentList":
         reply({ id: request.id, type: "customAgentList", agents: await listCustomAgents() });
         break;
+      case "customAgentImport": {
+        const imported = await importCustomAgent(request.config);
+        reply({ id: request.id, type: "customAgentImported", ...imported });
+        break;
+      }
       case "customAgentSave":
         reply({ id: request.id, type: "customAgentList",
           agents: await saveCustomAgent(request.config) });
         break;
-      case "customAgentRemove":
-        reply({ id: request.id, type: "customAgentList",
-          agents: await removeCustomAgent(request.agentId) });
+      case "customAgentRemove": {
+        // Include every persisted job, not just the 50 most recent UI summaries.
+        await manager.recoverInterrupted();
+        assertAgentMayBeRemoved(request.agentId, await storage.jobs.list(Number.MAX_SAFE_INTEGER));
+        const agents = await removeCustomAgent(request.agentId);
+        await removeAgentProfilesByProvider(request.agentId);
+        reply({ id: request.id, type: "customAgentList", agents });
         break;
+      }
       case "customAgentTest": {
         const label = await testCustomConfig(request.config, request.modelId, request.accountConfigDir);
         reply({ id: request.id, type: "customAgentTested", label });
