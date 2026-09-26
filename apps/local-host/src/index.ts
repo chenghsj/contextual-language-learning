@@ -7,7 +7,7 @@ import { discoverAgentModels } from "./agents/metadata";
 import { listAgentProfiles, saveAgentProfile, removeAgentProfile } from "./agents/profiles";
 import { findLocalDuplicates, requestKey } from "./duplicates";
 import { findDriveDuplicates } from "./drive/api";
-import { configureGoogleOAuth, connectGoogleAccount, googleConfigured, listGoogleAccounts } from "./drive/oauth";
+import { connectGoogleAccount, disconnectGoogleAccount, googleConfigured, listGoogleAccounts } from "./drive/oauth";
 import { JobManager } from "./jobs/manager";
 import { encodeMessage, NativeFramer } from "./protocol";
 import { localStoragePorts } from "./storage/file";
@@ -124,9 +124,9 @@ async function handle(input: unknown): Promise<void> {
         reply({ id: request.id, type: "driveAccounts",
           accounts: await listGoogleAccounts(), configured: await googleConfigured() });
         break;
-      case "driveConfigure":
-        await configureGoogleOAuth(request.clientId, request.clientSecret);
-        reply({ id: request.id, type: "driveConfigured" });
+      case "driveDisconnect":
+        await disconnectGoogleAccount(request.accountId);
+        reply({ id: request.id, type: "driveDisconnected", accountId: request.accountId });
         break;
       case "driveConnect":
         reply({ id: request.id, type: "driveConnected", account: await connectGoogleAccount() });

@@ -184,9 +184,7 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("checkDuplicates"), id: z.string().uuid(), payload: GenerationRequestSchema }),
   z.object({ type: z.literal("chooseFolder"), id: z.string().uuid() }),
   z.object({ type: z.literal("driveAccounts"), id: z.string().uuid() }),
-  z.object({ type: z.literal("driveConfigure"), id: z.string().uuid(),
-    clientId: z.string().regex(/^[A-Za-z0-9_.-]+\.apps\.googleusercontent\.com$/),
-    clientSecret: z.string().max(512).optional() }),
+  z.object({ type: z.literal("driveDisconnect"), id: z.string().uuid(), accountId: z.string().min(1).max(256) }),
   z.object({ type: z.literal("driveConnect"), id: z.string().uuid() }),
   z.object({ type: z.literal("publishJob"), id: z.string().uuid(), jobId: z.string().uuid() }),
 ]);
@@ -214,7 +212,7 @@ export type HostMessage =
   | { id: string; type: "folder"; directory: string }
   | { id: string; type: "driveAccounts"; accounts: DriveAccount[]; configured: boolean }
   | { id: string; type: "driveConnected"; account: DriveAccount }
-  | { id: string; type: "driveConfigured" }
+  | { id: string; type: "driveDisconnected"; accountId: string }
   | { id: string; type: "published"; jobId: string; location: string }
   | { id: string; type: "publicationFailed"; jobId: string; message: string }
   | { id: string; type: "cancelled" }

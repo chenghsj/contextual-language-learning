@@ -9,12 +9,11 @@ import type { DriveAccount } from "@immersive/core";
 
 const exec = promisify(execFile);
 const root = join(homedir(), "Library", "Application Support", "Immersive Learning");
-const configPath = join(root, "google-oauth.json");
 const accountsPath = join(root, "google-accounts.json");
 const keychainService = "dev.immersive.language-learning.google-drive";
 const clientIdPattern = /^[A-Za-z0-9_.-]+\.apps\.googleusercontent\.com$/;
 
-interface OAuthConfig { clientId: string; clientSecret?: string }
+interface OAuthConfig { clientId: string }
 interface SavedAccount extends DriveAccount { clientId: string }
 interface TokenResponse { access_token: string; expires_in: number; refresh_token?: string }
 const accessTokens = new Map<string, { value: string; expiry: number }>();
@@ -30,35 +29,18 @@ async function writePrivate(path: string, value: unknown): Promise<void> {
   }
 }
 
-export async function configureGoogleOAuth(clientId: string, clientSecret?: string): Promise<void> {
-  if (!clientIdPattern.test(clientId)) throw new Error("Expected a Google Desktop OAuth client ID");
-  if (clientSecret && clientSecret.length > 512) throw new Error("OAuth client secret is too long");
-  await writePrivate(configPath, { clientId, ...(clientSecret ? { clientSecret } : {}) });
-}
-
-export async function googleConfigured(): Promise<boolean> {
-  try {
-    await googleConfig();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
+// Desktop OAuth Client ID is injected into the bundled Native Host at build time.
+declare const __GOOGLE_OAUTH_CLIENT_ID__: string;
 async function googleConfig(): Promise<OAuthConfig> {
-  let value: unknown;
-  try {
-    value = JSON.parse(await readFile(configPath, "utf8")) as unknown;
-  } catch {
-    throw new Error("請先在設定中填寫 Google Desktop OAuth Client ID");
+  const clientId = typeof __GOOGLE_OAUTH_CLIENT_ID__ === "string"
+    ? __GOOGLE_OAUTH_CLIENT_ID__ : (process.env.GOOGLE_OAUTH_CLIENT_ID ?? "");
+  if (!clientIdPattern.test(clientId)) {
+    throw new Error("此版本尚未設定 Google OAuth Client ID，請更新 Native Host 或聯絡開發者");
   }
-  if (!value || typeof value !== "object") throw new Error("Google OAuth settings are invalid");
-  const config = value as Partial<OAuthConfig>;
-  if (!config.clientId || !clientIdPattern.test(config.clientId) ||
-    (config.clientSecret !== undefined && typeof config.clientSecret !== "string")) {
-    throw new Error("Google OAuth settings are invalid");
-  }
-  return { clientId: config.clientId, clientSecret: config.clientSecret };
+  return { clientId };
+}
+export async function googleConfigured(): Promise<boolean> {
+  try { await googleConfig(); return true; } catch { return false; }
 }
 
 export async function listGoogleAccounts(): Promise<DriveAccount[]> {
@@ -175,7 +157,6 @@ export async function connectGoogleAccount(): Promise<DriveAccount> {
     client_id: config.clientId, code, code_verifier: verifier,
     redirect_uri: redirectUri, grant_type: "authorization_code",
   });
-  if (config.clientSecret) form.set("client_secret", config.clientSecret);
   const token = await tokenRequest(form);
   const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
     headers: { Authorization: "Bearer " + token.access_token },
@@ -187,7 +168,7 @@ export async function connectGoogleAccount(): Promise<DriveAccount> {
     throw new Error("Google account did not provide a verified identity");
   }
   const account: SavedAccount = { id: info.sub, email: info.email, clientId: config.clientId };
-  const previous = (await savedAccounts()).find(item => item.id === account.id);
+  const previous = (await savedAccounts()).find(item => item.id === account.id && item.clientId === config.clientId);
   if (token.refresh_token) await keychainWrite(account.id, token.refresh_token);
   else if (!previous) throw new Error("Google did not issue a refresh token; reconnect with consent");
   const accounts = await savedAccounts();
@@ -209,9 +190,20 @@ export async function accessTokenFor(accountId: string): Promise<string> {
     client_id: config.clientId, refresh_token: await keychainRead(accountId),
     grant_type: "refresh_token",
   });
-  if (config.clientSecret) form.set("client_secret", config.clientSecret);
   const token = await tokenRequest(form);
   accessTokens.set(accountId, { value: token.access_token,
     expiry: Date.now() + Math.max(token.expires_in - 90, 30) * 1000 });
   return token.access_token;
+}
+
+/** Disconnect locally without deleting the user's Drive files. */
+export async function disconnectGoogleAccount(accountId: string): Promise<void> {
+  const accounts = await savedAccounts();
+  if (!accounts.some(item => item.id === accountId)) throw new Error("Google 帳號尚未連線");
+  accessTokens.delete(accountId);
+  if (process.platform === "darwin") {
+    await exec("/usr/bin/security", ["delete-generic-password", "-s", keychainService, "-a", accountId],
+      { maxBuffer: 4096 }).catch(() => undefined);
+  }
+  await writePrivate(accountsPath, accounts.filter(item => item.id !== accountId));
 }
