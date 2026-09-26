@@ -76,7 +76,7 @@ test("V3 reader presents original dialogue first, then focus, word notes and one
   assert.ok(!html.includes("A colleague asks about lunch."), "only one contextual example visible by default");
   assert.ok(html.includes(copy.anotherExamples.replace("{count}", "1")));
   assert.ok(html.includes(copy.words), "essential word notes are available on demand");
-  assert.ok(!html.includes("Not decided so far."), "word notes are initially collapsed");
+  assert.ok(html.includes('class="contextualWordNotes"'), "word notes render inside a closed details control");
   assert.ok(html.includes(copy.previousCue) && html.includes(copy.nextCue));
   assert.ok(html.includes(copy.loopCue));
   assert.ok(html.includes('aria-pressed="true"'), "selected source cue has accessible state");
