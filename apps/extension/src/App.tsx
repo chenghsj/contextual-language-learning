@@ -140,6 +140,10 @@ export default function App() {
   const [driveConnectError, setDriveConnectError] = useState("");
   const [driveAccounts, setDriveAccounts] = useState<DriveAccount[]>([]);
   const [driveConfigured, setDriveConfigured] = useState(false);
+  const [driveAccountsLoaded, setDriveAccountsLoaded] = useState(false);
+  const [driveAccess, setDriveAccess] = useState<{
+    accountId: string; status: "checking" | "verified" | "failed";
+  } | null>(null);
   const [storageBusy, setStorageBusy] = useState(false);
   const [checking, setChecking] = useState(false);
   const [publishedLocation, setPublishedLocation] = useState("");
@@ -178,6 +182,9 @@ export default function App() {
   // A valid saved source remains actionable when the Side Panel temporarily loses its tab context.
   const subtitlePlatform = getVideoAdapter(activeVideo?.url ?? sourceUrl).id;
   const readerAdapter = getVideoAdapter(document?.source.url);
+  const selectedDriveId = backup.accountId ?? driveAccounts[0]?.id;
+  const driveAccessVerified = !!selectedDriveId && driveAccess?.accountId === selectedDriveId &&
+    driveAccess.status === "verified";
   const selectedAgentInfo = agentCatalog.find(entry => entry.id === agent.provider);
   const selectedSavedProfile = savedAgentProfiles.find(profile =>
     profile.provider === agent.provider && profile.directory === agent.accountConfigDir);
@@ -456,12 +463,47 @@ export default function App() {
       setDriveAccounts(response.accounts);
       setDriveConfigured(response.configured);
       // Account choice no longer changes the local lesson destination.
-    } catch (cause) {
+    } catch {
       // Local-only use does not require a connected Host or a Google account.
       setDriveAccounts([]);
       setDriveConfigured(false);
+    } finally {
+      setDriveAccountsLoaded(true);
     }
   }
+
+  // A remembered OAuth identity is not evidence of current Drive API access.
+  // Revalidate the selected account after restore, account switching and panel reopen.
+  useEffect(() => {
+    if (!hydrated || !driveAccountsLoaded || storageBusy) return;
+    const accountId = backup.accountId ?? driveAccounts[0]?.id;
+    if (!accountId) {
+      setDriveAccess(null);
+      return;
+    }
+    if (!driveAccounts.some(account => account.id === accountId)) {
+      setDriveAccess({ accountId, status: "failed" });
+      setDriveConnectError(t("backupUnknownAccount"));
+      setBackup({ enabled: false, accountId: driveAccounts[0]?.id });
+      return;
+    }
+    let cancelled = false;
+    setDriveAccess({ accountId, status: "checking" });
+    void nativeOnce({ id: crypto.randomUUID(), type: "driveValidate", accountId }).then(response => {
+      if (cancelled) return;
+      if (response.type !== "driveValidated") throw new Error("Google Drive access could not be verified.");
+      setDriveAccess({ accountId, status: "verified" });
+      setDriveConnectError("");
+    }).catch(cause => {
+      if (cancelled) return;
+      setDriveAccess({ accountId, status: "failed" });
+      setDriveConnectError(cause instanceof Error ? cause.message : t("connectDriveError"));
+      // Keep locally saved lessons usable; never report an unusable backup as enabled.
+      setBackup(current => current.accountId === accountId && current.enabled
+        ? { ...current, enabled: false } : current);
+    });
+    return () => { cancelled = true; };
+  }, [hydrated, driveAccountsLoaded, backup.accountId, driveAccounts, storageBusy]);
 
   async function chooseFolder(): Promise<void> {
     setStorageBusy(true);
@@ -489,6 +531,7 @@ export default function App() {
         id: crypto.randomUUID(), type: "driveValidate", accountId: response.account.id,
       });
       if (verified.type !== "driveValidated") throw new Error("Google Drive access could not be verified.");
+      setDriveAccess({ accountId: response.account.id, status: "verified" });
       setBackup({ enabled: true, accountId: response.account.id });
       setDriveConnectError("");
     } catch (cause) {
@@ -521,8 +564,11 @@ export default function App() {
     try {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveValidate", accountId });
       if (response.type !== "driveValidated") throw new Error("Unexpected Drive validation response");
+      setDriveAccess({ accountId, status: "verified" });
+      setDriveConnectError("");
       setBackup({ enabled: true, accountId });
     } catch (cause) {
+      setDriveAccess({ accountId, status: "failed" });
       // A valid OAuth session can still lack Drive API access. Never force
       // another login for quota, disabled API, or file permission errors.
       const message = cause instanceof Error ? cause.message : t("connectDriveError");
@@ -817,6 +863,10 @@ export default function App() {
       setError(subtitleMessage(subtitleUi.languageNotReady, {
         language: learningLanguageName(profile.targetLanguage, uiLocale),
       }));
+      return;
+    }
+    if (backup.enabled && !driveAccessVerified) {
+      setError(t("driveAccessNotVerified"));
       return;
     }
     setError("");
@@ -1596,7 +1646,7 @@ export default function App() {
               onClick={() => backup.enabled ? setBackup(current => ({ ...current, enabled: false }))
                 : void enableBackup()}><span className="backupSwitchThumb" /></Button>
           </div>
-          {backup.enabled && <div className="backupConnection">
+          {backup.enabled && driveAccessVerified && <div className="backupConnection">
             <span className="hint">{t("backupConnected", { email:
               driveAccounts.find(account => account.id === backup.accountId)?.email ?? t("backupUnknownAccount") })}</span>
             <Button variant="ghost" size="sm" onClick={() => setPage("settings")}>{t("manageDrive")}</Button>
@@ -1927,9 +1977,17 @@ export default function App() {
               onValueChange={accountId => setBackup(current => ({ ...current, accountId }))}
               options={driveAccounts.map(account => ({ value: account.id, label: account.email }))} />
           </label>}
+          {selectedDriveId && <p className="hint" role="status">{
+            driveAccess?.accountId === selectedDriveId && driveAccess.status === "checking"
+              ? t("driveAccessChecking") : driveAccessVerified
+                ? t("driveAccessVerified") : t("driveAccessNotVerified")
+          }</p>}
           <div className="actions">
             <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
               onClick={() => void connectDrive()}>{driveAccounts.length ? t("connectAnother") : t("connectGoogle")}</Button>
+            {selectedDriveId && !driveAccessVerified && <Button variant="outline" size="sm"
+              disabled={storageBusy || driveAccess?.status === "checking"}
+              onClick={() => void enableBackup()}>{t("retryDriveAccess")}</Button>}
           </div>
           {driveAccounts.length > 0 && <details className="agentProfileAdvanced">
             <summary>{t("manageDrive")} · {driveAccounts.length}</summary>

@@ -30,3 +30,27 @@ test("Drive validation calls the Drive API rather than only refreshing OAuth", a
   assert.match(index, /case "driveValidate":\s*await validateDriveAccess\(request.accountId\)/);
   assert.match(api, /await listFiles\(accountId, "trashed = false", "id", 1, "驗證 Drive 權限"\)/);
 });
+
+test("new Google ErrorInfo details identify a disabled Drive API without exposing private text", () => {
+  const error = driveApiError(403, {
+    error: {
+      status: "PERMISSION_DENIED",
+      message: "https://private.example/file?access_token=secret",
+      details: [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", reason: "SERVICE_DISABLED",
+        metadata: { service: "drive.googleapis.com", consumer: "projects/123" } }],
+    },
+  }, "驗證 Drive 權限");
+  assert.match(error.message, /HTTP 403，SERVICE_DISABLED/);
+  assert.match(error.message, /啟用 Drive API/);
+  assert.doesNotMatch(error.message, /private|secret|projects\/123/);
+});
+
+test("HTTP 403 permission denied alone does not incorrectly insist the user must reauthorize", () => {
+  const error = driveApiError(403, { error: { status: "PERMISSION_DENIED" } }, "備份教材");
+  assert.match(error.message, /HTTP 403，PERMISSION_DENIED/);
+  assert.match(error.message, /Drive API/);
+  assert.doesNotMatch(error.message, /重新連結/);
+  assert.match(driveApiError(403, { error: { details: [
+    { reason: "ACCESS_TOKEN_SCOPE_INSUFFICIENT" },
+  ] } }, "驗證 Drive 權限").message, /drive.file/);
+});
