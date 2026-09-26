@@ -1,6 +1,10 @@
-# Immersive Language Learning
+# AI-powered Contextual Language Learning
 
-A local-first Chrome side-panel extension that turns **subtitles you have permission to use** into structured, level-appropriate language lessons using your locally installed CLI agent.
+A local-first Chrome side-panel extension that uses your locally installed CLI agent to turn **video subtitles you have permission to use** into structured, level-appropriate language lessons. Learn vocabulary and expressions in dialogue context, then return to the original video for focused listening practice.
+
+## Learning approach
+
+This is **contextual, video-based language learning**, not a promise of full language immersion. AI organizes subtitle excerpts into lessons with grounded explanations, vocabulary and exercises for the learner's level. An interactive reader connects lessons to source timestamps, with optional sentence looping and playback speed controls on supported video platforms.
 
 > MVP status: the working implementation covers subtitle import, three CLI adapters, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Netflix one-click subtitle retrieval is **experimental** and works only when the currently playing session exposes a readable subtitle track; a durable background daemon is **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a developer-configured Desktop OAuth client at build time and live account testing are required. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
 

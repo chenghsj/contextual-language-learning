@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions to Immersive Language Learning are welcome. Start with a small, reproducible issue and read [the architecture](docs/architecture.md) and [the MVP limitations](docs/scope.md) before implementing a new platform or Agent.
+Contributions to AI-powered Contextual Language Learning are welcome. Start with a small, reproducible issue and read [the architecture](docs/architecture.md) and [the MVP limitations](docs/scope.md) before implementing a new platform or Agent.
 
 ## Development
 

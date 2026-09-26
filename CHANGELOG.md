@@ -1,8 +1,10 @@
 # Changelog
 
-Notable user-facing changes to Immersive Language Learning are recorded here. Version tags and the matching GitHub Release assets are the source of truth for published versions.
+Notable user-facing changes to AI-powered Contextual Language Learning are recorded here. Version tags and the matching GitHub Release assets are the source of truth for published versions.
 
 ## [Unreleased]
+
+- Rename the product to AI-powered Contextual Language Learning and update its video-based, contextual-learning descriptions across extension metadata, UI and documentation.
 
 - Add user-triggered YouTube subtitle acquisition from the current watch player's available caption tracks and keep the Side Panel source in sync as active tabs change; preserve manual import as a fallback.
 

@@ -1,11 +1,11 @@
 {
   "extensionName": {
-    "message": "沉浸式語言學習"
+    "message": "AI 輔助情境式語言學習"
   },
   "extensionDescription": {
-    "message": "使用本地 CLI Agent 將字幕轉成語言學習教材。"
+    "message": "使用 AI 將影片字幕轉換成符合程度的情境式教材，搭配上下文理解與句子重播練習。"
   },
   "actionTitle": {
-    "message": "開啟沉浸式語言學習"
+    "message": "開啟 AI 輔助情境式語言學習"
   }
 }
