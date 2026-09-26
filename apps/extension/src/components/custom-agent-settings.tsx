@@ -22,6 +22,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
   const [editing, setEditing] = useState<CustomAgentConfig | null>(null);
   const [validated, setValidated] = useState<CustomAgentImport | null>(null);
   const [busy, setBusy] = useState(false);
+  const [testing, setTesting] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [failed, setFailed] = useState(false);
 
@@ -94,7 +95,9 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
   async function testAgent(): Promise<void> {
     if (!validated || !available || busy || !window.confirm(ui.testWarning)) return;
     setBusy(true);
-    setStatus("");
+    setTesting("draft");
+    setFailed(false);
+    setStatus(ui.testing);
     try {
       const config: CustomAgentConfig = {
         ...validated, id: editing?.id ?? "custom-" + crypto.randomUUID().replaceAll("-", "").slice(0, 24),
@@ -107,7 +110,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
       setFailed(false);
       setStatus(ui.tested);
     } catch (error) { report(error); }
-    finally { setBusy(false); }
+    finally { setTesting(null); setBusy(false); }
   }
   async function save(): Promise<void> {
     if (!validated || !available || busy) return;
@@ -137,7 +140,9 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
   async function testSavedAgent(agent: CustomAgentConfig): Promise<void> {
     if (!available || busy || !window.confirm(ui.testWarning)) return;
     setBusy(true);
-    setStatus("");
+    setTesting(agent.id);
+    setFailed(false);
+    setStatus(ui.testing);
     try {
       const reply = await nativeOnce({ id: crypto.randomUUID(), type: "customAgentTest",
         config: agent, modelId: agent.id === selectedProvider ? selectedModelId : "",
@@ -147,7 +152,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
       setFailed(false);
       setStatus(ui.tested);
     } catch (error) { report(error); }
-    finally { setBusy(false); }
+    finally { setTesting(null); setBusy(false); }
   }
   async function remove(agent: CustomAgentConfig): Promise<void> {
     if (!available || busy || !window.confirm(ui.confirmRemove)) return;
@@ -182,7 +187,10 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
         <Button variant="outline" size="sm" disabled={busy}
           onClick={() => edit(agent)}>{ui.edit}</Button>
         <Button variant="outline" size="sm" disabled={!available || busy}
-          onClick={() => void testSavedAgent(agent)}>{ui.test}</Button>
+          aria-busy={testing === agent.id} onClick={() => void testSavedAgent(agent)}>
+          {testing === agent.id && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
+          {testing === agent.id ? ui.testing : ui.test}
+        </Button>
         <Button variant="outline" size="sm" disabled={!available || busy}
           onClick={() => void remove(agent)}>{ui.remove}</Button>
       </div>
@@ -216,7 +224,10 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
             <Button variant="outline" size="sm" disabled={!available || busy || !validated}
               onClick={() => void detect()}>{ui.detect}</Button>
             <Button variant="outline" size="sm" disabled={!available || busy || !validated}
-              onClick={() => void testAgent()}>{ui.test}</Button>
+              aria-busy={testing === "draft"} onClick={() => void testAgent()}>
+              {testing === "draft" && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
+              {testing === "draft" ? ui.testing : ui.test}
+            </Button>
             <Button size="sm" disabled={!available || busy || !validated}
               onClick={() => void save()}>{editing ? ui.saveChanges : ui.save}</Button>
             {editing && <Button variant="ghost" size="sm" disabled={busy}
@@ -227,6 +238,6 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
       </div>
     </details>
     {status && <p className={failed ? "text-xs text-destructive wrap-anywhere" :
-      "text-xs text-muted-foreground wrap-anywhere"} role="status">{status}</p>}
+      "text-xs text-muted-foreground wrap-anywhere"} role="status" aria-live="polite">{status}</p>}
   </section>;
 }
