@@ -329,7 +329,7 @@ export type HostMessage =
   | { id: string; type: "storageLocations"; locations: { id: string; kind: "local" | "google-drive-desktop"; label: string; path: string; account?: string }[] }
   | { id: string; type: "preflight"; existing: { id: string; title: string; createdAt: string; path: string }[] }
   | { id: string; type: "result"; document: LearningDocument }
-  | { id: string; type: "playbackRangeSaved"; cueId: string; range: PlaybackOverride | null }
+  | { id: string; type: "playbackRangeSaved"; cueId: string; range: PlaybackOverride | null; warning?: string }
   | { id: string; type: "duplicates"; token: string; matches: DuplicateMatch[] }
   | { id: string; type: "folder"; directory: string }
   | { id: string; type: "driveAccounts"; accounts: DriveAccount[]; configured: boolean }
