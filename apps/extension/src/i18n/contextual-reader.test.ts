@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
+import { tw } from "../utility-classes";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { LearningDocument } from "@immersive/core";
@@ -77,7 +78,7 @@ test("V3 reader presents original dialogue first, then focus, word notes and one
   assert.ok(!html.includes("A colleague asks about lunch."), "only one contextual example visible by default");
   assert.ok(html.includes(copy.anotherExamples.replace("{count}", "1")));
   assert.ok(html.includes(copy.words), "essential word notes are available on demand");
-  assert.ok(html.includes('class="contextualWordNotes"'), "word notes render inside a closed details control");
+  assert.match(html, /<details[^>]*class="[^"]*my-\[11px\]/, "word notes retain their on-demand styling");
   assert.ok(html.includes(copy.previousCue) && html.includes(copy.nextCue));
   assert.ok(html.includes(copy.loopCue));
   assert.ok(html.includes('aria-pressed="true"'), "selected source cue has accessible state");
@@ -97,16 +98,15 @@ test("V3 reader stays localized in five UI languages and retains source-only dia
     assert.ok(html.includes('role="combobox"'), locale);
   }
   const importOnly = render("en", { ...document, source: { platform: "import", title: "Imported" } });
-  assert.ok(!importOnly.includes('class="contextualPlayer"'));
+  assert.ok(!importOnly.includes('z-[5]'), "import-only lessons have no sticky contextual player");
 });
 
 test("V3 route keeps V2 unchanged, original cue refs and export actions available", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   assert.match(app, /document\.schemaVersion === 3 \? <ContextualSceneReader/);
   assert.match(app, /document\.schemaVersion === 2 \? <SceneReader/);
-  assert.match(css, /\.contextualPlayer \{ position: sticky; bottom: 0/);
-  assert.match(css, /\.contextualLine:focus-visible/);
+  assert.ok(tw("contextualPlayer").includes("sticky bottom-0"));
+  assert.ok(tw("contextualLine").includes("focus-visible:outline-2"));
   const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
   assert.match(source, /scene\.cueIds\.map\(id => cues\.get\(id\)\)/);
   assert.match(source, /item\.sourceCueIds/);
@@ -116,7 +116,6 @@ test("V3 route keeps V2 unchanged, original cue refs and export actions availabl
 
 test("V3 follows actual playback time while keeping A/B edits per source cue", async () => {
   const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
-  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   assert.match(source, /playingCueAt\(scene\.cueIds, cues, ms\)/);
   assert.match(source, /aria-current=\{playing \? "true" : undefined\}/);
   assert.match(source, /const resumeLoop = !!loopingCueRef\.current/);
@@ -130,7 +129,7 @@ test("V3 follows actual playback time while keeping A/B edits per source cue", a
   assert.match(source, /updateRange\("reset"\)/);
   assert.match(source, /formatLoopTimestamp\(point\)/);
   assert.match(source, /calibrationRef\.current/);
-  assert.match(css, /\.contextualTimeDialog::backdrop/);
+  assert.ok(tw("contextualTimeDialog").includes("backdrop:bg-[#0008]"));
   const html = render("zh-TW");
   assert.ok(html.includes(contextualReaderMessages["zh-TW"].adjustPosition));
   assert.ok(html.includes("<dialog"));

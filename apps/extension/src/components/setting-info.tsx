@@ -1,3 +1,4 @@
+import { tw } from "../utility-classes";
 import React, { useEffect, useRef } from "react";
 import { Info } from "lucide-react";
 
@@ -39,13 +40,13 @@ export function SettingInfo({
   }, []);
 
   return (
-    <details className="settingInfo" ref={ref}>
-      <summary aria-label={infoLabel + " " + label} aria-controls={contentId}>
+    <details className={tw("detailsBase settingInfo")} ref={ref}>
+      <summary className={tw("summaryBase settingInfoSummary")} aria-label={infoLabel + " " + label} aria-controls={contentId}>
         <Info aria-hidden="true" size={15} />
       </summary>
-      <div className="settingInfoPopover" id={contentId} role="note">
+      <div className={tw("settingInfoPopover")} id={contentId} role="note">
         <p>{explanation}</p>
-        {items && items.length > 0 && <ul className="settingInfoLevels">
+        {items && items.length > 0 && <ul className={tw("settingInfoLevels")}>
           {items.map(item => <li key={item.value}>
             <strong>{item.value} · {item.label}</strong>
             <span>{item.description}</span>

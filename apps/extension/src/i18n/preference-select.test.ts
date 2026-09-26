@@ -50,5 +50,6 @@ test("Radix popup and trigger follow the warm theme without an unstyled native d
   assert.match(select, /bg-popover text-popover-foreground/);
   assert.match(select, /focus:bg-accent focus:text-accent-foreground/);
   assert.match(css, /--primary: oklch\(0\.6171 0\.1375 39\.0427\)/);
-  assert.match(css, /\.uiPreferenceField \[data-slot="select-trigger"\]/);
+  assert.match(select, /data-slot="select-trigger"/);
+  assert.match(await readFile(new URL("../utility-classes.ts", import.meta.url), "utf8"), /uiPreferenceField/);
 });

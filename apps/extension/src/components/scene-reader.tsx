@@ -1,3 +1,4 @@
+import { tw } from "../utility-classes";
 import React, { useEffect, useMemo, useState } from "react";
 import { ExternalLink, Play, Repeat2, SlidersHorizontal, Square } from "lucide-react";
 import { nextStudyStep, readSceneProgress, STUDY_STEPS, type StudyStep } from "./scene-navigation";
@@ -272,32 +273,32 @@ export function SceneReader({
 
   function renderOriginal(line: SubtitleCue, index: number) {
     const translation = scene.translations.find(item => item.cueId === line.id);
-    return <div className="sceneUtterance" key={line.id}>
-      <span className="sceneLineNumber">{index + 1}</span>
+    return <div className={tw("sceneUtterance")} key={line.id}>
+      <span className={tw("sceneLineNumber")}>{index + 1}</span>
       <div>
         <p lang={document.profile.targetLanguage}>{line.originalText}</p>
         {translationVisible
-          ? <p className="sceneTranslation">{translation?.text}</p> : null}
+          ? <p className={tw("sceneTranslation")}>{translation?.text}</p> : null}
       </div>
     </div>;
   }
 
-  return <div className="sceneReader">
-    <Card className="panel">
-      <div className="sceneHeader">
-        <div className="sceneHeaderTitle">
+  return <div className={tw("sceneReader")}>
+    <Card className={tw("panel")}>
+      <div className={tw("sceneHeader")}>
+        <div className={tw("sceneHeaderTitle")}>
           <strong>{document.source.title}</strong>
-          <span className="hint">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level} · {completedIds.length}/{document.sections.length} {c.completed}</span>
+          <span className={tw("hint")}>{document.profile.targetLanguage.toUpperCase()} · {document.profile.level} · {completedIds.length}/{document.sections.length} {c.completed}</span>
         </div>
-        <div className="sceneExport">
+        <div className={tw("sceneExport")}>
           <Button variant="outline" size="sm" onClick={() => onDownload("json")}>JSON</Button>
           <Button variant="outline" size="sm" onClick={() => onDownload("md")}>MD</Button>
         </div>
       </div>
-      <div className="sceneTabs" role="tablist" aria-label={c.scene}>
+      <div className={tw("sceneTabs")} role="tablist" aria-label={c.scene}>
         {(["learn", "review"] as const).map(tab =>
           <Button key={tab} role="tab" aria-selected={mode === tab}
-            className={mode === tab ? "selected" : ""}
+            className={tw(mode === tab ? "sceneTabButton selected" : "sceneTabButton")}
             onClick={() => { setMode(tab); setStatus(""); }}>
             {c[tab]}
           </Button>)}
@@ -305,13 +306,13 @@ export function SceneReader({
     </Card>
 
     {mode === "learn" && <>
-      <Card className="panel">
-        <div className="sceneHeading">
-          <span className="chip">{c.scene} {sceneIndex + 1} / {document.sections.length}</span>
-          <span className="time">{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
+      <Card className={tw("panel")}>
+        <div className={tw("sceneHeading")}>
+          <span className={tw("chip")}>{c.scene} {sceneIndex + 1} / {document.sections.length}</span>
+          <span className={tw("time")}>{formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
         </div>
-        <div className="scenePicker">
-          <label htmlFor="study-scene-picker">{c.chooseScene}</label>
+        <div className={tw("scenePicker")}>
+          <label className={tw("labelBase")} htmlFor="study-scene-picker">{c.chooseScene}</label>
           <SelectField id="study-scene-picker" ariaLabel={c.chooseScene}
             value={String(sceneIndex)} disabled={busy}
             onValueChange={value => selectScene(Number(value))}
@@ -323,33 +324,34 @@ export function SceneReader({
             }))} />
         </div>
         <h2>{scene.title}</h2>
-        <div className="sceneQuickPlay">
+        <div className={tw("sceneQuickPlay")}>
           <Button size="sm" variant="outline" disabled={busy || !canPlay}
             onClick={() => void playScene()}>
             <Play aria-hidden="true" />{c.playScene}
           </Button>
-          {!canPlay && <p className="hint">
+          {!canPlay && <p className={tw("hint")}>
             {!sourceUrl || adapter.id === "import" ? c.noVideo : c.noTime}
           </p>}
         </div>
-        <p className="hint">{scene.context}</p>
-        <p className="sceneGoal"><strong>{c.goal}:</strong> {scene.learningGoal}</p>
-        <nav className="sceneSteps" aria-label={c.studySteps}>
+        <p className={tw("hint")}>{scene.context}</p>
+        <p className={tw("sceneGoal")}><strong>{c.goal}:</strong> {scene.learningGoal}</p>
+        <nav className={tw("sceneSteps")} aria-label={c.studySteps}>
           {STUDY_STEPS.map((part, index) =>
             <Button key={part} variant={step === part ? "default" : "outline"}
               type="button" aria-pressed={step === part}
               aria-describedby={step === part ? "scene-step-hint" : undefined}
+              className={tw("sceneStepButton")}
               onClick={() => selectStep(part)}>
-              <span className="sceneStepNumber" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-              <span className="sceneStepLabel">{c[part]}</span>
+              <span className={tw("sceneStepNumber")} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <span className={tw("sceneStepLabel")}>{c[part]}</span>
             </Button>)}
         </nav>
-        <p className="sceneStepHint" id="scene-step-hint">
+        <p className={tw("sceneStepHint")} id="scene-step-hint">
           {step === "listen" ? c.listenHint : step === "understand" ? c.understandHint : c.practiceHint}
         </p>
-        <details className="sceneReadingSettings">
-          <summary>{c.hintLabel} · {c[hint]}</summary>
-          <div className="sceneReadingControl">
+        <details className={tw("detailsBase sceneReadingSettings")}>
+          <summary className={tw("summaryBase")}>{c.hintLabel} · {c[hint]}</summary>
+          <div className={tw("sceneReadingControl")}>
             <SelectField ariaLabel={c.hintLabel} value={hint} onValueChange={value => {
               setHint(value as Hint);
               setShowOriginal(null);
@@ -364,7 +366,7 @@ export function SceneReader({
           </div>
         </details>
         {step === "listen" && <>
-          {originalVisible && <div className="sceneDialogue">
+          {originalVisible && <div className={tw("sceneDialogue")}>
             {scene.cueIds.map(id => cues.get(id)).filter((cue): cue is SubtitleCue => !!cue)
               .map((cue, index) => renderOriginal(cue, index))}
           </div>}
@@ -373,39 +375,39 @@ export function SceneReader({
           </Button>
         </>}
         {step === "understand" && <>
-          <div className="sceneDialogue">
+          <div className={tw("sceneDialogue")}>
             {scene.cueIds.map(id => cues.get(id)).filter((cue): cue is SubtitleCue => !!cue)
               .map((cue, index) => renderOriginal(cue, index))}
           </div>
           <Button size="sm" variant="outline" onClick={() => setShowTranslation(current => !(current ?? hint === "bilingual"))}>
             {translationVisible ? c.hideTranslation : c.showTranslation}
           </Button>
-          {scene.vocabulary.length > 0 && <div className="sceneFocus">
+          {scene.vocabulary.length > 0 && <div className={tw("sceneFocus")}>
             <h3>{c.focus}</h3>
-            {scene.vocabulary.map(word => <div className="learningCard" key={word.expression}>
+            {scene.vocabulary.map(word => <div className={tw("learningCard")} key={word.expression}>
               <strong lang={document.profile.targetLanguage}>{word.expression}</strong>
               <span>{word.meaning}</span>
               <p>{word.explanation}</p>
               {word.example && <p lang={document.profile.targetLanguage}>{word.example}</p>}
             </div>)}
           </div>}
-          {scene.insights.length > 0 && <details><summary>{c.insight}</summary>
+          {scene.insights.length > 0 && <details className={tw("detailsBase")}><summary className={tw("summaryBase")}>{c.insight}</summary>
             {scene.insights.map((note, index) => <p key={index}>{note}</p>)}
           </details>}
         </>}
         {step === "practice" && <>
           {scene.exercises.length > 0 ? scene.exercises.map((exercise, index) =>
-            <div className="scenePractice" key={index}>
+            <div className={tw("scenePractice")} key={index}>
               <p>{exercise.question}</p>
               <Textarea aria-label={c.answerPlaceholder} rows={3} value={answer}
                 placeholder={c.answerPlaceholder} onChange={event => setAnswer(event.target.value)} />
               <Button variant="outline" size="sm" onClick={() => setShowAnswer(current => !current)}>
                 {showAnswer ? c.hideAnswer : c.showAnswer}
               </Button>
-              {showAnswer && <p className="sceneSample" lang={document.profile.targetLanguage}>{exercise.answer}</p>}
-            </div>) : <p className="hint">{c.noPractice}</p>}
+              {showAnswer && <p className={tw("sceneSample")} lang={document.profile.targetLanguage}>{exercise.answer}</p>}
+            </div>) : <p className={tw("hint")}>{c.noPractice}</p>}
         </>}
-        <div className="sceneStageNavigation">
+        <div className={tw("sceneStageNavigation")}>
           <Button disabled={step === "practice" && completedIds.includes(scene.id)}
             onClick={() => {
               const next = nextStudyStep(step);
@@ -416,10 +418,10 @@ export function SceneReader({
               : completedIds.includes(scene.id) ? c.sceneCompleted : c.finish}
           </Button>
         </div>
-        <nav className="sceneNavigation" aria-label={c.sceneNavigation}>
+        <nav className={tw("sceneNavigation")} aria-label={c.sceneNavigation}>
           <Button variant="outline" size="sm" disabled={busy || sceneIndex === 0}
             onClick={() => selectScene(sceneIndex - 1)}>{c.previousScene}</Button>
-          <span className="sceneNavPosition">{sceneIndex + 1} / {document.sections.length}</span>
+          <span className={tw("sceneNavPosition")}>{sceneIndex + 1} / {document.sections.length}</span>
           <Button variant="outline" size="sm"
             disabled={busy || sceneIndex === document.sections.length - 1}
             onClick={() => selectScene(sceneIndex + 1)}>{c.nextScene}</Button>
@@ -427,16 +429,16 @@ export function SceneReader({
       </Card>
     </>}
 
-    {mode === "review" && <Card className="panel">
+    {mode === "review" && <Card className={tw("panel")}>
       <h2>{c.review}</h2>
-      <p className="hint">{c.reviewHint}</p>
-      {document.sections.every(item => item.vocabulary.length === 0) && <p className="hint">{c.noExpressions}</p>}
+      <p className={tw("hint")}>{c.reviewHint}</p>
+      {document.sections.every(item => item.vocabulary.length === 0) && <p className={tw("hint")}>{c.noExpressions}</p>}
       {document.sections.flatMap(item => item.vocabulary.map(word => ({ item, word }))).map(({ item, word }) => {
         const key = item.id + ":" + word.expression;
         const line = focusCue(item, cues);
-        return <div className="learningCard" key={key}>
+        return <div className={tw("learningCard")} key={key}>
           <strong>{item.title}</strong>
-          <div className="actions">
+          <div className={tw("actions")}>
             <Button size="sm" variant="outline" disabled={busy || !sourceUrl || !adapter.loop || !line}
               onClick={() => void playFocus(line, false)}>{c.playOriginal}</Button>
             <Button size="sm" variant="outline" onClick={() =>
@@ -451,10 +453,10 @@ export function SceneReader({
     </Card>}
 
     {mode === "learn" && sourceUrl && adapter.id !== "import" && <Card
-      className="panel scenePlayer" aria-label={c.miniPlayer}>
-      <div className="sceneMiniHeader">
-        <div className="sceneMiniTitle">
-          <span className="time">{c.scene} {sceneIndex + 1} · {formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
+      className={tw("panel scenePlayer")} aria-label={c.miniPlayer}>
+      <div className={tw("sceneMiniHeader")}>
+        <div className={tw("sceneMiniTitle")}>
+          <span className={tw("time")}>{c.scene} {sceneIndex + 1} · {formatTime(scene.startMs)}–{formatTime(scene.endMs)}</span>
           <strong title={scene.title}>{scene.title}</strong>
         </div>
         <Button size="icon" variant="ghost" aria-label={c.openVideo}
@@ -462,8 +464,8 @@ export function SceneReader({
           <ExternalLink aria-hidden="true" />
         </Button>
       </div>
-      <div className="sceneMiniControls">
-        <Button size="sm" className="sceneMiniLoop" variant={focusLoopActive ? "secondary" : "default"}
+      <div className={tw("sceneMiniControls")}>
+        <Button size="sm" variant={focusLoopActive ? "secondary" : "default"}
           aria-pressed={focusLoopActive}
           disabled={busy || !selectedFocusCue || !adapter.loop ||
             (focusLoopActive && !adapter.stopLoop)}
@@ -471,17 +473,17 @@ export function SceneReader({
           {focusLoopActive ? <Square aria-hidden="true" /> : <Repeat2 aria-hidden="true" />}
           {focusLoopActive ? c.stopLoop : c.repeatFocus}
         </Button>
-        <Button size="sm" variant="outline" className="sceneMiniSettingsToggle"
+        <Button size="sm" variant="outline"
           aria-expanded={playbackSettingsOpen}
           aria-controls={playbackSettingsOpen ? "scene-playback-options" : undefined}
           onClick={() => setPlaybackSettingsOpen(open => !open)}>
           <SlidersHorizontal aria-hidden="true" />{c.playbackOptions}
         </Button>
       </div>
-      {playbackSettingsOpen && <div className="sceneMiniSettings" id="scene-playback-options"
+      {playbackSettingsOpen && <div className={tw("sceneMiniSettings")} id="scene-playback-options"
         role="region" aria-label={c.playbackOptions}>
-        <div className="twoColumns">
-          <label>{c.repeat}
+        <div className={tw("twoColumnsCompact")}>
+          <label className={tw("labelBase")}>{c.repeat}
             <SelectField ariaLabel={c.repeat} value={repeat}
               onValueChange={value => setRepeat(value as Repeat)}
               options={[
@@ -489,13 +491,13 @@ export function SceneReader({
                 { value: "5", label: "5×" }, { value: "infinite", label: "∞" },
               ]} />
           </label>
-          <label>{c.delay}
+          <label className={tw("labelBase")}>{c.delay}
             <SelectField ariaLabel={c.delay} value={delay}
               onValueChange={value => setDelay(Number(value))}
               options={[0, 1, 2, 3].map(value => ({ value, label: value + "s" }))} />
           </label>
         </div>
-        {adapter.setPlaybackRate && <label>{c.speed}
+        {adapter.setPlaybackRate && <label className={tw("labelBase")}>{c.speed}
           <SelectField ariaLabel={c.speed} value={playbackRate} disabled={busy}
             onValueChange={value => void changeRate(Number(value))}
             options={[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5].map(rate => ({
@@ -503,23 +505,23 @@ export function SceneReader({
             }))} />
         </label>}
 
-        <div className="sceneLoopRange" role="group" aria-label={c.loopRange}>
-          <div className="sceneLoopRangeTitle">
+        <div className={tw("sceneLoopRange")} role="group" aria-label={c.loopRange}>
+          <div className={tw("sceneLoopRangeTitle")}>
             <strong>{c.loopRange}</strong>
             <Button variant="outline" size="sm" disabled={busy || !selectedFocusCue ||
               !loopRanges[selectedFocusCue.id]}
               onClick={() => void updateFocusRange("reset")}>{c.loopRangeResetButton}</Button>
           </div>
-          <p className="hint">{c.loopRangeHint}</p>
+          <p className={tw("hint")}>{c.loopRangeHint}</p>
           {selectedFocusRange ? (["start", "end"] as const).map(boundary => {
             const point = boundary === "start" ? selectedFocusRange.startMs : selectedFocusRange.endMs;
             const name = boundary === "start" ? c.loopStart : c.loopEnd;
-            return <div className="sceneLoopBoundary" key={boundary}>
-              <div className="sceneLoopBoundaryTitle">
+            return <div className={tw("sceneLoopBoundary")} key={boundary}>
+              <div className={tw("sceneLoopBoundaryTitle")}>
                 <span>{name}</span>
                 <output>{formatLoopTimestamp(point)}</output>
               </div>
-              <div className="sceneLoopNudge">
+              <div className={tw("sceneLoopNudge")}>
                 <Button variant="outline" size="sm" disabled={busy}
                   aria-label={name + " " + c.loopEarlier}
                   onClick={() => void updateFocusRange(boundary, point - 500)}>−0.5s</Button>
@@ -532,10 +534,10 @@ export function SceneReader({
                 </Button>
               </div>
             </div>;
-          }) : <p className="hint">{c.noTime}</p>}
+          }) : <p className={tw("hint")}>{c.noTime}</p>}
         </div>
       </div>}
-      {status && <p className="sceneMiniStatus" role="status">{status}</p>}
+      {status && <p className={tw("sceneMiniStatus")} role="status">{status}</p>}
     </Card>}
   </div>;
 }

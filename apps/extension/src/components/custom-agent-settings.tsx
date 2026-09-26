@@ -1,3 +1,4 @@
+import { tw } from "../utility-classes";
 import { useEffect, useState } from "react";
 import { CustomAgentConfigSchema, type CustomAgentConfig, type HostMessage } from "@immersive/core";
 import { Button } from "./ui/button";
@@ -118,13 +119,13 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
     finally { setBusy(false); }
   }
 
-  return <details className="agentProfileAdvanced customAgentSection">
-    <summary>{t("customAgentsHeading")}</summary>
-    <p className="hint">{t("customAgentsHint")}</p>
-    {agents.length > 0 && <div className="customAgentList">
-      {agents.map(value => <div key={value.id} className="customAgentRow">
+  return <details className={tw("detailsBase agentProfileAdvanced customAgentSection")}>
+    <summary className={tw("summaryBase")}>{t("customAgentsHeading")}</summary>
+    <p className={tw("hint")}>{t("customAgentsHint")}</p>
+    {agents.length > 0 && <div className={tw("customAgentList")}>
+      {agents.map(value => <div key={value.id} className={tw("customAgentRow")}>
         <span><strong>{value.label}</strong><small>{value.executable}</small></span>
-        <div className="actions">
+        <div className={tw("actions")}>
           <Button variant="outline" size="sm" disabled={busy}
             onClick={() => edit(value)}>{t("customAgentEdit")}</Button>
           <Button variant="outline" size="sm" disabled={busy}
@@ -132,8 +133,8 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
         </div>
       </div>)}
     </div>}
-    <div className="customAgentFields">
-      <label>{t("customAgentTemplate")}
+    <div className={tw("customAgentFields")}>
+      <label className={tw("labelBase")}>{t("customAgentTemplate")}
         <SelectField ariaLabel={t("customAgentTemplate")} disabled={busy}
           value={template} onValueChange={chooseTemplate} options={[
             { value: "", label: t("customAgentManual") },
@@ -143,58 +144,58 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
             { value: "file", label: t("customAgentFileTemplate") },
           ]} />
       </label>
-      <label>{t("customAgentName")}
+      <label className={tw("labelBase")}>{t("customAgentName")}
         <Input disabled={busy} maxLength={80} value={draft.label}
           placeholder={t("customAgentNamePlaceholder")}
           onChange={event => update({ label: event.target.value })} />
       </label>
-      <label>{t("customAgentExecutable")}
+      <label className={tw("labelBase")}>{t("customAgentExecutable")}
         <Input disabled={busy} maxLength={1024} value={draft.executable}
           placeholder={t("customAgentExecutablePlaceholder")}
           onChange={event => update({ executable: event.target.value })} />
       </label>
-      <div className="actions">
+      <div className={tw("actions")}>
         <Button variant="outline" size="sm" disabled={!available || busy || !draft.executable.trim()}
           onClick={() => void probe()}>{t("customAgentDetect")}</Button>
       </div>
-      <details className="agentProfileAdvanced">
-        <summary>{t("customAgentAdvanced")}</summary>
-        <label>{t("customAgentPromptMode")}
+      <details className={tw("detailsBase agentProfileAdvanced")}>
+        <summary className={tw("summaryBase")}>{t("customAgentAdvanced")}</summary>
+        <label className={tw("labelBase")}>{t("customAgentPromptMode")}
           <SelectField ariaLabel={t("customAgentPromptMode")} value={draft.promptMode}
             disabled={busy} onValueChange={value =>
               update({ promptMode: value as CustomAgentConfig["promptMode"] })}
             options={[{ value: "argument", label: t("customAgentArgument") },
               { value: "stdin", label: t("customAgentStdin") }]} />
         </label>
-        <label>{t("customAgentOutputMode")}
+        <label className={tw("labelBase")}>{t("customAgentOutputMode")}
           <SelectField ariaLabel={t("customAgentOutputMode")} value={draft.outputMode}
             disabled={busy} onValueChange={value =>
               update({ outputMode: value as CustomAgentConfig["outputMode"] })}
             options={[{ value: "stdout-json", label: t("customAgentStdout") },
               { value: "file-json", label: t("customAgentFile") }]} />
         </label>
-        <label>{t("customAgentArgs")}
-          <textarea className="customAgentTextarea" disabled={busy} rows={4}
+        <label className={tw("labelBase")}>{t("customAgentArgs")}
+          <textarea className={tw("customAgentTextarea")} disabled={busy} rows={4}
             aria-label={t("customAgentArgs")} value={argv}
             onChange={event => setArgv(event.target.value)} />
         </label>
-        <p className="hint">{t("customAgentPlaceholders")}</p>
-        <label>{t("customAgentModelArgument")}
+        <p className={tw("hint")}>{t("customAgentPlaceholders")}</p>
+        <label className={tw("labelBase")}>{t("customAgentModelArgument")}
           <Input disabled={busy} maxLength={64} value={draft.modelArgument ?? ""}
             placeholder="--model" onChange={event => update({ modelArgument: event.target.value })} />
         </label>
-        <label>{t("customAgentModelsCommand")}
-          <textarea className="customAgentTextarea" disabled={busy} rows={2}
+        <label className={tw("labelBase")}>{t("customAgentModelsCommand")}
+          <textarea className={tw("customAgentTextarea")} disabled={busy} rows={2}
             aria-label={t("customAgentModelsCommand")} value={modelArgv}
             onChange={event => setModelArgv(event.target.value)} />
         </label>
-        <label>{t("customAgentProfileEnv")}
+        <label className={tw("labelBase")}>{t("customAgentProfileEnv")}
           <Input disabled={busy} value={draft.profileEnvVar ?? ""} placeholder="GEMINI_CLI_HOME"
             onChange={event => update({ profileEnvVar: event.target.value })} />
         </label>
       </details>
-      <p className="hint">{t("customAgentSafety")}</p>
-      <div className="actions">
+      <p className={tw("hint")}>{t("customAgentSafety")}</p>
+      <div className={tw("actions")}>
         <Button variant="outline" size="sm" disabled={busy} onClick={() => edit(fresh())}>
           {t("customAgentNew")}</Button>
         <Button variant="outline" size="sm" disabled={!available || busy}
@@ -202,7 +203,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
         <Button size="sm" disabled={!available || busy}
           onClick={() => void submit("save")}>{t("customAgentSave")}</Button>
       </div>
-      {status && <p className={failed ? "jobRowError" : "hint"} role="status">{status}</p>}
+      {status && <p className={tw(failed ? "jobRowError" : "hint")} role="status">{status}</p>}
     </div>
   </details>;
 }
