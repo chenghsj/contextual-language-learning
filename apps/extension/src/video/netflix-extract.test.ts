@@ -59,7 +59,7 @@ test("temporarily selects the requested track and restores the existing subtitle
 test("does not return a different language or fabricate a missing Netflix caption track", async () => {
   await assert.rejects(() => readNetflixSubtitles({
     getTimedTextTrackList: () => [ja],
-  }, null, () => null, "en"), /No subtitle track/);
+  }, null, () => null, "en"), /none match the selected learning language/);
 });
 
 test("rejects an inaccessible subtitle instead of claiming a complete transcript", async () => {
@@ -128,10 +128,32 @@ test("Netflix accepts new learning language codes and checks available tracks", 
   for (const language of ["es", "fr", "de", "it", "pt"]) {
     await assert.rejects(
       () => readNetflixSubtitles({}, null, () => null, language),
-      /No subtitle track in this language/,
+      /has not exposed subtitle tracks/,
       language + " passes the supported-language validation",
     );
   }
   await assert.rejects(() => readNetflixSubtitles({}, null, () => null, "xx"),
     /Unsupported learning language/);
+});
+
+test("rejects header-only captions at extraction stage instead of reporting success with zero cues", async () => {
+  const player: NetflixCaptionPlayer = {
+    getTimedTextTrackList: () => [{ ...en, urls: [{ url }] }],
+  };
+  await assert.rejects(() => readNetflixSubtitles(player, null, () => null, "en", {
+    fetchDocument: async () => new Response("WEBVTT\\n\\n", { status: 200 }),
+  }), /contains no usable timed cues/);
+});
+
+test("briefly retries an empty track catalog after the video appears", async () => {
+  let calls = 0;
+  const player: NetflixCaptionPlayer = {
+    getTimedTextTrackList: () => ++calls > 1 ? [{ ...en, urls: [{ url }] }] : [],
+  };
+  const video = { textTracks: [], duration: 200 } as unknown as HTMLVideoElement;
+  const result = await readNetflixSubtitles(player, video, () => null, "en", {
+    pause: async () => {}, fetchDocument: fakeFetch,
+  });
+  assert.equal(calls, 2);
+  assert.equal(parseSubtitles(result.text).length, 1);
 });

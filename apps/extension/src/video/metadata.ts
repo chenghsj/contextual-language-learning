@@ -23,6 +23,16 @@ export function cleanVideoTitle(value: string | null | undefined): string | null
   return candidate.slice(0, 200);
 }
 
+/** Resolve visible Netflix player titles before the browser's often generic "Netflix" tab label.
+ * Do not treat stale og:title from Netflix SPA navigation as the current episode. */
+export function netflixPlayerTitle(candidates: readonly (string | null | undefined)[]): string | null {
+  for (const candidate of candidates) {
+    const title = cleanVideoTitle(candidate);
+    if (title) return title;
+  }
+  return null;
+}
+
 /** Get the actual title from the current video page, falling back to Chrome's
  * tab title. Ignore metadata from a tab that has navigated to another video. */
 export async function titleForVideoTab(

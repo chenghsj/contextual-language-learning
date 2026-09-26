@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cleanVideoTitle, titleForVideoTab } from "./metadata";
+import { cleanVideoTitle, netflixPlayerTitle, titleForVideoTab } from "./metadata";
 import { netflixAdapter } from "./netflix";
 
 const url = "https://www.netflix.com/watch/81234567";
@@ -65,4 +65,11 @@ test("fallback to browser tab title when the page metadata is unavailable", asyn
     if (previous) globalChrome.chrome = previous;
     else delete globalChrome.chrome;
   }
+});
+
+test("Netflix title selection prefers visible player titles over generic page labels", () => {
+  assert.equal(netflixPlayerTitle(["Netflix", "第 12 話・新的開始", "Old episode - Netflix"]),
+    "第 12 話・新的開始");
+  assert.equal(netflixPlayerTitle([null, "Netflix", "Watch on Netflix"]), null);
+  assert.equal(netflixPlayerTitle(["", "Episode 12 - Netflix"]), "Episode 12");
 });
