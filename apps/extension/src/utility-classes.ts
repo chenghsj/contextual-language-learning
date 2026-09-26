@@ -3,7 +3,7 @@
  * Grouping recurring layouts keeps the 3 reader generations and the main App readable.
  */
 export const utilityClasses = {
-  "app": "mx-auto min-w-[320px] max-w-[780px] px-3 pb-9 leading-[1.55] antialiased font-[Outfit,'Noto_Sans_TC',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]",
+  "app": "mx-auto min-w-[320px] max-w-[780px] px-3 pb-9 leading-[1.55] antialiased font-[Outfit,'Noto_Sans_TC',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] [color-scheme:light] dark:[color-scheme:dark] [font-synthesis:none]",
   "topbar": "flex items-center justify-between gap-2 py-[18px] [&>div]:flex [&>div]:min-w-0 [&>div]:items-center [&>div]:gap-[9px] [&_strong]:min-w-0 [&_strong]:text-xs [&_strong]:leading-[1.25] [&_strong]:wrap-anywhere",
   "brandMark": "block size-9 shrink-0 rounded-[var(--radius)] object-contain",
   "version": "shrink-0 whitespace-nowrap text-[11px] text-muted-foreground",
@@ -121,7 +121,7 @@ export const utilityClasses = {
   "contextualWholePlayback": "min-h-[38px] w-full",
   "contextualDialogueHeading": "mt-[18px] [&>button]:shrink-0",
   "contextualDialogue": "overflow-hidden rounded-[var(--radius)] border border-border",
-  "contextualLine": "grid h-auto w-full min-w-0 grid-cols-[24px_minmax(0,1fr)_auto_16px] items-start gap-[7px] rounded-none border-0 bg-card px-[9px] py-[11px] text-left text-[13px] leading-[1.65] text-foreground not-first:border-t not-first:border-border hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-[-2px] max-[355px]:grid-cols-[20px_minmax(0,1fr)_12px]",
+  "contextualLine": "cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 grid h-auto w-full min-w-0 grid-cols-[24px_minmax(0,1fr)_auto_16px] items-start gap-[7px] rounded-none border-0 bg-card px-[9px] py-[11px] text-left text-[13px] leading-[1.65] text-foreground not-first:border-t not-first:border-border hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-[-2px] max-[355px]:grid-cols-[20px_minmax(0,1fr)_12px]",
   "chosen": "shadow-[inset_2px_0_var(--border)]",
   "playing": "bg-[color-mix(in_oklch,var(--primary)_11%,var(--card))]! shadow-[inset_3px_0_var(--primary)]!",
   "selectedLine": "bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))]! shadow-[inset_3px_0_var(--primary)]!",
