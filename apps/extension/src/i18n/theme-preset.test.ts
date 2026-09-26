@@ -15,6 +15,8 @@ const lightMatch = css.match(/:root \{([\s\S]*?)\n\}/);
 const darkMatch = css.match(/:root\[data-theme="dark"\], :root\.dark \{([\s\S]*?)\n\}/);
 if (!lightMatch || !darkMatch) throw new Error("Theme must support both app data-theme and shadcn dark class.");
 const light = declarations(lightMatch[1]), dark = declarations(darkMatch[1]);
+// CSS custom properties not overridden by :root.dark inherit from the base :root.
+const effectiveDark = { ...light, ...dark };
 
 test("the warm OKLCH theme covers light and dark semantic tokens", () => {
   const names = [
@@ -29,7 +31,7 @@ test("the warm OKLCH theme covers light and dark semantic tokens", () => {
   ];
   for (const name of names) {
     assert.ok(light[name]?.startsWith("oklch("), "missing light token: " + name);
-    assert.ok(dark[name]?.startsWith("oklch("), "missing dark token: " + name);
+    assert.ok(effectiveDark[name]?.startsWith("oklch("), "missing effective dark token: " + name);
     assert.match(css, new RegExp("--color-" + name + ": var\\(--" + name + "\\);"),
       "Tailwind mapping missing " + name);
   }
@@ -39,6 +41,8 @@ test("the warm OKLCH theme covers light and dark semantic tokens", () => {
   assert.equal(dark.background, "oklch(0.2679 0.0036 106.6427)");
   assert.equal(light["sidebar-primary"], "oklch(0.6171 0.1375 39.0427)");
   assert.equal(dark["sidebar-primary"], "oklch(0.3250 0 0)");
+  assert.equal(dark["chart-1"], undefined, "unchanged chart color should inherit");
+  assert.equal(effectiveDark["chart-1"], light["chart-1"]);
   assert.equal(light.radius, "1rem");
 });
 

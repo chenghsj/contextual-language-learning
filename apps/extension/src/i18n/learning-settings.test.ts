@@ -81,11 +81,43 @@ test("settings keep stable saved option values rather than persisting translated
   assert.match(app, /t\("contextualExamples"\)/);
 });
 
-test("task cards start below the refresh control with consistent spacing", async () => {
+test("task cards use one effective spacing rule below the refresh control", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   assert.match(app, /className="jobHistoryList"/);
-  assert.match(css, /\.jobHistoryList\s*\{[^}]*margin-top:\s*12px/);
+  const rules = [...css.matchAll(/^\.jobHistoryList\s*\{([^{}]*)\}/gm)];
+  assert.equal(rules.length, 1, "a later declaration must not silently override the tested spacing");
+  assert.match(rules[0][1], /\bmargin:\s*10px 0;/);
+  assert.match(rules[0][1], /\bgap:\s*7px;/);
+});
+
+test("navigation has one four-column style and keeps compact tab labels", async () => {
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  const tabRules = [...css.matchAll(/^\.tabs\s*\{([^{}]*)\}/gm)];
+  const buttonRules = [...css.matchAll(/^\.tabs button\s*\{([^{}]*)\}/gm)];
+  assert.equal(tabRules.length, 1, "four-column navigation must have a single source of truth");
+  assert.equal(buttonRules.length, 1, "tab labels must not depend on late overrides");
+  assert.match(tabRules[0][1], /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\);/);
+  assert.match(buttonRules[0][1], /font-size:\s*11px;/);
+  assert.match(buttonRules[0][1], /padding:\s*8px 1px;/);
+  assert.match(buttonRules[0][1], /gap:\s*3px;/);
+});
+
+test("dark theme inherits unchanged tokens and both lesson readers retain styles", async () => {
+  const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+  const light = css.match(/^:root \{([\s\S]*?)^\}/m)?.[1];
+  const dark = css.match(/^:root\[data-theme="dark"\], :root\.dark \{([\s\S]*?)^\}/m)?.[1];
+  assert.ok(light, "the base design tokens must exist");
+  assert.ok(dark, "the dark theme overrides must exist");
+  const variables = (block: string) => new Map(
+    [...block.matchAll(/^\s*(--[\w-]+):\s*([^;]+);/gm)].map(match => [match[1], match[2].trim()]),
+  );
+  const lightTokens = variables(light);
+  for (const [name, value] of variables(dark)) {
+    assert.notEqual(value, lightTokens.get(name), name + " must inherit identical base values");
+  }
+  assert.match(css, /^\.sceneSteps\s*\{/m, "saved V1/V2 study steps must retain their styles");
+  assert.match(css, /^\.contextualDialogue\s*\{/m, "V3 source dialogue must retain its styles");
 });
 
 test("level help follows the selected learning language in every interface locale", async () => {

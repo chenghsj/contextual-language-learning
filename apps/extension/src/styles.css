@@ -2,6 +2,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Shared Tailwind/shadcn tokens; chart and sidebar colors remain available to utilities. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -104,6 +105,7 @@
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 }
+/* Base, navigation and shared controls. */
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: var(--background); color: var(--foreground); line-height: 1.55; -webkit-font-smoothing: antialiased; }
 button, input, select, textarea { font: inherit; }
@@ -115,9 +117,10 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .topbar strong { min-width: 0; font-size: 12px; line-height: 1.25; overflow-wrap: anywhere; }
 .brandMark { display: block; width: 36px; height: 36px; flex-shrink: 0; object-fit: contain; border-radius: var(--radius); }
 .version { color: var(--muted-foreground); font-size: 11px; white-space: nowrap; flex-shrink: 0; }
-.tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; margin-bottom: 16px; padding: 4px; border-radius: var(--radius); background: var(--muted); }
-.tabs button { min-width: 0; padding: 8px 2px; background: transparent; color: var(--muted-foreground); font-size: 12px; box-shadow: none; }
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-bottom: 16px; padding: 4px; border-radius: var(--radius); background: var(--muted); }
+.tabs button { min-width: 0; gap: 3px; padding: 8px 1px; background: transparent; color: var(--muted-foreground); font-size: 11px; box-shadow: none; }
 .tabs button.selected { background: var(--card); color: var(--foreground); box-shadow: 0 1px 4px #0001; }
+.tabs button svg { width: 14px; height: 14px; }
 .panel { margin-bottom: 12px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); box-shadow: 0 1px 3px #00000008; }
 .panel h1 { font-size: 21px; font-weight: 650; line-height: 1.35; margin: 8px 0; }
 .panel h2 { font-size: 16px; font-weight: 650; margin: 0 0 10px; }
@@ -159,6 +162,7 @@ textarea { resize: vertical; }
 details { margin: 8px 0; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; }
 details summary { cursor: pointer; font-weight: 600; }
 details p { margin-bottom: 2px; color: var(--muted-foreground); }
+/* Theme-specific overrides inherit unchanged tokens from :root. */
 /* The extension already uses data-theme; accept shadcn's .dark as well. */
 :root[data-theme="dark"], :root.dark {
   color-scheme: dark;
@@ -177,41 +181,16 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
   --accent: oklch(0.2130 0.0078 95.4245);
   --accent-foreground: oklch(0.9663 0.0080 98.8792);
   --destructive: oklch(0.6368 0.2078 25.3313);
-  --destructive-foreground: oklch(1.0000 0 0);
   --border: oklch(0.3618 0.0101 106.8928);
   --input: oklch(0.4336 0.0113 100.2195);
   --ring: oklch(0.6724 0.1308 38.7559);
-  --chart-1: oklch(0.5583 0.1276 42.9956);
-  --chart-2: oklch(0.6898 0.1581 290.4107);
   --chart-3: oklch(0.2130 0.0078 95.4245);
   --chart-4: oklch(0.3074 0.0516 289.3230);
-  --chart-5: oklch(0.5608 0.1348 42.0584);
   --sidebar: oklch(0.2357 0.0024 67.7077);
   --sidebar-foreground: oklch(0.8074 0.0142 93.0137);
   --sidebar-primary: oklch(0.3250 0 0);
-  --sidebar-primary-foreground: oklch(0.9881 0 0);
   --sidebar-accent: oklch(0.1680 0.0020 106.6177);
   --sidebar-accent-foreground: oklch(0.8074 0.0142 93.0137);
-  --sidebar-border: oklch(0.9401 0 0);
-  --sidebar-ring: oklch(0.7731 0 0);
-  --font-sans: Outfit, sans-serif;
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: Geist Mono, ui-monospace, monospace;
-  --radius: 1rem;
-  --shadow-x: 0;
-  --shadow-y: 1px;
-  --shadow-blur: 3px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.1;
-  --shadow-color: oklch(0 0 0);
-  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
-  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
-  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
-  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
 }
 
 /* Narrow Chrome Side Panels must not be widened by long episode titles, paths,
@@ -266,6 +245,7 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 .settingInfoLevels strong { display: block; color: var(--foreground); font-size: 12px; font-weight: 650; }
 .settingInfoLevels span { display: block; color: var(--muted-foreground); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 
+/* Legacy V1/V2 study reader: keep these selectors while saved lessons still load. */
 /* Curated study keeps a single scene in view, with playback accessible while scrolling. */
 .advancedLessonSettings { margin: 8px 0 12px; }
 .advancedLessonSettings > summary { color: var(--muted-foreground); font-size: 12px; }
@@ -374,7 +354,7 @@ details p { margin-bottom: 2px; color: var(--muted-foreground); }
 }
 
 /* Keep the task history visually separate from the refresh control. */
-.jobHistoryList { display: grid; gap: 12px; margin-top: 12px; }
+.jobHistoryList { display: grid; gap: 7px; margin: 10px 0; }
 .jobHistoryList .learningCard { margin-bottom: 0; }
 
 /* Warm dark mode uses the brighter primary color for readable small links. */
@@ -436,7 +416,6 @@ button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(-
 .generationProgress > span { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width .25s ease; }
 .jobToolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .jobToolbar > [data-slot="select-trigger"] { flex: 1; min-width: 0; }
-.jobHistoryList { display: grid; gap: 7px; margin: 10px 0; }
 .jobRow { min-width: 0; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius); }
 .jobRowHeading { display: flex; justify-content: space-between; align-items: center; min-width: 0; gap: 8px; }
 .jobRowHeading strong { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; }
@@ -449,10 +428,6 @@ button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(-
   .generationProgress > span { transition: none; }
 }
 
-/* My Lessons combines the local and cloud copies of a document by ID. */
-.tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.tabs button { gap: 3px; padding-inline: 1px; font-size: 11px; }
-.tabs button svg { width: 14px; height: 14px; }
 .lessonLibraryList { display: grid; gap: 8px; margin-top: 12px; }
 .lessonRowMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .lessonRowMeta .hint { margin: 0; }
