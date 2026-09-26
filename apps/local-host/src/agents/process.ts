@@ -125,17 +125,24 @@ export function runCLI(
       timedOut = true;
       child.kill();
     }, timeoutMs) : undefined;
-    child.stdout.setEncoding("utf8");
-    child.stderr.setEncoding("utf8");
+    const stdoutStream = child.stdout;
+    const stderrStream = child.stderr;
+    if (!stdoutStream || !stderrStream) {
+      child.kill();
+      reject(new Error("CLI output streams were not created."));
+      return;
+    }
+    stdoutStream.setEncoding("utf8");
+    stderrStream.setEncoding("utf8");
     if (input !== undefined) child.stdin?.end(input);
-    child.stdout.on("data", (data: string) => {
+    stdoutStream.on("data", (data: string) => {
       stdout += data;
       if (stdout.length > 2_000_000) {
         exceeded = true;
         child.kill();
       }
     });
-    child.stderr.on("data", (data: string) => {
+    stderrStream.on("data", (data: string) => {
       stderr = (stderr + data).slice(-16_000);
     });
     child.on("error", error => {
