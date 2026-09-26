@@ -13,7 +13,7 @@ const accountsPath = join(root, "google-accounts.json");
 const keychainService = "dev.immersive.language-learning.google-drive";
 const clientIdPattern = /^[A-Za-z0-9_.-]+\.apps\.googleusercontent\.com$/;
 
-interface OAuthConfig { clientId: string }
+interface OAuthConfig { clientId: string; clientSecret?: string }
 interface SavedAccount extends DriveAccount { clientId: string }
 interface TokenResponse { access_token: string; expires_in: number; refresh_token?: string }
 const accessTokens = new Map<string, { value: string; expiry: number }>();
@@ -31,13 +31,17 @@ async function writePrivate(path: string, value: unknown): Promise<void> {
 
 // Desktop OAuth Client ID is injected into the bundled Native Host at build time.
 declare const __GOOGLE_OAUTH_CLIENT_ID__: string;
+declare const __GOOGLE_OAUTH_CLIENT_SECRET__: string;
 async function googleConfig(): Promise<OAuthConfig> {
   const clientId = typeof __GOOGLE_OAUTH_CLIENT_ID__ === "string"
     ? __GOOGLE_OAUTH_CLIENT_ID__ : (process.env.GOOGLE_OAUTH_CLIENT_ID ?? "");
+  const clientSecret = typeof __GOOGLE_OAUTH_CLIENT_SECRET__ === "string"
+    ? __GOOGLE_OAUTH_CLIENT_SECRET__ : (process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "");
   if (!clientIdPattern.test(clientId)) {
     throw new Error("此版本尚未設定 Google OAuth Client ID，請更新 Native Host 或聯絡開發者");
   }
-  return { clientId };
+  if (clientSecret.length > 512) throw new Error("Google Desktop OAuth Client Secret 設定無效");
+  return { clientId, ...(clientSecret ? { clientSecret } : {}) };
 }
 export async function googleConfigured(): Promise<boolean> {
   try { await googleConfig(); return true; } catch { return false; }
@@ -86,15 +90,38 @@ async function keychainRead(id: string): Promise<string> {
   }
 }
 
+/**
+ * Report Google's OAuth error code, but never echo token endpoint bodies.
+ * The response may contain identifiers or secrets and is not safe to display verbatim.
+ */
+export function googleTokenError(status: number, response: unknown): Error {
+  const payload = response && typeof response === "object"
+    ? response as Record<string, unknown> : {};
+  const rawCode = typeof payload.error === "string" ? payload.error : "";
+  const code = /^[a-z_]{1,48}$/.test(rawCode) ? rawCode : "unknown";
+  const description = typeof payload.error_description === "string"
+    ? payload.error_description.toLowerCase() : "";
+  let guidance = "請確認 Google Desktop OAuth 用戶端設定後重新授權。";
+  if (/client[_ ]secret/.test(description) &&
+      /missing|required|not present|must be supplied|invalid|incorrect/.test(description)) {
+    guidance = "Google 要求此桌面 OAuth 用戶端的 Client Secret；請在建置環境設定 GOOGLE_OAUTH_CLIENT_SECRET，重新建置並安裝 Native Host 後再授權。";
+  } else if (code === "invalid_client") {
+    guidance = "請確認 Client ID 與 Client Secret（如果設定）來自同一個 Desktop OAuth 用戶端。";
+  } else if (code === "invalid_grant") {
+    guidance = "授權碼可能已失效或被使用，請重新連結 Google 帳號。";
+  }
+  return new Error("Google OAuth Token 交換失敗（HTTP " + status + "，" + code + "）。" + guidance);
+}
+
 async function tokenRequest(form: URLSearchParams): Promise<TokenResponse> {
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: form, signal: AbortSignal.timeout(30_000),
   });
-  const data: unknown = await response.json();
+  const data: unknown = await response.json().catch(() => null);
   if (!response.ok || !data || typeof data !== "object" ||
     typeof (data as { access_token?: unknown }).access_token !== "string") {
-    throw new Error("Google OAuth token exchange failed; verify the Desktop client credentials and reauthorize");
+    throw googleTokenError(response.status, data);
   }
   return data as TokenResponse;
 }
@@ -159,6 +186,7 @@ export async function connectGoogleAccount(): Promise<DriveAccount> {
     client_id: config.clientId, code, code_verifier: verifier,
     redirect_uri: redirectUri, grant_type: "authorization_code",
   });
+  if (config.clientSecret) form.set("client_secret", config.clientSecret);
   const token = await tokenRequest(form);
   const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
     headers: { Authorization: "Bearer " + token.access_token },
@@ -192,6 +220,7 @@ export async function accessTokenFor(accountId: string): Promise<string> {
     client_id: config.clientId, refresh_token: await keychainRead(accountId),
     grant_type: "refresh_token",
   });
+  if (config.clientSecret) form.set("client_secret", config.clientSecret);
   const token = await tokenRequest(form);
   accessTokens.set(accountId, { value: token.access_token,
     expiry: Date.now() + Math.max(token.expires_in - 90, 30) * 1000 });
