@@ -2,7 +2,8 @@ import { LEARNING_LANGUAGES } from "@immersive/core";
 import {
   allowedYouTubeCaptionUrl, chooseYouTubeCaptionTrack,
   observedYouTubeCaptionUrls, parsePlayerYouTubeCaptionResponse,
-  readYouTubeCaptionTracks, youtubeTimedTextToVtt,
+  readYouTubeCaptionTracks, youtubeTimedTextToVtt, youtubeCaptionCandidates,
+  YOUTUBE_CAPTION_FETCH_BUDGET_MS, YOUTUBE_CAPTION_FETCH_ATTEMPT_MS,
 } from "../video/youtube-captions";
 
 // MAIN world: access only the active watch player's public caption-track metadata.
@@ -162,16 +163,19 @@ import {
       performance.getEntriesByType("resource").map(entry => entry.name),
       request.videoId, track.languageCode,
     );
-    const candidates = [...new Set([
-      ...observed, json3Url.toString(), originalUrl.toString(),
-    ])];
+    const candidates = youtubeCaptionCandidates(observed, json3Url.toString(), originalUrl.toString());
+    const deadline = Date.now() + YOUTUBE_CAPTION_FETCH_BUDGET_MS;
     let lastError: Error | null = null;
     let emptyResponses = 0;
+    let deadlineExpired = false;
     for (const candidate of candidates) {
       if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
+      const remainingMs = deadline - Date.now();
+      if (remainingMs < 250) { deadlineExpired = true; break; }
       try {
         const response = await fetch(candidate, {
-          credentials: "include", signal: AbortSignal.timeout(12_000),
+          credentials: "include",
+          signal: AbortSignal.timeout(Math.min(YOUTUBE_CAPTION_FETCH_ATTEMPT_MS, remainingMs)),
         });
         if (!response.ok) throw new Error("YouTube subtitle request failed (HTTP " + response.status + ").");
         if (response.url) allowedYouTubeCaptionUrl(response.url, request.videoId);
@@ -193,7 +197,13 @@ import {
         return { text, language: track.languageCode };
       } catch (error) {
         if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
-        lastError = error instanceof Error ? error : new Error("YouTube subtitle request failed.");
+        // A real caption response may arrive through the player's fetch/XHR
+        // while one of our fallback URLs fails or returns an empty body.
+        const playerCaptions = fromPlayer(request.videoId, track.languageCode, track.kind);
+        if (playerCaptions) return { text: playerCaptions.text, language: playerCaptions.language };
+        lastError = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")
+          ? new Error("A YouTube subtitle request timed out. Enable CC, play the video and retry.")
+          : error instanceof Error ? error : new Error("YouTube subtitle request failed.");
       }
     }
     // The player's cloned response may finish after our fallback requests.
@@ -208,6 +218,10 @@ import {
         "Some videos need the player's own session caption request. " +
         "Enable CC, play the video for a few seconds, then retry. " +
         "If it persists, this subtitle track is not readable in the current session.");
+    }
+    if (deadlineExpired || Date.now() >= deadline) {
+      throw new Error("YouTube subtitle retrieval timed out. Enable CC, play this video " +
+        "for a few seconds and retry. If it persists, use manual subtitles.");
     }
     throw lastError ?? new Error("YouTube subtitles are unavailable.");
   }
