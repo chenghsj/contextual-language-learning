@@ -3,6 +3,7 @@ import type { UiLocale } from "./messages";
 export const subtitleAcquisition: Record<UiLocale, {
   button: string; busy: string; hint: string; success: string; manual: string;
   unavailable: string; sourceMismatch: string;
+  reloadTab: string; reloadingTab: string; reloadedTab: string; reloadFailed: string;
 }> = {
   "en": {
     button: "Get subtitles from current video",
@@ -12,6 +13,10 @@ export const subtitleAcquisition: Record<UiLocale, {
     manual: "Other option: import your own subtitles",
     unavailable: "Open a supported video and start playback before fetching subtitles.",
     sourceMismatch: "The selected video tab differs from the lesson's source URL. Select the intended video or update the source URL, then retry.",
+    reloadTab: "Reload original video tab",
+    reloadingTab: "Reloading video tab…",
+    reloadedTab: "Reloaded the original video tab. Wait for playback to load, then try fetching subtitles again.",
+    reloadFailed: "Unable to reload the video tab. Switch to the matching watch tab and retry.",
   },
   "zh-TW": {
     button: "一鍵取得目前影片字幕",
@@ -21,6 +26,10 @@ export const subtitleAcquisition: Record<UiLocale, {
     manual: "其他方式：匯入已有的字幕",
     unavailable: "請先開啟支援的影片並開始播放，再取得字幕。",
     sourceMismatch: "目前選取的影片與教材來源網址不同。請切換到要取得字幕的影片，或更新來源網址後重試。",
+    reloadTab: "重新載入原影片分頁",
+    reloadingTab: "正在重新載入影片…",
+    reloadedTab: "已重新載入原本的影片分頁。請等待影片載入後，再次取得字幕。",
+    reloadFailed: "無法重新載入影片分頁，請切換到原影片分頁後重試。",
   },
   "zh-CN": {
     button: "一键获取当前视频字幕",
@@ -30,6 +39,10 @@ export const subtitleAcquisition: Record<UiLocale, {
     manual: "其他方式：导入已有字幕",
     unavailable: "请先打开支持的视频并开始播放，再获取字幕。",
     sourceMismatch: "当前选中的视频与教材来源网址不同。请切换到要获取字幕的视频，或更新来源网址后重试。",
+    reloadTab: "重新加载原视频标签页",
+    reloadingTab: "正在重新加载视频…",
+    reloadedTab: "已重新加载原视频标签页。请等待视频加载后，再次获取字幕。",
+    reloadFailed: "无法重新加载视频标签页，请切换到原视频标签页后重试。",
   },
   "ja": {
     button: "現在の動画から字幕を取得",
@@ -39,6 +52,10 @@ export const subtitleAcquisition: Record<UiLocale, {
     manual: "別の方法：字幕ファイルを読み込む",
     unavailable: "対応する動画を開いて再生してから、字幕を取得してください。",
     sourceMismatch: "選択中の動画と教材のURLが異なります。対象の動画タブを選ぶか、教材のURLを更新してから再試行してください。",
+    reloadTab: "元の動画タブを再読み込み",
+    reloadingTab: "動画タブを再読み込み中…",
+    reloadedTab: "元の動画タブを再読み込みしました。動画が読み込まれてから字幕を再取得してください。",
+    reloadFailed: "動画タブを再読み込みできません。対象の動画タブに切り替えて再試行してください。",
   },
   "ko": {
     button: "현재 동영상 자막 가져오기",
@@ -48,6 +65,10 @@ export const subtitleAcquisition: Record<UiLocale, {
     manual: "다른 방법: 기존 자막 가져오기",
     unavailable: "지원되는 동영상을 열고 재생한 후 자막을 가져오세요.",
     sourceMismatch: "선택한 동영상과 학습 자료의 URL이 다릅니다. 올바른 동영상 탭을 선택하거나 URL을 수정한 뒤 다시 시도하세요.",
+    reloadTab: "원래 동영상 탭 새로고침",
+    reloadingTab: "동영상 탭 새로고침 중…",
+    reloadedTab: "원래 동영상 탭을 새로고침했습니다. 동영상이 로드된 후 자막을 다시 가져오세요.",
+    reloadFailed: "동영상 탭을 새로고침할 수 없습니다. 해당 동영상 탭으로 전환한 후 다시 시도하세요.",
   },
 };
 
