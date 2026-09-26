@@ -300,7 +300,7 @@ export const messages = {
     "driveAccessChecking": "Checking Google Drive access…",
     "driveAccessVerified": "Google Drive access verified.",
     "driveAccessNotVerified": "Google Drive access has not been verified. Local lessons are still available.",
-    "retryDriveAccess": "Recheck Drive access and enable backup"
+    "retryDriveAccess": "Recheck Drive access and enable backup",
     "driveOauthHelp": "Authorize in your browser. No Google Cloud setup is needed.",
     "disconnectGoogle": "Disconnect",
     "oauthStatus": "Status: {status}",
@@ -613,7 +613,7 @@ export const messages = {
     "driveAccessChecking": "正在確認 Google Drive 存取權…",
     "driveAccessVerified": "Google Drive 存取權已驗證。",
     "driveAccessNotVerified": "Google Drive 存取權尚未驗證，仍可使用本地教材。",
-    "retryDriveAccess": "重新檢查 Drive 存取權並啟用備份"
+    "retryDriveAccess": "重新檢查 Drive 存取權並啟用備份",
     "driveOauthHelp": "在瀏覽器一鍵授權 Google Drive，不需自行設定 Google Cloud。",
     "disconnectGoogle": "解除連結",
     "oauthStatus": "狀態：{status}",
@@ -926,7 +926,7 @@ export const messages = {
     "driveAccessChecking": "正在验证 Google Drive 访问权限…",
     "driveAccessVerified": "Google Drive 访问权限已验证。",
     "driveAccessNotVerified": "Google Drive 访问权限尚未验证，本地教材仍可使用。",
-    "retryDriveAccess": "重新检查 Drive 权限并启用备份"
+    "retryDriveAccess": "重新检查 Drive 权限并启用备份",
     "driveOauthHelp": "在浏览器中一键授权 Google Drive，无需自行配置 Google Cloud。",
     "disconnectGoogle": "解除连接",
     "oauthStatus": "状态：{status}",
@@ -1239,7 +1239,7 @@ export const messages = {
     "driveAccessChecking": "Google Drive へのアクセスを確認中…",
     "driveAccessVerified": "Google Drive へのアクセスを確認しました。",
     "driveAccessNotVerified": "Google Drive へのアクセスを確認できません。ローカルの教材は利用できます。",
-    "retryDriveAccess": "Drive へのアクセスを再確認してバックアップを有効化"
+    "retryDriveAccess": "Drive へのアクセスを再確認してバックアップを有効化",
     "driveOauthHelp": "ブラウザーで Google Drive に接続できます。Google Cloud の設定は不要です。",
     "disconnectGoogle": "接続を解除",
     "oauthStatus": "状態：{status}",
@@ -1552,7 +1552,7 @@ export const messages = {
     "driveAccessChecking": "Google Drive 액세스를 확인하는 중…",
     "driveAccessVerified": "Google Drive 액세스가 확인되었습니다.",
     "driveAccessNotVerified": "Google Drive 액세스가 확인되지 않았습니다. 로컬 학습 자료는 사용할 수 있습니다.",
-    "retryDriveAccess": "Drive 액세스 재확인 및 백업 활성화"
+    "retryDriveAccess": "Drive 액세스 재확인 및 백업 활성화",
     "driveOauthHelp": "브라우저에서 Google Drive에 연결하세요. Google Cloud 설정은 필요하지 않습니다.",
     "disconnectGoogle": "연결 해제",
     "oauthStatus": "상태: {status}",
