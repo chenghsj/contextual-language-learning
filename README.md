@@ -14,24 +14,49 @@ This repository remains **private** pending the public-release checklist and liv
 
 **No production-ready Google Drive or Netflix compatibility guarantee:** Google OAuth and Netflix's undocumented playback API require manual platform testing before a public stable release. This project is not affiliated with the streaming platforms or model providers.
 
-## Custom CLI Agents
+## Bring your own CLI Agent
 
-The three-phase custom CLI workflow is under Settings → Local CLI Agent → Custom CLI Agents:
+There is **no default Agent** for a new user. Install and sign in to a trusted
+CLI yourself. Open Settings → My Agents, copy the fixed configuration prompt,
+ask your chosen CLI to return a single JSON configuration object, then paste
+the result into the extension. A Codex CLI configuration is one possible
+example, not a preset or a claim of access to a model. The extension validates
+the JSON, shows the executable/argument preview and can check the binary
+without invoking a model. Only your explicit **Test CLI** action makes a test
+request, which may be billable. A passing JSON test is not proof that the CLI
+can produce every lesson schema.
 
-1. Register, edit, remove and test an installed CLI before saving its configuration.
-   A successful test proves the CLI returns JSON, not that it can produce every
-   lesson schema or has an active subscription.
-2. Start from a Gemini CLI preset or generic argument, stdin and file-output
-   presets. Detect the actual executable on this computer.
-3. Configure stdin prompts, the explicit output-file placeholder, model flags,
-   optional model-list arguments, or an isolated account configuration folder
-   through a dedicated profile environment variable.
+On first import, the Native Host generates the Agent ID and stores the CLI
+definition in its local registry. You can edit the JSON (retaining the ID),
+add more Agents, switch between them, or remove an Agent after its running or
+resumable jobs have finished or been cancelled. Deleting a definition never
+uninstalls the CLI or removes login data, saved lessons or history.
 
-The Native Host stores the executable and argv template locally and invokes it
-without a shell. It never copies login credentials, but an added CLI runs with
-your local user permissions. Configure only CLIs you trust; testing may send a
-prompt to the selected model provider. Generated lessons still pass the existing
-Zod schema validation before they are saved.
+Normally each Agent uses the CLI's current login and default model. Optional
+**account environments** refer only to an existing separately authenticated
+configuration directory and are available when the imported CLI supports a
+verified configuration-directory environment variable. Model choices are
+remembered separately for each Agent/environment. The extension does not read,
+copy or store credentials. Generated prompts/subtitles may be sent to the
+selected model provider under that provider's terms.
+
+### Native Host / local connection service
+
+Chrome/Edge cannot execute CLI binaries directly. Install and register the
+matching Native Host package once for your OS and **current browser extension
+ID**. The Side Panel detects the connection and shows OS/browser-aware
+installation instructions, a copyable extension ID and installer command.
+The macOS/Windows/Linux Host packages share one Node.js core but have
+OS-specific launchers; Chrome/Edge/Chromium registrations may differ.
+Adding, editing or removing Agents **does not** require reinstalling Host.
+Changing extension ID or updating an incompatible Host may require
+re-registration. There is currently no silent/graphical one-click installer:
+download the matching ZIP and run its included installation script
+(Node.js 22+ required). The Host executes only directly validated executable
+plus argv, without a shell.
+
+Legacy built-in Agent adapters are retained internally so existing saved
+jobs and documents remain compatible; they are no longer the first-run picker.
 
 ## Features
 
@@ -82,7 +107,7 @@ A tag push runs the Release workflow and uploads the Chromium ZIP, three OS Host
 
 ## Quick start (macOS / Windows / Linux)
 
-Prerequisites: Node.js 22+, pnpm 9, Chrome / Edge / Chromium, and at least one **installed and signed-in** CLI (Claude Code / Codex / AGY). Windows additionally needs Windows PowerShell 5.1 and .NET Framework for the Host installer.
+Prerequisites: Node.js 22+, pnpm 9, Chrome / Edge / Chromium, and at least one **installed and signed-in** compatible CLI Agent of your choice. Windows additionally needs Windows PowerShell 5.1 and .NET Framework for the Host installer.
 
 ~~~sh
 git clone https://github.com/chenghsj/immersive-language-learning.git
@@ -100,9 +125,10 @@ pnpm build
 pnpm host:install YOUR_EXTENSION_ID
 ~~~
 
-4. Click the extension icon to open the Side Panel. Under **Agent 設定**, select **檢查 Native Host / CLI**.
-5. In **建立教材**, import an SRT/VTT or paste text, set the title and learning profile, then generate. Files are also saved to `~/Documents/Immersive Learning`.
-6. In **閱讀文件**, use **另存新檔** to choose where to download the JSON or Markdown copy.
+4. Open the Side Panel and check the **local connection service / Native Host** in Settings.
+5. In **My Agents**, copy the setup prompt, ask your own installed CLI to produce its JSON configuration, paste it, validate it and save. Test only when you explicitly want a model call.
+6. In **建立教材**, fetch/import subtitles, set the lesson profile and generate. Lessons are also saved to `~/Documents/Immersive Learning`.
+7. In **閱讀文件**, save JSON or Markdown when needed.
 
 If your browser reports a missing Native Host, confirm you installed it for the same browser and its **current extension ID**. The macOS/Linux installer writes a browser-specific NativeMessagingHosts manifest; Windows writes its path to the browser's per-user HKCU NativeMessagingHosts registry key. Re-run `pnpm build` and `pnpm host:install YOUR_EXTENSION_ID` after changing the Node installation or extension ID.
 

@@ -81,6 +81,7 @@ test("Host creates unique import IDs and rejects supplied IDs and unsafe extra f
     await assert.rejects(() => importCustomAgent({ ...definition, id: ID }), /Unrecognized key/);
     await assert.rejects(() => importCustomAgent({ ...definition, extra: "unsafe" }), /Unrecognized key/);
     await assert.rejects(() => importCustomAgent({ ...definition, promptMode: "argument" }), /requires/);
+    await assert.rejects(() => importCustomAgent({ ...definition, executable: "not-a-real-cli-agent-test" }), /not found/);
   } finally {
     if (previous === undefined) delete process.env.XDG_CONFIG_HOME;
     else process.env.XDG_CONFIG_HOME = previous;

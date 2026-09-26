@@ -53,6 +53,9 @@ export async function importCustomAgent(input: unknown): Promise<{
   agent: CustomAgentConfig; agents: CustomAgentConfig[];
 }> {
   const definition = CustomAgentImportSchema.parse(input);
+  if (!(await resolveCustomExecutable(definition.executable))) {
+    throw new Error(definition.label + " CLI executable not found. Install it or correct its path.");
+  }
   const agent = CustomAgentConfigSchema.parse({ ...definition, id: newCustomAgentId() });
   const agents = await saveCustomAgent(agent);
   return { agent, agents };

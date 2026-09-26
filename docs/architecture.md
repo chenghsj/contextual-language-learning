@@ -30,19 +30,46 @@ Existing platform modules:
 
 Do not assume every video site exposes a playback API or a permitted subtitle API. Subtitle ingestion stays separately pluggable: licensed/user-supplied SRT/VTT/text is the supported baseline. A new provider can support reading documents without any seek/loop or subtitle extraction.
 
-## Agents: Adapter + trusted Registry
+## Agents: strict bring-your-own CLI registry + legacy adapters
 
-apps/local-host/src/agents.ts registers provider modules implementing AgentAdapter from agents/types.ts. Each adapter owns:
+New users have **no preselected provider**. The Side Panel accepts one
+user-supplied JSON object describing the executable, argv, stdin/argument
+prompt transport, single JSON response/file transport, optional model flag
+and optional isolated account-directory environment variable. A fixed prompt
+helps users ask their own CLI for this JSON; the extension does not call a
+provider to manufacture its own setup. The imported object must not contain
+an ID, unknown keys or credentials. The Host generates a unique ID on import
+and retains it for edits. Strict shared Zod validation enforces transport and
+placeholder rules before the Host can persist the definition.
 
-- CLI executable name and human-readable label
-- Account-profile support and environment setup (never copy credentials to the browser)
-- Noninteractive generation command, model handling and result parsing
+`apps/local-host/src/agents/custom.ts` resolves only validated executable
+names/absolute paths, runs direct argv through `spawn(..., { shell: false })`,
+uses bounded temporary workspace/output, and parses the single JSON result.
+An explicit user-initiated test may contact a paid provider. A valid JSON
+test does not establish complete V3 lesson-schema compatibility; the
+generation pipeline continues to validate model content against the
+existing document schemas.
 
-apps/local-host/src/agents/process.ts owns executable resolution and process execution, always with spawn argument arrays (no shell). The generic generation pipeline calls generateWithAgent without provider-specific conditionals. A Host health request returns the actual adapter catalog and installed status, so the Side Panel presents providers discovered from the Host.
+Definitions and optional named account-environment directory references
+are stored in separate local Host registries, **never** with credentials.
+The default environment is the CLI's existing login. Model selection is
+keyed by Agent and environment. Removing a custom Agent first checks **all**
+persisted jobs; queued, running, waiting and failed/resumable jobs block
+removal. Only Host-owned Agent/profile records and the extension's model
+preferences are removed; the CLI executable, directory, login, lessons and
+job history remain untouched.
 
-**To add another agent:** create agents/<id>.ts, register the adapter in agents.ts, add adapter/unit tests and validate the new CLI's model/account/permissions behavior. The Zod document/Agent schemas allow safe provider IDs, but the Host rejects IDs not in its trusted registry. Arbitrary CLI names are never executed.
+The historical `apps/local-host/src/agents.ts` built-in adapter registry
+is retained solely for backward compatibility with saved jobs/documents
+and existing users. The new-user UI lists user-imported definitions rather
+than offering hardcoded Claude/Codex/AGY choices. A Native Host health
+request includes installed status, and independent Host setup/status UI
+handles registration/version compatibility across macOS, Windows and Linux
+and Chrome, Edge and Chromium. Adding Agents never changes Host
+registration or requires reinstalling it.
 
-No plugin code is loaded dynamically from web content or subtitle text. New adapters are packaged with the Host/extension, tested and installed through the normal release process.
+No plugin code is loaded dynamically from a webpage, subtitle or model
+response. Imported JSON is configuration data, not executable JavaScript.
 
 ## Native Host OS Strategy (no inheritance hierarchy)
 
