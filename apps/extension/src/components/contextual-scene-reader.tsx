@@ -497,7 +497,7 @@ export function ContextualSceneReader({
           {selectedCue?.originalText}
         </strong>
       </div>
-      <div className="mt-2 grid grid-cols-[36px_minmax(0,1fr)_36px_74px] items-center gap-[5px] [&>button]:w-full [&>button]:min-w-0 [&>[data-slot=select-trigger]]:w-full [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:px-[6px] [&>[data-slot=select-trigger]]:text-xs max-[355px]:grid-cols-[32px_minmax(0,1fr)_32px_60px] max-[355px]:gap-1 max-[355px]:[&>[data-slot=select-trigger]]:px-[3px]">
+      <div className="mt-2 grid grid-cols-[36px_minmax(0,1fr)_36px_74px] items-center gap-[5px] [&>button]:w-full [&>button]:min-w-0 [&>[data-slot=select-trigger]]:w-full [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:px-[6px] [&>[data-slot=select-trigger]]:text-xs max-[355px]:grid-cols-[32px_minmax(0,1fr)_32px_60px] max-[355px]:gap-1 max-[355px]:[&>[data-slot=select-trigger]]:px-[3px] min-[480px]:grid-cols-[36px_minmax(0,1fr)_36px_74px_90px]">
         <Button size="icon" variant="outline" aria-label={copy.previousCue}
           disabled={busy || selectedIndex === 0} onClick={() => void selectCue(scene.cueIds[selectedIndex - 1])}>
           <ChevronLeft aria-hidden="true" />
@@ -519,32 +519,16 @@ export function ContextualSceneReader({
           options={[0.5, 0.75, 1, 1.25, 1.5].map(rate => ({
             value: String(rate), label: rate + "×",
           }))} />}
+        <Button size="sm" variant="outline"
+          className="col-span-4 h-9 w-full min-[480px]:col-span-1" aria-label={copy.adjustPosition}
+          aria-expanded={calibrationOpen} aria-controls="contextual-inline-calibration"
+          disabled={busy || !selectedRange || !adapter.status}
+          onClick={() => calibrationOpen ? cancelCalibration() : void openCalibration()}>
+          <SlidersHorizontal aria-hidden="true" />{copy.adjustShort}
+        </Button>
       </div>
-      <details className="mt-2 rounded-[var(--radius)] border border-border px-2 py-[6px] text-xs">
-        <summary className="cursor-pointer font-semibold text-muted-foreground">{copy.loopOptions}</summary>
-        <div className="mt-2 grid grid-cols-2 gap-2 [&_[data-slot=select-trigger]]:w-full">
-          <label className="grid gap-1">{timing.repeat}
-            <SelectField ariaLabel={timing.repeat} value={repeat} disabled={busy}
-              onValueChange={value => setRepeat(value as Repeat)}
-              options={[{ value: "2", label: "2×" }, { value: "3", label: "3×" },
-                { value: "5", label: "5×" }, { value: "infinite", label: "∞" }]} />
-          </label>
-          <label className="grid gap-1">{timing.delay}
-            <SelectField ariaLabel={timing.delay} value={String(delay)} disabled={busy}
-              onValueChange={value => setDelay(Number(value))}
-              options={[0, 1, 2, 3].map(seconds => ({
-                value: String(seconds), label: seconds + "s",
-              }))} />
-          </label>
-        </div>
-      </details>
-      <Button size="sm" variant="ghost" className="mt-[3px] flex min-h-[30px] w-full justify-center text-[11px] text-muted-foreground"
-        aria-expanded={calibrationOpen} aria-controls="contextual-inline-calibration"
-        disabled={busy || !selectedRange || !adapter.status}
-        onClick={() => calibrationOpen ? cancelCalibration() : void openCalibration()}>
-        <SlidersHorizontal aria-hidden="true" />{copy.adjustPosition}
-        <ChevronDown aria-hidden="true" className={calibrationOpen ? "rotate-180" : ""} />
-      </Button>
+
+
       {calibrationOpen && selectedRange && <section id="contextual-inline-calibration"
         className="mt-2 grid gap-2 border-t border-border pt-3 text-xs" aria-label={copy.adjustPosition}>
         {calibrationStage === "start" && <>
@@ -589,6 +573,24 @@ export function ContextualSceneReader({
             {copy.restoreTiming}
           </Button>}
       </section>}
+      <details className="mt-2 rounded-[var(--radius)] border border-border px-2 py-[6px] text-xs">
+        <summary className="cursor-pointer font-semibold text-muted-foreground">{copy.loopOptions}</summary>
+        <div className="mt-2 grid grid-cols-2 gap-2 [&_[data-slot=select-trigger]]:w-full">
+          <label className="grid gap-1">{timing.repeat}
+            <SelectField ariaLabel={timing.repeat} value={repeat} disabled={busy}
+              onValueChange={value => setRepeat(value as Repeat)}
+              options={[{ value: "2", label: "2×" }, { value: "3", label: "3×" },
+                { value: "5", label: "5×" }, { value: "infinite", label: "∞" }]} />
+          </label>
+          <label className="grid gap-1">{timing.delay}
+            <SelectField ariaLabel={timing.delay} value={String(delay)} disabled={busy}
+              onValueChange={value => setDelay(Number(value))}
+              options={[0, 1, 2, 3].map(seconds => ({
+                value: String(seconds), label: seconds + "s",
+              }))} />
+          </label>
+        </div>
+      </details>
       {status && <p className="mt-[5px] text-[11px] text-muted-foreground wrap-anywhere" role="status">{status}</p>}
     </div>}
   </div>;
