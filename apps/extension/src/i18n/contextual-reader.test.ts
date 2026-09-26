@@ -63,6 +63,7 @@ function render(locale: UiLocale, doc: typeof document = document): string {
     repeat: "2", setRepeat: () => undefined, delay: 0, setDelay: () => undefined,
     playbackRate: 1, setPlaybackRate: () => undefined,
     onError: () => undefined, onDownload: () => undefined,
+    onSaveRange: async () => undefined,
   }));
 }
 
@@ -113,24 +114,30 @@ test("V3 route keeps V2 unchanged, original cue refs and export actions availabl
   assert.match(source, /onDownload\("md"\)/);
 });
 
-test("V3 follows actual playback time while keeping A/B edits per source cue", async () => {
+test("V3 keeps playback tracking and uses the requested inline guided calibration", async () => {
   const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
   assert.match(source, /playingCueAt\(scene\.cueIds, cues, ms\)/);
   assert.match(source, /aria-current=\{playing \? "true" : undefined\}/);
-  assert.match(source, /const resumeLoop = !!loopingCueRef\.current/);
   assert.match(source, /await stopPreviousLoop\(\)/);
   assert.match(source, /const loopKey = "sceneLoopRanges:" \+ document\.id/);
-  assert.match(source, /readLoopWindows\(saved\[loopKey\], document\.cues\.map/);
+  assert.match(source, /document\.playbackOverrides === undefined/);
   assert.match(source, /\[loopKey\]: loopRanges/);
   assert.match(source, /loopRanges\[selectedCue\.id\] \?\? cuePlaybackWindow/);
   assert.match(source, /adapter\.status\(sourceUrl\)/);
-  assert.match(source, /updateRange\(boundary, "current"\)/);
-  assert.match(source, /updateRange\("reset"\)/);
-  assert.match(source, /formatLoopTimestamp\(point\)/);
-  assert.match(source, /calibrationRef\.current/);
-  assert.ok(source.includes("backdrop:bg-[#0008]"));
+  assert.match(source, /captureBoundary\("start"\)/);
+  assert.match(source, /captureBoundary\("end"\)/);
+  assert.match(source, /await onSaveRange\(cueId, draftRange\)/);
+  assert.match(source, /onClick=\{cancelCalibration\}/);
+  assert.match(source, /id="contextual-inline-calibration"/);
+  assert.doesNotMatch(source, /<dialog|\.showModal\(|updateRange\(|−0\.5s|\+0\.5s/);
+  for (const locale of Object.keys(messages) as UiLocale[]) {
+    const copy = contextualReaderMessages[locale];
+    for (const key of ["calibrateStart", "calibrateEnd", "markStart", "markEnd", "saveTiming",
+      "cancelTiming", "restoreTiming"] as const) assert.ok(copy[key].trim(), locale + " " + key);
+  }
   const html = render("zh-TW");
   assert.ok(html.includes(contextualReaderMessages["zh-TW"].adjustPosition));
-  assert.ok(html.includes("<dialog"));
-  assert.ok(!html.includes("<dialog open"), "calibration opens only when requested");
+  assert.ok(!html.includes("<dialog"), "no modal, even while closed");
+  assert.ok(!html.includes('id="contextual-inline-calibration"'),
+    "calibration is expanded inline only on demand");
 });

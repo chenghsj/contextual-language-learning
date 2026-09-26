@@ -1,4 +1,4 @@
-import type { Destination, JobSnapshot, JobSummary, LearningDocument, StudyProgress } from "@immersive/core";
+import type { Destination, JobSnapshot, JobSummary, LearningDocument, PlaybackOverride, StudyProgress } from "@immersive/core";
 
 export interface JobRepository {
   create(job: JobSnapshot): Promise<void>;
@@ -11,6 +11,7 @@ export interface DocumentRepository {
   get(id: string): Promise<LearningDocument | null>;
   list(limit?: number): Promise<LearningDocument[]>;
   save(document: LearningDocument, markdown: string): Promise<void>;
+  updatePlaybackRange(id: string, cueId: string, range: PlaybackOverride | null): Promise<LearningDocument>;
 }
 
 export interface ProgressRepository {

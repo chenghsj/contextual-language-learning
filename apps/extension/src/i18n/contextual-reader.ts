@@ -15,6 +15,8 @@ const en = {
   loopStopped: "Loop stopped.", playbackStarted: "Playing the selected video segment.",
   subtitleNotice: "Select a line to play it in the original video. Its time comes from the source captions.",
   selected: "Selected sentence", showWordNotes: "Show word notes", hideWordNotes: "Hide word notes",adjustPosition:"Adjust playback timing",close:"Close",playing:"Playing sentence",
+  adjustShort:"Adjust",
+  calibrateStart:"Move the video to where this sentence begins.",calibrateEnd:"Move the video to where this sentence ends.",markStart:"Start here",markEnd:"End here",saveTiming:"Done",cancelTiming:"Cancel",restoreTiming:"Restore subtitle timing",loopOptions:"Loop settings",
 } as const;
 type Keys = keyof typeof en;
 export type ContextualReaderCopy = Record<Keys, string>;
@@ -33,6 +35,8 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
     loopStopped:"已停止循環。",playbackStarted:"正在播放選定片段。",
     subtitleNotice:"點選句子可播放影片原聲，時間以原始字幕為準。",
     selected:"目前選取的句子",showWordNotes:"顯示單字說明",hideWordNotes:"收起單字說明",adjustPosition:"調整播放位置",close:"關閉",playing:"播放中的句子",
+    adjustShort:"調整",
+    calibrateStart:"把影片移到這句話開始的位置",calibrateEnd:"把影片移到這句話結束的位置",markStart:"這裡開始",markEnd:"這裡結束",saveTiming:"完成",cancelTiming:"取消",restoreTiming:"恢復字幕時間",loopOptions:"循環設定",
   },
   "zh-CN": {
     scene:"场景",chooseScene:"直接选择场景",previousScene:"上一场景",nextScene:"下一场景",
@@ -47,6 +51,8 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
     loopStopped:"已停止循环。",playbackStarted:"正在播放选定片段。",
     subtitleNotice:"点击句子可播放视频原声，时间以原始字幕为准。",
     selected:"当前选中的句子",showWordNotes:"显示单词说明",hideWordNotes:"收起单词说明",adjustPosition:"调整播放位置",close:"关闭",playing:"播放中的句子",
+    adjustShort:"调整",
+    calibrateStart:"把视频移到这句话开始的位置",calibrateEnd:"把视频移到这句话结束的位置",markStart:"这里开始",markEnd:"这里结束",saveTiming:"完成",cancelTiming:"取消",restoreTiming:"恢复字幕时间",loopOptions:"循环设置",
   },
   ja: {
     scene:"シーン",chooseScene:"シーンを選択",previousScene:"前のシーン",nextScene:"次のシーン",
@@ -61,6 +67,8 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
     loopStopped:"ループを停止しました。",playbackStarted:"選択した動画の一部を再生中。",
     subtitleNotice:"文を選ぶと元の動画を再生します。時刻は元の字幕に基づきます。",
     selected:"選択中の文",showWordNotes:"単語の解説を表示",hideWordNotes:"単語の解説を閉じる",adjustPosition:"再生位置を調整",close:"閉じる",playing:"再生中の文",
+    adjustShort:"調整",
+    calibrateStart:"動画をこの文の開始位置に移動してください",calibrateEnd:"動画をこの文の終了位置に移動してください",markStart:"ここから開始",markEnd:"ここで終了",saveTiming:"完了",cancelTiming:"キャンセル",restoreTiming:"字幕の時刻に戻す",loopOptions:"ループ設定",
   },
   ko: {
     scene:"장면",chooseScene:"장면 선택",previousScene:"이전 장면",nextScene:"다음 장면",
@@ -75,6 +83,8 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
     loopStopped:"반복을 중지했습니다.",playbackStarted:"선택한 영상 구간을 재생 중입니다.",
     subtitleNotice:"문장을 선택하면 원본 영상을 재생합니다. 시간은 원본 자막을 따릅니다.",
     selected:"선택한 문장",showWordNotes:"단어 설명 보기",hideWordNotes:"단어 설명 접기",adjustPosition:"재생 위치 조정",close:"닫기",playing:"재생 중인 문장",
+    adjustShort:"조정",
+    calibrateStart:"동영상을 이 문장의 시작 위치로 이동하세요",calibrateEnd:"동영상을 이 문장의 끝 위치로 이동하세요",markStart:"여기서 시작",markEnd:"여기서 종료",saveTiming:"완료",cancelTiming:"취소",restoreTiming:"자막 시간 복원",loopOptions:"반복 설정",
   },
 };
 export function contextualText(template: string, params: Record<string, number | string>): string {

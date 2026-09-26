@@ -1,14 +1,14 @@
 import { cn } from "../lib/utils";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Play, Repeat2, SlidersHorizontal, Square, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Play, Repeat2, SlidersHorizontal, Square } from "lucide-react";
 import { formatTime, type LearningDocument, type SubtitleCue } from "@immersive/core";
 import type { UiLocale } from "../i18n/messages";
 import { contextualReaderMessages, contextualText } from "../i18n/contextual-reader";
 import { sceneReaderMessages } from "../i18n/scene-reader";
 import { playingCueAt } from "../video/cue-follow";
 import {
-  adjustLoopBoundary, formatLoopTimestamp, readLoopWindows,
-  type LoopBoundary, type LoopWindow,
+  formatLoopTimestamp, isLoopWindow, readLoopWindows,
+  type LoopWindow,
 } from "../video/loop-window";
 import { cuePlaybackStart, cuePlaybackWindow, openOrFocusVideoTab } from "../video/tab";
 import type { VideoAdapter } from "../video/types";
@@ -30,11 +30,12 @@ type Props = {
   setPlaybackRate: (rate: number) => void;
   onError: (message: string) => void;
   onDownload: (format: "json" | "md") => void;
+  onSaveRange: (cueId: string, range: LoopWindow | null) => Promise<void>;
 };
 
 /** V3 is readable as one cohesive scene. V1/V2 keep their original reader. */
 export function ContextualSceneReader({
-  document, adapter, locale, repeat, setRepeat, delay, setDelay, playbackRate, setPlaybackRate, onError, onDownload,
+  document, adapter, locale, repeat, setRepeat, delay, setDelay, playbackRate, setPlaybackRate, onError, onDownload, onSaveRange,
 }: Props) {
   const copy = contextualReaderMessages[locale];
   const timing = sceneReaderMessages[locale];
@@ -52,7 +53,9 @@ export function ContextualSceneReader({
   const [loopRanges, setLoopRanges] = useState<Record<string, LoopWindow>>({});
   const [calibrationOpen, setCalibrationOpen] = useState(false);
   const calibrationOpenRef = useRef(false);
-  const calibrationRef = useRef<HTMLDialogElement>(null);
+  const [calibrationStage, setCalibrationStage] = useState<"start" | "end" | "confirm">("start");
+  const [draftStartMs, setDraftStartMs] = useState<number | null>(null);
+  const [draftRange, setDraftRange] = useState<LoopWindow | null>(null);
   const [playbackCueId, setPlaybackCueId] = useState<string | null>(null);
   const [playbackKnown, setPlaybackKnown] = useState(false);
   const [status, setStatus] = useState("");
@@ -83,7 +86,8 @@ export function ContextualSceneReader({
         const index = document.sections.findIndex(item => item.id === progress.sceneId);
         if (index >= 0) setSceneIndex(index);
       }
-      setLoopRanges(readLoopWindows(saved[loopKey], document.cues.map(cue => cue.id)));
+      setLoopRanges(readLoopWindows(document.playbackOverrides === undefined
+        ? saved[loopKey] : document.playbackOverrides, document.cues.map(cue => cue.id)));
       if (progress?.selectionByScene && typeof progress.selectionByScene === "object") {
         const valid = Object.fromEntries(document.sections.flatMap(item => {
           const id = progress.selectionByScene?.[item.id];
@@ -105,12 +109,13 @@ export function ContextualSceneReader({
 
   useEffect(() => { loopingCueRef.current = loopingCueId; }, [loopingCueId]);
   useEffect(() => { calibrationOpenRef.current = calibrationOpen; }, [calibrationOpen]);
+  // A scene/cue change must discard an unfinished calibration draft.
   useEffect(() => {
-    const dialog = calibrationRef.current;
-    if (!dialog) return;
-    if (calibrationOpen && !dialog.open) dialog.showModal();
-    if (!calibrationOpen && dialog.open) dialog.close();
-  }, [calibrationOpen]);
+    setCalibrationOpen(false);
+    setCalibrationStage("start");
+    setDraftStartMs(null);
+    setDraftRange(null);
+  }, [scene.id, selectedCueId]);
 
   /** Native video status—not the last clicked line—drives the highlighted subtitle. */
   useEffect(() => {
@@ -246,35 +251,72 @@ export function ContextualSceneReader({
     }
   }
 
-  /** A/B edits use real video time and invalidate the old loop before saving a new window. */
-  async function updateRange(boundary: LoopBoundary | "reset", position: number | "current" = 0): Promise<void> {
-    if (busyRef.current || !selectedCue || !selectedRange) return;
+  function cancelCalibration(): void {
+    setCalibrationOpen(false);
+    setCalibrationStage("start");
+    setDraftStartMs(null);
+    setDraftRange(null);
+  }
+
+  async function openCalibration(): Promise<void> {
+    if (busyRef.current) return;
     markBusy(true);
     try {
-      let next: LoopWindow | null = null;
-      if (boundary !== "reset") {
-        let target = position;
-        if (target === "current") {
-          if (!sourceUrl || !adapter.status) { setStatus(timing.positionUnavailable); return; }
-          const playback = await adapter.status(sourceUrl);
-          if (typeof playback.currentMs !== "number" || !Number.isFinite(playback.currentMs)) {
-            setStatus(timing.positionUnavailable);
-            return;
-          }
-          target = playback.currentMs;
-        }
-        next = adjustLoopBoundary(selectedRange, boundary, target as number);
-        if (!next) { setStatus(timing.invalidLoopRange); return; }
-      }
       await stopPreviousLoop();
-      const id = selectedCue.id;
+      setCalibrationStage("start");
+      setDraftStartMs(null);
+      setDraftRange(null);
+      setStatus("");
+      setCalibrationOpen(true);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : copy.unavailable);
+    } finally { markBusy(false); }
+  }
+
+  /** Capture real player time; persist nothing before Done. */
+  async function captureBoundary(boundary: "start" | "end"): Promise<void> {
+    if (busyRef.current || !sourceUrl || !adapter.status || !selectedCue) return;
+    markBusy(true);
+    try {
+      const playback = await adapter.status(sourceUrl);
+      if (typeof playback.currentMs !== "number" || !Number.isFinite(playback.currentMs) ||
+          playback.currentMs < 0) {
+        setStatus(timing.positionUnavailable);
+        return;
+      }
+      const position = Math.round(playback.currentMs / 100) * 100;
+      if (boundary === "start") {
+        setDraftStartMs(position);
+        setCalibrationStage("end");
+      } else {
+        if (draftStartMs === null) return;
+        const next = { startMs: draftStartMs, endMs: position };
+        if (!isLoopWindow(next)) { setStatus(timing.invalidLoopRange); return; }
+        setDraftRange(next);
+        setCalibrationStage("confirm");
+      }
+      setStatus("");
+    } catch (error) {
+      onError(error instanceof Error ? error.message : copy.unavailable);
+    } finally { markBusy(false); }
+  }
+
+  async function finishCalibration(): Promise<void> {
+    if (busyRef.current || !selectedCue || calibrationStage !== "confirm") return;
+    if (draftRange && !isLoopWindow(draftRange)) { setStatus(timing.invalidLoopRange); return; }
+    markBusy(true);
+    const cueId = selectedCue.id;
+    try {
+      await stopPreviousLoop();
+      await onSaveRange(cueId, draftRange);
       setLoopRanges(previous => {
         const updated = { ...previous };
-        if (next) updated[id] = next;
-        else delete updated[id];
+        if (draftRange) updated[cueId] = draftRange;
+        else delete updated[cueId];
         return updated;
       });
-      setStatus(next ? timing.loopRangeSaved : timing.loopRangeReset);
+      setStatus(draftRange ? timing.loopRangeSaved : timing.loopRangeReset);
+      cancelCalibration();
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally { markBusy(false); }
@@ -455,7 +497,7 @@ export function ContextualSceneReader({
           {selectedCue?.originalText}
         </strong>
       </div>
-      <div className="mt-2 grid grid-cols-[36px_minmax(0,1fr)_36px_74px] items-center gap-[5px] [&>button]:w-full [&>button]:min-w-0 [&>[data-slot=select-trigger]]:w-full [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:px-[6px] [&>[data-slot=select-trigger]]:text-xs max-[355px]:grid-cols-[32px_minmax(0,1fr)_32px_60px] max-[355px]:gap-1 max-[355px]:[&>[data-slot=select-trigger]]:px-[3px]">
+      <div className="mt-2 grid grid-cols-[36px_minmax(0,1fr)_36px_74px] items-center gap-[5px] [&>button]:w-full [&>button]:min-w-0 [&>[data-slot=select-trigger]]:w-full [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:px-[6px] [&>[data-slot=select-trigger]]:text-xs max-[355px]:grid-cols-[32px_minmax(0,1fr)_32px_60px] max-[355px]:gap-1 max-[355px]:[&>[data-slot=select-trigger]]:px-[3px] min-[480px]:grid-cols-[36px_minmax(0,1fr)_36px_74px_90px]">
         <Button size="icon" variant="outline" aria-label={copy.previousCue}
           disabled={busy || selectedIndex === 0} onClick={() => void selectCue(scene.cueIds[selectedIndex - 1])}>
           <ChevronLeft aria-hidden="true" />
@@ -477,71 +519,78 @@ export function ContextualSceneReader({
           options={[0.5, 0.75, 1, 1.25, 1.5].map(rate => ({
             value: String(rate), label: rate + "×",
           }))} />}
+        <Button size="sm" variant="outline"
+          className="col-span-4 h-9 w-full min-[480px]:col-span-1" aria-label={copy.adjustPosition}
+          aria-expanded={calibrationOpen} aria-controls="contextual-inline-calibration"
+          disabled={busy || !selectedRange || !adapter.status}
+          onClick={() => calibrationOpen ? cancelCalibration() : void openCalibration()}>
+          <SlidersHorizontal aria-hidden="true" />{copy.adjustShort}
+        </Button>
       </div>
-      <Button size="sm" variant="ghost" className="mt-[3px] flex min-h-[30px] w-full justify-center text-[11px] text-muted-foreground"
-        aria-expanded={calibrationOpen} disabled={busy || !selectedRange}
-        onClick={() => setCalibrationOpen(true)}>
-        <SlidersHorizontal aria-hidden="true" />{copy.adjustPosition}
-      </Button>
-      <dialog className="max-h-[min(560px,84vh)] w-[min(370px,calc(100vw-22px))] max-w-[calc(100vw-22px)] overflow-auto rounded-[var(--radius)] border border-border bg-card p-4 text-foreground shadow-[0_20px_60px_#0004] backdrop:bg-[#0008]" ref={calibrationRef}
-        aria-labelledby="contextual-time-dialog-title"
-        onClose={() => setCalibrationOpen(false)}
-        onCancel={() => setCalibrationOpen(false)}>
-        <div className="flex items-center justify-between gap-[10px] [&>h3]:m-0 [&>h3]:text-base [&>button]:shrink-0">
-          <h3 id="contextual-time-dialog-title">{copy.adjustPosition}</h3>
-          <Button size="icon" variant="ghost" aria-label={copy.close}
-            onClick={() => setCalibrationOpen(false)}><X aria-hidden="true" /></Button>
-        </div>
-        <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{timing.loopRangeHint}</p>
-        <div className="my-[14px] grid grid-cols-2 gap-[10px] [&>div]:min-w-0 [&_label]:mb-[5px] [&_label]:mt-0 [&_label]:text-xs [&_[data-slot=select-trigger]]:w-full [&_[data-slot=select-trigger]]:min-w-0">
-          <div>
-            <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="contextual-repeats">{timing.repeat}</label>
-            <SelectField id="contextual-repeats" ariaLabel={timing.repeat} value={repeat}
-              onValueChange={value => setRepeat(value as Repeat)}
-              options={[
-                { value: "2", label: "2×" }, { value: "3", label: "3×" },
-                { value: "5", label: "5×" }, { value: "infinite", label: "∞" },
-              ]} />
+
+
+      {calibrationOpen && selectedRange && <section id="contextual-inline-calibration"
+        className="mt-2 grid gap-2 border-t border-border pt-3 text-xs" aria-label={copy.adjustPosition}>
+        {calibrationStage === "start" && <>
+          <p className="m-0 text-foreground">{copy.calibrateStart}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" disabled={busy} onClick={() => void captureBoundary("start")}>
+              {copy.markStart}
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={cancelCalibration}>
+              {copy.cancelTiming}
+            </Button>
           </div>
-          <div>
-            <label className="my-3 grid gap-[6px] text-xs font-semibold" htmlFor="contextual-delay">{timing.delay}</label>
-            <SelectField id="contextual-delay" ariaLabel={timing.delay} value={String(delay)}
+        </>}
+        {calibrationStage === "end" && <>
+          <p className="m-0 text-foreground">{copy.calibrateEnd}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" disabled={busy} onClick={() => void captureBoundary("end")}>
+              {copy.markEnd}
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={cancelCalibration}>
+              {copy.cancelTiming}
+            </Button>
+          </div>
+        </>}
+        {calibrationStage === "confirm" && <>
+          <p className="m-0 tabular-nums text-muted-foreground">
+            {draftRange ? formatLoopTimestamp(draftRange.startMs) + " – " +
+              formatLoopTimestamp(draftRange.endMs) : copy.restoreTiming}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" disabled={busy} onClick={() => void finishCalibration()}>
+              {copy.saveTiming}
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={cancelCalibration}>
+              {copy.cancelTiming}
+            </Button>
+          </div>
+        </>}
+        {calibrationStage !== "confirm" && selectedCue && loopRanges[selectedCue.id] &&
+          <Button size="sm" variant="ghost" className="w-fit text-muted-foreground"
+            disabled={busy} onClick={() => { setDraftRange(null); setCalibrationStage("confirm"); }}>
+            {copy.restoreTiming}
+          </Button>}
+      </section>}
+      <details className="mt-2 rounded-[var(--radius)] border border-border px-2 py-[6px] text-xs">
+        <summary className="cursor-pointer font-semibold text-muted-foreground">{copy.loopOptions}</summary>
+        <div className="mt-2 grid grid-cols-2 gap-2 [&_[data-slot=select-trigger]]:w-full">
+          <label className="grid gap-1">{timing.repeat}
+            <SelectField ariaLabel={timing.repeat} value={repeat} disabled={busy}
+              onValueChange={value => setRepeat(value as Repeat)}
+              options={[{ value: "2", label: "2×" }, { value: "3", label: "3×" },
+                { value: "5", label: "5×" }, { value: "infinite", label: "∞" }]} />
+          </label>
+          <label className="grid gap-1">{timing.delay}
+            <SelectField ariaLabel={timing.delay} value={String(delay)} disabled={busy}
               onValueChange={value => setDelay(Number(value))}
               options={[0, 1, 2, 3].map(seconds => ({
                 value: String(seconds), label: seconds + "s",
               }))} />
-          </div>
+          </label>
         </div>
-        {selectedRange && <div className="grid gap-4 border-t border-border pt-[10px]">
-          {(["start", "end"] as const).map(boundary => {
-            const point = boundary === "start" ? selectedRange.startMs : selectedRange.endMs;
-            const name = boundary === "start" ? timing.loopStart : timing.loopEnd;
-            return <div key={boundary}>
-              <div className="mb-[9px] flex items-center justify-between gap-2 text-[13px] [&>output]:tabular-nums">
-                <strong>{name}</strong>
-                <output>{formatLoopTimestamp(point)}</output>
-              </div>
-              <div className="grid grid-cols-2 gap-[6px] [&>button]:h-auto [&>button]:min-h-[35px] [&>button]:min-w-0 [&>button]:whitespace-normal [&>button]:p-[6px] [&>button]:text-xs [&>button:last-child]:col-span-full">
-                <Button size="sm" variant="outline" disabled={busy}
-                  aria-label={name + " " + timing.loopEarlier}
-                  onClick={() => void updateRange(boundary, point - 500)}>−0.5s</Button>
-                <Button size="sm" variant="outline" disabled={busy}
-                  aria-label={name + " " + timing.loopLater}
-                  onClick={() => void updateRange(boundary, point + 500)}>+0.5s</Button>
-                <Button size="sm" variant="outline" disabled={busy || !adapter.status}
-                  onClick={() => void updateRange(boundary, "current")}>
-                  {timing.setBoundaryHere}
-                </Button>
-              </div>
-            </div>;
-          })}
-          <Button size="sm" variant="ghost" disabled={busy || !selectedCue ||
-            !loopRanges[selectedCue.id]} onClick={() => void updateRange("reset")}>
-            {timing.loopRangeResetButton}
-          </Button>
-        </div>}
-        {status && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{status}</p>}
-      </dialog>
+      </details>
       {status && <p className="mt-[5px] text-[11px] text-muted-foreground wrap-anywhere" role="status">{status}</p>}
     </div>}
   </div>;
