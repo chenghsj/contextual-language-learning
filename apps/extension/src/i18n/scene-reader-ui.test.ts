@@ -112,7 +112,7 @@ test("the mini player is collapsed by default and leaves one full-scene playback
     assert.ok(html.includes(copy.playbackOptions), locale + ": settings label");
     assert.ok(html.includes(copy.openVideo), locale + ": open-video button accessible label");
     assert.ok(html.includes('aria-expanded="false"'), locale + ": settings closed initially");
-    assert.ok(!html.includes("max-h-[min(340px,55vh)]"), locale + ": expanded settings must be hidden");
+    assert.ok(!html.includes('id="scene-playback-options"'), locale + ": expanded settings must be hidden");
     assert.equal(html.split(copy.playScene).length - 1, 1,
       locale + ": full-scene playback should appear only once");
     assert.ok(html.includes("my-[8px_14px]"), locale + ": study hints beside the steps");
