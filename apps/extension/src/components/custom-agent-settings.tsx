@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Check, Copy } from "lucide-react";
 import { type CustomAgentConfig, type CustomAgentImport, type HostMessage } from "@immersive/core";
 import { AGENT_CONFIG_PROMPT, jsonForEdit, parseAgentImport } from "../agent-import";
 import { agentOnboardingCopy } from "../i18n/agent-onboarding";
@@ -25,6 +26,12 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
   const [testing, setTesting] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [failed, setFailed] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<"idle" | "copying" | "copied" | "failed">("idle");
+  const copyResetRef = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (copyResetRef.current !== null) window.clearTimeout(copyResetRef.current);
+  }, []);
 
   useEffect(() => {
     if (!available) return;
@@ -73,11 +80,23 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
     }
   }
   async function copyPrompt(): Promise<void> {
+    if (copyFeedback === "copying") return;
+    if (copyResetRef.current !== null) {
+      window.clearTimeout(copyResetRef.current);
+      copyResetRef.current = null;
+    }
+    setCopyFeedback("copying");
     try {
       await navigator.clipboard.writeText(AGENT_CONFIG_PROMPT);
-      setFailed(false);
-      setStatus(ui.copied);
-    } catch (error) { report(error); }
+      setCopyFeedback("copied");
+      copyResetRef.current = window.setTimeout(() => {
+        setCopyFeedback("idle");
+        copyResetRef.current = null;
+      }, 2_000);
+    } catch {
+      // Clipboard permissions can fail; never claim that the prompt was copied.
+      setCopyFeedback("failed");
+    }
   }
   async function detect(): Promise<void> {
     if (!validated || busy) return;
@@ -201,7 +220,14 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
         <div className="grid gap-2">
           <strong className="text-xs">{ui.prompt}</strong>
           <p className="text-xs leading-relaxed text-muted-foreground">{ui.promptHelp}</p>
-          <Button variant="outline" size="sm" onClick={() => void copyPrompt()}>{ui.copy}</Button>
+          <Button variant="outline" size="sm" disabled={copyFeedback === "copying"}
+            onClick={() => void copyPrompt()}>
+            {copyFeedback === "copied" ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+            {copyFeedback === "copied" ? ui.copied :
+              copyFeedback === "copying" ? ui.copying : ui.copy}
+          </Button>
+          {copyFeedback === "copied" && <span className="sr-only" role="status" aria-live="polite">{ui.copied}</span>}
+          {copyFeedback === "failed" && <p className="text-xs text-destructive" role="alert">{ui.copyFailed}</p>}
         </div>
         <div className="grid gap-2">
           <strong className="text-xs">{ui.import}</strong>
