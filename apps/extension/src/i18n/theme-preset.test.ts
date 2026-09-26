@@ -63,7 +63,8 @@ test("cards, tooltips and compact player use warm rounded Tailwind utilities", (
   assert.ok(info.includes("bg-popover"));
   assert.ok(legacy.includes("grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]"));
   assert.ok(app.includes("dark:text-primary"));
-  assert.ok(contextual.includes("backdrop:bg-[#0008]"));
+  assert.ok(contextual.includes('id="contextual-inline-calibration"'));
+  assert.doesNotMatch(contextual, /backdrop:bg-|<dialog/, "V3 time adjustment stays inline");
 });
 
 test("button variants and utility feedback use theme tokens instead of the old fixed palette", () => {
