@@ -3,6 +3,7 @@ import {
   HostRequestSchema, type DuplicateMatch, type GenerationRequest, type HostMessage, type LearningDocument,
 } from "@immersive/core";
 import { getAgentCatalog } from "./agents";
+import { listCustomAgents, saveCustomAgent, removeCustomAgent, testCustomConfig, resolveCustomExecutable } from "./agents/custom";
 import { discoverAgentModels } from "./agents/metadata";
 import { listAgentProfiles, saveAgentProfile, removeAgentProfile } from "./agents/profiles";
 import { findLocalDuplicates, requestKey } from "./duplicates";
@@ -105,6 +106,28 @@ async function handle(input: unknown): Promise<void> {
         const agents = await getAgentCatalog();
         reply({ id: request.id, type: "health", agents, version: hostVersion,
           installed: Object.fromEntries(agents.map(agent => [agent.id, agent.installed])) });
+        break;
+      }
+      case "customAgentList":
+        reply({ id: request.id, type: "customAgentList", agents: await listCustomAgents() });
+        break;
+      case "customAgentSave":
+        reply({ id: request.id, type: "customAgentList",
+          agents: await saveCustomAgent(request.config) });
+        break;
+      case "customAgentRemove":
+        reply({ id: request.id, type: "customAgentList",
+          agents: await removeCustomAgent(request.agentId) });
+        break;
+      case "customAgentTest": {
+        const label = await testCustomConfig(request.config, request.modelId, request.accountConfigDir);
+        reply({ id: request.id, type: "customAgentTested", label });
+        break;
+      }
+      case "customAgentProbe": {
+        const resolved = await resolveCustomExecutable(request.executable);
+        reply({ id: request.id, type: "customAgentProbed", installed: !!resolved,
+          ...(resolved ? { resolved } : {}) });
         break;
       }
       case "agentModels": {
