@@ -1,3 +1,5 @@
+import type { LearningLanguage } from "@immersive/core";
+
 export type PlaybackCapability = "timestampLink" | "diagnose" | "seek" | "loop" | "playbackRate";
 
 export type LoopSettings = {
@@ -20,7 +22,7 @@ export interface VideoAdapter {
   status?(url: string): Promise<{ currentMs?: number; playing?: boolean }>;
   seek?(url: string, startMs: number): Promise<void>;
   setPlaybackRate?(url: string, rate: number): Promise<void>;
-  fetchSubtitles?(url: string, language: "en" | "ja" | "ko"): Promise<{ text: string; language: string }>;
+  fetchSubtitles?(url: string, language: LearningLanguage): Promise<{ text: string; language: string }>;
   loop?(url: string, options: LoopSettings): Promise<void>;
   stopLoop?(url: string): Promise<void>;
 }

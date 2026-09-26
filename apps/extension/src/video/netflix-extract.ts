@@ -1,3 +1,4 @@
+import { LEARNING_LANGUAGES } from "@immersive/core";
 import {
   MAX_SUBTITLE_BYTES, normalizeNetflixTimedText,
   normalizedVttCues, subtitleUrlFromTrack, type SubtitleDocument,
@@ -92,7 +93,9 @@ export async function readNetflixSubtitles(
   player: NetflixCaptionPlayer, video: HTMLVideoElement | null,
   sessionRoot: () => unknown, requestedLanguage: string, options: Options = {},
 ): Promise<SubtitleDocument> {
-  if (!/^(en|ja|ko)$/.test(requestedLanguage)) throw new Error("Unsupported learning language.");
+  if (!LEARNING_LANGUAGES.some(language => language === requestedLanguage)) {
+    throw new Error("Unsupported learning language.");
+  }
   const sameVideo = options.sameVideo ?? (() => true);
   if (!sameVideo()) throw new Error("The Netflix watch page changed. Try again.");
   // The active Netflix build may expose either generation of the text-track API.

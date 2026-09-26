@@ -1,3 +1,4 @@
+import { LEARNING_LANGUAGES, type LearningLanguage } from "@immersive/core";
 import {
   NETFLIX_SEEK_GRACE_MS, NETFLIX_SEEK_TOLERANCE_MS, isManagedNetflixSeek,
   reachedNetflixSeekTarget, netflixLoopReachedEnd,
@@ -25,7 +26,7 @@ import {
     | { type: "NETFLIX_LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
     | { type: "NETFLIX_LOOP_CLEAR" }
     | { type: "NETFLIX_PLAYBACK_RATE_SET"; rate: number }
-    | { type: "NETFLIX_SUBTITLES_GET"; language: "en" | "ja" | "ko" };
+    | { type: "NETFLIX_SUBTITLES_GET"; language: LearningLanguage };
   type Loop = {
     startMs: number; endMs: number; repeats: number | "infinite"; delayMs: number;
     count: number; busy: boolean; managedPause: boolean; expectedSeekUntil: number;
@@ -253,7 +254,7 @@ import {
         ...(typeof diagnostic.playing === "boolean" ? { playing: diagnostic.playing } : {}) };
     }
     if (message.type === "NETFLIX_SUBTITLES_GET") {
-      if (!["en", "ja", "ko"].includes(message.language)) {
+      if (!LEARNING_LANGUAGES.some(language => language === message.language)) {
         return { ok: false, error: "Unsupported subtitle language." };
       }
       const result = await requestPage("subtitlesGet", undefined, message.language);
