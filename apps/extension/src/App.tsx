@@ -1489,7 +1489,7 @@ export default function App() {
             {visibleJobs.map(job => <div className="jobRow" key={job.id}>
               <div className="jobRowHeading">
                 <strong title={job.sourceTitle}>{job.sourceTitle}</strong>
-                <Badge variant="secondary">{t(jobStatusKeys[job.status])}</Badge>
+                <Badge>{t(jobStatusKeys[job.status])}</Badge>
               </div>
               <p className="hint">{agentDisplayName(job.provider)} · {job.completed}/{job.total}
                 {job.backup && " · " + t(job.backup.status === "backed-up"
@@ -1549,8 +1549,8 @@ export default function App() {
               <p className="hint">{new Date(lesson.createdAt).toLocaleString(uiLocale)}
                 {lesson.local && " · " + lesson.local.targetLanguage.toUpperCase() + " · " + lesson.local.level}</p>
               <div className="lessonRowMeta">
-                {lesson.local && <Badge variant="secondary">{t("localCopy")}</Badge>}
-                {lesson.drive && <Badge variant="secondary">{t("cloudCopy")}</Badge>}
+                {lesson.local && <Badge>{t("localCopy")}</Badge>}
+                {lesson.drive && <Badge>{t("cloudCopy")}</Badge>}
                 {lesson.local?.backup && !lesson.drive &&
                   <span className="hint">{t(lesson.local.backup.status === "backed-up"
                     ? "backupSaved" : ["pending", "uploading"].includes(lesson.local.backup.status)
