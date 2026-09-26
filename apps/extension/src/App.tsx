@@ -482,9 +482,12 @@ export default function App() {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveValidate", accountId });
       if (response.type !== "driveValidated") throw new Error("Unexpected Drive validation response");
       setBackup({ enabled: true, accountId });
-    } catch {
-      setStorageBusy(false);
-      await connectDrive();
+    } catch (cause) {
+      // A valid OAuth session can still lack Drive API access. Never force
+      // another login for quota, disabled API, or file permission errors.
+      const message = cause instanceof Error ? cause.message : t("connectDriveError");
+      setError(message);
+      setDriveConnectError(message);
     } finally { setStorageBusy(false); }
   }
 
@@ -834,7 +837,8 @@ export default function App() {
           if (version === catalogLoadIdRef.current) setCloudLessons(cloud.lessons);
         } catch (cause) {
           if (version === catalogLoadIdRef.current) {
-            setCloudLessons([]);
+            // Keep previously loaded cloud rows visible while the API is
+            // temporarily unavailable; the local lesson catalog remains usable.
             setCatalogError(cause instanceof Error ? cause.message : t("lessonCatalogError"));
           }
         }
@@ -1542,13 +1546,18 @@ export default function App() {
             <Button variant="outline" size="sm" disabled={lessonsBusy}
               onClick={() => void loadLessons()}>{lessonsBusy ? t("loading") : t("refreshJobs")}</Button>
           </div>
-          {catalogError && <p className="callout" role="alert">{catalogError}</p>}
+          {catalogError && <div className="callout" role="alert">
+            <p>{catalogError}</p>
+            <Button variant="outline" size="sm" disabled={lessonsBusy}
+              onClick={() => void loadLessons()}>{t("refreshJobs")}</Button>
+          </div>}
           {lessonFilter === "drive" && !driveAccounts.length && <div className="callout">
             <p>{t("connectDriveToBrowse")}</p>
             <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
               onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
           </div>}
-          {!lessonsBusy && visibleLessons.length === 0 && <p className="hint">{t("lessonLibraryEmpty")}</p>}
+          {!lessonsBusy && !catalogError && visibleLessons.length === 0 &&
+            <p className="hint">{t("lessonLibraryEmpty")}</p>}
           <div className="lessonLibraryList">
             {visibleLessons.map(lesson => <div className="jobRow" key={lesson.documentId}>
               <div className="jobRowHeading"><strong title={lesson.title}>{lesson.title}</strong></div>

@@ -6,7 +6,7 @@ import { getAgentCatalog } from "./agents";
 import { discoverAgentModels } from "./agents/metadata";
 import { listAgentProfiles, saveAgentProfile, removeAgentProfile } from "./agents/profiles";
 import { findLocalDuplicates, requestKey } from "./duplicates";
-import { findDriveDuplicates, listDriveLessons, getDriveDocument } from "./drive/api";
+import { findDriveDuplicates, listDriveLessons, getDriveDocument, validateDriveAccess } from "./drive/api";
 import { accessTokenFor, connectGoogleAccount, disconnectGoogleAccount, googleConfigured, listGoogleAccounts } from "./drive/oauth";
 import { JobManager } from "./jobs/manager";
 import { toMarkdown } from "./generation/markdown";
@@ -192,7 +192,7 @@ async function handle(input: unknown): Promise<void> {
         reply({ id: request.id, type: "driveConnected", account: await connectGoogleAccount() });
         break;
       case "driveValidate":
-        await accessTokenFor(request.accountId);
+        await validateDriveAccess(request.accountId);
         reply({ id: request.id, type: "driveValidated", accountId: request.accountId });
         break;
       case "checkDuplicates": {
