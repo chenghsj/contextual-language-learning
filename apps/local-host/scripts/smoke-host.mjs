@@ -86,6 +86,7 @@ const deadline = setTimeout(() => {
 try {
   const health = await send({ type: "health", id: randomUUID() });
   assert.equal(health.type, "health");
+  assert.equal(health.agentMode, "imported-only");
   assert.deepEqual(health.agents, [], "a fresh Host has no preinstalled Agent definitions");
   assert.deepEqual(health.installed, {}, "built-in CLI executables are never offered by health");
   const registration = await send({ id: randomUUID(), type: "customAgentImport", config: {

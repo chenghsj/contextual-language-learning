@@ -27,6 +27,7 @@ import { DocumentChunkAssembler } from "./native/document-chunks";
 import { CustomAgentSettings } from "./components/custom-agent-settings";
 import { HostConnectionSettings } from "./components/host-connection-settings";
 import { agentOnboardingCopy } from "./i18n/agent-onboarding";
+import { hostConnectionCopy } from "./i18n/host-connection";
 import { isImportedAgentId, restoreImportedAgentSelection } from "./agent-selection";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
 import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
@@ -102,6 +103,7 @@ export default function App() {
   const settingsCopy = learningSettingsCopy[uiLocale];
   const t = (key: MessageKey, params?: MessageParams) => translate(uiLocale, key, params);
   const agentUi = agentOnboardingCopy[uiLocale];
+  const hostUi = hostConnectionCopy[uiLocale];
   const [profile, setProfile] = useState<LearningProfile>(() => ({
     ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
   }));
@@ -120,6 +122,7 @@ export default function App() {
   const [customModelMode, setCustomModelMode] = useState(false);
   const [installed, setInstalled] = useState<Installed | null>(null);
   const [hostVersion, setHostVersion] = useState<string | null>(null);
+  const [hostImportedOnly, setHostImportedOnly] = useState(false);
   const [hostStatus, setHostStatus] = useState("");
   const [hostChecked, setHostChecked] = useState(false);
   const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([]);
@@ -189,6 +192,8 @@ export default function App() {
   const selectedDriveId = backup.accountId ?? driveAccounts[0]?.id;
   const driveAccessVerified = !!selectedDriveId && driveAccess?.accountId === selectedDriveId &&
     driveAccess.status === "verified";
+  const hostReady = installed !== null && hostImportedOnly &&
+    hostVersion === chrome.runtime.getManifest().version;
   const selectedAgentInfo = agentCatalog.find(entry => entry.id === agent.provider);
   const selectedSavedProfile = savedAgentProfiles.find(profile =>
     profile.provider === agent.provider && profile.directory === agent.accountConfigDir);
@@ -724,15 +729,18 @@ export default function App() {
       if (message.id === id && message.type === "health") {
         replied = true;
         setHostChecked(true);
-        setInstalled(message.installed);
+        // Older Hosts may still advertise built-in adapters despite matching version numbers.
+        const imported = Array.isArray(message.agents)
+          ? message.agents.filter(entry => isImportedAgentId(entry.id)) : [];
+        setInstalled(Object.fromEntries(Object.entries(message.installed)
+          .filter(([id]) => isImportedAgentId(id))));
         setHostVersion(typeof message.version === "string" ? message.version : null);
-        if (Array.isArray(message.agents)) {
-          setAgentCatalog(message.agents);
-          setAgent(current => current.provider &&
-            (!isImportedAgentId(current.provider) ||
-              !message.agents?.some(entry => entry.id === current.provider))
-            ? DEFAULT_AGENT : current);
-        }
+        setHostImportedOnly(message.agentMode === "imported-only");
+        setAgentCatalog(imported);
+        setAgent(current => current.provider &&
+          (!isImportedAgentId(current.provider) ||
+            !imported.some(entry => entry.id === current.provider))
+          ? DEFAULT_AGENT : current);
         void loadAgentProfiles();
         finishCheck();
         port.disconnect();
@@ -743,6 +751,7 @@ export default function App() {
         setHostChecked(true);
         setInstalled(null);
         setHostVersion(null);
+        setHostImportedOnly(false);
         setHostStatus(chrome.runtime.lastError?.message ?? "Native Host connection failed.");
         finishCheck();
       }
@@ -758,7 +767,7 @@ export default function App() {
 
   useEffect(() => {
     if (!hydrated || installed === null) return;
-    if (!agent.provider) {
+    if (!hostReady || !agent.provider) {
       setModelOptions([]);
       setModelNotice("");
       return;
@@ -793,7 +802,7 @@ export default function App() {
       }, Math.max(0, 500 - (performance.now() - startedAt)));
     });
     return () => { ignore = true; window.clearTimeout(settleTimer); };
-  }, [hydrated, installed, agent.provider, agent.accountConfigDir]);
+  }, [hydrated, installed, hostReady, agent.provider, agent.accountConfigDir]);
 
   function showDocument(raw: unknown): void {
     const parsed = LearningDocumentSchema.safeParse(raw);
@@ -901,6 +910,11 @@ export default function App() {
 
   function startGeneration(): void {
     if (checking || generating) return;
+    if (!hostReady) {
+      setError(installed === null ? agentUi.noHost : hostUi.unsupportedMode);
+      setPage("settings");
+      return;
+    }
     if (!isImportedAgentId(agent.provider) || installed?.[agent.provider] !== true) {
       setError(agentUi.empty);
       setPage("settings");
@@ -1755,7 +1769,7 @@ export default function App() {
               </div>
             </dl>
           </div>}
-          <Button className="h-auto min-h-10 w-full px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={generating || checking || subtitleBusy || !isImportedAgentId(agent.provider) || installed?.[agent.provider] !== true || !captionsReady || !cues.length || !title.trim()}>
+          <Button className="h-auto min-h-10 w-full px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={!hostReady || generating || checking || subtitleBusy || !isImportedAgentId(agent.provider) || installed?.[agent.provider] !== true || !captionsReady || !cues.length || !title.trim()}>
             {(generating || checking) && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
@@ -1798,7 +1812,7 @@ export default function App() {
               <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
                 {["queued", "waiting", "failed"].includes(job.status) &&
                   (isImportedAgentId(job.provider)
-                    ? <Button variant="outline" size="sm" disabled={generating}
+                    ? <Button variant="outline" size="sm" disabled={!hostReady || generating}
                         onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>
                     : <p role="status" className="text-xs text-muted-foreground">{t("legacyJobCannotResume")}</p>)}
                 {job.documentId && <>
@@ -1926,9 +1940,9 @@ export default function App() {
           <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("agentHint")}</p>
           <HostConnectionSettings locale={uiLocale} connected={installed !== null} checked={hostChecked}
+            importedOnly={hostImportedOnly}
             version={hostVersion} busy={hostBusy} error={hostStatus} onCheck={checkHost} />
-          <CustomAgentSettings locale={uiLocale} available={installed !== null &&
-            hostVersion === chrome.runtime.getManifest().version}
+          <CustomAgentSettings locale={uiLocale} available={hostReady}
             selectedProvider={agent.provider} selectedModelId={agent.modelId}
             selectedProfileDir={agent.accountConfigDir} nativeOnce={nativeOnce}
             onSelect={selectAgent}

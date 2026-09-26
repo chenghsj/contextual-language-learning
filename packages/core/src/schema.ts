@@ -316,7 +316,8 @@ export interface AgentInfo {
 }
 
 export type HostMessage =
-  | { id: string; type: "health"; installed: Record<string, boolean>; agents: AgentInfo[]; version?: string }
+  | { id: string; type: "health"; installed: Record<string, boolean>; agents: AgentInfo[];
+    version?: string; agentMode?: "imported-only" }
   | { id: string; type: "agentModels"; models: AgentModel[]; source: AgentModelSource; notice?: string }
   | { id: string; type: "agentProfiles"; profiles: AgentProfile[] }
   | { id: string; type: "customAgentList"; agents: CustomAgentConfig[] }

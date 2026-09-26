@@ -106,7 +106,7 @@ async function handle(input: unknown): Promise<void> {
       case "health": {
         const agents = await getAgentCatalog();
         reply({ id: request.id, type: "health", agents, version: hostVersion,
-          installed: Object.fromEntries(agents.map(agent => [agent.id, agent.installed])) });
+          agentMode: "imported-only", installed: Object.fromEntries(agents.map(agent => [agent.id, agent.installed])) });
         break;
       }
       case "customAgentList":
