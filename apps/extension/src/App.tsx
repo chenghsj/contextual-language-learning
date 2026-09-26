@@ -1220,6 +1220,7 @@ export default function App() {
       <nav className="tabs" aria-label={t("navLabel")}>
         <Button className={page === "create" ? "selected" : ""} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
         <Button className={page === "reader" ? "selected" : ""} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
+        <Button className={page === "lessons" ? "selected" : ""} onClick={() => setPage("lessons")}><Library aria-hidden="true" />{t("lessonLibrary")}</Button>
         <Button className={page === "settings" ? "selected" : ""} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
       </nav>
 
@@ -1519,6 +1520,57 @@ export default function App() {
         </Card>
       </main>}
 
+      {page === "lessons" && <main>
+        <Card className="panel">
+          <h2>{t("lessonLibrary")}</h2>
+          <p className="hint">{t("lessonLibraryHint")}</p>
+          <div className="jobToolbar">
+            <SelectField ariaLabel={t("lessonFilterLabel")} value={lessonFilter}
+              onValueChange={value => {
+                if (value === "all" || value === "local" || value === "drive") setLessonFilter(value);
+              }} options={[
+                { value: "all", label: t("lessonFilterAll") },
+                { value: "local", label: t("lessonFilterLocal") },
+                { value: "drive", label: t("lessonFilterDrive") },
+              ]} />
+            <Button variant="outline" size="sm" disabled={lessonsBusy}
+              onClick={() => void loadLessons()}>{lessonsBusy ? t("loading") : t("refreshJobs")}</Button>
+          </div>
+          {catalogError && <p className="callout" role="alert">{catalogError}</p>}
+          {lessonFilter === "drive" && !driveAccounts.length && <div className="callout">
+            <p>{t("connectDriveToBrowse")}</p>
+            <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
+              onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
+          </div>}
+          {!lessonsBusy && visibleLessons.length === 0 && <p className="hint">{t("lessonLibraryEmpty")}</p>}
+          <div className="lessonLibraryList">
+            {visibleLessons.map(lesson => <div className="jobRow" key={lesson.documentId}>
+              <div className="jobRowHeading"><strong title={lesson.title}>{lesson.title}</strong></div>
+              <p className="hint">{new Date(lesson.createdAt).toLocaleString(uiLocale)}
+                {lesson.local && " · " + lesson.local.targetLanguage.toUpperCase() + " · " + lesson.local.level}</p>
+              <div className="lessonRowMeta">
+                {lesson.local && <Badge variant="secondary">{t("localCopy")}</Badge>}
+                {lesson.drive && <Badge variant="secondary">{t("cloudCopy")}</Badge>}
+                {lesson.local?.backup && !lesson.drive &&
+                  <span className="hint">{t(lesson.local.backup.status === "backed-up"
+                    ? "backupSaved" : ["pending", "uploading"].includes(lesson.local.backup.status)
+                      ? "backupProcessing" : "backupFailedMessage")}</span>}
+              </div>
+              <div className="actions">
+                {lesson.local && <Button variant="outline" size="sm" disabled={generating}
+                  onClick={() => openSavedDocument(lesson.documentId)}>{t("openLesson")}</Button>}
+                {lesson.drive && !lesson.local && <Button variant="outline" size="sm"
+                  disabled={restoreBusy !== null || generating}
+                  onClick={() => void restoreLesson(lesson.drive!)}>{restoreBusy === lesson.documentId
+                    ? t("restoringLesson") : t("restoreLesson")}</Button>}
+                {lesson.drive && <Button variant="ghost" size="sm"
+                  onClick={() => void chrome.tabs.create({ url: lesson.drive!.url })}>{t("openInDrive")}</Button>}
+              </div>
+            </div>)}
+          </div>
+        </Card>
+      </main>}
+
       {page === "settings" && <main>
         <Card className="panel">
           <h2>{t("uiLanguage")} · {t("appearance")}</h2>
@@ -1656,6 +1708,11 @@ export default function App() {
             <Button variant="ghost" size="sm" disabled={storageBusy}
               onClick={() => void disconnectDrive(account.id)}>{t("disconnectGoogle")}</Button>
           </div>)}
+          {driveAccounts.length > 0 && <div className="actions">
+            <Button variant="outline" size="sm" disabled={storageBusy || !backup.accountId}
+              onClick={() => void backupExistingLessons()}>{t("backupExisting")}</Button>
+          </div>}
+          {backupStatus && <p className="hint" role="status">{backupStatus}</p>
         </Card>
       </main>}
 

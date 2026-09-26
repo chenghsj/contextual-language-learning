@@ -442,3 +442,11 @@ button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(-
   .generationSpinner { animation: none; }
   .generationProgress > span { transition: none; }
 }
+
+/* My Lessons combines the local and cloud copies of a document by ID. */
+.tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tabs button { gap: 3px; padding-inline: 1px; font-size: 11px; }
+.tabs button svg { width: 14px; height: 14px; }
+.lessonLibraryList { display: grid; gap: 8px; margin-top: 12px; }
+.lessonRowMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.lessonRowMeta .hint { margin: 0; }
