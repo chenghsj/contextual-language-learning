@@ -105,6 +105,14 @@ export class FileDocumentRepository implements DocumentRepository {
 
   /** The only intentional mutation of a finished V3 lesson: calibrated playback, never source cues. */
   async updatePlaybackRange(id: string, cueId: string, range: PlaybackOverride | null): Promise<LearningDocument> {
+    return this.updateCalibratedRange(id, cueId, range, "cue");
+  }
+  async updateScenePlaybackRange(id: string, sceneId: string, range: PlaybackOverride | null): Promise<LearningDocument> {
+    return this.updateCalibratedRange(id, sceneId, range, "scene");
+  }
+  private async updateCalibratedRange(
+    id: string, targetId: string, range: PlaybackOverride | null, kind: "cue" | "scene",
+  ): Promise<LearningDocument> {
     const safe = safeId(id);
     const prior = this.locks.get(safe) ?? Promise.resolve();
     let release!: () => void;
@@ -115,14 +123,18 @@ export class FileDocumentRepository implements DocumentRepository {
     try {
       const document = await this.get(safe);
       if (!document || document.schemaVersion !== 3) throw new Error("Saved V3 document not found");
-      if (!document.cues.some(cue => cue.id === cueId) ||
-          !document.sections.some(scene => scene.cueIds.includes(cueId))) {
+      if (kind === "cue" && (!document.cues.some(cue => cue.id === targetId) ||
+          !document.sections.some(scene => scene.cueIds.includes(targetId)))) {
         throw new Error("Playback cue is not part of this lesson");
       }
-      const overrides = { ...document.playbackOverrides };
-      if (range) overrides[cueId] = range;
-      else delete overrides[cueId];
-      const updated = readLearningDocument({ ...document, playbackOverrides: overrides });
+      if (kind === "scene" && !document.sections.some(scene => scene.id === targetId)) {
+        throw new Error("Playback scene is not part of this lesson");
+      }
+      const field = kind === "cue" ? "playbackOverrides" : "scenePlaybackOverrides";
+      const overrides = { ...document[field] };
+      if (range) overrides[targetId] = range;
+      else delete overrides[targetId];
+      const updated = readLearningDocument({ ...document, [field]: overrides });
       if (updated.schemaVersion !== 3) throw new Error("Playback update changed document schema");
       await atomicWrite(join(this.root, safe + ".json"), JSON.stringify(updated, null, 2) + "\n");
       await atomicWrite(join(this.root, safe + ".md"), learningDocumentToMarkdown(updated));
