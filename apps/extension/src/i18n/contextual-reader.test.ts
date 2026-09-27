@@ -92,6 +92,7 @@ test("V3 reader stays localized in five UI languages and retains source-only dia
     const copy = contextualReaderMessages[locale];
     assert.ok(html.includes(copy.dialogue), locale);
     assert.ok(html.includes(copy.playScene), locale);
+    assert.ok(html.includes(copy.loopScene), locale);
     assert.ok(html.includes(copy.aiExamples), locale);
     assert.ok(html.includes(copy.previousScene), locale);
     assert.ok(html.includes("What about dinner?"), locale);
@@ -119,6 +120,11 @@ test("V3 keeps playback tracking and uses the requested inline guided calibratio
   assert.match(source, /playingCueAt\(scene\.cueIds, cues, ms\)/);
   assert.match(source, /aria-current=\{playing \? "true" : undefined\}/);
   assert.match(source, /await stopPreviousLoop\(\)/);
+  assert.match(source, /loopingSceneRef\.current/);
+  assert.match(source, /async function toggleSceneLoop\(\)/);
+  assert.match(source, /sceneLoopStarted/);
+  assert.match(source, /stopSceneLoop/);
+  assert.match(source, /await adapter\.stopLoop\(sourceUrl\)/);
   assert.match(source, /const loopKey = "sceneLoopRanges:" \+ document\.id/);
   assert.match(source, /document\.playbackOverrides === undefined/);
   assert.match(source, /\[loopKey\]: loopRanges/);

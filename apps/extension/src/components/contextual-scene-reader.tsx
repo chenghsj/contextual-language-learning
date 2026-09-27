@@ -50,6 +50,8 @@ export function ContextualSceneReader({
   function markBusy(next: boolean): void { busyRef.current = next; setBusy(next); }
   const [loopingCueId, setLoopingCueId] = useState<string | null>(null);
   const loopingCueRef = useRef<string | null>(null);
+  const [loopingSceneId, setLoopingSceneId] = useState<string | null>(null);
+  const loopingSceneRef = useRef<string | null>(null);
   const [loopRanges, setLoopRanges] = useState<Record<string, LoopWindow>>({});
   const [calibrationOpen, setCalibrationOpen] = useState(false);
   const calibrationOpenRef = useRef(false);
@@ -108,6 +110,13 @@ export function ContextualSceneReader({
   }, [loaded, progressKey, loopKey, loopRanges, scene.id, selectionByScene]);
 
   useEffect(() => { loopingCueRef.current = loopingCueId; }, [loopingCueId]);
+  useEffect(() => { loopingSceneRef.current = loopingSceneId; }, [loopingSceneId]);
+  useEffect(() => () => {
+    // A closed reader must not leave a video loop controlling the old scene.
+    if ((loopingCueRef.current || loopingSceneRef.current) && sourceUrl && adapter.stopLoop) {
+      void adapter.stopLoop(sourceUrl).catch(() => undefined);
+    }
+  }, [sourceUrl, adapter]);
   useEffect(() => { calibrationOpenRef.current = calibrationOpen; }, [calibrationOpen]);
   // A scene/cue change must discard an unfinished calibration draft.
   useEffect(() => {
@@ -157,10 +166,12 @@ export function ContextualSceneReader({
   }, [sourceUrl, adapter, scene.id, scene.cueIds, cues]);
 
   async function stopPreviousLoop(): Promise<void> {
-    if (!loopingCueRef.current) return;
-    if (sourceUrl && adapter.stopLoop) await adapter.stopLoop(sourceUrl);
+    const active = !!loopingCueRef.current || !!loopingSceneRef.current;
     loopingCueRef.current = null;
+    loopingSceneRef.current = null;
     setLoopingCueId(null);
+    setLoopingSceneId(null);
+    if (active && sourceUrl && adapter.stopLoop) await adapter.stopLoop(sourceUrl);
   }
 
   async function selectScene(index: number): Promise<void> {
@@ -190,6 +201,32 @@ export function ContextualSceneReader({
         repeats: 1, delaySeconds: 0,
       });
       setStatus(copy.playbackStarted);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : copy.unavailable);
+    } finally {
+      markBusy(false);
+    }
+  }
+
+  async function toggleSceneLoop(): Promise<void> {
+    if (!sourceUrl || !adapter.loop || !adapter.stopLoop || busy ||
+        scene.startMs === null || scene.endMs === null || scene.endMs <= scene.startMs) return;
+    markBusy(true);
+    try {
+      if (loopingSceneRef.current === scene.id) {
+        await stopPreviousLoop();
+        setStatus(copy.sceneLoopStopped);
+      } else {
+        await stopPreviousLoop();
+        await adapter.loop(sourceUrl, {
+          startMs: cuePlaybackStart(scene.startMs), endMs: scene.endMs + 400,
+          repeats: repeat === "infinite" ? "infinite" : Number(repeat),
+          delaySeconds: delay,
+        });
+        loopingSceneRef.current = scene.id;
+        setLoopingSceneId(scene.id);
+        setStatus(copy.sceneLoopStarted);
+      }
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally {
@@ -394,10 +431,19 @@ export function ContextualSceneReader({
         </Button>}
       </div>
       <p className="my-[8px_12px] text-[13px] leading-[1.6] text-muted-foreground">{scene.context}</p>
-      <Button variant="outline" className="min-h-[38px] w-full" disabled={busy || !canLoop ||
-        scene.startMs === null || scene.endMs === null} onClick={() => void playScene()}>
-        <Play aria-hidden="true" />{copy.playScene}
-      </Button>
+      <div className="grid grid-cols-2 gap-2 [&>button]:min-h-[38px] [&>button]:min-w-0 [&>button]:h-auto [&>button]:whitespace-normal">
+        <Button variant="outline" disabled={busy || !canLoop ||
+          scene.startMs === null || scene.endMs === null} onClick={() => void playScene()}>
+          <Play aria-hidden="true" />{copy.playScene}
+        </Button>
+        <Button variant={loopingSceneId === scene.id ? "secondary" : "outline"}
+          disabled={busy || !canLoop || !adapter.stopLoop ||
+            scene.startMs === null || scene.endMs === null || scene.endMs <= scene.startMs}
+          aria-pressed={loopingSceneId === scene.id} onClick={() => void toggleSceneLoop()}>
+          {loopingSceneId === scene.id ? <Square aria-hidden="true" /> : <Repeat2 aria-hidden="true" />}
+          {loopingSceneId === scene.id ? copy.stopSceneLoop : copy.loopScene}
+        </Button>
+      </div>
       {!canLoop && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{copy.noVideo}</p>}
 
       <div className="flex min-w-0 items-center justify-between gap-2 mt-[18px] [&>button]:shrink-0 [&+.hint]:mt-1 [&+.hint]:mb-[10px] [&+.hint]:text-[11px]">
