@@ -63,7 +63,8 @@ test("cards, tooltips and compact player use warm rounded Tailwind utilities", (
   assert.ok(info.includes("bg-popover"));
   assert.ok(legacy.includes("grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]"));
   assert.ok(app.includes("dark:text-primary"));
-  assert.ok(contextual.includes('id="contextual-inline-calibration"'));
+  assert.ok(contextual.includes('"contextual-inline-calibration"'));
+  assert.ok(contextual.includes('"contextual-scene-calibration"'));
   assert.doesNotMatch(contextual, /backdrop:bg-|<dialog/, "V3 time adjustment stays inline");
 });
 
