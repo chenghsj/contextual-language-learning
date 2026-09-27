@@ -162,3 +162,24 @@ test("V3 can rewind, adjust and audition a draft; both readers offer 2×", async
     assert.ok(copy.rewind3 && copy.startEarlier && copy.startLater && copy.preview, locale);
   }
 });
+
+test("scene and sentence calibration share guided editor but persist distinct document ranges", async () => {
+  const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  assert.ok(source.includes('renderCalibration("scene")'));
+  assert.ok(source.includes('renderCalibration("cue")'));
+  assert.ok(source.includes('openCalibration("scene")'));
+  assert.ok(source.includes('openCalibration("cue")'));
+  assert.ok(source.includes("scenePlaybackOverrides"));
+  assert.ok(source.includes("await onSaveSceneRange(scene.id, draftRange)"));
+  assert.ok(source.includes("await onSaveRange(cueId, draftRange)"));
+  assert.ok(source.includes("selectedSceneRange"));
+  assert.ok(app.includes('type: "saveScenePlaybackRange"'));
+  assert.ok(app.includes('response.type !== "scenePlaybackRangeSaved"'));
+  const html = render("zh-TW");
+  assert.ok(html.includes(contextualReaderMessages["zh-TW"].adjustScene));
+  assert.ok(html.includes(contextualReaderMessages["zh-TW"].loopScene));
+  for (const copy of Object.values(contextualReaderMessages)) {
+    assert.ok(copy.adjustScene && copy.calibrateSceneStart && copy.calibrateSceneEnd && copy.adjusted);
+  }
+});
