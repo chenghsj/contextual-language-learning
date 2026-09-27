@@ -66,7 +66,7 @@ function onTimeUpdate(): void {
 
 type CaptionResponse = {
   source: "immersive-learning"; id: string; ok: boolean; bridgeVersion?: string;
-  text?: string; language?: string; error?: string;
+  text?: string; language?: string; error?: string; errorCode?: "TRACK_UNAVAILABLE";
 };
 
 function requestYouTubeCaptions(videoId: string, language: string): Promise<CaptionResponse> {
@@ -144,7 +144,8 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
       respond(result.ok && result.text && result.text.length <= 3_000_000 &&
         typeof result.language === "string"
         ? { ok: true, text: result.text, language: result.language }
-        : { ok: false, error: result.error ?? "YouTube did not return readable subtitles." });
+        : { ok: false, error: result.error ?? "YouTube did not return readable subtitles.",
+            ...(result.errorCode === "TRACK_UNAVAILABLE" ? { errorCode: result.errorCode } : {}) });
     }).catch(error => {
       respond({ ok: false, error: error instanceof Error ? error.message : "YouTube subtitles are unavailable." });
     });
