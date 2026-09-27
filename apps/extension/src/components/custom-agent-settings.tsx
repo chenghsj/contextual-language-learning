@@ -195,7 +195,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
     finally { setBusy(false); }
   }
 
-  // Keep existing-Agent edits visually and semantically separate from new Agent onboarding.
+  // Existing-Agent edits must never appear inside the Add Agent onboarding disclosure.
   function renderJsonEditor() {
     return <div className="grid gap-2">
           <strong className="text-xs">{editing ? ui.edit : ui.import}</strong>
@@ -216,7 +216,43 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
           {!available && <p className="text-xs text-muted-foreground">{ui.noHost}</p>}
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" disabled={!available || busy || !validated}
-        {editing && <section ref={editPanelRef}
+              onClick={() => void detect()}>{ui.detect}</Button>
+            <Button variant="outline" size="sm" disabled={!available || busy || !validated}
+              aria-busy={testing === "draft"} onClick={() => void testAgent()}>
+              {testing === "draft" && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
+              {testing === "draft" ? ui.testing : ui.test}
+            </Button>
+            <Button size="sm" disabled={!available || busy || !validated}
+              onClick={() => void save()}>{editing ? ui.saveChanges : ui.save}</Button>
+          </div>
+        </div>;
+  }
+
+  return <section className="mt-3 grid min-w-0 gap-3" data-ui="customAgentSettings">
+    <h3 className="text-sm font-semibold">{ui.heading}</h3>
+    <p className="text-xs leading-relaxed text-muted-foreground">{ui.hint}</p>
+    {agents.length === 0 && <p className="text-xs text-muted-foreground">{ui.empty}</p>}
+    {agents.map(agent => <div key={agent.id} className="grid min-w-0 gap-2 border border-border p-3">
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <div className="min-w-0"><strong className="block text-sm wrap-anywhere">{agent.label}</strong>
+          <p className="text-xs text-muted-foreground wrap-anywhere">{agent.executable}</p></div>
+        {selectedProvider === agent.id && <span className="shrink-0 text-xs text-primary">{ui.inUse}</span>}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" disabled={busy || selectedProvider === agent.id}
+          onClick={() => onSelect(agent.id)}>{ui.use}</Button>
+        <Button variant="outline" size="sm" disabled={busy}
+          onClick={() => edit(agent)}>{ui.edit}</Button>
+        <Button variant="outline" size="sm" disabled={!available || busy}
+          aria-busy={testing === agent.id} onClick={() => void testSavedAgent(agent)}>
+          {testing === agent.id && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
+          {testing === agent.id ? ui.testing : ui.test}
+        </Button>
+        <Button variant="outline" size="sm" disabled={!available || busy}
+          onClick={() => void remove(agent)}>{ui.remove}</Button>
+      </div>
+    </div>)}
+    {editing && <section ref={editPanelRef}
       className="grid min-w-0 gap-3 rounded-[var(--radius)] border border-border bg-card p-3"
       aria-label={ui.edit + " · " + editing.label} data-ui="editAgentPanel">
       <div className="flex min-w-0 items-center justify-between gap-2">
@@ -242,40 +278,6 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
           {copyFeedback === "failed" && <p className="text-xs text-destructive" role="alert">{ui.copyFailed}</p>}
         </div>
         {renderJsonEditor()}
-        <p className="text-xs leading-relaxed text-muted-foreground">{ui.safety}</p>
-      </div>
-    </details>} </div>
-        <div className="grid gap-2">
-          <strong className="text-xs">{ui.import}</strong>
-          <p className="text-xs leading-relaxed text-muted-foreground">{ui.importHelp}</p>
-          <label htmlFor="import-agent-json" className="text-xs font-semibold">{ui.import}</label>
-          <textarea id="import-agent-json" rows={7} value={json} placeholder={ui.placeholder}
-            disabled={busy} onChange={event => {
-              setJson(event.target.value); setValidated(null); setStatus(""); setFailed(false);
-            }}
-            className="w-full min-w-0 resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground focus-visible:outline-2 focus-visible:outline-ring" />
-          <Button variant="outline" size="sm" disabled={busy || !json.trim()}
-            onClick={validate}>{ui.validate}</Button>
-          {validated && <div className="grid min-w-0 gap-1 rounded-[var(--radius)] border border-border p-2 text-xs">
-            <strong>{ui.preview}</strong>
-            <span className="wrap-anywhere">{validated.executable}</span>
-            <pre className="overflow-x-auto whitespace-pre-wrap break-all">{JSON.stringify(validated.args)}</pre>
-          </div>}
-          {!available && <p className="text-xs text-muted-foreground">{ui.noHost}</p>}
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" disabled={!available || busy || !validated}
-              onClick={() => void detect()}>{ui.detect}</Button>
-            <Button variant="outline" size="sm" disabled={!available || busy || !validated}
-              aria-busy={testing === "draft"} onClick={() => void testAgent()}>
-              {testing === "draft" && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
-              {testing === "draft" ? ui.testing : ui.test}
-            </Button>
-            <Button size="sm" disabled={!available || busy || !validated}
-              onClick={() => void save()}>{editing ? ui.saveChanges : ui.save}</Button>
-            {editing && <Button variant="ghost" size="sm" disabled={busy}
-              onClick={resetEditor}>{ui.cancel}</Button>}
-          </div>
-        </div>
         <p className="text-xs leading-relaxed text-muted-foreground">{ui.safety}</p>
       </div>
     </details>
