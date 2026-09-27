@@ -28,10 +28,15 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
   const [failed, setFailed] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<"idle" | "copying" | "copied" | "failed">("idle");
   const copyResetRef = useRef<number | null>(null);
+  const editPanelRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => () => {
     if (copyResetRef.current !== null) window.clearTimeout(copyResetRef.current);
   }, []);
+
+  useEffect(() => {
+    if (editing) editPanelRef.current?.scrollIntoView({ block: "nearest" });
+  }, [editing]);
 
   useEffect(() => {
     if (!available) return;
@@ -190,31 +195,38 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
     finally { setBusy(false); }
   }
 
-  return <section className="mt-3 grid min-w-0 gap-3" data-ui="customAgentSettings">
-    <h3 className="text-sm font-semibold">{ui.heading}</h3>
-    <p className="text-xs leading-relaxed text-muted-foreground">{ui.hint}</p>
-    {agents.length === 0 && <p className="text-xs text-muted-foreground">{ui.empty}</p>}
-    {agents.map(agent => <div key={agent.id} className="grid min-w-0 gap-2 border border-border p-3">
-      <div className="flex min-w-0 items-start justify-between gap-2">
-        <div className="min-w-0"><strong className="block text-sm wrap-anywhere">{agent.label}</strong>
-          <p className="text-xs text-muted-foreground wrap-anywhere">{agent.executable}</p></div>
-        {selectedProvider === agent.id && <span className="shrink-0 text-xs text-primary">{ui.inUse}</span>}
+  // Keep existing-Agent edits visually and semantically separate from new Agent onboarding.
+  function renderJsonEditor() {
+    return <div className="grid gap-2">
+          <strong className="text-xs">{editing ? ui.edit : ui.import}</strong>
+          {!editing && <p className="text-xs leading-relaxed text-muted-foreground">{ui.importHelp}</p>}
+          <label htmlFor={editing ? "edit-agent-json" : "import-agent-json"} className="text-xs font-semibold">{editing ? ui.edit : ui.import}</label>
+          <textarea id={editing ? "edit-agent-json" : "import-agent-json"} rows={7} value={json} placeholder={ui.placeholder}
+            disabled={busy} onChange={event => {
+              setJson(event.target.value); setValidated(null); setStatus(""); setFailed(false);
+            }}
+            className="w-full min-w-0 resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground focus-visible:outline-2 focus-visible:outline-ring" />
+          <Button variant="outline" size="sm" disabled={busy || !json.trim()}
+            onClick={validate}>{ui.validate}</Button>
+          {validated && <div className="grid min-w-0 gap-1 rounded-[var(--radius)] border border-border p-2 text-xs">
+            <strong>{ui.preview}</strong>
+            <span className="wrap-anywhere">{validated.executable}</span>
+            <pre className="overflow-x-auto whitespace-pre-wrap break-all">{JSON.stringify(validated.args)}</pre>
+          </div>}
+          {!available && <p className="text-xs text-muted-foreground">{ui.noHost}</p>}
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" disabled={!available || busy || !validated}
+        {editing && <section ref={editPanelRef}
+      className="grid min-w-0 gap-3 rounded-[var(--radius)] border border-border bg-card p-3"
+      aria-label={ui.edit + " · " + editing.label} data-ui="editAgentPanel">
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <h4 className="min-w-0 text-sm font-semibold wrap-anywhere">{ui.edit} · {editing.label}</h4>
+        <Button variant="ghost" size="sm" disabled={busy} onClick={resetEditor}>{ui.cancel}</Button>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" disabled={busy || selectedProvider === agent.id}
-          onClick={() => onSelect(agent.id)}>{ui.use}</Button>
-        <Button variant="outline" size="sm" disabled={busy}
-          onClick={() => edit(agent)}>{ui.edit}</Button>
-        <Button variant="outline" size="sm" disabled={!available || busy}
-          aria-busy={testing === agent.id} onClick={() => void testSavedAgent(agent)}>
-          {testing === agent.id && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
-          {testing === agent.id ? ui.testing : ui.test}
-        </Button>
-        <Button variant="outline" size="sm" disabled={!available || busy}
-          onClick={() => void remove(agent)}>{ui.remove}</Button>
-      </div>
-    </div>)}
-    <details className="min-w-0 border border-border p-3" open={agents.length === 0 ? true : undefined}>
+      {renderJsonEditor()}
+      <p className="text-xs leading-relaxed text-muted-foreground">{ui.safety}</p>
+    </section>}
+    {!editing && <details className="min-w-0 border border-border p-3" open={agents.length === 0 ? true : undefined}>
       <summary className="cursor-pointer text-sm font-semibold">{ui.add}</summary>
       <div className="mt-3 grid min-w-0 gap-3">
         <div className="grid gap-2">
@@ -229,6 +241,10 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
           {copyFeedback === "copied" && <span className="sr-only" role="status" aria-live="polite">{ui.copied}</span>}
           {copyFeedback === "failed" && <p className="text-xs text-destructive" role="alert">{ui.copyFailed}</p>}
         </div>
+        {renderJsonEditor()}
+        <p className="text-xs leading-relaxed text-muted-foreground">{ui.safety}</p>
+      </div>
+    </details>} </div>
         <div className="grid gap-2">
           <strong className="text-xs">{ui.import}</strong>
           <p className="text-xs leading-relaxed text-muted-foreground">{ui.importHelp}</p>
