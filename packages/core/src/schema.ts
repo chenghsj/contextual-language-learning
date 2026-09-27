@@ -254,9 +254,18 @@ export const LearningDocumentV2Schema = DocumentCommonSchema.extend({
   schemaVersion: z.literal(2),
   sections: z.array(StudySceneSchema).min(1).max(6),
 });
+/** Calibrated playback windows never replace the canonical subtitle timestamps. */
+export const PlaybackOverrideSchema = z.object({
+  startMs: z.number().int().min(0).max(43_200_000),
+  endMs: z.number().int().min(0).max(43_200_000),
+}).refine(range => range.endMs - range.startMs >= 250 && range.endMs - range.startMs <= 600_000,
+  { message: "Playback duration must be between 0.25s and 10min" });
+export type PlaybackOverride = z.infer<typeof PlaybackOverrideSchema>;
 export const LearningDocumentV3Schema = DocumentCommonSchema.extend({
   schemaVersion: z.literal(3),
   sections: z.array(StudySceneV3Schema).min(1).max(6),
+  /** Presence (including an empty map) takes precedence over legacy browser-only calibration. */
+  playbackOverrides: z.record(z.string().min(1).max(80), PlaybackOverrideSchema).optional(),
 });
 export const LearningDocumentSchema = z.discriminatedUnion("schemaVersion", [
   LearningDocumentV1Schema, LearningDocumentV2Schema, LearningDocumentV3Schema,
@@ -293,6 +302,8 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("backupExisting"), id: z.string().uuid(), accountId: z.string().min(1).max(256) }),
   z.object({ type: z.literal("resume"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({ type: z.literal("getDocument"), id: z.string().uuid(), documentId: z.string().uuid() }),
+  z.object({ type: z.literal("savePlaybackRange"), id: z.string().uuid(), documentId: z.string().uuid(),
+    cueId: z.string().min(1).max(80), range: PlaybackOverrideSchema.nullable() }),
   z.object({ type: z.literal("storageLocations"), id: z.string().uuid() }),
   z.object({ type: z.literal("preflight"), id: z.string().uuid(), payload: GenerationRequestSchema }),
   z.object({ type: z.literal("checkDuplicates"), id: z.string().uuid(), payload: GenerationRequestSchema }),
@@ -335,6 +346,7 @@ export type HostMessage =
   | { id: string; type: "storageLocations"; locations: { id: string; kind: "local" | "google-drive-desktop"; label: string; path: string; account?: string }[] }
   | { id: string; type: "preflight"; existing: { id: string; title: string; createdAt: string; path: string }[] }
   | { id: string; type: "result"; document: LearningDocument }
+  | { id: string; type: "playbackRangeSaved"; cueId: string; range: PlaybackOverride | null; warning?: string }
   | { id: string; type: "duplicates"; token: string; matches: DuplicateMatch[] }
   | { id: string; type: "folder"; directory: string }
   | { id: string; type: "driveAccounts"; accounts: DriveAccount[]; configured: boolean }

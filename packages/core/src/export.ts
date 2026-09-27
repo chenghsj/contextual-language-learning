@@ -55,6 +55,16 @@ export function learningDocumentToMarkdown(doc: LearningDocument): string {
     }
     parts.push("");
   }
+  if (doc.schemaVersion === 3 && doc.playbackOverrides &&
+      Object.keys(doc.playbackOverrides).length > 0) {
+    parts.push("## User-calibrated playback (original subtitle times unchanged)", "");
+    for (const cue of doc.cues) {
+      const window = doc.playbackOverrides[cue.id];
+      if (!window) continue;
+      parts.push("- " + safeMarkdown(cue.id) + ": " + window.startMs + "–" + window.endMs + " ms");
+    }
+    parts.push("");
+  }
   return parts.join("\n");
 }
 

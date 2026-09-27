@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { driveApiError } from "./api";
+import { driveApiError, isPlaybackOnlyDriveRevision } from "./api";
+import { LearningDocumentSchema } from "@immersive/core";
 
 test("Drive permission diagnostics show safe reason and relevant next action", () => {
   const error = driveApiError(403, {
@@ -53,4 +54,38 @@ test("HTTP 403 permission denied alone does not incorrectly insist the user must
   assert.match(driveApiError(403, { error: { details: [
     { reason: "ACCESS_TOKEN_SCOPE_INSUFFICIENT" },
   ] } }, "驗證 Drive 權限").message, /drive.file/);
+});
+
+test("Drive accepts only a calibrated playback revision of an unchanged app lesson", () => {
+  const before = LearningDocumentSchema.parse({
+    id: "00000000-0000-4000-8000-000000000001", schemaVersion: 3,
+    createdAt: "2026-09-26T00:00:00.000Z",
+    source: { platform: "import", title: "Context" },
+    profile: { targetLanguage: "en", instructionLanguage: "en", level: "B1",
+      mode: "adaptive", maxNewVocabulary: 1, exerciseCount: 0, sceneCount: 1 },
+    generation: { provider: "claude", modelId: "" },
+    cues: [{ id: "a", startMs: 1000, endMs: 2000, originalText: "Hello" }],
+    sections: [{
+      id: "00000000-0000-4000-8000-000000000002", title: "Greeting", context: "Hello",
+      learningGoal: "Greet", cueIds: ["a"], focusCueIds: ["a"], startMs: 1000, endMs: 2000,
+      translations: [{ cueId: "a", text: "Hello" }], vocabulary: [], insights: [], exercises: [],
+      focusItems: [{
+        expression: "Hello", sourceCueIds: ["a"], meaning: "Hello",
+        contextExplanation: "Hello", contextCueIds: ["a"], wordNotes: [],
+        examples: [{ situation: "Meeting", dialogue: [
+          { text: "Hello", translation: "Hello" }, { text: "Hello!", translation: "Hello!" },
+        ] }],
+      }],
+    }],
+  });
+  if (before.schemaVersion !== 3) throw new Error("Unexpected schema");
+  const after = LearningDocumentSchema.parse({
+    ...before, playbackOverrides: { a: { startMs: 1100, endMs: 2200 } },
+  });
+  assert.equal(isPlaybackOnlyDriveRevision(before, after), true);
+  assert.equal(isPlaybackOnlyDriveRevision(before, { ...after,
+    cues: [{ ...after.cues[0], originalText: "Invented source" }] }), false);
+  assert.equal(isPlaybackOnlyDriveRevision(after, after), false);
+  assert.equal(isPlaybackOnlyDriveRevision(before, { ...before, playbackOverrides: {} }), true,
+    "explicit reset metadata may replace legacy browser-only calibration");
 });
