@@ -127,7 +127,7 @@ export function ContextualSceneReader({
   useEffect(() => { loopingSceneRef.current = loopingSceneId; }, [loopingSceneId]);
   useEffect(() => () => {
     // A closed reader must not leave a video loop controlling the old scene.
-    if ((loopingCueRef.current || loopingSceneRef.current) && sourceUrl && adapter.stopLoop) {
+    if ((loopingCueRef.current || loopingSceneRef.current || previewRef.current) && sourceUrl && adapter.stopLoop) {
       void adapter.stopLoop(sourceUrl).catch(() => undefined);
     }
   }, [sourceUrl, adapter]);
