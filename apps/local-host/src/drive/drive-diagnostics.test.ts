@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { driveApiError, isPlaybackOnlyDriveRevision } from "./api";
+import { boundedDriveProperty, driveApiError, isPlaybackOnlyDriveRevision,
+  MAX_DRIVE_PROPERTY_BYTES, validateDriveAppProperties } from "./api";
 import { LearningDocumentSchema } from "@immersive/core";
 
 test("Drive permission diagnostics show safe reason and relevant next action", () => {
@@ -23,6 +24,49 @@ test("Drive errors distinguish rate limits, missing scopes and unexpected values
     "https://private.example");
   assert.match(unknown.message, /unknown/);
   assert.doesNotMatch(unknown.message, /private|token/);
+});
+
+test("Drive CJK and emoji titles fit appProperties UTF-8 limits without splitting code points", () => {
+  const title = "畫完這個再去死 第12話【未來世界～今後也一直畫喜歡的東西吧】｜Muse木棉花 動畫 線上看 🎬".repeat(3);
+  const shortened = boundedDriveProperty("immersiveTitle", title);
+  assert.ok(title.startsWith(shortened));
+  assert.ok(shortened.length < title.length);
+  assert.ok(Buffer.byteLength("immersiveTitle", "utf8") +
+    Buffer.byteLength(shortened, "utf8") <= MAX_DRIVE_PROPERTY_BYTES);
+  assert.ok(Buffer.byteLength("immersiveTitle", "utf8") +
+    Buffer.byteLength(shortened, "utf8") + Buffer.byteLength("日", "utf8") > MAX_DRIVE_PROPERTY_BYTES);
+
+  const emoji = boundedDriveProperty("immersiveTitle", "🎬".repeat(40));
+  assert.equal(emoji, "🎬".repeat(Math.floor(
+    (MAX_DRIVE_PROPERTY_BYTES - Buffer.byteLength("immersiveTitle", "utf8")) / 4)));
+  assert.doesNotMatch(emoji, /[\uD800-\uDBFF]$/);
+
+  const properties = {
+    immersiveSourceKey: "a".repeat(64), immersiveTranscriptKey: "b".repeat(64),
+    immersiveSettingsKey: "c".repeat(64),
+    immersiveDocumentId: "00000000-0000-4000-8000-000000000001",
+    immersiveSchemaVersion: "3", immersiveTitle: shortened,
+    immersiveCreatedAt: "2026-09-26T00:00:00.000Z",
+    immersiveFormat: "json", immersiveDocumentKey: "d".repeat(64),
+    immersiveContentHash: "e".repeat(64),
+  };
+  assert.doesNotThrow(() => validateDriveAppProperties(properties));
+  assert.throws(() => validateDriveAppProperties({ ...properties, immersiveTitle: title }),
+    /UTF-8 property size limit/);
+  assert.throws(() => validateDriveAppProperties(Object.fromEntries(
+    Array.from({ length: 31 }, (_, index) => ["key" + index, "value"]))),
+  /property count limit/);
+});
+
+test("Drive property length errors do not ask the user to reauthorize", () => {
+  const error = driveApiError(403, { error: {
+    errors: [{ reason: "propertyLengthLimitExceeded" }],
+    message: "https://private.example?access_token=secret",
+  } }, "備份教材");
+  assert.match(error.message, /propertyLengthLimitExceeded/);
+  assert.match(error.message, /UTF-8/);
+  assert.match(error.message, /Native Host/);
+  assert.doesNotMatch(error.message, /drive.file|請重新連結|private|secret/);
 });
 
 test("Drive validation calls the Drive API rather than only refreshing OAuth", async () => {

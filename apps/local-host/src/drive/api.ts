@@ -17,6 +17,38 @@ const UPLOAD = "https://www.googleapis.com/upload/drive/v3";
 const FOLDER_TYPE = "application/vnd.google-apps.folder";
 const FOLDER_NAME = "Immersive Learning";
 
+/** Drive limits every appProperties key + value pair to 124 UTF-8 bytes, not characters. */
+export const MAX_DRIVE_PROPERTY_BYTES = 124;
+const MAX_DRIVE_PRIVATE_PROPERTIES = 30;
+
+/** Truncate display metadata only; the full source title remains in the saved lesson JSON. */
+export function boundedDriveProperty(key: string, value: string): string {
+  const budget = MAX_DRIVE_PROPERTY_BYTES - Buffer.byteLength(key, "utf8");
+  if (budget < 0) throw new Error("Drive metadata key exceeds the UTF-8 size limit");
+  let result = "";
+  let bytes = 0;
+  for (const codePoint of value) {
+    const nextBytes = Buffer.byteLength(codePoint, "utf8");
+    if (bytes + nextBytes > budget) break;
+    result += codePoint;
+    bytes += nextBytes;
+  }
+  return result;
+}
+
+/** Check all properties for initial uploads and subsequent playback-only revisions. */
+export function validateDriveAppProperties(properties: Record<string, string>): void {
+  if (Object.keys(properties).length > MAX_DRIVE_PRIVATE_PROPERTIES) {
+    throw new Error("Drive metadata exceeds the private property count limit");
+  }
+  for (const [key, value] of Object.entries(properties)) {
+    if (Buffer.byteLength(key, "utf8") + Buffer.byteLength(value, "utf8") >
+        MAX_DRIVE_PROPERTY_BYTES) {
+      throw new Error("Drive metadata exceeds the UTF-8 property size limit");
+    }
+  }
+}
+
 /** Never display raw Google responses: they can contain private file metadata or request details. */
 export function driveApiError(status: number, body: unknown, operation: string): Error {
   const payload = body && typeof body === "object" ? body as Record<string, unknown> : {};
@@ -42,6 +74,8 @@ export function driveApiError(status: number, body: unknown, operation: string):
     hint = "目前授權缺少 Google Drive 所需範圍；請重新連結並確認 drive.file 權限。";
   } else if (reason === "PERMISSION_DENIED") {
     hint = "Google Drive 拒絕存取；請確認 Drive API 已啟用、帳號與檔案權限。不要只因已完成 Google 登入就假設可使用 Drive。";
+  } else if (reason === "propertyLengthLimitExceeded") {
+    hint = "Google Drive 的檔案屬性超過 UTF-8 長度限制；請更新 Native Host 後重試備份，不需要重新授權。";
   } else if (reason === "appNotAuthorizedToFile" || reason === "forbidden") {
     hint = "這個 Google 帳號沒有存取此檔案的權限；請確認備份帳號及檔案是否由本應用程式建立。";
   } else if (["rateLimitExceeded", "userRateLimitExceeded", "quotaExceeded",
@@ -123,6 +157,7 @@ async function uploadFile(
   accountId: string, folderId: string, fileName: string, mimeType: string, data: Buffer,
   properties: Record<string, string>,
 ): Promise<DriveFile> {
+  validateDriveAppProperties(properties);
   const metadata = {
     name: fileName, mimeType, parents: [folderId], appProperties: properties,
   };
@@ -204,6 +239,7 @@ async function updateOwnedPlaybackBackup(
   accountId: string, file: DriveFile, mimeType: string, content: Buffer,
   oldContent: Buffer, properties: Record<string, string>,
 ): Promise<DriveFile> {
+  validateDriveAppProperties(properties);
   const response = await googleFetch(accountId,
     API + "/files/" + encodeURIComponent(file.id) + "?alt=media", {}, "讀取雲端教材");
   const remote = Buffer.from(await response.arrayBuffer());
@@ -248,7 +284,7 @@ export async function publishDriveDocument(
     immersiveSettingsKey: settingsKey({ profile: document.profile, agent: document.generation }),
     immersiveDocumentId: document.id,
     immersiveSchemaVersion: String(document.schemaVersion),
-    immersiveTitle: document.source.title.slice(0, 120),
+    immersiveTitle: boundedDriveProperty("immersiveTitle", document.source.title),
     immersiveCreatedAt: document.createdAt,
   };
   const docKey = createHash("sha256").update(document.id).digest("hex");
@@ -266,6 +302,7 @@ export async function publishDriveDocument(
     }
     const metadata = { ...properties, immersiveFormat: format, immersiveDocumentKey: docKey,
       immersiveContentHash: expectedHash };
+    validateDriveAppProperties(metadata);
     const oldContent = previousDocument && Buffer.from(format === "json"
       ? JSON.stringify(previousDocument, null, 2) + "\n"
       : toMarkdownForDrive(previousDocument), "utf8");
