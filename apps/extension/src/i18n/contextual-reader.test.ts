@@ -147,3 +147,17 @@ test("V3 keeps playback tracking and uses the requested inline guided calibratio
   assert.ok(!html.includes('id="contextual-inline-calibration"'),
     "calibration is expanded inline only on demand");
 });
+
+test("V3 can rewind, adjust and audition a draft; both readers offer 2×", async () => {
+  const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
+  const legacy = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
+  for (const code of [source, legacy]) assert.ok(code.includes("1.5, 1.75, 2"));
+  for (const action of ["async function rewindCalibration()", "adjustDraftStart(-500)",
+    "async function previewCalibration()", "border-sky-300 bg-sky-50", "void finishCalibration()"]) {
+    assert.ok(source.includes(action), action);
+  }
+  for (const locale of Object.keys(contextualReaderMessages) as UiLocale[]) {
+    const copy = contextualReaderMessages[locale];
+    assert.ok(copy.rewind3 && copy.startEarlier && copy.startLater && copy.preview, locale);
+  }
+});
