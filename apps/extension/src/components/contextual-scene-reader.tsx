@@ -58,6 +58,7 @@ export function ContextualSceneReader({
   const [calibrationStage, setCalibrationStage] = useState<"start" | "end" | "confirm">("start");
   const [draftStartMs, setDraftStartMs] = useState<number | null>(null);
   const [draftRange, setDraftRange] = useState<LoopWindow | null>(null);
+  const previewRef = useRef(false);
   const [playbackCueId, setPlaybackCueId] = useState<string | null>(null);
   const [playbackKnown, setPlaybackKnown] = useState(false);
   const [status, setStatus] = useState("");
@@ -166,7 +167,8 @@ export function ContextualSceneReader({
   }, [sourceUrl, adapter, scene.id, scene.cueIds, cues]);
 
   async function stopPreviousLoop(): Promise<void> {
-    const active = !!loopingCueRef.current || !!loopingSceneRef.current;
+    const active = !!loopingCueRef.current || !!loopingSceneRef.current || previewRef.current;
+    previewRef.current = false;
     loopingCueRef.current = null;
     loopingSceneRef.current = null;
     setLoopingCueId(null);
@@ -289,6 +291,10 @@ export function ContextualSceneReader({
   }
 
   function cancelCalibration(): void {
+    if (previewRef.current && sourceUrl && adapter.stopLoop) {
+      previewRef.current = false;
+      void adapter.stopLoop(sourceUrl).catch(() => undefined);
+    }
     setCalibrationOpen(false);
     setCalibrationStage("start");
     setDraftStartMs(null);
@@ -305,6 +311,43 @@ export function ContextualSceneReader({
       setDraftRange(null);
       setStatus("");
       setCalibrationOpen(true);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : copy.unavailable);
+    } finally { markBusy(false); }
+  }
+
+  /** Rewind the player after hearing a sound; no prediction of the exact syllable onset needed. */
+  async function rewindCalibration(): Promise<void> {
+    if (busyRef.current || !sourceUrl || !adapter.status || !adapter.seek) return;
+    markBusy(true);
+    try {
+      const playback = await adapter.status(sourceUrl);
+      if (typeof playback.currentMs !== "number" || !Number.isFinite(playback.currentMs) ||
+          playback.currentMs < 0) { setStatus(timing.positionUnavailable); return; }
+      await stopPreviousLoop();
+      await adapter.seek(sourceUrl, Math.max(0, Math.round(playback.currentMs) - 3_000));
+      setStatus(copy.rewound);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : copy.unavailable);
+    } finally { markBusy(false); }
+  }
+
+  function adjustDraftStart(delta: number): void {
+    if (!draftRange) return;
+    const candidate = { ...draftRange, startMs: Math.max(0, draftRange.startMs + delta) };
+    if (!isLoopWindow(candidate)) { setStatus(timing.invalidLoopRange); return; }
+    setDraftRange(candidate);
+    setStatus("");
+  }
+
+  async function previewCalibration(): Promise<void> {
+    if (busyRef.current || !sourceUrl || !adapter.loop || !draftRange) return;
+    markBusy(true);
+    try {
+      await stopPreviousLoop();
+      await adapter.loop(sourceUrl, { ...draftRange, repeats: 1, delaySeconds: 0 });
+      previewRef.current = true;
+      setStatus(copy.previewStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally { markBusy(false); }
@@ -562,7 +605,7 @@ export function ContextualSceneReader({
         </Button>
         {adapter.setPlaybackRate && <SelectField ariaLabel={copy.speed} value={String(playbackRate)}
           disabled={busy} onValueChange={value => void changeRate(Number(value))}
-          options={[0.5, 0.75, 1, 1.25, 1.5].map(rate => ({
+          options={[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(rate => ({
             value: String(rate), label: rate + "×",
           }))} />}
         <Button size="sm" variant="outline"
@@ -576,10 +619,19 @@ export function ContextualSceneReader({
 
 
       {calibrationOpen && selectedRange && <section id="contextual-inline-calibration"
-        className="mt-2 grid gap-2 border-t border-border pt-3 text-xs" aria-label={copy.adjustPosition}>
+        className="mt-2 grid gap-3 rounded-[var(--radius)] border border-sky-300 bg-sky-50 p-3 text-xs dark:border-sky-700 dark:bg-sky-950/30"
+        aria-label={copy.adjustPosition}>
+        <div className="flex items-center gap-2 border-b border-sky-200 pb-2 font-semibold text-sky-900 dark:border-sky-800 dark:text-sky-100">
+          <SlidersHorizontal aria-hidden="true" className="size-4" />{copy.adjustPosition}
+          <span className="ml-auto rounded-full bg-sky-100 px-2 py-0.5 text-[11px] tabular-nums dark:bg-sky-900">
+            {calibrationStage === "start" ? "1 / 3" : calibrationStage === "end" ? "2 / 3" : "3 / 3"}
+          </span>
+        </div>
         {calibrationStage === "start" && <>
           <p className="m-0 text-foreground">{copy.calibrateStart}</p>
           <div className="flex flex-wrap items-center gap-2">
+            {adapter.seek && <Button size="sm" variant="outline" disabled={busy}
+              onClick={() => void rewindCalibration()}>{copy.rewind3}</Button>}
             <Button size="sm" disabled={busy} onClick={() => void captureBoundary("start")}>
               {copy.markStart}
             </Button>
@@ -591,6 +643,8 @@ export function ContextualSceneReader({
         {calibrationStage === "end" && <>
           <p className="m-0 text-foreground">{copy.calibrateEnd}</p>
           <div className="flex flex-wrap items-center gap-2">
+            {adapter.seek && <Button size="sm" variant="outline" disabled={busy}
+              onClick={() => void rewindCalibration()}>{copy.rewind3}</Button>}
             <Button size="sm" disabled={busy} onClick={() => void captureBoundary("end")}>
               {copy.markEnd}
             </Button>
@@ -604,6 +658,14 @@ export function ContextualSceneReader({
             {draftRange ? formatLoopTimestamp(draftRange.startMs) + " – " +
               formatLoopTimestamp(draftRange.endMs) : copy.restoreTiming}
           </p>
+          {draftRange && <div className="grid grid-cols-2 gap-2">
+            <Button size="sm" variant="outline" disabled={busy}
+              onClick={() => adjustDraftStart(-500)}>{copy.startEarlier}</Button>
+            <Button size="sm" variant="outline" disabled={busy}
+              onClick={() => adjustDraftStart(500)}>{copy.startLater}</Button>
+            <Button size="sm" variant="outline" className="col-span-2" disabled={busy || !adapter.loop}
+              onClick={() => void previewCalibration()}><Play aria-hidden="true" />{copy.preview}</Button>
+          </div>}
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" disabled={busy} onClick={() => void finishCalibration()}>
               {copy.saveTiming}
