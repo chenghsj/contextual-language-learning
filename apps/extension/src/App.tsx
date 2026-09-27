@@ -832,6 +832,25 @@ export default function App() {
     });
   }
 
+  async function saveDocumentScenePlaybackRange(
+    documentId: string, sceneId: string, range: { startMs: number; endMs: number } | null,
+  ): Promise<void> {
+    const response = await nativeOnce({
+      id: crypto.randomUUID(), type: "saveScenePlaybackRange", documentId, sceneId, range,
+    });
+    if (response.type !== "scenePlaybackRangeSaved" || response.sceneId !== sceneId) {
+      throw new Error("Native Host did not confirm the scene playback calibration");
+    }
+    if (response.warning) setError(response.warning);
+    setDocument(current => {
+      if (current?.id !== documentId || current.schemaVersion !== 3) return current;
+      const scenePlaybackOverrides = { ...current.scenePlaybackOverrides };
+      if (response.range) scenePlaybackOverrides[sceneId] = response.range;
+      else delete scenePlaybackOverrides[sceneId];
+      return { ...current, scenePlaybackOverrides };
+    });
+  }
+
   function jobStatusLine(summary: JobSummary): string {
     return summary.status === "queued" || summary.status === "running"
       ? t("statusProgress", { completed: summary.completed, total: summary.total })
@@ -2135,6 +2154,7 @@ export default function App() {
           playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
           onError={setError} onDownload={format => downloadDocument(document, format)}
           onSaveRange={(cueId, range) => saveDocumentPlaybackRange(document.id, cueId, range)}
+          onSaveSceneRange={(sceneId, range) => saveDocumentScenePlaybackRange(document.id, sceneId, range)}
         /> : document.schemaVersion === 2 ? <SceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
           repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}

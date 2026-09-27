@@ -64,6 +64,7 @@ function render(locale: UiLocale, doc: typeof document = document): string {
     playbackRate: 1, setPlaybackRate: () => undefined,
     onError: () => undefined, onDownload: () => undefined,
     onSaveRange: async () => undefined,
+    onSaveSceneRange: async () => undefined,
   }));
 }
 
