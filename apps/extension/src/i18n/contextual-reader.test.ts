@@ -135,7 +135,7 @@ test("V3 keeps playback tracking and uses the requested inline guided calibratio
   assert.match(source, /captureBoundary\("end"\)/);
   assert.match(source, /await onSaveRange\(cueId, draftRange\)/);
   assert.match(source, /onClick=\{cancelCalibration\}/);
-  assert.match(source, /id="contextual-inline-calibration"/);
+  assert.match(source, /id=\{scope === "scene" \? "contextual-scene-calibration" : "contextual-inline-calibration"\}/);
   assert.doesNotMatch(source, /<dialog|\.showModal\(|updateRange\(|−0\.5s|\+0\.5s/);
   for (const locale of Object.keys(messages) as UiLocale[]) {
     const copy = contextualReaderMessages[locale];
