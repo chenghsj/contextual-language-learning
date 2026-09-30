@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  BackupSettingsSchema, compactStudyExport, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
+  BackupSettingsSchema, compactStudyExport, learningDocumentToMarkdown, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
   LEARNING_LANGUAGES, EXPLANATION_LANGUAGES, levelsForTargetLanguage, defaultLevelForTargetLanguage,
   parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
   type BackupSettings, type Destination, type DriveAccount, type DriveLessonSummary, type LessonSummary, type DuplicateMatch,
@@ -60,26 +60,9 @@ const DEFAULT_PROFILE: LearningProfile = {
 const DEFAULT_AGENT: AgentSettings = { provider: "claude", modelId: "" };
 
 function downloadDocument(doc: LearningDocument, format: "json" | "md"): void {
-  const md = [
-    "# " + doc.source.title, "",
-    "Level: " + doc.profile.level + " · Teaching language: " + doc.profile.instructionLanguage, "",
-    ...doc.sections.flatMap(section => [
-      "## " + section.title, "", section.context, "",
-      ...section.cueIds.map(id => {
-        const cue = doc.cues.find(item => item.id === id);
-        if (!cue) return "";
-        const translated = "translations" in section
-          ? section.translations.find(item => item.cueId === id)?.text : undefined;
-        return "> " + formatTime(cue.startMs) + " " + cue.originalText +
-          (translated ? "\n> " + translated : "");
-      }),
-      "", "### Vocabulary",
-      ...section.vocabulary.map(word => "- " + word.expression + " — " + word.meaning + ": " + word.explanation),
-      "", "### Insights", ...section.insights.map(text => "- " + text),
-      "", "### Practice", ...section.exercises.map(ex => "- " + ex.question + "\n  - " + ex.answer), "",
-    ]),
-  ].join("\n");
-  const content = format === "json" ? JSON.stringify(compactStudyExport(doc), null, 2) : md;
+  const content = format === "json"
+    ? JSON.stringify(compactStudyExport(doc), null, 2)
+    : learningDocumentToMarkdown(doc);
   const blob = new Blob([content], { type: format === "json" ? "application/json" : "text/markdown" });
   const url = URL.createObjectURL(blob);
   chrome.downloads.download({
