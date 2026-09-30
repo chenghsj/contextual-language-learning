@@ -49,3 +49,16 @@ test("prompt copy shows inline success/error and a timed Lucide icon change", as
   assert.doesNotMatch(source, /setStatus\(ui\.copied\)/,
     "copy feedback must be adjacent to the button rather than at the bottom of settings");
 });
+
+test("existing Agent edits do not appear inside new Agent onboarding", async () => {
+  const source = await readFile(new URL("../components/custom-agent-settings.tsx", import.meta.url), "utf8");
+  assert.match(source, /editing && <section ref=\{editPanelRef\}/);
+  assert.match(source, /data-ui="editAgentPanel"/);
+  assert.match(source, /!editing && <details className="min-w-0 border border-border p-3"/);
+  assert.match(source, /\{renderJsonEditor\(\)\}/);
+  assert.match(source, /editing \? ui\.edit : ui\.import/);
+  assert.match(source, /editing \? "edit-agent-json" : "import-agent-json"/);
+  assert.match(source, /if \(editing\) editPanelRef\.current\?\.scrollIntoView/);
+  assert.match(source, /type: "customAgentSave"/);
+  assert.match(source, /type: "customAgentImport"/);
+});
