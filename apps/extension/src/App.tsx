@@ -83,6 +83,9 @@ export default function App() {
   const [fileName, setFileName] = useState("");
   const [subtitleBusy, setSubtitleBusy] = useState(false);
   const [subtitleStatus, setSubtitleStatus] = useState("");
+  const [trackInfo, setTrackInfo] = useState<{ sourceKey: string; status: "available" | "unknown";
+    tracks: { language: string; kind: "manual" | "auto" }[] } | null>(null);
+  const [trackBusy, setTrackBusy] = useState(false);
   const [captionSource, setCaptionSource] = useState<CaptionProvenance | null>(null);
   const [videoRecoveryUrl, setVideoRecoveryUrl] = useState("");
   const [reloadingVideoTab, setReloadingVideoTab] = useState(false);
@@ -427,6 +430,29 @@ export default function App() {
     setError("");
     setSubtitleStatus("");
   }, [activeVideo?.url]);
+
+  useEffect(() => {
+    const key = videoSourceKey(sourceUrl);
+    const adapter = getVideoAdapter(sourceUrl);
+    setTrackInfo(null);
+    if (!key || adapter.id === "import") { setTrackBusy(false); return; }
+    if (!adapter.availableSubtitleTracks) {
+      setTrackBusy(false);
+      setTrackInfo({ sourceKey: key, status: "unknown", tracks: [] });
+      return;
+    }
+    let live = true;
+    setTrackBusy(true);
+    void (async () => {
+      const tab = await findVideoTab(adapter, sourceUrl);
+      await assertVideoReaderReady(tab, adapter);
+      const result = await adapter.availableSubtitleTracks!(tab.url ?? sourceUrl);
+      if (live) setTrackInfo({ sourceKey: key, ...result });
+    })().catch(() => {
+      if (live) setTrackInfo({ sourceKey: key, status: "unknown", tracks: [] });
+    }).finally(() => { if (live) setTrackBusy(false); });
+    return () => { live = false; };
+  }, [sourceUrl]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -1596,6 +1622,24 @@ export default function App() {
             </div>
           </div>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
+            {trackBusy && <p className="my-2 text-xs text-muted-foreground" role="status">{subtitleUi.tracksChecking}</p>}
+            {!trackBusy && trackInfo?.sourceKey === videoSourceKey(sourceUrl) && <p className="my-2 text-xs text-muted-foreground wrap-anywhere" role="status">{
+              trackInfo.status === "unknown" ? subtitleUi.tracksUnknown : (() => {
+                const available = LEARNING_LANGUAGES.filter(language => trackInfo.tracks.some(track =>
+                  subtitleLanguageMatches(language, track.language)));
+                const names = available.map(language => learningLanguageName(language, uiLocale) +
+                  (trackInfo.tracks.some(track => subtitleLanguageMatches(language, track.language) && track.kind === "manual")
+                    ? "" : " (" + subtitleUi.tracksAuto + ")"));
+                const summary = subtitleMessage(subtitleUi.tracksAvailable, {
+                  languages: names.join("、") || subtitleUi.tracksNone,
+                });
+                return available.includes(profile.targetLanguage) ? summary : summary + " " +
+                  subtitleMessage(subtitleUi.tracksMissing, {
+                    language: learningLanguageName(profile.targetLanguage, uiLocale),
+                  });
+              })()
+            }</p>}
+
             <Button className="h-9 min-w-0 px-3 text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere"
               disabled={subtitleBusy || metadataBusy || checking || generating}
               onClick={() => void fetchCurrentSubtitles()}>
