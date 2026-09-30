@@ -1,0 +1,208 @@
+import { useEffect, useState } from "react";
+import { CustomAgentConfigSchema, type CustomAgentConfig, type HostMessage } from "@immersive/core";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { SelectField } from "./ui/select";
+import { translate, type UiLocale } from "../i18n/messages";
+
+type Once = (request: { id: string; type: string; [key: string]: unknown }) => Promise<HostMessage>;
+const templates: Record<string, Partial<CustomAgentConfig>> = {
+  gemini: { label: "Gemini CLI", executable: "gemini", args: ["--output-format", "json"],
+    promptMode: "stdin", outputMode: "stdout-json", modelArgument: "--model" },
+  argument: { label: "", executable: "", args: ["--prompt", "{prompt}"],
+    promptMode: "argument", outputMode: "stdout-json" },
+  stdin: { label: "", executable: "", args: [], promptMode: "stdin", outputMode: "stdout-json" },
+  file: { label: "", executable: "", args: ["--output", "{output}"],
+    promptMode: "stdin", outputMode: "file-json" },
+};
+function fresh(): CustomAgentConfig {
+  return { id: "custom-" + crypto.randomUUID().replaceAll("-", "").slice(0, 24),
+    label: "", executable: "", args: ["--prompt", "{prompt}"],
+    promptMode: "argument", outputMode: "stdout-json" };
+}
+function lines(value: string): string[] {
+  return value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+}
+
+export function CustomAgentSettings({ locale, available, selectedProvider, selectedModelId,
+  selectedProfileDir, nativeOnce, onSaved, onRemoved,
+}: {
+  locale: UiLocale; available: boolean; selectedProvider: string; selectedModelId: string;
+  selectedProfileDir?: string; nativeOnce: Once; onSaved: (id: string) => void;
+  onRemoved: (id: string) => void;
+}) {
+  const t = (key: Parameters<typeof translate>[1]) => translate(locale, key);
+  const [agents, setAgents] = useState<CustomAgentConfig[]>([]);
+  const [draft, setDraft] = useState<CustomAgentConfig>(fresh);
+  const [argv, setArgv] = useState("--prompt\n{prompt}");
+  const [modelArgv, setModelArgv] = useState("");
+  const [template, setTemplate] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("");
+  const [failed, setFailed] = useState(false);
+  const update = (patch: Partial<CustomAgentConfig>) => setDraft(previous => ({ ...previous, ...patch }));
+  const config = () => ({ ...draft, args: lines(argv), modelListArgs: lines(modelArgv),
+    modelArgument: draft.modelArgument?.trim() || undefined,
+    profileEnvVar: draft.profileEnvVar?.trim() || undefined });
+  const report = (error: unknown) => {
+    setFailed(true);
+    setStatus(error instanceof Error ? error.message : t("customAgentError"));
+  };
+
+  useEffect(() => {
+    if (!available) return;
+    let active = true;
+    void nativeOnce({ id: crypto.randomUUID(), type: "customAgentList" }).then(reply => {
+      if (active && reply.type === "customAgentList") setAgents(reply.agents);
+    }).catch(error => { if (active) report(error); });
+    return () => { active = false; };
+    // Only reload on availability changes, not each parent render of nativeOnce.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [available]);
+
+  function edit(value: CustomAgentConfig): void {
+    setDraft(value); setArgv(value.args.join("\n"));
+    setModelArgv((value.modelListArgs ?? []).join("\n"));
+    setTemplate(""); setStatus(""); setFailed(false);
+  }
+  function chooseTemplate(value: string): void {
+    setTemplate(value);
+    const preset = templates[value];
+    if (!preset) return;
+    update({ modelArgument: undefined, modelListArgs: undefined, profileEnvVar: undefined, ...preset });
+    setArgv((preset.args ?? []).join("\n")); setModelArgv("");
+  }
+  async function probe(): Promise<void> {
+    setBusy(true); setStatus(""); setFailed(false);
+    try {
+      const reply = await nativeOnce({ id: crypto.randomUUID(), type: "customAgentProbe",
+        executable: draft.executable.trim() });
+      if (reply.type !== "customAgentProbed") throw new Error(t("customAgentError"));
+      setStatus(reply.installed ? t("customAgentDetected") + ": " + (reply.resolved ?? draft.executable)
+        : t("customAgentNotFound"));
+      setFailed(!reply.installed);
+    } catch (error) { report(error); }
+    finally { setBusy(false); }
+  }
+  async function submit(action: "save" | "test"): Promise<void> {
+    const valid = CustomAgentConfigSchema.safeParse(config());
+    if (!valid.success) { report(valid.error.issues[0]?.message ?? t("customAgentError")); return; }
+    setBusy(true); setStatus(""); setFailed(false);
+    try {
+      const reply = await nativeOnce(action === "save"
+        ? { id: crypto.randomUUID(), type: "customAgentSave", config: valid.data }
+        : { id: crypto.randomUUID(), type: "customAgentTest", config: valid.data,
+          modelId: selectedProvider === valid.data.id ? selectedModelId : "",
+          ...(selectedProvider === valid.data.id && selectedProfileDir
+            ? { accountConfigDir: selectedProfileDir } : {}) });
+      if (action === "save" && reply.type === "customAgentList") {
+        setAgents(reply.agents); setStatus(t("customAgentSaved")); onSaved(valid.data.id);
+      } else if (action === "test" && reply.type === "customAgentTested") {
+        setStatus(t("customAgentTestPassed") + ": " + reply.label);
+      } else throw new Error(t("customAgentError"));
+    } catch (error) { report(error); }
+    finally { setBusy(false); }
+  }
+  async function remove(value: CustomAgentConfig): Promise<void> {
+    if (!window.confirm(t("customAgentRemoveConfirm"))) return;
+    setBusy(true); setStatus(""); setFailed(false);
+    try {
+      const reply = await nativeOnce({ id: crypto.randomUUID(), type: "customAgentRemove",
+        agentId: value.id });
+      if (reply.type !== "customAgentList") throw new Error(t("customAgentError"));
+      setAgents(reply.agents);
+      if (draft.id === value.id) edit(fresh());
+      onRemoved(value.id);
+      setStatus(t("customAgentRemoved"));
+    } catch (error) { report(error); }
+    finally { setBusy(false); }
+  }
+
+  return <details className="agentProfileAdvanced customAgentSection">
+    <summary>{t("customAgentsHeading")}</summary>
+    <p className="hint">{t("customAgentsHint")}</p>
+    {agents.length > 0 && <div className="customAgentList">
+      {agents.map(value => <div key={value.id} className="customAgentRow">
+        <span><strong>{value.label}</strong><small>{value.executable}</small></span>
+        <div className="actions">
+          <Button variant="outline" size="sm" disabled={busy}
+            onClick={() => edit(value)}>{t("customAgentEdit")}</Button>
+          <Button variant="outline" size="sm" disabled={busy}
+            onClick={() => void remove(value)}>{t("customAgentRemove")}</Button>
+        </div>
+      </div>)}
+    </div>}
+    <div className="customAgentFields">
+      <label>{t("customAgentTemplate")}
+        <SelectField ariaLabel={t("customAgentTemplate")} disabled={busy}
+          value={template} onValueChange={chooseTemplate} options={[
+            { value: "", label: t("customAgentManual") },
+            { value: "gemini", label: "Gemini CLI" },
+            { value: "argument", label: t("customAgentArgumentTemplate") },
+            { value: "stdin", label: t("customAgentStdinTemplate") },
+            { value: "file", label: t("customAgentFileTemplate") },
+          ]} />
+      </label>
+      <label>{t("customAgentName")}
+        <Input disabled={busy} maxLength={80} value={draft.label}
+          placeholder={t("customAgentNamePlaceholder")}
+          onChange={event => update({ label: event.target.value })} />
+      </label>
+      <label>{t("customAgentExecutable")}
+        <Input disabled={busy} maxLength={1024} value={draft.executable}
+          placeholder={t("customAgentExecutablePlaceholder")}
+          onChange={event => update({ executable: event.target.value })} />
+      </label>
+      <div className="actions">
+        <Button variant="outline" size="sm" disabled={!available || busy || !draft.executable.trim()}
+          onClick={() => void probe()}>{t("customAgentDetect")}</Button>
+      </div>
+      <details className="agentProfileAdvanced">
+        <summary>{t("customAgentAdvanced")}</summary>
+        <label>{t("customAgentPromptMode")}
+          <SelectField ariaLabel={t("customAgentPromptMode")} value={draft.promptMode}
+            disabled={busy} onValueChange={value =>
+              update({ promptMode: value as CustomAgentConfig["promptMode"] })}
+            options={[{ value: "argument", label: t("customAgentArgument") },
+              { value: "stdin", label: t("customAgentStdin") }]} />
+        </label>
+        <label>{t("customAgentOutputMode")}
+          <SelectField ariaLabel={t("customAgentOutputMode")} value={draft.outputMode}
+            disabled={busy} onValueChange={value =>
+              update({ outputMode: value as CustomAgentConfig["outputMode"] })}
+            options={[{ value: "stdout-json", label: t("customAgentStdout") },
+              { value: "file-json", label: t("customAgentFile") }]} />
+        </label>
+        <label>{t("customAgentArgs")}
+          <textarea className="customAgentTextarea" disabled={busy} rows={4}
+            aria-label={t("customAgentArgs")} value={argv}
+            onChange={event => setArgv(event.target.value)} />
+        </label>
+        <p className="hint">{t("customAgentPlaceholders")}</p>
+        <label>{t("customAgentModelArgument")}
+          <Input disabled={busy} maxLength={64} value={draft.modelArgument ?? ""}
+            placeholder="--model" onChange={event => update({ modelArgument: event.target.value })} />
+        </label>
+        <label>{t("customAgentModelsCommand")}
+          <textarea className="customAgentTextarea" disabled={busy} rows={2}
+            aria-label={t("customAgentModelsCommand")} value={modelArgv}
+            onChange={event => setModelArgv(event.target.value)} />
+        </label>
+        <label>{t("customAgentProfileEnv")}
+          <Input disabled={busy} value={draft.profileEnvVar ?? ""} placeholder="GEMINI_CLI_HOME"
+            onChange={event => update({ profileEnvVar: event.target.value })} />
+        </label>
+      </details>
+      <p className="hint">{t("customAgentSafety")}</p>
+      <div className="actions">
+        <Button variant="outline" size="sm" disabled={busy} onClick={() => edit(fresh())}>
+          {t("customAgentNew")}</Button>
+        <Button variant="outline" size="sm" disabled={!available || busy}
+          onClick={() => void submit("test")}>{t("customAgentTest")}</Button>
+        <Button size="sm" disabled={!available || busy}
+          onClick={() => void submit("save")}>{t("customAgentSave")}</Button>
+      </div>
+      {status && <p className={failed ? "jobRowError" : "hint"} role="status">{status}</p>}
+    </div>
+  </details>;
+}

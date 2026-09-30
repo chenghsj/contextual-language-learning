@@ -474,3 +474,22 @@ button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(-
 .driveExistingBackup { display: grid; justify-items: start; gap: 4px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
 .driveExistingBackup strong { font-size: 12px; }
 .driveExistingBackup .hint { margin: 0 0 5px; }
+
+/* Optional custom CLI configuration: compact on narrow Chrome Side Panels. */
+.customAgentSection { margin-top: 15px; border-top: 1px solid var(--border); }
+.customAgentFields { display: grid; gap: 11px; min-width: 0; padding-top: 11px; }
+.customAgentFields label { display: grid; gap: 5px; min-width: 0; font-size: 12px; }
+.customAgentFields .agentProfileAdvanced { margin: 0; }
+.customAgentFields .agentProfileAdvanced > label { margin-top: 10px; }
+.customAgentFields .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.customAgentTextarea { display: block; box-sizing: border-box; width: 100%; min-width: 0;
+  padding: 9px 10px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--background); color: var(--foreground); resize: vertical;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+.customAgentTextarea:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+.customAgentList { display: grid; gap: 8px; margin-top: 12px; }
+.customAgentRow { display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; padding: 8px; border: 1px solid var(--border); min-width: 0; }
+.customAgentRow span { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.customAgentRow strong, .customAgentRow small { display: block; }
+.customAgentRow small { color: var(--muted-foreground); font-size: 11px; }

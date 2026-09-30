@@ -1,7 +1,8 @@
 import { spawn } from "node:child_process";
 import type { AgentSettings, AgentModel, AgentModelSource } from "@immersive/core";
 import { getAgentAdapter } from "../agents";
-import { cliInvocation, findExecutable } from "./process";
+import { cliInvocation, findExecutable, profileEnvironment } from "./process";
+import { getCustomAgent, resolveCustomExecutable } from "./custom";
 
 const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/;
 const MODEL_LIMIT = 80;
@@ -85,6 +86,24 @@ export function probeCli(command: string, args: readonly string[], env: NodeJS.P
 export async function discoverAgentModels(settings: AgentSettings): Promise<{
   models: AgentModel[]; source: AgentModelSource; notice?: string;
 }> {
+  if (settings.provider.startsWith("custom-")) {
+    const config = await getCustomAgent(settings.provider);
+    const executable = await resolveCustomExecutable(config.executable);
+    if (!executable) return { models: [], source: "unavailable", notice: "Custom CLI not found." };
+    if (!config.modelListArgs?.length) return { models: [], source: "unavailable",
+      notice: "Use CLI default or enter a model ID. Optional model discovery is not configured." };
+    try {
+      const env = await profileEnvironment(settings, config.profileEnvVar ?? null);
+      const output = await probeCli(executable, config.modelListArgs, env);
+      let models: AgentModel[] = [];
+      try { models = parseCatalogModels(JSON.parse(output.stdout) as unknown); }
+      catch { models = parseAgyModels(output.stdout || output.stderr); }
+      return models.length ? { models, source: "cli" as const }
+        : { models: [], source: "unavailable" as const, notice: "No parseable models. Enter a model ID manually." };
+    } catch {
+      return { models: [], source: "unavailable" as const, notice: "Model discovery failed. Enter a model ID manually." };
+    }
+  }
   const adapter = getAgentAdapter(settings.provider);
   const executable = await findExecutable(adapter.executableName);
   if (!executable) return { models: [], source: "unavailable", notice: adapter.label + " CLI is not installed." };

@@ -14,6 +14,25 @@ This repository remains **private** pending the public-release checklist and liv
 
 **No production-ready Google Drive or Netflix compatibility guarantee:** Google OAuth and Netflix's undocumented playback API require manual platform testing before a public stable release. This project is not affiliated with the streaming platforms or model providers.
 
+## Custom CLI Agents
+
+The three-phase custom CLI workflow is under Settings → Local CLI Agent → Custom CLI Agents:
+
+1. Register, edit, remove and test an installed CLI before saving its configuration.
+   A successful test proves the CLI returns JSON, not that it can produce every
+   lesson schema or has an active subscription.
+2. Start from a Gemini CLI preset or generic argument, stdin and file-output
+   presets. Detect the actual executable on this computer.
+3. Configure stdin prompts, the explicit output-file placeholder, model flags,
+   optional model-list arguments, or an isolated account configuration folder
+   through a dedicated profile environment variable.
+
+The Native Host stores the executable and argv template locally and invokes it
+without a shell. It never copies login credentials, but an added CLI runs with
+your local user permissions. Configure only CLIs you trust; testing may send a
+prompt to the selected model provider. Generated lessons still pass the existing
+Zod schema validation before they are saved.
+
 ## Features
 
 - On the currently selected YouTube watch tab, click **一鍵取得目前影片字幕** to read the video player's available English/Japanese/Korean caption track (including automatic captions when available). The extension reads the track only on request, preserves cue timestamps and never requires a file upload for a readable caption track. YouTube can change its page/player interfaces; if it offers no readable track, use manual import. Switching tabs updates the source of the next empty lesson form without replacing an existing transcript.
