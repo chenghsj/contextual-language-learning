@@ -5,7 +5,7 @@ import {
   parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
   type BackupSettings, type Destination, type DriveAccount, type DriveLessonSummary, type LessonSummary, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
-  type LearningProfile, type SubtitleCue,
+  type LearningLanguage, type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
 import { titleForVideoTab } from "./video/metadata";
@@ -13,6 +13,10 @@ import { detectCurrentVideoMetadata, metadataSourceSafety } from "./video/metada
 import { videoMetadataMessages } from "./i18n/video-metadata";
 import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
 import { needsVideoReaderReload } from "./video/reader-health";
+import {
+  captionCacheKey, isCurrentCaption, subtitleLanguageMatches, videoSourceKey,
+  type CaptionProvenance,
+} from "./video/caption-provenance";
 import {
   cuePlaybackStart, cuePlaybackWindow,
   assertVideoReaderReady, findVideoTab, getActiveWindowTab, openOrFocusVideoTab,
@@ -88,6 +92,7 @@ export default function App() {
   const [fileName, setFileName] = useState("");
   const [subtitleBusy, setSubtitleBusy] = useState(false);
   const [subtitleStatus, setSubtitleStatus] = useState("");
+  const [captionSource, setCaptionSource] = useState<CaptionProvenance | null>(null);
   const [videoRecoveryUrl, setVideoRecoveryUrl] = useState("");
   const [reloadingVideoTab, setReloadingVideoTab] = useState(false);
   const [metadataBusy, setMetadataBusy] = useState(false);
@@ -174,9 +179,14 @@ export default function App() {
   const lastSelectedVideoKeyRef = useRef<string | null>(null);
   const manuallyEditedTitleRef = useRef(false);
   const metadataRequestRef = useRef(0);
+  const captionRequestRef = useRef(0);
+  const captionDraftsRef = useRef(new Map<string, {
+    raw: string; fileName: string; source: CaptionProvenance;
+  }>());
   const catalogLoadIdRef = useRef(0);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
+  const captionsReady = !!raw.trim() && isCurrentCaption(captionSource, profile.targetLanguage, sourceUrl);
   const platform = getVideoAdapter(sourceUrl).id;
   // A valid saved source remains actionable when the Side Panel temporarily loses its tab context.
   const subtitlePlatform = getVideoAdapter(activeVideo?.url ?? sourceUrl).id;
@@ -395,6 +405,8 @@ export default function App() {
       ? adapter.id + ":" + adapter.getVideoId(activeVideo.url) : null;
     if (key === lastSelectedVideoKeyRef.current) return;
     lastSelectedVideoKeyRef.current = key;
+    ++captionRequestRef.current;
+    setSubtitleBusy(false);
     setError("");
     setSubtitleStatus("");
   }, [activeVideo?.url]);
@@ -800,6 +812,12 @@ export default function App() {
 
   function startGeneration(): void {
     if (checking || generating) return;
+    if (subtitleBusy || !captionsReady) {
+      setError(subtitleMessage(subtitleUi.languageNotReady, {
+        language: learningLanguageName(profile.targetLanguage, uiLocale),
+      }));
+      return;
+    }
     setError("");
     cancelDuplicate();
     setPublishedLocation("");
@@ -1031,6 +1049,15 @@ export default function App() {
 
       // Never replace an existing URL or a manually edited title; metadata
       // recovery only fills missing fields or refreshes an auto-detected title.
+      // An explicitly confirmed metadata link can bind an imported transcript to this video.
+      // Editing a video URL directly never silently rebinds an unrelated subtitle file.
+      if (!originalSource && captionSource?.origin === "manual" && raw.trim()) {
+        const source: CaptionProvenance = { ...captionSource, sourceKey: videoSourceKey(found.url) };
+        setCaptionSource(source);
+        captionDraftsRef.current.set(captionCacheKey(found.url, profile.targetLanguage), {
+          raw, fileName, source,
+        });
+      }
       setSourceUrl(current => current.trim() ? current : found.url);
       if (found.title && !manuallyEditedTitleRef.current) {
         setTitle(current => current.trim() && manuallyEditedTitleRef.current
@@ -1049,15 +1076,62 @@ export default function App() {
     }
   }
 
-  async function fetchCurrentSubtitles(): Promise<void> {
-    if (subtitleBusy || metadataBusy) return;
+  function chooseLearningLanguage(next: string): void {
+    const language = LEARNING_LANGUAGES.find(value => value === next);
+    if (!language || language === profile.targetLanguage || checking || generating) return;
+    ++captionRequestRef.current; // Supersede a previous language/video request immediately.
+    setSubtitleBusy(false);
+    setProfile(current => ({
+      ...current, targetLanguage: language, level: defaultLevelForTargetLanguage(language),
+    }));
+    setError("");
+    setVideoRecoveryUrl("");
+    const cached = captionDraftsRef.current.get(captionCacheKey(sourceUrl, language));
+    if (cached) {
+      setRaw(cached.raw);
+      setFileName(cached.fileName);
+      setCaptionSource(cached.source);
+    } else {
+      // Keep the old draft visible; its source-language identity prevents generation.
+      setCaptionSource(null);
+    }
+    if (cached?.source.origin === "manual") {
+      setSubtitleStatus(subtitleMessage(subtitleUi.manualLanguageReady, {
+        language: learningLanguageName(language, uiLocale),
+      }));
+      return;
+    }
+    if (!cached && captionSource?.origin === "manual" && raw.trim()) {
+      setSubtitleStatus(subtitleMessage(subtitleUi.manualLanguageChanged, {
+        language: learningLanguageName(language, uiLocale),
+      }));
+      return;
+    }
+    if (!getVideoAdapter(activeVideo?.url ?? sourceUrl).fetchSubtitles) {
+      setSubtitleStatus(subtitleMessage(subtitleUi.languageNotReady, {
+        language: learningLanguageName(language, uiLocale),
+      }));
+      return;
+    }
+    void fetchCurrentSubtitles(language, true);
+  }
+
+  async function fetchCurrentSubtitles(
+    language: LearningLanguage = profile.targetLanguage, replacing = false,
+  ): Promise<void> {
+    if ((!replacing && (subtitleBusy || metadataBusy)) || checking || generating) return;
+    const request = ++captionRequestRef.current;
     let attemptedUrl = "";
+    setCaptionSource(null);
     setSubtitleBusy(true);
-    setSubtitleStatus("");
+    setSubtitleStatus(subtitleMessage(subtitleUi.loadingLanguage, {
+      language: learningLanguageName(language, uiLocale),
+    }));
     setVideoRecoveryUrl("");
     setError("");
     try {
       const selected = await getActiveWindowTab();
+      if (request !== captionRequestRef.current) return;
       const selectedUrl = selected?.url ?? "";
       const currentAdapter = getVideoAdapter(selectedUrl);
       const formUrl = sourceUrl.trim();
@@ -1070,24 +1144,39 @@ export default function App() {
       const url = currentAdapter.fetchSubtitles ? selectedUrl : formUrl;
       const adapter = getVideoAdapter(url);
       if (!adapter.fetchSubtitles) throw new Error(subtitleUi.unavailable);
-      // Revalidate against a real, matching watch tab even when using the form URL
-      // as a fallback. Never send a subtitle request to an unrelated active tab.
       const tab = await findVideoTab(adapter, url);
+      if (request !== captionRequestRef.current) return;
       const actualUrl = tab.url ?? url;
       attemptedUrl = actualUrl;
       await assertVideoReaderReady(tab, adapter);
-      const fetched = await adapter.fetchSubtitles(actualUrl, profile.targetLanguage);
+      if (request !== captionRequestRef.current) return;
+      const fetched = await adapter.fetchSubtitles(actualUrl, language);
+      if (request !== captionRequestRef.current) return;
+      if (!subtitleLanguageMatches(language, fetched.language)) {
+        throw new Error(subtitleMessage(subtitleUi.languageMismatch, {
+          requested: learningLanguageName(language, uiLocale), actual: fetched.language,
+        }));
+      }
       const parsed = parseSubtitles(fetched.text);
       if (!parsed.length || parsed.length > 3_000 ||
         parsed.reduce((sum, cue) => sum + cue.originalText.length, 0) > 220_000) {
         throw new Error("The current video did not return a usable transcript within the lesson size limit.");
       }
-      // Never combine cues from a previous video with the currently selected video.
+      const sourceKey = videoSourceKey(actualUrl);
+      if (!sourceKey) throw new Error(subtitleUi.sourceMismatch);
       const fromDifferentVideo = formAdapter.id !== adapter.id ||
         formAdapter.getVideoId(formUrl) !== adapter.getVideoId(actualUrl);
       const videoTitle = await titleForVideoTab(tab, adapter);
+      if (request !== captionRequestRef.current) return;
+      const source: CaptionProvenance = {
+        sourceKey, language, origin: "video", actualLanguage: fetched.language,
+      };
+      captionDraftsRef.current.set(captionCacheKey(actualUrl, language), {
+        raw: fetched.text, fileName: "", source,
+      });
       if (fromDifferentVideo) manuallyEditedTitleRef.current = false;
       setRaw(fetched.text);
+      setCaptionSource(source);
       setFileName("");
       setSourceUrl(actualUrl);
       if (videoTitle && !manuallyEditedTitleRef.current) setTitle(videoTitle);
@@ -1096,11 +1185,12 @@ export default function App() {
         count: parsed.length, language: fetched.language,
       }));
     } catch (cause) {
+      if (request !== captionRequestRef.current) return;
       const message = cause instanceof Error ? cause.message : subtitleUi.unavailable;
       if (attemptedUrl && needsVideoReaderReload(message)) setVideoRecoveryUrl(attemptedUrl);
-      setError(message);
+      setSubtitleStatus(message);
     } finally {
-      setSubtitleBusy(false);
+      if (request === captionRequestRef.current) setSubtitleBusy(false);
     }
   }
 
@@ -1126,9 +1216,22 @@ export default function App() {
     ++metadataRequestRef.current;
     setMetadataBusy(false);
     setMetadataStatus("");
-    setRaw(await file.text());
+    const request = ++captionRequestRef.current;
+    setSubtitleBusy(false);
+    const text = await file.text();
+    if (request !== captionRequestRef.current) return;
+    const source: CaptionProvenance = {
+      origin: "manual", sourceKey: videoSourceKey(sourceUrl), language: profile.targetLanguage,
+    };
+    captionDraftsRef.current.set(captionCacheKey(sourceUrl, profile.targetLanguage), {
+      raw: text, fileName: file.name, source,
+    });
+    setRaw(text);
+    setCaptionSource(source);
     setFileName(file.name);
-    setSubtitleStatus("");
+    setSubtitleStatus(subtitleMessage(subtitleUi.manualLanguageReady, {
+      language: learningLanguageName(profile.targetLanguage, uiLocale),
+    }));
     if (!title) {
       manuallyEditedTitleRef.current = true;
       setTitle(file.name.replace(/\.(srt|vtt|txt)$/i, ""));
@@ -1295,6 +1398,20 @@ export default function App() {
       {page === "create" && <main>
         <Card className="panel">
           <h2>{t("subtitleHeading")}</h2>
+          <div className="subtitleLanguageSetting">
+            <div className="settingField">
+              <div className="settingHeading">
+                <label htmlFor="learning-target">{t("targetLanguage")}</label>
+                <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
+                  explanation={settingsCopy.fieldHints.targetLanguage}
+                  />
+              </div>
+              <SelectField id="learning-target" ariaLabel={t("targetLanguage")}
+                value={profile.targetLanguage} onValueChange={chooseLearningLanguage} disabled={checking || generating} options={LEARNING_LANGUAGES.map(language => ({
+                  value: language, label: learningLanguageName(language, uiLocale),
+                }))} />
+            </div>
+          </div>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
             <p className="hint">{subtitleUi.hint}</p>
             <Button className="subtitleFetchButton"
@@ -1302,7 +1419,6 @@ export default function App() {
               onClick={() => void fetchCurrentSubtitles()}>
               {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
             </Button>
-            {subtitleStatus && <p className="hint" role="status">{subtitleStatus}</p>}
             {videoRecoveryUrl && <div className="actions">
               <Button variant="outline" size="sm"
                 disabled={reloadingVideoTab || subtitleBusy || metadataBusy}
@@ -1320,11 +1436,30 @@ export default function App() {
               ++metadataRequestRef.current;
               setMetadataBusy(false);
               setMetadataStatus("");
+              ++captionRequestRef.current;
+              setSubtitleBusy(false);
+              const source: CaptionProvenance = {
+                origin: "manual", sourceKey: videoSourceKey(sourceUrl), language: profile.targetLanguage,
+              };
               setRaw(event.target.value);
-              setSubtitleStatus("");
+              setCaptionSource(event.target.value.trim() ? source : null);
+              setFileName("");
+              if (event.target.value.trim()) captionDraftsRef.current.set(
+                captionCacheKey(sourceUrl, profile.targetLanguage),
+                { raw: event.target.value, fileName: "", source },
+              );
+              setSubtitleStatus(event.target.value.trim()
+                ? subtitleMessage(subtitleUi.manualLanguageReady, {
+                    language: learningLanguageName(profile.targetLanguage, uiLocale),
+                  }) : "");
             }}
               placeholder={t("subtitlePlaceholder")} /></label>
           </details>
+          {subtitleStatus && <p className="status subtitleAcquisitionStatus" role="status">{subtitleStatus}</p>}
+          {!!raw.trim() && !captionsReady && !subtitleStatus && !subtitleBusy &&
+            <p className="status subtitleAcquisitionStatus" role="status">{subtitleMessage(subtitleUi.languageNotReady, {
+              language: learningLanguageName(profile.targetLanguage, uiLocale),
+            })}</p>}
           <p className="hint">{t("parsedCues", { count: cues.length })}</p>
           <div className="actions">
             <Button variant={!title.trim() || !sourceUrl.trim() ? "default" : "outline"}
@@ -1346,7 +1481,10 @@ export default function App() {
             ++metadataRequestRef.current;
             setMetadataBusy(false);
             setMetadataStatus("");
+            ++captionRequestRef.current;
+            setSubtitleBusy(false);
             setSourceUrl(event.target.value);
+            setSubtitleStatus("");
           }} placeholder="https://www.youtube.com/watch?v=…" /></label>
           <Badge className="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
         </Card>
@@ -1354,24 +1492,6 @@ export default function App() {
         <Card className="panel">
           <h2>{t("learningHeading")}</h2>
           <div className="twoColumns">
-            <div className="settingField">
-              <div className="settingHeading">
-                <label htmlFor="learning-target">{t("targetLanguage")}</label>
-                <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
-                  explanation={settingsCopy.fieldHints.targetLanguage}
-                  />
-              </div>
-              <SelectField id="learning-target" ariaLabel={t("targetLanguage")}
-                value={profile.targetLanguage} onValueChange={next => {
-                  const targetLanguage = LEARNING_LANGUAGES.find(language => language === next);
-                  if (!targetLanguage) return;
-                  setProfile(current => ({
-                    ...current, targetLanguage, level: defaultLevelForTargetLanguage(targetLanguage),
-                  }));
-                }} options={LEARNING_LANGUAGES.map(language => ({
-                  value: language, label: learningLanguageName(language, uiLocale),
-                }))} />
-            </div>
             <div className="settingField">
               <div className="settingHeading">
                 <label htmlFor="learning-level">{t("level")}</label>
@@ -1534,7 +1654,7 @@ export default function App() {
               </div>
             </dl>
           </div>
-          <Button className="primary" onClick={startGeneration} disabled={generating || checking || !cues.length || !title.trim()}>
+          <Button className="primary" onClick={startGeneration} disabled={generating || checking || subtitleBusy || !captionsReady || !cues.length || !title.trim()}>
             {(generating || checking) && <span className="generationSpinner" aria-hidden="true" />}
             {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
           </Button>
