@@ -11,7 +11,7 @@ import {
 (() => {
   const REQUEST = "immersive-learning:youtube:caption-request";
   const RESPONSE = "immersive-learning:youtube:caption-response";
-  const BRIDGE_VERSION = "native-caption-capture-v1";
+  const BRIDGE_VERSION = "native-caption-capture-v2";
   const HEALTH_REQUEST = "immersive-learning:youtube:bridge-health-request";
   const HEALTH_RESPONSE = "immersive-learning:youtube:bridge-health-response";
   type CaptionRequest = {

@@ -157,3 +157,32 @@ test("briefly retries an empty track catalog after the video appears", async () 
   assert.equal(calls, 2);
   assert.equal(parseSubtitles(result.text).length, 1);
 });
+
+test("falls back to a complete already-exposed HTML text track when Netflix hides its internal player", async () => {
+  const browserTrack = {
+    language: "en-US", mode: "showing",
+    cues: [
+      { startTime: 2, endTime: 4, text: "Let's go." },
+      { startTime: 60, endTime: 63, text: "Not yet." },
+      { startTime: 88, endTime: 91, text: "All right." },
+    ],
+  };
+  const video = { duration: 110, textTracks: [browserTrack] } as unknown as HTMLVideoElement;
+  const result = await readNetflixSubtitles({}, video, () => null, "en", {
+    pause: async () => {},
+  });
+  assert.equal(result.language, "en-US");
+  assert.deepEqual(parseSubtitles(result.text).map(cue => [cue.startMs, cue.endMs]), [
+    [2_000, 4_000], [60_000, 63_000], [88_000, 91_000],
+  ]);
+});
+
+test("never mistakes only a currently displayed HTML cue for a full Netflix transcript", async () => {
+  const video = { duration: 110, textTracks: [{
+    language: "en-US", mode: "showing",
+    cues: [{ startTime: 70, endTime: 73, text: "A single displayed cue." }],
+  }] } as unknown as HTMLVideoElement;
+  await assert.rejects(() => readNetflixSubtitles({}, video, () => null, "en", {
+    pause: async () => {},
+  }), /has not exposed subtitle tracks/);
+});
