@@ -8,14 +8,14 @@ import { discoverAgentModels } from "./agents/metadata";
 import { listAgentProfiles, saveAgentProfile, removeAgentProfile, removeAgentProfilesByProvider } from "./agents/profiles";
 import { assertAgentMayBeRemoved } from "./agents/remove-guard";
 import { findLocalDuplicates, requestKey } from "./duplicates";
-import { findDriveDuplicates, listDriveLessons, getDriveDocument, validateDriveAccess } from "./drive/api";
+import { findDriveDuplicates, listDriveLessons, getDriveDocument, publishDriveDocument, validateDriveAccess } from "./drive/api";
 import { accessTokenFor, connectGoogleAccount, disconnectGoogleAccount, googleConfigured, listGoogleAccounts } from "./drive/oauth";
 import { JobManager } from "./jobs/manager";
 import { toMarkdown } from "./generation/markdown";
 import { encodeMessage, NativeFramer } from "./protocol";
 import { localStoragePorts } from "./storage/file";
 import { chooseLocalFolder, validateFolder } from "./storage/folders";
-import { publishSavedJob } from "./storage/publish";
+import { publishSavedJob, syncPublishedPlayback } from "./storage/publish";
 import { backupSavedJob, resumePendingBackups } from "./storage/backup";
 // Keep earlier filesystem/synced-drive compatibility endpoints for existing users.
 import { findExisting } from "./storage/publisher";
@@ -285,6 +285,57 @@ async function handle(input: unknown): Promise<void> {
         const document = await storage.documents.get(request.documentId);
         if (!document) throw new Error("Saved document not found");
         deliverDocument(request.id, document);
+        break;
+      }
+      case "savePlaybackRange": {
+        const previous = await storage.documents.get(request.documentId);
+        if (!previous || previous.schemaVersion !== 3) throw new Error("Saved V3 document not found");
+        const updated = await storage.documents.updatePlaybackRange(
+          request.documentId, request.cueId, request.range);
+        if (updated.schemaVersion !== 3) throw new Error("Only V3 lessons support saved playback calibration");
+        const warnings: string[] = [];
+        try {
+          await syncPublishedPlayback(storage, previous, updated);
+        } catch (error) {
+          warnings.push("已儲存本地教材，但發布資料夾同步失敗：" +
+            (error instanceof Error ? error.message : "Unknown local publishing error"));
+        }
+        // The backup files are app-owned and immutable for unrelated edits.
+        // A prior matching canonical document authorizes ONLY this calibration revision.
+        const job = await storage.jobs.get(updated.id);
+        if (job?.summary.backup?.status === "backed-up" && job.summary.backup.accountId) {
+          try {
+            if (JSON.stringify(previous) !== JSON.stringify(updated)) {
+              const location = await publishDriveDocument(
+                job.summary.backup.accountId, updated, toMarkdown(updated), previous);
+              await storage.jobs.update(updated.id, current => ({
+                ...current, summary: { ...current.summary,
+                  backup: { status: "backed-up", accountId: job.summary.backup!.accountId,
+                    location, updatedAt: new Date().toISOString() },
+                  updatedAt: new Date().toISOString() },
+              }));
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Unknown Drive backup error";
+            warnings.push("Google Drive 尚未同步校正資料：" + message);
+            await storage.jobs.update(updated.id, current => ({
+              ...current, summary: { ...current.summary,
+                backup: { status: "failed", accountId: job.summary.backup!.accountId,
+                  error: message.slice(0, 500), updatedAt: new Date().toISOString() },
+                updatedAt: new Date().toISOString() },
+            }));
+          }
+        } else if (job?.request.backup?.enabled && job.summary.backup?.status !== "backed-up") {
+          // A new/pending backup reads the just-saved canonical document.
+          try { await backupSavedJob(storage, updated.id); }
+          catch (error) {
+            warnings.push("Google Drive 尚未同步校正資料：" +
+              (error instanceof Error ? error.message : "Unknown backup error"));
+          }
+        }
+        reply({ id: request.id, type: "playbackRangeSaved",
+          cueId: request.cueId, range: updated.playbackOverrides?.[request.cueId] ?? null,
+          ...(warnings.length ? { warning: warnings.join("；") } : {}) });
         break;
       }
       case "retryBackup": {

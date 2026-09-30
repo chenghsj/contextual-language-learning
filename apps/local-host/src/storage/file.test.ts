@@ -4,8 +4,8 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GenerationRequestSchema, createJob } from "@immersive/core";
-import { FileJobRepository } from "./file";
+import { GenerationRequestSchema, LearningDocumentSchema, createJob, learningDocumentToMarkdown } from "@immersive/core";
+import { FileDocumentRepository, FileJobRepository } from "./file";
 
 test("job records survive repository restarts and invalid IDs cannot traverse directories", async () => {
   const root = await mkdtemp(join(tmpdir(), "immersive-store-"));
@@ -35,6 +35,62 @@ test("corrupt checkpoint files fail visibly instead of silently resetting job pr
     await import("node:fs/promises").then(fs => fs.mkdir(folder));
     await writeFile(join(folder, id + ".json"), "{corrupt");
     await assert.rejects(new FileJobRepository(root).get(id), /Cannot load saved job/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a completed V3 cue calibration persists atomically and cannot alter source timestamps", async () => {
+  const root = await mkdtemp(join(tmpdir(), "immersive-calibration-"));
+  try {
+    const id = randomUUID();
+    const repo = new FileDocumentRepository(root);
+    const doc = LearningDocumentSchema.parse({
+      id, schemaVersion: 3, createdAt: new Date().toISOString(),
+      source: { platform: "import", title: "Calibration" },
+      profile: { targetLanguage: "en", instructionLanguage: "en", level: "B1",
+        mode: "adaptive", maxNewVocabulary: 1, exerciseCount: 0, sceneCount: 1 },
+      generation: { provider: "claude", modelId: "" },
+      cues: [
+        { id: "q", startMs: 1000, endMs: 2000, originalText: "What about dinner?" },
+        { id: "a", startMs: 2100, endMs: 3300, originalText: "Not decided yet." },
+      ],
+      sections: [{
+        id: randomUUID(), title: "Dinner", context: "A dinner conversation",
+        learningGoal: "Learn an undecided plan", cueIds: ["q", "a"],
+        focusCueIds: ["a"], startMs: 1000, endMs: 3300,
+        translations: [{ cueId: "q", text: "What about dinner?" }, { cueId: "a", text: "Not decided yet." }],
+        vocabulary: [], insights: [], exercises: [],
+        focusItems: [{
+          expression: "Not decided yet.", sourceCueIds: ["a"], meaning: "Undecided",
+          contextExplanation: "The question provides the context.", contextCueIds: ["q"],
+          wordNotes: [], examples: [{ situation: "Plans", dialogue: [
+            { text: "Dinner?", translation: "Dinner?" },
+            { text: "Not decided yet.", translation: "Not decided yet." },
+          ] }],
+        }],
+      }],
+    });
+    assert.equal(doc.schemaVersion, 3);
+    await repo.save(doc, learningDocumentToMarkdown(doc));
+    const saved = await repo.updatePlaybackRange(id, "a", { startMs: 2300, endMs: 3700 });
+    assert.equal(saved.schemaVersion, 3);
+    if (saved.schemaVersion !== 3) throw new Error("Unexpected version");
+    assert.deepEqual(saved.playbackOverrides?.a, { startMs: 2300, endMs: 3700 });
+    assert.equal(saved.cues.find(cue => cue.id === "a")?.startMs, 2100);
+    const fresh = await new FileDocumentRepository(root).get(id);
+    assert.equal(fresh?.schemaVersion, 3);
+    if (fresh?.schemaVersion !== 3) throw new Error("Unexpected disk document");
+    assert.deepEqual(fresh.playbackOverrides?.a, { startMs: 2300, endMs: 3700 });
+    assert.match(await readFile(join(root, id + ".md"), "utf8"), /User-calibrated playback/);
+    await assert.rejects(repo.updatePlaybackRange(id, "missing", null), /not part of this lesson/);
+    const restored = await repo.updatePlaybackRange(id, "a", null);
+    assert.equal(restored.schemaVersion, 3);
+    if (restored.schemaVersion !== 3) throw new Error("Unexpected version");
+    assert.deepEqual(restored.playbackOverrides, {});
+    assert.equal(restored.cues.find(cue => cue.id === "a")?.startMs, 2100);
+    await assert.rejects(repo.updatePlaybackRange(id, "a", { startMs: 4000, endMs: 1000 }),
+      /Playback duration|Invalid|validation/i);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

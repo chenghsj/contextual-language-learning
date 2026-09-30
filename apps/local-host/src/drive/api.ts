@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { readLearningDocument, type DriveLessonSummary, type DuplicateMatch, type GenerationRequest, type LearningDocument } from "@immersive/core";
 import { settingsKey, sourceKey, transcriptKey } from "../duplicates";
+import { learningDocumentToMarkdown as toMarkdownForDrive } from "@immersive/core";
 import { accessTokenFor, listGoogleAccounts } from "./oauth";
 
 interface DriveFile {
@@ -190,7 +191,53 @@ export class DriveContentConflict extends Error {
   constructor(message: string) { super(message); this.name = "DriveContentConflict"; }
 }
 
-export async function publishDriveDocument(accountId: string, document: LearningDocument, markdown: string): Promise<string> {
+/** A revision may change ONLY the user's optional V3 playback windows, never the video or lesson. */
+export function isPlaybackOnlyDriveRevision(before: LearningDocument, after: LearningDocument): boolean {
+  if (before.schemaVersion !== 3 || after.schemaVersion !== 3 || before.id !== after.id) return false;
+  const { playbackOverrides: oldRanges, ...oldContent } = before;
+  const { playbackOverrides: newRanges, ...newContent } = after;
+  return JSON.stringify(oldContent) === JSON.stringify(newContent) &&
+    JSON.stringify(oldRanges) !== JSON.stringify(newRanges);
+}
+
+async function updateOwnedPlaybackBackup(
+  accountId: string, file: DriveFile, mimeType: string, content: Buffer,
+  oldContent: Buffer, properties: Record<string, string>,
+): Promise<DriveFile> {
+  const response = await googleFetch(accountId,
+    API + "/files/" + encodeURIComponent(file.id) + "?alt=media", {}, "讀取雲端教材");
+  const remote = Buffer.from(await response.arrayBuffer());
+  if (remote.length > 25_000_000) throw new DriveContentConflict("Cloud lesson exceeds the update limit");
+  if (remote.equals(content)) return file; // idempotent after a partially completed two-file backup
+  if (!remote.equals(oldContent)) {
+    throw new DriveContentConflict("雲端教材與上次備份不同；保留雲端檔案，請先確認版本");
+  }
+  const boundary = "immersive_" + randomBytes(12).toString("hex");
+  const body = Buffer.concat([
+    Buffer.from("--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" +
+      JSON.stringify({ appProperties: properties }) + "\r\n--" + boundary +
+      "\r\nContent-Type: " + mimeType + "\r\n\r\n", "utf8"),
+    content,
+    Buffer.from("\r\n--" + boundary + "--\r\n"),
+  ]);
+  const etag = response.headers.get("etag");
+  return apiJSON<DriveFile>(accountId,
+    UPLOAD + "/files/" + encodeURIComponent(file.id) +
+      "?uploadType=multipart&fields=id,name,webViewLink,appProperties", {
+      method: "PATCH",
+      headers: { "Content-Type": "multipart/related; boundary=" + boundary,
+        ...(etag ? { "If-Match": etag } : {}) },
+      body: new Uint8Array(body),
+    }, "備份教材");
+}
+
+export async function publishDriveDocument(
+  accountId: string, document: LearningDocument, markdown: string,
+  previousDocument?: LearningDocument,
+): Promise<string> {
+  if (previousDocument && !isPlaybackOnlyDriveRevision(previousDocument, document)) {
+    throw new DriveContentConflict("Only explicit playback calibration may revise an existing Drive lesson");
+  }
   const account = (await listGoogleAccounts()).find(item => item.id === accountId);
   if (!account) throw new Error("Google Drive 帳號尚未連線");
   const folderId = await appFolder(accountId);
@@ -214,19 +261,29 @@ export async function publishDriveDocument(accountId: string, document: Learning
     const content = Buffer.from(format === "json" ? JSON.stringify(document, null, 2) + "\n" : markdown, "utf8");
     const expectedHash = createHash("sha256").update(content).digest("hex");
     const existing = found.filter(file => file.appProperties?.immersiveFormat === format);
-    for (const file of existing) {
-      // Earlier versions did not store hashes; compare their actual bytes once.
-      const remoteHash = file.appProperties?.immersiveContentHash ??
-        createHash("sha256").update(Buffer.from(await (await googleFetch(accountId,
-          API + "/files/" + encodeURIComponent(file.id) + "?alt=media")).arrayBuffer())).digest("hex");
-      if (remoteHash !== expectedHash) {
-        throw new DriveContentConflict("雲端教材 " + name + " 的內容不同；已保留兩邊檔案，請先確認版本");
-      }
+    if (existing.length > 1) {
+      throw new DriveContentConflict("Multiple Drive backups exist for the same lesson format; no file was overwritten");
     }
-    const file = existing[0] ?? await uploadFile(accountId, folderId, name,
-      format === "json" ? "application/json" : "text/markdown", content,
-      { ...properties, immersiveFormat: format, immersiveDocumentKey: docKey,
-        immersiveContentHash: expectedHash });
+    const metadata = { ...properties, immersiveFormat: format, immersiveDocumentKey: docKey,
+      immersiveContentHash: expectedHash };
+    const oldContent = previousDocument && Buffer.from(format === "json"
+      ? JSON.stringify(previousDocument, null, 2) + "\n"
+      : toMarkdownForDrive(previousDocument), "utf8");
+    const file = existing[0]
+      ? previousDocument && oldContent
+        ? await updateOwnedPlaybackBackup(accountId, existing[0],
+            format === "json" ? "application/json" : "text/markdown", content, oldContent, metadata)
+        : await (async () => {
+            const remoteHash = existing[0].appProperties?.immersiveContentHash ??
+              createHash("sha256").update(Buffer.from(await (await googleFetch(accountId,
+                API + "/files/" + encodeURIComponent(existing[0].id) + "?alt=media")).arrayBuffer())).digest("hex");
+            if (remoteHash !== expectedHash) {
+              throw new DriveContentConflict("雲端教材 " + name + " 的內容不同；已保留兩邊檔案，請先確認版本");
+            }
+            return existing[0];
+          })()
+      : await uploadFile(accountId, folderId, name,
+          format === "json" ? "application/json" : "text/markdown", content, metadata);
     if (format === "json") jsonUrl = file.webViewLink ??
       "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view";
   }

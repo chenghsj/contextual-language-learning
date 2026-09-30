@@ -812,6 +812,26 @@ export default function App() {
     setProgress(t("statusSaved"));
   }
 
+  async function saveDocumentPlaybackRange(
+    documentId: string, cueId: string, range: { startMs: number; endMs: number } | null,
+  ): Promise<void> {
+    const response = await nativeOnce({
+      id: crypto.randomUUID(), type: "savePlaybackRange", documentId, cueId, range,
+    });
+    if (response.type !== "playbackRangeSaved" || response.cueId !== cueId) {
+      throw new Error("Native Host did not confirm the playback calibration");
+    }
+    if (response.warning) setError(response.warning);
+    // The Host persists first; only then update the reader and JSON/Markdown export.
+    setDocument(current => {
+      if (current?.id !== documentId || current.schemaVersion !== 3) return current;
+      const playbackOverrides = { ...current.playbackOverrides };
+      if (response.range) playbackOverrides[cueId] = response.range;
+      else delete playbackOverrides[cueId];
+      return { ...current, playbackOverrides };
+    });
+  }
+
   function jobStatusLine(summary: JobSummary): string {
     return summary.status === "queued" || summary.status === "running"
       ? t("statusProgress", { completed: summary.completed, total: summary.total })
@@ -2114,6 +2134,7 @@ export default function App() {
           repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
           playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
           onError={setError} onDownload={format => downloadDocument(document, format)}
+          onSaveRange={(cueId, range) => saveDocumentPlaybackRange(document.id, cueId, range)}
         /> : document.schemaVersion === 2 ? <SceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
           repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}

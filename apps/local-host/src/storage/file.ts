@@ -3,8 +3,8 @@ import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promise
 import { homedir } from "node:os";
 import { join } from "node:path";
 import {
-  JobSnapshotSchema, StudyProgressSchema, readLearningDocument,
-  type JobSnapshot, type JobSummary, type LearningDocument, type StudyProgress,
+  JobSnapshotSchema, StudyProgressSchema, readLearningDocument, learningDocumentToMarkdown,
+  type JobSnapshot, type JobSummary, type LearningDocument, type PlaybackOverride, type StudyProgress,
 } from "@immersive/core";
 import type { DocumentRepository, JobRepository, ProgressRepository, StoragePorts } from "./ports";
 
@@ -83,6 +83,7 @@ export class FileJobRepository implements JobRepository {
 }
 
 export class FileDocumentRepository implements DocumentRepository {
+  private readonly locks = new Map<string, Promise<void>>();
   constructor(private readonly root: string) {}
   async get(id: string): Promise<LearningDocument | null> {
     try {
@@ -100,6 +101,36 @@ export class FileDocumentRepository implements DocumentRepository {
     return documents.filter((value): value is LearningDocument => value !== null)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, Math.min(limit, 5000));
+  }
+
+  /** The only intentional mutation of a finished V3 lesson: calibrated playback, never source cues. */
+  async updatePlaybackRange(id: string, cueId: string, range: PlaybackOverride | null): Promise<LearningDocument> {
+    const safe = safeId(id);
+    const prior = this.locks.get(safe) ?? Promise.resolve();
+    let release!: () => void;
+    const pending = new Promise<void>(resolve => { release = resolve; });
+    const lock = prior.then(() => pending);
+    this.locks.set(safe, lock);
+    await prior;
+    try {
+      const document = await this.get(safe);
+      if (!document || document.schemaVersion !== 3) throw new Error("Saved V3 document not found");
+      if (!document.cues.some(cue => cue.id === cueId) ||
+          !document.sections.some(scene => scene.cueIds.includes(cueId))) {
+        throw new Error("Playback cue is not part of this lesson");
+      }
+      const overrides = { ...document.playbackOverrides };
+      if (range) overrides[cueId] = range;
+      else delete overrides[cueId];
+      const updated = readLearningDocument({ ...document, playbackOverrides: overrides });
+      if (updated.schemaVersion !== 3) throw new Error("Playback update changed document schema");
+      await atomicWrite(join(this.root, safe + ".json"), JSON.stringify(updated, null, 2) + "\n");
+      await atomicWrite(join(this.root, safe + ".md"), learningDocumentToMarkdown(updated));
+      return updated;
+    } finally {
+      release();
+      if (this.locks.get(safe) === lock) this.locks.delete(safe);
+    }
   }
 
   async save(document: LearningDocument, markdown: string): Promise<void> {

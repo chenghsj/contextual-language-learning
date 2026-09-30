@@ -114,3 +114,23 @@ test("saved V2 lessons still parse and export translations and exercises without
   assert.match(md, /### Practice/);
   assert.doesNotMatch(md, /AI-created contextual examples/);
 });
+
+test("V3 calibration is optional, portable in compact JSON and Markdown, and never edits original captions", () => {
+  const calibrated = LearningDocumentSchema.parse({
+    ...v3, playbackOverrides: { a: { startMs: 2300, endMs: 3500 } },
+  });
+  if (calibrated.schemaVersion !== 3) throw new Error("Unexpected version");
+  const exported = compactStudyExport(calibrated);
+  const imported = LearningDocumentSchema.parse(JSON.parse(JSON.stringify(exported)));
+  assert.equal(imported.schemaVersion, 3);
+  if (imported.schemaVersion !== 3) throw new Error("Unexpected export version");
+  assert.deepEqual(imported.playbackOverrides?.a, { startMs: 2300, endMs: 3500 });
+  assert.equal(imported.cues.find(cue => cue.id === "a")?.startMs, 2100);
+  assert.match(learningDocumentToMarkdown(calibrated), /User-calibrated playback/);
+  assert.match(learningDocumentToMarkdown(calibrated), /a: 2300–3500 ms/);
+  assert.equal(LearningDocumentSchema.parse(v3).schemaVersion, 3,
+    "an uncalibrated old V3 document must remain valid");
+  assert.equal(LearningDocumentSchema.safeParse({
+    ...v3, playbackOverrides: { a: { startMs: 3500, endMs: 2300 } },
+  }).success, false, "reversed calibration cannot enter the document");
+});
