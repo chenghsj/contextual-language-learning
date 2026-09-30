@@ -29,6 +29,7 @@ import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./
 import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { AppPanel } from "./components/app-panel";
+import { Card } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Select, SelectContent, SelectField, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Textarea } from "./components/ui/textarea";
@@ -2035,6 +2036,14 @@ export default function App() {
       </main>}
 
       {page === "reader" && <main>
+        {document && document.schemaVersion !== 3 && <Card className="mb-3 grid gap-2 p-3" role="note">
+          <p className="m-0 text-xs leading-[1.55] text-muted-foreground">
+            {t("legacyReaderNotice", { version: document.schemaVersion })}
+          </p>
+          <Button variant="outline" size="sm" className="w-fit" onClick={() => setPage("create")}>
+            {t("createV3FromLegacy")}
+          </Button>
+        </Card>}
         {!document ? <AppPanel className="px-[18px] py-8 text-center">
           <h2>{t("emptyHeading")}</h2><p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("emptyHint")}</p>
           <Button variant="outline" onClick={() => setPage("create")}>{t("create")}</Button>
