@@ -23,12 +23,12 @@ test("generation summary displays the selected model label or the honest CLI def
 test("generation card shows Agent and model before submitting and links directly to Agent settings", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   const section = app.slice(app.indexOf('<h2>{t("generationHeading")}</h2>'), app.indexOf('<h2>{t("jobHistory")}</h2>'));
-  assert.ok(section.includes('className="generationSummary"'));
+  assert.ok(section.includes('className="my-3 min-w-0 rounded-[var(--radius)] border border-border bg-muted p-3'));
   assert.ok(section.includes('agentDisplayName(agent.provider, selectedAgentInfo?.label)'));
   assert.ok(section.includes('modelDisplayName(agent.modelId, modelOptions, t("cliDefault"))'));
   assert.ok(section.includes('onClick={() => {') && section.includes('setPage("settings")'));
   assert.ok(section.includes('getElementById("agent-settings-heading")'));
-  assert.ok(section.indexOf('className="generationSummary"') < section.indexOf('onClick={startGeneration}'));
+  assert.ok(section.indexOf('className="my-3 min-w-0 rounded-[var(--radius)] border border-border bg-muted p-3') < section.indexOf('onClick={startGeneration}'));
   assert.ok(app.includes('agentDisplayName(entry.id, entry.label)'));
   assert.ok(app.includes('agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)'));
   assert.match(app, /id="agent-settings-heading" tabIndex=\{-1\}/);
@@ -49,7 +49,7 @@ test("Agent and optional CLI Profile share one persisted model setting", async (
   assert.match(app, /agentModelPreferences/);
   assert.match(app, /savedAgentModel\(agent.provider, entry\?\.directory, agentModelPreferences\)/);
   assert.match(app, /<SettingInfo label=\{t\("useOtherCliAccount"\)\}/);
-  assert.match(app, /<details className="agentProfileAdvanced">/);
+  assert.match(app, /<details className="[^"]*mt-\[10px\][^"]*"/);
   assert.match(app, /agent.accountConfigDir && <div><dt>\{t\("agentAccount"\)\}/);
 });
 

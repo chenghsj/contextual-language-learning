@@ -1,4 +1,4 @@
-import { readFile, access } from "node:fs/promises";
+import { readFile, access, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import assert from "node:assert/strict";
 import { Script } from "node:vm";
@@ -37,4 +37,15 @@ for (const script of manifest.content_scripts) {
 }
 assert.ok(manifest.content_scripts.some(script => script.world === "MAIN" && script.js.includes("netflix-page.js")));
 assert.ok(manifest.content_scripts.some(script => script.world === "MAIN" && script.js.includes("youtube-page.js")));
+// Tailwind v4 must discover the static utility groups in utility-classes.ts.
+const styles = (await readdir(resolve(dist, "assets"))).filter(name => name.endsWith(".css"));
+assert.ok(styles.length > 0, "the packaged Side Panel must include compiled CSS");
+const compiledCss = (await Promise.all(styles.map(name =>
+  readFile(resolve(dist, "assets", name), "utf8")
+))).join("\n");
+for (const selector of [".grid-cols-4", ".sticky", ".bg-card", ".text-muted-foreground"]) {
+  assert.ok(compiledCss.includes(selector), "missing packaged Tailwind utility " + selector);
+}
+assert.ok(compiledCss.includes("355px"), "narrow-width contextual reader utilities were not compiled");
+assert.ok(compiledCss.includes("group-aria-checked"), "Drive backup switch state utility was not compiled");
 process.stdout.write("Extension manifest and content-script assets OK\n");
