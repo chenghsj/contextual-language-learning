@@ -21,7 +21,7 @@ import {
 import {
   cuePlaybackStart, cuePlaybackWindow,
   assertVideoReaderReady, findVideoTab, getActiveWindowTab, openOrFocusVideoTab,
-  reloadExistingVideoTab,
+  reloadExistingVideoTab, VideoCommandError,
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
 import { CustomAgentSettings } from "./components/custom-agent-settings";
@@ -30,7 +30,7 @@ import { agentOnboardingCopy } from "./i18n/agent-onboarding";
 import { hostConnectionCopy } from "./i18n/host-connection";
 import { isImportedAgentId, restoreImportedAgentSelection } from "./agent-selection";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
-import { BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
+import { AlertCircle, BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { AppPanel } from "./components/app-panel";
 import { Card } from "./components/ui/card";
@@ -86,6 +86,7 @@ export default function App() {
   const [trackInfo, setTrackInfo] = useState<{ sourceKey: string; status: "available" | "unknown";
     tracks: { language: string; kind: "manual" | "auto" }[] } | null>(null);
   const [trackBusy, setTrackBusy] = useState(false);
+  const [subtitleTone, setSubtitleTone] = useState<"neutral" | "loading" | "success" | "missing" | "error">("neutral");
   const [captionSource, setCaptionSource] = useState<CaptionProvenance | null>(null);
   const [videoRecoveryUrl, setVideoRecoveryUrl] = useState("");
   const [reloadingVideoTab, setReloadingVideoTab] = useState(false);
@@ -1277,18 +1278,21 @@ export default function App() {
       setCaptionSource(null);
     }
     if (cached?.source.origin === "manual") {
+      setSubtitleTone("neutral");
       setSubtitleStatus(subtitleMessage(subtitleUi.manualLanguageReady, {
         language: learningLanguageName(language, uiLocale),
       }));
       return;
     }
     if (!cached && captionSource?.origin === "manual" && raw.trim()) {
+      setSubtitleTone("missing");
       setSubtitleStatus(subtitleMessage(subtitleUi.manualLanguageChanged, {
         language: learningLanguageName(language, uiLocale),
       }));
       return;
     }
     if (!getVideoAdapter(activeVideo?.url ?? sourceUrl).fetchSubtitles) {
+      setSubtitleTone("missing");
       setSubtitleStatus(subtitleMessage(subtitleUi.languageNotReady, {
         language: learningLanguageName(language, uiLocale),
       }));
@@ -1305,6 +1309,7 @@ export default function App() {
     let attemptedUrl = "";
     setCaptionSource(null);
     setSubtitleBusy(true);
+    setSubtitleTone("loading");
     setSubtitleStatus(subtitleMessage(subtitleUi.loadingLanguage, {
       language: learningLanguageName(language, uiLocale),
     }));
@@ -1362,13 +1367,19 @@ export default function App() {
       setSourceUrl(actualUrl);
       if (videoTitle && !manuallyEditedTitleRef.current) setTitle(videoTitle);
       else if (fromDifferentVideo) setTitle("");
+      setSubtitleTone("success");
       setSubtitleStatus(subtitleMessage(subtitleUi.success, {
         count: parsed.length, language: fetched.language,
       }));
     } catch (cause) {
       if (request !== captionRequestRef.current) return;
-      const message = cause instanceof Error ? cause.message : subtitleUi.unavailable;
+      const trackMissing = cause instanceof VideoCommandError &&
+        cause.code === "TRACK_UNAVAILABLE";
+      const message = trackMissing ? subtitleMessage(subtitleUi.trackUnavailable, {
+        language: learningLanguageName(language, uiLocale),
+      }) : cause instanceof Error ? cause.message : subtitleUi.unavailable;
       if (attemptedUrl && needsVideoReaderReload(message)) setVideoRecoveryUrl(attemptedUrl);
+      setSubtitleTone(trackMissing ? "missing" : "error");
       setSubtitleStatus(message);
     } finally {
       if (request === captionRequestRef.current) setSubtitleBusy(false);
@@ -1383,6 +1394,7 @@ export default function App() {
       await reloadExistingVideoTab(getVideoAdapter(videoRecoveryUrl), videoRecoveryUrl);
       setVideoRecoveryUrl("");
       setMetadataStatus("");
+      setSubtitleTone("neutral");
       setSubtitleStatus(subtitleUi.reloadedTab);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : subtitleUi.reloadFailed);
@@ -1410,6 +1422,7 @@ export default function App() {
     setRaw(text);
     setCaptionSource(source);
     setFileName(file.name);
+    setSubtitleTone("neutral");
     setSubtitleStatus(subtitleMessage(subtitleUi.manualLanguageReady, {
       language: learningLanguageName(profile.targetLanguage, uiLocale),
     }));
@@ -1682,9 +1695,20 @@ export default function App() {
             }}
               placeholder={t("subtitlePlaceholder")} /></label>
           </details>
-          {subtitleStatus && <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere my-[10px] leading-[1.5]" role="status">{subtitleStatus}</p>}
+          {subtitleStatus && <div className={subtitleTone === "missing" || subtitleTone === "error"
+            ? "my-[10px] flex min-w-0 items-start gap-2 rounded-[var(--radius)] border border-destructive/60 bg-destructive/10 p-[10px] text-xs leading-[1.5] text-foreground wrap-anywhere"
+            : "my-[10px] min-w-0 rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs leading-[1.5] text-foreground wrap-anywhere"}
+            role={subtitleTone === "missing" || subtitleTone === "error" ? "alert" : "status"}
+            data-ui="subtitleStatus" data-tone={subtitleTone}>
+            {(subtitleTone === "missing" || subtitleTone === "error") &&
+              <AlertCircle aria-hidden="true" className="mt-[1px] size-4 shrink-0 text-destructive" />}
+            <div className="min-w-0">
+              <p className="m-0">{subtitleStatus}</p>
+              {subtitleTone === "missing" && <p className="mt-1 mb-0 text-muted-foreground">{subtitleUi.trackUnavailableAction}</p>}
+            </div>
+          </div>}
           {!!raw.trim() && !captionsReady && !subtitleStatus && !subtitleBusy &&
-            <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere my-[10px] leading-[1.5]" role="status">{subtitleMessage(subtitleUi.languageNotReady, {
+            <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-destructive/60 bg-destructive/10 p-[10px] text-xs leading-[1.5] text-foreground wrap-anywhere" role="alert" data-ui="subtitleLanguageMismatch">{subtitleMessage(subtitleUi.languageNotReady, {
               language: learningLanguageName(profile.targetLanguage, uiLocale),
             })}</p>}
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("parsedCues", { count: cues.length })}</p>

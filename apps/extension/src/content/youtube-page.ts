@@ -16,6 +16,7 @@ import {
   const BRIDGE_VERSION = "native-caption-capture-v2";
   const HEALTH_REQUEST = "immersive-learning:youtube:bridge-health-request";
   const HEALTH_RESPONSE = "immersive-learning:youtube:bridge-health-response";
+  class MissingYouTubeCaptionTrackError extends Error {}
   type CaptionRequest = {
     source: "immersive-learning"; id: string; videoId: string; language: string;
   };
@@ -149,7 +150,7 @@ import {
     }
     const track = chooseYouTubeCaptionTrack(tracks, request.language);
     if (!track) {
-      throw new Error("This YouTube video has no available " + request.language +
+      throw new MissingYouTubeCaptionTrackError("This YouTube video has no available " + request.language +
         " subtitle track. Choose a language provided by the video.");
     }
     const playerCaptions = fromPlayer(request.videoId, track.languageCode, track.kind);
@@ -269,7 +270,8 @@ import {
     }).catch(error => {
       window.dispatchEvent(new CustomEvent(RESPONSE, {
         detail: { source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION, ok: false,
-          error: error instanceof Error ? error.message : "YouTube subtitles are unavailable." },
+          error: error instanceof Error ? error.message : "YouTube subtitles are unavailable.",
+          ...(error instanceof MissingYouTubeCaptionTrackError ? { errorCode: "TRACK_UNAVAILABLE" } : {}) },
       }));
     });
   });

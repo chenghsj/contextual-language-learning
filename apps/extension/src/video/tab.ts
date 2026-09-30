@@ -133,7 +133,14 @@ export async function openOrFocusVideoTab(
   return { tab: created, reused: false };
 }
 
-export async function sendToVideo<T extends { ok: boolean; error?: string }>(
+export class VideoCommandError extends Error {
+  constructor(message: string, readonly code?: "TRACK_UNAVAILABLE") {
+    super(message);
+    this.name = "VideoCommandError";
+  }
+}
+
+export async function sendToVideo<T extends { ok: boolean; error?: string; errorCode?: string }>(
   adapter: VideoAdapter, sourceUrl: string, message: unknown, activate = false,
 ): Promise<T> {
   const tab = await findVideoTab(adapter, sourceUrl);
@@ -148,7 +155,8 @@ export async function sendToVideo<T extends { ok: boolean; error?: string }>(
     }
     throw error;
   }
-  if (!response?.ok) throw new Error(response?.error ?? "播放器無法執行這個操作。");
+  if (!response?.ok) throw new VideoCommandError(response?.error ?? "播放器無法執行這個操作。",
+    response?.errorCode === "TRACK_UNAVAILABLE" ? "TRACK_UNAVAILABLE" : undefined);
   if (activate) await focusVideoTab(tab);
   return response;
 }
