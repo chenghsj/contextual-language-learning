@@ -213,6 +213,19 @@ export function youtubeTimedTextToVtt(input: string): string {
   throw new Error("YouTube did not return a readable subtitle document.");
 }
 
+/** The MAIN-world caption reader must finish before the 32s content-script bridge deadline. */
+export const YOUTUBE_CAPTION_FETCH_BUDGET_MS = 25_000;
+export const YOUTUBE_CAPTION_FETCH_ATTEMPT_MS = 8_000;
+
+/** Try at most two browser-observed URLs, then the selected track's JSON3 and original URLs.
+ * Browser-observed URLs have already been validated against the active video/language.
+ * Never log or persist URLs because they may contain player session parameters. */
+export function youtubeCaptionCandidates(
+  observed: readonly string[], json3Url: string, originalUrl: string,
+): string[] {
+  return [...new Set([...observed.slice(0, 2), json3Url, originalUrl])];
+}
+
 /**
  * Reuse only caption URLs exposed to the currently playing video's browser
  * session. Resource Timing may contain a player-generated session token;
