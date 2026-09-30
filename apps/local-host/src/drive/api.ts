@@ -16,7 +16,6 @@ const API = "https://www.googleapis.com/drive/v3";
 const UPLOAD = "https://www.googleapis.com/upload/drive/v3";
 const FOLDER_TYPE = "application/vnd.google-apps.folder";
 const FOLDER_NAME = "Immersive Learning";
-
 /** Drive limits every appProperties key + value pair to 124 UTF-8 bytes, not characters. */
 export const MAX_DRIVE_PROPERTY_BYTES = 124;
 const MAX_DRIVE_PRIVATE_PROPERTIES = 30;
@@ -236,6 +235,16 @@ export function isPlaybackOnlyDriveRevision(before: LearningDocument, after: Lea
       JSON.stringify(oldScenes) !== JSON.stringify(newScenes));
 }
 
+/** Markdown's only mutable sections are the generated calibration footers. */
+export function isPlaybackOnlyMarkdownRevision(before: string, after: string): boolean {
+  const footer = /^## User-calibrated (?:playback|scene playback) \(original .*\)$/m;
+  const base = (value: string) => {
+    const match = footer.exec(value);
+    return (match ? value.slice(0, match.index) : value).trimEnd();
+  };
+  return before !== after && base(before) === base(after);
+}
+
 async function updateOwnedPlaybackBackup(
   accountId: string, file: DriveFile, mimeType: string, content: Buffer,
   oldContent: Buffer, properties: Record<string, string>,
@@ -312,13 +321,30 @@ export async function publishDriveDocument(
         ? await updateOwnedPlaybackBackup(accountId, existing[0],
             format === "json" ? "application/json" : "text/markdown", content, oldContent, metadata)
         : await (async () => {
-            const remoteHash = existing[0].appProperties?.immersiveContentHash ??
-              createHash("sha256").update(Buffer.from(await (await googleFetch(accountId,
-                API + "/files/" + encodeURIComponent(existing[0].id) + "?alt=media")).arrayBuffer())).digest("hex");
-            if (remoteHash !== expectedHash) {
+            const response = await googleFetch(accountId,
+              API + "/files/" + encodeURIComponent(existing[0].id) + "?alt=media", {}, "讀取雲端教材");
+            const remote = Buffer.from(await response.arrayBuffer());
+            if (remote.length > 25_000_000) throw new DriveContentConflict("Cloud lesson exceeds the update limit");
+            const remoteHash = createHash("sha256").update(remote).digest("hex");
+            const recordedHash = existing[0].appProperties?.immersiveContentHash;
+            if (recordedHash && remoteHash !== recordedHash) {
+              throw new DriveContentConflict("雲端教材已在應用程式外變更；已保留兩邊檔案");
+            }
+            if (remoteHash === expectedHash) return existing[0];
+            if (!recordedHash) {
+              throw new DriveContentConflict("雲端教材缺少原始校驗值；已保留兩邊檔案，請先確認版本");
+            }
+            const recoverable = format === "json"
+              ? (() => {
+                  try { return isPlaybackOnlyDriveRevision(readLearningDocument(JSON.parse(remote.toString("utf8")) as unknown), document); }
+                  catch { return false; }
+                })()
+              : isPlaybackOnlyMarkdownRevision(remote.toString("utf8"), markdown);
+            if (!recoverable) {
               throw new DriveContentConflict("雲端教材 " + name + " 的內容不同；已保留兩邊檔案，請先確認版本");
             }
-            return existing[0];
+            return updateOwnedPlaybackBackup(accountId, existing[0],
+              format === "json" ? "application/json" : "text/markdown", content, remote, metadata);
           })()
       : await uploadFile(accountId, folderId, name,
           format === "json" ? "application/json" : "text/markdown", content, metadata);

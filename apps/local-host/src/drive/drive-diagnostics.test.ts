@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { boundedDriveProperty, driveApiError, isPlaybackOnlyDriveRevision,
-  MAX_DRIVE_PROPERTY_BYTES, validateDriveAppProperties } from "./api";
-import { LearningDocumentSchema } from "@immersive/core";
+  isPlaybackOnlyMarkdownRevision, MAX_DRIVE_PROPERTY_BYTES, validateDriveAppProperties } from "./api";
+import { LearningDocumentSchema, learningDocumentToMarkdown } from "@immersive/core";
 
 test("Drive permission diagnostics show safe reason and relevant next action", () => {
   const error = driveApiError(403, {
@@ -140,4 +140,10 @@ test("Drive accepts only a calibrated playback revision of an unchanged app less
     sections: [{ ...before.sections[0], startMs: 700 }] }), false);
   assert.equal(isPlaybackOnlyDriveRevision(before, { ...before, playbackOverrides: {} }), true,
     "explicit reset metadata may replace legacy browser-only calibration");
+  assert.equal(isPlaybackOnlyMarkdownRevision(learningDocumentToMarkdown(before),
+    learningDocumentToMarkdown(after)), true);
+  assert.equal(isPlaybackOnlyMarkdownRevision(learningDocumentToMarkdown(after),
+    learningDocumentToMarkdown(sceneRevision)), true);
+  assert.equal(isPlaybackOnlyMarkdownRevision(learningDocumentToMarkdown(before),
+    learningDocumentToMarkdown({ ...after, source: { ...after.source, title: "Changed lesson" } })), false);
 });
