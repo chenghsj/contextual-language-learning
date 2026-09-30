@@ -572,3 +572,25 @@ button[data-slot="button"].backupSwitch[aria-checked="true"] { background: var(-
   .contextualFocusMarker { grid-column: 2; width: fit-content; }
   .contextualLinePlay { grid-column: 3; grid-row: 1; width: 12px; }
 }
+
+/* The actual watch-page clock is the only source of the active-line highlight. */
+.contextualLine.chosen:not(.playing) { box-shadow: inset 2px 0 var(--border); }
+.contextualLine.playing { background: color-mix(in oklch, var(--primary) 11%, var(--card)); box-shadow: inset 3px 0 var(--primary); }
+.contextualTimeToggle { display: flex; width: 100%; margin-top: 3px; justify-content: center; min-height: 30px; font-size: 11px; color: var(--muted-foreground); }
+.contextualTimeDialog { width: min(370px, calc(100vw - 22px)); max-width: calc(100vw - 22px); max-height: min(560px, 84vh); overflow: auto;
+  padding: 16px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--card); color: var(--foreground); box-shadow: 0 20px 60px #0004; }
+.contextualTimeDialog::backdrop { background: #0008; }
+.contextualTimeHeading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.contextualTimeHeading > h3 { margin: 0; font-size: 16px; }
+.contextualTimeHeading > button { flex-shrink: 0; }
+.contextualTimeOptions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.contextualTimeOptions > div { min-width: 0; }
+.contextualTimeOptions label { margin: 0 0 5px; font-size: 12px; }
+.contextualTimeOptions [data-slot="select-trigger"] { min-width: 0; width: 100%; }
+.contextualTimeBoundaries { display: grid; gap: 16px; padding-top: 10px; border-top: 1px solid var(--border); }
+.contextualTimeBoundaryHeading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; font-size: 13px; }
+.contextualTimeBoundaryHeading > output { font-variant-numeric: tabular-nums; }
+.contextualTimeActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.contextualTimeActions > button { min-width: 0; height: auto; min-height: 35px; white-space: normal; padding: 6px; font-size: 12px; }
+.contextualTimeActions > button:last-child { grid-column: 1 / -1; }

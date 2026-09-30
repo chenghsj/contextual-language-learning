@@ -1,8 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Play, Repeat2, Square } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Play, Repeat2, SlidersHorizontal, Square, X } from "lucide-react";
 import { formatTime, type LearningDocument, type SubtitleCue } from "@immersive/core";
 import type { UiLocale } from "../i18n/messages";
 import { contextualReaderMessages, contextualText } from "../i18n/contextual-reader";
+import { sceneReaderMessages } from "../i18n/scene-reader";
+import { playingCueAt } from "../video/cue-follow";
+import {
+  adjustLoopBoundary, formatLoopTimestamp, readLoopWindows,
+  type LoopBoundary, type LoopWindow,
+} from "../video/loop-window";
 import { cuePlaybackStart, cuePlaybackWindow, openOrFocusVideoTab } from "../video/tab";
 import type { VideoAdapter } from "../video/types";
 import { Button } from "./ui/button";
@@ -16,7 +22,9 @@ type Props = {
   adapter: VideoAdapter;
   locale: UiLocale;
   repeat: Repeat;
+  setRepeat: (repeat: Repeat) => void;
   delay: number;
+  setDelay: (delay: number) => void;
   playbackRate: number;
   setPlaybackRate: (rate: number) => void;
   onError: (message: string) => void;
@@ -25,9 +33,10 @@ type Props = {
 
 /** V3 is readable as one cohesive scene. V1/V2 keep their original reader. */
 export function ContextualSceneReader({
-  document, adapter, locale, repeat, delay, playbackRate, setPlaybackRate, onError, onDownload,
+  document, adapter, locale, repeat, setRepeat, delay, setDelay, playbackRate, setPlaybackRate, onError, onDownload,
 }: Props) {
   const copy = contextualReaderMessages[locale];
+  const timing = sceneReaderMessages[locale];
   const cues = useMemo(() => new Map(document.cues.map(cue => [cue.id, cue])), [document.cues]);
   const [sceneIndex, setSceneIndex] = useState(0);
   const [selectionByScene, setSelectionByScene] = useState<Record<string, string>>({});
@@ -35,7 +44,16 @@ export function ContextualSceneReader({
   const [expandedExamples, setExpandedExamples] = useState<Record<string, boolean>>({});
   const [exampleTranslations, setExampleTranslations] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  function markBusy(next: boolean): void { busyRef.current = next; setBusy(next); }
   const [loopingCueId, setLoopingCueId] = useState<string | null>(null);
+  const loopingCueRef = useRef<string | null>(null);
+  const [loopRanges, setLoopRanges] = useState<Record<string, LoopWindow>>({});
+  const [calibrationOpen, setCalibrationOpen] = useState(false);
+  const calibrationOpenRef = useRef(false);
+  const calibrationRef = useRef<HTMLDialogElement>(null);
+  const [playbackCueId, setPlaybackCueId] = useState<string | null>(null);
+  const [playbackKnown, setPlaybackKnown] = useState(false);
   const [status, setStatus] = useState("");
   const [loaded, setLoaded] = useState(false);
   const scene = document.sections[sceneIndex] ?? document.sections[0];
@@ -46,12 +64,16 @@ export function ContextualSceneReader({
   const sourceUrl = document.source.url;
   const canLoop = !!sourceUrl && !!adapter.loop;
   const progressKey = "contextualStudy:" + document.id;
+  const loopKey = "sceneLoopRanges:" + document.id;
+  const selectedRange = selectedCue && selectedCue.startMs !== null &&
+    selectedCue.endMs !== null && selectedCue.endMs > selectedCue.startMs
+    ? loopRanges[selectedCue.id] ?? cuePlaybackWindow(selectedCue.startMs, selectedCue.endMs) : null;
   const supportsCue = (cue: SubtitleCue | undefined): cue is SubtitleCue =>
     !!cue && cue.startMs !== null && cue.endMs !== null && cue.endMs > cue.startMs;
 
   useEffect(() => {
     let live = true;
-    void chrome.storage.local.get(progressKey).then(saved => {
+    void chrome.storage.local.get([progressKey, loopKey]).then(saved => {
       if (!live) return;
       const progress = saved[progressKey] as {
         sceneId?: string; selectionByScene?: Record<string, string>;
@@ -60,6 +82,7 @@ export function ContextualSceneReader({
         const index = document.sections.findIndex(item => item.id === progress.sceneId);
         if (index >= 0) setSceneIndex(index);
       }
+      setLoopRanges(readLoopWindows(saved[loopKey], document.cues.map(cue => cue.id)));
       if (progress?.selectionByScene && typeof progress.selectionByScene === "object") {
         const valid = Object.fromEntries(document.sections.flatMap(item => {
           const id = progress.selectionByScene?.[item.id];
@@ -69,39 +92,91 @@ export function ContextualSceneReader({
       }
     }).catch(() => undefined).finally(() => { if (live) setLoaded(true); });
     return () => { live = false; };
-  }, [document.id, document.sections, progressKey]);
+  }, [document.id, document.sections, document.cues, progressKey, loopKey]);
 
   useEffect(() => {
     if (!loaded) return;
     void chrome.storage.local.set({
       [progressKey]: { sceneId: scene.id, selectionByScene },
+      [loopKey]: loopRanges,
     }).catch(() => undefined);
-  }, [loaded, progressKey, scene.id, selectionByScene]);
+  }, [loaded, progressKey, loopKey, loopRanges, scene.id, selectionByScene]);
+
+  useEffect(() => { loopingCueRef.current = loopingCueId; }, [loopingCueId]);
+  useEffect(() => { calibrationOpenRef.current = calibrationOpen; }, [calibrationOpen]);
+  useEffect(() => {
+    const dialog = calibrationRef.current;
+    if (!dialog) return;
+    if (calibrationOpen && !dialog.open) dialog.showModal();
+    if (!calibrationOpen && dialog.open) dialog.close();
+  }, [calibrationOpen]);
+
+  /** Native video status—not the last clicked line—drives the highlighted subtitle. */
+  useEffect(() => {
+    if (!sourceUrl || !adapter.status) {
+      setPlaybackKnown(false);
+      setPlaybackCueId(null);
+      return;
+    }
+    let live = true;
+    let inFlight = false;
+    const poll = async () => {
+      if (!live || inFlight || busyRef.current) return;
+      inFlight = true;
+      try {
+        const playback = await adapter.status!(sourceUrl);
+        if (!live || busyRef.current) return;
+        const ms = playback.currentMs;
+        if (typeof ms !== "number" || !Number.isFinite(ms)) {
+          setPlaybackKnown(false);
+          setPlaybackCueId(null);
+          return;
+        }
+        const cueId = playingCueAt(scene.cueIds, cues, ms);
+        setPlaybackKnown(true);
+        setPlaybackCueId(cueId);
+        if (cueId && !loopingCueRef.current && !calibrationOpenRef.current) {
+          setSelectionByScene(previous => previous[scene.id] === cueId ? previous
+            : { ...previous, [scene.id]: cueId });
+        }
+      } catch {
+        if (live) { setPlaybackKnown(false); setPlaybackCueId(null); }
+      } finally { inFlight = false; }
+    };
+    setPlaybackKnown(false);
+    setPlaybackCueId(null);
+    void poll();
+    const timer = window.setInterval(() => { void poll(); }, 900);
+    return () => { live = false; window.clearInterval(timer); };
+  }, [sourceUrl, adapter, scene.id, scene.cueIds, cues]);
 
   async function stopPreviousLoop(): Promise<void> {
-    if (!loopingCueId) return;
+    if (!loopingCueRef.current) return;
     if (sourceUrl && adapter.stopLoop) await adapter.stopLoop(sourceUrl);
+    loopingCueRef.current = null;
     setLoopingCueId(null);
   }
 
   async function selectScene(index: number): Promise<void> {
     if (busy || index === sceneIndex || index < 0 || index >= document.sections.length) return;
-    setBusy(true);
+    markBusy(true);
     try {
       await stopPreviousLoop();
       setSceneIndex(index);
       setTranslationVisible(false);
+      setPlaybackCueId(null);
+      setPlaybackKnown(false);
       setStatus("");
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally {
-      setBusy(false);
+      markBusy(false);
     }
   }
 
   async function playScene(): Promise<void> {
     if (!sourceUrl || !adapter.loop || scene.startMs === null || scene.endMs === null) return;
-    setBusy(true);
+    markBusy(true);
     try {
       await stopPreviousLoop();
       await adapter.loop(sourceUrl, {
@@ -112,22 +187,27 @@ export function ContextualSceneReader({
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally {
-      setBusy(false);
+      markBusy(false);
     }
   }
 
   async function selectCue(id: string, play = true): Promise<void> {
     if (busy || !scene.cueIds.includes(id)) return;
     const cue = cues.get(id);
-    setBusy(true);
+    markBusy(true);
     try {
+      const resumeLoop = !!loopingCueRef.current;
       await stopPreviousLoop();
       setSelectionByScene(previous => ({ ...previous, [scene.id]: id }));
       if (play && sourceUrl && adapter.loop && supportsCue(cue)) {
+        const range = loopRanges[cue.id] ?? cuePlaybackWindow(cue.startMs!, cue.endMs!);
         await adapter.loop(sourceUrl, {
-          ...cuePlaybackWindow(cue.startMs!, cue.endMs!), repeats: 1, delaySeconds: 0,
+          ...range,
+          repeats: resumeLoop ? repeat === "infinite" ? "infinite" : Number(repeat) : 1,
+          delaySeconds: resumeLoop ? delay : 0,
         });
-        setStatus(copy.playbackStarted);
+        if (resumeLoop) { loopingCueRef.current = cue.id; setLoopingCueId(cue.id); }
+        setStatus(resumeLoop ? copy.loopStarted : copy.playbackStarted);
       } else if (play && !supportsCue(cue)) {
         setStatus(copy.noTime);
       } else {
@@ -136,13 +216,13 @@ export function ContextualSceneReader({
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally {
-      setBusy(false);
+      markBusy(false);
     }
   }
 
   async function toggleLoop(): Promise<void> {
     if (!sourceUrl || !adapter.loop || !supportsCue(selectedCue) || busy) return;
-    setBusy(true);
+    markBusy(true);
     try {
       if (loopingCueId === selectedCue.id) {
         await stopPreviousLoop();
@@ -150,43 +230,78 @@ export function ContextualSceneReader({
       } else {
         await stopPreviousLoop();
         await adapter.loop(sourceUrl, {
-          ...cuePlaybackWindow(selectedCue.startMs!, selectedCue.endMs!),
+          ...(loopRanges[selectedCue.id] ?? cuePlaybackWindow(selectedCue.startMs!, selectedCue.endMs!)),
           repeats: repeat === "infinite" ? "infinite" : Number(repeat),
           delaySeconds: delay,
         });
+        loopingCueRef.current = selectedCue.id;
         setLoopingCueId(selectedCue.id);
         setStatus(copy.loopStarted);
       }
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally {
-      setBusy(false);
+      markBusy(false);
     }
+  }
+
+  /** A/B edits use real video time and invalidate the old loop before saving a new window. */
+  async function updateRange(boundary: LoopBoundary | "reset", position: number | "current" = 0): Promise<void> {
+    if (busyRef.current || !selectedCue || !selectedRange) return;
+    markBusy(true);
+    try {
+      let next: LoopWindow | null = null;
+      if (boundary !== "reset") {
+        let target = position;
+        if (target === "current") {
+          if (!sourceUrl || !adapter.status) { setStatus(timing.positionUnavailable); return; }
+          const playback = await adapter.status(sourceUrl);
+          if (typeof playback.currentMs !== "number" || !Number.isFinite(playback.currentMs)) {
+            setStatus(timing.positionUnavailable);
+            return;
+          }
+          target = playback.currentMs;
+        }
+        next = adjustLoopBoundary(selectedRange, boundary, target as number);
+        if (!next) { setStatus(timing.invalidLoopRange); return; }
+      }
+      await stopPreviousLoop();
+      const id = selectedCue.id;
+      setLoopRanges(previous => {
+        const updated = { ...previous };
+        if (next) updated[id] = next;
+        else delete updated[id];
+        return updated;
+      });
+      setStatus(next ? timing.loopRangeSaved : timing.loopRangeReset);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : copy.unavailable);
+    } finally { markBusy(false); }
   }
 
   async function changeRate(rate: number): Promise<void> {
     if (!sourceUrl || !adapter.setPlaybackRate || busy) return;
-    setBusy(true);
+    markBusy(true);
     try {
       await adapter.setPlaybackRate(sourceUrl, rate);
       setPlaybackRate(rate);
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally {
-      setBusy(false);
+      markBusy(false);
     }
   }
 
   async function openVideo(): Promise<void> {
     if (!sourceUrl || busy) return;
-    setBusy(true);
+    markBusy(true);
     try {
       await openOrFocusVideoTab(adapter, sourceUrl);
       setStatus(copy.videoOpened);
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally {
-      setBusy(false);
+      markBusy(false);
     }
   }
 
@@ -254,9 +369,12 @@ export function ContextualSceneReader({
         {lines.map((cue, index) => {
           const focused = scene.focusItems.some(item => item.sourceCueIds.includes(cue.id));
           const selected = selectedCueId === cue.id;
+          const playing = playbackKnown && playbackCueId === cue.id;
           const translation = scene.translations.find(row => row.cueId === cue.id);
           return <button key={cue.id} type="button"
-            className={"contextualLine" + (selected ? " selected" : "")}
+            className={"contextualLine" + (selected ? " chosen" : "") +
+              (playing ? " playing" : "") + (!playbackKnown && selected ? " selected" : "")}
+            aria-current={playing ? "true" : undefined}
             aria-pressed={selected} disabled={busy} onClick={() => void selectCue(cue.id)}>
             <span className="contextualLineNumber">{String(index + 1).padStart(2, "0")}</span>
             <span className="contextualLineText">
@@ -357,6 +475,70 @@ export function ContextualSceneReader({
             value: String(rate), label: rate + "×",
           }))} />}
       </div>
+      <Button size="sm" variant="ghost" className="contextualTimeToggle"
+        aria-expanded={calibrationOpen} disabled={busy || !selectedRange}
+        onClick={() => setCalibrationOpen(true)}>
+        <SlidersHorizontal aria-hidden="true" />{copy.adjustPosition}
+      </Button>
+      <dialog className="contextualTimeDialog" ref={calibrationRef}
+        aria-labelledby="contextual-time-dialog-title"
+        onClose={() => setCalibrationOpen(false)}
+        onCancel={() => setCalibrationOpen(false)}>
+        <div className="contextualTimeHeading">
+          <h3 id="contextual-time-dialog-title">{copy.adjustPosition}</h3>
+          <Button size="icon" variant="ghost" aria-label={copy.close}
+            onClick={() => setCalibrationOpen(false)}><X aria-hidden="true" /></Button>
+        </div>
+        <p className="hint">{timing.loopRangeHint}</p>
+        <div className="contextualTimeOptions">
+          <div>
+            <label htmlFor="contextual-repeats">{timing.repeat}</label>
+            <SelectField id="contextual-repeats" ariaLabel={timing.repeat} value={repeat}
+              onValueChange={value => setRepeat(value as Repeat)}
+              options={[
+                { value: "2", label: "2×" }, { value: "3", label: "3×" },
+                { value: "5", label: "5×" }, { value: "infinite", label: "∞" },
+              ]} />
+          </div>
+          <div>
+            <label htmlFor="contextual-delay">{timing.delay}</label>
+            <SelectField id="contextual-delay" ariaLabel={timing.delay} value={String(delay)}
+              onValueChange={value => setDelay(Number(value))}
+              options={[0, 1, 2, 3].map(seconds => ({
+                value: String(seconds), label: seconds + "s",
+              }))} />
+          </div>
+        </div>
+        {selectedRange && <div className="contextualTimeBoundaries">
+          {(["start", "end"] as const).map(boundary => {
+            const point = boundary === "start" ? selectedRange.startMs : selectedRange.endMs;
+            const name = boundary === "start" ? timing.loopStart : timing.loopEnd;
+            return <div className="contextualTimeBoundary" key={boundary}>
+              <div className="contextualTimeBoundaryHeading">
+                <strong>{name}</strong>
+                <output>{formatLoopTimestamp(point)}</output>
+              </div>
+              <div className="contextualTimeActions">
+                <Button size="sm" variant="outline" disabled={busy}
+                  aria-label={name + " " + timing.loopEarlier}
+                  onClick={() => void updateRange(boundary, point - 500)}>−0.5s</Button>
+                <Button size="sm" variant="outline" disabled={busy}
+                  aria-label={name + " " + timing.loopLater}
+                  onClick={() => void updateRange(boundary, point + 500)}>+0.5s</Button>
+                <Button size="sm" variant="outline" disabled={busy || !adapter.status}
+                  onClick={() => void updateRange(boundary, "current")}>
+                  {timing.setBoundaryHere}
+                </Button>
+              </div>
+            </div>;
+          })}
+          <Button size="sm" variant="ghost" disabled={busy || !selectedCue ||
+            !loopRanges[selectedCue.id]} onClick={() => void updateRange("reset")}>
+            {timing.loopRangeResetButton}
+          </Button>
+        </div>}
+        {status && <p className="hint" role="status">{status}</p>}
+      </dialog>
       {status && <p className="contextualPlayerStatus" role="status">{status}</p>}
     </div>}
   </div>;
