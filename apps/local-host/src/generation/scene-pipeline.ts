@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   CandidateBatchSchema, ContextualSceneContentSchema, FinalSelectionSchema, LearningDocumentSchema, StudySceneContentSchema, StudySceneV3Schema,
-  chunkCues, normalizeLearningCues, type CandidateScene, type JobSummary, type SubtitleCue, type StudyScene, type StudySceneV3,
+  chunkCues, normalizeLearningCues, type CandidateScene, type JobSummary, type LearningLanguage, type PronunciationSegment, type SubtitleCue, type StudyScene, type StudySceneV3,
 } from "@immersive/core";
 import type { PipelineDependencies } from "./pipeline";
 import { generateWithAgent } from "../agents";
@@ -14,6 +14,18 @@ function assertRunning(signal: AbortSignal): void {
 
 function normalizeExpression(text: string): string {
   return text.replace(/\s+/g, " ").trim();
+}
+
+function alignedReading(segments: PronunciationSegment[] | undefined, original: string, language: LearningLanguage): PronunciationSegment[] | undefined {
+  if (!segments || segments.map(segment => segment.text).join("") !== original) return undefined;
+  const cleaned: PronunciationSegment[] = segments.map(segment => {
+    const reading = segment.reading?.trim();
+    const valid = reading && (language === "ja" ? /^[\u3040-\u309fー\s。、!?！？]+$/u.test(reading)
+      : language === "ko" ? /^[\uac00-\ud7a3\s.,!?！？]+$/u.test(reading)
+        : /^\/.+\/$/u.test(reading));
+    return valid ? { ...segment, reading } : { text: segment.text };
+  });
+  return cleaned.some(segment => segment.reading) ? cleaned : undefined;
 }
 
 /** Resolve an exact phrase to original cue IDs, even when the words span adjacent cues. */
@@ -158,6 +170,7 @@ export function assembleStudyScene(
 /** Reject model-provided source references or examples that contradict the canonical scene. */
 export function assembleContextualScene(
   candidate: CandidateScene, cues: SubtitleCue[], raw: unknown, vocabularyLimit: number, exampleCount: number,
+  language: LearningLanguage = "en",
 ): StudySceneV3 {
   const content = ContextualSceneContentSchema.parse(raw);
   if (content.focusItems.length !== candidate.focusExpressions.length ||
@@ -172,6 +185,24 @@ export function assembleContextualScene(
   const selected = candidate.cueIds.map(id => byId.get(id));
   if (selected.some(cue => !cue)) throw new Error("Selected source subtitles no longer exist");
   const original = selected.map(cue => cue!);
+  const pronouncedCueIds = new Set<string>();
+  const pronunciations = content.pronunciations?.flatMap(item => {
+    const cue = original.find(source => source.id === item.cueId);
+    if (!cue || pronouncedCueIds.has(item.cueId)) return [];
+    const segments = alignedReading(item.segments, cue.originalText, language);
+    if (!segments) return [];
+    pronouncedCueIds.add(item.cueId);
+    return [{ cueId: item.cueId, segments }];
+  });
+  const focusItems = content.focusItems.map(item => ({
+    ...item,
+    examples: item.examples.map(example => ({
+      ...example,
+      dialogue: example.dialogue.map(line => ({
+        ...line, pronunciation: alignedReading(line.pronunciation, line.text, language),
+      })),
+    })),
+  }));
   const inScene = new Set(candidate.cueIds);
   const focusCueIds: string[] = [];
   for (const [index, item] of content.focusItems.entries()) {
@@ -203,7 +234,7 @@ export function assembleContextualScene(
   }
   const timed = original.every(cue => cue.startMs !== null && cue.endMs !== null);
   return StudySceneV3Schema.parse({
-    ...content, id: randomUUID(), learningGoal: candidate.learningGoal,
+    ...content, pronunciations, focusItems, id: randomUUID(), learningGoal: candidate.learningGoal,
     cueIds: candidate.cueIds, focusCueIds,
     startMs: timed ? Math.min(...original.map(cue => cue.startMs!)) : null,
     endMs: timed ? Math.max(...original.map(cue => cue.endMs!)) : null,
@@ -330,7 +361,8 @@ export async function runSceneGenerationPipeline(
         const raw = await generate(job.request.agent, prompt, signal);
         assertRunning(signal);
         try {
-          section = assembleContextualScene(candidate, job.request.cues, raw, vocabularyBudget, exampleCount);
+          section = assembleContextualScene(candidate, job.request.cues, raw, vocabularyBudget, exampleCount,
+            job.request.profile.targetLanguage);
           break;
         } catch (error) {
           if (!(error instanceof Error) ||

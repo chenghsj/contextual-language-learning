@@ -1,9 +1,10 @@
 import { cn } from "../lib/utils";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Play, Repeat2, SlidersHorizontal, Square } from "lucide-react";
-import { formatTime, type LearningDocument, type SubtitleCue } from "@immersive/core";
+import { formatTime, type LearningDocument, type PronunciationSegment, type SubtitleCue } from "@immersive/core";
 import type { UiLocale } from "../i18n/messages";
 import { contextualReaderMessages, contextualText } from "../i18n/contextual-reader";
+import { pronunciationCopy } from "../i18n/pronunciation";
 import { sceneReaderMessages } from "../i18n/scene-reader";
 import { playingCueAt } from "../video/cue-follow";
 import {
@@ -15,6 +16,7 @@ import type { VideoAdapter } from "../video/types";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { SelectField } from "./ui/select";
+import { defaultPronunciationMode, displayReading, pronunciationModes, type PronunciationMode } from "./pronunciation";
 
 type ContextualDocument = Extract<LearningDocument, { schemaVersion: 3 }>;
 type Repeat = "2" | "3" | "5" | "infinite";
@@ -26,20 +28,28 @@ type Props = {
   setRepeat: (repeat: Repeat) => void;
   delay: number;
   setDelay: (delay: number) => void;
+  sceneRepeat: Repeat;
+  setSceneRepeat: (repeat: Repeat) => void;
+  sceneDelay: number;
+  setSceneDelay: (delay: number) => void;
   playbackRate: number;
   setPlaybackRate: (rate: number) => void;
   onError: (message: string) => void;
-  onDownload: (format: "json" | "md") => void;
+  onNotice: (message: string) => void;
   onSaveRange: (cueId: string, range: LoopWindow | null) => Promise<void>;
   onSaveSceneRange: (sceneId: string, range: LoopWindow | null) => Promise<void>;
 };
 
 /** V3 is readable as one cohesive scene. V1/V2 keep their original reader. */
 export function ContextualSceneReader({
-  document, adapter, locale, repeat, setRepeat, delay, setDelay, playbackRate, setPlaybackRate, onError, onDownload, onSaveRange, onSaveSceneRange,
+  document, adapter, locale, repeat, setRepeat, delay, setDelay, sceneRepeat, setSceneRepeat, sceneDelay, setSceneDelay, playbackRate, setPlaybackRate, onError, onNotice, onSaveRange, onSaveSceneRange,
 }: Props) {
   const copy = contextualReaderMessages[locale];
   const timing = sceneReaderMessages[locale];
+  const targetLanguage = document.profile.targetLanguage;
+  const phonetics = pronunciationCopy(locale, targetLanguage);
+  const pronunciationKey = "pronunciationMode:" + targetLanguage;
+  const [pronunciationMode, setPronunciationMode] = useState<PronunciationMode>(() => defaultPronunciationMode(targetLanguage));
   const cues = useMemo(() => new Map(document.cues.map(cue => [cue.id, cue])), [document.cues]);
   const [sceneIndex, setSceneIndex] = useState(0);
   const [selectionByScene, setSelectionByScene] = useState<Record<string, string>>({});
@@ -58,6 +68,8 @@ export function ContextualSceneReader({
     readLoopWindows(document.scenePlaybackOverrides, document.sections.map(scene => scene.id)));
   const [calibrationOpen, setCalibrationOpen] = useState(false);
   const [calibrationScope, setCalibrationScope] = useState<"cue" | "scene">("cue");
+  const cueCalibrationOpen = calibrationOpen && calibrationScope === "cue";
+  const sceneCalibrationOpen = calibrationOpen && calibrationScope === "scene";
   const calibrationOpenRef = useRef(false);
   const [calibrationStage, setCalibrationStage] = useState<"start" | "end" | "confirm">("start");
   const [draftStartMs, setDraftStartMs] = useState<number | null>(null);
@@ -86,6 +98,34 @@ export function ContextualSceneReader({
     (isLoopWindow(sourceSceneRange) ? sourceSceneRange : null);
   const supportsCue = (cue: SubtitleCue | undefined): cue is SubtitleCue =>
     !!cue && cue.startMs !== null && cue.endMs !== null && cue.endMs > cue.startMs;
+
+  useEffect(() => {
+    let live = true;
+    setPronunciationMode(defaultPronunciationMode(targetLanguage));
+    void chrome.storage.local.get(pronunciationKey).then(saved => {
+      const candidate = saved[pronunciationKey] as PronunciationMode;
+      if (live && pronunciationModes(targetLanguage).includes(candidate)) setPronunciationMode(candidate);
+    }).catch(() => undefined);
+    return () => { live = false; };
+  }, [pronunciationKey, targetLanguage]);
+
+  function choosePronunciation(mode: PronunciationMode): void {
+    setPronunciationMode(mode);
+    void chrome.storage.local.set({ [pronunciationKey]: mode }).catch(() => undefined);
+  }
+
+  function annotatedText(text: string, segments?: PronunciationSegment[]): React.ReactNode {
+    if (pronunciationMode === "off" || !segments?.length || segments.map(item => item.text).join("") !== text) return text;
+    return segments.map((item, index) => {
+      const reading = displayReading(targetLanguage, pronunciationMode, item.reading);
+      if (reading && Array.from(item.text).length > 14) return <span key={index} className="inline-block max-w-full min-w-0 align-top">
+        <span className="block wrap-anywhere">{item.text}</span>
+        <span className="block text-[10px] leading-[1.6] text-muted-foreground wrap-anywhere">{reading}</span>
+      </span>;
+      return reading ? <ruby key={index} className="ruby-[position:over] leading-[2.2]">{item.text}<rp>(</rp><rt className="text-[10px] font-normal text-muted-foreground">{reading}</rt><rp>)</rp></ruby>
+        : <React.Fragment key={index}>{item.text}</React.Fragment>;
+    });
+  }
 
   useEffect(() => {
     let live = true;
@@ -212,7 +252,7 @@ export function ContextualSceneReader({
     try {
       await stopPreviousLoop();
       await adapter.loop(sourceUrl, { ...selectedSceneRange, repeats: 1, delaySeconds: 0 });
-      setStatus(copy.playbackStarted);
+      onNotice(copy.playbackStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally { markBusy(false); }
@@ -224,17 +264,17 @@ export function ContextualSceneReader({
     try {
       if (loopingSceneRef.current === scene.id) {
         await stopPreviousLoop();
-        setStatus(copy.sceneLoopStopped);
+        onNotice(copy.sceneLoopStopped);
       } else {
         await stopPreviousLoop();
         await adapter.loop(sourceUrl, {
           ...selectedSceneRange,
-          repeats: repeat === "infinite" ? "infinite" : Number(repeat),
-          delaySeconds: delay,
+          repeats: sceneRepeat === "infinite" ? "infinite" : Number(sceneRepeat),
+          delaySeconds: sceneDelay,
         });
         loopingSceneRef.current = scene.id;
         setLoopingSceneId(scene.id);
-        setStatus(copy.sceneLoopStarted);
+        onNotice(copy.sceneLoopStarted);
       }
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
@@ -257,9 +297,9 @@ export function ContextualSceneReader({
           delaySeconds: resumeLoop ? delay : 0,
         });
         if (resumeLoop) { loopingCueRef.current = cue.id; setLoopingCueId(cue.id); }
-        setStatus(resumeLoop ? copy.loopStarted : copy.playbackStarted);
+        onNotice(resumeLoop ? copy.loopStarted : copy.playbackStarted);
       } else if (play && !supportsCue(cue)) {
-        setStatus(copy.noTime);
+        onNotice(copy.noTime);
       } else {
         setStatus("");
       }
@@ -276,7 +316,7 @@ export function ContextualSceneReader({
     try {
       if (loopingCueId === selectedCue.id) {
         await stopPreviousLoop();
-        setStatus(copy.loopStopped);
+        onNotice(copy.loopStopped);
       } else {
         await stopPreviousLoop();
         await adapter.loop(sourceUrl, {
@@ -286,7 +326,7 @@ export function ContextualSceneReader({
         });
         loopingCueRef.current = selectedCue.id;
         setLoopingCueId(selectedCue.id);
-        setStatus(copy.loopStarted);
+        onNotice(copy.loopStarted);
       }
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
@@ -390,6 +430,22 @@ export function ContextualSceneReader({
     } finally { markBusy(false); }
   }
 
+  function keepCurrentBoundary(boundary: "start" | "end"): void {
+    const currentRange = calibrationScope === "scene" ? selectedSceneRange : selectedRange;
+    if (busyRef.current || !currentRange) return;
+    if (boundary === "start") {
+      setDraftStartMs(currentRange.startMs);
+      setCalibrationStage("end");
+    } else {
+      if (draftStartMs === null) return;
+      const next = { startMs: draftStartMs, endMs: currentRange.endMs };
+      if (!isLoopWindow(next)) { setStatus(timing.invalidLoopRange); return; }
+      setDraftRange(next);
+      setCalibrationStage("confirm");
+    }
+    setStatus("");
+  }
+
   async function finishCalibration(): Promise<void> {
     if (busyRef.current || calibrationStage !== "confirm" ||
         (calibrationScope === "cue" && !selectedCue)) return;
@@ -415,7 +471,7 @@ export function ContextualSceneReader({
           return updated;
         });
       }
-      setStatus(draftRange ? timing.loopRangeSaved : timing.loopRangeReset);
+      onNotice(draftRange ? timing.loopRangeSaved : timing.loopRangeReset);
       cancelCalibration();
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
@@ -440,7 +496,7 @@ export function ContextualSceneReader({
     markBusy(true);
     try {
       await openOrFocusVideoTab(adapter, sourceUrl);
-      setStatus(copy.videoOpened);
+      onNotice(copy.videoOpened);
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally {
@@ -453,11 +509,11 @@ export function ContextualSceneReader({
     const hasSavedRange = scope === "scene" ? !!sceneRanges[scene.id] :
       !!(selectedCue && loopRanges[selectedCue.id]);
     return calibrationOpen && calibrationScope === scope && currentRange && <section id={scope === "scene" ? "contextual-scene-calibration" : "contextual-inline-calibration"}
-        className="mt-2 grid gap-3 rounded-[var(--radius)] border border-sky-300 bg-sky-50 p-3 text-xs dark:border-sky-700 dark:bg-sky-950/30"
+        className="mt-2 grid gap-3 rounded-[var(--radius)] border border-border bg-muted/50 p-3 text-xs"
         aria-label={scope === "scene" ? copy.adjustScene : copy.adjustPosition}>
-        <div className="flex items-center gap-2 border-b border-sky-200 pb-2 font-semibold text-sky-900 dark:border-sky-800 dark:text-sky-100">
+        <div className="flex items-center gap-2 border-b border-border pb-2 font-semibold text-foreground">
           <SlidersHorizontal aria-hidden="true" className="size-4" />{scope === "scene" ? copy.adjustScene : copy.adjustPosition}
-          <span className="ml-auto rounded-full bg-sky-100 px-2 py-0.5 text-[11px] tabular-nums dark:bg-sky-900">
+          <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground tabular-nums">
             {calibrationStage === "start" ? "1 / 3" : calibrationStage === "end" ? "2 / 3" : "3 / 3"}
           </span>
         </div>
@@ -469,6 +525,8 @@ export function ContextualSceneReader({
             <Button size="sm" disabled={busy} onClick={() => void captureBoundary("start")}>
               {copy.markStart}
             </Button>
+            <Button size="sm" variant="outline" disabled={busy}
+              onClick={() => keepCurrentBoundary("start")}>{copy.keepStart}</Button>
             <Button size="sm" variant="ghost" disabled={busy} onClick={cancelCalibration}>
               {copy.cancelTiming}
             </Button>
@@ -482,6 +540,8 @@ export function ContextualSceneReader({
             <Button size="sm" disabled={busy} onClick={() => void captureBoundary("end")}>
               {copy.markEnd}
             </Button>
+            <Button size="sm" variant="outline" disabled={busy}
+              onClick={() => keepCurrentBoundary("end")}>{copy.keepEnd}</Button>
             <Button size="sm" variant="ghost" disabled={busy} onClick={cancelCalibration}>
               {copy.cancelTiming}
             </Button>
@@ -514,20 +574,28 @@ export function ContextualSceneReader({
             disabled={busy} onClick={() => { setDraftRange(null); setCalibrationStage("confirm"); }}>
             {copy.restoreTiming}
           </Button>}
+        {status && <p className="m-0 text-xs text-muted-foreground wrap-anywhere" role="status">{status}</p>}
       </section>;
   }
 
   return <div className="min-w-0">
     <Card className="mb-3 min-w-0 max-w-full p-3 wrap-anywhere">
-      <div className="flex min-w-0 items-center justify-between gap-2">
+      <div className="min-w-0">
         <div className="min-w-0 flex-1 [&>strong]:block [&>strong]:text-[13px] [&>strong]:wrap-anywhere [&_[data-ui=hint]]:my-[3px]">
           <strong>{document.source.title}</strong>
           <span className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</span>
         </div>
-        <div className="flex gap-[5px]">
-          <Button size="sm" variant="outline" onClick={() => onDownload("json")}>JSON</Button>
-          <Button size="sm" variant="outline" onClick={() => onDownload("md")}>MD</Button>
+      </div>
+      <div className="mt-2 min-w-0" role="group" aria-label={phonetics.title}>
+        <span className="mb-1 block text-[11px] font-semibold text-muted-foreground">{phonetics.title}</span>
+        <div className="flex min-w-0 flex-wrap gap-1">
+          {pronunciationModes(targetLanguage).map(mode => <Button key={mode} size="sm"
+            className="h-8 min-w-0 px-2 text-[11px]" variant={pronunciationMode === mode ? "secondary" : "outline"}
+            aria-pressed={pronunciationMode === mode} onClick={() => choosePronunciation(mode)}>
+            {phonetics.option(mode)}
+          </Button>)}
         </div>
+        {pronunciationMode === "zhuyin" && <p className="mt-1 text-[11px] text-muted-foreground">{phonetics.approximate}</p>}
       </div>
       <div className="mt-[10px] grid grid-cols-[36px_minmax(0,1fr)_36px] items-end gap-[7px] [&>div]:grid [&>div]:min-w-0 [&>div]:gap-1 [&>button]:size-9 [&_[data-slot=select-trigger]]:w-full">
         <Button variant="outline" size="icon" aria-label={copy.previousScene}
@@ -575,18 +643,30 @@ export function ContextualSceneReader({
           aria-pressed={loopingSceneId === scene.id} onClick={() => void toggleSceneLoop()}>
           {loopingSceneId === scene.id ? <Square aria-hidden="true" /> : <Repeat2 aria-hidden="true" />}
           {loopingSceneId === scene.id ? copy.stopSceneLoop : copy.loopScene + " · " +
-            (repeat === "infinite" ? "∞" : repeat + "×")}
+            (sceneRepeat === "infinite" ? "∞" : sceneRepeat + "×")}
         </Button>
       </div>
       {!canLoop && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{copy.noVideo}</p>}
-      {sourceUrl && adapter.status && adapter.loop && selectedSceneRange && <div className="mt-2 grid gap-2">
-        <Button variant="ghost" size="sm" className="w-fit" disabled={busy}
-          aria-expanded={calibrationOpen && calibrationScope === "scene"}
+      <div className="mt-2 grid grid-cols-2 gap-2 max-[355px]:grid-cols-1 [&>button]:h-auto [&>button]:min-h-9 [&>button]:whitespace-normal">
+        <details className="min-w-0 rounded-[var(--radius)] border border-border bg-muted/50 px-2 py-[7px] text-xs">
+          <summary className="cursor-pointer font-semibold text-foreground">{copy.sceneLoopOptions}</summary>
+          <div className="mt-2 grid grid-cols-2 gap-2 [&_[data-slot=select-trigger]]:w-full">
+            <label className="grid gap-1">{timing.repeat}<SelectField ariaLabel={copy.sceneLoopOptions + " · " + timing.repeat}
+              value={sceneRepeat} disabled={busy} onValueChange={value => setSceneRepeat(value as Repeat)}
+              options={[{ value: "2", label: "2×" }, { value: "3", label: "3×" }, { value: "5", label: "5×" }, { value: "infinite", label: "∞" }]} /></label>
+            <label className="grid gap-1">{timing.delay}<SelectField ariaLabel={copy.sceneLoopOptions + " · " + timing.delay}
+              value={String(sceneDelay)} disabled={busy} onValueChange={value => setSceneDelay(Number(value))}
+              options={[0, 1, 2, 3].map(value => ({ value: String(value), label: value + "s" }))} /></label>
+          </div>
+        </details>
+        {sourceUrl && adapter.status && adapter.loop && selectedSceneRange && !sceneCalibrationOpen && <Button variant="outline" size="sm" disabled={busy}
+          aria-expanded={false}
           aria-controls="contextual-scene-calibration"
-          onClick={() => calibrationOpen && calibrationScope === "scene"
-            ? cancelCalibration() : void openCalibration("scene")}>
+          onClick={() => void openCalibration("scene")}>
           <SlidersHorizontal aria-hidden="true" />{copy.adjustScene}
-        </Button>
+        </Button>}
+      </div>
+      {sourceUrl && adapter.status && adapter.loop && selectedSceneRange && <div className="mt-2 grid gap-2">
         {renderCalibration("scene")}
       </div>}
 
@@ -613,7 +693,7 @@ export function ContextualSceneReader({
             aria-pressed={selected} disabled={busy} onClick={() => void selectCue(cue.id)}>
             <span className="text-[11px] text-muted-foreground tabular-nums">{String(index + 1).padStart(2, "0")}</span>
             <span className="grid min-w-0 gap-[5px] wrap-anywhere">
-              <span lang={document.profile.targetLanguage}>{cue.originalText}</span>
+              <span lang={document.profile.targetLanguage}>{annotatedText(cue.originalText, scene.pronunciations?.find(item => item.cueId === cue.id)?.segments)}</span>
               {translationVisible && translation && <span className="block text-xs leading-[1.55] text-muted-foreground">{translation.text}</span>}
             </span>
             {focused && <span className="whitespace-nowrap rounded-[var(--radius)] border border-border px-[3px] py-px text-[10px] text-muted-foreground max-[355px]:col-start-2 max-[355px]:w-fit">{copy.focus}</span>}
@@ -657,7 +737,7 @@ export function ContextualSceneReader({
                   <p className="mb-2 text-[11px] leading-[1.6] text-muted-foreground">{example.situation}</p>
                   {example.dialogue.map((line, index) =>
                     <div key={index} className="mb-[7px] [&>p]:m-0 [&>p]:text-[13px] [&>p]:leading-[1.5] [&>p]:wrap-anywhere [&>p:not([lang])]:mt-[2px] [&>p:not([lang])]:text-xs">
-                      <p lang={document.profile.targetLanguage}>{line.text}</p>
+                      <p lang={document.profile.targetLanguage}>{annotatedText(line.text, line.pronunciation)}</p>
                       {show && <p className="block text-xs leading-[1.55] text-muted-foreground">{line.translation}</p>}
                     </div>)}
                   <Button size="sm" variant="ghost" onClick={() => setExampleTranslations(previous => ({
@@ -709,20 +789,10 @@ export function ContextualSceneReader({
           options={[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(rate => ({
             value: String(rate), label: rate + "×",
           }))} />}
-        <Button size="sm" variant="outline"
-          className="col-span-4 h-9 w-full min-[480px]:col-span-1" aria-label={copy.adjustPosition}
-          aria-expanded={calibrationOpen && calibrationScope === "cue"} aria-controls="contextual-inline-calibration"
-          disabled={busy || !selectedRange || !adapter.status}
-          onClick={() => calibrationOpen && calibrationScope === "cue"
-             ? cancelCalibration() : void openCalibration("cue")}>
-          <SlidersHorizontal aria-hidden="true" />{copy.adjustShort}
-        </Button>
       </div>
-
-
-      {renderCalibration("cue")}
-      <details className="mt-2 rounded-[var(--radius)] border border-border px-2 py-[6px] text-xs">
-        <summary className="cursor-pointer font-semibold text-muted-foreground">{copy.loopOptions}</summary>
+      <div className="mt-2 grid grid-cols-2 gap-2 max-[355px]:grid-cols-1">
+      <details className="min-w-0 rounded-[var(--radius)] border border-border bg-muted/50 px-2 py-[6px] text-xs">
+        <summary className="cursor-pointer font-semibold text-foreground">{copy.cueLoopOptions}</summary>
         <div className="mt-2 grid grid-cols-2 gap-2 [&_[data-slot=select-trigger]]:w-full">
           <label className="grid gap-1">{timing.repeat}
             <SelectField ariaLabel={timing.repeat} value={repeat} disabled={busy}
@@ -739,7 +809,14 @@ export function ContextualSceneReader({
           </label>
         </div>
       </details>
-      {status && <p className="mt-[5px] text-[11px] text-muted-foreground wrap-anywhere" role="status">{status}</p>}
+      {!cueCalibrationOpen && <Button size="sm" variant="outline" className="h-auto min-h-9 whitespace-normal"
+        aria-expanded={false} aria-controls="contextual-inline-calibration"
+        disabled={busy || !selectedRange || !adapter.status}
+        onClick={() => void openCalibration("cue")}>
+        <SlidersHorizontal aria-hidden="true" />{copy.adjustPosition}
+      </Button>}
+      </div>
+      {renderCalibration("cue")}
     </div>}
   </div>;
 }

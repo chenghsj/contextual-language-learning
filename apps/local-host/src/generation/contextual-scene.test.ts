@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GenerationRequestSchema, LearningDocumentSchema, readLearningDocument } from "@immersive/core";
+import { GenerationRequestSchema, LearningDocumentSchema, compactStudyExport, readLearningDocument } from "@immersive/core";
 import { JobManager } from "../jobs/manager";
 import { localStoragePorts } from "../storage/file";
 import { toMarkdown } from "./markdown";
@@ -72,6 +72,55 @@ test("V3 maps contextual learning to original cue times, counts and saved docume
   assert.equal(doc.sections[0].focusItems[0].examples.length, 2);
   assert.match(toMarkdown(doc), /AI-created contextual examples/);
   assert.doesNotMatch(toMarkdown(doc), /### Practice/);
+});
+
+test("V3 keeps only pronunciation segments aligned with unchanged source and example text", () => {
+  const input = content();
+  const section = assembleContextualScene(candidate, cues, {
+    ...input,
+    pronunciations: [
+      { cueId: "cue-2", segments: [{ text: "I haven't decided yet.", reading: "/aɪ hævənt dɪˈsaɪdɪd jɛt/" }] },
+      { cueId: "cue-1", segments: [{ text: "Wrong text", reading: "/rɔŋ/" }] },
+      { cueId: "cue-404", segments: [{ text: "Invented", reading: "/ɪnˈvɛntɪd/" }] },
+    ],
+    focusItems: [{ ...input.focusItems[0], examples: [
+      { ...examples[0], dialogue: [
+        { ...examples[0].dialogue[0], pronunciation: [{ text: "Mismatch", reading: "/x/" }] },
+        { ...examples[0].dialogue[1], pronunciation: [{ text: "I haven't decided yet.", reading: "/aɪ hævənt dɪˈsaɪdɪd jɛt/" }] },
+      ] },
+      examples[1],
+    ] }],
+  }, 1, 2);
+  assert.deepEqual(section.pronunciations?.map(item => item.cueId), ["cue-2"]);
+  assert.equal(section.focusItems[0].examples[0].dialogue[0].pronunciation, undefined);
+  assert.ok(section.focusItems[0].examples[0].dialogue[1].pronunciation);
+  const doc = LearningDocumentSchema.parse({
+    id: randomUUID(), schemaVersion: 3, createdAt: new Date().toISOString(),
+    source: { platform: "import", title: "Example" }, profile: request().profile,
+    generation: { provider: "custom-" + "a".repeat(24), modelId: "" }, cues, sections: [section],
+  });
+  assert.equal(readLearningDocument(doc).schemaVersion, 3);
+  assert.match(toMarkdown(doc), /Pronunciation: I haven't decided yet/);
+  const imported = LearningDocumentSchema.parse(JSON.parse(JSON.stringify(compactStudyExport(doc))));
+  assert.equal(imported.schemaVersion, 3);
+  if (imported.schemaVersion !== 3) throw new Error("Unexpected lesson version");
+  assert.equal(imported.sections[0].pronunciations?.[0].segments[0].reading, "/aɪ hævənt dɪˈsaɪdɪd jɛt/");
+});
+
+test("V3 omits readings in the wrong script while preserving exact source text", () => {
+  const input = content();
+  const annotated = {
+    ...input,
+    pronunciations: [{ cueId: "cue-2", segments: [{ text: "I haven't decided yet.", reading: "kinou" }] }],
+  };
+  assert.equal(assembleContextualScene(candidate, cues, annotated, 1, 2, "ja").pronunciations?.length, 0);
+  assert.equal(assembleContextualScene(candidate, cues, annotated, 1, 2, "ko").pronunciations?.length, 0);
+  assert.equal(assembleContextualScene(candidate, cues, annotated, 1, 2, "th").pronunciations?.length, 0);
+  const japanese = assembleContextualScene(candidate, cues, {
+    ...annotated, pronunciations: [{ cueId: "cue-2", segments: [{ text: "I haven't decided yet.", reading: "きのう" }] }],
+  }, 1, 2, "ja");
+  assert.equal(japanese.pronunciations?.[0].segments[0].reading, "きのう");
+  assert.equal(cues[1].originalText, "I haven't decided yet.");
 });
 
 test("V3 rejects invented cue references, ungrounded word notes and invalid examples", () => {

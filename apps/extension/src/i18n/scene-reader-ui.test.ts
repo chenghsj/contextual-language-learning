@@ -58,7 +58,7 @@ function renderReader(locale: UiLocale, withVideo = false): string {
     repeat: "2", setRepeat: () => undefined,
     delay: 0, setDelay: () => undefined,
     playbackRate: 1, setPlaybackRate: () => undefined,
-    onError: () => undefined, onDownload: () => undefined,
+    onError: () => undefined, onNotice: () => undefined, onDownload: () => undefined,
   }));
 }
 

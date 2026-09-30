@@ -14,9 +14,9 @@ const en = {
   playback: "Sentence playback", videoOpened: "Original video opened.", loopStarted: "Repeating the selected sentence.",
   loopStopped: "Loop stopped.", sceneLoopStarted: "Repeating the whole scene.", sceneLoopStopped: "Scene loop stopped.", playbackStarted: "Playing the selected video segment.",
   subtitleNotice: "Select a line to play it in the original video. Its time comes from the source captions.",
-  selected: "Selected sentence", showWordNotes: "Show word notes", hideWordNotes: "Hide word notes",adjustPosition:"Adjust playback timing",close:"Close",playing:"Playing sentence",
-  adjustShort:"Adjust",adjustScene:"Adjust scene timing",calibrateSceneStart:"Move the video to the start of this whole scene.",calibrateSceneEnd:"Move the video to the end of this whole scene.",adjusted:"Adjusted",rewind3:"Rewind 3s",rewound:"Rewound 3 seconds. Play and mark the start when ready.",startEarlier:"Start 0.5s earlier",startLater:"Start 0.5s later",preview:"Preview selected range",previewStarted:"Playing the unsaved preview.",
-  calibrateStart:"Move the video to where this sentence begins.",calibrateEnd:"Move the video to where this sentence ends.",markStart:"Start here",markEnd:"End here",saveTiming:"Done",cancelTiming:"Cancel",restoreTiming:"Restore subtitle timing",loopOptions:"Loop settings",
+  selected: "Selected sentence", showWordNotes: "Show word notes", hideWordNotes: "Hide word notes",adjustPosition:"Adjust sentence timing",close:"Close",playing:"Playing sentence",
+  adjustScene:"Adjust scene timing",calibrateSceneStart:"Move the video to the start of this whole scene.",calibrateSceneEnd:"Move the video to the end of this whole scene.",adjusted:"Adjusted",rewind3:"Rewind 3s",rewound:"Rewound 3 seconds. Play and mark the start when ready.",startEarlier:"Start 0.5s earlier",startLater:"Start 0.5s later",preview:"Preview selected range",previewStarted:"Playing the unsaved preview.",
+  calibrateStart:"Move the video to where this sentence begins.",calibrateEnd:"Move the video to where this sentence ends.",markStart:"Start here",markEnd:"End here",keepStart:"Keep current start",keepEnd:"Keep current end",saveTiming:"Done",cancelTiming:"Cancel",restoreTiming:"Restore subtitle timing",loopOptions:"Loop settings",sceneLoopOptions:"Scene loop settings",cueLoopOptions:"Sentence loop settings",
 } as const;
 type Keys = keyof typeof en;
 export type ContextualReaderCopy = Record<Keys, string>;
@@ -34,9 +34,9 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
     playback:"句子播放",videoOpened:"已開啟原影片。",loopStarted:"正在循環目前句子。",
     loopStopped:"已停止循環。",sceneLoopStarted:"正在循環完整場景。",sceneLoopStopped:"已停止場景循環。",playbackStarted:"正在播放選定片段。",
     subtitleNotice:"點選句子可播放影片原聲，時間以原始字幕為準。",
-    selected:"目前選取的句子",showWordNotes:"顯示單字說明",hideWordNotes:"收起單字說明",adjustPosition:"調整播放位置",close:"關閉",playing:"播放中的句子",
-    adjustShort:"調整",adjustScene:"調整場景時間",calibrateSceneStart:"把影片移到整段對話開始的位置",calibrateSceneEnd:"把影片移到整段對話結束的位置",adjusted:"已調整",rewind3:"倒退 3 秒",rewound:"已倒退 3 秒，可重聽並設定開頭。",startEarlier:"開頭提前 0.5 秒",startLater:"開頭延後 0.5 秒",preview:"試聽調整範圍",previewStarted:"正在試聽尚未儲存的範圍。",
-    calibrateStart:"把影片移到這句話開始的位置",calibrateEnd:"把影片移到這句話結束的位置",markStart:"這裡開始",markEnd:"這裡結束",saveTiming:"完成",cancelTiming:"取消",restoreTiming:"恢復字幕時間",loopOptions:"循環設定",
+    selected:"目前選取的句子",showWordNotes:"顯示單字說明",hideWordNotes:"收起單字說明",adjustPosition:"調整句子時間",close:"關閉",playing:"播放中的句子",
+    adjustScene:"調整場景時間",calibrateSceneStart:"把影片移到整段對話開始的位置",calibrateSceneEnd:"把影片移到整段對話結束的位置",adjusted:"已調整",rewind3:"倒退 3 秒",rewound:"已倒退 3 秒，可重聽並設定開頭。",startEarlier:"開頭提前 0.5 秒",startLater:"開頭延後 0.5 秒",preview:"試聽調整範圍",previewStarted:"正在試聽尚未儲存的範圍。",
+    calibrateStart:"把影片移到這句話開始的位置",calibrateEnd:"把影片移到這句話結束的位置",markStart:"這裡開始",markEnd:"這裡結束",keepStart:"沿用目前開頭",keepEnd:"沿用目前結尾",saveTiming:"完成",cancelTiming:"取消",restoreTiming:"恢復字幕時間",loopOptions:"循環設定",sceneLoopOptions:"場景循環設定",cueLoopOptions:"句子循環設定",
   },
   "zh-CN": {
     scene:"场景",chooseScene:"直接选择场景",previousScene:"上一场景",nextScene:"下一场景",
@@ -50,9 +50,9 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
     playback:"句子播放",videoOpened:"已打开原视频。",loopStarted:"正在循环当前句子。",
     loopStopped:"已停止循环。",sceneLoopStarted:"正在循环完整场景。",sceneLoopStopped:"已停止场景循环。",playbackStarted:"正在播放选定片段。",
     subtitleNotice:"点击句子可播放视频原声，时间以原始字幕为准。",
-    selected:"当前选中的句子",showWordNotes:"显示单词说明",hideWordNotes:"收起单词说明",adjustPosition:"调整播放位置",close:"关闭",playing:"播放中的句子",
-    adjustShort:"调整",adjustScene:"调整场景时间",calibrateSceneStart:"把视频移到整段对话开始的位置",calibrateSceneEnd:"把视频移到整段对话结束的位置",adjusted:"已调整",rewind3:"倒退 3 秒",rewound:"已倒退 3 秒，可以重听并设置开头。",startEarlier:"开头提前 0.5 秒",startLater:"开头延后 0.5 秒",preview:"试听调整范围",previewStarted:"正在试听尚未保存的范围。",
-    calibrateStart:"把视频移到这句话开始的位置",calibrateEnd:"把视频移到这句话结束的位置",markStart:"这里开始",markEnd:"这里结束",saveTiming:"完成",cancelTiming:"取消",restoreTiming:"恢复字幕时间",loopOptions:"循环设置",
+    selected:"当前选中的句子",showWordNotes:"显示单词说明",hideWordNotes:"收起单词说明",adjustPosition:"调整句子时间",close:"关闭",playing:"播放中的句子",
+    adjustScene:"调整场景时间",calibrateSceneStart:"把视频移到整段对话开始的位置",calibrateSceneEnd:"把视频移到整段对话结束的位置",adjusted:"已调整",rewind3:"倒退 3 秒",rewound:"已倒退 3 秒，可以重听并设置开头。",startEarlier:"开头提前 0.5 秒",startLater:"开头延后 0.5 秒",preview:"试听调整范围",previewStarted:"正在试听尚未保存的范围。",
+    calibrateStart:"把视频移到这句话开始的位置",calibrateEnd:"把视频移到这句话结束的位置",markStart:"这里开始",markEnd:"这里结束",keepStart:"沿用当前开头",keepEnd:"沿用当前结尾",saveTiming:"完成",cancelTiming:"取消",restoreTiming:"恢复字幕时间",loopOptions:"循环设置",sceneLoopOptions:"场景循环设置",cueLoopOptions:"句子循环设置",
   },
   ja: {
     scene:"シーン",chooseScene:"シーンを選択",previousScene:"前のシーン",nextScene:"次のシーン",
@@ -66,9 +66,9 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
     playback:"文の再生",videoOpened:"元の動画を開きました。",loopStarted:"選択した文を繰り返し再生中。",
     loopStopped:"ループを停止しました。",sceneLoopStarted:"シーン全体を繰り返し再生中。",sceneLoopStopped:"シーンのループを停止しました。",playbackStarted:"選択した動画の一部を再生中。",
     subtitleNotice:"文を選ぶと元の動画を再生します。時刻は元の字幕に基づきます。",
-    selected:"選択中の文",showWordNotes:"単語の解説を表示",hideWordNotes:"単語の解説を閉じる",adjustPosition:"再生位置を調整",close:"閉じる",playing:"再生中の文",
-    adjustShort:"調整",adjustScene:"シーンの再生範囲を調整",calibrateSceneStart:"動画をこのシーン全体の開始位置に移動してください",calibrateSceneEnd:"動画をこのシーン全体の終了位置に移動してください",adjusted:"調整済み",rewind3:"3 秒戻す",rewound:"3 秒戻しました。再生して開始位置を指定できます。",startEarlier:"開始を 0.5 秒早める",startLater:"開始を 0.5 秒遅らせる",preview:"調整範囲を試聴",previewStarted:"保存前の範囲を試聴中です。",
-    calibrateStart:"動画をこの文の開始位置に移動してください",calibrateEnd:"動画をこの文の終了位置に移動してください",markStart:"ここから開始",markEnd:"ここで終了",saveTiming:"完了",cancelTiming:"キャンセル",restoreTiming:"字幕の時刻に戻す",loopOptions:"ループ設定",
+    selected:"選択中の文",showWordNotes:"単語の解説を表示",hideWordNotes:"単語の解説を閉じる",adjustPosition:"文の再生時間を調整",close:"閉じる",playing:"再生中の文",
+    adjustScene:"シーンの再生範囲を調整",calibrateSceneStart:"動画をこのシーン全体の開始位置に移動してください",calibrateSceneEnd:"動画をこのシーン全体の終了位置に移動してください",adjusted:"調整済み",rewind3:"3 秒戻す",rewound:"3 秒戻しました。再生して開始位置を指定できます。",startEarlier:"開始を 0.5 秒早める",startLater:"開始を 0.5 秒遅らせる",preview:"調整範囲を試聴",previewStarted:"保存前の範囲を試聴中です。",
+    calibrateStart:"動画をこの文の開始位置に移動してください",calibrateEnd:"動画をこの文の終了位置に移動してください",markStart:"ここから開始",markEnd:"ここで終了",keepStart:"現在の開始位置を使う",keepEnd:"現在の終了位置を使う",saveTiming:"完了",cancelTiming:"キャンセル",restoreTiming:"字幕の時刻に戻す",loopOptions:"ループ設定",sceneLoopOptions:"シーンのループ設定",cueLoopOptions:"文のループ設定",
   },
   ko: {
     scene:"장면",chooseScene:"장면 선택",previousScene:"이전 장면",nextScene:"다음 장면",
@@ -82,9 +82,9 @@ export const contextualReaderMessages: Record<UiLocale, ContextualReaderCopy> = 
     playback:"문장 재생",videoOpened:"원본 동영상을 열었습니다.",loopStarted:"선택한 문장을 반복 재생 중입니다.",
     loopStopped:"반복을 중지했습니다.",sceneLoopStarted:"전체 장면을 반복 재생 중입니다.",sceneLoopStopped:"장면 반복을 중지했습니다.",playbackStarted:"선택한 영상 구간을 재생 중입니다.",
     subtitleNotice:"문장을 선택하면 원본 영상을 재생합니다. 시간은 원본 자막을 따릅니다.",
-    selected:"선택한 문장",showWordNotes:"단어 설명 보기",hideWordNotes:"단어 설명 접기",adjustPosition:"재생 위치 조정",close:"닫기",playing:"재생 중인 문장",
-    adjustShort:"조정",adjustScene:"장면 재생 위치 조정",calibrateSceneStart:"동영상을 전체 장면의 시작 위치로 이동하세요",calibrateSceneEnd:"동영상을 전체 장면의 종료 위치로 이동하세요",adjusted:"조정됨",rewind3:"3초 뒤로",rewound:"3초 되돌렸습니다. 다시 듣고 시작 위치를 지정하세요.",startEarlier:"시작 0.5초 앞당기기",startLater:"시작 0.5초 늦추기",preview:"조정 구간 미리 듣기",previewStarted:"저장 전 구간을 미리 재생합니다.",
-    calibrateStart:"동영상을 이 문장의 시작 위치로 이동하세요",calibrateEnd:"동영상을 이 문장의 끝 위치로 이동하세요",markStart:"여기서 시작",markEnd:"여기서 종료",saveTiming:"완료",cancelTiming:"취소",restoreTiming:"자막 시간 복원",loopOptions:"반복 설정",
+    selected:"선택한 문장",showWordNotes:"단어 설명 보기",hideWordNotes:"단어 설명 접기",adjustPosition:"문장 재생 시간 조정",close:"닫기",playing:"재생 중인 문장",
+    adjustScene:"장면 재생 위치 조정",calibrateSceneStart:"동영상을 전체 장면의 시작 위치로 이동하세요",calibrateSceneEnd:"동영상을 전체 장면의 종료 위치로 이동하세요",adjusted:"조정됨",rewind3:"3초 뒤로",rewound:"3초 되돌렸습니다. 다시 듣고 시작 위치를 지정하세요.",startEarlier:"시작 0.5초 앞당기기",startLater:"시작 0.5초 늦추기",preview:"조정 구간 미리 듣기",previewStarted:"저장 전 구간을 미리 재생합니다.",
+    calibrateStart:"동영상을 이 문장의 시작 위치로 이동하세요",calibrateEnd:"동영상을 이 문장의 끝 위치로 이동하세요",markStart:"여기서 시작",markEnd:"여기서 종료",keepStart:"현재 시작 위치 사용",keepEnd:"현재 종료 위치 사용",saveTiming:"완료",cancelTiming:"취소",restoreTiming:"자막 시간 복원",loopOptions:"반복 설정",sceneLoopOptions:"장면 반복 설정",cueLoopOptions:"문장 반복 설정",
   },
 };
 export function contextualText(template: string, params: Record<string, number | string>): string {

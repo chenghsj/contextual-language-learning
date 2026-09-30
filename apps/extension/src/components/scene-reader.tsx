@@ -33,6 +33,7 @@ type Props = {
   playbackRate: number;
   setPlaybackRate: (value: number) => void;
   onError: (message: string) => void;
+  onNotice: (message: string) => void;
   onDownload: (format: "json" | "md") => void;
 };
 
@@ -42,7 +43,7 @@ function focusCue(scene: StudyScene, cues: ReadonlyMap<string, SubtitleCue>): Su
 
 export function SceneReader({
   document, adapter, locale, repeat, setRepeat, delay, setDelay, playbackRate,
-  setPlaybackRate, onError, onDownload,
+  setPlaybackRate, onError, onNotice, onDownload,
 }: Props) {
   const c = sceneReaderMessages[locale];
   const [mode, setMode] = useState<Mode>("learn");
@@ -143,7 +144,7 @@ export function SceneReader({
     setBusy(true);
     try {
       await openOrFocusVideoTab(adapter, sourceUrl);
-      setStatus(c.videoOpened);
+      onNotice(c.videoOpened);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
     } finally {
@@ -160,7 +161,7 @@ export function SceneReader({
         repeats: 1, delaySeconds: 0,
       });
       setLoopingSceneId(null);
-      setStatus(c.playbackStarted);
+      onNotice(c.playbackStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
     } finally {
@@ -178,7 +179,7 @@ export function SceneReader({
         delaySeconds: isLoop ? delay : 0,
       });
       setLoopingSceneId(isLoop ? scene.id : null);
-      setStatus(isLoop ? c.loopStarted : c.playbackStarted);
+      onNotice(isLoop ? c.loopStarted : c.playbackStarted);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
     } finally {
@@ -192,7 +193,7 @@ export function SceneReader({
     try {
       await adapter.stopLoop(sourceUrl);
       setLoopingSceneId(null);
-      setStatus(c.loopStopped);
+      onNotice(c.loopStopped);
     } catch (error) {
       onError(error instanceof Error ? error.message : c.unavailable);
     } finally {

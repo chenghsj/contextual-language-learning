@@ -18,15 +18,20 @@ export function nativeLanguageName(locale: UiLocale): string {
 /** Study/explanation selectors use the active interface language, not endonyms or system locale. */
 export const LEARNING_LANGUAGE_LABELS: Readonly<Record<UiLocale, Readonly<Record<LearningLanguage, string>>>> = {
   "en": { en: "English", ja: "Japanese", ko: "Korean", es: "Spanish",
-    fr: "French", de: "German", it: "Italian", pt: "Portuguese" },
+    fr: "French", de: "German", it: "Italian", pt: "Portuguese",
+    id: "Indonesian", th: "Thai", ms: "Malay", vi: "Vietnamese" },
   "zh-TW": { en: "英語", ja: "日語", ko: "韓語", es: "西班牙語",
-    fr: "法語", de: "德語", it: "義大利語", pt: "葡萄牙語" },
+    fr: "法語", de: "德語", it: "義大利語", pt: "葡萄牙語",
+    id: "印尼語", th: "泰語", ms: "馬來語", vi: "越南語" },
   "zh-CN": { en: "英语", ja: "日语", ko: "韩语", es: "西班牙语",
-    fr: "法语", de: "德语", it: "意大利语", pt: "葡萄牙语" },
+    fr: "法语", de: "德语", it: "意大利语", pt: "葡萄牙语",
+    id: "印尼语", th: "泰语", ms: "马来语", vi: "越南语" },
   "ja": { en: "英語", ja: "日本語", ko: "韓国語", es: "スペイン語",
-    fr: "フランス語", de: "ドイツ語", it: "イタリア語", pt: "ポルトガル語" },
+    fr: "フランス語", de: "ドイツ語", it: "イタリア語", pt: "ポルトガル語",
+    id: "インドネシア語", th: "タイ語", ms: "マレー語", vi: "ベトナム語" },
   "ko": { en: "영어", ja: "일본어", ko: "한국어", es: "스페인어",
-    fr: "프랑스어", de: "독일어", it: "이탈리아어", pt: "포르투갈어" },
+    fr: "프랑스어", de: "독일어", it: "이탈리아어", pt: "포르투갈어",
+    id: "인도네시아어", th: "태국어", ms: "말레이어", vi: "베트남어" },
 };
 const CHINESE_EXPLANATION_LABELS: Readonly<Record<UiLocale, Readonly<Record<"zh-TW" | "zh-CN", string>>>> = {
   "en": { "zh-TW": "Traditional Chinese", "zh-CN": "Simplified Chinese" },
@@ -38,6 +43,13 @@ const CHINESE_EXPLANATION_LABELS: Readonly<Record<UiLocale, Readonly<Record<"zh-
 export function learningLanguageName(language: LearningLanguage, locale: UiLocale): string {
   return LEARNING_LANGUAGE_LABELS[locale][language];
 }
+export const LEARNING_LANGUAGE_GROUP_LABELS: Readonly<Record<UiLocale, { featured: string; more: string }>> = {
+  en: { featured: "Common languages", more: "More languages" },
+  "zh-TW": { featured: "常用語言", more: "更多語言" },
+  "zh-CN": { featured: "常用语言", more: "更多语言" },
+  ja: { featured: "主な言語", more: "その他の言語" },
+  ko: { featured: "주요 언어", more: "다른 언어" },
+};
 export function explanationLanguageName(language: ExplanationLanguage, locale: UiLocale): string {
   return language === "zh-TW" || language === "zh-CN"
     ? CHINESE_EXPLANATION_LABELS[locale][language]

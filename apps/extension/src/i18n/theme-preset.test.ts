@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
 const button = await readFile(new URL("../components/ui/button.tsx", import.meta.url), "utf8");
 const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+const notice = await readFile(new URL("../components/notice-viewport.tsx", import.meta.url), "utf8");
 const card = await readFile(new URL("../components/ui/card.tsx", import.meta.url), "utf8");
 const info = await readFile(new URL("../components/setting-info.tsx", import.meta.url), "utf8");
 const legacy = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
@@ -78,7 +79,7 @@ test("button variants and utility feedback use theme tokens instead of the old f
   assert.doesNotMatch(button, /bg-red-600|bg-red-700/);
   assert.doesNotMatch(css, /#(?:f8faf9|17231f|e7f4ec|f3c0b5|fff0ec|e9f4fb|79b18d)/i);
   assert.ok(app.includes("var(--primary)_35%"));
-  assert.ok(app.includes("var(--destructive)_55%"));
+  assert.ok(notice.includes("var(--destructive)_55%"));
   assert.match(css, /@layer base \{/);
   assert.doesNotMatch(css, /^\.(?!dark\b)[A-Za-z][\w-]*\s*\{/gm,
     "component selectors must be replaced by Tailwind v4 utilities");

@@ -1,7 +1,12 @@
-import type { LearningDocument } from "./schema";
+import type { LearningDocument, PronunciationSegment } from "./schema";
 
 function safeMarkdown(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/([*_[\]#<>])/g, "\\$1");
+}
+
+function pronunciationText(segments: PronunciationSegment[]): string {
+  return segments.map(segment => safeMarkdown(segment.text) +
+    (segment.reading ? " (" + safeMarkdown(segment.reading) + ")" : "")).join("");
 }
 
 /** One canonical Markdown representation is shared by the Native Host, Drive backup and extension download. */
@@ -20,6 +25,10 @@ export function learningDocumentToMarkdown(doc: LearningDocument): string {
       const translation = "translations" in section
         ? section.translations.find(item => item.cueId === id)?.text : undefined;
       parts.push("> " + time + safeMarkdown(cue.originalText));
+      if ("pronunciations" in section) {
+        const reading = section.pronunciations?.find(item => item.cueId === id);
+        if (reading) parts.push("> Pronunciation: " + pronunciationText(reading.segments));
+      }
       if (translation) parts.push("> " + safeMarkdown(translation));
     }
     if ("focusItems" in section) {
@@ -36,6 +45,7 @@ export function learningDocumentToMarkdown(doc: LearningDocument): string {
           parts.push("- " + safeMarkdown(example.situation));
           for (const line of example.dialogue) {
             parts.push("  - " + safeMarkdown(line.text) + " — " + safeMarkdown(line.translation));
+            if (line.pronunciation) parts.push("    - Pronunciation: " + pronunciationText(line.pronunciation));
           }
         }
         parts.push("");

@@ -20,6 +20,10 @@ test("accepts same-language regional caption tracks and rejects other languages"
   assert.equal(subtitleLanguageMatches("ja", "ja_JP"), true);
   assert.equal(subtitleLanguageMatches("ja", "en"), false);
   assert.equal(subtitleLanguageMatches("en", "english"), false);
+  for (const [language, regional] of [["id", "id-ID"], ["th", "th-TH"], ["ms", "ms-MY"], ["vi", "vi-VN"]] as const) {
+    assert.equal(subtitleLanguageMatches(language, regional), true);
+    assert.equal(subtitleLanguageMatches(language, "en-US"), false);
+  }
 });
 
 test("generation requires a matching requested and actual caption language and video", () => {

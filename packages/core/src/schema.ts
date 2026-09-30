@@ -209,9 +209,20 @@ export const ContextualWordNoteSchema = z.object({
   meaning: z.string().min(1).max(400),
   explanation: z.string().min(1).max(700),
 });
+/** Segments concatenate to the unchanged source text; reading is omitted when uncertain. */
+export const PronunciationSegmentSchema = z.object({
+  text: z.string().min(1).max(500),
+  reading: z.string().min(1).max(200).optional(),
+});
+export type PronunciationSegment = z.infer<typeof PronunciationSegmentSchema>;
+export const CuePronunciationSchema = z.object({
+  cueId: z.string().min(1).max(80),
+  segments: z.array(PronunciationSegmentSchema).min(1).max(100),
+});
 export const ContextualDialogueLineSchema = z.object({
   text: z.string().min(1).max(500),
   translation: z.string().min(1).max(700),
+  pronunciation: z.array(PronunciationSegmentSchema).min(1).max(100).optional().catch(undefined),
 });
 export const ContextualExampleSchema = z.object({
   situation: z.string().min(1).max(450),
@@ -231,10 +242,12 @@ export const ContextualSceneContentSchema = z.object({
   title: z.string().min(1).max(180),
   context: z.string().min(1).max(2400),
   translations: z.array(StudyTranslationSchema).min(1).max(10),
+  pronunciations: z.array(CuePronunciationSchema).max(10).optional().catch(undefined),
   focusItems: z.array(ContextualFocusSchema).min(1).max(2),
 });
 export const StudySceneV3Schema = StudySceneSchema.extend({
   focusItems: z.array(ContextualFocusSchema).min(1).max(2),
+  pronunciations: z.array(CuePronunciationSchema).max(10).optional().catch(undefined),
 });
 export type StudySceneV3 = z.infer<typeof StudySceneV3Schema>;
 

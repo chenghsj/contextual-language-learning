@@ -53,6 +53,6 @@ test("failed generation updates the progress status and refreshing tasks preserv
   assert.match(app, /function jobStatusLine\(summary: JobSummary\)/);
   assert.match(app, /lastJobSummaryRef\.current = summary;/);
   assert.match(app, /const current = message\.jobs\.find\(job => job\.id === lastJobIdRef\.current\);/);
-  const load = app.slice(app.indexOf("function loadJobs(): void"), app.indexOf("function openSavedDocument("));
+  const load = app.slice(app.indexOf("function loadJobs(): void"), app.indexOf("function fetchSavedDocument("));
   assert.doesNotMatch(load, /setError\(" "\)|setError\(""\)/);
 });

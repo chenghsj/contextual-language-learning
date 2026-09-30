@@ -191,8 +191,8 @@ test("level tooltip displays the complete scale for the selected language in eve
   }
 });
 
-test("all eight learning languages have localized names, levels and help without changing interface language", () => {
-  const added = ["es", "fr", "de", "it", "pt"] as const;
+test("all twelve learning languages have localized names, levels and help without changing interface language", () => {
+  const added = ["es", "fr", "de", "it", "pt", "id", "th", "ms", "vi"] as const;
   assert.deepEqual(LEARNING_LANGUAGES, ["en", "ja", "ko", ...added]);
   for (const locale of locales) {
     const copy = learningSettingsCopy[locale];

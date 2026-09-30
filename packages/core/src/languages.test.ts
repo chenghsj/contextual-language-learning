@@ -29,7 +29,9 @@ test("language choices are valid in saved learning profiles independently of int
   }));
 });
 
-test("European languages share CEFR without overwriting Japanese or Korean levels", () => {
+test("ten languages share CEFR without overwriting Japanese or Korean levels", () => {
+  assert.equal(LEARNING_LANGUAGES.length, 12);
+  assert.equal(EXPLANATION_LANGUAGES.length, 14);
   for (const language of CEFR_LANGUAGES) {
     assert.deepEqual(levelsForTargetLanguage(language), ["A1", "A2", "B1", "B2", "C1", "C2"]);
   }

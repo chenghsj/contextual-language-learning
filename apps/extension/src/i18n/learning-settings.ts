@@ -625,7 +625,7 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
 };
 
 type AddedLanguage = Exclude<LearningLanguage, OriginalTarget>;
-const ADDED_LANGUAGES: readonly AddedLanguage[] = ["es", "fr", "de", "it", "pt"];
+const ADDED_LANGUAGES: readonly AddedLanguage[] = ["es", "fr", "de", "it", "pt", "id", "th", "ms", "vi"];
 
 const localizedCEFRHint: Record<UiLocale, (name: string) => string> = {
   en: name => name + " uses CEFR (A1–C2): A1 is beginner and C2 is proficient. Choose a level that matches the dialogue you can understand.",

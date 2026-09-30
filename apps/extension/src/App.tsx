@@ -9,6 +9,7 @@ import {
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
 import { contextualGenerationProfile, normalizeSavedLessonProfile } from "./lib/contextual-profile";
+import { restoreLoopPreferences, type RepeatOption } from "./lib/loop-preferences";
 import { titleForVideoTab } from "./video/metadata";
 import { detectCurrentVideoMetadata, metadataSourceSafety } from "./video/metadata-resolver";
 import { videoMetadataMessages } from "./i18n/video-metadata";
@@ -36,10 +37,12 @@ import { AppPanel } from "./components/app-panel";
 import { Card } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Select, SelectContent, SelectField, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import { GroupedSelectField } from "./components/grouped-select-field";
 import { Textarea } from "./components/ui/textarea";
 import { Badge } from "./components/ui/badge";
 import { SceneReader } from "./components/scene-reader";
 import { ContextualSceneReader } from "./components/contextual-scene-reader";
+import { NoticeViewport } from "./components/notice-viewport";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
 import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
@@ -48,6 +51,7 @@ import { translate, type MessageKey, type MessageParams } from "./i18n/messages"
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
   nativeLanguageName, learningLanguageName, explanationLanguageName,
+  LEARNING_LANGUAGE_GROUP_LABELS,
   type LocalePreference, type ThemePreference,
 } from "./i18n/preferences";
 
@@ -55,7 +59,7 @@ const HOST_NAME = "dev.immersive.language_learning";
 type Page = "create" | "reader" | "settings" | "lessons";
 type LessonEntry = { documentId: string; title: string; createdAt: string; local?: LessonSummary; drive?: DriveLessonSummary };
 type Installed = Record<string, boolean>;
-type RepeatOption = "2" | "3" | "5" | "infinite";
+const FEATURED_LEARNING_LANGUAGES: readonly LearningLanguage[] = ["en", "ja", "ko", "es"];
 
 const DEFAULT_PROFILE: LearningProfile = {
   targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
@@ -133,6 +137,7 @@ export default function App() {
   const [document, setDocument] = useState<LearningDocument | null>(null);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [generating, setGenerating] = useState(false);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
@@ -164,6 +169,8 @@ export default function App() {
   const [hydrated, setHydrated] = useState(false);
   const [repeat, setRepeat] = useState<RepeatOption>("3");
   const [delay, setDelay] = useState(1);
+  const [sceneRepeat, setSceneRepeat] = useState<RepeatOption>("3");
+  const [sceneDelay, setSceneDelay] = useState(1);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [rateApplying, setRateApplying] = useState(false);
   const [loopActive, setLoopActive] = useState(false);
@@ -210,7 +217,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "agentModelPreferences", "destination", "backup", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference", "explanationLanguageMode"]).then(saved => {
+    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "agentModelPreferences", "destination", "backup", "repeat", "delay", "sceneRepeat", "sceneDelay", "playbackRate", "uiLocalePreference", "themePreference", "explanationLanguageMode"]).then(saved => {
       if (saved.profile) setProfile(normalizeSavedLessonProfile(saved.profile as Partial<LearningProfile>, {
         ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
       }));
@@ -256,8 +263,11 @@ export default function App() {
         const parsed = BackupSettingsSchema.safeParse(saved.backup);
         if (parsed.success) setBackup(parsed.data);
       }
-      if (saved.repeat) setRepeat(saved.repeat as RepeatOption);
-      if (typeof saved.delay === "number") setDelay(saved.delay);
+      const loopPreferences = restoreLoopPreferences(saved);
+      setRepeat(loopPreferences.repeat);
+      setDelay(loopPreferences.delay);
+      setSceneRepeat(loopPreferences.sceneRepeat);
+      setSceneDelay(loopPreferences.sceneDelay);
       if (typeof saved.playbackRate === "number" && [0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].includes(saved.playbackRate)) {
         setPlaybackRate(saved.playbackRate);
       }
@@ -470,8 +480,16 @@ export default function App() {
   }, [uiLocale, themePreference, systemDark]);
 
   useEffect(() => {
-    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, playbackRate, uiLocalePreference: localePreference, themePreference, explanationLanguageMode });
-  }, [hydrated, profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, playbackRate, localePreference, themePreference, explanationLanguageMode]);
+    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, sceneRepeat, sceneDelay, playbackRate, uiLocalePreference: localePreference, themePreference, explanationLanguageMode });
+  }, [hydrated, profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, sceneRepeat, sceneDelay, playbackRate, localePreference, themePreference, explanationLanguageMode]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 5_000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  useEffect(() => { if (playbackStatus) setNotice(playbackStatus); }, [playbackStatus]);
 
   useEffect(() => {
     if (hydrated && explanationLanguageMode === "auto") {
@@ -1148,7 +1166,7 @@ export default function App() {
     port.postMessage({ type: "listJobs", id });
   }
 
-  function openSavedDocument(documentId: string): void {
+  function fetchSavedDocument(documentId: string, handle: (raw: unknown) => void): void {
     if (generating) return;
     setError("");
     setGenerating(true);
@@ -1157,7 +1175,7 @@ export default function App() {
     const chunks = new DocumentChunkAssembler();
     let finished = false;
     function complete(raw: unknown): void {
-      try { showDocument(raw); }
+      try { handle(raw); }
       catch (error) { setError(error instanceof Error ? error.message : t("errorDocumentOpen")); }
       finished = true;
       setGenerating(false);
@@ -1190,6 +1208,14 @@ export default function App() {
       }
     });
     port.postMessage({ type: "getDocument", id, documentId });
+  }
+
+  function openSavedDocument(documentId: string): void {
+    fetchSavedDocument(documentId, showDocument);
+  }
+
+  function downloadSavedDocument(documentId: string, format: "json" | "md"): void {
+    fetchSavedDocument(documentId, raw => downloadDocument(LearningDocumentSchema.parse(raw), format));
   }
 
   useEffect(() => {
@@ -1575,7 +1601,7 @@ export default function App() {
   }, [page, backup.accountId, driveAccounts.length]);
 
   return (
-    <div className="mx-auto min-w-[320px] max-w-[780px] px-3 pb-9 leading-[1.55] antialiased font-[Outfit,'Noto_Sans_TC',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] [color-scheme:light] dark:[color-scheme:dark] [font-synthesis:none]">
+    <div className="mx-auto min-w-0 max-w-[780px] px-3 pb-9 leading-[1.55] antialiased font-[Outfit,'Noto_Sans_TC',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] [color-scheme:light] dark:[color-scheme:dark] [font-synthesis:none]">
       <header className="flex items-center justify-between gap-2 py-[18px] [&>div]:flex [&>div]:min-w-0 [&>div]:items-center [&>div]:gap-[9px] [&_strong]:min-w-0 [&_strong]:text-xs [&_strong]:leading-[1.25] [&_strong]:wrap-anywhere">
         <div><img className="block size-9 shrink-0 rounded-[var(--radius)] object-contain" src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>AI-powered Contextual Language Learning</strong></div>
         <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">MVP · v0.1</span>
@@ -1587,7 +1613,8 @@ export default function App() {
         <Button className={page === "settings" ? "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "settings" ? "page" : undefined} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
       </nav>
 
-      {error && <div className="my-[10px] flex max-w-full min-w-0 justify-between gap-[10px] rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--destructive)_55%,var(--border))] bg-[color-mix(in_oklch,var(--destructive)_10%,var(--card))] px-3 py-[10px] text-xs text-foreground wrap-anywhere [&_button]:shrink-0" role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}><X aria-hidden="true" /></Button></div>}
+      <NoticeViewport error={error} notice={notice} closeLabel={t("closeError")}
+        dismiss={() => error ? setError("") : setNotice("")} />
 
       {page === "create" && <main>
         <AppPanel>
@@ -1628,10 +1655,15 @@ export default function App() {
                   explanation={settingsCopy.fieldHints.targetLanguage}
                   />
               </div>
-              <SelectField id="learning-target" ariaLabel={t("targetLanguage")}
-                value={profile.targetLanguage} onValueChange={chooseLearningLanguage} disabled={checking || generating} options={LEARNING_LANGUAGES.map(language => ({
-                  value: language, label: learningLanguageName(language, uiLocale),
-                }))} />
+              <GroupedSelectField id="learning-target" ariaLabel={t("targetLanguage")}
+                value={profile.targetLanguage} onValueChange={chooseLearningLanguage} disabled={checking || generating}
+                groups={[
+                  { label: LEARNING_LANGUAGE_GROUP_LABELS[uiLocale].featured,
+                    options: FEATURED_LEARNING_LANGUAGES.map(language => ({ value: language, label: learningLanguageName(language, uiLocale) })) },
+                  { label: LEARNING_LANGUAGE_GROUP_LABELS[uiLocale].more,
+                    options: LEARNING_LANGUAGES.filter(language => !FEATURED_LEARNING_LANGUAGES.includes(language))
+                      .map(language => ({ value: language, label: learningLanguageName(language, uiLocale) })) },
+                ]} />
             </div>
           </div>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
@@ -1986,6 +2018,12 @@ export default function App() {
               <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
                 {lesson.local && <Button variant="outline" size="sm" disabled={generating}
                   onClick={() => openSavedDocument(lesson.documentId)}>{t("openLesson")}</Button>}
+                {lesson.local && <>
+                  <Button variant="ghost" size="sm" disabled={generating}
+                    onClick={() => downloadSavedDocument(lesson.documentId, "json")}>{t("saveJson")}</Button>
+                  <Button variant="ghost" size="sm" disabled={generating}
+                    onClick={() => downloadSavedDocument(lesson.documentId, "md")}>{t("saveMarkdown")}</Button>
+                </>}
                 {lesson.drive && !lesson.local && <Button variant="outline" size="sm"
                   disabled={restoreBusy !== null || generating}
                   onClick={() => void restoreLesson(lesson.drive!)}>{restoreBusy === lesson.documentId
@@ -2219,15 +2257,16 @@ export default function App() {
         </AppPanel> : document.schemaVersion === 3 ? <ContextualSceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
           repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
+          sceneRepeat={sceneRepeat} setSceneRepeat={setSceneRepeat} sceneDelay={sceneDelay} setSceneDelay={setSceneDelay}
           playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
-          onError={setError} onDownload={format => downloadDocument(document, format)}
+          onError={setError} onNotice={setNotice}
           onSaveRange={(cueId, range) => saveDocumentPlaybackRange(document.id, cueId, range)}
           onSaveSceneRange={(sceneId, range) => saveDocumentScenePlaybackRange(document.id, sceneId, range)}
         /> : document.schemaVersion === 2 ? <SceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
           repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
           playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
-          onError={setError} onDownload={format => downloadDocument(document, format)}
+          onError={setError} onNotice={setNotice} onDownload={format => downloadDocument(document, format)}
         /> : <>
           <AppPanel>
             <Badge data-ui="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
@@ -2291,7 +2330,6 @@ export default function App() {
               : readerAdapter.loop
                 ? <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("youtubeVideoHint", { name: readerAdapter.label })}</p>
                 : <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("noVideoControl")}</p>}
-            {playbackStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{playbackStatus}</p>}
             {loopActive && <Button variant="outline" onClick={() => void stopLoop()}>{t("stopLoop")}</Button>}
           </AppPanel>
           {document.sections.map(section => <AppPanel className="pt-5 [&>p]:text-[13px] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:text-[13px] [&_li]:mb-[6px]" key={section.id}>
