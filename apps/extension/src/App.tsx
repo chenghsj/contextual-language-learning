@@ -126,6 +126,7 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
+  const [hostBusy, setHostBusy] = useState(false);
   const [jobFilter, setJobFilter] = useState<"all" | "active" | "completed">("all");
   const [showAllJobs, setShowAllJobs] = useState(false);
   const [localLessons, setLocalLessons] = useState<LessonSummary[]>([]);
@@ -701,6 +702,10 @@ export default function App() {
 
   function checkHost(): void {
     setError("");
+    setHostBusy(true);
+    const startedAt = performance.now();
+    const finishCheck = () => window.setTimeout(() => setHostBusy(false),
+      Math.max(0, 500 - (performance.now() - startedAt)));
     const id = crypto.randomUUID();
     let replied = false;
     const port = chrome.runtime.connectNative(HOST_NAME);
@@ -711,6 +716,7 @@ export default function App() {
         setHostVersion(typeof message.version === "string" ? message.version : null);
         if (Array.isArray(message.agents)) setAgentCatalog(message.agents);
         void loadAgentProfiles();
+        finishCheck();
         port.disconnect();
       }
     });
@@ -720,6 +726,7 @@ export default function App() {
         setHostVersion(null);
         setError((chrome.runtime.lastError?.message ?? "Native Host connection failed.") +
           " " + t("hostInstallHint", { id: chrome.runtime.id }));
+        finishCheck();
       }
     });
     port.postMessage({ id, type: "health" });
@@ -733,6 +740,8 @@ export default function App() {
       return;
     }
     let ignore = false;
+    let settleTimer: number | undefined;
+    const startedAt = performance.now();
     setModelBusy(true);
     setModelOptions([]);
     setModelNotice("");
@@ -749,8 +758,12 @@ export default function App() {
         setModelOptions([]);
         setModelNotice(cause instanceof Error ? cause.message : t("modelsError"));
       }
-    }).finally(() => { if (!ignore) setModelBusy(false); });
-    return () => { ignore = true; };
+    }).finally(() => {
+      if (!ignore) settleTimer = window.setTimeout(() => {
+        if (!ignore) setModelBusy(false);
+      }, Math.max(0, 500 - (performance.now() - startedAt)));
+    });
+    return () => { ignore = true; window.clearTimeout(settleTimer); };
   }, [hydrated, installed, agent.provider, agent.accountConfigDir]);
 
   function showDocument(raw: unknown): void {
@@ -990,6 +1003,9 @@ export default function App() {
     if (loadingJobs) return;
     // Refreshing history must never dismiss the Agent error just received.
     setLoadingJobs(true);
+    const startedAt = performance.now();
+    const finishLoading = () => window.setTimeout(() => setLoadingJobs(false),
+      Math.max(0, 500 - (performance.now() - startedAt)));
     const id = crypto.randomUUID();
     const port = chrome.runtime.connectNative(HOST_NAME);
     let received = false;
@@ -1000,18 +1016,18 @@ export default function App() {
         setJobs(message.jobs);
         const current = message.jobs.find(job => job.id === lastJobIdRef.current);
         if (current) updateJob(current);
-        setLoadingJobs(false);
+        finishLoading();
         port.disconnect();
       } else if (message.type === "error") {
         received = true;
         setError(message.message);
-        setLoadingJobs(false);
+        finishLoading();
         port.disconnect();
       }
     });
     port.onDisconnect.addListener(() => {
       if (!received) {
-        setLoadingJobs(false);
+        finishLoading();
         setError(chrome.runtime.lastError?.message ?? t("errorJobs"));
       }
     });
@@ -1439,10 +1455,10 @@ export default function App() {
         <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">MVP · v0.1</span>
       </header>
       <nav className="mb-4 grid grid-cols-4 gap-1 rounded-[var(--radius)] bg-muted p-1" aria-label={t("navLabel")}>
-        <Button className={page === "create" ? "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "create" ? "page" : undefined} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
-        <Button className={page === "reader" ? "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "reader" ? "page" : undefined} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
-        <Button className={page === "lessons" ? "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "lessons" ? "page" : undefined} onClick={() => setPage("lessons")}><Library aria-hidden="true" />{t("lessonLibrary")}</Button>
-        <Button className={page === "settings" ? "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "settings" ? "page" : undefined} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
+        <Button className={page === "create" ? "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "create" ? "page" : undefined} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
+        <Button className={page === "reader" ? "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "reader" ? "page" : undefined} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
+        <Button className={page === "lessons" ? "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "lessons" ? "page" : undefined} onClick={() => setPage("lessons")}><Library aria-hidden="true" />{t("lessonLibrary")}</Button>
+        <Button className={page === "settings" ? "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "settings" ? "page" : undefined} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
       </nav>
 
       {error && <div className="my-[10px] flex max-w-full min-w-0 justify-between gap-[10px] rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--destructive)_55%,var(--border))] bg-[color-mix(in_oklch,var(--destructive)_10%,var(--card))] px-3 py-[10px] text-xs text-foreground wrap-anywhere [&_button]:shrink-0" role="alert">{error}<Button variant="ghost" size="icon" aria-label={t("closeError")} onClick={() => setError("")}><X aria-hidden="true" /></Button></div>}
@@ -1493,7 +1509,7 @@ export default function App() {
             </div>
           </div>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
-            <Button className="h-auto min-h-10 px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere"
+            <Button className="h-9 min-w-0 px-3 text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere"
               disabled={subtitleBusy || metadataBusy || checking || generating}
               onClick={() => void fetchCurrentSubtitles()}>
               {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
@@ -1644,9 +1660,9 @@ export default function App() {
               <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupHint")}</p>
             </div>
             <Button role="switch" aria-checked={backup.enabled} aria-label={t("autoBackup")}
-              className="group relative inline-flex h-[27px] w-[46px] shrink-0 items-center justify-start rounded-full border-0 bg-muted-foreground p-[3px] transition-colors duration-200 aria-checked:bg-primary motion-reduce:transition-none" disabled={storageBusy}
+              className="group relative inline-flex h-9 w-11 shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0" disabled={storageBusy}
               onClick={() => backup.enabled ? setBackup(current => ({ ...current, enabled: false }))
-                : void enableBackup()}><span className="pointer-events-none block size-[21px] shrink-0 translate-x-0 rounded-full bg-white shadow-[0_1px_3px_#0003] transition-transform duration-200 group-aria-checked:translate-x-[19px] motion-reduce:transition-none" /></Button>
+                : void enableBackup()}><span aria-hidden="true" className="relative block h-[22px] w-[38px] shrink-0 rounded-full bg-muted-foreground transition-colors duration-200 group-aria-checked:bg-primary motion-reduce:transition-none"><span className="absolute top-[3px] left-[3px] block size-4 rounded-full bg-white shadow-[0_1px_3px_#0003] transition-transform duration-200 group-aria-checked:translate-x-4 motion-reduce:transition-none" /></span></Button>
           </div>
           {backup.enabled && driveAccessVerified && <div className="flex items-center justify-between gap-2 [&_[data-ui=hint]]:my-[3px] [&_[data-ui=hint]]:min-w-0 [&_[data-ui=hint]]:wrap-anywhere">
             <span className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupConnected", { email:
@@ -1727,14 +1743,14 @@ export default function App() {
                 { value: "active", label: t("jobFilterActive") },
                 { value: "completed", label: t("jobFilterCompleted") },
               ]} />
-            <Button variant="outline" size="sm" disabled={loadingJobs}
-              onClick={loadJobs}>{loadingJobs ? t("loading") : t("refreshJobs")}</Button>
+            <Button variant="outline" size="sm" disabled={loadingJobs} aria-busy={loadingJobs}
+              onClick={loadJobs}>{loadingJobs && <span aria-hidden="true" className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />}{t("refreshJobs")}</Button>
           </div>
           <div className="my-[10px] grid gap-[7px]">
             {visibleJobs.map(job => <div className="min-w-0 rounded-[var(--radius)] border border-border px-[11px] py-[9px] [&_p]:my-[3px] [&_p]:text-[11px] [&_[data-ui=actions]]:mt-[5px] [&_[data-ui=actions]]:gap-[5px] [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-7" key={job.id}>
               <div className="flex min-w-0 items-center justify-between gap-2 [&_strong]:min-w-0 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-xs">
-                <strong title={job.sourceTitle}>{job.sourceTitle}</strong>
-                <Badge>{t(jobStatusKeys[job.status])}</Badge>
+                <strong className="min-w-0 flex-1 truncate" title={job.sourceTitle}>{job.sourceTitle}</strong>
+                <Badge className="shrink-0 whitespace-nowrap text-[11px] leading-4">{t(jobStatusKeys[job.status])}</Badge>
               </div>
               <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)} · {job.completed}/{job.total}
                 {job.backup && " · " + t(job.backup.status === "backed-up"
@@ -1956,10 +1972,10 @@ export default function App() {
           <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
             <summary className="cursor-pointer font-semibold">{t("agentDiagnostics")}</summary>
             <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-              <Button variant="outline" size="sm" onClick={checkHost}>{t("checkHost")}</Button>
+              <Button variant="outline" size="sm" disabled={hostBusy} aria-busy={hostBusy} onClick={checkHost}>{hostBusy && <span aria-hidden="true" className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />}{t("checkHost")}</Button>
               <Button variant="outline" size="sm" disabled={modelBusy || installed === null}
                 onClick={() => setInstalled(current => current ? { ...current } : current)}>
-                {modelBusy ? t("modelsLoading") : t("refreshModels")}
+                {modelBusy && <span aria-hidden="true" className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />}{t("refreshModels")}
               </Button>
             </div>
           </details>
