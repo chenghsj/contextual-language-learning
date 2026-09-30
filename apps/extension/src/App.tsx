@@ -8,6 +8,7 @@ import {
   type LearningLanguage, type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
+import { contextualGenerationProfile, normalizeSavedLessonProfile } from "./lib/contextual-profile";
 import { titleForVideoTab } from "./video/metadata";
 import { detectCurrentVideoMetadata, metadataSourceSafety } from "./video/metadata-resolver";
 import { videoMetadataMessages } from "./i18n/video-metadata";
@@ -53,7 +54,8 @@ type RepeatOption = "2" | "3" | "5" | "infinite";
 
 const DEFAULT_PROFILE: LearningProfile = {
   targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-  mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3, sceneCount: 4,
+  mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 0, sceneCount: 4,
+  contextualExampleCount: 2,
 };
 const DEFAULT_AGENT: AgentSettings = { provider: "claude", modelId: "" };
 
@@ -115,6 +117,7 @@ export default function App() {
   const [profile, setProfile] = useState<LearningProfile>(() => ({
     ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
   }));
+  const [explanationLanguageMode, setExplanationLanguageMode] = useState<"auto" | "custom">("auto");
   const [agent, setAgent] = useState<AgentSettings>(DEFAULT_AGENT);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>>({});
   const [agentModelPreferences, setAgentModelPreferences] = useState<Record<string, string>>({});
@@ -204,8 +207,15 @@ export default function App() {
   };
 
   useEffect(() => {
-    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "agentModelPreferences", "destination", "backup", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference"]).then(saved => {
-      if (saved.profile) setProfile({ ...DEFAULT_PROFILE, instructionLanguage: browserLocale, ...(saved.profile as Partial<LearningProfile>) });
+    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "agentModelPreferences", "destination", "backup", "repeat", "delay", "playbackRate", "uiLocalePreference", "themePreference", "explanationLanguageMode"]).then(saved => {
+      if (saved.profile) setProfile(normalizeSavedLessonProfile(saved.profile as Partial<LearningProfile>, {
+        ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
+      }));
+      if (saved.explanationLanguageMode === "custom" ||
+          (!saved.explanationLanguageMode && saved.profile &&
+            (saved.profile as Partial<LearningProfile>).instructionLanguage !== browserLocale)) {
+        setExplanationLanguageMode("custom");
+      }
       if (isLocalePreference(saved.uiLocalePreference)) setLocalePreference(saved.uiLocalePreference);
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
       if (saved.agent) setAgent(saved.agent as AgentSettings);
@@ -427,8 +437,15 @@ export default function App() {
   }, [uiLocale, themePreference, systemDark]);
 
   useEffect(() => {
-    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, playbackRate, uiLocalePreference: localePreference, themePreference });
-  }, [hydrated, profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, playbackRate, localePreference, themePreference]);
+    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, playbackRate, uiLocalePreference: localePreference, themePreference, explanationLanguageMode });
+  }, [hydrated, profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, playbackRate, localePreference, themePreference, explanationLanguageMode]);
+
+  useEffect(() => {
+    if (hydrated && explanationLanguageMode === "auto") {
+      setProfile(previous => previous.instructionLanguage === uiLocale ? previous
+        : { ...previous, instructionLanguage: uiLocale });
+    }
+  }, [hydrated, explanationLanguageMode, uiLocale]);
 
   function nativeOnce(request: { id: string; type: string; [key: string]: unknown }): Promise<HostMessage> {
     return new Promise((resolve, reject) => {
@@ -827,7 +844,8 @@ export default function App() {
       const payload = GenerationRequestSchema.parse({
         id: crypto.randomUUID(),
         source: { platform, title: title.trim(), ...(sourceUrl.trim() ? { url: sourceUrl.trim() } : {}) },
-        profile, agent, destination, backup, cues,
+        lessonFormat: "contextual-v3", profile: contextualGenerationProfile(profile),
+        agent, destination, backup, cues,
       });
       const port = chrome.runtime.connect({ name: GENERATION_CONTROLLER_PORT });
       preflightPortRef.current = port;
@@ -1399,6 +1417,34 @@ export default function App() {
       {page === "create" && <main>
         <Card className="panel">
           <h2>{t("subtitleHeading")}</h2>
+          <div className="subtitleSourceBlock">
+          <div className="actions">
+            <Button variant={!title.trim() || !sourceUrl.trim() ? "default" : "outline"}
+              size="sm" disabled={metadataBusy || subtitleBusy || checking || generating}
+              onClick={() => void fetchCurrentVideoMetadata()}>
+              {metadataBusy ? metadataUi.busy :
+                !title.trim() || !sourceUrl.trim() ? metadataUi.get : metadataUi.refresh}
+            </Button>
+          </div>
+          {metadataStatus && <p className="hint" role="status">{metadataStatus}</p>}
+          <label>{t("videoTitle")} <Input value={title} onChange={event => {
+            ++metadataRequestRef.current;
+            setMetadataBusy(false);
+            manuallyEditedTitleRef.current = !!event.target.value.trim();
+            setMetadataStatus("");
+            setTitle(event.target.value);
+          }} placeholder={t("titlePlaceholder")} /></label>
+          <label>{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => {
+            ++metadataRequestRef.current;
+            setMetadataBusy(false);
+            setMetadataStatus("");
+            ++captionRequestRef.current;
+            setSubtitleBusy(false);
+            setSourceUrl(event.target.value);
+            setSubtitleStatus("");
+          }} placeholder="https://www.youtube.com/watch?v=…" /></label>
+          <Badge className="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
+          </div>
           <div className="subtitleLanguageSetting">
             <div className="settingField">
               <div className="settingHeading">
@@ -1462,125 +1508,87 @@ export default function App() {
               language: learningLanguageName(profile.targetLanguage, uiLocale),
             })}</p>}
           <p className="hint">{t("parsedCues", { count: cues.length })}</p>
-          <div className="actions">
-            <Button variant={!title.trim() || !sourceUrl.trim() ? "default" : "outline"}
-              size="sm" disabled={metadataBusy || subtitleBusy || checking || generating}
-              onClick={() => void fetchCurrentVideoMetadata()}>
-              {metadataBusy ? metadataUi.busy :
-                !title.trim() || !sourceUrl.trim() ? metadataUi.get : metadataUi.refresh}
-            </Button>
-          </div>
-          {metadataStatus && <p className="hint" role="status">{metadataStatus}</p>}
-          <label>{t("videoTitle")} <Input value={title} onChange={event => {
-            ++metadataRequestRef.current;
-            setMetadataBusy(false);
-            manuallyEditedTitleRef.current = !!event.target.value.trim();
-            setMetadataStatus("");
-            setTitle(event.target.value);
-          }} placeholder={t("titlePlaceholder")} /></label>
-          <label>{t("videoUrl")} <Input type="url" value={sourceUrl} onChange={event => {
-            ++metadataRequestRef.current;
-            setMetadataBusy(false);
-            setMetadataStatus("");
-            ++captionRequestRef.current;
-            setSubtitleBusy(false);
-            setSourceUrl(event.target.value);
-            setSubtitleStatus("");
-          }} placeholder="https://www.youtube.com/watch?v=…" /></label>
-          <Badge className="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
+
         </Card>
 
-        <Card className="panel">
+        <Card className="panel lessonSettingsPanel">
           <h2>{t("learningHeading")}</h2>
-          <div className="twoColumns">
-            <div className="settingField">
-              <div className="settingHeading">
-                <label htmlFor="learning-level">{t("level")}</label>
-                <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
-                  explanation={levelHint(settingsCopy, profile.targetLanguage)}
-                  items={levelOptions.map(value => {
-                    const info = settingsCopy.levels[profile.targetLanguage][value];
-                    return { value, label: info?.label ?? value, description: info?.description ?? "" };
-                  })}
-                  />
-              </div>
-              <SelectField id="learning-level" ariaLabel={t("level")} value={profile.level}
-                onValueChange={level => setProfile(current => ({ ...current, level }))}
-                options={levelOptions.map(level => ({
-                  value: level, label: level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
-                }))} />
+          <p className="hint lessonSettingsIntro">{t("lessonSettingsIntro")}</p>
+          <div className="settingField">
+            <div className="settingHeading">
+              <label htmlFor="learning-level">{t("level")}</label>
+              <SettingInfo label={t("level")} infoLabel={settingsCopy.infoLabel}
+                explanation={levelHint(settingsCopy, profile.targetLanguage)}
+                items={levelOptions.map(value => {
+                  const info = settingsCopy.levels[profile.targetLanguage][value];
+                  return { value, label: info?.label ?? value, description: info?.description ?? "" };
+                })} />
             </div>
+            <SelectField id="learning-level" ariaLabel={t("level")} value={profile.level}
+              onValueChange={level => setProfile(current => ({ ...current, level }))}
+              options={levelOptions.map(level => ({
+                value: level, label: level + " · " + (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
+              }))} />
           </div>
           <div className="settingField">
             <div className="settingHeading">
-              <label htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
-              <SettingInfo label={t("instructionLanguage")} infoLabel={settingsCopy.infoLabel}
-                explanation={settingsCopy.fieldHints.instructionLanguage}
-                />
+              <label htmlFor="learning-length">{t("lessonLength")}</label>
             </div>
-            <SelectField id="learning-explanation-language" ariaLabel={t("instructionLanguage")}
-              value={profile.instructionLanguage}
-              onValueChange={instructionLanguage => setProfile(current => ({
-                ...current, instructionLanguage: instructionLanguage as LearningProfile["instructionLanguage"],
+            <SelectField id="learning-length" ariaLabel={t("lessonLength")}
+              value={String(profile.sceneCount)}
+              onValueChange={value => setProfile(current => contextualGenerationProfile({
+                ...current, sceneCount: Number(value),
               }))}
-              options={EXPLANATION_LANGUAGES.map(value => ({
-                value, label: explanationLanguageName(value, uiLocale),
+              options={[
+                { value: "2", label: t("lessonLengthShort") },
+                { value: "4", label: t("lessonLengthStandard") },
+                { value: "6", label: t("lessonLengthRich") },
+              ]} />
+            <p className="hint">{t("lessonLengthHint")}</p>
+          </div>
+          <div className="settingField">
+            <div className="settingHeading">
+              <label htmlFor="contextual-examples">{t("contextualExamples")}</label>
+            </div>
+            <SelectField id="contextual-examples" ariaLabel={t("contextualExamples")}
+              value={String(profile.contextualExampleCount ?? 2)}
+              onValueChange={value => setProfile(current => ({
+                ...current, contextualExampleCount: Number(value),
+              }))}
+              options={[1, 2, 3].map(value => ({
+                value: String(value), label: t("contextualExamplesValue", { count: value }),
               }))} />
+            <p className="hint">{t("contextualExamplesHint")}</p>
           </div>
           <details className="advancedLessonSettings">
             <summary>{t("advancedLessonSettings")}</summary>
-          <div className="settingField">
-            <div className="settingHeading">
-              <label htmlFor="learning-mode">{t("teachingMode")}</label>
-              <SettingInfo label={t("teachingMode")} infoLabel={settingsCopy.infoLabel}
-                explanation={settingsCopy.fieldHints.teachingMode}
-                />
+            <div className="settingField">
+              <div className="settingHeading">
+                <label htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
+                <SettingInfo label={t("instructionLanguage")} infoLabel={settingsCopy.infoLabel}
+                  explanation={settingsCopy.fieldHints.instructionLanguage} />
+              </div>
+              <SelectField id="learning-explanation-language" ariaLabel={t("instructionLanguage")}
+                value={explanationLanguageMode === "auto" ? "__auto__" : profile.instructionLanguage}
+                onValueChange={value => {
+                  if (value === "__auto__") {
+                    setExplanationLanguageMode("auto");
+                    setProfile(current => ({ ...current, instructionLanguage: uiLocale }));
+                  } else {
+                    setExplanationLanguageMode("custom");
+                    setProfile(current => ({
+                      ...current, instructionLanguage: value as LearningProfile["instructionLanguage"],
+                    }));
+                  }
+                }}
+                options={[
+                  { value: "__auto__", label: t("explanationAuto") },
+                  ...EXPLANATION_LANGUAGES.map(value => ({
+                    value, label: explanationLanguageName(value, uiLocale),
+                  })),
+                ]} />
             </div>
-            <SelectField id="learning-mode" ariaLabel={t("teachingMode")}
-              value={profile.mode}
-              onValueChange={mode => setProfile(current => ({ ...current, mode: mode as LearningProfile["mode"] }))}
-              options={(["adaptive", "guided", "immersive"] as const).map(value => ({
-                value, label: settingsCopy.modes[value].label,
-              }))} />
-          </div>
           </details>
-          <div className="settingField">
-            <div className="settingHeading">
-              <label htmlFor="learning-scenes">{t("sceneCount")}</label>
-              <SettingInfo label={t("sceneCount")} infoLabel={settingsCopy.infoLabel}
-                explanation={settingsCopy.fieldHints.sceneCount} />
-            </div>
-            <Input id="learning-scenes" type="number" min={1} max={6}
-              value={profile.sceneCount} onChange={event => setProfile(current => ({
-                ...current, sceneCount: Number(event.target.value),
-              }))} />
-          </div>
-          <div className="twoColumns">
-            <div className="settingField">
-              <div className="settingHeading">
-                <label htmlFor="learning-vocabulary">{t("vocabLimit")}</label>
-                <SettingInfo label={t("vocabLimit")} infoLabel={settingsCopy.infoLabel}
-                  explanation={settingsCopy.fieldHints.vocabLimit} />
-              </div>
-              <Input id="learning-vocabulary" type="number" min={1} max={12}
-                value={profile.maxNewVocabulary}
-                onChange={event => setProfile(current => ({
-                  ...current, maxNewVocabulary: Number(event.target.value),
-                }))} />
-            </div>
-            <div className="settingField">
-              <div className="settingHeading">
-                <label htmlFor="learning-exercises">{t("exerciseCount")}</label>
-                <SettingInfo label={t("exerciseCount")} infoLabel={settingsCopy.infoLabel}
-                  explanation={settingsCopy.fieldHints.exerciseCount} />
-              </div>
-              <Input id="learning-exercises" type="number" min={0} max={6}
-                value={profile.exerciseCount}
-                onChange={event => setProfile(current => ({
-                  ...current, exerciseCount: Number(event.target.value),
-                }))} />
-            </div>
-          </div>
         </Card>
 
         <Card className="panel">
@@ -1633,6 +1641,9 @@ export default function App() {
               <Button variant="outline" size="sm" onClick={cancelDuplicate}>{t("cancelNoGeneration")}</Button>
             </div>
           </div>}
+          <p className="status lessonGenerationPreview">{t("lessonContentSummary", {
+            scenes: profile.sceneCount, examples: profile.contextualExampleCount ?? 2,
+          })}</p>
           <div className="generationSummary">
             <div className="generationSummaryHeading">
               <strong>{t("generationSummary")}</strong>
