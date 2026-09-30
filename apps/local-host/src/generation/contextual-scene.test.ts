@@ -148,3 +148,52 @@ test("V3 generation completes through the existing resumable scene job pipeline"
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("V3 candidate selection excludes scenes with no independent source context", () => {
+  const isolated = { cueIds: ["cue-2"], focusExpressions: ["I haven't decided yet."],
+    learningGoal: "Express uncertainty" };
+  const batch = { candidates: [isolated] };
+  assert.equal(validateCandidateBatch(cues, batch, 0).length, 1,
+    "legacy V2 candidate behavior remains unchanged");
+  assert.deepEqual(validateCandidateBatch(cues, batch, 0, true), [],
+    "V3 must not save an isolated focus line as a contextual scene");
+  const spanning = { cueIds: ["cue-1", "cue-2"],
+    focusExpressions: ["What about dinner? I haven't decided yet."],
+    learningGoal: "Understand a two-cue utterance" };
+  assert.deepEqual(validateCandidateBatch(cues, { candidates: [spanning] }, 0, true), [],
+    "a focus spanning every cue still needs actual neighboring dialogue");
+});
+
+test("V3 repairs only a scene with invalid evidence and keeps canonical cue IDs", async () => {
+  const root = await mkdtemp(join(tmpdir(), "immersive-evidence-retry-"));
+  try {
+    const storage = localStoragePorts(root);
+    const req = request();
+    let attempts = 0;
+    const prompts: string[] = [];
+    const manager = new JobManager({
+      storage,
+      generateCandidates: async () => ({ candidates: [{
+        cueIds: candidate.cueIds, focusExpressions: candidate.focusExpressions,
+        learningGoal: candidate.learningGoal,
+      }] }),
+      generateSelection: async () => ({ selectedCandidateIds: ["candidate-1-1"] }),
+      generateSection: async (_agent, prompt) => {
+        prompts.push(prompt);
+        attempts++;
+        return attempts === 1 ? {
+          ...content(), focusItems: [{ ...content().focusItems[0], contextCueIds: ["cue-2"] }],
+        } : content();
+      },
+    }, () => undefined);
+    const doc = await manager.start(req.id, req);
+    assert.equal(doc.schemaVersion, 3);
+    assert.equal(attempts, 2, "only the invalid scene should be regenerated once");
+    assert.match(prompts[1], /VALIDATION REPAIR/);
+    assert.ok(prompts[1].includes("cue-1") && prompts[1].includes("cue-3"));
+    assert.deepEqual(doc.sections[0].cueIds, candidate.cueIds);
+    assert.equal((await storage.jobs.get(req.id))?.summary.status, "completed");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
