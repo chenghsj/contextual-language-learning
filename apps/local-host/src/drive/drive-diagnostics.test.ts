@@ -86,6 +86,14 @@ test("Drive accepts only a calibrated playback revision of an unchanged app less
   assert.equal(isPlaybackOnlyDriveRevision(before, { ...after,
     cues: [{ ...after.cues[0], originalText: "Invented source" }] }), false);
   assert.equal(isPlaybackOnlyDriveRevision(after, after), false);
+  const sceneId = before.sections[0].id;
+  const sceneRevision = LearningDocumentSchema.parse({
+    ...before, scenePlaybackOverrides: { [sceneId]: { startMs: 700, endMs: 2400 } },
+  });
+  assert.equal(isPlaybackOnlyDriveRevision(before, sceneRevision), true);
+  assert.equal(isPlaybackOnlyDriveRevision(sceneRevision, sceneRevision), false);
+  assert.equal(isPlaybackOnlyDriveRevision(before, { ...sceneRevision,
+    sections: [{ ...before.sections[0], startMs: 700 }] }), false);
   assert.equal(isPlaybackOnlyDriveRevision(before, { ...before, playbackOverrides: {} }), true,
     "explicit reset metadata may replace legacy browser-only calibration");
 });

@@ -500,7 +500,7 @@ export function SceneReader({
         {adapter.setPlaybackRate && <label className="my-3 grid gap-[6px] text-xs font-semibold">{c.speed}
           <SelectField ariaLabel={c.speed} value={playbackRate} disabled={busy}
             onValueChange={value => void changeRate(Number(value))}
-            options={[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5].map(rate => ({
+            options={[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map(rate => ({
               value: rate, label: rate + "×",
             }))} />
         </label>}

@@ -287,11 +287,13 @@ async function handle(input: unknown): Promise<void> {
         deliverDocument(request.id, document);
         break;
       }
-      case "savePlaybackRange": {
+      case "savePlaybackRange":
+      case "saveScenePlaybackRange": {
         const previous = await storage.documents.get(request.documentId);
         if (!previous || previous.schemaVersion !== 3) throw new Error("Saved V3 document not found");
-        const updated = await storage.documents.updatePlaybackRange(
-          request.documentId, request.cueId, request.range);
+        const updated = request.type === "savePlaybackRange"
+          ? await storage.documents.updatePlaybackRange(request.documentId, request.cueId, request.range)
+          : await storage.documents.updateScenePlaybackRange(request.documentId, request.sceneId, request.range);
         if (updated.schemaVersion !== 3) throw new Error("Only V3 lessons support saved playback calibration");
         const warnings: string[] = [];
         try {
@@ -333,9 +335,15 @@ async function handle(input: unknown): Promise<void> {
               (error instanceof Error ? error.message : "Unknown backup error"));
           }
         }
-        reply({ id: request.id, type: "playbackRangeSaved",
-          cueId: request.cueId, range: updated.playbackOverrides?.[request.cueId] ?? null,
-          ...(warnings.length ? { warning: warnings.join("；") } : {}) });
+        if (request.type === "savePlaybackRange") {
+          reply({ id: request.id, type: "playbackRangeSaved",
+            cueId: request.cueId, range: updated.playbackOverrides?.[request.cueId] ?? null,
+            ...(warnings.length ? { warning: warnings.join("；") } : {}) });
+        } else {
+          reply({ id: request.id, type: "scenePlaybackRangeSaved",
+            sceneId: request.sceneId, range: updated.scenePlaybackOverrides?.[request.sceneId] ?? null,
+            ...(warnings.length ? { warning: warnings.join("；") } : {}) });
+        }
         break;
       }
       case "retryBackup": {

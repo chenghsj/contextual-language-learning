@@ -65,6 +65,17 @@ export function learningDocumentToMarkdown(doc: LearningDocument): string {
     }
     parts.push("");
   }
+  if (doc.schemaVersion === 3 && doc.scenePlaybackOverrides &&
+      Object.keys(doc.scenePlaybackOverrides).length > 0) {
+    parts.push("## User-calibrated scene playback (original source times unchanged)", "");
+    for (const scene of doc.sections) {
+      const window = doc.scenePlaybackOverrides[scene.id];
+      if (!window) continue;
+      parts.push("- " + safeMarkdown(scene.title) + " (" + safeMarkdown(scene.id) + "): " +
+        window.startMs + "–" + window.endMs + " ms");
+    }
+    parts.push("");
+  }
   return parts.join("\n");
 }
 

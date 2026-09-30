@@ -266,6 +266,8 @@ export const LearningDocumentV3Schema = DocumentCommonSchema.extend({
   sections: z.array(StudySceneV3Schema).min(1).max(6),
   /** Presence (including an empty map) takes precedence over legacy browser-only calibration. */
   playbackOverrides: z.record(z.string().min(1).max(80), PlaybackOverrideSchema).optional(),
+  /** Optional user-calibrated scene playback, independent of scene/cue source times. */
+  scenePlaybackOverrides: z.record(z.string().uuid(), PlaybackOverrideSchema).optional(),
 });
 export const LearningDocumentSchema = z.discriminatedUnion("schemaVersion", [
   LearningDocumentV1Schema, LearningDocumentV2Schema, LearningDocumentV3Schema,
@@ -304,6 +306,8 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("getDocument"), id: z.string().uuid(), documentId: z.string().uuid() }),
   z.object({ type: z.literal("savePlaybackRange"), id: z.string().uuid(), documentId: z.string().uuid(),
     cueId: z.string().min(1).max(80), range: PlaybackOverrideSchema.nullable() }),
+  z.object({ type: z.literal("saveScenePlaybackRange"), id: z.string().uuid(), documentId: z.string().uuid(),
+    sceneId: z.string().uuid(), range: PlaybackOverrideSchema.nullable() }),
   z.object({ type: z.literal("storageLocations"), id: z.string().uuid() }),
   z.object({ type: z.literal("preflight"), id: z.string().uuid(), payload: GenerationRequestSchema }),
   z.object({ type: z.literal("checkDuplicates"), id: z.string().uuid(), payload: GenerationRequestSchema }),
@@ -347,6 +351,7 @@ export type HostMessage =
   | { id: string; type: "preflight"; existing: { id: string; title: string; createdAt: string; path: string }[] }
   | { id: string; type: "result"; document: LearningDocument }
   | { id: string; type: "playbackRangeSaved"; cueId: string; range: PlaybackOverride | null; warning?: string }
+  | { id: string; type: "scenePlaybackRangeSaved"; sceneId: string; range: PlaybackOverride | null; warning?: string }
   | { id: string; type: "duplicates"; token: string; matches: DuplicateMatch[] }
   | { id: string; type: "folder"; directory: string }
   | { id: string; type: "driveAccounts"; accounts: DriveAccount[]; configured: boolean }

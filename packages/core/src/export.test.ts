@@ -134,3 +134,20 @@ test("V3 calibration is optional, portable in compact JSON and Markdown, and nev
     ...v3, playbackOverrides: { a: { startMs: 3500, endMs: 2300 } },
   }).success, false, "reversed calibration cannot enter the document");
 });
+
+test("scene calibration round-trips JSON and Markdown without editing scene or subtitle source", () => {
+  const sceneId = v3.sections[0].id;
+  const saved = LearningDocumentSchema.parse({
+    ...v3, scenePlaybackOverrides: { [sceneId]: { startMs: 800, endMs: 3900 } },
+  });
+  if (saved.schemaVersion !== 3) throw new Error("Expected V3 document");
+  const imported = LearningDocumentSchema.parse(JSON.parse(JSON.stringify(compactStudyExport(saved))));
+  if (imported.schemaVersion !== 3) throw new Error("Expected exported V3 document");
+  assert.deepEqual(imported.scenePlaybackOverrides?.[sceneId], { startMs: 800, endMs: 3900 });
+  assert.equal(imported.sections[0].startMs, 1000);
+  assert.equal(imported.cues.find(cue => cue.id === "q")?.startMs, 1000);
+  assert.match(learningDocumentToMarkdown(saved), /User-calibrated scene playback/);
+  assert.equal(LearningDocumentSchema.safeParse({
+    ...v3, scenePlaybackOverrides: { [sceneId]: { startMs: 4200, endMs: 3800 } },
+  }).success, false);
+});

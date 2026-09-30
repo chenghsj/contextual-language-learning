@@ -12,6 +12,7 @@ export interface DocumentRepository {
   list(limit?: number): Promise<LearningDocument[]>;
   save(document: LearningDocument, markdown: string): Promise<void>;
   updatePlaybackRange(id: string, cueId: string, range: PlaybackOverride | null): Promise<LearningDocument>;
+  updateScenePlaybackRange(id: string, sceneId: string, range: PlaybackOverride | null): Promise<LearningDocument>;
 }
 
 export interface ProgressRepository {

@@ -194,10 +194,11 @@ export class DriveContentConflict extends Error {
 /** A revision may change ONLY the user's optional V3 playback windows, never the video or lesson. */
 export function isPlaybackOnlyDriveRevision(before: LearningDocument, after: LearningDocument): boolean {
   if (before.schemaVersion !== 3 || after.schemaVersion !== 3 || before.id !== after.id) return false;
-  const { playbackOverrides: oldRanges, ...oldContent } = before;
-  const { playbackOverrides: newRanges, ...newContent } = after;
+  const { playbackOverrides: oldRanges, scenePlaybackOverrides: oldScenes, ...oldContent } = before;
+  const { playbackOverrides: newRanges, scenePlaybackOverrides: newScenes, ...newContent } = after;
   return JSON.stringify(oldContent) === JSON.stringify(newContent) &&
-    JSON.stringify(oldRanges) !== JSON.stringify(newRanges);
+    (JSON.stringify(oldRanges) !== JSON.stringify(newRanges) ||
+      JSON.stringify(oldScenes) !== JSON.stringify(newScenes));
 }
 
 async function updateOwnedPlaybackBackup(

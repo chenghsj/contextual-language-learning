@@ -64,6 +64,7 @@ function render(locale: UiLocale, doc: typeof document = document): string {
     playbackRate: 1, setPlaybackRate: () => undefined,
     onError: () => undefined, onDownload: () => undefined,
     onSaveRange: async () => undefined,
+    onSaveSceneRange: async () => undefined,
   }));
 }
 
@@ -134,7 +135,7 @@ test("V3 keeps playback tracking and uses the requested inline guided calibratio
   assert.match(source, /captureBoundary\("end"\)/);
   assert.match(source, /await onSaveRange\(cueId, draftRange\)/);
   assert.match(source, /onClick=\{cancelCalibration\}/);
-  assert.match(source, /id="contextual-inline-calibration"/);
+  assert.match(source, /id=\{scope === "scene" \? "contextual-scene-calibration" : "contextual-inline-calibration"\}/);
   assert.doesNotMatch(source, /<dialog|\.showModal\(|updateRange\(|−0\.5s|\+0\.5s/);
   for (const locale of Object.keys(messages) as UiLocale[]) {
     const copy = contextualReaderMessages[locale];
@@ -146,4 +147,39 @@ test("V3 keeps playback tracking and uses the requested inline guided calibratio
   assert.ok(!html.includes("<dialog"), "no modal, even while closed");
   assert.ok(!html.includes('id="contextual-inline-calibration"'),
     "calibration is expanded inline only on demand");
+});
+
+test("V3 can rewind, adjust and audition a draft; both readers offer 2×", async () => {
+  const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
+  const legacy = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
+  for (const code of [source, legacy]) assert.ok(code.includes("1.5, 1.75, 2"));
+  for (const action of ["async function rewindCalibration()", "adjustDraftStart(-500)",
+    "async function previewCalibration()", "border-sky-300 bg-sky-50", "void finishCalibration()"]) {
+    assert.ok(source.includes(action), action);
+  }
+  for (const locale of Object.keys(contextualReaderMessages) as UiLocale[]) {
+    const copy = contextualReaderMessages[locale];
+    assert.ok(copy.rewind3 && copy.startEarlier && copy.startLater && copy.preview, locale);
+  }
+});
+
+test("scene and sentence calibration share guided editor but persist distinct document ranges", async () => {
+  const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  assert.ok(source.includes('renderCalibration("scene")'));
+  assert.ok(source.includes('renderCalibration("cue")'));
+  assert.ok(source.includes('openCalibration("scene")'));
+  assert.ok(source.includes('openCalibration("cue")'));
+  assert.ok(source.includes("scenePlaybackOverrides"));
+  assert.ok(source.includes("await onSaveSceneRange(scene.id, draftRange)"));
+  assert.ok(source.includes("await onSaveRange(cueId, draftRange)"));
+  assert.ok(source.includes("selectedSceneRange"));
+  assert.ok(app.includes('type: "saveScenePlaybackRange"'));
+  assert.ok(app.includes('response.type !== "scenePlaybackRangeSaved"'));
+  const html = render("zh-TW");
+  assert.ok(html.includes(contextualReaderMessages["zh-TW"].adjustScene));
+  assert.ok(html.includes(contextualReaderMessages["zh-TW"].loopScene));
+  for (const copy of Object.values(contextualReaderMessages)) {
+    assert.ok(copy.adjustScene && copy.calibrateSceneStart && copy.calibrateSceneEnd && copy.adjusted);
+  }
 });
