@@ -24,16 +24,23 @@ export function driveApiError(status: number, body: unknown, operation: string):
   const reasons = Array.isArray(error.errors)
     ? error.errors.filter((entry): entry is Record<string, unknown> =>
         !!entry && typeof entry === "object") : [];
-  const rawReason = reasons.find(entry => typeof entry.reason === "string")?.reason;
-  const rawStatus = typeof error.status === "string" ? error.status : "";
+  // Newer Google APIs often put the actionable cause in error.details[]
+  // instead of legacy error.errors[]. Never expose error.message, URLs or tokens.
+  const details = Array.isArray(error.details)
+    ? error.details.filter((entry): entry is Record<string, unknown> =>
+        !!entry && typeof entry === "object") : [];
   const clean = (value: unknown): string => typeof value === "string" &&
     /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(value) ? value : "";
-  const reason = clean(rawReason) || clean(rawStatus) || "unknown";
+  const reason = clean(reasons.find(entry => clean(entry.reason))?.reason) ||
+    clean(details.find(entry => clean(entry.reason))?.reason) ||
+    clean(error.status) || "unknown";
   let hint = "請確認目前帳號的 Google Drive 權限，並重試。";
-  if (reason === "accessNotConfigured" || reason === "SERVICE_DISABLED") {
+  if (["accessNotConfigured", "SERVICE_DISABLED", "API_DISABLED"].includes(reason)) {
     hint = "Google Drive API 尚未啟用；請在 OAuth 用戶端所屬的 Google Cloud 專案啟用 Drive API。";
-  } else if (reason === "insufficientPermissions" || reason === "PERMISSION_DENIED") {
-    hint = "目前授權可能缺少 drive.file 權限；請確認所選帳號與授權範圍後重新連結。";
+  } else if (["insufficientPermissions", "ACCESS_TOKEN_SCOPE_INSUFFICIENT"].includes(reason)) {
+    hint = "目前授權缺少 Google Drive 所需範圍；請重新連結並確認 drive.file 權限。";
+  } else if (reason === "PERMISSION_DENIED") {
+    hint = "Google Drive 拒絕存取；請確認 Drive API 已啟用、帳號與檔案權限。不要只因已完成 Google 登入就假設可使用 Drive。";
   } else if (reason === "appNotAuthorizedToFile" || reason === "forbidden") {
     hint = "這個 Google 帳號沒有存取此檔案的權限；請確認備份帳號及檔案是否由本應用程式建立。";
   } else if (["rateLimitExceeded", "userRateLimitExceeded", "quotaExceeded",
