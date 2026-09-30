@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GenerationRequestSchema, type JobSummary } from "@immersive/core";
+import { GenerationRequestSchema, createJob, type JobSummary } from "@immersive/core";
 import { JobManager } from "./manager";
 import { localStoragePorts } from "../storage/file";
 
@@ -14,7 +14,7 @@ function request() {
     source: { platform: "import", title: "Resume lesson" },
     profile: { targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
       mode: "guided", maxNewVocabulary: 3, exerciseCount: 1 },
-    agent: { provider: "claude", modelId: "" },
+    agent: { provider: "custom-" + "a".repeat(24), modelId: "" },
     cues: [
       { id: "cue-1", startMs: 0, endMs: 2000, originalText: "Good morning!" },
       { id: "cue-2", startMs: 310_000, endMs: 312_000, originalText: "Nice to meet you." },
@@ -105,6 +105,26 @@ test("study progress is stored separately from the generated document", async ()
     await storage.progress.save(progress);
     assert.deepEqual(await storage.progress.get(documentId), progress);
     assert.equal(await storage.documents.get(documentId), null);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("legacy built-in job history remains readable, but unfinished jobs cannot resume", async () => {
+  const root = await mkdtemp(join(tmpdir(), "immersive-legacy-jobs-"));
+  try {
+    const storage = localStoragePorts(root);
+    const requestData = request();
+    const legacy = { ...requestData, agent: { provider: "agy", modelId: "" } };
+    const manager = new JobManager({ storage, legacyGeneration: true,
+      generateSection: async () => sample }, () => undefined);
+    await assert.rejects(manager.start(legacy.id, legacy), /no longer supported/);
+    const saved = createJob(legacy, 2);
+    await storage.jobs.create(saved);
+    await assert.rejects(manager.resume(randomUUID(), saved.summary.id),
+      /Import your own CLI Agent JSON and create a new lesson/);
+    assert.equal((await storage.jobs.get(saved.summary.id))?.summary.status, "queued",
+      "migration must not rewrite or silently cancel the historical checkpoint");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

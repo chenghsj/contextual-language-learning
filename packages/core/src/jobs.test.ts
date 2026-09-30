@@ -9,7 +9,7 @@ function request() {
     id: randomUUID(), source: { platform: "import", title: "A lesson" },
     profile: { targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
       mode: "guided", maxNewVocabulary: 4, exerciseCount: 2 },
-    agent: { provider: "claude", modelId: "" },
+    agent: { provider: "custom-" + "a".repeat(24), modelId: "" },
     cues: [{ id: "cue-1", startMs: 1000, endMs: 2000, originalText: "Good morning." }],
   });
 }

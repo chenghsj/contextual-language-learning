@@ -1,25 +1,34 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences } from "./agent-model-preferences";
+import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences,
+  filterImportedModelPreferences } from "./agent-model-preferences";
 
-test("model choice is scoped to Agent and its isolated CLI config directory", () => {
-  const preferences = {
-    [agentModelPreferenceKey("codex")]: "gpt-default",
-    [agentModelPreferenceKey("codex", "/Users/me/.codex-work")]: "gpt-work",
-    [agentModelPreferenceKey("claude")]: "sonnet",
+const first = "custom-" + "a".repeat(24);
+const second = "custom-" + "b".repeat(24);
+
+test("models are scoped to an imported Agent and its CLI account directory", () => {
+  const saved = {
+    [agentModelPreferenceKey(first)]: "default",
+    [agentModelPreferenceKey(first, "/Users/me/.work")]: "work",
+    [agentModelPreferenceKey(second)]: "another",
   };
-  assert.equal(savedAgentModel("codex", undefined, preferences), "gpt-default");
-  assert.equal(savedAgentModel("codex", "/Users/me/.codex-work", preferences), "gpt-work");
-  assert.equal(savedAgentModel("claude", undefined, preferences), "sonnet");
-  assert.equal(savedAgentModel("codex", "/Users/me/.codex-other", preferences), "");
+  assert.equal(savedAgentModel(first, undefined, saved), "default");
+  assert.equal(savedAgentModel(first, "/Users/me/.work", saved), "work");
+  assert.equal(savedAgentModel(first, "/Users/me/.other", saved), "");
+  assert.equal(savedAgentModel(second, undefined, saved), "another");
 });
 
-test("migrates old per-provider preferences without changing the selected Agent", () => {
-  const legacy = { codex: { modelId: "gpt-old", accountConfigDir: "/Users/me/.codex-work" },
-    claude: { modelId: "sonnet" } };
-  const migrated = migrateAgentModelPreferences({
-    provider: "codex", modelId: "gpt-current", accountConfigDir: "/Users/me/.codex-work",
-  }, legacy);
-  assert.equal(savedAgentModel("codex", "/Users/me/.codex-work", migrated), "gpt-current");
-  assert.equal(savedAgentModel("claude", undefined, migrated), "sonnet");
+test("migration drops obsolete built-in model settings without touching imported Agent preferences", () => {
+  const previous = {
+    [agentModelPreferenceKey("codex")]: "old",
+    [agentModelPreferenceKey(first, "/Users/me/.work")]: "new",
+    "bad": "ignored",
+  };
+  assert.deepEqual(filterImportedModelPreferences(previous),
+    { [agentModelPreferenceKey(first, "/Users/me/.work")]: "new" });
+  assert.equal(savedAgentModel("codex", undefined, previous), "");
+  const migrated = migrateAgentModelPreferences({ provider: "agy", modelId: "legacy" }, {
+    codex: { modelId: "legacy" }, [first]: { modelId: "imported", accountConfigDir: "/Users/me/.work" },
+  });
+  assert.deepEqual(migrated, { [agentModelPreferenceKey(first, "/Users/me/.work")]: "imported" });
 });

@@ -11,14 +11,16 @@ const registryRoot = () => appConfigRoot();
 const registryFile = () => join(registryRoot(), "agent-profiles.json");
 const profileSchema = z.array(z.object({
   id: z.string().uuid(),
-  provider: z.string().regex(/^(?:claude|codex|custom-[a-f0-9]{24})$/),
+  // Parse historical records without re-exposing removed built-in providers.
+  provider: z.string().regex(/^[a-z][a-z0-9-]{0,39}$/),
   label: z.string().min(1).max(80),
   directory: z.string().min(1).max(1024),
 })).max(30);
 
 export async function listAgentProfiles(): Promise<AgentProfile[]> {
   try {
-    return profileSchema.parse(JSON.parse(await readFile(registryFile(), "utf8")));
+    return profileSchema.parse(JSON.parse(await readFile(registryFile(), "utf8")))
+      .filter(profile => /^custom-[a-f0-9]{24}$/.test(profile.provider));
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
     throw new Error("Cannot load saved Agent profiles. Check the local profile registry.");
@@ -27,8 +29,7 @@ export async function listAgentProfiles(): Promise<AgentProfile[]> {
 
 /** Save names and paths only. Never read, copy, export or serialize CLI credentials. */
 export async function saveAgentProfile(provider: string, label: string, directory: string): Promise<AgentProfile[]> {
-  if (provider !== "claude" && provider !== "codex" &&
-      !(provider.startsWith("custom-") && (await getCustomAgent(provider)).profileEnvVar)) {
+  if (!/^custom-[a-f0-9]{24}$/.test(provider) || !(await getCustomAgent(provider)).profileEnvVar) {
     throw new Error("This Agent has no isolated CLI profile support.");
   }
   const name = label.trim();
@@ -49,6 +50,13 @@ export async function saveAgentProfile(provider: string, label: string, director
   return next;
 }
 
+/** Delete only Host-owned profile references, not the CLI's folder or credentials. */
+export async function removeAgentProfilesByProvider(provider: string): Promise<AgentProfile[]> {
+  const saved = await listAgentProfiles();
+  const next = saved.filter(profile => profile.provider !== provider);
+  if (next.length !== saved.length) await writeProfiles(next);
+  return next;
+}
 export async function removeAgentProfile(id: string): Promise<AgentProfile[]> {
   if (!z.string().uuid().safeParse(id).success) throw new Error("Invalid profile ID.");
   const saved = await listAgentProfiles();

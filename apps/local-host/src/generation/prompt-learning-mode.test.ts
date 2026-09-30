@@ -10,7 +10,7 @@ const makeRequest = (mode: GenerationRequest["profile"]["mode"]): GenerationRequ
     targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
     mode, maxNewVocabulary: 8, exerciseCount: 3, sceneCount: 4,
   },
-  agent: { provider: "claude", modelId: "" },
+  agent: { provider: "custom-" + "a".repeat(24), modelId: "" },
   cues: [{ id: "cue-1", startMs: 1000, endMs: 3000, originalText: "I need to decide." }],
 });
 

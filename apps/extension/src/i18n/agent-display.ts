@@ -1,15 +1,9 @@
-/** UI-facing names; provider IDs and CLI commands remain unchanged. */
-const KNOWN_AGENT_NAMES: Readonly<Record<string, string>> = {
-  claude: "Claude Code",
-  codex: "Codex CLI",
-  agy: "Antigravity CLI (agy)",
-};
-
+/** User-imported CLI labels come from the Native Host registry, not a provider preset. */
 export function agentDisplayName(provider: string, reportedLabel?: string): string {
-  return KNOWN_AGENT_NAMES[provider] ?? reportedLabel?.trim() ?? provider;
+  return reportedLabel?.trim() || provider;
 }
 
-/** Never guess a CLI's effective model when the user left the model ID blank. */
+/** Never guess a CLI's effective model when its model ID is blank. */
 export function modelDisplayName(
   modelId: string,
   available: readonly { id: string; label: string }[],

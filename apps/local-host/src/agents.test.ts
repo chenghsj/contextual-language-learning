@@ -1,16 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getAgentAdapter, getAgentCatalog } from "./agents";
+import { assertImportedAgentProvider, generateWithAgent, getAgentCatalog } from "./agents";
 
-test("provider IDs resolve through the trusted registry", () => {
-  assert.equal(getAgentAdapter("claude").label, "Claude Code");
-  assert.equal(getAgentAdapter("codex").supportsAccountProfiles, true);
-  assert.equal(getAgentAdapter("agy").supportsAccountProfiles, false);
-  assert.throws(() => getAgentAdapter("../../bin/sh"), /Unsupported Agent/);
+test("the Host catalog contains only user-imported Agent definitions", async () => {
+  const agents = await getAgentCatalog();
+  assert.ok(agents.every(entry =>
+    /^custom-[a-f0-9]{24}$/.test(entry.id) && entry.custom === true &&
+      typeof entry.label === "string" && typeof entry.installed === "boolean"));
 });
 
-test("catalog presents providers with explicit capabilities and installation status", async () => {
-  const entries = await getAgentCatalog();
-  assert.ok(entries.some(entry => entry.id === "claude"));
-  assert.ok(entries.every(entry => typeof entry.installed === "boolean" && typeof entry.label === "string"));
+test("removed built-in providers cannot execute or be selected", async () => {
+  for (const provider of ["claude", "codex", "agy", "../../bin/sh", ""]) {
+    assert.throws(() => assertImportedAgentProvider(provider), /no longer supported/);
+    await assert.rejects(() => generateWithAgent({ provider, modelId: "" },
+      "Hello", new AbortController().signal), /no longer supported/);
+  }
+  assert.doesNotThrow(() => assertImportedAgentProvider("custom-" + "a".repeat(24)));
 });

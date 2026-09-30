@@ -30,19 +30,56 @@ Existing platform modules:
 
 Do not assume every video site exposes a playback API or a permitted subtitle API. Subtitle ingestion stays separately pluggable: licensed/user-supplied SRT/VTT/text is the supported baseline. A new provider can support reading documents without any seek/loop or subtitle extraction.
 
-## Agents: Adapter + trusted Registry
+## Agents: strict bring-your-own CLI registry (no built-in providers)
 
-apps/local-host/src/agents.ts registers provider modules implementing AgentAdapter from agents/types.ts. Each adapter owns:
+New users have **no preselected provider**. The Side Panel accepts one
+user-supplied JSON object describing the executable, argv, stdin/argument
+prompt transport, single JSON response/file transport, optional model flag
+and optional isolated account-directory environment variable. A fixed prompt
+helps users ask their own CLI for this JSON; the extension does not call a
+provider to manufacture its own setup. The imported object must not contain
+an ID, unknown keys or credentials. The Host generates a unique ID on import
+and retains it for edits. Strict shared Zod validation enforces transport and
+placeholder rules before the Host can persist the definition.
 
-- CLI executable name and human-readable label
-- Account-profile support and environment setup (never copy credentials to the browser)
-- Noninteractive generation command, model handling and result parsing
+`apps/local-host/src/agents/custom.ts` resolves only validated executable
+names/absolute paths, runs direct argv through `spawn(..., { shell: false })`,
+uses bounded temporary workspace/output, and parses the single JSON result.
+An explicit user-initiated test may contact a paid provider. A valid JSON
+test does not establish complete V3 lesson-schema compatibility; the
+generation pipeline continues to validate model content against the
+existing document schemas.
 
-apps/local-host/src/agents/process.ts owns executable resolution and process execution, always with spawn argument arrays (no shell). The generic generation pipeline calls generateWithAgent without provider-specific conditionals. A Host health request returns the actual adapter catalog and installed status, so the Side Panel presents providers discovered from the Host.
+Definitions and optional named account-environment directory references
+are stored in separate local Host registries, **never** with credentials.
+The default environment is the CLI's existing login. Model selection is
+keyed by Agent and environment. Removing a custom Agent first checks **all**
+persisted jobs; queued, running, waiting and failed/resumable jobs block
+removal. Only Host-owned Agent/profile records and the extension's model
+preferences are removed; the CLI executable, directory, login, lessons and
+job history remain untouched.
 
-**To add another agent:** create agents/<id>.ts, register the adapter in agents.ts, add adapter/unit tests and validate the new CLI's model/account/permissions behavior. The Zod document/Agent schemas allow safe provider IDs, but the Host rejects IDs not in its trusted registry. Arbitrary CLI names are never executed.
+The Native Host no longer contains built-in Claude, Codex or AGY adapters,
+model aliases or account switching logic. `agents.ts` dispatches solely to
+the imported CLI registry; the generic model catalog parser and optional
+account-directory environment variable apply equally to any imported CLI.
+A Native Host health response lists **only** imported Agent definitions.
+Existing V1/V2/V3 documents and job snapshots retain historical provider IDs
+as metadata, but a queued/waiting/failed job using a removed built-in Agent
+cannot resume. The Side Panel shows a localized explanation and preserves
+the old checkpoint and completed documents. Users can create a new lesson
+after importing their CLI JSON; no job is silently re-assigned.
 
-No plugin code is loaded dynamically from web content or subtitle text. New adapters are packaged with the Host/extension, tested and installed through the normal release process.
+Host setup/status handles registration and version compatibility across
+macOS, Windows and Linux and Chrome, Edge and Chromium. The health response
+explicitly advertises `agentMode: "imported-only"`. A newer extension refuses
+generation and Agent mutation when connected to a Host without that capability,
+even when an older Host reports the same package version. Updating an older
+Host requires installing the new Host once; future Agent imports never change
+Host registration or require reinstalling it.
+
+No plugin code is loaded dynamically from a webpage, subtitle or model
+response. Imported JSON is configuration data, not executable JavaScript.
 
 ## Native Host OS Strategy (no inheritance hierarchy)
 
@@ -66,7 +103,7 @@ A document refers to source.platform as a provider identifier. The platform can 
 
 ## Generation Pipeline + Job State Machine
 
-The generation pipeline in apps/local-host/src/generation/pipeline.ts owns six explicit stages: plan (subtitle cue chunking), generate (injected SectionGenerator/Agent Adapter), validate (Zod and configured learning-load limits), checkpoint (persist each successful LearningSection), assemble (stable version-1 document), and persist (document repository + Markdown export). A failed chapter never overwrites earlier validated checkpoints. Resuming uses the original saved request snapshot and preserved section IDs, not whatever settings are currently selected in the Side Panel.
+The generation pipeline in apps/local-host/src/generation/pipeline.ts owns six explicit stages: plan (subtitle cue chunking), generate (injected SectionGenerator/imported CLI executor), validate (Zod and configured learning-load limits), checkpoint (persist each successful LearningSection), assemble (stable version-1 document), and persist (document repository + Markdown export). A failed chapter never overwrites earlier validated checkpoints. Resuming uses the original saved request snapshot and preserved section IDs, not whatever settings are currently selected in the Side Panel. Historical snapshots using removed built-in provider IDs remain readable but their unfinished jobs are not resumable.
 
 The JobManager in apps/local-host/src/jobs/manager.ts owns the state machine (queued → running → completed | failed | waiting | cancelled). Failed/waiting jobs may return to queued, but completed and cancelled jobs are terminal. The Host records the generating process PID so another live Host's running job is not misclassified as interrupted. Closing the Native Messaging port aborts active execution and leaves durable checkpoints; the next job-list/resume operation reconciles orphaned running jobs to waiting. A separate background daemon is **not** implemented.
 
