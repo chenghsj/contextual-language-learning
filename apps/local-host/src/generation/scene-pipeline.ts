@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import {
-  CandidateBatchSchema, FinalSelectionSchema, LearningDocumentSchema, StudySceneContentSchema,
-  chunkCues, normalizeLearningCues, type CandidateScene, type JobSummary, type SubtitleCue, type StudyScene,
+  CandidateBatchSchema, ContextualSceneContentSchema, FinalSelectionSchema, LearningDocumentSchema, StudySceneContentSchema, StudySceneV3Schema,
+  chunkCues, normalizeLearningCues, type CandidateScene, type JobSummary, type SubtitleCue, type StudyScene, type StudySceneV3,
 } from "@immersive/core";
 import type { PipelineDependencies } from "./pipeline";
 import { generateWithAgent } from "../agents";
-import { candidatePrompt, selectionPrompt, studyScenePrompt } from "./scene-prompts";
+import { candidatePrompt, contextualScenePrompt, selectionPrompt, studyScenePrompt } from "./scene-prompts";
 import { toMarkdown } from "./markdown";
 
 function assertRunning(signal: AbortSignal): void {
@@ -14,6 +14,24 @@ function assertRunning(signal: AbortSignal): void {
 
 function normalizeExpression(text: string): string {
   return text.replace(/\s+/g, " ").trim();
+}
+
+/** Resolve an exact phrase to original cue IDs, even when the words span adjacent cues. */
+function expressionCueIds(cues: readonly SubtitleCue[], expression: string): string[] {
+  const rows = cues.map(cue => normalizeExpression(cue.originalText));
+  const dialogue = rows.join(" ");
+  const normalized = normalizeExpression(expression);
+  const start = dialogue.indexOf(normalized);
+  if (start < 0) return [];
+  const end = start + normalized.length;
+  let offset = 0;
+  const ids: string[] = [];
+  rows.forEach((text, index) => {
+    const rowEnd = offset + text.length;
+    if (start < rowEnd && end > offset) ids.push(cues[index].id);
+    offset = rowEnd + 1;
+  });
+  return ids;
 }
 
 function validatedCandidate(
@@ -34,7 +52,7 @@ function validatedCandidate(
   }
   for (const expression of candidate.focusExpressions) {
     const exact = normalizeExpression(expression);
-    if (!rows.some(row => normalizeExpression(row!.cue.originalText).includes(exact))) {
+    if (!expressionCueIds(rows.map(row => row!.cue), exact).length) {
       throw new Error("AI focus expression is not present in the selected subtitle cues");
     }
   }
@@ -119,10 +137,9 @@ export function assembleStudyScene(
   if (selected.some(cue => !cue)) throw new Error("Selected source subtitles no longer exist");
   const focusCueIds: string[] = [];
   for (const expression of candidate.focusExpressions) {
-    const matched = selected.find(cue => normalizeExpression(cue!.originalText)
-      .includes(normalizeExpression(expression)));
-    if (!matched) throw new Error("Focus expression is no longer present in the original transcript");
-    if (!focusCueIds.includes(matched.id)) focusCueIds.push(matched.id);
+    const matched = expressionCueIds(selected.map(cue => cue!), expression);
+    if (!matched.length) throw new Error("Focus expression is no longer present in the original transcript");
+    if (!focusCueIds.includes(matched[0])) focusCueIds.push(matched[0]);
   }
   const timed = selected.every(cue => cue!.startMs !== null && cue!.endMs !== null);
   const startMs = timed ? Math.min(...selected.map(cue => cue!.startMs!)) : null;
@@ -131,6 +148,67 @@ export function assembleStudyScene(
     ...content, id: randomUUID(), learningGoal: candidate.learningGoal,
     cueIds, focusCueIds, startMs, endMs,
   };
+}
+
+/** Reject model-provided source references or examples that contradict the canonical scene. */
+export function assembleContextualScene(
+  candidate: CandidateScene, cues: SubtitleCue[], raw: unknown, vocabularyLimit: number, exampleCount: number,
+): StudySceneV3 {
+  const content = ContextualSceneContentSchema.parse(raw);
+  if (content.focusItems.length !== candidate.focusExpressions.length ||
+      content.focusItems.length > vocabularyLimit) {
+    throw new Error("Contextual scene must explain each selected focus expression exactly once");
+  }
+  if (content.translations.length !== candidate.cueIds.length ||
+      content.translations.some((item, index) => item.cueId !== candidate.cueIds[index])) {
+    throw new Error("Scene translations must reference every selected cue exactly once and in order");
+  }
+  const byId = new Map(cues.map(cue => [cue.id, cue]));
+  const selected = candidate.cueIds.map(id => byId.get(id));
+  if (selected.some(cue => !cue)) throw new Error("Selected source subtitles no longer exist");
+  const original = selected.map(cue => cue!);
+  const inScene = new Set(candidate.cueIds);
+  const focusCueIds: string[] = [];
+  for (const [index, item] of content.focusItems.entries()) {
+    if (normalizeExpression(item.expression) !== normalizeExpression(candidate.focusExpressions[index])) {
+      throw new Error("Contextual expression must match the selected source phrase in order");
+    }
+    const actual = expressionCueIds(original, item.expression);
+    if (!actual.length || actual.length !== item.sourceCueIds.length ||
+        actual.some((id, position) => id !== item.sourceCueIds[position])) {
+      throw new Error("Contextual expression source cue IDs do not match the original transcript");
+    }
+    if (!focusCueIds.includes(actual[0])) focusCueIds.push(actual[0]);
+    if (item.contextCueIds.some(id => !inScene.has(id)) ||
+        (candidate.cueIds.length > 1 && !item.contextCueIds.some(id => !actual.includes(id)))) {
+      throw new Error("Context evidence must reference real neighboring dialogue cues");
+    }
+    if (item.wordNotes.some(word =>
+        !normalizeExpression(item.expression).includes(normalizeExpression(word.surface)))) {
+      throw new Error("Word notes must use surface forms from the selected focus expression");
+    }
+    if (item.examples.length !== exampleCount) {
+      throw new Error("Contextual example count does not match the lesson setting");
+    }
+    const situations = item.examples.map(example => normalizeExpression(example.situation).toLowerCase());
+    if (new Set(situations).size !== situations.length || item.examples.some(example =>
+        !example.dialogue.some(line => normalizeExpression(line.text).includes(normalizeExpression(item.expression))))) {
+      throw new Error("Contextual examples must use the focus expression in distinct situations");
+    }
+  }
+  const timed = original.every(cue => cue.startMs !== null && cue.endMs !== null);
+  return StudySceneV3Schema.parse({
+    ...content, id: randomUUID(), learningGoal: candidate.learningGoal,
+    cueIds: candidate.cueIds, focusCueIds,
+    startMs: timed ? Math.min(...original.map(cue => cue.startMs!)) : null,
+    endMs: timed ? Math.max(...original.map(cue => cue.endMs!)) : null,
+    vocabulary: content.focusItems.map(item => ({
+      expression: item.expression, meaning: item.meaning, explanation: item.contextExplanation,
+      example: item.examples[0].dialogue.find(line =>
+        normalizeExpression(line.text).includes(normalizeExpression(item.expression)))?.text ?? "",
+    })),
+    insights: [], exercises: [],
+  });
 }
 
 export async function runSceneGenerationPipeline(
@@ -144,12 +222,13 @@ export async function runSceneGenerationPipeline(
     throw new Error("Scene job is not in the running state");
   }
   const chunks = chunkCues(job.request.cues);
+  const contextual = job.request.lessonFormat === "contextual-v3";
   const plan = job.scenePlan;
   if (plan.candidateChunks.length > chunks.length) throw new Error("Saved candidate checkpoint exceeds transcript");
 
   const existing = await storage.documents.get(jobId);
   if (existing) {
-    if (job.summary.completed !== job.summary.total || existing.schemaVersion !== 2) {
+    if (job.summary.completed !== job.summary.total || existing.schemaVersion !== (contextual ? 3 : 2)) {
       throw new Error("Existing document conflicts with an incomplete scene job");
     }
     const finished = await storage.jobs.update(jobId, current => ({
@@ -225,10 +304,14 @@ export async function runSceneGenerationPipeline(
     const vocabularyBudget = Math.min(candidate.focusExpressions.length,
       job.request.profile.maxNewVocabulary - usedVocabulary);
     const exerciseBudget = Math.min(1, job.request.profile.exerciseCount - usedExercises);
+    const exampleCount = job.request.profile.contextualExampleCount ?? 2;
     const raw = await generate(job.request.agent,
-      studyScenePrompt(job.request, candidate, cues, vocabularyBudget, exerciseBudget), signal);
+      contextual ? contextualScenePrompt(job.request, candidate, cues, vocabularyBudget, exampleCount)
+        : studyScenePrompt(job.request, candidate, cues, vocabularyBudget, exerciseBudget), signal);
     assertRunning(signal);
-    const section = assembleStudyScene(candidate, job.request.cues, raw, vocabularyBudget, exerciseBudget);
+    const section = contextual
+      ? assembleContextualScene(candidate, job.request.cues, raw, vocabularyBudget, exampleCount)
+      : assembleStudyScene(candidate, job.request.cues, raw, vocabularyBudget, exerciseBudget);
     job = await storage.jobs.update(jobId, current => {
       assertRunning(signal);
       if (current.summary.status !== "running" || !current.scenePlan?.selected ||
@@ -247,11 +330,11 @@ export async function runSceneGenerationPipeline(
   }
   assertRunning(signal);
   const document = LearningDocumentSchema.parse({
-    id: job.summary.id, schemaVersion: 2, createdAt: job.summary.createdAt,
+    id: job.summary.id, schemaVersion: contextual ? 3 : 2, createdAt: job.summary.createdAt,
     source: job.request.source, profile: job.request.profile, generation: job.request.agent,
     cues: job.request.cues, sections: job.sections,
   });
-  if (document.schemaVersion !== 2) throw new Error("Scene generation created an unexpected document version");
+  if (document.schemaVersion !== (contextual ? 3 : 2)) throw new Error("Scene generation created an unexpected document version");
   const vocabulary = document.sections.reduce((sum, scene) => sum + scene.vocabulary.length, 0);
   const exercises = document.sections.reduce((sum, scene) => sum + scene.exercises.length, 0);
   if (vocabulary > job.request.profile.maxNewVocabulary ||
