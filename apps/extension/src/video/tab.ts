@@ -1,3 +1,4 @@
+import { isVideoCommandErrorCode, type VideoCommandErrorCode } from "./command-errors";
 import type { VideoAdapter } from "./types";
 import { VIDEO_READER_STATUS, VIDEO_READER_VERSION, RELOAD_READER_MESSAGE } from "./reader-health";
 
@@ -134,7 +135,7 @@ export async function openOrFocusVideoTab(
 }
 
 export class VideoCommandError extends Error {
-  constructor(message: string, readonly code?: "TRACK_UNAVAILABLE") {
+  constructor(message: string, readonly code?: VideoCommandErrorCode) {
     super(message);
     this.name = "VideoCommandError";
   }
@@ -156,7 +157,7 @@ export async function sendToVideo<T extends { ok: boolean; error?: string; error
     throw error;
   }
   if (!response?.ok) throw new VideoCommandError(response?.error ?? "播放器無法執行這個操作。",
-    response?.errorCode === "TRACK_UNAVAILABLE" ? "TRACK_UNAVAILABLE" : undefined);
+    isVideoCommandErrorCode(response?.errorCode) ? response.errorCode : undefined);
   if (activate) await focusVideoTab(tab);
   return response;
 }

@@ -1,9 +1,11 @@
+import { isVideoCommandErrorCode, type VideoCommandErrorCode } from "../video/command-errors";
 import type { LearningLanguage } from "@immersive/core";
 import { VIDEO_READER_STATUS, VIDEO_READER_VERSION, RELOAD_READER_MESSAGE } from "../video/reader-health";
 
 type LoopMessage =
-  | { type: "LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
+  | { type: "LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number; resumeMs?: number }
   | { type: "LOOP_CLEAR" }
+  | { type: "PLAYBACK_PLAY" | "PLAYBACK_PAUSE" }
   | { type: "VIDEO_METADATA_GET" }
   | { type: "YOUTUBE_SEEK"; timeMs: number }
   | { type: "PLAYBACK_RATE_SET"; rate: number }
@@ -67,7 +69,7 @@ function onTimeUpdate(): void {
 
 type CaptionResponse = {
   source: "immersive-learning"; id: string; ok: boolean; bridgeVersion?: string;
-  text?: string; language?: string; error?: string; errorCode?: "TRACK_UNAVAILABLE";
+  text?: string; language?: string; error?: string; errorCode?: VideoCommandErrorCode;
 };
 
 function requestYouTubeCaptions(videoId: string, language: string): Promise<CaptionResponse> {
@@ -190,7 +192,7 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
         typeof result.language === "string"
         ? { ok: true, text: result.text, language: result.language }
         : { ok: false, error: result.error ?? "YouTube did not return readable subtitles.",
-            ...(result.errorCode === "TRACK_UNAVAILABLE" ? { errorCode: result.errorCode } : {}) });
+            ...(isVideoCommandErrorCode(result.errorCode) ? { errorCode: result.errorCode } : {}) });
     }).catch(error => {
       respond({ ok: false, error: error instanceof Error ? error.message : "YouTube subtitles are unavailable." });
     });
@@ -215,6 +217,14 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
     } catch {
       respond({ ok: false, error: "YouTube could not seek to the subtitle timestamp." });
     }
+    return true;
+  }
+  if (message.type === "PLAYBACK_PLAY" || message.type === "PLAYBACK_PAUSE") {
+    const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ?? document.querySelector<HTMLVideoElement>("video");
+    if (!video) { respond({ ok: false, error: "The video player is not ready." }); return; }
+    clearLoop();
+    if (message.type === "PLAYBACK_PAUSE") { video.pause(); respond({ ok: true }); }
+    else void video.play().then(() => respond({ ok: true })).catch(() => respond({ ok: false, error: "YouTube blocked playback. Press Play in the video tab." }));
     return true;
   }
   if (message.type === "PLAYBACK_STATUS_GET") {
@@ -263,7 +273,8 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
     respond({ ok: false, error: "No YouTube video player is available in this tab." });
     return;
   }
-  if (!Number.isFinite(message.startMs) || !Number.isFinite(message.endMs) ||
+  if ((message.resumeMs !== undefined && (!Number.isInteger(message.resumeMs) || message.resumeMs < message.startMs || message.resumeMs >= message.endMs)) ||
+      !Number.isFinite(message.startMs) || !Number.isFinite(message.endMs) ||
       message.startMs < 0 || message.endMs <= message.startMs ||
       message.endMs - message.startMs > 600000 ||
       ![0, 1, 2, 3].includes(message.delaySeconds) ||
@@ -283,7 +294,7 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
   video.addEventListener("timeupdate", onTimeUpdate);
   video.addEventListener("pause", onPause);
   video.addEventListener("seeking", onSeeking);
-  seek(video, message.startMs / 1000);
+  seek(video, (message.resumeMs ?? message.startMs) / 1000);
   void video.play().catch(() => clearLoop());
   respond({ ok: true });
 });

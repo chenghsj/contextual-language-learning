@@ -24,3 +24,11 @@ test("missing or corrupt timestamps never create a misleading active highlight",
   assert.equal(playingCueAt(["a", "b"], cues, NaN), null);
   assert.equal(playingCueAt(["a", "b"], cues, Infinity), null);
 });
+
+test("an explicitly playing sentence stays highlighted through its playback range", () => {
+  const active = { cueId: "a", startMs: 500, endMs: 3_600 };
+  assert.equal(playingCueAt(["a", "b"], cues, 3_200, active), "a",
+    "sentence a is still playing even though its subtitle ended and sentence b has started");
+  assert.equal(playingCueAt(["a", "b"], cues, 3_600, active), "b",
+    "after the playback range, normal subtitle following resumes");
+});

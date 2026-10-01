@@ -44,6 +44,12 @@ export const youtubeAdapter: VideoAdapter = {
   async loop(url, options) {
     await sendToVideo(youtubeAdapter, url, { type: "LOOP_SET", ...options }, true);
   },
+  async play(url) {
+    await sendToVideo(youtubeAdapter, url, { type: "PLAYBACK_PLAY" });
+  },
+  async pause(url) {
+    await sendToVideo(youtubeAdapter, url, { type: "PLAYBACK_PAUSE" });
+  },
   async stopLoop(url) {
     await sendToVideo(youtubeAdapter, url, { type: "LOOP_CLEAR" });
   },

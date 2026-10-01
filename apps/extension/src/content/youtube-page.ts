@@ -1,3 +1,4 @@
+import { CaptionRetrievalError } from "../video/command-errors";
 import { LEARNING_LANGUAGES } from "@immersive/core";
 import {
   allowedYouTubeCaptionUrl, chooseYouTubeCaptionTrack,
@@ -16,7 +17,9 @@ import {
   const BRIDGE_VERSION = "native-caption-capture-v2";
   const HEALTH_REQUEST = "immersive-learning:youtube:bridge-health-request";
   const HEALTH_RESPONSE = "immersive-learning:youtube:bridge-health-response";
-  class MissingYouTubeCaptionTrackError extends Error {}
+  class MissingYouTubeCaptionTrackError extends CaptionRetrievalError {
+    constructor(message: string) { super(message, "TRACK_UNAVAILABLE"); }
+  }
   type CaptionRequest = {
     source: "immersive-learning"; id: string; videoId: string; language: string;
   };
@@ -134,7 +137,7 @@ import {
   }
 
   async function getCurrentCaptions(request: CaptionRequest): Promise<{ text: string; language: string }> {
-    if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
+    if (currentVideoId() !== request.videoId) throw new CaptionRetrievalError("The YouTube video changed. Try again.", "VIDEO_CHANGED");
     if (!LEARNING_LANGUAGES.some(language => language === request.language)) {
       throw new Error("Unsupported learning language.");
     }
@@ -142,7 +145,7 @@ import {
     // The watch URL can become active before its player has loaded caption metadata.
     for (let attempt = 0; !tracks.length && attempt < 8; attempt++) {
       await new Promise<void>(resolve => setTimeout(resolve, 250));
-      if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
+      if (currentVideoId() !== request.videoId) throw new CaptionRetrievalError("The YouTube video changed. Try again.", "VIDEO_CHANGED");
       tracks = tracksForVideo(request.videoId);
     }
     if (!tracks.length) {
@@ -172,7 +175,7 @@ import {
     let emptyResponses = 0;
     let deadlineExpired = false;
     for (const candidate of candidates) {
-      if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
+      if (currentVideoId() !== request.videoId) throw new CaptionRetrievalError("The YouTube video changed. Try again.", "VIDEO_CHANGED");
       const remainingMs = deadline - Date.now();
       if (remainingMs < 250) { deadlineExpired = true; break; }
       try {
@@ -183,11 +186,11 @@ import {
         if (!response.ok) throw new Error("YouTube subtitle request failed (HTTP " + response.status + ").");
         if (response.url) allowedYouTubeCaptionUrl(response.url, request.videoId);
         if (Number(response.headers.get("content-length") ?? 0) > 3_000_000) {
-          throw new Error("YouTube subtitle document exceeds the size limit.");
+          throw new CaptionRetrievalError("YouTube subtitle document exceeds the size limit.", "CAPTION_TOO_LARGE");
         }
         const body = await response.text();
-        if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
-        if (body.length > 3_000_000) throw new Error("YouTube subtitle document exceeds the size limit.");
+        if (currentVideoId() !== request.videoId) throw new CaptionRetrievalError("The YouTube video changed. Try again.", "VIDEO_CHANGED");
+        if (body.length > 3_000_000) throw new CaptionRetrievalError("YouTube subtitle document exceeds the size limit.", "CAPTION_TOO_LARGE");
         if (!body.trim()) {
           emptyResponses++;
           throw new Error("YouTube returned an empty subtitle response (HTTP " + response.status + ").");
@@ -196,16 +199,16 @@ import {
           throw new Error("YouTube returned HTML instead of a subtitle document (HTTP " + response.status + ").");
         }
         const text = youtubeTimedTextToVtt(body);
-        if (text.length > 3_000_000) throw new Error("YouTube subtitles exceed the size limit.");
+        if (text.length > 3_000_000) throw new CaptionRetrievalError("YouTube subtitles exceed the size limit.", "CAPTION_TOO_LARGE");
         return { text, language: track.languageCode };
       } catch (error) {
-        if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
+        if (currentVideoId() !== request.videoId) throw new CaptionRetrievalError("The YouTube video changed. Try again.", "VIDEO_CHANGED");
         // A real caption response may arrive through the player's fetch/XHR
         // while one of our fallback URLs fails or returns an empty body.
         const playerCaptions = fromPlayer(request.videoId, track.languageCode, track.kind);
         if (playerCaptions) return { text: playerCaptions.text, language: playerCaptions.language };
         lastError = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")
-          ? new Error("A YouTube subtitle request timed out. Enable CC, play the video and retry.")
+          ? new CaptionRetrievalError("A YouTube subtitle request timed out. Enable CC, play the video and retry.", "CAPTION_TIMEOUT")
           : error instanceof Error ? error : new Error("YouTube subtitle request failed.");
       }
     }
@@ -214,17 +217,17 @@ import {
       const playerCaptions = fromPlayer(request.videoId, track.languageCode, track.kind);
       if (playerCaptions) return { text: playerCaptions.text, language: playerCaptions.language };
       await new Promise<void>(resolve => setTimeout(resolve, 200));
-      if (currentVideoId() !== request.videoId) throw new Error("The YouTube video changed. Try again.");
+      if (currentVideoId() !== request.videoId) throw new CaptionRetrievalError("The YouTube video changed. Try again.", "VIDEO_CHANGED");
     }
     if (emptyResponses === candidates.length) {
-      throw new Error("YouTube returned empty subtitle responses (HTTP 200). " +
+      throw new CaptionRetrievalError("YouTube returned empty subtitle responses (HTTP 200). " +
         "Some videos need the player's own session caption request. " +
         "Enable CC, play the video for a few seconds, then retry. " +
-        "If it persists, this subtitle track is not readable in the current session.");
+        "If it persists, this subtitle track is not readable in the current session.", "CAPTION_EMPTY");
     }
     if (deadlineExpired || Date.now() >= deadline) {
-      throw new Error("YouTube subtitle retrieval timed out. Enable CC, play this video " +
-        "for a few seconds and retry. If it persists, use manual subtitles.");
+      throw new CaptionRetrievalError("YouTube subtitle retrieval timed out. Enable CC, play this video " +
+        "for a few seconds and retry. If it persists, use manual subtitles.", "CAPTION_TIMEOUT");
     }
     throw lastError ?? new Error("YouTube subtitles are unavailable.");
   }
@@ -271,7 +274,7 @@ import {
       window.dispatchEvent(new CustomEvent(RESPONSE, {
         detail: { source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION, ok: false,
           error: error instanceof Error ? error.message : "YouTube subtitles are unavailable.",
-          ...(error instanceof MissingYouTubeCaptionTrackError ? { errorCode: "TRACK_UNAVAILABLE" } : {}) },
+          ...(error instanceof CaptionRetrievalError ? { errorCode: error.code } : { errorCode: "CAPTION_FAILED" }) },
       }));
     });
   });

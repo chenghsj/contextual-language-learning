@@ -7,6 +7,8 @@ export type LoopSettings = {
   endMs: number;
   repeats: number | "infinite";
   delaySeconds: number;
+  /** Resume once inside the range; subsequent repeats still begin at startMs. */
+  resumeMs?: number;
 };
 
 export type PlaybackStatus = { currentMs?: number; message: string };
@@ -26,6 +28,9 @@ export interface VideoAdapter {
   /** Read-only current playback state for the optional companion view. */
   status?(url: string): Promise<{ currentMs?: number; playing?: boolean }>;
   seek?(url: string, startMs: number): Promise<void>;
+  /** Unbounded transport for timing inspection. */
+  play?(url: string): Promise<void>;
+  pause?(url: string): Promise<void>;
   setPlaybackRate?(url: string, rate: number): Promise<void>;
   fetchSubtitles?(url: string, language: LearningLanguage): Promise<{ text: string; language: string }>;
   availableSubtitleTracks?(url: string): Promise<SubtitleTrackAvailability>;

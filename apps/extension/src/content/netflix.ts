@@ -25,8 +25,9 @@ import {
     | { type: "VIDEO_METADATA_GET" }
     | { type: "NETFLIX_DIAGNOSE" }
     | { type: "NETFLIX_SEEK"; timeMs: number }
-    | { type: "NETFLIX_LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number }
+    | { type: "NETFLIX_LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number; resumeMs?: number }
     | { type: "NETFLIX_LOOP_CLEAR" }
+    | { type: "NETFLIX_PLAYBACK_PLAY" | "NETFLIX_PLAYBACK_PAUSE" }
     | { type: "NETFLIX_PLAYBACK_RATE_SET"; rate: number }
     | { type: "NETFLIX_SUBTITLES_GET"; language: LearningLanguage }
     | { type: typeof VIDEO_READER_STATUS };
@@ -254,6 +255,11 @@ import {
       clearLoop();
       return { ok: true };
     }
+    if (message.type === "NETFLIX_PLAYBACK_PLAY" || message.type === "NETFLIX_PLAYBACK_PAUSE") {
+      clearLoop();
+      const result = await requestPage(message.type === "NETFLIX_PLAYBACK_PLAY" ? "play" : "pause");
+      return { ok: result.ok, error: result.error };
+    }
     if (message.type === "NETFLIX_DIAGNOSE") {
       const diagnostic = await requestPage("diagnose");
       return { ok: diagnostic.ok, error: diagnostic.error, currentMs: diagnostic.currentMs,
@@ -300,7 +306,8 @@ import {
         "Netflix positioned the video, but could not start playback. Press Play in the video tab.") };
     }
     if (message.type !== "NETFLIX_LOOP_SET") return { ok: false, error: "Unsupported action." };
-    if (!Number.isInteger(message.startMs) || !Number.isInteger(message.endMs)
+    if ((message.resumeMs !== undefined && (!Number.isInteger(message.resumeMs) || message.resumeMs < message.startMs || message.resumeMs >= message.endMs)) ||
+      !Number.isInteger(message.startMs) || !Number.isInteger(message.endMs)
       || message.startMs < 0 || message.endMs <= message.startMs
       || message.endMs - message.startMs > 600_000
       || ![0, 1, 2, 3].includes(message.delaySeconds)
@@ -324,7 +331,7 @@ import {
     video.addEventListener("pause", onPause);
     video.addEventListener("seeking", onSeeking);
     video.addEventListener("seeked", onSeeked);
-    const jumped = await seek(state, state.startMs);
+    const jumped = await seek(state, message.resumeMs ?? state.startMs);
     if (current !== state || !jumped.ok || !jumped.seekCalled) {
       clearLoop();
       return { ok: false, error: jumped.error ?? "Netflix could not seek to the start of the segment." };
@@ -366,7 +373,7 @@ import {
       sendResponse({ ok: true, url: location.href, title: title ?? undefined });
       return false;
     }
-    if (!["NETFLIX_DIAGNOSE", "NETFLIX_SEEK", "NETFLIX_LOOP_SET", "NETFLIX_LOOP_CLEAR", "NETFLIX_PLAYBACK_RATE_SET", "NETFLIX_SUBTITLES_GET"].includes(candidate.type ?? "")) {
+    if (!["NETFLIX_PLAYBACK_PLAY", "NETFLIX_PLAYBACK_PAUSE", "NETFLIX_DIAGNOSE", "NETFLIX_SEEK", "NETFLIX_LOOP_SET", "NETFLIX_LOOP_CLEAR", "NETFLIX_PLAYBACK_RATE_SET", "NETFLIX_SUBTITLES_GET"].includes(candidate.type ?? "")) {
       return false;
     }
     void handle(candidate as Message).then(sendResponse).catch(error => {

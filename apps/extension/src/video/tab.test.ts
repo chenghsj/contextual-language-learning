@@ -1,10 +1,11 @@
+import { VIDEO_COMMAND_ERROR_CODES, isVideoCommandErrorCode } from "./command-errors";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { netflixAdapter } from "./netflix";
 import { youtubeAdapter } from "./youtube";
 import {
   CUE_LEAD_IN_MS, CUE_TAIL_MS, cuePlaybackStart, cuePlaybackWindow,
-  findVideoTab, getActiveWindowTab, openOrFocusVideoTab, sendToVideo,
+  findVideoTab, getActiveWindowTab, openOrFocusVideoTab, sendToVideo, VideoCommandError,
 } from "./tab";
 
 const url = "https://www.netflix.com/watch/81234567";
@@ -19,7 +20,7 @@ async function withChrome(
   handlers: {
     tabs: MockTab[];
     current: MockTab[];
-    reply?: { ok: boolean; error?: string };
+    reply?: { ok: boolean; error?: string; errorCode?: string };
     onCreate?: (url: string) => void;
     onUpdate?: (id: number) => void;
     onMessage?: (id: number, message: unknown) => void;
@@ -220,4 +221,18 @@ test("YouTube direct seek targets only its matching existing video tab", async (
     await youtubeAdapter.seek?.(watchUrl, 83_500);
   });
   assert.deepEqual(sent, [{ id: 62, message: { type: "YOUTUBE_SEEK", timeMs: 83_500 } }]);
+});
+
+
+test("video failures preserve known error codes and reject unknown transport codes", async () => {
+  for (const code of [...VIDEO_COMMAND_ERROR_CODES, "UNTRUSTED_CODE"]) {
+    await withChrome({ tabs: [tab(1, true, 1)], current: [],
+      reply: { ok: false, error: "Technical diagnostic", errorCode: code } }, async () => {
+      await assert.rejects(sendToVideo(netflixAdapter, url, { type: "SUBTITLES_GET" }), error => {
+        assert.ok(error instanceof VideoCommandError);
+        assert.equal(error.code, isVideoCommandErrorCode(code) ? code : undefined);
+        return true;
+      });
+    });
+  }
 });
