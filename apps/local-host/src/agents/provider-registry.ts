@@ -11,7 +11,9 @@ export function configurePiProviders(runtime: ModelRuntime, root: string): void 
   for (const definition of PI_PROVIDER_REGISTRY) {
     adapters[definition.adapter](runtime, root);
     if (!runtime.getProvider(definition.id)) {
-      throw new Error(`Bundled SDK does not provide ${definition.id}. Check the provider registry and pinned SDK version.`);
+      throw new Error(
+        `Bundled SDK does not provide ${definition.id}. Check the provider registry and pinned SDK version.`,
+      );
     }
   }
 }

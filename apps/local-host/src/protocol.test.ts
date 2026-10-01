@@ -11,7 +11,10 @@ test("native messaging recovers frames fragmented across reads", () => {
   framer.push(combined.subarray(0, 2));
   framer.push(combined.subarray(2, 13));
   framer.push(combined.subarray(13));
-  assert.deepEqual(values, [{ id: "one", type: "health" }, { id: "two", text: "日本語" }]);
+  assert.deepEqual(values, [
+    { id: "one", type: "health" },
+    { id: "two", text: "日本語" },
+  ]);
 });
 
 test("oversize native messages fail before allocation of payload", () => {

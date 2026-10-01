@@ -3,7 +3,8 @@ export const MAX_OUTPUT_BYTES = 900_000;
 
 export function encodeMessage(value: unknown): Buffer {
   const body = Buffer.from(JSON.stringify(value), "utf8");
-  if (body.length > MAX_OUTPUT_BYTES) throw new Error("Host response exceeds Chrome's native messaging limit");
+  if (body.length > MAX_OUTPUT_BYTES)
+    throw new Error("Host response exceeds Chrome's native messaging limit");
   const header = Buffer.alloc(4);
   header.writeUInt32LE(body.length);
   return Buffer.concat([header, body]);

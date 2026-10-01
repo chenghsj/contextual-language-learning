@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  oauthCallbackHeaders, oauthCallbackPageStart, oauthCallbackPageEnd,
+  oauthCallbackHeaders,
+  oauthCallbackPageStart,
+  oauthCallbackPageEnd,
 } from "./drive/oauth-callback-page";
 
 const nonce = "abcdefghijklmnopqrstuv_123456789";
@@ -25,10 +27,11 @@ test("the standalone shadcn-style callback renders a centered accessible pending
 test("callback marks successful authorization only in the final streamed chunk", () => {
   const first = oauthCallbackPageStart(nonce);
   assert.doesNotMatch(first, /window\.__immersiveOAuthComplete\("success"\)/);
-  assert.match(oauthCallbackPageEnd(nonce, "success"),
-    /window\.__immersiveOAuthComplete\("success"\)/);
-  assert.match(oauthCallbackPageEnd(nonce, "error"),
-    /window\.__immersiveOAuthComplete\("error"\)/);
+  assert.match(
+    oauthCallbackPageEnd(nonce, "success"),
+    /window\.__immersiveOAuthComplete\("success"\)/,
+  );
+  assert.match(oauthCallbackPageEnd(nonce, "error"), /window\.__immersiveOAuthComplete\("error"\)/);
   assert.doesNotMatch(oauthCallbackPageEnd(nonce, "success"), /access_token|refresh_token/);
 });
 

@@ -8,14 +8,19 @@ export function appConfigRoot(
   home: string = homedir(),
 ): string {
   switch (platform) {
-    case "darwin": return join(home, "Library", "Application Support", "Immersive Learning");
-    case "win32": return join(env.APPDATA || join(home, "AppData", "Roaming"), "Immersive Learning");
+    case "darwin":
+      return join(home, "Library", "Application Support", "Immersive Learning");
+    case "win32":
+      return join(env.APPDATA || join(home, "AppData", "Roaming"), "Immersive Learning");
     case "linux": {
-      const config = env.XDG_CONFIG_HOME && isAbsolute(env.XDG_CONFIG_HOME)
-        ? env.XDG_CONFIG_HOME : join(home, ".config");
+      const config =
+        env.XDG_CONFIG_HOME && isAbsolute(env.XDG_CONFIG_HOME)
+          ? env.XDG_CONFIG_HOME
+          : join(home, ".config");
       return join(config, "immersive-language-learning");
     }
-    default: throw new Error("Unsupported Native Host platform: " + platform);
+    default:
+      throw new Error("Unsupported Native Host platform: " + platform);
   }
 }
 

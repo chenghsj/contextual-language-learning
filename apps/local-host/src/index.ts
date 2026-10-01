@@ -6,15 +6,21 @@ import { interruptPiLogins } from "./host/agents";
 import { createHostDispatcher } from "./host/dispatcher";
 
 declare const __IMMERSIVE_HOST_VERSION__: string;
-const hostVersion = typeof __IMMERSIVE_HOST_VERSION__ === "string"
-  ? __IMMERSIVE_HOST_VERSION__ : "dev";
+const hostVersion =
+  typeof __IMMERSIVE_HOST_VERSION__ === "string" ? __IMMERSIVE_HOST_VERSION__ : "dev";
 const storage = localStoragePorts();
 function reply(message: HostMessage): void {
   process.stdout.write(encodeMessage(message));
 }
 const manager = new JobManager({ storage }, (requestId, job) => {
   reply({ id: requestId, type: "job", job });
-  reply({ id: requestId, type: "progress", jobId: job.id, completed: job.completed, total: job.total });
+  reply({
+    id: requestId,
+    type: "progress",
+    jobId: job.id,
+    completed: job.completed,
+    total: job.total,
+  });
 });
 const handle = createHostDispatcher({ storage, manager, reply, hostVersion });
 
@@ -32,4 +38,7 @@ process.stdin.on("data", (chunk: Buffer) => {
     process.stdin.pause();
   }
 });
-process.stdin.on("end", () => { manager.interruptAll(); interruptPiLogins(); });
+process.stdin.on("end", () => {
+  manager.interruptAll();
+  interruptPiLogins();
+});

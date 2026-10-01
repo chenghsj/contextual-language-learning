@@ -1,114 +1,163 @@
 import { readFile, rename, rm, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { readLearningDocument, type Destination, type LearningDocument } from "@immersive/core";
+import { join } from "node:path";
+import type { Destination, LearningDocument } from "@immersive/core";
 import { toMarkdown } from "../generation/markdown";
 import { validateFolder } from "./folders";
-import type { DocumentPublisher, StoragePorts } from "./ports";
+import type { DocumentPublisher, StoragePorts, PublicationJournal } from "./ports";
 import { videoFolder } from "./video-folders";
+import { contentHash, documentRevision, serializeDocument } from "./document-queue";
 
-async function writeOnce(path: string, content: string, documentId: string): Promise<void> {
+async function readExisting(path: string): Promise<string | null> {
   try {
-    await writeFile(path, content, { flag: "wx", mode: 0o600 });
+    return await readFile(path, "utf8");
   } catch (error) {
-    if (!error || typeof error !== "object" || !("code" in error) || error.code !== "EEXIST") throw error;
-    // A previous upload/export may have completed before the Host crashed. Never replace another document.
-    if (!path.endsWith(".json")) return;
-    const existing = readLearningDocument(JSON.parse(await readFile(path, "utf8")) as unknown);
-    if (existing.id !== documentId) throw new Error("Local destination already contains a different document");
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
   }
 }
-
+/** Prepare both files before writing either: unknown bytes are never overwritten. */
 export class DestinationPublisher implements DocumentPublisher {
-  async publish(document: LearningDocument, markdown: string, destination: Destination): Promise<string> {
-    if (destination.kind === "drive") throw new Error("Google Drive is a backup, not a primary destination");
-    const folder = await videoFolder(await validateFolder(destination.directory), document);
-    const jsonPath = join(folder, document.id + ".json");
-    const markdownPath = join(folder, document.id + ".md");
-    await writeOnce(jsonPath, JSON.stringify(document, null, 2) + "\n", document.id);
-    await writeOnce(markdownPath, markdown, document.id);
-    return jsonPath;
-  }
-}
-
-/** Update only an app-published local copy, never an unrelated or user-edited file.
- * The repository copy was already saved on explicit Done. */
-export async function syncPublishedPlayback(
-  storage: StoragePorts, previous: LearningDocument, updated: LearningDocument,
-): Promise<void> {
-  if (previous.id !== updated.id) {
-    throw new Error("Playback sync requires the same saved V4 document");
-  }
-  const job = await storage.jobs.getRecord(updated.id);
-  if (!job || job.summary.publication?.status !== "published" ||
-      !job.summary.publication.location) return;
-  const folder = await validateFolder(job.request.destination?.kind === "local"
-    ? job.request.destination.directory : undefined);
-  const jsonPath = job.summary.publication.location;
-  const within = isAbsolute(jsonPath) ? relative(folder, resolve(jsonPath)) : "..";
-  if (within.startsWith("..") || isAbsolute(within) || basename(jsonPath) !== updated.id + ".json") {
-    throw new Error("Published lesson destination no longer matches the verified local folder");
-  }
-  const mdPath = join(dirname(jsonPath), updated.id + ".md");
-  const oldJson = JSON.stringify(previous, null, 2) + "\n";
-  const newJson = JSON.stringify(updated, null, 2) + "\n";
-  const oldMd = toMarkdown(previous);
-  const newMd = toMarkdown(updated);
-  const currentJson = await readFile(jsonPath, "utf8");
-  if (currentJson !== oldJson && currentJson !== newJson) {
-    throw new Error("Published lesson was changed independently; local export was left untouched");
-  }
-  const currentMd = await readFile(mdPath, "utf8");
-  if (currentMd !== oldMd && currentMd !== newMd) {
-    throw new Error("Published Markdown was changed independently; local export was left untouched");
-  }
-  const writeIfChanged = async (path: string, current: string, next: string): Promise<void> => {
-    if (current === next) return;
-    const temporary = path + "." + randomUUID() + ".tmp";
-    try {
-      await writeFile(temporary, next, { flag: "wx", mode: 0o600 });
-      await rename(temporary, path);
-    } finally {
-      await rm(temporary, { force: true }).catch(() => undefined);
+  constructor(
+    private readonly folderFor: (directory: string | undefined) => Promise<string> = validateFolder,
+  ) {}
+  async publish(
+    document: LearningDocument,
+    markdown: string,
+    destination: Destination,
+    journal?: PublicationJournal,
+  ): Promise<string> {
+    if (destination.kind !== "local")
+      throw new Error("Google Drive is a backup, not a primary destination");
+    const folder = await videoFolder(await this.folderFor(destination.directory), document);
+    const files = [
+      {
+        format: "json" as const,
+        path: join(folder, document.id + ".json"),
+        content: JSON.stringify(document, null, 2) + "\n",
+      },
+      { format: "markdown" as const, path: join(folder, document.id + ".md"), content: markdown },
+    ];
+    const originals = await Promise.all(files.map(file => readExisting(file.path)));
+    for (const [index, file] of files.entries()) {
+      const existing = originals[index];
+      if (existing === null || existing === file.content) continue;
+      const hash = contentHash(existing);
+      if (!journal?.allowed.some(hashes => hashes[file.format] === hash)) {
+        throw new Error(
+          "Published lesson was changed independently; local export was left untouched",
+        );
+      }
     }
-  };
-  await writeIfChanged(jsonPath, currentJson, newJson);
-  await writeIfChanged(mdPath, currentMd, newMd);
+    for (const [index, file] of files.entries()) {
+      if (originals[index] === file.content) continue;
+      // Recheck external changes immediately before replacing. Cross-process transactions are out of scope.
+      if ((await readExisting(file.path)) !== originals[index])
+        throw new Error("Published lesson changed during synchronization");
+      if (originals[index] === null) {
+        await writeFile(file.path, file.content, { flag: "wx", mode: 0o600 });
+        continue;
+      }
+      const tmp = file.path + "." + randomUUID() + ".tmp";
+      try {
+        await writeFile(tmp, file.content, { flag: "wx", mode: 0o600 });
+        await rename(tmp, file.path);
+      } finally {
+        await rm(tmp, { force: true }).catch(() => {});
+      }
+    }
+    return files[0].path;
+  }
 }
 
-export async function publishSavedJob(
-  storage: StoragePorts, jobId: string, publisher: DocumentPublisher = new DestinationPublisher(),
+/** Called only inside the document queue. Persist planned hashes before writing any export bytes. */
+export async function publishRevision(
+  storage: StoragePorts,
+  jobId: string,
+  publisher: DocumentPublisher = new DestinationPublisher(),
 ): Promise<string> {
   const job = await storage.jobs.getRecord(jobId);
-  if (!job || job.summary.status !== "completed") throw new Error("A complete document is required before publishing");
-  if (job.summary.publication?.status === "published" && job.summary.publication.location) {
-    return job.summary.publication.location;
-  }
+  if (!job || job.summary.status !== "completed")
+    throw new Error("A complete document is required before publishing");
   const document = await storage.documents.get(job.summary.documentId ?? jobId);
   if (!document) throw new Error("Saved learning document not found");
-  const destination: Destination = job.request.destination?.kind === "local"
-    ? job.request.destination : { kind: "local" };
+  const markdown = toMarkdown(document);
+  const revision = documentRevision(document);
+  const hashes = {
+    json: contentHash(JSON.stringify(document, null, 2) + "\n"),
+    markdown: contentHash(markdown),
+  };
+  const prior = job.summary.publication;
+  const allowed = [
+    ...(prior?.authorizedHashes ?? []),
+    prior?.attemptHashes,
+    prior?.syncedHashes,
+  ].filter((value): value is typeof hashes => !!value);
+  const destination: Destination =
+    job.request.destination?.kind === "local" ? job.request.destination : { kind: "local" };
   await storage.jobs.updateRecord(jobId, current => ({
-    ...current, summary: { ...current.summary,
-      publication: { status: "pending" }, updatedAt: new Date().toISOString() },
+    ...current,
+    summary: {
+      ...current.summary,
+      publication: {
+        ...prior,
+        status: "pending",
+        attemptHashes: hashes,
+        authorizedHashes: [...allowed, hashes],
+        error: undefined,
+      },
+      updatedAt: new Date().toISOString(),
+    },
   }));
   try {
-    const location = await publisher.publish(document, toMarkdown(document), destination);
+    const location = await publisher.publish(document, markdown, destination, { allowed });
     await storage.jobs.updateRecord(jobId, current => ({
-      ...current, summary: { ...current.summary,
-        publication: { status: "published", location },
-        ...(current.request.backup?.enabled && !current.summary.backup ? {
-          backup: { status: "pending" as const, accountId: current.request.backup.accountId!, updatedAt: new Date().toISOString() },
-        } : {}),
-        updatedAt: new Date().toISOString() },
+      ...current,
+      summary: {
+        ...current.summary,
+        publication: {
+          status: "published",
+          location,
+          revision,
+          attemptHashes: hashes,
+          syncedHashes: hashes,
+        },
+        ...(current.request.backup?.enabled &&
+        (!current.summary.backup ||
+          current.summary.backup.revision !== revision ||
+          current.summary.backup.accountId !== current.request.backup.accountId)
+          ? {
+              backup: {
+                status: "pending" as const,
+                accountId: current.request.backup.accountId!,
+                updatedAt: new Date().toISOString(),
+              },
+            }
+          : {}),
+        updatedAt: new Date().toISOString(),
+      },
     }));
     return location;
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown publishing error";
     await storage.jobs.updateRecord(jobId, current => ({
-      ...current, summary: { ...current.summary,
-        publication: { status: "failed", error: message.slice(0, 500) }, updatedAt: new Date().toISOString() },
+      ...current,
+      summary: {
+        ...current.summary,
+        publication: {
+          ...current.summary.publication!,
+          status: "failed",
+          error: String(error).slice(0, 500),
+        },
+        updatedAt: new Date().toISOString(),
+      },
     }));
     throw error;
   }
+}
+export function publishSavedJob(
+  storage: StoragePorts,
+  jobId: string,
+  publisher?: DocumentPublisher,
+): Promise<string> {
+  return serializeDocument(storage, jobId, () => publishRevision(storage, jobId, publisher));
 }

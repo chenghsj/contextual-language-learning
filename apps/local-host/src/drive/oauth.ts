@@ -6,7 +6,12 @@ import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { DriveAccount } from "@immersive/core";
-import { oauthCallbackHeaders, oauthCallbackPageStart, oauthCallbackPageEnd, type OAuthCallbackOutcome } from "./oauth-callback-page";
+import {
+  oauthCallbackHeaders,
+  oauthCallbackPageStart,
+  oauthCallbackPageEnd,
+  type OAuthCallbackOutcome,
+} from "./oauth-callback-page";
 
 const exec = promisify(execFile);
 const root = join(homedir(), "Library", "Application Support", "Immersive Learning");
@@ -14,9 +19,18 @@ const accountsPath = join(root, "google-accounts.json");
 const keychainService = "dev.immersive.language-learning.google-drive";
 const clientIdPattern = /^[A-Za-z0-9_.-]+\.apps\.googleusercontent\.com$/;
 
-interface OAuthConfig { clientId: string; clientSecret?: string }
-interface SavedAccount extends DriveAccount { clientId: string }
-interface TokenResponse { access_token: string; expires_in: number; refresh_token?: string }
+interface OAuthConfig {
+  clientId: string;
+  clientSecret?: string;
+}
+interface SavedAccount extends DriveAccount {
+  clientId: string;
+}
+interface TokenResponse {
+  access_token: string;
+  expires_in: number;
+  refresh_token?: string;
+}
 const accessTokens = new Map<string, { value: string; expiry: number }>();
 
 async function writePrivate(path: string, value: unknown): Promise<void> {
@@ -34,10 +48,14 @@ async function writePrivate(path: string, value: unknown): Promise<void> {
 declare const __GOOGLE_OAUTH_CLIENT_ID__: string;
 declare const __GOOGLE_OAUTH_CLIENT_SECRET__: string;
 async function googleConfig(): Promise<OAuthConfig> {
-  const clientId = typeof __GOOGLE_OAUTH_CLIENT_ID__ === "string"
-    ? __GOOGLE_OAUTH_CLIENT_ID__ : (process.env.GOOGLE_OAUTH_CLIENT_ID ?? "");
-  const clientSecret = typeof __GOOGLE_OAUTH_CLIENT_SECRET__ === "string"
-    ? __GOOGLE_OAUTH_CLIENT_SECRET__ : (process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "");
+  const clientId =
+    typeof __GOOGLE_OAUTH_CLIENT_ID__ === "string"
+      ? __GOOGLE_OAUTH_CLIENT_ID__
+      : (process.env.GOOGLE_OAUTH_CLIENT_ID ?? "");
+  const clientSecret =
+    typeof __GOOGLE_OAUTH_CLIENT_SECRET__ === "string"
+      ? __GOOGLE_OAUTH_CLIENT_SECRET__
+      : (process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "");
   if (!clientIdPattern.test(clientId)) {
     throw new Error("此版本尚未設定 Google OAuth Client ID，請更新 Native Host 或聯絡開發者");
   }
@@ -45,17 +63,28 @@ async function googleConfig(): Promise<OAuthConfig> {
   return { clientId, ...(clientSecret ? { clientSecret } : {}) };
 }
 export async function googleConfigured(): Promise<boolean> {
-  try { await googleConfig(); return true; } catch { return false; }
+  try {
+    await googleConfig();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function listGoogleAccounts(): Promise<DriveAccount[]> {
   try {
     const value: unknown = JSON.parse(await readFile(accountsPath, "utf8")) as unknown;
     if (!Array.isArray(value)) throw new Error("Google account list is invalid");
-    return value.filter((item): item is SavedAccount =>
-      !!item && typeof item === "object" &&
-      typeof item.id === "string" && typeof item.email === "string" &&
-      typeof item.clientId === "string").map(({ id, email }) => ({ id, email }));
+    return value
+      .filter(
+        (item): item is SavedAccount =>
+          !!item &&
+          typeof item === "object" &&
+          typeof item.id === "string" &&
+          typeof item.email === "string" &&
+          typeof item.clientId === "string",
+      )
+      .map(({ id, email }) => ({ id, email }));
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
     throw error;
@@ -74,17 +103,25 @@ async function savedAccounts(): Promise<SavedAccount[]> {
 }
 
 async function keychainWrite(id: string, refreshToken: string): Promise<void> {
-  if (process.platform !== "darwin") throw new Error("Google account storage currently requires macOS Keychain");
+  if (process.platform !== "darwin")
+    throw new Error("Google account storage currently requires macOS Keychain");
   // macOS 'security' stores the secret in Keychain. Avoid log output from this command.
-  await exec("/usr/bin/security", ["add-generic-password", "-s", keychainService, "-a", id,
-    "-w", refreshToken, "-U"], { maxBuffer: 4096 });
+  await exec(
+    "/usr/bin/security",
+    ["add-generic-password", "-s", keychainService, "-a", id, "-w", refreshToken, "-U"],
+    { maxBuffer: 4096 },
+  );
 }
 
 async function keychainRead(id: string): Promise<string> {
-  if (process.platform !== "darwin") throw new Error("Google account storage currently requires macOS Keychain");
+  if (process.platform !== "darwin")
+    throw new Error("Google account storage currently requires macOS Keychain");
   try {
-    const { stdout } = await exec("/usr/bin/security",
-      ["find-generic-password", "-s", keychainService, "-a", id, "-w"], { maxBuffer: 16_384 });
+    const { stdout } = await exec(
+      "/usr/bin/security",
+      ["find-generic-password", "-s", keychainService, "-a", id, "-w"],
+      { maxBuffer: 16_384 },
+    );
     return stdout.trim();
   } catch {
     throw new Error("此 Google 帳號的憑證已失效，請重新連線");
@@ -96,16 +133,19 @@ async function keychainRead(id: string): Promise<string> {
  * The response may contain identifiers or secrets and is not safe to display verbatim.
  */
 export function googleTokenError(status: number, response: unknown): Error {
-  const payload = response && typeof response === "object"
-    ? response as Record<string, unknown> : {};
+  const payload =
+    response && typeof response === "object" ? (response as Record<string, unknown>) : {};
   const rawCode = typeof payload.error === "string" ? payload.error : "";
   const code = /^[a-z_]{1,48}$/.test(rawCode) ? rawCode : "unknown";
-  const description = typeof payload.error_description === "string"
-    ? payload.error_description.toLowerCase() : "";
+  const description =
+    typeof payload.error_description === "string" ? payload.error_description.toLowerCase() : "";
   let guidance = "請確認 Google Desktop OAuth 用戶端設定後重新授權。";
-  if (/client[_ ]secret/.test(description) &&
-      /missing|required|not present|must be supplied|invalid|incorrect/.test(description)) {
-    guidance = "Google 要求此桌面 OAuth 用戶端的 Client Secret；請在建置環境設定 GOOGLE_OAUTH_CLIENT_SECRET，重新建置並安裝 Native Host 後再授權。";
+  if (
+    /client[_ ]secret/.test(description) &&
+    /missing|required|not present|must be supplied|invalid|incorrect/.test(description)
+  ) {
+    guidance =
+      "Google 要求此桌面 OAuth 用戶端的 Client Secret；請在建置環境設定 GOOGLE_OAUTH_CLIENT_SECRET，重新建置並安裝 Native Host 後再授權。";
   } else if (code === "invalid_client") {
     guidance = "請確認 Client ID 與 Client Secret（如果設定）來自同一個 Desktop OAuth 用戶端。";
   } else if (code === "invalid_grant") {
@@ -116,12 +156,18 @@ export function googleTokenError(status: number, response: unknown): Error {
 
 async function tokenRequest(form: URLSearchParams): Promise<TokenResponse> {
   const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: form, signal: AbortSignal.timeout(30_000),
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: form,
+    signal: AbortSignal.timeout(30_000),
   });
   const data: unknown = await response.json().catch(() => null);
-  if (!response.ok || !data || typeof data !== "object" ||
-    typeof (data as { access_token?: unknown }).access_token !== "string") {
+  if (
+    !response.ok ||
+    !data ||
+    typeof data !== "object" ||
+    typeof (data as { access_token?: unknown }).access_token !== "string"
+  ) {
     throw googleTokenError(response.status, data);
   }
   return data as TokenResponse;
@@ -140,7 +186,8 @@ type AuthorizationSession = {
  * so the browser cannot report success merely because a code was received.
  */
 async function authorizationCode(clientId: string): Promise<AuthorizationSession> {
-  if (process.platform !== "darwin") throw new Error("Google Drive account login currently supports macOS");
+  if (process.platform !== "darwin")
+    throw new Error("Google Drive account login currently supports macOS");
   const verifier = randomBytes(48).toString("base64url");
   const challenge = createHash("sha256").update(verifier).digest("base64url");
   const state = randomBytes(32).toString("base64url");
@@ -162,10 +209,17 @@ async function authorizationCode(clientId: string): Promise<AuthorizationSession
       return;
     }
     const returnedState = url.searchParams.get("state") ?? "";
-    const validState = returnedState.length === state.length &&
+    const validState =
+      returnedState.length === state.length &&
       timingSafeEqual(Buffer.from(returnedState), Buffer.from(state));
-    if (!validState) { res.writeHead(400).end("Invalid OAuth state"); return; }
-    if (handled) { res.writeHead(409).end("OAuth response already handled"); return; }
+    if (!validState) {
+      res.writeHead(400).end("Invalid OAuth state");
+      return;
+    }
+    if (handled) {
+      res.writeHead(409).end("OAuth response already handled");
+      return;
+    }
     handled = true;
 
     const nonce = randomBytes(24).toString("base64url");
@@ -183,8 +237,13 @@ async function authorizationCode(clientId: string): Promise<AuthorizationSession
     const code = url.searchParams.get("code");
     if (!code) {
       finish("error");
-      rejectCode(new Error(url.searchParams.has("error")
-        ? "Google authorization was declined" : "Google did not provide an authorization code"));
+      rejectCode(
+        new Error(
+          url.searchParams.has("error")
+            ? "Google authorization was declined"
+            : "Google did not provide an authorization code",
+        ),
+      );
       return;
     }
     if (timeout) clearTimeout(timeout);
@@ -212,10 +271,15 @@ async function authorizationCode(clientId: string): Promise<AuthorizationSession
   redirectUri = "http://127.0.0.1:" + address.port + "/oauth/callback";
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.search = new URLSearchParams({
-    client_id: clientId, redirect_uri: redirectUri, response_type: "code",
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
     scope: "openid email https://www.googleapis.com/auth/drive.file",
-    access_type: "offline", prompt: "select_account consent",
-    code_challenge: challenge, code_challenge_method: "S256", state,
+    access_type: "offline",
+    prompt: "select_account consent",
+    code_challenge: challenge,
+    code_challenge_method: "S256",
+    state,
   }).toString();
   timeout = setTimeout(() => {
     rejectCode(new Error("Google authorization expired"));
@@ -236,8 +300,11 @@ export async function connectGoogleAccount(): Promise<DriveAccount> {
   const session = await authorizationCode(config.clientId);
   try {
     const form = new URLSearchParams({
-      client_id: config.clientId, code: session.code, code_verifier: session.verifier,
-      redirect_uri: session.redirectUri, grant_type: "authorization_code",
+      client_id: config.clientId,
+      code: session.code,
+      code_verifier: session.verifier,
+      redirect_uri: session.redirectUri,
+      grant_type: "authorization_code",
     });
     if (config.clientSecret) form.set("client_secret", config.clientSecret);
     const token = await tokenRequest(form);
@@ -246,18 +313,27 @@ export async function connectGoogleAccount(): Promise<DriveAccount> {
       signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) throw new Error("Google identity verification failed");
-    const info = await response.json() as Record<string, unknown>;
-    if (typeof info.sub !== "string" || typeof info.email !== "string" || info.email_verified === false) {
+    const info = (await response.json()) as Record<string, unknown>;
+    if (
+      typeof info.sub !== "string" ||
+      typeof info.email !== "string" ||
+      info.email_verified === false
+    ) {
       throw new Error("Google account did not provide a verified identity");
     }
     const account: SavedAccount = { id: info.sub, email: info.email, clientId: config.clientId };
-    const previous = (await savedAccounts()).find(item => item.id === account.id && item.clientId === config.clientId);
+    const previous = (await savedAccounts()).find(
+      item => item.id === account.id && item.clientId === config.clientId,
+    );
     if (token.refresh_token) await keychainWrite(account.id, token.refresh_token);
-    else if (!previous) throw new Error("Google did not issue a refresh token; reconnect with consent");
+    else if (!previous)
+      throw new Error("Google did not issue a refresh token; reconnect with consent");
     const accounts = await savedAccounts();
     await writePrivate(accountsPath, [...accounts.filter(item => item.id !== account.id), account]);
-    accessTokens.set(account.id, { value: token.access_token,
-      expiry: Date.now() + Math.max(token.expires_in - 90, 30) * 1000 });
+    accessTokens.set(account.id, {
+      value: token.access_token,
+      expiry: Date.now() + Math.max(token.expires_in - 90, 30) * 1000,
+    });
     session.finish("success");
     return { id: account.id, email: account.email };
   } catch (error) {
@@ -275,13 +351,16 @@ export async function accessTokenFor(accountId: string): Promise<string> {
   const cached = accessTokens.get(accountId);
   if (cached && cached.expiry > Date.now()) return cached.value;
   const form = new URLSearchParams({
-    client_id: config.clientId, refresh_token: await keychainRead(accountId),
+    client_id: config.clientId,
+    refresh_token: await keychainRead(accountId),
     grant_type: "refresh_token",
   });
   if (config.clientSecret) form.set("client_secret", config.clientSecret);
   const token = await tokenRequest(form);
-  accessTokens.set(accountId, { value: token.access_token,
-    expiry: Date.now() + Math.max(token.expires_in - 90, 30) * 1000 });
+  accessTokens.set(accountId, {
+    value: token.access_token,
+    expiry: Date.now() + Math.max(token.expires_in - 90, 30) * 1000,
+  });
   return token.access_token;
 }
 
@@ -291,8 +370,14 @@ export async function disconnectGoogleAccount(accountId: string): Promise<void> 
   if (!accounts.some(item => item.id === accountId)) throw new Error("Google 帳號尚未連線");
   accessTokens.delete(accountId);
   if (process.platform === "darwin") {
-    await exec("/usr/bin/security", ["delete-generic-password", "-s", keychainService, "-a", accountId],
-      { maxBuffer: 4096 }).catch(() => undefined);
+    await exec(
+      "/usr/bin/security",
+      ["delete-generic-password", "-s", keychainService, "-a", accountId],
+      { maxBuffer: 4096 },
+    ).catch(() => undefined);
   }
-  await writePrivate(accountsPath, accounts.filter(item => item.id !== accountId));
+  await writePrivate(
+    accountsPath,
+    accounts.filter(item => item.id !== accountId),
+  );
 }

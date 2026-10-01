@@ -3,10 +3,22 @@ import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promise
 import { homedir } from "node:os";
 import { join } from "node:path";
 import {
-  JobSnapshotSchema, readLearningDocument, learningDocumentToMarkdown, withSentenceTiming,
-  type JobSnapshot, type JobSummary, type LearningDocument, type PlaybackOverride,
+  JobSnapshotSchema,
+  readLearningDocument,
+  learningDocumentToMarkdown,
+  withSentenceTiming,
+  type JobSnapshot,
+  type JobSummary,
+  type LearningDocument,
+  type PlaybackOverride,
 } from "@immersive/core";
-import { LessonJobRecordSchema, type LessonJobRecord, type DocumentRepository, type JobRepository, type StoragePorts } from "./ports";
+import {
+  LessonJobRecordSchema,
+  type LessonJobRecord,
+  type DocumentRepository,
+  type JobRepository,
+  type StoragePorts,
+} from "./ports";
 import { findVideoDocument, listVideoDocumentIds, videoFolder } from "./video-folders";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -35,13 +47,18 @@ export class FileJobRepository implements JobRepository {
     this.recordsFolder = join(root, "lesson-records");
   }
 
-  private filename(id: string): string { return join(this.folder, safeId(id) + ".json"); }
+  private filename(id: string): string {
+    return join(this.folder, safeId(id) + ".json");
+  }
 
   async get(id: string): Promise<JobSnapshot | null> {
     try {
-      return JobSnapshotSchema.parse(JSON.parse(await readFile(this.filename(id), "utf8")) as unknown);
+      return JobSnapshotSchema.parse(
+        JSON.parse(await readFile(this.filename(id), "utf8")) as unknown,
+      );
     } catch (error) {
-      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return null;
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT")
+        return null;
       throw new Error("Cannot load saved job " + id + ": " + String(error));
     }
   }
@@ -56,14 +73,20 @@ export class FileJobRepository implements JobRepository {
 
   async list(limit = 50): Promise<JobSummary[]> {
     await mkdir(this.folder, { recursive: true, mode: 0o700 });
-    const names = (await readdir(this.folder)).filter(name => UUID.test(name.replace(/\.json$/, "")) && name.endsWith(".json"));
-    const items = await Promise.all(names.map(async name => {
-      const id = name.slice(0, -5);
-      const job = await this.get(id);
-      return job?.summary ?? null;
-    }));
-    return items.filter((item): item is JobSummary => item !== null)
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, limit);
+    const names = (await readdir(this.folder)).filter(
+      name => UUID.test(name.replace(/\.json$/, "")) && name.endsWith(".json"),
+    );
+    const items = await Promise.all(
+      names.map(async name => {
+        const id = name.slice(0, -5);
+        const job = await this.get(id);
+        return job?.summary ?? null;
+      }),
+    );
+    return items
+      .filter((item): item is JobSummary => item !== null)
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .slice(0, limit);
   }
 
   async update(id: string, change: (current: JobSnapshot) => JobSnapshot): Promise<JobSnapshot> {
@@ -80,12 +103,15 @@ export class FileJobRepository implements JobRepository {
   private async withLock<T>(id: string, work: () => Promise<T>): Promise<T> {
     const prior = this.locks.get(id) ?? Promise.resolve();
     let release!: () => void;
-    const pending = new Promise<void>(resolve => { release = resolve; });
+    const pending = new Promise<void>(resolve => {
+      release = resolve;
+    });
     const lock = prior.then(() => pending);
     this.locks.set(id, lock);
     await prior;
-    try { return await work(); }
-    finally {
+    try {
+      return await work();
+    } finally {
       release();
       if (this.locks.get(id) === lock) this.locks.delete(id);
     }
@@ -93,13 +119,16 @@ export class FileJobRepository implements JobRepository {
 
   async getRecord(id: string): Promise<LessonJobRecord | null> {
     const job = await this.get(id);
-    if (job) return LessonJobRecordSchema.parse(job);
+    if (job) return LessonJobRecordSchema.parse({ ...job, schemaVersion: 1 });
     try {
-      const record = LessonJobRecordSchema.parse(JSON.parse(await readFile(join(this.recordsFolder, safeId(id) + ".json"), "utf8")));
+      const record = LessonJobRecordSchema.parse(
+        JSON.parse(await readFile(join(this.recordsFolder, safeId(id) + ".json"), "utf8")),
+      );
       if (record.summary.id !== id) throw new Error("Lesson record identity mismatch");
       return record;
     } catch (error) {
-      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return null;
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT")
+        return null;
       throw error;
     }
   }
@@ -107,33 +136,47 @@ export class FileJobRepository implements JobRepository {
   async listRecords(): Promise<JobSummary[]> {
     const jobs = await this.list(Number.MAX_SAFE_INTEGER);
     let names: string[];
-    try { names = await readdir(this.recordsFolder); }
-    catch (error) {
-      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return jobs;
+    try {
+      names = await readdir(this.recordsFolder);
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT")
+        return jobs;
       throw error;
     }
     const known = new Set(jobs.map(job => job.id));
     for (const name of names) {
-      if (!name.endsWith(".json") || !UUID.test(name.slice(0, -5)) || known.has(name.slice(0, -5))) continue;
+      if (!name.endsWith(".json") || !UUID.test(name.slice(0, -5)) || known.has(name.slice(0, -5)))
+        continue;
       const record = await this.getRecord(name.slice(0, -5));
       if (record) jobs.push(record.summary);
     }
     return jobs;
   }
 
-  async updateRecord(id: string, change: (current: LessonJobRecord) => LessonJobRecord): Promise<LessonJobRecord> {
+  async updateRecord(
+    id: string,
+    change: (current: LessonJobRecord) => LessonJobRecord,
+  ): Promise<LessonJobRecord> {
     return this.withLock(id, async () => {
       const job = await this.get(id);
-      const current = job ? LessonJobRecordSchema.parse(job) : await this.getRecord(id);
+      const current = job
+        ? LessonJobRecordSchema.parse({ ...job, schemaVersion: 1 })
+        : await this.getRecord(id);
       if (!current) throw new Error("Lesson record not found");
       const next = LessonJobRecordSchema.parse(change(current));
       if (next.summary.id !== id) throw new Error("Lesson record identity cannot change");
       if (job) {
-        const updated = JobSnapshotSchema.parse({ ...job, summary: next.summary,
-          request: { ...job.request, ...next.request } });
+        const updated = JobSnapshotSchema.parse({
+          ...job,
+          summary: next.summary,
+          request: { ...job.request, ...next.request },
+        });
         await atomicWrite(this.filename(id), JSON.stringify(updated, null, 2) + "\n");
       } else {
-        await atomicWrite(join(this.recordsFolder, safeId(id) + ".json"), JSON.stringify(next, null, 2) + "\n");
+        await atomicWrite(
+          join(this.recordsFolder, safeId(id) + ".json"),
+          JSON.stringify(next, null, 2) + "\n",
+        );
       }
       return next;
     });
@@ -148,13 +191,15 @@ export class FileJobRepository implements JobRepository {
       }
       if (job.summary.documentId) {
         await mkdir(this.recordsFolder, { recursive: true, mode: 0o700 });
-        const record = LessonJobRecordSchema.parse(job);
-        await atomicWrite(join(this.recordsFolder, safeId(id) + ".json"), JSON.stringify(record, null, 2) + "\n");
+        const record = LessonJobRecordSchema.parse({ ...job, schemaVersion: 1 });
+        await atomicWrite(
+          join(this.recordsFolder, safeId(id) + ".json"),
+          JSON.stringify(record, null, 2) + "\n",
+        );
       }
       await rm(this.filename(id), { force: true });
     });
   }
-
 }
 
 export class FileDocumentRepository implements DocumentRepository {
@@ -171,7 +216,8 @@ export class FileDocumentRepository implements DocumentRepository {
     try {
       return readLearningDocument(JSON.parse(await readFile(path, "utf8")) as unknown);
     } catch (error) {
-      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return null;
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT")
+        return null;
       throw new Error("Cannot load document " + id + ": " + String(error));
     }
   }
@@ -179,33 +225,50 @@ export class FileDocumentRepository implements DocumentRepository {
     await mkdir(this.root, { recursive: true, mode: 0o700 });
     const ids = await listVideoDocumentIds(this.root);
     const documents = await Promise.all(ids.map(id => this.get(id)));
-    return documents.filter((value): value is LearningDocument => value !== null)
+    return documents
+      .filter((value): value is LearningDocument => value !== null)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, Math.min(limit, 5000));
   }
 
-  /** The only intentional mutation of a finished V4 lesson: calibrated playback, never source cues. */
-  async updatePlaybackRange(id: string, cueId: string, range: PlaybackOverride | null): Promise<LearningDocument> {
+  /** The only intentional mutation of a finished V5 lesson: calibrated playback, never source cues. */
+  async updatePlaybackRange(
+    id: string,
+    cueId: string,
+    range: PlaybackOverride | null,
+  ): Promise<LearningDocument> {
     return this.updateCalibratedRange(id, cueId, range, "cue");
   }
-  async updateScenePlaybackRange(id: string, sceneId: string, range: PlaybackOverride | null): Promise<LearningDocument> {
+  async updateScenePlaybackRange(
+    id: string,
+    sceneId: string,
+    range: PlaybackOverride | null,
+  ): Promise<LearningDocument> {
     return this.updateCalibratedRange(id, sceneId, range, "scene");
   }
   private async updateCalibratedRange(
-    id: string, targetId: string, range: PlaybackOverride | null, kind: "cue" | "scene",
+    id: string,
+    targetId: string,
+    range: PlaybackOverride | null,
+    kind: "cue" | "scene",
   ): Promise<LearningDocument> {
     const safe = safeId(id);
     const prior = this.locks.get(safe) ?? Promise.resolve();
     let release!: () => void;
-    const pending = new Promise<void>(resolve => { release = resolve; });
+    const pending = new Promise<void>(resolve => {
+      release = resolve;
+    });
     const lock = prior.then(() => pending);
     this.locks.set(safe, lock);
     await prior;
     try {
       const document = await this.get(safe);
-      if (!document || document.schemaVersion !== 4) throw new Error("Saved V4 document not found");
-      if (kind === "cue" && (!document.cues.some(cue => cue.id === targetId) ||
-          !document.sections.some(scene => scene.cueIds.includes(targetId)))) {
+      if (!document || document.schemaVersion !== 5) throw new Error("Saved V5 document not found");
+      if (
+        kind === "cue" &&
+        (!document.cues.some(cue => cue.id === targetId) ||
+          !document.sections.some(scene => scene.cueIds.includes(targetId)))
+      ) {
         throw new Error("Playback cue is not part of this lesson");
       }
       if (kind === "scene" && !document.sections.some(scene => scene.id === targetId)) {
@@ -215,10 +278,14 @@ export class FileDocumentRepository implements DocumentRepository {
       const overrides = { ...document[field] };
       if (range) overrides[targetId] = range;
       else delete overrides[targetId];
-      const updated = readLearningDocument(kind === "cue" ? withSentenceTiming(document, targetId, range) : { ...document, [field]: overrides });
-      if (updated.schemaVersion !== 4) throw new Error("Playback update changed document schema");
+      const updated = readLearningDocument(
+        kind === "cue"
+          ? withSentenceTiming(document, targetId, range)
+          : { ...document, [field]: overrides },
+      );
+      if (updated.schemaVersion !== 5) throw new Error("Playback update changed document schema");
       const path = await this.documentPath(safe);
-      if (!path) throw new Error("Saved V4 document not found");
+      if (!path) throw new Error("Saved V5 document not found");
       await atomicWrite(path, JSON.stringify(updated, null, 2) + "\n");
       await atomicWrite(path.slice(0, -5) + ".md", learningDocumentToMarkdown(updated));
       return updated;
@@ -231,7 +298,8 @@ export class FileDocumentRepository implements DocumentRepository {
   async save(document: LearningDocument, markdown: string): Promise<void> {
     const id = safeId(document.id);
     await mkdir(this.root, { recursive: true, mode: 0o700 });
-    if (await this.get(id)) throw new Error("Document already exists; refusing to overwrite existing learning material");
+    if (await this.get(id))
+      throw new Error("Document already exists; refusing to overwrite existing learning material");
     // Commit canonical JSON last. A crash before that point can safely retry
     // both files; a crash afterward leaves a complete lesson for resume.
     const folder = await videoFolder(this.root, document);
@@ -240,7 +308,9 @@ export class FileDocumentRepository implements DocumentRepository {
   }
 }
 
-export function localStoragePorts(root = join(homedir(), "Documents", "Immersive Learning", "data-v4")): StoragePorts {
+export function localStoragePorts(
+  root = join(homedir(), "Documents", "Immersive Learning", "data-v5"),
+): StoragePorts {
   const jobs = new FileJobRepository(root);
   return {
     jobs,

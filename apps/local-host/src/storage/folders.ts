@@ -10,7 +10,9 @@ export const defaultDocumentFolder = defaultDocumentsFolder();
 async function allowedFolders(): Promise<string[]> {
   try {
     const value: unknown = JSON.parse(await readFile(allowedFile(), "utf8"));
-    return Array.isArray(value) ? value.filter((path): path is string => typeof path === "string") : [];
+    return Array.isArray(value)
+      ? value.filter((path): path is string => typeof path === "string")
+      : [];
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
     throw new Error("Cannot load allowed storage folders");
@@ -28,7 +30,8 @@ export async function validateFolder(directory: string | undefined): Promise<str
   if (normalized !== defaultPath && !(await allowedFolders()).includes(normalized)) {
     throw new Error("This directory has not been selected using the folder picker");
   }
-  if (!(await stat(normalized)).isDirectory()) throw new Error("Selected local path is not a directory");
+  if (!(await stat(normalized)).isDirectory())
+    throw new Error("Selected local path is not a directory");
   await access(normalized, constants.W_OK);
   return normalized;
 }

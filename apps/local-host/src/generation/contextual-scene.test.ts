@@ -4,7 +4,12 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GenerationRequestSchema, LearningDocumentSchema, compactStudyExport, readLearningDocument } from "@immersive/core";
+import {
+  GenerationRequestSchema,
+  LearningDocumentSchema,
+  compactStudyExport,
+  readLearningDocument,
+} from "@immersive/core";
 import { JobManager } from "../jobs/manager";
 import { localStoragePorts } from "../storage/file";
 import { toMarkdown } from "./markdown";
@@ -17,163 +22,345 @@ const cues = [
   { id: "cue-3", startMs: 4_200, endMs: 5_500, originalText: "Let's decide tomorrow." },
 ];
 const candidate = {
-  id: "candidate-1-1", cueIds: cues.map(cue => cue.id),
-  focusExpressions: ["I haven't decided yet."], learningGoal: "Explain an undecided plan",
+  id: "candidate-1-1",
+  cueIds: cues.map(cue => cue.id),
+  focusExpressions: ["I haven't decided yet."],
+  learningGoal: "Explain an undecided plan",
 };
 const examples = [
-  { situation: "A friend asks about your trip.", dialogue: [
-    { text: "Have you chosen the trip?", translation: "你選好旅行了嗎？" },
-    { text: "I haven't decided yet.", translation: "我還沒決定。" },
-  ] },
-  { situation: "A colleague asks about lunch.", dialogue: [
-    { text: "What are you having for lunch?", translation: "午餐要吃什麼？" },
-    { text: "I haven't decided yet.", translation: "我還沒決定。" },
-  ] },
+  {
+    situation: "A friend asks about your trip.",
+    dialogue: [
+      { text: "Have you chosen the trip?", translation: "你選好旅行了嗎？" },
+      { text: "I haven't decided yet.", translation: "我還沒決定。" },
+    ],
+  },
+  {
+    situation: "A colleague asks about lunch.",
+    dialogue: [
+      { text: "What are you having for lunch?", translation: "午餐要吃什麼？" },
+      { text: "I haven't decided yet.", translation: "我還沒決定。" },
+    ],
+  },
 ];
 function content() {
   return {
-    title: "Making a plan", context: "Someone is asked about dinner and has not made a decision.",
+    title: "Making a plan",
+    context: "Someone is asked about dinner and has not made a decision.",
     translations: cues.map(cue => ({ cueId: cue.id, text: "翻譯" })),
-    focusItems: [{
-      expression: candidate.focusExpressions[0], sourceCueIds: ["cue-2"],
-      meaning: "我還沒決定",
-      contextExplanation: "The dinner question and suggestion to decide tomorrow establish an undecided plan.",
-      contextCueIds: ["cue-1", "cue-3"],
-      wordNotes: [{ surface: "yet", meaning: "尚未", explanation: "Indicates no decision so far." }],
-      examples,
-    }],
+    focusItems: [
+      {
+        expression: candidate.focusExpressions[0],
+        sourceCueIds: ["cue-2"],
+        meaning: "我還沒決定",
+        contextExplanation:
+          "The dinner question and suggestion to decide tomorrow establish an undecided plan.",
+        contextCueIds: ["cue-1", "cue-3"],
+        wordNotes: [
+          { surface: "yet", meaning: "尚未", explanation: "Indicates no decision so far." },
+        ],
+        examples,
+      },
+    ],
   };
 }
 function request() {
   return GenerationRequestSchema.parse({
     id: randomUUID(),
-    source: { platform: "import", title: "Video dialogue" }, cues,
-    profile: { targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-      sceneCount: 2, contextualExampleCount: 2 },
+    source: { platform: "import", title: "Video dialogue" },
+    cues,
+    profile: {
+      targetLanguage: "en",
+      instructionLanguage: "zh-TW",
+      level: "B1",
+      sceneCount: 2,
+      contextualExampleCount: 2,
+    },
     agent: { provider: "openai", modelId: "" },
   });
 }
 
-test("V4 maps contextual learning to original cue times, counts and saved documents", () => {
+test("V5 maps contextual learning to original cue times, counts and saved documents", () => {
   const section = assembleContextualScene(candidate, cues, content(), 1, 2);
   assert.deepEqual(section.focusItems[0].sourceCueIds, ["cue-2"]);
   assert.equal(section.startMs, 1_000);
   assert.equal(section.endMs, 5_500);
   assert.equal(section.focusItems[0].examples.length, 2);
   const doc = LearningDocumentSchema.parse({
-    id: randomUUID(), schemaVersion: 4, createdAt: new Date().toISOString(),
-    source: { platform: "import", title: "Example" }, profile: request().profile,
-    generation: { provider: "openai", modelId: "" }, cues, sections: [section],
+    id: randomUUID(),
+    schemaVersion: 5,
+    createdAt: new Date().toISOString(),
+    source: { platform: "import", title: "Example" },
+    profile: request().profile,
+    generation: { provider: "openai", modelId: "" },
+    cues,
+    sections: [section],
   });
-  if (doc.schemaVersion !== 4) throw new Error("Unexpected lesson version");
-  assert.equal(readLearningDocument(doc).schemaVersion, 4);
+  if (doc.schemaVersion !== 5) throw new Error("Unexpected lesson version");
+  assert.equal(readLearningDocument(doc).schemaVersion, 5);
   assert.equal(doc.sections[0].focusItems[0].examples.length, 2);
   assert.match(toMarkdown(doc), /AI-created contextual examples/);
   assert.doesNotMatch(toMarkdown(doc), /### Practice/);
 });
 
-test("V4 keeps only pronunciation segments aligned with unchanged source and example text", () => {
+test("V5 keeps only pronunciation segments aligned with unchanged source and example text", () => {
   const input = content();
-  const section = assembleContextualScene(candidate, cues, {
-    ...input,
-    pronunciations: [
-      { cueId: "cue-2", segments: [{ text: "I haven't decided yet.", reading: "/aɪ hævənt dɪˈsaɪdɪd jɛt/" }] },
-      { cueId: "cue-1", segments: [{ text: "Wrong text", reading: "/rɔŋ/" }] },
-      { cueId: "cue-404", segments: [{ text: "Invented", reading: "/ɪnˈvɛntɪd/" }] },
-    ],
-    focusItems: [{ ...input.focusItems[0], examples: [
-      { ...examples[0], dialogue: [
-        { ...examples[0].dialogue[0], pronunciation: [{ text: "Mismatch", reading: "/x/" }] },
-        { ...examples[0].dialogue[1], pronunciation: [{ text: "I haven't decided yet.", reading: "/aɪ hævənt dɪˈsaɪdɪd jɛt/" }] },
-      ] },
-      examples[1],
-    ] }],
-  }, 1, 2);
-  assert.deepEqual(section.pronunciations?.map(item => item.cueId), ["cue-2"]);
+  const section = assembleContextualScene(
+    candidate,
+    cues,
+    {
+      ...input,
+      pronunciations: [
+        {
+          cueId: "cue-2",
+          segments: [{ text: "I haven't decided yet.", reading: "/aɪ hævənt dɪˈsaɪdɪd jɛt/" }],
+        },
+        { cueId: "cue-1", segments: [{ text: "Wrong text", reading: "/rɔŋ/" }] },
+        { cueId: "cue-404", segments: [{ text: "Invented", reading: "/ɪnˈvɛntɪd/" }] },
+      ],
+      focusItems: [
+        {
+          ...input.focusItems[0],
+          examples: [
+            {
+              ...examples[0],
+              dialogue: [
+                {
+                  ...examples[0].dialogue[0],
+                  pronunciation: [{ text: "Mismatch", reading: "/x/" }],
+                },
+                {
+                  ...examples[0].dialogue[1],
+                  pronunciation: [
+                    { text: "I haven't decided yet.", reading: "/aɪ hævənt dɪˈsaɪdɪd jɛt/" },
+                  ],
+                },
+              ],
+            },
+            examples[1],
+          ],
+        },
+      ],
+    },
+    1,
+    2,
+  );
+  assert.deepEqual(
+    section.pronunciations?.map(item => item.cueId),
+    ["cue-2"],
+  );
   assert.equal(section.focusItems[0].examples[0].dialogue[0].pronunciation, undefined);
   assert.ok(section.focusItems[0].examples[0].dialogue[1].pronunciation);
   const doc = LearningDocumentSchema.parse({
-    id: randomUUID(), schemaVersion: 4, createdAt: new Date().toISOString(),
-    source: { platform: "import", title: "Example" }, profile: request().profile,
-    generation: { provider: "openai", modelId: "" }, cues, sections: [section],
+    id: randomUUID(),
+    schemaVersion: 5,
+    createdAt: new Date().toISOString(),
+    source: { platform: "import", title: "Example" },
+    profile: request().profile,
+    generation: { provider: "openai", modelId: "" },
+    cues,
+    sections: [section],
   });
-  assert.equal(readLearningDocument(doc).schemaVersion, 4);
+  assert.equal(readLearningDocument(doc).schemaVersion, 5);
   assert.match(toMarkdown(doc), /Pronunciation: I haven't decided yet/);
-  const imported = LearningDocumentSchema.parse(JSON.parse(JSON.stringify(compactStudyExport(doc))));
-  assert.equal(imported.schemaVersion, 4);
-  if (imported.schemaVersion !== 4) throw new Error("Unexpected lesson version");
-  assert.equal(imported.sections[0].pronunciations?.[0].segments[0].reading, "/aɪ hævənt dɪˈsaɪdɪd jɛt/");
+  const imported = LearningDocumentSchema.parse(
+    JSON.parse(JSON.stringify(compactStudyExport(doc))),
+  );
+  assert.equal(imported.schemaVersion, 5);
+  if (imported.schemaVersion !== 5) throw new Error("Unexpected lesson version");
+  assert.equal(
+    imported.sections[0].pronunciations?.[0].segments[0].reading,
+    "/aɪ hævənt dɪˈsaɪdɪd jɛt/",
+  );
 });
 
-test("V4 omits readings in the wrong script while preserving exact source text", () => {
+test("V5 omits readings in the wrong script while preserving exact source text", () => {
   const input = content();
   const annotated = {
     ...input,
-    pronunciations: [{ cueId: "cue-2", segments: [{ text: "I haven't decided yet.", reading: "kinou" }] }],
+    pronunciations: [
+      { cueId: "cue-2", segments: [{ text: "I haven't decided yet.", reading: "kinou" }] },
+    ],
   };
-  assert.equal(assembleContextualScene(candidate, cues, annotated, 1, 2, "ja").pronunciations?.length, 0);
-  assert.equal(assembleContextualScene(candidate, cues, annotated, 1, 2, "ko").pronunciations?.length, 0);
-  assert.equal(assembleContextualScene(candidate, cues, annotated, 1, 2, "th").pronunciations?.length, 0);
-  const japanese = assembleContextualScene(candidate, cues, {
-    ...annotated, pronunciations: [{ cueId: "cue-2", segments: [{ text: "I haven't decided yet.", reading: "きのう" }] }],
-  }, 1, 2, "ja");
+  assert.equal(
+    assembleContextualScene(candidate, cues, annotated, 1, 2, "ja").pronunciations?.length,
+    0,
+  );
+  assert.equal(
+    assembleContextualScene(candidate, cues, annotated, 1, 2, "ko").pronunciations?.length,
+    0,
+  );
+  assert.equal(
+    assembleContextualScene(candidate, cues, annotated, 1, 2, "th").pronunciations?.length,
+    0,
+  );
+  const japanese = assembleContextualScene(
+    candidate,
+    cues,
+    {
+      ...annotated,
+      pronunciations: [
+        { cueId: "cue-2", segments: [{ text: "I haven't decided yet.", reading: "きのう" }] },
+      ],
+    },
+    1,
+    2,
+    "ja",
+  );
   assert.equal(japanese.pronunciations?.[0].segments[0].reading, "きのう");
   assert.equal(cues[1].originalText, "I haven't decided yet.");
 });
 
-test("V4 rejects invented cue references, ungrounded word notes and invalid examples", () => {
-  assert.throws(() => assembleContextualScene(candidate, cues, {
-    ...content(), focusItems: [{ ...content().focusItems[0], sourceCueIds: ["cue-404"] }],
-  }, 1, 2), /source cue IDs/);
-  assert.throws(() => assembleContextualScene(candidate, cues, {
-    ...content(), focusItems: [{ ...content().focusItems[0], contextCueIds: ["cue-404"] }],
-  }, 1, 2), /context evidence/i);
-  assert.throws(() => assembleContextualScene(candidate, cues, {
-    ...content(), focusItems: [{ ...content().focusItems[0],
-      wordNotes: [{ surface: "imagined", meaning: "X", explanation: "X" }] }],
-  }, 1, 2), /word notes/i);
-  assert.throws(() => assembleContextualScene(candidate, cues, {
-    ...content(), focusItems: [{ ...content().focusItems[0], examples: examples.slice(0, 1) }],
-  }, 1, 2), /example count/i);
-  assert.throws(() => assembleContextualScene(candidate, cues, {
-    ...content(), focusItems: [{ ...content().focusItems[0], examples: [examples[0], {
-      situation: "Another topic", dialogue: [
-        { text: "Are you free?", translation: "有空嗎？" },
-        { text: "Yes.", translation: "有。" },
-      ],
-    }] }],
-  }, 1, 2), /focus expression/i);
+test("V5 rejects invented cue references, ungrounded word notes and invalid examples", () => {
+  assert.throws(
+    () =>
+      assembleContextualScene(
+        candidate,
+        cues,
+        {
+          ...content(),
+          focusItems: [{ ...content().focusItems[0], sourceCueIds: ["cue-404"] }],
+        },
+        1,
+        2,
+      ),
+    /source cue IDs/,
+  );
+  assert.throws(
+    () =>
+      assembleContextualScene(
+        candidate,
+        cues,
+        {
+          ...content(),
+          focusItems: [{ ...content().focusItems[0], contextCueIds: ["cue-404"] }],
+        },
+        1,
+        2,
+      ),
+    /context evidence/i,
+  );
+  assert.throws(
+    () =>
+      assembleContextualScene(
+        candidate,
+        cues,
+        {
+          ...content(),
+          focusItems: [
+            {
+              ...content().focusItems[0],
+              wordNotes: [{ surface: "imagined", meaning: "X", explanation: "X" }],
+            },
+          ],
+        },
+        1,
+        2,
+      ),
+    /word notes/i,
+  );
+  assert.throws(
+    () =>
+      assembleContextualScene(
+        candidate,
+        cues,
+        {
+          ...content(),
+          focusItems: [{ ...content().focusItems[0], examples: examples.slice(0, 1) }],
+        },
+        1,
+        2,
+      ),
+    /example count/i,
+  );
+  assert.throws(
+    () =>
+      assembleContextualScene(
+        candidate,
+        cues,
+        {
+          ...content(),
+          focusItems: [
+            {
+              ...content().focusItems[0],
+              examples: [
+                examples[0],
+                {
+                  situation: "Another topic",
+                  dialogue: [
+                    { text: "Are you free?", translation: "有空嗎？" },
+                    { text: "Yes.", translation: "有。" },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        1,
+        2,
+      ),
+    /focus expression/i,
+  );
 });
 
-test("V4 prompt distinguishes evidence-based video explanations and AI-created contexts", () => {
+test("V5 prompt distinguishes evidence-based video explanations and AI-created contexts", () => {
   const prompt = contextualScenePrompt(request(), candidate, cues, 1, 2);
   assert.match(prompt, /EXACTLY 2 contextual examples PER focus expression/);
   assert.match(prompt, /ACTUAL neighboring source cues/);
   assert.match(prompt, /NEVER imply examples appeared in the original video/);
   assert.ok(prompt.includes("cue-1") && prompt.includes("cue-3"));
-  assert.match(prompt, /For EACH original cue and EACH AI example dialogue line, provide pronunciation segments/);
-  const japanesePrompt = contextualScenePrompt({ ...request(), profile: { ...request().profile, targetLanguage: "ja" } }, candidate, cues, 1, 2);
+  assert.match(
+    prompt,
+    /For EACH original cue and EACH AI example dialogue line, provide pronunciation segments/,
+  );
+  const japanesePrompt = contextualScenePrompt(
+    { ...request(), profile: { ...request().profile, targetLanguage: "ja" } },
+    candidate,
+    cues,
+    1,
+    2,
+  );
   assert.match(japanesePrompt, /short word-level segments/);
   assert.match(japanesePrompt, /Include okurigana in the same segment as its kanji/);
-  assert.match(japanesePrompt, /kana-only words and particles their context-correct hiragana readings/);
+  assert.match(
+    japanesePrompt,
+    /kana-only words and particles their context-correct hiragana readings/,
+  );
   assert.match(japanesePrompt, /standalone topic particle は, output reading わ/);
   assert.match(japanesePrompt, /keep lexical は as は/);
   assert.match(japanesePrompt, /Do not output Zhuyin\/Bopomofo or romanization/);
-  const koreanPrompt = contextualScenePrompt({ ...request(), profile: { ...request().profile, targetLanguage: "ko" } }, candidate, cues, 1, 2);
+  const koreanPrompt = contextualScenePrompt(
+    { ...request(), profile: { ...request().profile, targetLanguage: "ko" } },
+    candidate,
+    cues,
+    1,
+    2,
+  );
   assert.match(koreanPrompt, /Do not output Zhuyin\/Bopomofo or romanization/);
 });
 
-test("V4 resolves expressions spanning adjacent original subtitle cues", () => {
+test("V5 resolves expressions spanning adjacent original subtitle cues", () => {
   const split = [
     { id: "a", startMs: 100, endMs: 500, originalText: "I haven't" },
     { id: "b", startMs: 510, endMs: 900, originalText: "decided yet." },
     { id: "c", startMs: 910, endMs: 1_300, originalText: "Let's decide tomorrow." },
   ];
-  const candidates = validateCandidateBatch(split, { candidates: [{
-    cueIds: ["a", "b", "c"], focusExpressions: ["I haven't decided yet."], learningGoal: "Decision",
-  }] }, 0);
+  const candidates = validateCandidateBatch(
+    split,
+    {
+      candidates: [
+        {
+          cueIds: ["a", "b", "c"],
+          focusExpressions: ["I haven't decided yet."],
+          learningGoal: "Decision",
+        },
+      ],
+    },
+    0,
+  );
   const splitContent = {
-    ...content(), translations: split.map(cue => ({ cueId: cue.id, text: "翻譯" })),
+    ...content(),
+    translations: split.map(cue => ({ cueId: cue.id, text: "翻譯" })),
     focusItems: [{ ...content().focusItems[0], sourceCueIds: ["a", "b"], contextCueIds: ["c"] }],
   };
   const scene = assembleContextualScene(candidates[0], split, splitContent, 1, 2);
@@ -181,69 +368,99 @@ test("V4 resolves expressions spanning adjacent original subtitle cues", () => {
   assert.deepEqual(scene.focusItems[0].sourceCueIds, ["a", "b"]);
 });
 
-test("V4 generation completes through the existing resumable scene job pipeline", async () => {
+test("V5 generation completes through the existing resumable scene job pipeline", async () => {
   const root = await mkdtemp(join(tmpdir(), "immersive-contextual-"));
   try {
     const storage = localStoragePorts(root);
     const req = request();
-    const manager = new JobManager({
-      storage,
-      generateCandidates: async () => ({ candidates: [{
-        cueIds: candidate.cueIds, focusExpressions: candidate.focusExpressions,
-        learningGoal: candidate.learningGoal,
-      }] }),
-      generateSelection: async () => ({ selectedCandidateIds: ["candidate-1-1"] }),
-      generateSection: async () => content(),
-    }, () => undefined);
+    const manager = new JobManager(
+      {
+        storage,
+        generateCandidates: async () => ({
+          candidates: [
+            {
+              cueIds: candidate.cueIds,
+              focusExpressions: candidate.focusExpressions,
+              learningGoal: candidate.learningGoal,
+            },
+          ],
+        }),
+        generateSelection: async () => ({ selectedCandidateIds: ["candidate-1-1"] }),
+        generateSection: async () => content(),
+      },
+      () => undefined,
+    );
     const doc = await manager.start(req.id, req);
-    assert.equal(doc.schemaVersion, 4);
-    if (doc.schemaVersion !== 4) throw new Error("Unexpected lesson version");
+    assert.equal(doc.schemaVersion, 5);
+    if (doc.schemaVersion !== 5) throw new Error("Unexpected lesson version");
     assert.equal(doc.sections[0].focusItems[0].examples.length, 2);
     assert.equal((await storage.jobs.get(req.id))?.summary.status, "completed");
-    assert.equal((await storage.documents.get(req.id))?.schemaVersion, 4);
+    assert.equal((await storage.documents.get(req.id))?.schemaVersion, 5);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test("V4 candidate selection excludes scenes with no independent source context", () => {
-  const isolated = { cueIds: ["cue-2"], focusExpressions: ["I haven't decided yet."],
-    learningGoal: "Express uncertainty" };
+test("V5 candidate selection excludes scenes with no independent source context", () => {
+  const isolated = {
+    cueIds: ["cue-2"],
+    focusExpressions: ["I haven't decided yet."],
+    learningGoal: "Express uncertainty",
+  };
   const batch = { candidates: [isolated] };
   assert.equal(validateCandidateBatch(cues, batch, 0).length, 0);
-  assert.deepEqual(validateCandidateBatch(cues, batch, 0), [],
-    "V4 must not save an isolated focus line as a contextual scene");
-  const spanning = { cueIds: ["cue-1", "cue-2"],
+  assert.deepEqual(
+    validateCandidateBatch(cues, batch, 0),
+    [],
+    "V5 must not save an isolated focus line as a contextual scene",
+  );
+  const spanning = {
+    cueIds: ["cue-1", "cue-2"],
     focusExpressions: ["What about dinner? I haven't decided yet."],
-    learningGoal: "Understand a two-cue utterance" };
-  assert.deepEqual(validateCandidateBatch(cues, { candidates: [spanning] }, 0), [],
-    "a focus spanning every cue still needs actual neighboring dialogue");
+    learningGoal: "Understand a two-cue utterance",
+  };
+  assert.deepEqual(
+    validateCandidateBatch(cues, { candidates: [spanning] }, 0),
+    [],
+    "a focus spanning every cue still needs actual neighboring dialogue",
+  );
 });
 
-test("V4 repairs only a scene with invalid evidence and keeps canonical cue IDs", async () => {
+test("V5 repairs only a scene with invalid evidence and keeps canonical cue IDs", async () => {
   const root = await mkdtemp(join(tmpdir(), "immersive-evidence-retry-"));
   try {
     const storage = localStoragePorts(root);
     const req = request();
     let attempts = 0;
     const prompts: string[] = [];
-    const manager = new JobManager({
-      storage,
-      generateCandidates: async () => ({ candidates: [{
-        cueIds: candidate.cueIds, focusExpressions: candidate.focusExpressions,
-        learningGoal: candidate.learningGoal,
-      }] }),
-      generateSelection: async () => ({ selectedCandidateIds: ["candidate-1-1"] }),
-      generateSection: async (_agent, prompt) => {
-        prompts.push(prompt);
-        attempts++;
-        return attempts === 1 ? {
-          ...content(), focusItems: [{ ...content().focusItems[0], contextCueIds: ["cue-2"] }],
-        } : content();
+    const manager = new JobManager(
+      {
+        storage,
+        generateCandidates: async () => ({
+          candidates: [
+            {
+              cueIds: candidate.cueIds,
+              focusExpressions: candidate.focusExpressions,
+              learningGoal: candidate.learningGoal,
+            },
+          ],
+        }),
+        generateSelection: async () => ({ selectedCandidateIds: ["candidate-1-1"] }),
+        generateSection: async (_agent, prompt) => {
+          prompts.push(prompt);
+          attempts++;
+          return attempts === 1
+            ? {
+                ...content(),
+                focusItems: [{ ...content().focusItems[0], contextCueIds: ["cue-2"] }],
+              }
+            : content();
+        },
       },
-    }, () => undefined);
+      () => undefined,
+    );
     const doc = await manager.start(req.id, req);
-    assert.equal(doc.schemaVersion, 4);
+    assert.equal(doc.schemaVersion, 5);
     assert.equal(attempts, 2, "only the invalid scene should be regenerated once");
     assert.match(prompts[1], /VALIDATION REPAIR/);
     assert.ok(prompts[1].includes("cue-1") && prompts[1].includes("cue-3"));

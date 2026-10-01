@@ -1,4 +1,11 @@
-import { chunkCues, createSceneJob, transitionJob, type GenerationRequest, type JobSummary, type LearningDocument } from "@immersive/core";
+import {
+  chunkCues,
+  createSceneJob,
+  transitionJob,
+  type GenerationRequest,
+  type JobSummary,
+  type LearningDocument,
+} from "@immersive/core";
 import { runGenerationPipeline, type PipelineDependencies } from "../generation";
 import { assertPiProvider } from "../agents";
 import type { StoragePorts } from "../storage/ports";
@@ -21,7 +28,9 @@ export class JobManager {
     private readonly notify: (requestId: string, summary: JobSummary) => void,
   ) {}
 
-  private get storage(): StoragePorts { return this.deps.storage; }
+  private get storage(): StoragePorts {
+    return this.deps.storage;
+  }
 
   /** Only orphaned running jobs are marked waiting; a separate live Host must be left alone. */
   async recoverInterrupted(): Promise<void> {
@@ -29,10 +38,15 @@ export class JobManager {
       if (summary.status !== "running" || isAlive(summary.ownerPid)) continue;
       await this.storage.jobs.update(summary.id, current =>
         current.summary.status === "running" && !isAlive(current.summary.ownerPid)
-          ? { ...transitionJob(current, "waiting"), summary: {
-              ...current.summary, status: "waiting", ownerPid: undefined,
-              updatedAt: new Date().toISOString(),
-            } }
+          ? {
+              ...transitionJob(current, "waiting"),
+              summary: {
+                ...current.summary,
+                status: "waiting",
+                ownerPid: undefined,
+                updatedAt: new Date().toISOString(),
+              },
+            }
           : current,
       );
     }
@@ -43,7 +57,11 @@ export class JobManager {
     return this.storage.jobs.list(50);
   }
 
-  async start(requestId: string, request: GenerationRequest, signal?: AbortSignal): Promise<LearningDocument> {
+  async start(
+    requestId: string,
+    request: GenerationRequest,
+    signal?: AbortSignal,
+  ): Promise<LearningDocument> {
     assertPiProvider(request.agent.provider);
     if (this.running.size) throw new Error("Another generation is already running in this Host");
     const chunks = chunkCues(request.cues).length;
@@ -67,16 +85,22 @@ export class JobManager {
   async cancel(jobId: string): Promise<boolean> {
     this.running.get(jobId)?.abort();
     const job = await this.storage.jobs.get(jobId);
-    if (!job || !["queued", "running", "waiting", "failed"].includes(job.summary.status)) return false;
+    if (!job || !["queued", "running", "waiting", "failed"].includes(job.summary.status))
+      return false;
     await this.storage.jobs.update(jobId, current => {
-      if (!["queued", "running", "waiting", "failed"].includes(current.summary.status)) return current;
+      if (!["queued", "running", "waiting", "failed"].includes(current.summary.status))
+        return current;
       const next = transitionJob(current, "cancelled");
       return { ...next, summary: { ...next.summary, ownerPid: undefined } };
     });
     return true;
   }
 
-  private async execute(requestId: string, jobId: string, signal?: AbortSignal): Promise<LearningDocument> {
+  private async execute(
+    requestId: string,
+    jobId: string,
+    signal?: AbortSignal,
+  ): Promise<LearningDocument> {
     const controller = new AbortController();
     const externalAbort = () => controller.abort();
     signal?.addEventListener("abort", externalAbort, { once: true });
@@ -84,24 +108,33 @@ export class JobManager {
     this.running.set(jobId, controller);
     try {
       const started = await this.storage.jobs.update(jobId, current => {
-        if (current.summary.status === "failed" || current.summary.status === "waiting" || current.summary.status === "cancelled") {
+        if (
+          current.summary.status === "failed" ||
+          current.summary.status === "waiting" ||
+          current.summary.status === "cancelled"
+        ) {
           current = transitionJob(current, "queued");
         }
         const next = transitionJob(current, "running");
         return { ...next, summary: { ...next.summary, ownerPid: process.pid, error: undefined } };
       });
       this.notify(requestId, started.summary);
-      const document = await runGenerationPipeline(jobId, this.deps, controller.signal, summary => this.notify(requestId, summary));
+      const document = await runGenerationPipeline(jobId, this.deps, controller.signal, summary =>
+        this.notify(requestId, summary),
+      );
       return document;
     } catch (error) {
       const updated = await this.storage.jobs.update(jobId, current => {
         if (current.summary.status !== "running") return current;
         const next = transitionJob(current, controller.signal.aborted ? "waiting" : "failed");
         return {
-          ...next, summary: {
-            ...next.summary, ownerPid: undefined,
-            error: controller.signal.aborted ? undefined :
-              (error instanceof Error ? error.message : String(error)).slice(0, 1200),
+          ...next,
+          summary: {
+            ...next.summary,
+            ownerPid: undefined,
+            error: controller.signal.aborted
+              ? undefined
+              : (error instanceof Error ? error.message : String(error)).slice(0, 1200),
           },
         };
       });

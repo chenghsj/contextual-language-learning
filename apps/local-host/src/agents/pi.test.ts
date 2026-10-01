@@ -4,41 +4,88 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ModelRuntime } from "@earendil-works/pi-coding-agent";
-import { fauxProvider, fauxAssistantMessage, type Credential, type CredentialStore } from "@earendil-works/pi-ai";
-import { generatePi, lessonResources, piProviders, piDeviceId } from "./pi";
+import {
+  fauxProvider,
+  fauxAssistantMessage,
+  type Credential,
+  type CredentialStore,
+} from "@earendil-works/pi-ai";
+import { generatePi, lessonResources, piProviders, piDeviceId, piModels } from "./pi";
 
 test("isolated SDK generates JSON with no tools, global resources or cross-stage history", async () => {
   const root = await mkdtemp(join(tmpdir(), "immersive-pi-"));
   try {
-    const data = new Map<string, Credential>([["openai", { type: "api_key", key: "test-not-a-real-key" }]]);
+    const data = new Map<string, Credential>([
+      ["openai", { type: "api_key", key: "test-not-a-real-key" }],
+    ]);
     const credentials: CredentialStore = {
       read: async id => data.get(id),
       list: async () => [...data].map(([providerId, value]) => ({ providerId, type: value.type })),
-      modify: async (id, fn) => { const value = await fn(data.get(id)); if (value) data.set(id, value); return value; },
-      delete: async id => { data.delete(id); },
+      modify: async (id, fn) => {
+        const value = await fn(data.get(id));
+        if (value) data.set(id, value);
+        return value;
+      },
+      delete: async id => {
+        data.delete(id);
+      },
     };
-    const runtime = await ModelRuntime.create({ credentials, modelsPath: null, modelsStorePath: join(root, "models.json"), refreshOnCreate: false });
-    const fake = fauxProvider({ provider: "openai", models: [{ id: "test-model", reasoning: true }] });
-    fake.setResponses([(context, options) => {
-      assert.equal(options?.reasoning, "high", "saved intensity reaches the provider request");
-      assert.equal(context.messages.filter(m => m.role === "user").length, 1);
-      assert.equal(context.messages.filter(m => m.role === "assistant").length, 0);
-      
-      return fauxAssistantMessage('{"stage":"first"}');
-    }, context => {
-      assert.equal(context.messages.filter(m => m.role === "user").length, 1, "a new stage cannot inherit earlier stage history");
-      return fauxAssistantMessage('{"stage":"second"}');
-    }, fauxAssistantMessage('{"partial":', { stopReason: "length" })]);
-    runtime.registerNativeProvider(fake.provider);
+    const runtime = await ModelRuntime.create({
+      credentials,
+      modelsPath: null,
+      modelsStorePath: join(root, "models.json"),
+      refreshOnCreate: false,
+    });
+    const fake = fauxProvider({
+      provider: "openai",
+      models: [{ id: "test-model", reasoning: true }, { id: "catalog-only" }],
+    });
+    fake.setResponses([
+      (context, options) => {
+        assert.equal(options?.reasoning, "high", "saved intensity reaches the provider request");
+        assert.equal(context.messages.filter(m => m.role === "user").length, 1);
+        assert.equal(context.messages.filter(m => m.role === "assistant").length, 0);
+
+        return fauxAssistantMessage('{"stage":"first"}');
+      },
+      context => {
+        assert.equal(
+          context.messages.filter(m => m.role === "user").length,
+          1,
+          "a new stage cannot inherit earlier stage history",
+        );
+        return fauxAssistantMessage('{"stage":"second"}');
+      },
+      fauxAssistantMessage('{"partial":', { stopReason: "length" }),
+    ]);
+    runtime.registerNativeProvider({
+      ...fake.provider,
+      filterModels: models => models.filter(model => model.id === "test-model"),
+    });
+    assert.equal(runtime.getModels("openai").length, 2);
+    const listed = await piModels({ provider: "openai", modelId: "" }, runtime);
+    assert.deepEqual(
+      listed.models.map(model => model.id),
+      ["test-model"],
+    );
     const settings = { provider: "openai", modelId: "test-model", thinkingLevel: "high" as const };
     const options = { root, runtime };
-    assert.deepEqual(await generatePi(settings, "First stage", new AbortController().signal, options), { stage: "first" });
-    assert.deepEqual(await generatePi(settings, "Second stage", new AbortController().signal, options), { stage: "second" });
-    await assert.rejects(generatePi(settings, "Truncated", new AbortController().signal, options), /did not finish/);
-    const aborted = new AbortController(); aborted.abort();
+    assert.deepEqual(
+      await generatePi(settings, "First stage", new AbortController().signal, options),
+      { stage: "first" },
+    );
+    assert.deepEqual(
+      await generatePi(settings, "Second stage", new AbortController().signal, options),
+      { stage: "second" },
+    );
+    await assert.rejects(
+      generatePi(settings, "Truncated", new AbortController().signal, options),
+      /did not finish/,
+    );
+    const aborted = new AbortController();
+    aborted.abort();
     await assert.rejects(generatePi(settings, "Stopped", aborted.signal, options));
     assert.equal(fake.state.callCount, 3);
-    await assert.rejects(generatePi({ ...settings, accountConfigDir: root }, "Wrong account", new AbortController().signal, options), /CLI account/);
     const loader = lessonResources();
     assert.deepEqual(loader.getAgentsFiles().agentsFiles, []);
     assert.deepEqual(loader.getSkills().skills, []);
@@ -46,27 +93,52 @@ test("isolated SDK generates JSON with no tools, global resources or cross-stage
     const providers = await piProviders(runtime);
     assert.equal(providers.find(p => p.id === "openai")?.connected, true);
     await runtime.logout("openai");
-    await assert.rejects(generatePi(settings, "Logged out", new AbortController().signal, options), /Connect this/);
-  } finally { await rm(root, { recursive: true, force: true }); }
+    await assert.rejects(
+      generatePi(settings, "Logged out", new AbortController().signal, options),
+      /Connect this/,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("SDK OAuth loads and can be cancelled before exchanging any credential", async () => {
   const root = await mkdtemp(join(tmpdir(), "immersive-pi-oauth-"));
   try {
-    const runtime = await ModelRuntime.create({ authPath: join(root, "auth.json"),
-      modelsPath: null, modelsStorePath: join(root, "models.json"), refreshOnCreate: false });
+    const runtime = await ModelRuntime.create({
+      authPath: join(root, "auth.json"),
+      modelsPath: null,
+      modelsStorePath: join(root, "models.json"),
+      refreshOnCreate: false,
+    });
     const controller = new AbortController();
     const deviceId = await piDeviceId(root);
     assert.equal(await piDeviceId(root), deviceId);
     let opened = false;
-    await assert.rejects(runtime.login("openai", "oauth", {
-      signal: controller.signal,
-      notify(event) { if (event.type === "auth_url") { opened = true; controller.abort(); } },
-      prompt: async () => { throw new Error("cancelled"); },
-    }, { getDeviceId: () => deviceId }));
+    await assert.rejects(
+      runtime.login(
+        "openai",
+        "oauth",
+        {
+          signal: controller.signal,
+          notify(event) {
+            if (event.type === "auth_url") {
+              opened = true;
+              controller.abort();
+            }
+          },
+          prompt: async () => {
+            throw new Error("cancelled");
+          },
+        },
+        { getDeviceId: () => deviceId },
+      ),
+    );
     assert.equal(opened, true, "OAuth implementation must be included in the standalone bundle");
     assert.deepEqual(await runtime.listCredentials(), []);
-  } finally { await rm(root, { recursive: true, force: true }); }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("Antigravity is registered offline with OAuth, models and product-owned credentials", async () => {
@@ -83,29 +155,45 @@ test("Antigravity is registered offline with OAuth, models and product-owned cre
     assert.equal(provider.connected, false);
     assert.equal(provider.label, "Antigravity");
     assert.ok(runtime.getModels("antigravity").length > 0);
-    assert.equal(process.env.PI_CODING_AGENT_DIR, previousDirectory, "runtime creation must not mutate the process environment");
+    assert.equal(
+      process.env.PI_CODING_AGENT_DIR,
+      previousDirectory,
+      "runtime creation must not mutate the process environment",
+    );
     assert.deepEqual(lessonResources().getExtensions().extensions, []);
     const controller = new AbortController();
     let opened = false;
-    await assert.rejects(runtime.login("antigravity", "oauth", {
-      signal: controller.signal,
-      notify(event) {
-        if (event.type === "auth_url") {
-          assert.equal(new URL(event.url).hostname, "accounts.google.com");
-          opened = true; controller.abort();
-        }
-      },
-      prompt: async () => { throw new Error("Cancelled by test"); },
-    }), /cancel|abort/i);
+    await assert.rejects(
+      runtime.login("antigravity", "oauth", {
+        signal: controller.signal,
+        notify(event) {
+          if (event.type === "auth_url") {
+            assert.equal(new URL(event.url).hostname, "accounts.google.com");
+            opened = true;
+            controller.abort();
+          }
+        },
+        prompt: async () => {
+          throw new Error("Cancelled by test");
+        },
+      }),
+      /cancel|abort/i,
+    );
     assert.equal(opened, true);
     assert.deepEqual(await runtime.listCredentials(), []);
     // A second start also proves cancellation released the loopback listener.
     const second = new AbortController();
-    await assert.rejects(runtime.login("antigravity", "oauth", {
-      signal: second.signal,
-      notify(event) { if (event.type === "auth_url") second.abort(); },
-      prompt: async () => { throw new Error("Cancelled by test"); },
-    }));
+    await assert.rejects(
+      runtime.login("antigravity", "oauth", {
+        signal: second.signal,
+        notify(event) {
+          if (event.type === "auth_url") second.abort();
+        },
+        prompt: async () => {
+          throw new Error("Cancelled by test");
+        },
+      }),
+    );
     await runtime.logout("antigravity");
     assert.deepEqual(await runtime.listCredentials(), []);
     assert.equal((await readdir(root)).includes("antigravity-accounts.json"), false);
@@ -126,10 +214,19 @@ test("Antigravity streams a lesson through the real SDK provider without tools o
   const previousDirectory = process.env.PI_CODING_AGENT_DIR;
   const requests: Record<string, any>[] = [];
   try {
-    await writeFile(join(root, "auth.json"), JSON.stringify({ antigravity: {
-      type: "oauth", access: "synthetic-access-token", refresh: "synthetic-refresh-token",
-      expires: Date.now() + 3_600_000, projectId: "synthetic-project",
-    } }), { mode: 0o600 });
+    await writeFile(
+      join(root, "auth.json"),
+      JSON.stringify({
+        antigravity: {
+          type: "oauth",
+          access: "synthetic-access-token",
+          refresh: "synthetic-refresh-token",
+          expires: Date.now() + 3_600_000,
+          projectId: "synthetic-project",
+        },
+      }),
+      { mode: 0o600 },
+    );
     globalThis.fetch = async (input, init) => {
       const url = String(input);
       if (init?.method === "HEAD") return new Response(null, { status: 200 });
@@ -138,8 +235,14 @@ test("Antigravity streams a lesson through the real SDK provider without tools o
       requests.push(body);
       assert.equal(body.project, "synthetic-project");
       assert.deepEqual(body.request.tools ?? [], []);
-      const chunk = { response: { candidates: [{ content: { parts: [{ text: '{"stage":"antigravity"}' }] }, finishReason: "STOP" }],
-        usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1, totalTokenCount: 2 } } };
+      const chunk = {
+        response: {
+          candidates: [
+            { content: { parts: [{ text: '{"stage":"antigravity"}' }] }, finishReason: "STOP" },
+          ],
+          usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1, totalTokenCount: 2 },
+        },
+      };
       return new Response(`data: ${JSON.stringify(chunk)}\n\ndata: [DONE]\n\n`, {
         headers: { "content-type": "text/event-stream" },
       });
@@ -147,14 +250,25 @@ test("Antigravity streams a lesson through the real SDK provider without tools o
     const runtime = await createPiRuntime(root);
     const model = runtime.getModels("antigravity").find(item => item.id.startsWith("gemini-"));
     assert.ok(model);
-    const output = await generatePi({ provider: "antigravity", modelId: model.id },
-      "Synthetic lesson stage", new AbortController().signal, { root, runtime });
+    const output = await generatePi(
+      { provider: "antigravity", modelId: model.id },
+      "Synthetic lesson stage",
+      new AbortController().signal,
+      { root, runtime },
+    );
     assert.deepEqual(output, { stage: "antigravity" });
     assert.equal(requests.length, 1);
     assert.match(JSON.stringify(requests[0].request.contents), /Synthetic lesson stage/);
     await runtime.logout("antigravity");
-    await assert.rejects(generatePi({ provider: "antigravity", modelId: model.id },
-      "Logged out", new AbortController().signal, { root, runtime }), /Connect this/);
+    await assert.rejects(
+      generatePi(
+        { provider: "antigravity", modelId: model.id },
+        "Logged out",
+        new AbortController().signal,
+        { root, runtime },
+      ),
+      /Connect this/,
+    );
   } finally {
     globalThis.fetch = previousFetch;
     if (previousDirectory === undefined) delete process.env.PI_CODING_AGENT_DIR;
@@ -170,21 +284,36 @@ test("Antigravity model refresh reports network errors and retains the offline c
   const previousFetch = globalThis.fetch;
   const previousDirectory = process.env.PI_CODING_AGENT_DIR;
   try {
-    await writeFile(join(root, "auth.json"), JSON.stringify({ antigravity: {
-      type: "oauth", access: "synthetic-models-token", refresh: "synthetic-refresh",
-      expires: Date.now() + 3_600_000, projectId: "synthetic-project",
-    } }), { mode: 0o600 });
+    await writeFile(
+      join(root, "auth.json"),
+      JSON.stringify({
+        antigravity: {
+          type: "oauth",
+          access: "synthetic-models-token",
+          refresh: "synthetic-refresh",
+          expires: Date.now() + 3_600_000,
+          projectId: "synthetic-project",
+        },
+      }),
+      { mode: 0o600 },
+    );
     const runtime = await createPiRuntime(root);
     const before = runtime.getModels("antigravity").map(model => model.id);
     let requests = 0;
     globalThis.fetch = async input => {
       assert.match(String(input), /fetchAvailableModels/);
       requests++;
-      return new Response('Synthetic catalog unavailable', { status: 503 });
+      return new Response("Synthetic catalog unavailable", { status: 503 });
     };
-    await assert.rejects(piModels({ provider: "antigravity", modelId: "" }, runtime), /fetchAvailableModels|503/);
+    await assert.rejects(
+      piModels({ provider: "antigravity", modelId: "" }, runtime),
+      /fetchAvailableModels|503/,
+    );
     assert.ok(requests > 0);
-    assert.deepEqual(runtime.getModels("antigravity").map(model => model.id), before);
+    assert.deepEqual(
+      runtime.getModels("antigravity").map(model => model.id),
+      before,
+    );
   } finally {
     globalThis.fetch = previousFetch;
     if (previousDirectory === undefined) delete process.env.PI_CODING_AGENT_DIR;

@@ -10,9 +10,15 @@ import { localStoragePorts } from "../storage/file";
 
 function request() {
   return GenerationRequestSchema.parse({
-    id: randomUUID(), source: { platform: "import", title: "Resume lesson" },
-    profile: { targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-      sceneCount: 2, contextualExampleCount: 1 },
+    id: randomUUID(),
+    source: { platform: "import", title: "Resume lesson" },
+    profile: {
+      targetLanguage: "en",
+      instructionLanguage: "zh-TW",
+      level: "B1",
+      sceneCount: 2,
+      contextualExampleCount: 1,
+    },
     agent: { provider: "openai", modelId: "" },
     cues: [
       { id: "cue-1", startMs: 0, endMs: 2000, originalText: "Good morning!" },
@@ -21,15 +27,23 @@ function request() {
   });
 }
 
-test("cancelled V4 generation retains its checkpoint and can resume", async () => {
+test("cancelled V5 generation retains its checkpoint and can resume", async () => {
   const root = await mkdtemp(join(tmpdir(), "immersive-test-"));
   try {
     const storage = localStoragePorts(root);
     const payload = request();
     const reported: JobSummary[] = [];
-    const manager = new JobManager({
-      storage, generateCandidates: async () => { throw new Error("Agent temporarily unavailable"); },
-    }, (_requestId, summary) => { reported.push(summary); });
+    const manager = new JobManager(
+      {
+        storage,
+        generateCandidates: async () => {
+          throw new Error("Agent temporarily unavailable");
+        },
+      },
+      (_requestId, summary) => {
+        reported.push(summary);
+      },
+    );
     await assert.rejects(manager.start(payload.id, payload), /Agent temporarily unavailable/);
     assert.equal((await storage.jobs.get(payload.id))?.summary.status, "failed");
     assert.equal(reported.at(-1)?.status, "failed");
