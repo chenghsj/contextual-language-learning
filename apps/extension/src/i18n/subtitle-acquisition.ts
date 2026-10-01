@@ -3,17 +3,36 @@ import type { LearningLanguage } from "@immersive/core";
 import { learningLanguageName } from "./preferences";
 import type { UiLocale } from "./messages";
 
-export const subtitleAcquisition: Record<UiLocale, {
-  button: string; busy: string; hint: string; success: string; manual: string;
-  unavailable: string; sourceMismatch: string;
-  trackUnavailable: string; trackUnavailableAction: string;
-  loadingLanguage: string; languageMismatch: string; languageNotReady: string;
-  tracksChecking: string; tracksAvailable: string; tracksNone: string;
-  tracksMissing: string; tracksUnknown: string; tracksAuto: string;
-  manualLanguageChanged: string; manualLanguageReady: string;
-  reloadTab: string; reloadingTab: string; reloadedTab: string; reloadFailed: string;
-}> = {
-  "en": {
+export const subtitleAcquisition: Record<
+  UiLocale,
+  {
+    button: string;
+    busy: string;
+    hint: string;
+    success: string;
+    manual: string;
+    unavailable: string;
+    sourceMismatch: string;
+    trackUnavailable: string;
+    trackUnavailableAction: string;
+    loadingLanguage: string;
+    languageMismatch: string;
+    languageNotReady: string;
+    tracksChecking: string;
+    tracksAvailable: string;
+    tracksNone: string;
+    tracksMissing: string;
+    tracksUnknown: string;
+    tracksAuto: string;
+    manualLanguageChanged: string;
+    manualLanguageReady: string;
+    reloadTab: string;
+    reloadingTab: string;
+    reloadedTab: string;
+    reloadFailed: string;
+  }
+> = {
+  en: {
     button: "Get subtitles",
     busy: "Reading video subtitles…",
     hint: "Get available subtitles from the video you are watching. Netflix support depends on the active playback session and available subtitle tracks.",
@@ -22,21 +41,30 @@ export const subtitleAcquisition: Record<UiLocale, {
     tracksChecking: "Checking subtitle languages…",
     tracksAvailable: "Available subtitle languages: {languages}.",
     tracksNone: "No supported subtitle languages",
-    tracksMissing: "No {language} subtitle track was found. You can try retrieval or import your own captions.",
-    tracksUnknown: "Subtitle languages cannot currently be confirmed. You can still try fetching captions.",
+    tracksMissing:
+      "No {language} subtitle track was found. You can try retrieval or import your own captions.",
+    tracksUnknown:
+      "Subtitle languages cannot currently be confirmed. You can still try fetching captions.",
     tracksAuto: "Auto",
-    languageMismatch: "Requested {requested} subtitles, but the video returned {actual}. Choose the matching language or import your own captions.",
-    languageNotReady: "The captions do not match this video and selected language. Get {language} subtitles before generating.",
-    manualLanguageChanged: "These imported captions belong to another language. Import {language} captions; your previous draft is preserved.",
-    manualLanguageReady: "Imported captions for {language}. Verify the language in your file before generating.",
+    languageMismatch:
+      "Requested {requested} subtitles, but the video returned {actual}. Choose the matching language or import your own captions.",
+    languageNotReady:
+      "The captions do not match this video and selected language. Get {language} subtitles before generating.",
+    manualLanguageChanged:
+      "These imported captions belong to another language. Import {language} captions; your previous draft is preserved.",
+    manualLanguageReady:
+      "Imported captions for {language}. Verify the language in your file before generating.",
     manual: "Use your own subtitles",
     unavailable: "Open a supported video and start playback before fetching subtitles.",
     trackUnavailable: "This video does not offer {language} subtitles.",
-    trackUnavailableAction: "Choose a subtitle language offered by the video, or import your own subtitles.",
-    sourceMismatch: "The selected video tab differs from the lesson's source URL. Select the intended video or update the source URL, then retry.",
+    trackUnavailableAction:
+      "Choose a subtitle language offered by the video, or import your own subtitles.",
+    sourceMismatch:
+      "The selected video tab differs from the lesson's source URL. Select the intended video or update the source URL, then retry.",
     reloadTab: "Reload original video tab",
     reloadingTab: "Reloading video tab…",
-    reloadedTab: "Reloaded the original video tab. Wait for playback to load, then try fetching subtitles again.",
+    reloadedTab:
+      "Reloaded the original video tab. Wait for playback to load, then try fetching subtitles again.",
     reloadFailed: "Unable to reload the video tab. Switch to the matching watch tab and retry.",
   },
   "zh-TW": {
@@ -51,7 +79,8 @@ export const subtitleAcquisition: Record<UiLocale, {
     tracksMissing: "目前沒有找到{language}字幕軌；仍可嘗試取得字幕或自行匯入。",
     tracksUnknown: "目前無法確認字幕語言；仍可嘗試取得字幕。",
     tracksAuto: "自動",
-    languageMismatch: "要求{requested}字幕，但影片回傳的是 {actual}。請選擇相符語言，或匯入自己的字幕。",
+    languageMismatch:
+      "要求{requested}字幕，但影片回傳的是 {actual}。請選擇相符語言，或匯入自己的字幕。",
     languageNotReady: "目前字幕與影片或所選語言不符。請先取得{language}字幕，才能生成教材。",
     manualLanguageChanged: "已匯入的字幕屬於其他語言。請重新匯入{language}字幕；原草稿會保留。",
     manualLanguageReady: "已匯入{language}字幕，生成前請確認檔案內容確實為該語言。",
@@ -59,7 +88,8 @@ export const subtitleAcquisition: Record<UiLocale, {
     unavailable: "請先開啟支援的影片並開始播放，再取得字幕。",
     trackUnavailable: "這部影片沒有提供{language}字幕。",
     trackUnavailableAction: "請改選影片有提供的字幕語言，或匯入自己的字幕。",
-    sourceMismatch: "目前選取的影片與教材來源網址不同。請切換到要取得字幕的影片，或更新來源網址後重試。",
+    sourceMismatch:
+      "目前選取的影片與教材來源網址不同。請切換到要取得字幕的影片，或更新來源網址後重試。",
     reloadTab: "重新載入原影片分頁",
     reloadingTab: "正在重新載入影片…",
     reloadedTab: "已重新載入原本的影片分頁。請等待影片載入後，再次取得字幕。",
@@ -77,7 +107,8 @@ export const subtitleAcquisition: Record<UiLocale, {
     tracksMissing: "目前没有找到{language}字幕轨；仍可尝试获取字幕或自行导入。",
     tracksUnknown: "目前无法确认字幕语言；仍可尝试获取字幕。",
     tracksAuto: "自动",
-    languageMismatch: "请求的是{requested}字幕，但视频返回 {actual}。请选择匹配语言或导入自己的字幕。",
+    languageMismatch:
+      "请求的是{requested}字幕，但视频返回 {actual}。请选择匹配语言或导入自己的字幕。",
     languageNotReady: "当前字幕与视频或所选语言不符。请先获取{language}字幕，再生成教材。",
     manualLanguageChanged: "导入的字幕属于其他语言。请重新导入{language}字幕，原草稿会保留。",
     manualLanguageReady: "已导入{language}字幕，生成前请确认文件内容确实为该语言。",
@@ -85,13 +116,14 @@ export const subtitleAcquisition: Record<UiLocale, {
     unavailable: "请先打开支持的视频并开始播放，再获取字幕。",
     trackUnavailable: "此视频没有提供{language}字幕。",
     trackUnavailableAction: "请选择视频提供的字幕语言，或导入自己的字幕。",
-    sourceMismatch: "当前选中的视频与教材来源网址不同。请切换到要获取字幕的视频，或更新来源网址后重试。",
+    sourceMismatch:
+      "当前选中的视频与教材来源网址不同。请切换到要获取字幕的视频，或更新来源网址后重试。",
     reloadTab: "重新加载原视频标签页",
     reloadingTab: "正在重新加载视频…",
     reloadedTab: "已重新加载原视频标签页。请等待视频加载后，再次获取字幕。",
     reloadFailed: "无法重新加载视频标签页，请切换到原视频标签页后重试。",
   },
-  "ja": {
+  ja: {
     button: "字幕を取得",
     busy: "動画の字幕を取得中…",
     hint: "再生中の動画で利用可能な字幕を取得します。Netflix では再生セッションと字幕トラックによって取得できない場合があります。",
@@ -103,21 +135,26 @@ export const subtitleAcquisition: Record<UiLocale, {
     tracksMissing: "{language}の字幕トラックが見つかりません。取得を試すか字幕を読み込めます。",
     tracksUnknown: "字幕の言語を確認できません。字幕の取得は試せます。",
     tracksAuto: "自動",
-    languageMismatch: "{requested}字幕を要求しましたが、動画は {actual} を返しました。言語を変更するか、字幕を読み込んでください。",
-    languageNotReady: "字幕が選択中の動画または言語と一致しません。教材生成前に{language}字幕を取得してください。",
-    manualLanguageChanged: "読み込んだ字幕は別の言語です。元の下書きを残したまま、{language}字幕を読み込んでください。",
+    languageMismatch:
+      "{requested}字幕を要求しましたが、動画は {actual} を返しました。言語を変更するか、字幕を読み込んでください。",
+    languageNotReady:
+      "字幕が選択中の動画または言語と一致しません。教材生成前に{language}字幕を取得してください。",
+    manualLanguageChanged:
+      "読み込んだ字幕は別の言語です。元の下書きを残したまま、{language}字幕を読み込んでください。",
     manualLanguageReady: "{language}字幕を読み込みました。生成前にファイルの言語をご確認ください。",
     manual: "字幕を自分で用意する",
     unavailable: "対応する動画を開いて再生してから、字幕を取得してください。",
     trackUnavailable: "この動画には{language}の字幕がありません。",
     trackUnavailableAction: "動画で利用できる字幕言語を選ぶか、字幕ファイルを読み込んでください。",
-    sourceMismatch: "選択中の動画と教材のURLが異なります。対象の動画タブを選ぶか、教材のURLを更新してから再試行してください。",
+    sourceMismatch:
+      "選択中の動画と教材のURLが異なります。対象の動画タブを選ぶか、教材のURLを更新してから再試行してください。",
     reloadTab: "元の動画タブを再読み込み",
     reloadingTab: "動画タブを再読み込み中…",
-    reloadedTab: "元の動画タブを再読み込みしました。動画が読み込まれてから字幕を再取得してください。",
+    reloadedTab:
+      "元の動画タブを再読み込みしました。動画が読み込まれてから字幕を再取得してください。",
     reloadFailed: "動画タブを再読み込みできません。対象の動画タブに切り替えて再試行してください。",
   },
-  "ko": {
+  ko: {
     button: "자막 가져오기",
     busy: "동영상 자막을 가져오는 중…",
     hint: "재생 중인 동영상에서 제공되는 자막을 가져옵니다. Netflix에서는 재생 세션과 자막 트랙에 따라 전체 자막을 가져오지 못할 수 있습니다.",
@@ -126,71 +163,107 @@ export const subtitleAcquisition: Record<UiLocale, {
     tracksChecking: "利用 가능한 자막 언어 확인 중…",
     tracksAvailable: "사용 가능한 자막 언어: {languages}.",
     tracksNone: "지원 언어 없음",
-    tracksMissing: "{language} 자막 트랙을 찾지 못했습니다. 가져오기를 시도하거나 직접 자막을 불러올 수 있습니다.",
+    tracksMissing:
+      "{language} 자막 트랙을 찾지 못했습니다. 가져오기를 시도하거나 직접 자막을 불러올 수 있습니다.",
     tracksUnknown: "현재 자막 언어를 확인할 수 없습니다. 자막 가져오기는 시도할 수 있습니다.",
     tracksAuto: "자동",
-    languageMismatch: "{requested} 자막을 요청했지만 동영상은 {actual} 자막을 반환했습니다. 언어를 변경하거나 자막을 가져오세요.",
-    languageNotReady: "현재 자막이 동영상 또는 선택한 언어와 일치하지 않습니다. 생성 전에 {language} 자막을 가져오세요.",
-    manualLanguageChanged: "가져온 자막이 다른 언어입니다. 기존 초안을 유지한 채 {language} 자막을 다시 가져오세요.",
+    languageMismatch:
+      "{requested} 자막을 요청했지만 동영상은 {actual} 자막을 반환했습니다. 언어를 변경하거나 자막을 가져오세요.",
+    languageNotReady:
+      "현재 자막이 동영상 또는 선택한 언어와 일치하지 않습니다. 생성 전에 {language} 자막을 가져오세요.",
+    manualLanguageChanged:
+      "가져온 자막이 다른 언어입니다. 기존 초안을 유지한 채 {language} 자막을 다시 가져오세요.",
     manualLanguageReady: "{language} 자막을 가져왔습니다. 생성 전에 파일 언어를 확인하세요.",
     manual: "직접 자막 추가",
     unavailable: "지원되는 동영상을 열고 재생한 후 자막을 가져오세요.",
     trackUnavailable: "이 동영상에는 {language} 자막이 없습니다.",
     trackUnavailableAction: "동영상에서 제공하는 자막 언어를 선택하거나 자막 파일을 가져오세요.",
-    sourceMismatch: "선택한 동영상과 학습 자료의 URL이 다릅니다. 올바른 동영상 탭을 선택하거나 URL을 수정한 뒤 다시 시도하세요.",
+    sourceMismatch:
+      "선택한 동영상과 학습 자료의 URL이 다릅니다. 올바른 동영상 탭을 선택하거나 URL을 수정한 뒤 다시 시도하세요.",
     reloadTab: "원래 동영상 탭 새로고침",
     reloadingTab: "동영상 탭 새로고침 중…",
     reloadedTab: "원래 동영상 탭을 새로고침했습니다. 동영상이 로드된 후 자막을 다시 가져오세요.",
-    reloadFailed: "동영상 탭을 새로고침할 수 없습니다. 해당 동영상 탭으로 전환한 후 다시 시도하세요.",
+    reloadFailed:
+      "동영상 탭을 새로고침할 수 없습니다. 해당 동영상 탭으로 전환한 후 다시 시도하세요.",
   },
 };
 
 export function subtitleMessage(template: string, params: Record<string, string | number>): string {
   return template.replace(/\{([a-z]+)\}/g, (match, name: string) =>
-    name in params ? String(params[name]) : match);
+    name in params ? String(params[name]) : match,
+  );
 }
 
 /** User-facing recovery instructions; transport diagnostics stay out of the UI. */
-const subtitleFailures: Record<UiLocale, Record<Exclude<VideoCommandErrorCode, "TRACK_UNAVAILABLE">, string>> = {
-  "en": {
-    CAPTION_EMPTY: "Subtitles could not be retrieved from this video. Turn on captions in YouTube, play for a few seconds, then try again. If it still fails, import your own subtitles.",
-    CAPTION_TIMEOUT: "Getting subtitles took too long. Turn on captions in YouTube, play for a few seconds, then try again. You can also import your own subtitles.",
-    CAPTION_FAILED: "Subtitles could not be retrieved. Make sure the video is playing and captions are available, then try again. You can also import your own subtitles.",
-    VIDEO_CHANGED: "The video changed while getting subtitles. Switch to the video you want and try again.",
-    CAPTION_TOO_LARGE: "This video's subtitles are too long. Try a shorter video or import a shorter subtitle file.",
-    READER_UNAVAILABLE: "The video tab needs to be reloaded before subtitles can be retrieved. Reload the original video tab, wait for playback to start, then try again.",
+const subtitleFailures: Record<
+  UiLocale,
+  Record<Exclude<VideoCommandErrorCode, "TRACK_UNAVAILABLE">, string>
+> = {
+  en: {
+    CAPTION_EMPTY:
+      "Subtitles could not be retrieved from this video. Turn on captions in YouTube, play for a few seconds, then try again. If it still fails, import your own subtitles.",
+    CAPTION_TIMEOUT:
+      "Getting subtitles took too long. Turn on captions in YouTube, play for a few seconds, then try again. You can also import your own subtitles.",
+    CAPTION_FAILED:
+      "Subtitles could not be retrieved. Make sure the video is playing and captions are available, then try again. You can also import your own subtitles.",
+    VIDEO_CHANGED:
+      "The video changed while getting subtitles. Switch to the video you want and try again.",
+    CAPTION_TOO_LARGE:
+      "This video's subtitles are too long. Try a shorter video or import a shorter subtitle file.",
+    READER_UNAVAILABLE:
+      "The video tab needs to be reloaded before subtitles can be retrieved. Reload the original video tab, wait for playback to start, then try again.",
   },
   "zh-TW": {
-    CAPTION_EMPTY: "目前無法取得這部影片的字幕。請先在 YouTube 開啟字幕，播放幾秒後再試；若仍失敗，可自行匯入字幕。",
-    CAPTION_TIMEOUT: "取得字幕等候太久。請先在 YouTube 開啟字幕，播放幾秒後再試；也可以自行匯入字幕。",
-    CAPTION_FAILED: "目前無法取得字幕。請確認影片正在播放且有提供字幕，再試一次；也可以自行匯入字幕。",
+    CAPTION_EMPTY:
+      "目前無法取得這部影片的字幕。請先在 YouTube 開啟字幕，播放幾秒後再試；若仍失敗，可自行匯入字幕。",
+    CAPTION_TIMEOUT:
+      "取得字幕等候太久。請先在 YouTube 開啟字幕，播放幾秒後再試；也可以自行匯入字幕。",
+    CAPTION_FAILED:
+      "目前無法取得字幕。請確認影片正在播放且有提供字幕，再試一次；也可以自行匯入字幕。",
     VIDEO_CHANGED: "取得字幕時影片已切換。請切回要製作教材的影片，再試一次。",
     CAPTION_TOO_LARGE: "這部影片的字幕太長。請改用較短的影片，或匯入較短的字幕檔。",
-    READER_UNAVAILABLE: "需要重新載入影片分頁才能取得字幕。請重新載入原影片分頁，等影片開始播放後再試。",
+    READER_UNAVAILABLE:
+      "需要重新載入影片分頁才能取得字幕。請重新載入原影片分頁，等影片開始播放後再試。",
   },
   "zh-CN": {
-    CAPTION_EMPTY: "暂时无法获取此视频的字幕。请先在 YouTube 开启字幕，播放几秒后重试；若仍失败，可以自行导入字幕。",
-    CAPTION_TIMEOUT: "获取字幕等待太久。请先在 YouTube 开启字幕，播放几秒后重试；也可以自行导入字幕。",
-    CAPTION_FAILED: "暂时无法获取字幕。请确认视频正在播放且提供字幕，然后重试；也可以自行导入字幕。",
+    CAPTION_EMPTY:
+      "暂时无法获取此视频的字幕。请先在 YouTube 开启字幕，播放几秒后重试；若仍失败，可以自行导入字幕。",
+    CAPTION_TIMEOUT:
+      "获取字幕等待太久。请先在 YouTube 开启字幕，播放几秒后重试；也可以自行导入字幕。",
+    CAPTION_FAILED:
+      "暂时无法获取字幕。请确认视频正在播放且提供字幕，然后重试；也可以自行导入字幕。",
     VIDEO_CHANGED: "获取字幕时视频已切换。请切回要制作教材的视频后重试。",
     CAPTION_TOO_LARGE: "此视频的字幕太长。请使用较短的视频，或导入较短的字幕文件。",
-    READER_UNAVAILABLE: "需要重新加载视频标签页才能获取字幕。请重新加载原视频标签页，等视频开始播放后重试。",
+    READER_UNAVAILABLE:
+      "需要重新加载视频标签页才能获取字幕。请重新加载原视频标签页，等视频开始播放后重试。",
   },
-  "ja": {
-    CAPTION_EMPTY: "この動画の字幕を取得できませんでした。YouTube で字幕をオンにし、数秒再生してから再試行してください。取得できない場合は字幕ファイルを読み込めます。",
-    CAPTION_TIMEOUT: "字幕の取得に時間がかかりすぎました。YouTube で字幕をオンにし、数秒再生してから再試行してください。字幕ファイルの読み込みも可能です。",
-    CAPTION_FAILED: "字幕を取得できませんでした。動画が再生中で、字幕があることを確認して再試行してください。字幕ファイルの読み込みも可能です。",
-    VIDEO_CHANGED: "字幕の取得中に動画が切り替わりました。教材に使いたい動画に戻って再試行してください。",
-    CAPTION_TOO_LARGE: "この動画の字幕は長すぎます。短い動画を選ぶか、短い字幕ファイルを読み込んでください。",
-    READER_UNAVAILABLE: "字幕を取得するには動画のタブを再読み込みしてください。動画の再生が始まってから再試行してください。",
+  ja: {
+    CAPTION_EMPTY:
+      "この動画の字幕を取得できませんでした。YouTube で字幕をオンにし、数秒再生してから再試行してください。取得できない場合は字幕ファイルを読み込めます。",
+    CAPTION_TIMEOUT:
+      "字幕の取得に時間がかかりすぎました。YouTube で字幕をオンにし、数秒再生してから再試行してください。字幕ファイルの読み込みも可能です。",
+    CAPTION_FAILED:
+      "字幕を取得できませんでした。動画が再生中で、字幕があることを確認して再試行してください。字幕ファイルの読み込みも可能です。",
+    VIDEO_CHANGED:
+      "字幕の取得中に動画が切り替わりました。教材に使いたい動画に戻って再試行してください。",
+    CAPTION_TOO_LARGE:
+      "この動画の字幕は長すぎます。短い動画を選ぶか、短い字幕ファイルを読み込んでください。",
+    READER_UNAVAILABLE:
+      "字幕を取得するには動画のタブを再読み込みしてください。動画の再生が始まってから再試行してください。",
   },
-  "ko": {
-    CAPTION_EMPTY: "이 동영상의 자막을 가져올 수 없습니다. YouTube에서 자막을 켜고 몇 초 동안 재생한 후 다시 시도하세요. 계속 실패하면 자막 파일을 가져올 수 있습니다.",
-    CAPTION_TIMEOUT: "자막을 가져오는 데 너무 오래 걸렸습니다. YouTube에서 자막을 켜고 몇 초 동안 재생한 후 다시 시도하세요. 자막 파일을 가져올 수도 있습니다.",
-    CAPTION_FAILED: "자막을 가져올 수 없습니다. 동영상이 재생 중이고 자막이 있는지 확인한 후 다시 시도하세요. 자막 파일을 가져올 수도 있습니다.",
-    VIDEO_CHANGED: "자막을 가져오는 중 동영상이 변경되었습니다. 학습 자료로 만들 동영상으로 돌아가 다시 시도하세요.",
-    CAPTION_TOO_LARGE: "이 동영상의 자막이 너무 깁니다. 더 짧은 동영상을 선택하거나 짧은 자막 파일을 가져오세요.",
-    READER_UNAVAILABLE: "자막을 가져오려면 동영상 탭을 새로고침해야 합니다. 원래 동영상 탭을 새로고침하고 재생이 시작되면 다시 시도하세요.",
+  ko: {
+    CAPTION_EMPTY:
+      "이 동영상의 자막을 가져올 수 없습니다. YouTube에서 자막을 켜고 몇 초 동안 재생한 후 다시 시도하세요. 계속 실패하면 자막 파일을 가져올 수 있습니다.",
+    CAPTION_TIMEOUT:
+      "자막을 가져오는 데 너무 오래 걸렸습니다. YouTube에서 자막을 켜고 몇 초 동안 재생한 후 다시 시도하세요. 자막 파일을 가져올 수도 있습니다.",
+    CAPTION_FAILED:
+      "자막을 가져올 수 없습니다. 동영상이 재생 중이고 자막이 있는지 확인한 후 다시 시도하세요. 자막 파일을 가져올 수도 있습니다.",
+    VIDEO_CHANGED:
+      "자막을 가져오는 중 동영상이 변경되었습니다. 학습 자료로 만들 동영상으로 돌아가 다시 시도하세요.",
+    CAPTION_TOO_LARGE:
+      "이 동영상의 자막이 너무 깁니다. 더 짧은 동영상을 선택하거나 짧은 자막 파일을 가져오세요.",
+    READER_UNAVAILABLE:
+      "자막을 가져오려면 동영상 탭을 새로고침해야 합니다. 원래 동영상 탭을 새로고침하고 재생이 시작되면 다시 시도하세요.",
   },
 };
 
@@ -198,6 +271,8 @@ export type SubtitleFailure = { code: VideoCommandErrorCode; language: LearningL
 
 export function subtitleFailureMessage(locale: UiLocale, failure: SubtitleFailure): string {
   return failure.code === "TRACK_UNAVAILABLE"
-    ? subtitleMessage(subtitleAcquisition[locale].trackUnavailable, { language: learningLanguageName(failure.language, locale) })
+    ? subtitleMessage(subtitleAcquisition[locale].trackUnavailable, {
+        language: learningLanguageName(failure.language, locale),
+      })
     : subtitleFailures[locale][failure.code];
 }

@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { defaultPronunciationMode, displayReading, japaneseKanjiAnnotations, pronunciationModes, romanAnnotations } from "../components/pronunciation";
+import {
+  defaultPronunciationMode,
+  displayReading,
+  japaneseKanjiAnnotations,
+  pronunciationModes,
+  romanAnnotations,
+} from "../components/pronunciation";
 import { pronunciationCopy } from "./pronunciation";
 
 test("Japanese saved kana supports local romanization", () => {
@@ -15,15 +21,20 @@ test("Japanese saved kana supports local romanization", () => {
 
 test("Japanese kana labels only kanji while preserving the original sentence", () => {
   assert.deepEqual(japaneseKanjiAnnotations("面白い設定ですね。", "おもしろいせっていですね"), [
-    { text: "面白", reading: "おもしろ" }, { text: "い" },
-    { text: "設定", reading: "せってい" }, { text: "ですね。" },
+    { text: "面白", reading: "おもしろ" },
+    { text: "い" },
+    { text: "設定", reading: "せってい" },
+    { text: "ですね。" },
   ]);
   assert.deepEqual(japaneseKanjiAnnotations("いくら", "いくら"), [{ text: "いくら" }]);
   assert.deepEqual(japaneseKanjiAnnotations("食べ物", "たべもの"), [
-    { text: "食", reading: "た" }, { text: "べ" }, { text: "物", reading: "もの" },
+    { text: "食", reading: "た" },
+    { text: "べ" },
+    { text: "物", reading: "もの" },
   ]);
   assert.deepEqual(japaneseKanjiAnnotations("昨日。", "きのう"), [
-    { text: "昨日", reading: "きのう" }, { text: "。" },
+    { text: "昨日", reading: "きのう" },
+    { text: "。" },
   ]);
   assert.deepEqual(japaneseKanjiAnnotations("漢。字", "かんじ"), [{ text: "漢。字" }]);
 });
@@ -49,27 +60,42 @@ test("roman readings stay attached to saved source chunks without inventing kana
 });
 
 test("Japanese particle は uses wa while lexical は keeps ha", () => {
-  assert.deepEqual(romanAnnotations("ja", "命はキャラです。", [
-    { text: "命", reading: "いのち" },
-    { text: "は", reading: "は" },
-    { text: "キャラ", reading: "きゃら" },
-    { text: "です。", reading: "です" },
-  ]), [
-    { text: "命", reading: "inochi" },
-    { text: "は", reading: "wa" },
-    { text: "キャラ", reading: "kyara" },
-    { text: "です。", reading: "desu" },
-  ]);
-  assert.deepEqual(romanAnnotations("ja", "歯は", [
-    { text: "歯", reading: "は" }, { text: "は", reading: "は" },
-  ]), [
-    { text: "歯", reading: "ha" }, { text: "は", reading: "wa" },
-  ]);
-  assert.deepEqual(romanAnnotations("ja", "あ、は", [
-    { text: "あ", reading: "あ" }, { text: "、" }, { text: "は", reading: "は" },
-  ]), [
-    { text: "あ", reading: "a" }, { text: "、", reading: undefined }, { text: "は", reading: "ha" },
-  ]);
+  assert.deepEqual(
+    romanAnnotations("ja", "命はキャラです。", [
+      { text: "命", reading: "いのち" },
+      { text: "は", reading: "は" },
+      { text: "キャラ", reading: "きゃら" },
+      { text: "です。", reading: "です" },
+    ]),
+    [
+      { text: "命", reading: "inochi" },
+      { text: "は", reading: "wa" },
+      { text: "キャラ", reading: "kyara" },
+      { text: "です。", reading: "desu" },
+    ],
+  );
+  assert.deepEqual(
+    romanAnnotations("ja", "歯は", [
+      { text: "歯", reading: "は" },
+      { text: "は", reading: "は" },
+    ]),
+    [
+      { text: "歯", reading: "ha" },
+      { text: "は", reading: "wa" },
+    ],
+  );
+  assert.deepEqual(
+    romanAnnotations("ja", "あ、は", [
+      { text: "あ", reading: "あ" },
+      { text: "、" },
+      { text: "は", reading: "は" },
+    ]),
+    [
+      { text: "あ", reading: "a" },
+      { text: "、", reading: undefined },
+      { text: "は", reading: "ha" },
+    ],
+  );
   assert.equal(displayReading("ja", "roman", "はは"), "haha");
   assert.equal(displayReading("ja", "roman", "は"), "ha");
 });

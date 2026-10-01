@@ -1,25 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { EMPTY_AGENT_SELECTION, isImportedAgentId, restoreImportedAgentSelection } from "./agent-selection";
-
-const imported = "custom-" + "a".repeat(24);
-
-test("legacy built-in Agent and model selections are not displayed as BYO defaults", () => {
-  for (const provider of ["agy", "claude", "codex"]) {
-    assert.deepEqual(restoreImportedAgentSelection({
-      provider, modelId: "previous-selected-model", accountConfigDir: "/home/user/.legacy",
-    }), EMPTY_AGENT_SELECTION);
+import { EMPTY_AGENT_SELECTION, restorePiAgentSelection } from "./agent-selection";
+import { AgentSettingsSchema } from "@immersive/core";
+test("empty and removed CLI selections are form states, never generation settings", () => {
+  for (const provider of ["", "agy", "claude", "codex", "custom-" + "a".repeat(24)]) {
+    assert.deepEqual(restorePiAgentSelection({ provider, modelId: "old" }), EMPTY_AGENT_SELECTION);
   }
-  assert.deepEqual(restoreImportedAgentSelection(null), EMPTY_AGENT_SELECTION);
-  assert.deepEqual(restoreImportedAgentSelection({ provider: "custom-invalid", modelId: "" }),
-    EMPTY_AGENT_SELECTION);
-});
-
-test("valid imported Agent selection and its existing account environment persist", () => {
-  assert.ok(isImportedAgentId(imported));
-  assert.deepEqual(restoreImportedAgentSelection({
-    provider: imported, modelId: "model-1", accountConfigDir: "/home/user/.codex-work",
-  }), { provider: imported, modelId: "model-1", accountConfigDir: "/home/user/.codex-work" });
-  assert.deepEqual(restoreImportedAgentSelection({ provider: imported, modelId: "" }),
-    { provider: imported, modelId: "" });
+  assert.equal(AgentSettingsSchema.safeParse(EMPTY_AGENT_SELECTION).success, false);
+  assert.equal(
+    AgentSettingsSchema.safeParse({ provider: "openai", modelId: "", accountConfigDir: "/tmp" })
+      .success,
+    false,
+  );
+  assert.deepEqual(
+    restorePiAgentSelection({ provider: "openai", modelId: "gpt", thinkingLevel: "high" }),
+    { provider: "openai", modelId: "gpt", thinkingLevel: "high" },
+  );
 });

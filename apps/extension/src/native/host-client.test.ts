@@ -1,0 +1,73 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { randomUUID } from "node:crypto";
+import { document } from "../../dev/reader-fixture";
+import { getDocument, request } from "./host-client";
+import { testRuntime } from "./test-runtime";
+
+test("typed requests filter IDs, use declared replies and close after success or failure", async () => {
+  const app = testRuntime();
+  const jobs = request({ type: "listJobs" }, app.runtime);
+  const port = app.ports[0];
+  port.receive({ id: randomUUID(), type: "jobs", jobs: [] });
+  assert.equal(port.closed, false);
+  port.receive({ id: port.sent[0].id, type: "jobs", jobs: [] });
+  assert.deepEqual((await jobs).jobs, []);
+  assert.equal(port.closed, true);
+
+  const logout = request({ type: "piLogout", provider: "openai" }, app.runtime);
+  const auth = app.ports[1];
+  auth.receive({ id: auth.sent[0].id, type: "piProviders", providers: [] });
+  assert.deepEqual((await logout).providers, []);
+
+  const publication = request({ type: "publishJob", jobId: document.id }, app.runtime);
+  const failed = app.ports[2];
+  failed.receive({
+    id: failed.sent[0].id,
+    type: "publicationFailed",
+    jobId: document.id,
+    message: "External edit",
+  });
+  await assert.rejects(publication, /External edit/);
+  assert.equal(failed.closed, true);
+
+  const invalid = request({ type: "listLessons" }, app.runtime);
+  app.ports[3].receive({ type: "lessons", lessons: "invalid" });
+  await assert.rejects(invalid, /invalid response/);
+  assert.equal(app.ports[3].closed, true);
+});
+
+test("document request assembles UTF-8 chunks, rejects missing chunks and cleans disconnects", async () => {
+  const app = testRuntime();
+  const result = getDocument(document.id, app.runtime);
+  const port = app.ports[0];
+  const bytes = Buffer.from(JSON.stringify(document));
+  const middle = Math.floor(bytes.length / 2);
+  for (const [index, data] of [bytes.subarray(0, middle), bytes.subarray(middle)].entries()) {
+    port.receive({
+      type: "documentChunk",
+      id: port.sent[0].id,
+      documentId: document.id,
+      index,
+      total: 2,
+      dataBase64: data.toString("base64"),
+    });
+  }
+  assert.deepEqual(await result, document);
+  assert.equal(port.closed, true);
+  const missing = getDocument(document.id, app.runtime);
+  const incomplete = app.ports[1];
+  incomplete.receive({
+    type: "documentChunk",
+    id: incomplete.sent[0].id,
+    documentId: document.id,
+    index: 1,
+    total: 2,
+    dataBase64: bytes.toString("base64"),
+  });
+  await assert.rejects(missing, /Missing document chunks/);
+  assert.equal(incomplete.closed, true);
+  const interrupted = request({ type: "health" }, app.runtime);
+  app.ports[2].disconnect();
+  await assert.rejects(interrupted, /connection ended/);
+});

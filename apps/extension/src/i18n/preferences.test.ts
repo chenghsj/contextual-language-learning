@@ -2,8 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { messages, translate } from "./messages";
 import {
-  isLocalePreference, isThemePreference, localeFromBrowser, nativeLanguageName, resolveTheme,
-  learningLanguageName, learningLanguageOptions, explanationLanguageName,
+  isLocalePreference,
+  isThemePreference,
+  localeFromBrowser,
+  nativeLanguageName,
+  resolveTheme,
+  learningLanguageName,
+  learningLanguageOptions,
+  explanationLanguageName,
 } from "./preferences";
 import { LEARNING_LANGUAGES } from "@immersive/core";
 
@@ -24,8 +30,15 @@ test("all supported languages have the same keys and replace interpolation token
     assert.deepEqual(Object.keys(catalog).sort(), expected, locale);
   }
   assert.equal(translate("ja", "parsedCues", { count: 3 }), "3 件の字幕を解析しました。");
-  assert.equal(translate("en", "jobProgress",
-    { provider: "Codex", status: "Running", completed: 1, total: 3 }), "Codex · Running · 1 / 3 steps");
+  assert.equal(
+    translate("en", "jobProgress", {
+      provider: "Codex",
+      status: "Running",
+      completed: 1,
+      total: 3,
+    }),
+    "Codex · Running · 1 / 3 steps",
+  );
 });
 test("theme and locale overrides accept supported values only", () => {
   assert.equal(resolveTheme("system", true), "dark");
@@ -69,8 +82,11 @@ test("learning-language choices include every supported language once and sort i
     const options = learningLanguageOptions(locale);
     assert.deepEqual(new Set(options.map(option => option.value)), new Set(LEARNING_LANGUAGES));
     const collator = new Intl.Collator(locale);
-    assert.deepEqual(options.map(option => option.label),
-      [...options].sort((a, b) => collator.compare(a.label, b.label) || a.value.localeCompare(b.value))
-        .map(option => option.label));
+    assert.deepEqual(
+      options.map(option => option.label),
+      [...options]
+        .sort((a, b) => collator.compare(a.label, b.label) || a.value.localeCompare(b.value))
+        .map(option => option.label),
+    );
   }
 });

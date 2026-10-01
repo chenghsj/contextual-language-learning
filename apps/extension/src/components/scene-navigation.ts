@@ -23,11 +23,16 @@ export function readSceneProgress(raw: unknown, sceneIds: readonly string[]): Sa
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return empty;
   const saved = raw as { sceneId?: unknown; completedIds?: unknown; steps?: unknown };
   const allowed = new Set(sceneIds);
-  const sceneId = typeof saved.sceneId === "string" && allowed.has(saved.sceneId)
-    ? saved.sceneId : null;
+  const sceneId =
+    typeof saved.sceneId === "string" && allowed.has(saved.sceneId) ? saved.sceneId : null;
   const completedIds = Array.isArray(saved.completedIds)
-    ? [...new Set(saved.completedIds.filter((id): id is string =>
-        typeof id === "string" && allowed.has(id)))]
+    ? [
+        ...new Set(
+          saved.completedIds.filter(
+            (id): id is string => typeof id === "string" && allowed.has(id),
+          ),
+        ),
+      ]
     : [];
   const steps: Record<string, StudyStep> = {};
   if (saved.steps && typeof saved.steps === "object" && !Array.isArray(saved.steps)) {

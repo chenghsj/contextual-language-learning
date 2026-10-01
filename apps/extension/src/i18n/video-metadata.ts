@@ -1,21 +1,35 @@
 import type { UiLocale } from "./messages";
 
 /** Small, independent UI copy for metadata retrieval (no subtitle fetching). */
-export const videoMetadataMessages: Record<UiLocale, {
-  get: string; refresh: string; busy: string; success: string; partial: string;
-  unavailable: string; invalidSource: string; mismatch: string;
-  confirmUnlinked: string; changed: string;
-}> = {
-  "en": {
+export const videoMetadataMessages: Record<
+  UiLocale,
+  {
+    get: string;
+    refresh: string;
+    busy: string;
+    success: string;
+    partial: string;
+    unavailable: string;
+    invalidSource: string;
+    mismatch: string;
+    confirmUnlinked: string;
+    changed: string;
+  }
+> = {
+  en: {
     get: "Get current video information",
     refresh: "Refresh video information",
     busy: "Detecting video information…",
     success: "Video information updated. Existing subtitles were not changed.",
-    partial: "Video URL found, but the title is not available yet. Play the video and retry, or enter a title manually.",
+    partial:
+      "Video URL found, but the title is not available yet. Play the video and retry, or enter a title manually.",
     unavailable: "No supported video tab found. Open the YouTube or Netflix video, then retry.",
-    invalidSource: "The entered source URL is not a supported watch URL. Correct it or clear it to detect the active video.",
-    mismatch: "The current video differs from the source of these subtitles. Switch to the matching video before retrieving its information.",
-    confirmUnlinked: "These subtitles do not have a matching video URL. Link the current video to them? The subtitles will not be changed.",
+    invalidSource:
+      "The entered source URL is not a supported watch URL. Correct it or clear it to detect the active video.",
+    mismatch:
+      "The current video differs from the source of these subtitles. Switch to the matching video before retrieving its information.",
+    confirmUnlinked:
+      "These subtitles do not have a matching video URL. Link the current video to them? The subtitles will not be changed.",
     changed: "The video tab changed while reading information. Retry on the intended video.",
   },
   "zh-TW": {
@@ -42,28 +56,36 @@ export const videoMetadataMessages: Record<UiLocale, {
     confirmUnlinked: "这份字幕尚未设置视频来源。要将当前视频设为字幕来源吗？已有字幕不会被修改。",
     changed: "获取信息时视频标签页已切换，请返回目标视频后重试。",
   },
-  "ja": {
+  ja: {
     get: "現在の動画情報を取得",
     refresh: "動画情報を再取得",
     busy: "動画情報を取得中…",
     success: "動画情報を更新しました。字幕は変更していません。",
-    partial: "動画 URL は取得しましたが、タイトルがまだありません。再生後に再試行するか、手入力してください。",
-    unavailable: "対応する動画タブが見つかりません。YouTube または Netflix の動画を開いて再試行してください。",
-    invalidSource: "入力された URL は対応する動画 URL ではありません。修正するか消去して現在の動画を検出してください。",
+    partial:
+      "動画 URL は取得しましたが、タイトルがまだありません。再生後に再試行するか、手入力してください。",
+    unavailable:
+      "対応する動画タブが見つかりません。YouTube または Netflix の動画を開いて再試行してください。",
+    invalidSource:
+      "入力された URL は対応する動画 URL ではありません。修正するか消去して現在の動画を検出してください。",
     mismatch: "現在の動画は既存の字幕の元動画と異なります。元動画のタブに切り替えてください。",
-    confirmUnlinked: "この字幕には元動画 URL がありません。現在の動画を元動画として設定しますか？字幕は変更しません。",
+    confirmUnlinked:
+      "この字幕には元動画 URL がありません。現在の動画を元動画として設定しますか？字幕は変更しません。",
     changed: "情報の取得中に動画タブが切り替わりました。対象の動画で再試行してください。",
   },
-  "ko": {
+  ko: {
     get: "현재 동영상 정보 가져오기",
     refresh: "동영상 정보 다시 감지",
     busy: "동영상 정보 확인 중…",
     success: "동영상 정보를 업데이트했습니다. 기존 자막은 변경하지 않았습니다.",
-    partial: "동영상 URL을 가져왔지만 제목은 아직 없습니다. 재생 후 다시 시도하거나 제목을 직접 입력하세요.",
-    unavailable: "지원되는 동영상 탭이 없습니다. YouTube 또는 Netflix 동영상을 열고 다시 시도하세요.",
-    invalidSource: "입력한 출처 URL은 지원되는 동영상 URL이 아닙니다. 수정하거나 지운 후 현재 동영상을 감지하세요.",
+    partial:
+      "동영상 URL을 가져왔지만 제목은 아직 없습니다. 재생 후 다시 시도하거나 제목을 직접 입력하세요.",
+    unavailable:
+      "지원되는 동영상 탭이 없습니다. YouTube 또는 Netflix 동영상을 열고 다시 시도하세요.",
+    invalidSource:
+      "입력한 출처 URL은 지원되는 동영상 URL이 아닙니다. 수정하거나 지운 후 현재 동영상을 감지하세요.",
     mismatch: "현재 동영상이 기존 자막의 출처와 다릅니다. 일치하는 동영상 탭으로 전환하세요.",
-    confirmUnlinked: "이 자막에는 출처 동영상 URL이 없습니다. 현재 동영상을 연결할까요? 기존 자막은 변경하지 않습니다.",
+    confirmUnlinked:
+      "이 자막에는 출처 동영상 URL이 없습니다. 현재 동영상을 연결할까요? 기존 자막은 변경하지 않습니다.",
     changed: "정보를 가져오는 동안 동영상 탭이 변경되었습니다. 대상 동영상에서 다시 시도하세요.",
   },
 };

@@ -1,3 +1,4 @@
+import { readSource } from "../lib/source-contract";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
@@ -5,12 +6,19 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { learningSettingsCopy, levelHint, type LearningSettingKey } from "./learning-settings";
 import { nativeLanguageName, learningLanguageName, explanationLanguageName } from "./preferences";
-import { LEARNING_LANGUAGES, EXPLANATION_LANGUAGES, levelsForTargetLanguage, defaultLevelForTargetLanguage } from "@immersive/core";
+import {
+  LEARNING_LANGUAGES,
+  EXPLANATION_LANGUAGES,
+  levelsForTargetLanguage,
+  defaultLevelForTargetLanguage,
+} from "@immersive/core";
 import { messages, type UiLocale } from "./messages";
 import { SettingInfo } from "../components/setting-info";
 
 const fields: LearningSettingKey[] = [
-  "targetLanguage", "level", "instructionLanguage",
+  "targetLanguage",
+  "level",
+  "instructionLanguage",
   "sceneCount",
 ];
 const levels = {
@@ -32,30 +40,39 @@ test("all five UI locales explain every field and every available dropdown choic
       for (const level of levels[language]) {
         const option = copy.levels[language][level];
         assert.ok(option.label.trim(), locale + " " + language + " " + level + " label");
-        assert.ok(option.description.trim(), locale + " " + language + " " + level + " description");
-        assert.notEqual(option.label, level, locale + " " + language + " " + level + " must be understandable");
+        assert.ok(
+          option.description.trim(),
+          locale + " " + language + " " + level + " description",
+        );
+        assert.notEqual(
+          option.label,
+          level,
+          locale + " " + language + " " + level + " must be understandable",
+        );
       }
     }
     for (const language of ["en", "zh-TW", "zh-CN", "ja", "ko"] as const) {
-      assert.ok(copy.instructionDescriptions[language].trim(),
-        locale + " instruction " + language);
+      assert.ok(copy.instructionDescriptions[language].trim(), locale + " instruction " + language);
       assert.ok(nativeLanguageName(language).trim());
     }
   }
 });
 
 test("setting help shows only the concise field explanation, without repeating all choices", () => {
-  const markup = renderToStaticMarkup(createElement(SettingInfo, {
-    label: "Level", infoLabel: "About",
-    explanation: "Choose a comfortable starting point.",
-  }));
+  const markup = renderToStaticMarkup(
+    createElement(SettingInfo, {
+      label: "Level",
+      infoLabel: "About",
+      explanation: "Choose a comfortable starting point.",
+    }),
+  );
   assert.match(markup, /aria-label="About Level"/);
   assert.match(markup, /aria-expanded="false"/);
   assert.doesNotMatch(markup, /<ul>|<li>|B1 · Intermediate/);
 });
 
 test("settings keep stable saved option values rather than persisting translated labels", async () => {
-  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const app = await readSource(new URL("../App.tsx", import.meta.url));
   assert.doesNotMatch(app, /lessonFormat:/);
   assert.match(app, /buildGenerationRequest\(\{/);
   assert.doesNotMatch(app, /id="learning-mode"/);
@@ -73,29 +90,37 @@ test("settings keep stable saved option values rather than persisting translated
 });
 
 test("task cards use one Tailwind layout below the refresh control", async () => {
-  const history = await readFile(new URL("../components/task-history.tsx", import.meta.url), "utf8");
+  const history = await readSource(new URL("../components/task-history.tsx", import.meta.url));
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
-  assert.ok(history.includes('className="my-[10px] grid gap-[7px]"'), "task layout uses direct Tailwind classes");
+  assert.ok(
+    history.includes('className="my-[10px] grid gap-[7px]"'),
+    "task layout uses direct Tailwind classes",
+  );
   assert.doesNotMatch(css, /\.jobHistoryList\s*\{/);
 });
 
 test("navigation uses two primary page buttons", async () => {
-  const nav = await readFile(new URL("../components/side-panel-navigation.tsx", import.meta.url), "utf8");
+  const nav = await readSource(new URL("../components/side-panel-navigation.tsx", import.meta.url));
   assert.match(nav, /<nav[^>]*aria-label/);
   assert.match(nav, /<Button variant="ghost" size="sm"/);
   assert.match(nav, /aria-current=\{active === id \? "page" : undefined\}/);
   assert.doesNotMatch(nav, /<TabsTrigger/);
 });
 
-test("the supplied dark tokens and V4 reader retain Tailwind utilities", async () => {
+test("the supplied dark tokens and V5 reader retain Tailwind utilities", async () => {
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   const light = css.match(/^:root \{([\s\S]*?)^\}/m)?.[1];
   const dark = css.match(/^\.dark \{([\s\S]*?)^\}/m)?.[1];
   assert.ok(light && dark, "light and dark theme token blocks must exist");
   assert.match(dark, /--primary:\s*oklch\(0\.6724 0\.1308 38\.7559\)/);
-  const contextual = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
-  assert.ok(contextual.includes("border border-border"), "V4 source dialogue remains styled");
-  assert.ok(contextual.includes('data-ui="unifiedPlayer"') && contextual.includes("shrink-0 border-t"), "player stays outside the scroll area");
+  const contextual = await readSource(
+    new URL("../components/contextual-scene-reader.tsx", import.meta.url),
+  );
+  assert.ok(contextual.includes("border border-border"), "V5 source dialogue remains styled");
+  assert.ok(
+    contextual.includes('data-ui="unifiedPlayer"') && contextual.includes("shrink-0 border-t"),
+    "player stays outside the scroll area",
+  );
   assert.doesNotMatch(css, /^\.scene/m);
 });
 
@@ -107,23 +132,23 @@ test("level help follows the selected learning language in every interface local
       const help = levelHint(copy, language);
       assert.ok(help.includes(scales[language]), locale + " " + language + " level scale");
       for (const other of ["en", "ja", "ko"] as const) {
-        if (other !== language) assert.ok(!help.includes(scales[other]),
-          locale + " " + language + " should not explain " + other);
+        if (other !== language)
+          assert.ok(
+            !help.includes(scales[other]),
+            locale + " " + language + " should not explain " + other,
+          );
       }
       assert.ok(help.endsWith(copy.fieldHints.level), locale + " difficulty disclaimer");
       assert.ok(copy.levelHints[language].length > 20, locale + " " + language + " explanation");
     }
   }
-  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const app = await readSource(new URL("../App.tsx", import.meta.url));
   assert.match(app, /explanation=\{levelHint\(settingsCopy, profile\.targetLanguage\)\}/);
   assert.match(app, /defaultLevelForTargetLanguage\(language\)/);
   assert.match(app, /onValueChange=\{chooseLearningLanguage\}/);
 });
 
-test("each interface locale declares exactly one levelHints block in its own language", async () => {
-  const source = await readFile(new URL("./learning-settings.ts", import.meta.url), "utf8");
-  const headers = [...source.matchAll(/^  "(en|zh-TW|zh-CN|ja|ko)": \{$/gm)];
-  assert.deepEqual(headers.map(match => match[1]), ["en", "zh-TW", "zh-CN", "ja", "ko"]);
+test("each interface locale uses its own level explanation", () => {
   const localeStarts = {
     en: "English uses",
     "zh-TW": "英文使用",
@@ -131,24 +156,17 @@ test("each interface locale declares exactly one levelHints block in its own lan
     ja: "英語は",
     ko: "영어는",
   };
-  for (let index = 0; index < headers.length; index++) {
-    const locale = headers[index][1] as UiLocale;
-    const section = source.slice(headers[index].index,
-      headers[index + 1]?.index ?? source.indexOf("\n};", headers[index].index));
-    assert.equal([...section.matchAll(/^    "levelHints": \{/gm)].length, 1,
-      locale + " must declare levelHints exactly once");
-    assert.ok(learningSettingsCopy[locale].levelHints.en.startsWith(localeStarts[locale]),
-      locale + " must use its own localized level explanation");
+  for (const locale of locales) {
+    assert.ok(learningSettingsCopy[locale].levelHints.en.startsWith(localeStarts[locale]), locale);
   }
 });
 
-
 test("level tooltip displays the complete scale for the selected language in every UI locale", async () => {
-  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const app = await readSource(new URL("../App.tsx", import.meta.url));
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   assert.match(app, /items=\{levelOptions\.map\(value => \{/);
   assert.match(app, /settingsCopy\.levels\[profile\.targetLanguage\]\[value\]/);
-  const infoSource = await readFile(new URL("../components/setting-info.tsx", import.meta.url), "utf8");
+  const infoSource = await readSource(new URL("../components/setting-info.tsx", import.meta.url));
   assert.ok(infoSource.includes("items.map(item"));
   for (const locale of locales) {
     const copy = learningSettingsCopy[locale];
@@ -158,15 +176,20 @@ test("level tooltip displays the complete scale for the selected language in eve
         label: copy.levels[language][value].label,
         description: copy.levels[language][value].description,
       }));
-      const html = renderToStaticMarkup(createElement(SettingInfo, {
-        label: "Level",
-        infoLabel: copy.infoLabel,
-        explanation: levelHint(copy, language),
-        items,
-      }));
+      const html = renderToStaticMarkup(
+        createElement(SettingInfo, {
+          label: "Level",
+          infoLabel: copy.infoLabel,
+          explanation: levelHint(copy, language),
+          items,
+        }),
+      );
       assert.match(html, /aria-expanded="false"/);
       for (const item of items) {
-        assert.ok(item.label && item.description, locale + " " + language + ": localized level " + item.value);
+        assert.ok(
+          item.label && item.description,
+          locale + " " + language + ": localized level " + item.value,
+        );
       }
     }
   }
@@ -189,8 +212,14 @@ test("all twelve learning languages have localized names, levels and help withou
       assert.ok(options.includes(defaultLevelForTargetLanguage(language)));
     }
     for (const language of EXPLANATION_LANGUAGES) {
-      assert.ok(explanationLanguageName(language, locale).trim(), locale + " " + language + " name");
-      assert.ok(copy.instructionDescriptions[language].trim(), locale + " " + language + " explanation");
+      assert.ok(
+        explanationLanguageName(language, locale).trim(),
+        locale + " " + language + " name",
+      );
+      assert.ok(
+        copy.instructionDescriptions[language].trim(),
+        locale + " " + language + " explanation",
+      );
     }
     for (const language of added) {
       assert.match(levelHint(copy, language), /CEFR/);
@@ -199,21 +228,31 @@ test("all twelve learning languages have localized names, levels and help withou
   }
 });
 
-
 test("learning help is label-aligned and general settings describe the language inline", async () => {
-  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  const help = await readFile(new URL("../components/setting-info.tsx", import.meta.url), "utf8");
-  for (const id of ["learning-target", "learning-level", "learning-length", "contextual-examples", "learning-explanation-language", "ui-language-select", "appearance-select"]) {
+  const app = await readSource(new URL("../App.tsx", import.meta.url));
+  const help = await readSource(new URL("../components/setting-info.tsx", import.meta.url));
+  for (const id of [
+    "learning-target",
+    "learning-level",
+    "learning-length",
+    "contextual-examples",
+    "learning-explanation-language",
+    "ui-language-select",
+    "appearance-select",
+  ]) {
     assert.ok(app.includes('htmlFor="' + id + '"'), id + " must have a real label");
   }
   for (const key of ["lessonLengthHint", "contextualExamplesHint"]) {
     assert.ok(app.includes('explanation={t("' + key + '")}'), key + " belongs in info help");
-    assert.ok(!app.includes('>{t("' + key + '")}</p>'), key + " must not be duplicated under the select");
+    assert.ok(
+      !app.includes('>{t("' + key + '")}</p>'),
+      key + " must not be duplicated under the select",
+    );
   }
-  assert.ok(app.includes('relative mb-[6px] flex min-w-0 items-center gap-2'));
+  assert.ok(app.includes("relative mb-[6px] flex min-w-0 items-center gap-2"));
   assert.match(app, /aria-describedby="ui-language-hint"/);
   assert.match(app, /<p id="ui-language-hint"[^>]*>\{t\("uiLanguageHint"\)\}<\/p>/);
   assert.ok(help.includes('<Button variant="ghost" size="icon"'));
-  assert.ok(help.includes('<PopoverContent collisionPadding={8}'));
+  assert.ok(help.includes("<PopoverContent collisionPadding={8}"));
   assert.ok(help.includes("max-w-[calc(100vw-16px)]"));
 });

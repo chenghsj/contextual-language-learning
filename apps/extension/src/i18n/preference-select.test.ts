@@ -1,14 +1,21 @@
+import { readSource } from "../lib/source-contract";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
 test("language and appearance settings use Radix Select", async () => {
-  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const app = await readSource(new URL("../App.tsx", import.meta.url));
   const preferences = app.slice(
-    app.indexOf('<h2>{layout.general}</h2>'),
+    app.indexOf("<h2>{layout.general}</h2>"),
     app.indexOf('{settingsSection === "ai" && <PageSection>'),
   );
   assert.match(preferences, /<Select value=\{localePreference\} onValueChange=/);
@@ -27,13 +34,23 @@ test("language and appearance settings use Radix Select", async () => {
 });
 
 test("shadcn Select renders an accessible, keyboard-controlled combobox", () => {
-  const html = renderToStaticMarkup(createElement(Select, { value: "light" },
-    createElement(SelectTrigger, { id: "appearance-select", "aria-label": "Appearance" },
-      createElement(SelectValue)),
-    createElement(SelectContent, null,
-      createElement(SelectItem, { value: "light" }, "Light"),
-      createElement(SelectItem, { value: "dark" }, "Dark")),
-  ));
+  const html = renderToStaticMarkup(
+    createElement(
+      Select,
+      { value: "light" },
+      createElement(
+        SelectTrigger,
+        { id: "appearance-select", "aria-label": "Appearance" },
+        createElement(SelectValue),
+      ),
+      createElement(
+        SelectContent,
+        null,
+        createElement(SelectItem, { value: "light" }, "Light"),
+        createElement(SelectItem, { value: "dark" }, "Dark"),
+      ),
+    ),
+  );
   assert.match(html, /role="combobox"/);
   assert.match(html, /aria-expanded="false"/);
   assert.match(html, /aria-label="Appearance"/);
@@ -41,7 +58,7 @@ test("shadcn Select renders an accessible, keyboard-controlled combobox", () => 
 });
 
 test("Radix popup and trigger follow the warm theme without an unstyled native dropdown", async () => {
-  const select = await readFile(new URL("../components/ui/select.tsx", import.meta.url), "utf8");
+  const select = await readSource(new URL("../components/ui/select.tsx", import.meta.url));
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   assert.match(select, /SelectPrimitive\.Root/);
   assert.match(select, /SelectPrimitive\.Portal/);
@@ -51,5 +68,9 @@ test("Radix popup and trigger follow the warm theme without an unstyled native d
   assert.match(select, /focus:bg-accent focus:text-accent-foreground/);
   assert.match(css, /--primary: oklch\(0\.6171 0\.1375 39\.0427\)/);
   assert.match(select, /data-slot="select-trigger"/);
-  assert.ok((await readFile(new URL("../App.tsx", import.meta.url), "utf8")).includes("[&_[data-slot=select-trigger]]:w-full"));
+  assert.ok(
+    (await readSource(new URL("../App.tsx", import.meta.url))).includes(
+      "[&_[data-slot=select-trigger]]:w-full",
+    ),
+  );
 });

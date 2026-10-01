@@ -175,7 +175,16 @@
     a[href],
     summary,
     select,
-    input:is([type="button"], [type="submit"], [type="reset"], [type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
+    input:is(
+      [type="button"],
+      [type="submit"],
+      [type="reset"],
+      [type="checkbox"],
+      [type="radio"],
+      [type="range"],
+      [type="file"],
+      [type="color"]
+    ),
     [role="button"],
     [role="link"],
     [role="combobox"],
@@ -193,7 +202,7 @@
 }
 
 /* A disclosure can grow after Sonner has measured the original toast. */
-[data-sonner-toast][data-styled='true'].app-notice {
+[data-sonner-toast][data-styled="true"].app-notice {
   height: auto;
   align-items: flex-start;
   padding: 20px;

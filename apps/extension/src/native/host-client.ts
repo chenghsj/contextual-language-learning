@@ -1,34 +1,181 @@
-import { HostMessageSchema, HostRequestSchema, type HostMessage } from "@immersive/core";
+import {
+  BackgroundGenerationStateSchema,
+  HostMessageSchema,
+  HostRequestSchema,
+  type HostRequest,
+  type HostMessage,
+  type LearningDocument,
+} from "@immersive/core";
+import {
+  GENERATION_CONTROLLER_PORT,
+  type GenerationControllerMessage,
+} from "./generation-controller";
+import { DocumentChunkAssembler } from "./document-chunks";
 
-export const HOST_NAME = "dev.immersive.language_learning";
-
-/** One-shot Native Messaging request. Every reply is checked before it reaches UI state. */
-export function nativeOnce(request: { id: string; type: string; [key: string]: unknown },
-  runtime: typeof chrome.runtime = chrome.runtime): Promise<HostMessage> {
-  return new Promise((resolve, reject) => {
-    const checkedRequest = HostRequestSchema.safeParse(request);
-    if (!checkedRequest.success) { reject(new Error("Invalid Native Host request.")); return; }
-    const port = runtime.connectNative(HOST_NAME);
-    let finished = false;
-    port.onMessage.addListener((raw: unknown) => {
-      const parsed = HostMessageSchema.safeParse(raw);
-      if (!parsed.success) {
-        finished = true;
-        port.disconnect();
-        reject(new Error("Native Host returned an invalid response. Update the Host and try again."));
-        return;
-      }
-      const response = parsed.data;
-      if (response.id !== request.id) return;
-      finished = true;
+export type HostStream = { send(input: HostRequest | { type: "watch" }): void; close(): void };
+/** All panel transports use one worker-owned Native connection, with validation and cleanup here. */
+export function openHostStream(
+  onMessage: (message: GenerationControllerMessage) => void,
+  onError: (error: Error) => void,
+  runtime: typeof chrome.runtime = chrome.runtime,
+): HostStream {
+  const port = runtime.connect({ name: GENERATION_CONTROLLER_PORT });
+  let closed = false;
+  function close() {
+    if (!closed) {
+      closed = true;
       port.disconnect();
-      if (response.type === "error") reject(new Error(response.message));
-      else resolve(response as HostMessage);
-    });
-    port.onDisconnect.addListener(() => {
-      if (!finished) reject(new Error(runtime.lastError?.message ?? "Native Host disconnected."));
-    });
-    try { port.postMessage(checkedRequest.data); }
-    catch (error) { finished = true; port.disconnect(); reject(error); }
+    }
+  }
+  function fail(error: Error) {
+    if (closed) return;
+    close();
+    onError(error);
+  }
+  port.onMessage.addListener((raw: unknown) => {
+    if (closed) return;
+    const state = BackgroundGenerationStateSchema.safeParse(raw);
+    if (state.success) {
+      onMessage(state.data);
+      return;
+    }
+    const message = HostMessageSchema.safeParse(raw);
+    if (!message.success) {
+      fail(new Error("Native Host returned an invalid response. Update the Host and try again."));
+      return;
+    }
+    onMessage(message.data);
+  });
+  port.onDisconnect.addListener(() =>
+    fail(new Error(runtime.lastError?.message ?? "Background Host connection ended")),
+  );
+  return {
+    close,
+    send(input) {
+      if (closed) throw new Error("Host subscription is closed");
+      const checked =
+        input.type === "watch" ? { type: "watch" as const } : HostRequestSchema.parse(input);
+      port.postMessage(checked);
+    },
+  };
+}
+
+const responseTypes = {
+  health: "health",
+  agentModels: "agentModels",
+  piProviders: "piProviders",
+  piLogout: "piProviders",
+  listEndedJobs: "jobs",
+  listJobs: "jobs",
+  deleteJobHistory: "jobHistoryDeleted",
+  listLessons: "lessons",
+  listDriveLessons: "driveLessons",
+  restoreDriveLesson: "driveRestored",
+  backupExisting: "backupsScheduled",
+  savePlaybackRange: "playbackRangeSaved",
+  saveScenePlaybackRange: "scenePlaybackRangeSaved",
+  checkDuplicates: "duplicates",
+  chooseFolder: "folder",
+  driveAccounts: "driveAccounts",
+  driveConnect: "driveConnected",
+  driveDisconnect: "driveDisconnected",
+  driveValidate: "driveValidated",
+  publishJob: "published",
+  retryBackup: "backupPublished",
+  resumeBackups: "backupsFinished",
+  cancel: "cancelled",
+} as const satisfies Partial<Record<HostRequest["type"], HostMessage["type"]>>;
+export type OnceRequest = Extract<HostRequest, { type: keyof typeof responseTypes }>;
+type Reply<R extends OnceRequest> = Extract<
+  HostMessage,
+  { type: (typeof responseTypes)[R["type"]] }
+>;
+/** Resolve only the declared response for this request ID, rejecting domain failures too. */
+export function nativeOnce<R extends OnceRequest>(
+  input: R,
+  runtime: typeof chrome.runtime = chrome.runtime,
+): Promise<Reply<R>> {
+  const request = HostRequestSchema.parse(input);
+  return new Promise((resolve, reject) => {
+    const stream = openHostStream(
+      message => {
+        if (message.type === "generationState" || message.id !== request.id) return;
+        if (
+          message.type === "error" ||
+          message.type === "publicationFailed" ||
+          message.type === "backupFailed"
+        ) {
+          stream.close();
+          reject(new Error(message.message));
+          return;
+        }
+        if (message.type !== responseTypes[input.type]) {
+          stream.close();
+          reject(new Error("Unexpected Host response for " + input.type));
+          return;
+        }
+        stream.close();
+        resolve(message as Reply<R>);
+      },
+      reject,
+      runtime,
+    );
+    try {
+      stream.send(request);
+    } catch (error) {
+      stream.close();
+      reject(error);
+    }
+  });
+}
+export type RequestInput = OnceRequest extends infer R
+  ? R extends OnceRequest
+    ? Omit<R, "id">
+    : never
+  : never;
+export function request<R extends RequestInput>(
+  input: R,
+  runtime?: typeof chrome.runtime,
+): Promise<Reply<Extract<OnceRequest, { type: R["type"] }>>>;
+export function request(input: RequestInput, runtime: typeof chrome.runtime = chrome.runtime) {
+  return nativeOnce({ ...input, id: crypto.randomUUID() }, runtime);
+}
+export function getDocument(
+  documentId: string,
+  runtime: typeof chrome.runtime = chrome.runtime,
+): Promise<LearningDocument> {
+  return new Promise((resolve, reject) => {
+    const id = crypto.randomUUID();
+    const chunks = new DocumentChunkAssembler();
+    const stream = openHostStream(
+      message => {
+        if (message.type === "generationState" || message.id !== id) return;
+        try {
+          if (message.type === "error") throw new Error(message.message);
+          if (message.type === "result") {
+            stream.close();
+            resolve(message.document);
+          } else if (message.type === "documentChunk") {
+            const document = chunks.push(message);
+            if (document) {
+              stream.close();
+              resolve(document);
+            } else if (message.index === message.total - 1)
+              throw new Error("Missing document chunks");
+          } else throw new Error("Unexpected Host document response");
+        } catch (error) {
+          stream.close();
+          reject(error);
+        }
+      },
+      reject,
+      runtime,
+    );
+    try {
+      stream.send({ type: "getDocument", id, documentId });
+    } catch (error) {
+      stream.close();
+      reject(error);
+    }
   });
 }

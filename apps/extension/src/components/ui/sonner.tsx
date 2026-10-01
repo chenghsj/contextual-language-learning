@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Toaster as Sonner, type ToasterProps } from "sonner"
+import * as React from "react";
+import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 // Theme is supplied by the extension instead of next-themes.
 const Toaster = ({ theme = "system", toastOptions, ...props }: ToasterProps) => (
@@ -13,15 +13,13 @@ const Toaster = ({ theme = "system", toastOptions, ...props }: ToasterProps) => 
         toast:
           "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
         description: "group-[.toast]:text-muted-foreground",
-        actionButton:
-          "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-        cancelButton:
-          "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+        actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+        cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
       },
       ...toastOptions,
     }}
     {...props}
   />
-)
+);
 
-export { Toaster }
+export { Toaster };

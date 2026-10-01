@@ -6,30 +6,58 @@ import { createRoot } from "react-dom/client";
 import { HeaderActions } from "../components/header-actions";
 
 test("both header icons show localized tooltips on keyboard focus and dismiss with Escape", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: 'https://extension.test' });
+  const dom = new JSDOM('<div id="root"></div>', { url: "https://extension.test" });
   const originals = new Map<string, PropertyDescriptor | undefined>();
-  for (const [key, value] of Object.entries({ window: dom.window, document: dom.window.document, HTMLElement: dom.window.HTMLElement, IS_REACT_ACT_ENVIRONMENT: true })) {
+  for (const [key, value] of Object.entries({
+    window: dom.window,
+    document: dom.window.document,
+    HTMLElement: dom.window.HTMLElement,
+    IS_REACT_ACT_ENVIRONMENT: true,
+  })) {
     originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
     Object.defineProperty(globalThis, key, { configurable: true, value });
   }
-  const container = dom.window.document.getElementById('root')!;
+  const container = dom.window.document.getElementById("root")!;
   const root = createRoot(container);
   const clicked: string[] = [];
   try {
-    await act(async () => root.render(<HeaderActions locale="zh-TW" page="create" attentionCount={1}
-      onActivity={() => clicked.push('activity')} onSettings={() => clicked.push('settings')} />));
-    const icons = container.querySelectorAll<HTMLButtonElement>('button');
-    for (const [index, label] of ['活動', '設定'].entries()) {
+    await act(async () =>
+      root.render(
+        <HeaderActions
+          locale="zh-TW"
+          page="create"
+          attentionCount={1}
+          onActivity={() => clicked.push("activity")}
+          onSettings={() => clicked.push("settings")}
+        />,
+      ),
+    );
+    const icons = container.querySelectorAll<HTMLButtonElement>("button");
+    for (const [index, label] of ["活動", "設定"].entries()) {
       await act(async () => icons[index].focus());
       const tooltip = container.querySelector('[role="tooltip"]')!;
       assert.match(tooltip.textContent!, new RegExp(label));
-      assert.equal(icons[index].getAttribute('aria-describedby'), tooltip.id);
-      await act(async () => icons[index].dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+      assert.equal(icons[index].getAttribute("aria-describedby"), tooltip.id);
+      await act(async () =>
+        icons[index].dispatchEvent(
+          new dom.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+        ),
+      );
       assert.equal(container.querySelector('[role="tooltip"]'), null);
       await act(async () => icons[index].click());
     }
-    assert.deepEqual(clicked, ['activity', 'settings']);
-    await act(async () => root.render(<HeaderActions locale="ja" page="settings" attentionCount={0} onActivity={() => {}} onSettings={() => {}} />));
+    assert.deepEqual(clicked, ["activity", "settings"]);
+    await act(async () =>
+      root.render(
+        <HeaderActions
+          locale="ja"
+          page="settings"
+          attentionCount={0}
+          onActivity={() => {}}
+          onSettings={() => {}}
+        />,
+      ),
+    );
     await act(async () => icons[0].focus());
     assert.match(container.querySelector('[role="tooltip"]')!.textContent!, /アクティビティ/);
   } finally {

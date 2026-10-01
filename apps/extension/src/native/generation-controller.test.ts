@@ -7,8 +7,12 @@ type Listener<T> = (value: T) => void;
 function emitter<T>() {
   const listeners: Listener<T>[] = [];
   return {
-    addListener: (listener: Listener<T>) => { listeners.push(listener); },
-    fire: (value: T) => { for (const listener of listeners) listener(value); },
+    addListener: (listener: Listener<T>) => {
+      listeners.push(listener);
+    },
+    fire: (value: T) => {
+      for (const listener of listeners) listener(value);
+    },
   };
 }
 
@@ -18,26 +22,55 @@ function fakePort(name: string, senderId = "immersive-extension-test") {
   const sent: unknown[] = [];
   let disconnected = false;
   return {
-    name, sender: { id: senderId, url: "chrome-extension://" + senderId + "/sidepanel.html" }, onMessage, onDisconnect,
-    postMessage: (value: unknown) => { sent.push(value); },
+    name,
+    sender: { id: senderId, url: "chrome-extension://" + senderId + "/sidepanel.html" },
+    onMessage,
+    onDisconnect,
+    postMessage: (value: unknown) => {
+      sent.push(value);
+    },
     disconnect: () => {
       if (disconnected) return;
       disconnected = true;
       onDisconnect.fire();
     },
-    get sent() { return sent; },
-    get disconnected() { return disconnected; },
+    get sent() {
+      return sent;
+    },
+    get disconnected() {
+      return disconnected;
+    },
   };
 }
 
-function setup(onCompleted: (jobId: string, title: string, documentId?: string) => void = () => {},
-  onAttention: (jobId: string, title: string, outcome: "interrupted" | "failed") => void = () => {}) {
+function setup(
+  onCompleted: (jobId: string, title: string, documentId?: string) => void = () => {},
+  onAttention: (jobId: string, title: string, outcome: "interrupted" | "failed") => void = () => {},
+  automaticHandshake = true,
+) {
   const id = "immersive-extension-test";
   const onConnect = emitter<ReturnType<typeof fakePort>>();
   const native = fakePort("native", id);
+  const send = native.postMessage;
+  native.postMessage = value => {
+    send(value);
+    const request = value as { type: string; id: string };
+    if (request.type === "health" && automaticHandshake)
+      native.onMessage.fire({
+        type: "health",
+        id: request.id,
+        installed: {},
+        agents: [],
+        protocolVersion: 4,
+        version: "0.1.0",
+        agentMode: "pi-sdk",
+      });
+  };
   let connections = 0;
   const runtime = {
-    id, onConnect,
+    id,
+    getManifest: () => ({ version: "0.1.0" }),
+    onConnect,
     connectNative: (name: string) => {
       assert.equal(name, "dev.immersive.language_learning");
       connections++;
@@ -46,8 +79,12 @@ function setup(onCompleted: (jobId: string, title: string, documentId?: string) 
   } as unknown as typeof chrome.runtime;
   installGenerationController(runtime, onCompleted, onAttention);
   return {
-    native, onConnect, id,
-    get connections() { return connections; },
+    native,
+    onConnect,
+    id,
+    get connections() {
+      return connections;
+    },
     connectPanel: () => {
       const panel = fakePort(GENERATION_CONTROLLER_PORT, id);
       onConnect.fire(panel);
@@ -56,10 +93,168 @@ function setup(onCompleted: (jobId: string, title: string, documentId?: string) 
   };
 }
 
+test("all Host operations wait for one compatible handshake and retain pending work after panel close", () => {
+  const app = setup(undefined, undefined, false);
+  const panel = app.connectPanel();
+  const jobsId = randomUUID(),
+    lessonsId = randomUUID();
+  panel.onMessage.fire({ id: jobsId, type: "listJobs" });
+  panel.onMessage.fire({ id: lessonsId, type: "listLessons" });
+  assert.equal(app.connections, 1);
+  assert.equal(app.native.sent.length, 1);
+  const handshake = app.native.sent[0] as { id: string };
+  app.native.onMessage.fire({
+    id: handshake.id,
+    type: "health",
+    installed: {},
+    agents: [],
+    version: "0.1.0",
+    protocolVersion: 4,
+    agentMode: "pi-sdk",
+  });
+  assert.deepEqual(app.native.sent.slice(1), [
+    { id: jobsId, type: "listJobs" },
+    { id: lessonsId, type: "listLessons" },
+  ]);
+  panel.disconnect();
+  app.native.onMessage.fire({ id: jobsId, type: "jobs", jobs: [] });
+  assert.equal(app.native.disconnected, false);
+  app.native.onMessage.fire({ id: lessonsId, type: "lessons", lessons: [] });
+  assert.equal(app.native.disconnected, true);
+});
+
+test("incompatible Host never receives queued business requests", () => {
+  for (const mismatch of [
+    { protocolVersion: 3 },
+    { version: "old" },
+    { agentMode: "imported-only" },
+  ]) {
+    const app = setup(undefined, undefined, false);
+    const panel = app.connectPanel();
+    const id = randomUUID();
+    panel.onMessage.fire({ id, type: "listJobs" });
+    const handshake = app.native.sent[0] as { id: string };
+    app.native.onMessage.fire({
+      id: handshake.id,
+      type: "health",
+      installed: {},
+      agents: [],
+      version: "0.1.0",
+      protocolVersion: 4,
+      agentMode: "pi-sdk",
+      ...mismatch,
+    });
+    assert.equal(app.native.sent.length, 1);
+    assert.equal(app.native.disconnected, true);
+    assert.ok(
+      panel.sent.some(
+        value =>
+          (value as { id?: string; type?: string }).id === id &&
+          (value as { type?: string }).type === "error",
+      ),
+    );
+  }
+});
+
+test("health reports installed metadata without forwarding business requests to an incompatible Host", () => {
+  for (const mismatch of [
+    { protocolVersion: 3 },
+    { version: "old" },
+    { agentMode: "imported-only" },
+  ]) {
+    const app = setup(undefined, undefined, false);
+    const panel = app.connectPanel();
+    const healthId = randomUUID(),
+      jobsId = randomUUID();
+    panel.onMessage.fire({ id: healthId, type: "health" });
+    panel.onMessage.fire({ id: jobsId, type: "listJobs" });
+    const handshake = app.native.sent[0] as { id: string };
+    const health = {
+      id: handshake.id,
+      type: "health",
+      installed: {},
+      agents: [],
+      version: "0.1.0",
+      protocolVersion: 4,
+      agentMode: "pi-sdk",
+      ...mismatch,
+    };
+    app.native.onMessage.fire(health);
+    assert.deepEqual(
+      panel.sent.find(value => (value as { id?: string }).id === healthId),
+      { ...health, id: healthId },
+    );
+    assert.equal(
+      (panel.sent.find(value => (value as { id?: string }).id === jobsId) as { type: string }).type,
+      "error",
+    );
+    assert.equal(app.native.sent.length, 1);
+    assert.equal(app.native.disconnected, true);
+  }
+});
+
+test("a compatible health check uses the handshake response without a second Native request", () => {
+  const app = setup();
+  const panel = app.connectPanel(),
+    id = randomUUID();
+  panel.onMessage.fire({ id, type: "health" });
+  assert.equal(app.native.sent.length, 1);
+  assert.equal(
+    (panel.sent.find(value => (value as { id?: string }).id === id) as { type: string }).type,
+    "health",
+  );
+  panel.disconnect();
+  assert.equal(app.native.disconnected, true);
+});
+
+test("checking an already connected Host sends a fresh health request each time", () => {
+  const app = setup();
+  const panel = app.connectPanel();
+  panel.onMessage.fire({ id: randomUUID(), type: "health" });
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const id = randomUUID();
+    panel.onMessage.fire({ id, type: "health" });
+    assert.deepEqual(app.native.sent.at(-1), { id, type: "health" });
+    assert.equal(app.native.sent.length, attempt + 2);
+    assert.ok(
+      panel.sent.some(
+        value =>
+          (value as { id?: string; type?: string }).id === id &&
+          (value as { type?: string }).type === "health",
+      ),
+    );
+  }
+});
+
+test("login answers belong to their panel and closing its owner cancels only that login", () => {
+  const app = setup();
+  const owner = app.connectPanel(),
+    observer = app.connectPanel();
+  const loginId = randomUUID(),
+    jobsId = randomUUID();
+  owner.onMessage.fire({ id: loginId, type: "piLogin", provider: "openai", method: "api_key" });
+  observer.onMessage.fire({
+    id: randomUUID(),
+    type: "piAuthAnswer",
+    loginId,
+    promptId: randomUUID(),
+    value: "key",
+  });
+  assert.equal((app.native.sent.at(-1) as { type: string }).type, "piLogin");
+  observer.onMessage.fire({ id: jobsId, type: "listJobs" });
+  owner.disconnect();
+  assert.equal((app.native.sent.at(-1) as { type: string }).type, "piAuthCancel");
+  observer.disconnect();
+  assert.equal(app.native.disconnected, false);
+  app.native.onMessage.fire({ id: jobsId, type: "jobs", jobs: [] });
+  assert.equal(app.native.disconnected, true);
+});
+
 test("closing the Side Panel retains the live Native Host and new panel can observe progress", () => {
   const app = setup();
   const first = app.connectPanel();
-  const requestId = randomUUID(), jobId = randomUUID();
+  const requestId = randomUUID(),
+    jobId = randomUUID();
   first.onMessage.fire({ type: "resume", id: requestId, jobId });
   assert.equal(app.connections, 1);
   assert.deepEqual(app.native.sent.at(-1), { type: "resume", id: requestId, jobId });
@@ -67,14 +262,25 @@ test("closing the Side Panel retains the live Native Host and new panel can obse
   first.disconnect();
   assert.equal(app.native.disconnected, false);
 
-  app.native.onMessage.fire({ id: requestId, type: "job",
-    job: { id: jobId, sourceTitle: "Test", provider: "custom-" + "a".repeat(24),
-      status: "running", completed: 3, total: 5,
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } });
+  app.native.onMessage.fire({
+    id: requestId,
+    type: "job",
+    job: {
+      id: jobId,
+      sourceTitle: "Test",
+      provider: "openai",
+      status: "running",
+      completed: 3,
+      total: 5,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  });
   const second = app.connectPanel();
   second.onMessage.fire({ type: "watch" });
   const state = second.sent.at(-1) as {
-    type: string; active: { requestId: string; jobId: string; summary: { completed: number } };
+    type: string;
+    active: { requestId: string; jobId: string; summary: { completed: number } };
   };
   assert.equal(state.type, "generationState");
   assert.equal(state.active.requestId, requestId);
@@ -82,9 +288,13 @@ test("closing the Side Panel retains the live Native Host and new panel can obse
   assert.equal(state.active.summary.completed, 3);
 
   app.native.onMessage.fire({ id: requestId, type: "progress", jobId, completed: 4, total: 5 });
-  assert.ok(second.sent.some(message =>
-    (message as { type?: string; completed?: number }).type === "progress" &&
-    (message as { completed?: number }).completed === 4));
+  assert.ok(
+    second.sent.some(
+      message =>
+        (message as { type?: string; completed?: number }).type === "progress" &&
+        (message as { completed?: number }).completed === 4,
+    ),
+  );
   second.disconnect();
   assert.equal(app.native.disconnected, false);
 
@@ -95,25 +305,39 @@ test("closing the Side Panel retains the live Native Host and new panel can obse
 test("duplicate check and authorized generation share the same Host process and check token", () => {
   const app = setup();
   const panel = app.connectPanel();
-  const checkId = randomUUID(), token = randomUUID(), jobId = randomUUID();
+  const checkId = randomUUID(),
+    token = randomUUID(),
+    jobId = randomUUID();
   const payload = {
-    id: jobId, source: { platform: "youtube", title: "A video" },
+    id: jobId,
+    source: { platform: "youtube", title: "A video" },
     profile: {
-      targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-      sceneCount: 4, contextualExampleCount: 2,
+      targetLanguage: "en",
+      instructionLanguage: "zh-TW",
+      level: "B1",
+      sceneCount: 4,
+      contextualExampleCount: 2,
     },
-    agent: { provider: "custom-" + "a".repeat(24), modelId: "" },
+    agent: { provider: "openai", modelId: "" },
     cues: [{ id: "line-1", startMs: 1_000, endMs: 2_000, originalText: "Hello" }],
   };
   panel.onMessage.fire({ type: "checkDuplicates", id: checkId, payload });
   assert.equal(app.connections, 1);
   app.native.onMessage.fire({ type: "duplicates", id: checkId, token, matches: [] });
   panel.onMessage.fire({
-    type: "generate", id: jobId, payload, checkToken: token, confirmRegeneration: false,
+    type: "generate",
+    id: jobId,
+    payload,
+    checkToken: token,
+    confirmRegeneration: false,
   });
   assert.equal(app.connections, 1);
   assert.deepEqual(app.native.sent.at(-1), {
-    type: "generate", id: jobId, payload, checkToken: token, confirmRegeneration: false,
+    type: "generate",
+    id: jobId,
+    payload,
+    checkToken: token,
+    confirmRegeneration: false,
   });
   panel.disconnect();
   assert.equal(app.native.disconnected, false);
@@ -126,12 +350,17 @@ test("duplicate check and authorized generation share the same Host process and 
 test("a native crash is relayed to all live panels, without claiming the job finished", () => {
   const app = setup();
   const panel = app.connectPanel();
-  const requestId = randomUUID(), jobId = randomUUID();
+  const requestId = randomUUID(),
+    jobId = randomUUID();
   panel.onMessage.fire({ type: "resume", id: requestId, jobId });
   app.native.disconnect();
-  assert.ok(panel.sent.some(message =>
-    (message as { id?: string; type?: string }).id === requestId &&
-    (message as { type?: string }).type === "error"));
+  assert.ok(
+    panel.sent.some(
+      message =>
+        (message as { id?: string; type?: string }).id === requestId &&
+        (message as { type?: string }).type === "error",
+    ),
+  );
   const last = panel.sent.at(-1) as { type: string; active: unknown };
   assert.equal(last.type, "generationState");
   assert.equal(last.active, null);
@@ -152,7 +381,8 @@ test("an internal content-script port cannot run an Agent through the worker", (
   const app = setup();
   const contentScript = fakePort(GENERATION_CONTROLLER_PORT, app.id);
   Object.assign(contentScript.sender, {
-    url: "https://www.netflix.com/watch/81234567", tab: { id: 42 },
+    url: "https://www.netflix.com/watch/81234567",
+    tab: { id: 42 },
   });
   app.onConnect.fire(contentScript);
   assert.equal(contentScript.disconnected, true);
@@ -171,16 +401,30 @@ test("pending Drive backups survive Side Panel closure until the Host finishes",
   assert.equal(app.native.disconnected, true);
 });
 
- test("completion notifies once after the panel closes; errors do not notify", () => {
+test("completion notifies once after the panel closes; errors do not notify", () => {
   const notifications: string[] = [];
-  const app = setup((jobId) => notifications.push(jobId));
+  const app = setup(jobId => notifications.push(jobId));
   const panel = app.connectPanel();
-  const id = randomUUID(), jobId = randomUUID();
+  const id = randomUUID(),
+    jobId = randomUUID();
   panel.onMessage.fire({ type: "resume", id, jobId });
   panel.disconnect();
   const now = new Date().toISOString();
-  app.native.onMessage.fire({ type: "job", id, job: { id: jobId, provider: "openai", sourceTitle: "Video",
-    status: "completed", completed: 1, total: 1, createdAt: now, updatedAt: now, documentId: jobId } });
+  app.native.onMessage.fire({
+    type: "job",
+    id,
+    job: {
+      id: jobId,
+      provider: "openai",
+      sourceTitle: "Video",
+      status: "completed",
+      completed: 1,
+      total: 1,
+      createdAt: now,
+      updatedAt: now,
+      documentId: jobId,
+    },
+  });
   app.native.onMessage.fire({ type: "generationSettled", id });
   app.native.onMessage.fire({ type: "generationSettled", id });
   assert.deepEqual(notifications, [jobId]);
@@ -191,23 +435,34 @@ test("pending Drive backups survive Side Panel closure until the Host finishes",
   assert.deepEqual(notifications, [jobId]);
 });
 
-
 test("failed, disconnected, and cancelled tasks notify attention once; unrelated requests stay quiet", () => {
   for (const kind of ["error", "disconnect", "cancelled", "invalid"] as const) {
     const outcomes: string[] = [];
-    const app = setup(() => assert.fail("must not notify completion"), (_id, _title, outcome) => outcomes.push(outcome));
+    const app = setup(
+      () => assert.fail("must not notify completion"),
+      (_id, _title, outcome) => outcomes.push(outcome),
+    );
     const panel = app.connectPanel();
-    const id = randomUUID(), jobId = randomUUID();
+    const id = randomUUID(),
+      jobId = randomUUID();
     panel.onMessage.fire({ type: "resume", id, jobId });
     panel.disconnect();
     if (kind === "disconnect") app.native.disconnect();
     else if (kind === "invalid") app.native.onMessage.fire({ broken: true });
-    else app.native.onMessage.fire(kind === "error" ? { type: "error", id, message: "failed" } : { type: "cancelled", id, jobId });
+    else
+      app.native.onMessage.fire(
+        kind === "error"
+          ? { type: "error", id, message: "failed" }
+          : { type: "cancelled", id, jobId },
+      );
     app.native.onMessage.fire({ type: "generationSettled", id });
     assert.deepEqual(outcomes, [kind === "error" ? "failed" : "interrupted"]);
   }
   const outcomes: string[] = [];
-  const app = setup(() => {}, (_id, _title, outcome) => outcomes.push(outcome));
+  const app = setup(
+    () => {},
+    (_id, _title, outcome) => outcomes.push(outcome),
+  );
   const panel = app.connectPanel();
   const id = randomUUID();
   panel.onMessage.fire({ type: "resumeBackups", id });
@@ -217,7 +472,10 @@ test("failed, disconnected, and cancelled tasks notify attention once; unrelated
 
 test("settlement without a completed saved lesson reports interruption", () => {
   const outcomes: string[] = [];
-  const app = setup(() => assert.fail("no lesson was saved"), (_id, _title, outcome) => outcomes.push(outcome));
+  const app = setup(
+    () => assert.fail("no lesson was saved"),
+    (_id, _title, outcome) => outcomes.push(outcome),
+  );
   const panel = app.connectPanel();
   const id = randomUUID();
   panel.onMessage.fire({ type: "resume", id, jobId: randomUUID() });
@@ -225,12 +483,16 @@ test("settlement without a completed saved lesson reports interruption", () => {
   assert.deepEqual(outcomes, ["interrupted"]);
 });
 
-
 test("a separate cancel request reports interruption without duplicating the later generation error", () => {
   const outcomes: string[] = [];
-  const app = setup(() => assert.fail("cancelled job is not complete"), (_id, _title, outcome) => outcomes.push(outcome));
+  const app = setup(
+    () => assert.fail("cancelled job is not complete"),
+    (_id, _title, outcome) => outcomes.push(outcome),
+  );
   const panel = app.connectPanel();
-  const id = randomUUID(), cancelId = randomUUID(), jobId = randomUUID();
+  const id = randomUUID(),
+    cancelId = randomUUID(),
+    jobId = randomUUID();
   panel.onMessage.fire({ type: "resume", id, jobId });
   panel.onMessage.fire({ type: "cancel", id: cancelId, jobId });
   app.native.onMessage.fire({ type: "cancelled", id: cancelId });

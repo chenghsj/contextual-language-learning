@@ -1,15 +1,18 @@
+import { readSource } from "../lib/source-contract";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 
-const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-const oauth = await readFile(new URL("../../../local-host/src/drive/oauth.ts", import.meta.url), "utf8");
-const callbackPage = await readFile(new URL("../../../local-host/src/drive/oauth-callback-page.ts", import.meta.url), "utf8");
+const app = await readSource(new URL("../App.tsx", import.meta.url));
+const oauth = await readSource(new URL("../../../local-host/src/drive/oauth.ts", import.meta.url));
+const callbackPage = await readSource(
+  new URL("../../../local-host/src/drive/oauth-callback-page.ts", import.meta.url),
+);
 
 test("backup uses the standard shadcn Switch without Button hover overrides", async () => {
   assert.match(app, /<Switch checked=\{backup.enabled\}/);
   assert.match(app, /onCheckedChange=\{enabled => enabled \? void enableBackup\(\)/);
-  const source = await readFile(new URL("../components/ui/switch.tsx", import.meta.url), "utf8");
+  const source = await readSource(new URL("../components/ui/switch.tsx", import.meta.url));
   assert.match(source, /SwitchPrimitives.Root/);
   assert.match(source, /SwitchPrimitives.Thumb/);
   assert.doesNotMatch(source, /hover:bg-primary/);

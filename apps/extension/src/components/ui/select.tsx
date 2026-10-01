@@ -9,7 +9,9 @@ export function SelectValue(props: React.ComponentProps<typeof SelectPrimitive.V
 }
 
 export function SelectTrigger({
-  className, children, ...props
+  className,
+  children,
+  ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger>) {
   return (
     <SelectPrimitive.Trigger
@@ -29,7 +31,10 @@ export function SelectTrigger({
 }
 
 export function SelectContent({
-  className, children, position = "popper", ...props
+  className,
+  children,
+  position = "popper",
+  ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (
     <SelectPrimitive.Portal>
@@ -46,9 +51,7 @@ export function SelectContent({
         <SelectPrimitive.ScrollUpButton className="flex h-6 cursor-default items-center justify-center">
           <ChevronUp aria-hidden="true" className="size-4" />
         </SelectPrimitive.ScrollUpButton>
-        <SelectPrimitive.Viewport className="p-1">
-          {children}
-        </SelectPrimitive.Viewport>
+        <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
         <SelectPrimitive.ScrollDownButton className="flex h-6 cursor-default items-center justify-center">
           <ChevronDown aria-hidden="true" className="size-4" />
         </SelectPrimitive.ScrollDownButton>
@@ -58,7 +61,9 @@ export function SelectContent({
 }
 
 export function SelectItem({
-  className, children, ...props
+  className,
+  children,
+  ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item>) {
   return (
     <SelectPrimitive.Item
@@ -79,7 +84,6 @@ export function SelectItem({
   );
 }
 
-
 /** Radix does not allow an empty SelectItem value. Keep saved empty IDs unchanged. */
 export const EMPTY_OPTION_VALUE = "__immersive_default_select_option__";
 export function encodeSelectValue(value: string): string {
@@ -91,7 +95,13 @@ export function decodeSelectValue(value: string): string {
 }
 export type SelectFieldOption = { value: string | number; label: string; disabled?: boolean };
 export function SelectField({
-  id, ariaLabel, value, onValueChange, options, disabled, className,
+  id,
+  ariaLabel,
+  value,
+  onValueChange,
+  options,
+  disabled,
+  className,
 }: {
   id?: string;
   ariaLabel: string;
@@ -102,16 +112,26 @@ export function SelectField({
   className?: string;
 }) {
   const selectedLabel = options.find(option => String(option.value) === String(value))?.label;
-  return <Select value={encodeSelectValue(String(value))}
-    onValueChange={next => onValueChange(decodeSelectValue(next))} disabled={disabled}>
-    <SelectTrigger id={id} aria-label={ariaLabel} className={className}>
-      <SelectValue>{selectedLabel}</SelectValue>
-    </SelectTrigger>
-    <SelectContent>
-      {options.map(option => <SelectItem key={String(option.value)}
-        value={encodeSelectValue(String(option.value))} disabled={option.disabled}>
-        {option.label}
-      </SelectItem>)}
-    </SelectContent>
-  </Select>;
+  return (
+    <Select
+      value={encodeSelectValue(String(value))}
+      onValueChange={next => onValueChange(decodeSelectValue(next))}
+      disabled={disabled}
+    >
+      <SelectTrigger id={id} aria-label={ariaLabel} className={className}>
+        <SelectValue>{selectedLabel}</SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {options.map(option => (
+          <SelectItem
+            key={String(option.value)}
+            value={encodeSelectValue(String(option.value))}
+            disabled={option.disabled}
+          >
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
 }

@@ -7,7 +7,8 @@ import { getBrowserLocale, resolveTheme } from "./i18n/preferences";
 // Apply browser-language and system-theme defaults before React first renders.
 document.documentElement.lang = getBrowserLocale();
 const initialTheme = resolveTheme(
-  "system", window.matchMedia("(prefers-color-scheme: dark)").matches,
+  "system",
+  window.matchMedia("(prefers-color-scheme: dark)").matches,
 );
 document.documentElement.dataset.theme = initialTheme;
 document.documentElement.classList.toggle("dark", initialTheme === "dark");
