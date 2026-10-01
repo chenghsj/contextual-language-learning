@@ -3,8 +3,8 @@ import test from "node:test";
 import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences,
   filterImportedModelPreferences } from "./agent-model-preferences";
 
-const first = "custom-" + "a".repeat(24);
-const second = "custom-" + "b".repeat(24);
+const first = "openai";
+const second = "anthropic";
 
 test("models are scoped to an imported Agent and its CLI account directory", () => {
   const saved = {

@@ -43,13 +43,13 @@ export function SelectContent({
         )}
         {...props}
       >
-        <SelectPrimitive.ScrollUpButton className="flex h-6 cursor-default items-center justify-center">
+        <SelectPrimitive.ScrollUpButton className="flex h-6 cursor-pointer items-center justify-center">
           <ChevronUp aria-hidden="true" className="size-4" />
         </SelectPrimitive.ScrollUpButton>
         <SelectPrimitive.Viewport className="p-1">
           {children}
         </SelectPrimitive.Viewport>
-        <SelectPrimitive.ScrollDownButton className="flex h-6 cursor-default items-center justify-center">
+        <SelectPrimitive.ScrollDownButton className="flex h-6 cursor-pointer items-center justify-center">
           <ChevronDown aria-hidden="true" className="size-4" />
         </SelectPrimitive.ScrollDownButton>
       </SelectPrimitive.Content>
@@ -64,7 +64,7 @@ export function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full min-w-0 cursor-default select-none items-center rounded-md py-2 pr-8 pl-3 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full min-w-0 cursor-pointer select-none items-center rounded-md py-2 pr-8 pl-3 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
       {...props}

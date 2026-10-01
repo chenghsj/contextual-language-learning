@@ -1,5 +1,5 @@
 import type { AgentSettings } from "@immersive/core";
-import { isImportedAgentId } from "../agent-selection";
+import { isPiProviderId } from "../agent-selection";
 
 /** Include imported Agent ID and optional isolated CLI config directory in model preference. */
 export function agentModelPreferenceKey(provider: string, directory?: string): string {
@@ -9,7 +9,7 @@ export function agentModelPreferenceKey(provider: string, directory?: string): s
 /** An obsolete provider is never restored as a usable Agent preference. */
 export function savedAgentModel(provider: string, directory: string | undefined,
   preferences: Readonly<Record<string, string>>, fallback = ""): string {
-  if (!isImportedAgentId(provider)) return "";
+  if (!isPiProviderId(provider)) return "";
   return preferences[agentModelPreferenceKey(provider, directory)] ?? fallback;
 }
 
@@ -21,7 +21,7 @@ export function filterImportedModelPreferences(input: unknown): Record<string, s
     try {
       const parsed: unknown = JSON.parse(key);
       return Array.isArray(parsed) && parsed.length === 2 &&
-        isImportedAgentId(parsed[0]) && typeof parsed[1] === "string" &&
+        isPiProviderId(parsed[0]) && typeof parsed[1] === "string" &&
         parsed[1].length <= 1024;
     } catch { return false; }
   });
@@ -35,11 +35,11 @@ export function migrateAgentModelPreferences(
 ): Record<string, string> {
   const models: Record<string, string> = {};
   for (const [provider, settings] of Object.entries(byProvider)) {
-    if (isImportedAgentId(provider) && settings && typeof settings.modelId === "string") {
+    if (isPiProviderId(provider) && settings && typeof settings.modelId === "string") {
       models[agentModelPreferenceKey(provider, settings.accountConfigDir)] = settings.modelId;
     }
   }
-  if (current && isImportedAgentId(current.provider)) {
+  if (current && isPiProviderId(current.provider)) {
     models[agentModelPreferenceKey(current.provider, current.accountConfigDir)] = current.modelId;
   }
   return models;

@@ -1,11 +1,11 @@
 {
   "extensionName": {
-    "message": "AI 기반 맥락 중심 언어 학습"
+    "message": "Contextual Language Learning"
   },
   "extensionDescription": {
     "message": "AI가 동영상 자막을 수준별 학습 자료로 구성하고, 대화 맥락 이해와 문장 반복 재생을 지원합니다."
   },
   "actionTitle": {
-    "message": "AI 기반 맥락 중심 언어 학습 열기"
+    "message": "Contextual Language Learning 열기"
   }
 }

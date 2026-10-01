@@ -30,7 +30,8 @@ function fakePort(name: string, senderId = "immersive-extension-test") {
   };
 }
 
-function setup() {
+function setup(onCompleted: (jobId: string, title: string, documentId?: string) => void = () => {},
+  onAttention: (jobId: string, title: string, outcome: "interrupted" | "failed") => void = () => {}) {
   const id = "immersive-extension-test";
   const onConnect = emitter<ReturnType<typeof fakePort>>();
   const native = fakePort("native", id);
@@ -43,7 +44,7 @@ function setup() {
       return native;
     },
   } as unknown as typeof chrome.runtime;
-  installGenerationController(runtime);
+  installGenerationController(runtime, onCompleted, onAttention);
   return {
     native, onConnect, id,
     get connections() { return connections; },
@@ -67,7 +68,9 @@ test("closing the Side Panel retains the live Native Host and new panel can obse
   assert.equal(app.native.disconnected, false);
 
   app.native.onMessage.fire({ id: requestId, type: "job",
-    job: { id: jobId, status: "running", completed: 3, total: 5 } });
+    job: { id: jobId, sourceTitle: "Test", provider: "custom-" + "a".repeat(24),
+      status: "running", completed: 3, total: 5,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } });
   const second = app.connectPanel();
   second.onMessage.fire({ type: "watch" });
   const state = second.sent.at(-1) as {
@@ -97,7 +100,7 @@ test("duplicate check and authorized generation share the same Host process and 
     id: jobId, source: { platform: "youtube", title: "A video" },
     profile: {
       targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-      mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3, sceneCount: 4,
+      sceneCount: 4, contextualExampleCount: 2,
     },
     agent: { provider: "custom-" + "a".repeat(24), modelId: "" },
     cues: [{ id: "line-1", startMs: 1_000, endMs: 2_000, originalText: "Hello" }],
@@ -114,7 +117,7 @@ test("duplicate check and authorized generation share the same Host process and 
   });
   panel.disconnect();
   assert.equal(app.native.disconnected, false);
-  app.native.onMessage.fire({ id: jobId, type: "result", document: {} });
+  app.native.onMessage.fire({ id: jobId, type: "published", jobId, location: "/tmp/lesson" });
   assert.equal(app.native.disconnected, false, "backup may still be running after delivery");
   app.native.onMessage.fire({ id: jobId, type: "generationSettled" });
   assert.equal(app.native.disconnected, true);
@@ -166,4 +169,71 @@ test("pending Drive backups survive Side Panel closure until the Host finishes",
   assert.equal(app.native.disconnected, false);
   app.native.onMessage.fire({ id, type: "backupsFinished" });
   assert.equal(app.native.disconnected, true);
+});
+
+ test("completion notifies once after the panel closes; errors do not notify", () => {
+  const notifications: string[] = [];
+  const app = setup((jobId) => notifications.push(jobId));
+  const panel = app.connectPanel();
+  const id = randomUUID(), jobId = randomUUID();
+  panel.onMessage.fire({ type: "resume", id, jobId });
+  panel.disconnect();
+  const now = new Date().toISOString();
+  app.native.onMessage.fire({ type: "job", id, job: { id: jobId, provider: "openai", sourceTitle: "Video",
+    status: "completed", completed: 1, total: 1, createdAt: now, updatedAt: now, documentId: jobId } });
+  app.native.onMessage.fire({ type: "generationSettled", id });
+  app.native.onMessage.fire({ type: "generationSettled", id });
+  assert.deepEqual(notifications, [jobId]);
+  const second = app.connectPanel();
+  const failedId = randomUUID();
+  second.onMessage.fire({ type: "resume", id: failedId, jobId: randomUUID() });
+  app.native.onMessage.fire({ type: "error", id: failedId, message: "Failed" });
+  assert.deepEqual(notifications, [jobId]);
+});
+
+
+test("failed, disconnected, and cancelled tasks notify attention once; unrelated requests stay quiet", () => {
+  for (const kind of ["error", "disconnect", "cancelled", "invalid"] as const) {
+    const outcomes: string[] = [];
+    const app = setup(() => assert.fail("must not notify completion"), (_id, _title, outcome) => outcomes.push(outcome));
+    const panel = app.connectPanel();
+    const id = randomUUID(), jobId = randomUUID();
+    panel.onMessage.fire({ type: "resume", id, jobId });
+    panel.disconnect();
+    if (kind === "disconnect") app.native.disconnect();
+    else if (kind === "invalid") app.native.onMessage.fire({ broken: true });
+    else app.native.onMessage.fire(kind === "error" ? { type: "error", id, message: "failed" } : { type: "cancelled", id, jobId });
+    app.native.onMessage.fire({ type: "generationSettled", id });
+    assert.deepEqual(outcomes, [kind === "error" ? "failed" : "interrupted"]);
+  }
+  const outcomes: string[] = [];
+  const app = setup(() => {}, (_id, _title, outcome) => outcomes.push(outcome));
+  const panel = app.connectPanel();
+  const id = randomUUID();
+  panel.onMessage.fire({ type: "resumeBackups", id });
+  app.native.onMessage.fire({ type: "error", id, message: "backup failed" });
+  assert.deepEqual(outcomes, []);
+});
+
+test("settlement without a completed saved lesson reports interruption", () => {
+  const outcomes: string[] = [];
+  const app = setup(() => assert.fail("no lesson was saved"), (_id, _title, outcome) => outcomes.push(outcome));
+  const panel = app.connectPanel();
+  const id = randomUUID();
+  panel.onMessage.fire({ type: "resume", id, jobId: randomUUID() });
+  app.native.onMessage.fire({ type: "generationSettled", id });
+  assert.deepEqual(outcomes, ["interrupted"]);
+});
+
+
+test("a separate cancel request reports interruption without duplicating the later generation error", () => {
+  const outcomes: string[] = [];
+  const app = setup(() => assert.fail("cancelled job is not complete"), (_id, _title, outcome) => outcomes.push(outcome));
+  const panel = app.connectPanel();
+  const id = randomUUID(), cancelId = randomUUID(), jobId = randomUUID();
+  panel.onMessage.fire({ type: "resume", id, jobId });
+  panel.onMessage.fire({ type: "cancel", id: cancelId, jobId });
+  app.native.onMessage.fire({ type: "cancelled", id: cancelId });
+  app.native.onMessage.fire({ type: "error", id, message: "aborted" });
+  assert.deepEqual(outcomes, ["interrupted"]);
 });

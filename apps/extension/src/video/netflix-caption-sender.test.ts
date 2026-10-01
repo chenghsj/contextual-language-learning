@@ -57,6 +57,7 @@ test("the actual worker relay accepts an SPA /browse sender when the current tab
       },
       tabs: { get: async (id: number) => ({ id, url: currentTabUrl }) },
       sidePanel: { setPanelBehavior: async () => {} },
+      notifications: { onClicked: { addListener: () => {} }, onButtonClicked: { addListener: () => {} } },
     } as unknown as typeof chrome;
     globals.fetch = (async () => {
       networkCalls++;

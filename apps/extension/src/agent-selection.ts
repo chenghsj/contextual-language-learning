@@ -21,3 +21,14 @@ export function restoreImportedAgentSelection(saved: unknown): AgentSettings {
       ? { accountConfigDir: entry.accountConfigDir } : {}),
   };
 }
+
+export { isPiProviderId } from "@immersive/core";
+import { ThinkingLevelSchema, isPiProviderId } from "@immersive/core";
+export function restorePiAgentSelection(saved: unknown): AgentSettings {
+  if (!saved || typeof saved !== "object" || Array.isArray(saved)) return EMPTY_AGENT_SELECTION;
+  const entry = saved as Partial<AgentSettings>;
+  if (!isPiProviderId(entry.provider) || typeof entry.modelId !== "string") return EMPTY_AGENT_SELECTION;
+  const thinking = ThinkingLevelSchema.safeParse(entry.thinkingLevel);
+  return { provider: entry.provider, modelId: entry.modelId,
+    ...(thinking.success ? { thinkingLevel: thinking.data } : {}) };
+}

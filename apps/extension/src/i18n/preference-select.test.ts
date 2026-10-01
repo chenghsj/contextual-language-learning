@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 test("language and appearance settings use Radix Select", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   const preferences = app.slice(
-    app.indexOf('<h2>{t("uiLanguage")} · {t("appearance")}</h2>'),
-    app.indexOf('<h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>'),
+    app.indexOf('<h2>{layout.general}</h2>'),
+    app.indexOf('{settingsSection === "ai" && <PageSection>'),
   );
   assert.match(preferences, /<Select value=\{localePreference\} onValueChange=/);
   assert.match(preferences, /<Select value=\{themePreference\} onValueChange=/);

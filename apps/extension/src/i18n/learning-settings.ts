@@ -3,7 +3,7 @@ import type { LearningProfile, LearningLanguage } from "@immersive/core";
 import { learningLanguageName } from "./preferences";
 
 export type LearningSettingKey = "targetLanguage" | "level" | "instructionLanguage" |
-  "teachingMode" | "sceneCount" | "vocabLimit" | "exerciseCount";
+  "sceneCount";
 export type SettingOptionInfo = { label: string; description: string };
 export type LearningSettingsCopy = {
   infoLabel: string;
@@ -12,7 +12,6 @@ export type LearningSettingsCopy = {
   targetDescriptions: Record<LearningProfile["targetLanguage"], string>;
   instructionDescriptions: Record<LearningProfile["instructionLanguage"], string>;
   levels: Record<LearningProfile["targetLanguage"], Record<string, SettingOptionInfo>>;
-  modes: Record<LearningProfile["mode"], SettingOptionInfo>;
 };
 
 type OriginalTarget = "en" | "ja" | "ko";
@@ -33,10 +32,7 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
       "targetLanguage": "Choose the language you want to learn. The subtitle phrases and example sentences stay in that language.",
       "level": "This sets your lesson difficulty; it is not a proficiency test.",
       "instructionLanguage": "Choose the language used to explain meanings, grammar and answers. Original subtitle lines stay in the learning language.",
-      "teachingMode": "Choose how the AI explains and practices the subtitle dialogue. The language of explanations remains your selected explanation language.",
       "sceneCount": "Maximum selected scenes for the entire video (1–6). The AI chooses only meaningful conversations and may select fewer.",
-      "vocabLimit": "Maximum focus expressions across the entire video (1–12), not per scene. The AI may select fewer.",
-      "exerciseCount": "Maximum practice questions across the entire video (0–6), including sentence-building. Enter 0 to skip exercises."
     },
     "levelHints": {
       "en": "English uses CEFR (A1–C2): A1 is beginner and C2 is proficient. Choose a level that matches the dialogue you can currently understand.",
@@ -130,21 +126,8 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
           "description": "Nuanced meaning across demanding contexts."
         }
       }
-    },
-    "modes": {
-      "adaptive": {
-        "label": "Balanced for my level",
-        "description": "Balance explanations and practice based on the level you selected."
-      },
-      "guided": {
-        "label": "Explain more in my chosen language",
-        "description": "Give more explanations and clarification in your explanation language while keeping the original expressions."
-      },
-      "immersive": {
-        "label": "Practice more in the learning language",
-        "description": "Use more examples and exercises in the learning language; explanations still use your selected explanation language."
-      }
     }
+
   },
   "zh-TW": {
     "infoLabel": "設定說明：",
@@ -152,10 +135,7 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
       "targetLanguage": "選擇你要學的語言。字幕原句和學習例句會保留該語言。",
       "level": "這是教材難度設定，不是能力測驗結果。",
       "instructionLanguage": "選擇單字意思、文法與答案解說使用的語言；字幕原句仍保留學習語言。",
-      "teachingMode": "選擇 AI 如何解說及安排字幕練習。解說文字仍使用你選的解說語言。",
       "sceneCount": "整部影片最多挑選 1～6 個有上下文的對話場景。若沒有足夠合適的內容，AI 會挑得更少。",
-      "vocabLimit": "整部影片合計最多 1～12 個重點表達，不是每個場景各算一次；AI 可以選更少。",
-      "exerciseCount": "整部影片合計最多 0～6 題練習，包含替換造句或情境回答。設為 0 就不產生練習題。"
     },
     "levelHints": {
       "en": "英文使用 CEFR（A1～C2）分級，A1 為入門、C2 為精通。請依目前能理解的英文對話選擇難度。",
@@ -249,21 +229,8 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
           "description": "理解高難度內容與細微語意。"
         }
       }
-    },
-    "modes": {
-      "adaptive": {
-        "label": "依我的程度平衡解說與練習",
-        "description": "依照所選程度，安排解說深度和練習量。"
-      },
-      "guided": {
-        "label": "多用解說語言講解",
-        "description": "增加你選的解說語言中的說明與釐清，保留原文例句。"
-      },
-      "immersive": {
-        "label": "多用學習語言練習",
-        "description": "增加學習語言的例句與練習，解說仍使用你選的解說語言。"
-      }
     }
+
   },
   "zh-CN": {
     "infoLabel": "设置说明：",
@@ -271,10 +238,7 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
       "targetLanguage": "选择你要学习的语言。字幕原句和学习例句会保留该语言。",
       "level": "这是教材难度设置，不是能力测试结果。",
       "instructionLanguage": "选择词义、语法和答案讲解使用的语言；字幕原句仍保留学习语言。",
-      "teachingMode": "选择 AI 如何讲解及安排字幕练习。讲解文字仍使用你选的讲解语言。",
       "sceneCount": "整部影片最多挑选 1～6 个有上下文的对话场景。没有足够合适的内容时，AI 会选得更少。",
-      "vocabLimit": "整部影片合计最多 1～12 个重点表达，所有场景共用上限，AI 可选更少。",
-      "exerciseCount": "整部影片合计最多 0～6 道练习，包括造句与情境回答；设为 0 就不生成练习。"
     },
     "levelHints": {
       "en": "英语使用 CEFR（A1～C2）分级，A1 为入门、C2 为精通。请根据目前能理解的英语对话选择难度。",
@@ -368,21 +332,8 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
           "description": "理解高难度内容与细微语义。"
         }
       }
-    },
-    "modes": {
-      "adaptive": {
-        "label": "按我的水平平衡讲解与练习",
-        "description": "根据所选水平调整讲解深度与练习量。"
-      },
-      "guided": {
-        "label": "多用讲解语言解释",
-        "description": "增加所选讲解语言中的说明和解释，保留原文例句。"
-      },
-      "immersive": {
-        "label": "多用学习语言练习",
-        "description": "增加学习语言的例句与练习，讲解仍使用所选讲解语言。"
-      }
     }
+
   },
   "ja": {
     "infoLabel": "設定の説明：",
@@ -390,10 +341,7 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
       "targetLanguage": "学習したい言語を選びます。字幕の原文や例文はその言語のままです。",
       "level": "教材の難易度を設定します。実際の語学力を判定する試験ではありません。",
       "instructionLanguage": "語彙の意味、文法、解答の説明に使う言語を選びます。字幕の原文は学習言語のままです。",
-      "teachingMode": "AI にどのくらい説明や練習を入れてもらうかを選びます。解説の言語は指定したままです。",
       "sceneCount": "動画全体から選ぶ会話シーンの上限（1～6）。適切な場面が少ない場合は、より少ない数を選びます。",
-      "vocabLimit": "動画全体で取り上げる重要表現の上限（1～12）。シーンごとではなく、全シーン共通の上限です。",
-      "exerciseCount": "動画全体の練習問題の上限（0～6）。文作り・状況に合う返答も含み、0 なら練習を省略します。"
     },
     "levelHints": {
       "en": "英語は CEFR（A1～C2）を使います。A1 は入門、C2 は熟達です。現在理解できる英語の会話に合わせて選んでください。",
@@ -487,21 +435,8 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
           "description": "難しい内容や微妙な意味。"
         }
       }
-    },
-    "modes": {
-      "adaptive": {
-        "label": "レベルに合わせて説明と練習を調整",
-        "description": "設定したレベルに合わせて説明の深さと練習量を調整します。"
-      },
-      "guided": {
-        "label": "解説する言語で詳しく説明",
-        "description": "選んだ解説言語で説明を増やし、元の例文は学習言語のままにします。"
-      },
-      "immersive": {
-        "label": "学習する言語で練習を増やす",
-        "description": "学習言語の例文や練習を増やし、解説は指定言語で行います。"
-      }
     }
+
   },
   "ko": {
     "infoLabel": "설정 설명:",
@@ -509,10 +444,7 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
       "targetLanguage": "학습할 언어를 선택합니다. 자막 원문과 예문은 해당 언어로 유지됩니다.",
       "level": "교재의 난이도를 설정하는 것이며 실제 언어 능력을 평가하는 시험은 아닙니다.",
       "instructionLanguage": "어휘 의미, 문법 및 정답 설명에 사용할 언어를 선택합니다. 자막 원문은 학습 언어 그대로 유지됩니다.",
-      "teachingMode": "AI가 자막 대화를 설명하고 연습을 구성하는 방식을 선택합니다. 설명 언어는 지정한 언어를 유지합니다.",
       "sceneCount": "동영상 전체에서 고를 대화 장면의 상한(1~6개)입니다. 적합한 장면이 적으면 더 적게 선택합니다.",
-      "vocabLimit": "동영상 전체에서 배울 핵심 표현의 상한(1~12개)입니다. 장면별이 아닌 전체 합계입니다.",
-      "exerciseCount": "동영상 전체 연습 문제 상한(0~6개)입니다. 문장 만들기와 상황별 대답을 포함하며 0이면 생략합니다."
     },
     "levelHints": {
       "en": "영어는 CEFR(A1~C2)을 사용합니다. A1은 입문, C2는 숙련 단계입니다. 현재 이해할 수 있는 영어 대화 수준에 맞춰 선택하세요.",
@@ -606,21 +538,8 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
           "description": "난도 높은 내용과 미묘한 의미."
         }
       }
-    },
-    "modes": {
-      "adaptive": {
-        "label": "내 수준에 맞춰 설명과 연습 조정",
-        "description": "선택한 수준에 맞게 설명의 깊이와 연습량을 조정합니다."
-      },
-      "guided": {
-        "label": "선택한 설명 언어로 더 자세히 설명",
-        "description": "선택한 설명 언어로 풀이를 늘리고 원문 예문은 유지합니다."
-      },
-      "immersive": {
-        "label": "학습 언어로 연습 더 많이 하기",
-        "description": "학습 언어의 예문과 연습을 늘리고 설명은 선택한 언어로 제공합니다."
-      }
     }
+
   }
 };
 

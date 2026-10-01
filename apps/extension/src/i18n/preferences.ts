@@ -1,5 +1,5 @@
 import type { UiLocale } from "./messages";
-import type { LearningLanguage, ExplanationLanguage } from "@immersive/core";
+import { LEARNING_LANGUAGES, type LearningLanguage, type ExplanationLanguage } from "@immersive/core";
 
 export type LocalePreference = UiLocale | "auto";
 
@@ -43,13 +43,22 @@ const CHINESE_EXPLANATION_LABELS: Readonly<Record<UiLocale, Readonly<Record<"zh-
 export function learningLanguageName(language: LearningLanguage, locale: UiLocale): string {
   return LEARNING_LANGUAGE_LABELS[locale][language];
 }
-export const LEARNING_LANGUAGE_GROUP_LABELS: Readonly<Record<UiLocale, { featured: string; more: string }>> = {
-  en: { featured: "Common languages", more: "More languages" },
-  "zh-TW": { featured: "常用語言", more: "更多語言" },
-  "zh-CN": { featured: "常用语言", more: "更多语言" },
-  ja: { featured: "主な言語", more: "その他の言語" },
-  ko: { featured: "주요 언어", more: "다른 언어" },
+export const LEARNING_LANGUAGE_SEARCH_COPY: Readonly<Record<UiLocale, { search: string; empty: string }>> = {
+  en: { search: "Search languages", empty: "No matching languages" },
+  "zh-TW": { search: "搜尋語言", empty: "找不到符合的語言" },
+  "zh-CN": { search: "搜索语言", empty: "找不到符合的语言" },
+  ja: { search: "言語を検索", empty: "一致する言語がありません" },
+  ko: { search: "언어 검색", empty: "일치하는 언어가 없습니다" },
 };
+
+export function learningLanguageOptions(locale: UiLocale) {
+  const collator = new Intl.Collator(locale);
+  return LEARNING_LANGUAGES.map(language => ({
+    value: language,
+    label: learningLanguageName(language, locale),
+    keywords: Object.values(LEARNING_LANGUAGE_LABELS).map(names => names[language]),
+  })).sort((a, b) => collator.compare(a.label, b.label) || a.value.localeCompare(b.value));
+}
 export function explanationLanguageName(language: ExplanationLanguage, locale: UiLocale): string {
   return language === "zh-TW" || language === "zh-CN"
     ? CHINESE_EXPLANATION_LABELS[locale][language]

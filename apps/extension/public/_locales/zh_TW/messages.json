@@ -1,11 +1,11 @@
 {
   "extensionName": {
-    "message": "AI 輔助情境式語言學習"
+    "message": "Contextual Language Learning"
   },
   "extensionDescription": {
     "message": "使用 AI 將影片字幕轉換成符合程度的情境式教材，搭配上下文理解與句子重播練習。"
   },
   "actionTitle": {
-    "message": "開啟 AI 輔助情境式語言學習"
+    "message": "開啟 Contextual Language Learning"
   }
 }

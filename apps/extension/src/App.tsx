@@ -1,92 +1,102 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { subtitleLayoutCopy } from "./i18n/subtitle-layout";
+import { usePlatformVideoNotice } from "./hooks/use-platform-video-notice";
+import { HeaderActions } from "./components/header-actions";
+import { PageSection } from "./components/page-section";
+import { GenerationService } from "./components/generation-service";
+import { GenerationStatus } from "./components/generation-status";
+import { sidePanelLayoutCopy } from "./i18n/side-panel-layout";
+import { settingsLayoutCopy } from "./i18n/settings-layout";
+import { NotificationSettings } from "./components/notification-settings";
+import { ArrowLeft, ChevronRight, Check, LoaderCircle } from "lucide-react";
+import { piFeedback } from "./i18n/pi-feedback";
+import { SubtitleImport } from "./components/subtitle-import";
+import { shouldFollowSelectedVideo } from "./video/draft-navigation";
+import { Switch } from "./components/ui/switch";
+import { Progress } from "./components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
+import { Disclosure } from "./components/disclosure";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  BackupSettingsSchema, compactStudyExport, learningDocumentToMarkdown, formatTime, GenerationRequestSchema, LearningDocumentSchema, parsePlainText,
+  withSentenceTiming, BackupSettingsSchema, LearningDocumentSchema, HostMessageSchema, HOST_PROTOCOL_VERSION, parsePlainText,
   LEARNING_LANGUAGES, EXPLANATION_LANGUAGES, levelsForTargetLanguage, defaultLevelForTargetLanguage,
-  parseSubtitles, type AgentInfo, type AgentModel, type AgentProfile, type GenerationRequest, type JobSummary,
+  parseSubtitles, type AgentInfo, type AgentModel, type GenerationRequest, type JobSummary,
   type BackupSettings, type Destination, type DriveAccount, type DriveLessonSummary, type LessonSummary, type DuplicateMatch,
   type AgentSettings, type HostMessage, type LearningDocument,
   type LearningLanguage, type LearningProfile, type SubtitleCue,
 } from "@immersive/core";
 import { getVideoAdapter } from "./video";
-import { contextualGenerationProfile, normalizeSavedLessonProfile } from "./lib/contextual-profile";
+import { contextualGenerationProfile, normalizeLessonLength, normalizeSavedLessonProfile } from "./lib/contextual-profile";
+import { buildGenerationRequest } from "./lib/generation-request";
 import { restoreLoopPreferences, type RepeatOption } from "./lib/loop-preferences";
 import { titleForVideoTab } from "./video/metadata";
 import { detectCurrentVideoMetadata, metadataSourceSafety } from "./video/metadata-resolver";
 import { videoMetadataMessages } from "./i18n/video-metadata";
-import { subtitleAcquisition, subtitleMessage } from "./i18n/subtitle-acquisition";
+import { subtitleAcquisition, subtitleMessage, subtitleFailureMessage, type SubtitleFailure } from "./i18n/subtitle-acquisition";
 import { needsVideoReaderReload } from "./video/reader-health";
 import {
   captionCacheKey, isCurrentCaption, subtitleLanguageMatches, videoSourceKey,
   type CaptionProvenance,
 } from "./video/caption-provenance";
 import {
-  cuePlaybackStart, cuePlaybackWindow,
-  assertVideoReaderReady, findVideoTab, getActiveWindowTab, openOrFocusVideoTab,
+  assertVideoReaderReady, findVideoTab, getActiveWindowTab,
   reloadExistingVideoTab, VideoCommandError,
 } from "./video/tab";
 import { DocumentChunkAssembler } from "./native/document-chunks";
-import { CustomAgentSettings } from "./components/custom-agent-settings";
+import { HOST_NAME, nativeOnce as sendHostRequest } from "./native/host-client";
+import { AiModelSelection } from "./components/ai-model-selection";
+import { PiSettings } from "./components/pi-settings";
+import { agentDisplayName } from "./i18n/agent-display";
+import { piCopy } from "./i18n/pi";
 import { HostConnectionSettings } from "./components/host-connection-settings";
-import { agentOnboardingCopy } from "./i18n/agent-onboarding";
 import { hostConnectionCopy } from "./i18n/host-connection";
-import { isImportedAgentId, restoreImportedAgentSelection } from "./agent-selection";
+import { isPiProviderId, restorePiAgentSelection } from "./agent-selection";
 import { GENERATION_CONTROLLER_PORT, type GenerationControllerMessage } from "./native/generation-controller";
-import { AlertCircle, BookOpen, Library, Settings2, WandSparkles, X } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
+import { SidePanelNavigation, type SidePanelPage } from "./components/side-panel-navigation";
 import { Button } from "./components/ui/button";
 import { AppPanel } from "./components/app-panel";
-import { Card } from "./components/ui/card";
+import { TaskHistory, jobStatusKeys } from "./components/task-history";
+import { VideoLibrary } from "./components/video-library";
 import { Input } from "./components/ui/input";
 import { Select, SelectContent, SelectField, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
-import { GroupedSelectField } from "./components/grouped-select-field";
-import { Textarea } from "./components/ui/textarea";
+import { SearchableSelectField } from "./components/searchable-select-field";
 import { Badge } from "./components/ui/badge";
-import { SceneReader } from "./components/scene-reader";
 import { ContextualSceneReader } from "./components/contextual-scene-reader";
 import { NoticeViewport } from "./components/notice-viewport";
 import { SettingInfo } from "./components/setting-info";
 import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
-import { agentDisplayName, modelDisplayName } from "./i18n/agent-display";
 import { agentModelPreferenceKey, savedAgentModel, migrateAgentModelPreferences, filterImportedModelPreferences } from "./i18n/agent-model-preferences";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
   getBrowserLocale, isLocalePreference, isThemePreference, resolveTheme,
-  nativeLanguageName, learningLanguageName, explanationLanguageName,
-  LEARNING_LANGUAGE_GROUP_LABELS,
+  nativeLanguageName, learningLanguageName, learningLanguageOptions, explanationLanguageName,
+  LEARNING_LANGUAGE_SEARCH_COPY,
   type LocalePreference, type ThemePreference,
 } from "./i18n/preferences";
 
-const HOST_NAME = "dev.immersive.language_learning";
-type Page = "create" | "reader" | "settings" | "lessons";
-type LessonEntry = { documentId: string; title: string; createdAt: string; local?: LessonSummary; drive?: DriveLessonSummary };
+type Page = SidePanelPage;
 type Installed = Record<string, boolean>;
-const FEATURED_LEARNING_LANGUAGES: readonly LearningLanguage[] = ["en", "ja", "ko", "es"];
 
 const DEFAULT_PROFILE: LearningProfile = {
   targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-  mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 0, sceneCount: 4,
-  contextualExampleCount: 2,
+  sceneCount: 4, contextualExampleCount: 2,
 };
 const DEFAULT_AGENT: AgentSettings = { provider: "", modelId: "" };
 
-function downloadDocument(doc: LearningDocument, format: "json" | "md"): void {
-  const content = format === "json"
-    ? JSON.stringify(compactStudyExport(doc), null, 2)
-    : learningDocumentToMarkdown(doc);
-  const blob = new Blob([content], { type: format === "json" ? "application/json" : "text/markdown" });
-  const url = URL.createObjectURL(blob);
-  chrome.downloads.download({
-    url, saveAs: true, filename: "immersive-" + doc.id.slice(0, 8) + "." + format,
-  }, () => {
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  });
-}
-
 export default function App() {
   const [page, setPage] = useState<Page>("create");
+  const [settingsSection, setSettingsSection] = useState<"general" | "ai" | "storage" | "advanced" | null>(null);
+  const [providerDetail, setProviderDetail] = useState(false);
+  const [returnPage, setReturnPage] = useState<"create" | "lessons" | "lesson">("create");
+  const [editingVideo, setEditingVideo] = useState(false);
+  const [temporaryAgent, setTemporaryAgent] = useState<AgentSettings | null>(null);
+  const [generationServiceReady, setGenerationServiceReady] = useState(false);
+  const [attentionNotificationsEnabled, setAttentionNotificationsEnabled] = useState(true);
   const [raw, setRaw] = useState("");
   const [fileName, setFileName] = useState("");
+  const [subtitlePasteDrafts, setSubtitlePasteDrafts] = useState<Record<string, string>>({});
   const [subtitleBusy, setSubtitleBusy] = useState(false);
-  const [subtitleStatus, setSubtitleStatus] = useState("");
+  const [subtitleStatus, setSubtitleStatus] = useState<string | SubtitleFailure>("");
   const [trackInfo, setTrackInfo] = useState<{ sourceKey: string; status: "available" | "unknown";
     tracks: { language: string; kind: "manual" | "auto" }[] } | null>(null);
   const [trackBusy, setTrackBusy] = useState(false);
@@ -102,35 +112,37 @@ export default function App() {
     tabId: number; windowId: number; url: string; title: string;
   } | null>(null);
   const [browserLocale] = useState(getBrowserLocale);
+  const [analysisNotificationsEnabled, setAnalysisNotificationsEnabled] = useState(true);
   const [localePreference, setLocalePreference] = useState<LocalePreference>("auto");
   const [themePreference, setThemePreference] = useState<ThemePreference>("system");
   const [systemDark, setSystemDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
   const uiLocale = localePreference === "auto" ? browserLocale : localePreference;
+  const layout = settingsLayoutCopy[uiLocale];
+  const flow = sidePanelLayoutCopy[uiLocale];
   const subtitleUi = subtitleAcquisition[uiLocale];
+  const subtitleLayout = subtitleLayoutCopy[uiLocale];
+  const [subtitlePreview, setSubtitlePreview] = useState(false);
   const metadataUi = videoMetadataMessages[uiLocale];
   const settingsCopy = learningSettingsCopy[uiLocale];
-  const t = (key: MessageKey, params?: MessageParams) => translate(uiLocale, key, params);
-  const agentUi = agentOnboardingCopy[uiLocale];
+  const t = useCallback((key: MessageKey, params?: MessageParams) => translate(uiLocale, key, params), [uiLocale]);
   const hostUi = hostConnectionCopy[uiLocale];
   const [profile, setProfile] = useState<LearningProfile>(() => ({
     ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
   }));
   const [explanationLanguageMode, setExplanationLanguageMode] = useState<"auto" | "custom">("auto");
   const [agent, setAgent] = useState<AgentSettings>(DEFAULT_AGENT);
-  const [agentProfiles, setAgentProfiles] = useState<Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">>>({});
+  const generationAgent = temporaryAgent ?? agent;
+  const [agentProfiles, setAgentProfiles] = useState<Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir" | "thinkingLevel">>>({});
   const [agentModelPreferences, setAgentModelPreferences] = useState<Record<string, string>>({});
-  const [savedAgentProfiles, setSavedAgentProfiles] = useState<AgentProfile[]>([]);
-  const [draftProfileName, setDraftProfileName] = useState("");
-  const [draftProfileDir, setDraftProfileDir] = useState("");
-  const [profileBusy, setProfileBusy] = useState(false);
-  const [profileStatus, setProfileStatus] = useState("");
   const [modelOptions, setModelOptions] = useState<AgentModel[]>([]);
+  const modelCatalogProviderRef = useRef("");
   const [modelBusy, setModelBusy] = useState(false);
   const [modelNotice, setModelNotice] = useState("");
-  const [customModelMode, setCustomModelMode] = useState(false);
+  const [modelRefreshVersion, setModelRefreshVersion] = useState(0);
   const [installed, setInstalled] = useState<Installed | null>(null);
   const [hostVersion, setHostVersion] = useState<string | null>(null);
-  const [hostImportedOnly, setHostImportedOnly] = useState(false);
+  const [hostSdkMode, setHostSdkMode] = useState(false);
+  const [hostProtocolVersion, setHostProtocolVersion] = useState<number | null>(null);
   const [hostStatus, setHostStatus] = useState("");
   const [hostChecked, setHostChecked] = useState(false);
   const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([]);
@@ -138,15 +150,14 @@ export default function App() {
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const videoRecovery = usePlatformVideoNotice();
+  const subtitleReaderBlocked = !!videoRecovery.unavailable || !!videoRecoveryUrl || reloadingVideoTab;
   const [generating, setGenerating] = useState(false);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [hostBusy, setHostBusy] = useState(false);
-  const [jobFilter, setJobFilter] = useState<"all" | "active" | "completed">("all");
-  const [showAllJobs, setShowAllJobs] = useState(false);
   const [localLessons, setLocalLessons] = useState<LessonSummary[]>([]);
   const [cloudLessons, setCloudLessons] = useState<DriveLessonSummary[]>([]);
-  const [lessonFilter, setLessonFilter] = useState<"all" | "local" | "drive">("all");
   const [lessonsBusy, setLessonsBusy] = useState(false);
   const [catalogError, setCatalogError] = useState("");
   const [restoreBusy, setRestoreBusy] = useState<string | null>(null);
@@ -172,11 +183,6 @@ export default function App() {
   const [sceneRepeat, setSceneRepeat] = useState<RepeatOption>("3");
   const [sceneDelay, setSceneDelay] = useState(1);
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [rateApplying, setRateApplying] = useState(false);
-  const [loopActive, setLoopActive] = useState(false);
-  const [playbackStatus, setPlaybackStatus] = useState("");
-  const [openingVideo, setOpeningVideo] = useState(false);
-  const openingVideoRef = useRef(false);
   const portRef = useRef<chrome.runtime.Port | null>(null);
   const preflightPortRef = useRef<chrome.runtime.Port | null>(null);
   const controllerPortRef = useRef<chrome.runtime.Port | null>(null);
@@ -195,7 +201,9 @@ export default function App() {
   const catalogLoadIdRef = useRef(0);
 
   const cues = useMemo(() => raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw), [raw]);
-  const captionsReady = !!raw.trim() && isCurrentCaption(captionSource, profile.targetLanguage, sourceUrl);
+  const captionsReady = cues.length > 0 && !!raw.trim() && isCurrentCaption(captionSource, profile.targetLanguage, sourceUrl);
+  const subtitleState = subtitleBusy ? "loading" : subtitleStatus && (subtitleTone === "missing" || subtitleTone === "error") ? "error" : captionsReady ? "ready" : raw.trim() ? "error" : "idle";
+  useEffect(() => { setSubtitlePreview(false); }, [raw, sourceUrl, profile.targetLanguage]);
   const platform = getVideoAdapter(sourceUrl).id;
   // A valid saved source remains actionable when the Side Panel temporarily loses its tab context.
   const subtitlePlatform = getVideoAdapter(activeVideo?.url ?? sourceUrl).id;
@@ -203,21 +211,12 @@ export default function App() {
   const selectedDriveId = backup.accountId ?? driveAccounts[0]?.id;
   const driveAccessVerified = !!selectedDriveId && driveAccess?.accountId === selectedDriveId &&
     driveAccess.status === "verified";
-  const hostReady = installed !== null && hostImportedOnly &&
+  const hostReady = installed !== null && hostSdkMode &&
+    hostProtocolVersion === HOST_PROTOCOL_VERSION &&
     hostVersion === chrome.runtime.getManifest().version;
   const selectedAgentInfo = agentCatalog.find(entry => entry.id === agent.provider);
-  const selectedSavedProfile = savedAgentProfiles.find(profile =>
-    profile.provider === agent.provider && profile.directory === agent.accountConfigDir);
-  const modelSelection = customModelMode ||
-    (agent.modelId !== "" && !modelOptions.some(model => model.id === agent.modelId))
-    ? "__custom__" : agent.modelId;
-  const jobStatusKeys: Record<JobSummary["status"], MessageKey> = {
-    queued: "jobQueued", running: "jobRunning", waiting: "jobWaiting",
-    completed: "jobCompleted", failed: "jobFailed", cancelled: "jobCancelled",
-  };
-
   useEffect(() => {
-    void chrome.storage.local.get(["profile", "agent", "agentProfiles", "agentModelPreferences", "destination", "backup", "repeat", "delay", "sceneRepeat", "sceneDelay", "playbackRate", "uiLocalePreference", "themePreference", "explanationLanguageMode"]).then(saved => {
+    void chrome.storage.local.get(["attentionNotificationsEnabled", "analysisNotificationsEnabled", "profile", "agent", "agentProfiles", "agentModelPreferences", "destination", "backup", "repeat", "delay", "sceneRepeat", "sceneDelay", "playbackRate", "uiLocalePreference", "themePreference", "explanationLanguageMode"]).then(saved => {
       if (saved.profile) setProfile(normalizeSavedLessonProfile(saved.profile as Partial<LearningProfile>, {
         ...DEFAULT_PROFILE, instructionLanguage: browserLocale,
       }));
@@ -226,26 +225,28 @@ export default function App() {
             (saved.profile as Partial<LearningProfile>).instructionLanguage !== browserLocale)) {
         setExplanationLanguageMode("custom");
       }
+      if (typeof saved.attentionNotificationsEnabled === "boolean") setAttentionNotificationsEnabled(saved.attentionNotificationsEnabled);
+      if (typeof saved.analysisNotificationsEnabled === "boolean") setAnalysisNotificationsEnabled(saved.analysisNotificationsEnabled);
       if (isLocalePreference(saved.uiLocalePreference)) setLocalePreference(saved.uiLocalePreference);
       if (isThemePreference(saved.themePreference)) setThemePreference(saved.themePreference);
       // Old built-in selections remain in saved job snapshots, not in BYO onboarding.
-      if (saved.agent) setAgent(restoreImportedAgentSelection(saved.agent));
+      if (saved.agent) setAgent(restorePiAgentSelection(saved.agent));
       if (saved.agentProfiles && typeof saved.agentProfiles === "object" && !Array.isArray(saved.agentProfiles)) {
         setAgentProfiles(Object.fromEntries(Object.entries(saved.agentProfiles)
-          .filter(([provider, value]) => isImportedAgentId(provider) && value &&
+          .filter(([provider, value]) => isPiProviderId(provider) && value &&
             typeof value === "object" && "modelId" in value && typeof value.modelId === "string")
           .map(([provider, value]) => {
-            const setting = value as Pick<AgentSettings, "modelId" | "accountConfigDir">;
+            const setting = value as Pick<AgentSettings, "modelId" | "accountConfigDir" | "thinkingLevel">;
             return [provider, { modelId: setting.modelId,
-              accountConfigDir: typeof setting.accountConfigDir === "string" ? setting.accountConfigDir : undefined }];
+              accountConfigDir: undefined, thinkingLevel: restorePiAgentSelection({ provider, ...setting }).thinkingLevel }];
           })));
-      } else if (saved.agent && isImportedAgentId((saved.agent as AgentSettings).provider)) {
+      } else if (saved.agent && isPiProviderId((saved.agent as AgentSettings).provider)) {
         const previous = saved.agent as AgentSettings;
-        setAgentProfiles({ [previous.provider]: { modelId: previous.modelId, accountConfigDir: previous.accountConfigDir } });
+        setAgentProfiles({ [previous.provider]: { modelId: previous.modelId, accountConfigDir: undefined } });
       }
       const previousAgent = saved.agent as AgentSettings | undefined;
       const previousProfiles = saved.agentProfiles && typeof saved.agentProfiles === "object"
-        ? saved.agentProfiles as Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir">> : {};
+        ? saved.agentProfiles as Record<string, Pick<AgentSettings, "modelId" | "accountConfigDir" | "thinkingLevel">> : {};
       const legacyModels = migrateAgentModelPreferences(previousAgent, previousProfiles);
       if (saved.agentModelPreferences && typeof saved.agentModelPreferences === "object" &&
           !Array.isArray(saved.agentModelPreferences)) {
@@ -370,13 +371,13 @@ export default function App() {
       } else if (message.type === "publicationFailed") {
         setError(t("publishFailed", { message: message.message }));
       } else if (message.type === "result") {
-        try { showDocument(message.document); }
+        try { receiveGeneratedDocument(message.document); }
         catch { void loadJobs(); }
         setGenerating(false);
       } else if (message.type === "documentChunk") {
         try {
           const document = chunks.push(message);
-          if (document) showDocument(document);
+          if (document) receiveGeneratedDocument(document);
         } catch {
           // Reopening a panel in the middle of a chunk stream may miss its
           // first chunk. The complete canonical document remains on disk.
@@ -408,10 +409,23 @@ export default function App() {
     const sameSource = sourceAdapter.id === adapter.id &&
       sourceAdapter.getVideoId(sourceUrl) === videoId;
 
-    // Never attach the currently playing video's title to subtitles already
-    // imported or fetched for a different source.
-    if (raw.trim() && !sameSource) return;
-    if (!raw.trim() && !sameSource) {
+    // Keep manual transcripts bound to their source; restore video captions
+    // from the selected video's own draft instead of reusing the old transcript.
+    const follow = shouldFollowSelectedVideo(sourceUrl, activeVideo.url, raw, captionSource?.origin);
+    if (!sameSource && !follow) return;
+    if (follow) {
+      if (checking || generating) return;
+      ++captionRequestRef.current;
+      ++metadataRequestRef.current;
+      setSubtitleBusy(false);
+      setMetadataBusy(false);
+      const cached = captionDraftsRef.current.get(captionCacheKey(activeVideo.url, profile.targetLanguage));
+      setRaw(cached?.raw ?? "");
+      setFileName(cached?.fileName ?? "");
+      setCaptionSource(cached?.source ?? null);
+      setSubtitleStatus("");
+      setMetadataStatus("");
+      setVideoRecoveryUrl("");
       manuallyEditedTitleRef.current = false;
       setTitle("");
       setSourceUrl(activeVideo.url);
@@ -426,7 +440,7 @@ export default function App() {
       }
     });
     return () => { cancelled = true; };
-  }, [activeVideo?.tabId, activeVideo?.url, activeVideo?.title, raw, sourceUrl, fileName]);
+  }, [activeVideo?.tabId, activeVideo?.url, activeVideo?.title, raw, sourceUrl, fileName, captionSource?.origin, profile.targetLanguage, checking, generating]);
 
   // An error from YouTube must not remain visible after switching to Netflix
   // (or a different video). Leave ongoing generation errors untouched otherwise.
@@ -480,8 +494,8 @@ export default function App() {
   }, [uiLocale, themePreference, systemDark]);
 
   useEffect(() => {
-    if (hydrated) void chrome.storage.local.set({ profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, sceneRepeat, sceneDelay, playbackRate, uiLocalePreference: localePreference, themePreference, explanationLanguageMode });
-  }, [hydrated, profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, sceneRepeat, sceneDelay, playbackRate, localePreference, themePreference, explanationLanguageMode]);
+    if (hydrated) void chrome.storage.local.set({ attentionNotificationsEnabled, analysisNotificationsEnabled, profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, sceneRepeat, sceneDelay, playbackRate, uiLocalePreference: localePreference, themePreference, explanationLanguageMode });
+  }, [hydrated, attentionNotificationsEnabled, analysisNotificationsEnabled, profile, agent, agentProfiles, agentModelPreferences, destination, backup, repeat, delay, sceneRepeat, sceneDelay, playbackRate, localePreference, themePreference, explanationLanguageMode]);
 
   useEffect(() => {
     if (!notice) return;
@@ -489,7 +503,6 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  useEffect(() => { if (playbackStatus) setNotice(playbackStatus); }, [playbackStatus]);
 
   useEffect(() => {
     if (hydrated && explanationLanguageMode === "auto") {
@@ -499,22 +512,7 @@ export default function App() {
   }, [hydrated, explanationLanguageMode, uiLocale]);
 
   function nativeOnce(request: { id: string; type: string; [key: string]: unknown }): Promise<HostMessage> {
-    return new Promise((resolve, reject) => {
-      const port = chrome.runtime.connectNative(HOST_NAME);
-      let finished = false;
-      port.onMessage.addListener((response: HostMessage) => {
-        if (response.id !== request.id) return;
-        finished = true;
-        port.disconnect();
-        if (response.type === "error") reject(new Error(response.message));
-        else resolve(response);
-      });
-      port.onDisconnect.addListener(() => {
-        if (!finished) reject(new Error(chrome.runtime.lastError?.message ?? t("errorHostDisconnected")));
-      });
-      try { port.postMessage(request); }
-      catch (error) { port.disconnect(); reject(error); }
-    });
+    return sendHostRequest(request);
   }
 
   async function refreshDriveAccounts(): Promise<void> {
@@ -638,6 +636,21 @@ export default function App() {
     } finally { setStorageBusy(false); }
   }
 
+  const listEndedJobs = useCallback(async (): Promise<JobSummary[]> => {
+    const response = await nativeOnce({ id: crypto.randomUUID(), type: "listEndedJobs" });
+    if (response.type !== "jobs") throw new Error("Unexpected task history response");
+    return response.jobs;
+  }, []);
+
+  async function deleteJobRecords(jobIds: string[]) {
+    const response = await nativeOnce({ id: crypto.randomUUID(), type: "deleteJobHistory", jobIds });
+    if (response.type !== "jobHistoryDeleted") throw new Error("Unexpected deletion response");
+    const removed = new Set(response.deleted);
+    setJobs(previous => previous.filter(job => !removed.has(job.id)));
+    loadJobs();
+    return response;
+  }
+
   async function retryBackup(jobId: string): Promise<void> {
     setStorageBusy(true);
     setError("");
@@ -676,89 +689,25 @@ export default function App() {
   }
 
   function updateAgent(next: AgentSettings): void {
+    next = { provider: next.provider, modelId: next.modelId, thinkingLevel: next.thinkingLevel };
     setAgent(next);
     setAgentProfiles(previous => ({
       ...previous,
-      [next.provider]: { modelId: next.modelId, accountConfigDir: next.accountConfigDir },
+      [next.provider]: { modelId: next.modelId, accountConfigDir: undefined, thinkingLevel: next.thinkingLevel },
     }));
     setAgentModelPreferences(previous => ({
-      ...previous, [agentModelPreferenceKey(next.provider, next.accountConfigDir)]: next.modelId,
+      ...previous, [agentModelPreferenceKey(next.provider, undefined)]: next.modelId,
     }));
   }
 
   function selectAgent(provider: string): void {
-    if (!isImportedAgentId(provider)) return;
-    setCustomModelMode(false);
+    if (!isPiProviderId(provider)) return;
     const previous = agentProfiles[provider];
     updateAgent({
       provider,
-      modelId: savedAgentModel(provider, previous?.accountConfigDir, agentModelPreferences, previous?.modelId ?? ""),
-      accountConfigDir: previous?.accountConfigDir,
+      thinkingLevel: previous?.thinkingLevel,
+      modelId: savedAgentModel(provider, undefined, agentModelPreferences, previous?.modelId ?? ""),
     });
-  }
-
-  async function loadAgentProfiles(): Promise<void> {
-    try {
-      const response = await nativeOnce({ id: crypto.randomUUID(), type: "agentProfiles" });
-      if (response.type !== "agentProfiles") throw new Error("Unexpected profile response.");
-      setSavedAgentProfiles(response.profiles);
-    } catch (cause) {
-      setProfileStatus(cause instanceof Error ? cause.message : t("profileLoadError"));
-    }
-  }
-
-  async function saveProfile(): Promise<void> {
-    if (!selectedAgentInfo?.supportsAccountProfiles || !draftProfileName.trim() || !draftProfileDir.trim()) return;
-    setProfileBusy(true);
-    setProfileStatus("");
-    try {
-      const response = await nativeOnce({
-        id: crypto.randomUUID(), type: "agentProfileSave",
-        provider: agent.provider, label: draftProfileName.trim(), directory: draftProfileDir.trim(),
-      });
-      if (response.type !== "agentProfiles") throw new Error("Unexpected profile response.");
-      setSavedAgentProfiles(response.profiles);
-      const saved = response.profiles.find(profile =>
-        profile.provider === agent.provider && profile.label === draftProfileName.trim());
-      if (saved) {
-        updateAgent({ ...agent, accountConfigDir: saved.directory,
-          modelId: savedAgentModel(agent.provider, saved.directory, agentModelPreferences) });
-        setCustomModelMode(false);
-      }
-      setDraftProfileName("");
-      setDraftProfileDir("");
-      setProfileStatus(t("profileSaved"));
-    } catch (cause) {
-      setProfileStatus(cause instanceof Error ? cause.message : t("profileSaveError"));
-    } finally { setProfileBusy(false); }
-  }
-
-  async function removeProfile(): Promise<void> {
-    if (!selectedSavedProfile) return;
-    setProfileBusy(true);
-    setProfileStatus("");
-    try {
-      const response = await nativeOnce({
-        id: crypto.randomUUID(), type: "agentProfileRemove", profileId: selectedSavedProfile.id,
-      });
-      if (response.type !== "agentProfiles") throw new Error("Unexpected profile response.");
-      setSavedAgentProfiles(response.profiles);
-      updateAgent({ ...agent, accountConfigDir: undefined,
-        modelId: savedAgentModel(agent.provider, undefined, agentModelPreferences) });
-      setCustomModelMode(false);
-      setProfileStatus(t("profileRemoved"));
-    } catch (cause) {
-      setProfileStatus(cause instanceof Error ? cause.message : t("profileRemoveError"));
-    } finally { setProfileBusy(false); }
-  }
-
-  function chooseAgentProfile(id: string): void {
-    const entry = savedAgentProfiles.find(profile => profile.id === id && profile.provider === agent.provider);
-    if (id !== "" && !entry) return;
-    updateAgent({ ...agent, accountConfigDir: entry?.directory,
-      modelId: savedAgentModel(agent.provider, entry?.directory, agentModelPreferences) });
-    setCustomModelMode(false);
-    setProfileStatus("");
   }
 
   function checkHost(): void {
@@ -770,23 +719,38 @@ export default function App() {
     const id = crypto.randomUUID();
     let replied = false;
     const port = chrome.runtime.connectNative(HOST_NAME);
-    port.onMessage.addListener((message: HostMessage) => {
+    port.onMessage.addListener((raw: unknown) => {
+      const parsed = HostMessageSchema.safeParse(raw);
+      if (!parsed.success) {
+        const old = raw && typeof raw === "object" ? raw as Record<string, unknown> : null;
+        if (old?.id !== id) return;
+        replied = true;
+        setHostChecked(true);
+        setInstalled({});
+        setHostVersion(typeof old.version === "string" ? old.version : null);
+        setHostProtocolVersion(null);
+        setHostSdkMode(false);
+        finishCheck();
+        port.disconnect();
+        return;
+      }
+      const message = parsed.data;
       if (message.id === id && message.type === "health") {
         replied = true;
         setHostChecked(true);
         // Older Hosts may still advertise built-in adapters despite matching version numbers.
         const imported = Array.isArray(message.agents)
-          ? message.agents.filter(entry => isImportedAgentId(entry.id)) : [];
+          ? message.agents.filter(entry => isPiProviderId(entry.id)) : [];
         setInstalled(Object.fromEntries(Object.entries(message.installed)
-          .filter(([id]) => isImportedAgentId(id))));
+          .filter(([id]) => isPiProviderId(id))));
         setHostVersion(typeof message.version === "string" ? message.version : null);
-        setHostImportedOnly(message.agentMode === "imported-only");
+        setHostSdkMode(message.agentMode === "pi-sdk");
+        setHostProtocolVersion(message.protocolVersion ?? null);
         setAgentCatalog(imported);
         setAgent(current => current.provider &&
-          (!isImportedAgentId(current.provider) ||
+          (!isPiProviderId(current.provider) ||
             !imported.some(entry => entry.id === current.provider))
           ? DEFAULT_AGENT : current);
-        void loadAgentProfiles();
         finishCheck();
         port.disconnect();
       }
@@ -796,7 +760,8 @@ export default function App() {
         setHostChecked(true);
         setInstalled(null);
         setHostVersion(null);
-        setHostImportedOnly(false);
+        setHostSdkMode(false);
+        setHostProtocolVersion(null);
         setHostStatus(chrome.runtime.lastError?.message ?? "Native Host connection failed.");
         finishCheck();
       }
@@ -811,8 +776,9 @@ export default function App() {
   }, [hydrated]);
 
   useEffect(() => {
-    if (!hydrated || installed === null) return;
+    if (!hydrated) return;
     if (!hostReady || !agent.provider) {
+      setModelBusy(false);
       setModelOptions([]);
       setModelNotice("");
       return;
@@ -826,11 +792,12 @@ export default function App() {
     let settleTimer: number | undefined;
     const startedAt = performance.now();
     setModelBusy(true);
-    setModelOptions([]);
+    if (modelCatalogProviderRef.current !== agent.provider) setModelOptions([]);
+    modelCatalogProviderRef.current = agent.provider;
     setModelNotice("");
     void nativeOnce({
       id: crypto.randomUUID(), type: "agentModels",
-      settings: { provider: agent.provider, modelId: "", accountConfigDir: agent.accountConfigDir },
+      settings: { provider: agent.provider, modelId: "" },
     }).then(response => {
       if (ignore) return;
       if (response.type !== "agentModels") throw new Error("Unexpected model catalog response.");
@@ -847,13 +814,21 @@ export default function App() {
       }, Math.max(0, 500 - (performance.now() - startedAt)));
     });
     return () => { ignore = true; window.clearTimeout(settleTimer); };
-  }, [hydrated, installed, hostReady, agent.provider, agent.accountConfigDir]);
+  }, [hydrated, installed, hostReady, agent.provider, modelRefreshVersion]);
+
+  function receiveGeneratedDocument(raw: unknown): void {
+    const parsed = LearningDocumentSchema.safeParse(raw);
+    if (!parsed.success) throw new Error("Host returned an invalid learning document.");
+    setProgress(t("statusSaved"));
+    setPage(current => current === "create" ? "lessons" : current);
+    void loadLessons();
+  }
 
   function showDocument(raw: unknown): void {
     const parsed = LearningDocumentSchema.safeParse(raw);
     if (!parsed.success) throw new Error("Host returned an invalid learning document.");
     setDocument(parsed.data);
-    setPage("reader");
+    setPage("lesson");
     setProgress(t("statusSaved"));
   }
 
@@ -869,11 +844,8 @@ export default function App() {
     if (response.warning) setError(response.warning);
     // The Host persists first; only then update the reader and JSON/Markdown export.
     setDocument(current => {
-      if (current?.id !== documentId || current.schemaVersion !== 3) return current;
-      const playbackOverrides = { ...current.playbackOverrides };
-      if (response.range) playbackOverrides[cueId] = response.range;
-      else delete playbackOverrides[cueId];
-      return { ...current, playbackOverrides };
+      if (current?.id !== documentId) return current;
+      return withSentenceTiming(current, cueId, response.range);
     });
   }
 
@@ -888,7 +860,7 @@ export default function App() {
     }
     if (response.warning) setError(response.warning);
     setDocument(current => {
-      if (current?.id !== documentId || current.schemaVersion !== 3) return current;
+      if (current?.id !== documentId) return current;
       const scenePlaybackOverrides = { ...current.scenePlaybackOverrides };
       if (response.range) scenePlaybackOverrides[sceneId] = response.range;
       else delete scenePlaybackOverrides[sceneId];
@@ -932,11 +904,12 @@ export default function App() {
     lastJobSummaryRef.current = null;
     activeRequestIdRef.current = id;
     setGenerating(true);
+    setPage("create");
     setProgress(t(input.type === "resume" ? "statusResuming" : "statusConnecting"));
     const chunks = new DocumentChunkAssembler();
     let finished = false;
     function complete(raw: unknown): void {
-      try { showDocument(raw); }
+      try { receiveGeneratedDocument(raw); }
       catch (error) { setError(error instanceof Error ? error.message : t("errorDocumentOpen")); }
       finished = true;
       setGenerating(false);
@@ -974,7 +947,10 @@ export default function App() {
         }
       } else if (message.type === "error") {
         finished = true;
-        setError(message.message);
+        if (/^(?:Error: )?This operation was aborted\.?$/.test(message.message)) {
+          setError("");
+          setNotice(piFeedback(uiLocale, message.message, "generation").message);
+        } else setError(message.message);
         setGenerating(false);
         if (!lastJobSummaryRef.current || ["queued", "running"].includes(lastJobSummaryRef.current.status)) {
           setProgress(t("jobFailed"));
@@ -990,18 +966,19 @@ export default function App() {
       }
     });
     port.postMessage({ id, ...input });
+    setTemporaryAgent(null);
   }
 
   function startGeneration(): void {
     if (checking || generating) return;
     if (!hostReady) {
-      setError(installed === null ? agentUi.noHost : hostUi.unsupportedMode);
-      setPage("settings");
+      setError(installed === null ? piCopy[uiLocale].unavailable : hostUi.unsupportedMode);
+      setSettingsSection("advanced"); setPage("settings");
       return;
     }
-    if (!isImportedAgentId(agent.provider) || installed?.[agent.provider] !== true) {
-      setError(agentUi.empty);
-      setPage("settings");
+    if (!isPiProviderId(generationAgent.provider) || installed?.[generationAgent.provider] !== true) {
+      setError(piCopy[uiLocale].empty);
+      setSettingsSection("ai"); setPage("settings");
       return;
     }
     if (subtitleBusy || !captionsReady) {
@@ -1019,11 +996,9 @@ export default function App() {
     setPublishedLocation("");
     setBackupStatus("");
     try {
-      const payload = GenerationRequestSchema.parse({
-        id: crypto.randomUUID(),
+      const payload = buildGenerationRequest({
         source: { platform, title: title.trim(), ...(sourceUrl.trim() ? { url: sourceUrl.trim() } : {}) },
-        lessonFormat: "contextual-v3", profile: contextualGenerationProfile(profile),
-        agent, destination, backup, cues,
+        profile, agent: generationAgent, destination, backup, cues,
       });
       const port = chrome.runtime.connect({ name: GENERATION_CONTROLLER_PORT });
       preflightPortRef.current = port;
@@ -1141,7 +1116,16 @@ export default function App() {
     const id = crypto.randomUUID();
     const port = chrome.runtime.connectNative(HOST_NAME);
     let received = false;
-    port.onMessage.addListener((message: HostMessage) => {
+    port.onMessage.addListener((raw: unknown) => {
+      const parsed = HostMessageSchema.safeParse(raw);
+      if (!parsed.success) {
+        received = true;
+        setError("Native Host returned invalid job data. Update the Host and try again.");
+        finishLoading();
+        port.disconnect();
+        return;
+      }
+      const message = parsed.data;
       if (message.id !== id) return;
       if (message.type === "jobs") {
         received = true;
@@ -1181,7 +1165,16 @@ export default function App() {
       setGenerating(false);
       port.disconnect();
     }
-    port.onMessage.addListener((message: HostMessage) => {
+    port.onMessage.addListener((raw: unknown) => {
+      const parsed = HostMessageSchema.safeParse(raw);
+      if (!parsed.success) {
+        finished = true;
+        setGenerating(false);
+        setError("Native Host returned an invalid lesson response. Update the Host and try again.");
+        port.disconnect();
+        return;
+      }
+      const message = parsed.data;
       if (message.id !== id) return;
       if (message.type === "result") complete(message.document);
       else if (message.type === "documentChunk") {
@@ -1210,12 +1203,16 @@ export default function App() {
     port.postMessage({ type: "getDocument", id, documentId });
   }
 
+  useEffect(() => {
+    if (!hydrated) return;
+    const route = new URLSearchParams(window.location.search);
+    const lesson = route.get("lesson");
+    if (lesson && hostReady) { openSavedDocument(lesson); window.history.replaceState(null, "", window.location.pathname); }
+    else if (route.has("activity")) { setPage("activity"); loadJobs(); window.history.replaceState(null, "", window.location.pathname); }
+  }, [hydrated, hostReady]);
+
   function openSavedDocument(documentId: string): void {
     fetchSavedDocument(documentId, showDocument);
-  }
-
-  function downloadSavedDocument(documentId: string, format: "json" | "md"): void {
-    fetchSavedDocument(documentId, raw => downloadDocument(LearningDocumentSchema.parse(raw), format));
   }
 
   useEffect(() => {
@@ -1227,7 +1224,7 @@ export default function App() {
       setDuplicateWarning(null);
       setChecking(false);
     }
-  }, [raw, title, sourceUrl, profile, agent, destination, backup]);
+  }, [raw, title, sourceUrl, profile, generationAgent, destination, backup]);
 
   function cancelGeneration(): void {
     if (!portRef.current || !requestRef.current) return;
@@ -1246,17 +1243,27 @@ export default function App() {
       if (originalSource && getVideoAdapter(originalSource).id === "import") {
         throw new Error(metadataUi.invalidSource);
       }
-      const found = await detectCurrentVideoMetadata(originalSource);
+      const found = await detectCurrentVideoMetadata("");
       if (request !== metadataRequestRef.current) return;
       if (!found) throw new Error(metadataUi.unavailable);
 
-      const safety = metadataSourceSafety(originalSource, raw, found.url);
+      const follow = shouldFollowSelectedVideo(originalSource, found.url, raw, captionSource?.origin);
+      const safety = metadataSourceSafety(originalSource, follow ? "" : raw, found.url);
       if (safety === "mismatch") throw new Error(metadataUi.mismatch);
       if (safety === "confirm" && !window.confirm(metadataUi.confirmUnlinked)) return;
       if (request !== metadataRequestRef.current) return;
 
-      // Never replace an existing URL or a manually edited title; metadata
-      // recovery only fills missing fields or refreshes an auto-detected title.
+      // Preserve manual transcripts; video captions are cached separately per source.
+      if (follow) {
+        ++captionRequestRef.current;
+        const cached = captionDraftsRef.current.get(captionCacheKey(found.url, profile.targetLanguage));
+        setRaw(cached?.raw ?? "");
+        setFileName(cached?.fileName ?? "");
+        setCaptionSource(cached?.source ?? null);
+        setSubtitleStatus("");
+        manuallyEditedTitleRef.current = false;
+        setTitle("");
+      }
       // An explicitly confirmed metadata link can bind an imported transcript to this video.
       // Editing a video URL directly never silently rebinds an unrelated subtitle file.
       if (!originalSource && captionSource?.origin === "manual" && raw.trim()) {
@@ -1266,7 +1273,7 @@ export default function App() {
           raw, fileName, source,
         });
       }
-      setSourceUrl(current => current.trim() ? current : found.url);
+      setSourceUrl(found.url);
       if (found.title && !manuallyEditedTitleRef.current) {
         setTitle(current => current.trim() && manuallyEditedTitleRef.current
           ? current : found.title ?? current);
@@ -1330,7 +1337,7 @@ export default function App() {
   async function fetchCurrentSubtitles(
     language: LearningLanguage = profile.targetLanguage, replacing = false,
   ): Promise<void> {
-    if ((!replacing && (subtitleBusy || metadataBusy)) || checking || generating) return;
+    if (subtitleReaderBlocked || (!replacing && (subtitleBusy || metadataBusy)) || checking || generating) return;
     const request = ++captionRequestRef.current;
     let attemptedUrl = "";
     setCaptionSource(null);
@@ -1401,12 +1408,15 @@ export default function App() {
       if (request !== captionRequestRef.current) return;
       const trackMissing = cause instanceof VideoCommandError &&
         cause.code === "TRACK_UNAVAILABLE";
-      const message = trackMissing ? subtitleMessage(subtitleUi.trackUnavailable, {
-        language: learningLanguageName(language, uiLocale),
-      }) : cause instanceof Error ? cause.message : subtitleUi.unavailable;
-      if (attemptedUrl && needsVideoReaderReload(message)) setVideoRecoveryUrl(attemptedUrl);
+      const diagnostic = cause instanceof Error ? cause.message : "";
+      const readerUnavailable = needsVideoReaderReload(diagnostic);
+      if (attemptedUrl && readerUnavailable) setVideoRecoveryUrl(attemptedUrl);
       setSubtitleTone(trackMissing ? "missing" : "error");
-      setSubtitleStatus(message);
+      setSubtitleStatus({
+        code: readerUnavailable ? "READER_UNAVAILABLE"
+          : cause instanceof VideoCommandError && cause.code ? cause.code : "CAPTION_FAILED",
+        language,
+      });
     } finally {
       if (request === captionRequestRef.current) setSubtitleBusy(false);
     }
@@ -1427,6 +1437,29 @@ export default function App() {
     } finally {
       setReloadingVideoTab(false);
     }
+  }
+
+  function usePastedSubtitles(text: string): void {
+    if (!text.trim()) return;
+    ++metadataRequestRef.current;
+    setMetadataBusy(false);
+    setMetadataStatus("");
+    ++captionRequestRef.current;
+    setSubtitleBusy(false);
+    const source: CaptionProvenance = {
+      origin: "manual", sourceKey: videoSourceKey(sourceUrl), language: profile.targetLanguage,
+    };
+    setRaw(text);
+    setCaptionSource(source);
+    setFileName("");
+    captionDraftsRef.current.set(captionCacheKey(sourceUrl, profile.targetLanguage), {
+      raw: text, fileName: "", source,
+    });
+    setSubtitleTone("neutral");
+    setSubtitleStatus(subtitleMessage(subtitleUi.manualLanguageReady, {
+      language: learningLanguageName(profile.targetLanguage, uiLocale),
+    }));
+    setError("");
   }
 
   async function onFile(file: File | undefined): Promise<void> {
@@ -1459,176 +1492,45 @@ export default function App() {
     setError("");
   }
 
-  async function openVideo(): Promise<void> {
-    if (openingVideoRef.current) return;
-    if (!document?.source.url || readerAdapter.id === "import") {
-      setError(t("errorVideoOpenUnsupported"));
-      return;
-    }
-    openingVideoRef.current = true;
-    setOpeningVideo(true);
-    setError("");
-    try {
-      const { reused } = await openOrFocusVideoTab(readerAdapter, document.source.url);
-      setPlaybackStatus(t(reused ? "statusVideoReused" : "statusVideoOpened"));
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("errorVideoOpen"));
-    } finally {
-      openingVideoRef.current = false;
-      setOpeningVideo(false);
-    }
-  }
-
-  async function diagnoseVideo(): Promise<void> {
-    setError("");
-    try {
-      if (!readerAdapter.diagnose || !document?.source.url) throw new Error(t("errorPlayerDiagnoseUnsupported"));
-      const status = await readerAdapter.diagnose(document.source.url);
-      setPlaybackStatus(t("statusPlayerReady") + (status.currentMs !== undefined ? t("statusCurrentTime", { time: formatTime(status.currentMs) }) : ""));
-    } catch (cause) {
-      setPlaybackStatus("");
-      setError(cause instanceof Error ? cause.message : t("errorPlayerDiagnose"));
-    }
-  }
-
-  async function openTimestampCue(cue: SubtitleCue): Promise<void> {
-    if (cue.startMs === null || !document?.source.url) return;
-    setError("");
-    try {
-      const atMs = cuePlaybackStart(cue.startMs);
-      const timestampUrl = readerAdapter.timestampLink?.(document.source.url, atMs);
-      if (!timestampUrl) throw new Error(t("errorVideoOpenUnsupported"));
-      // openOrFocusVideoTab matches the *video ID*, not the timestamp URL: it
-      // will focus an already open watch tab rather than opening a duplicate.
-      const { reused, tab } = await openOrFocusVideoTab(readerAdapter, timestampUrl);
-      if (reused && readerAdapter.seek) {
-        await readerAdapter.seek(document.source.url, atMs);
-      } else if (reused && tab.id !== undefined) {
-        // Future adapters that support timestamp links but not direct seeking.
-        await chrome.tabs.update(tab.id, { url: timestampUrl });
-      }
-      setLoopActive(false);
-      setPlaybackStatus(t(reused ? "statusVideoReused" : "statusVideoOpened"));
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("errorVideoOpen"));
-    }
-  }
-
-  async function seekCue(cue: SubtitleCue): Promise<void> {
-    if (cue.startMs === null) return;
-    setError("");
-    try {
-      if (!readerAdapter.seek || !document?.source.url) throw new Error(t("errorSeekUnsupported"));
-      await readerAdapter.seek(document.source.url, cuePlaybackStart(cue.startMs));
-      setLoopActive(false);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("errorSeek"));
-    }
-  }
-
-  async function loopCue(cue: SubtitleCue): Promise<void> {
-    if (cue.startMs === null || cue.endMs === null) return;
-    setError("");
-    try {
-      if (!readerAdapter.loop || !document?.source.url) throw new Error(t("errorLoopUnsupported"));
-      await readerAdapter.loop(document.source.url, {
-        ...cuePlaybackWindow(cue.startMs, cue.endMs),
-        repeats: repeat === "infinite" ? "infinite" : Number(repeat),
-        delaySeconds: delay,
-      });
-      setLoopActive(true);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("errorLoop"));
-    }
-  }
-
-  async function applyPlaybackRate(): Promise<void> {
-    setError("");
-    if (!readerAdapter.setPlaybackRate || !document?.source.url) {
-      setError(t("errorRateUnsupported"));
-      return;
-    }
-    setRateApplying(true);
-    try {
-      await readerAdapter.setPlaybackRate(document.source.url, playbackRate);
-      setPlaybackStatus(t("rateApplied", { name: readerAdapter.label, rate: playbackRate }));
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("errorRate"));
-    } finally {
-      setRateApplying(false);
-    }
-  }
-
-  async function stopLoop(): Promise<void> {
-    try {
-      if (readerAdapter.stopLoop && document?.source.url) {
-        await readerAdapter.stopLoop(document.source.url);
-      }
-    } catch {
-      // Closing or reloading a video tab already cancels its loop.
-    }
-    setLoopActive(false);
-  }
-
   const levelOptions = levelsForTargetLanguage(profile.targetLanguage);
 
-  const filteredJobs = jobs.filter(job => jobFilter === "completed"
-    ? job.status === "completed" : jobFilter === "active" ? job.status !== "completed" : true);
-  const visibleJobs = showAllJobs ? filteredJobs : jobFilter === "all"
-    ? [...filteredJobs.filter(job => job.status !== "completed"),
-      ...filteredJobs.filter(job => job.status === "completed").slice(0, 3)]
-    : filteredJobs.slice(0, 3);
   const activeJob = jobs.find(job => job.id === lastJobIdRef.current);
-  const lessonCatalog = useMemo(() => {
-    const entries = new Map<string, LessonEntry>();
-    for (const local of localLessons) entries.set(local.documentId, {
-      documentId: local.documentId, title: local.title, createdAt: local.createdAt, local,
-    });
-    for (const drive of cloudLessons) {
-      const previous = entries.get(drive.documentId);
-      entries.set(drive.documentId, previous
-        ? { ...previous, drive } : {
-          documentId: drive.documentId, title: drive.title, createdAt: drive.createdAt, drive,
-        });
-    }
-    return [...entries.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  }, [localLessons, cloudLessons]);
-  const visibleLessons = lessonCatalog.filter(item => lessonFilter === "local"
-    ? !!item.local : lessonFilter === "drive" ? !!item.drive : true);
-
   useEffect(() => {
     if (page === "lessons") void loadLessons();
   }, [page, backup.accountId, driveAccounts.length]);
 
   return (
-    <div className="mx-auto min-w-0 max-w-[780px] px-3 pb-9 leading-[1.55] antialiased font-[Outfit,'Noto_Sans_TC',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] [color-scheme:light] dark:[color-scheme:dark] [font-synthesis:none]">
-      <header className="flex items-center justify-between gap-2 py-[18px] [&>div]:flex [&>div]:min-w-0 [&>div]:items-center [&>div]:gap-[9px] [&_strong]:min-w-0 [&_strong]:text-xs [&_strong]:leading-[1.25] [&_strong]:wrap-anywhere">
-        <div><img className="block size-9 shrink-0 rounded-[var(--radius)] object-contain" src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>AI-powered Contextual Language Learning</strong></div>
-        <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">MVP · v0.1</span>
+    <div className={(page === "lesson" ? "h-dvh flex flex-col overflow-hidden pb-0 " : "pb-9 ") + "mx-auto min-w-0 max-w-[780px] px-3 text-[13px] leading-[1.5] antialiased font-[Outfit,'Noto_Sans_TC',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] [color-scheme:light] dark:[color-scheme:dark] [font-synthesis:none]"}>
+      <header className="flex items-center justify-between gap-2 py-2.5 [&>div]:flex [&>div]:min-w-0 [&>div]:items-center [&>div]:gap-2 [&_strong]:min-w-0 [&_strong]:text-xs [&_strong]:leading-[1.25] [&_strong]:wrap-anywhere">
+        <div><img className="block size-7 shrink-0 rounded-[var(--radius)] object-contain" src={chrome.runtime.getURL("icons/icon48.png")} alt="" /><strong>Contextual Language Learning</strong></div>
+        <HeaderActions locale={uiLocale} page={page} attentionCount={jobs.filter(job => ["waiting", "failed"].includes(job.status)).length}
+          onActivity={() => { if (page === "activity") return; if (page === "create" || page === "lessons" || page === "lesson") setReturnPage(page); setPage("activity"); loadJobs(); }}
+          onSettings={() => { if (page === "create" || page === "lessons" || page === "lesson") setReturnPage(page); setSettingsSection(null); setPage("settings"); }} />
       </header>
-      <nav className="mb-4 grid grid-cols-4 gap-1 rounded-[var(--radius)] bg-muted p-1" aria-label={t("navLabel")}>
-        <Button className={page === "create" ? "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "create" ? "page" : undefined} onClick={() => setPage("create")}><WandSparkles aria-hidden="true" />{t("create")}</Button>
-        <Button className={page === "reader" ? "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "reader" ? "page" : undefined} onClick={() => setPage("reader")}><BookOpen aria-hidden="true" />{t("reader")}</Button>
-        <Button className={page === "lessons" ? "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "lessons" ? "page" : undefined} onClick={() => setPage("lessons")}><Library aria-hidden="true" />{t("lessonLibrary")}</Button>
-        <Button className={page === "settings" ? "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent bg-card! text-foreground! shadow-[0_1px_4px_#0001]!" : "h-auto min-w-0 rounded-[calc(var(--radius)-4px)] gap-[3px] bg-transparent px-px py-2 text-[11px] text-muted-foreground shadow-none [&_svg]:size-[14px] hover:bg-transparent"} aria-current={page === "settings" ? "page" : undefined} onClick={() => setPage("settings")}><Settings2 aria-hidden="true" />{t("settings")}</Button>
-      </nav>
+      <SidePanelNavigation page={page} onNavigate={setPage} t={t} />
 
-      <NoticeViewport error={error} notice={notice} closeLabel={t("closeError")}
-        dismiss={() => error ? setError("") : setNotice("")} />
+      <NoticeViewport locale={uiLocale} videoRecovery={page === "create" && !generating ? undefined : videoRecovery} error={error} notice={notice}
+        closeLabel={t("closeNotification")} regionLabel={t("notificationsRegion")}
+        theme={resolveTheme(themePreference, systemDark)}
+        dismiss={() => { setError(""); setNotice(""); }} />
 
-      {page === "create" && <main>
-        <AppPanel>
-          <h2>{t("subtitleHeading")}</h2>
-          <div className="mb-[10px] min-w-0 border-b border-border pb-3 [&>label]:my-2 [&>.actions]:mt-0 [&>.actions]:mb-[7px] [&_[data-ui=chip]]:mt-[6px]">
-          <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-            <Button variant={!title.trim() || !sourceUrl.trim() ? "default" : "outline"}
-              size="sm" disabled={metadataBusy || subtitleBusy || checking || generating}
-              onClick={() => void fetchCurrentVideoMetadata()}>
-              {metadataBusy ? metadataUi.busy :
-                !title.trim() || !sourceUrl.trim() ? metadataUi.get : metadataUi.refresh}
-            </Button>
-          </div>
-          {metadataStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{metadataStatus}</p>}
+      {page === "create" && <main id="page-panel-create" aria-labelledby="page-nav-create" className="space-y-4 py-3">
+        {generating ? <GenerationStatus locale={uiLocale} job={activeJob} title={title} progress={progress}
+          notificationsEnabled={analysisNotificationsEnabled} onLibrary={() => setPage("lessons")}
+          onCancel={cancelGeneration} /> : <>
+        <PageSection framed>
+          <h2>{flow.video}</h2>
+          <div className="min-w-0 border-b border-border pb-4">
+            <strong className="block text-sm wrap-anywhere">{title || activeVideo?.title || flow.videoEmpty}</strong>
+            <p className="mt-1 text-sm text-muted-foreground">{!activeVideo ? flow.videoEntryHint : getVideoAdapter(sourceUrl || activeVideo.url).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl || activeVideo.url).label}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" disabled={metadataBusy || subtitleBusy || checking}
+                onClick={() => void fetchCurrentVideoMetadata()}>
+                {metadataBusy ? metadataUi.busy : flow.useVideo}</Button>
+              {activeVideo && <Button variant="ghost" size="sm" aria-expanded={editingVideo} onClick={() => setEditingVideo(value => !value)}>{editingVideo ? flow.done : flow.editVideoDetails}</Button>}
+            </div>
+          {metadataStatus && <p className="my-2 text-xs text-muted-foreground" role="status">{metadataStatus}</p>}
+          {(editingVideo || !activeVideo) && <>
           <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("videoTitle")} <Input value={title} onChange={event => {
             ++metadataRequestRef.current;
             setMetadataBusy(false);
@@ -1645,31 +1547,40 @@ export default function App() {
             setSourceUrl(event.target.value);
             setSubtitleStatus("");
           }} placeholder="https://www.youtube.com/watch?v=…" /></label>
-          <Badge data-ui="chip">{t("source", { name: getVideoAdapter(sourceUrl).id === "import" ? t("providerImport") : getVideoAdapter(sourceUrl).label })}</Badge>
+          </>}
           </div>
-          <div className="my-[6px_12px] min-w-0 [&_[data-ui=settingField]]:m-0">
-            <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
-              <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
-                <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="learning-target">{t("targetLanguage")}</label>
-                <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
-                  explanation={settingsCopy.fieldHints.targetLanguage}
-                  />
-              </div>
-              <GroupedSelectField id="learning-target" ariaLabel={t("targetLanguage")}
-                value={profile.targetLanguage} onValueChange={chooseLearningLanguage} disabled={checking || generating}
-                groups={[
-                  { label: LEARNING_LANGUAGE_GROUP_LABELS[uiLocale].featured,
-                    options: FEATURED_LEARNING_LANGUAGES.map(language => ({ value: language, label: learningLanguageName(language, uiLocale) })) },
-                  { label: LEARNING_LANGUAGE_GROUP_LABELS[uiLocale].more,
-                    options: LEARNING_LANGUAGES.filter(language => !FEATURED_LEARNING_LANGUAGES.includes(language))
-                      .map(language => ({ value: language, label: learningLanguageName(language, uiLocale) })) },
-                ]} />
+          <section aria-label={subtitleLayout.heading} data-ui="subtitleState" data-state={subtitleState} className="my-3 grid min-w-0 gap-2">
+            <h3 className="text-sm font-semibold">{subtitleLayout.heading}</h3>
+            <div role={subtitleState === "error" ? "alert" : "status"} className="grid gap-1 text-sm wrap-anywhere">
+              <p className="flex items-center gap-2 font-medium">
+                {subtitleState === "ready" && <Check aria-hidden="true" className="size-4 shrink-0" />}
+                {subtitleState === "loading" && <LoaderCircle aria-hidden="true" className="size-4 shrink-0 motion-safe:animate-spin" />}
+                {subtitleState === "error" && <AlertCircle aria-hidden="true" className="size-4 shrink-0 text-destructive" />}
+                {subtitleState === "ready" ? learningLanguageName(profile.targetLanguage, uiLocale) + " · " + subtitleMessage(subtitleLayout.count, { count: cues.length }) : subtitleReaderBlocked ? subtitleLayout.reloadNeeded : subtitleState === "loading" ? subtitleUi.busy : subtitleState === "error" ? subtitleLayout.failed : subtitleLayout.empty}
+              </p>
+              {!subtitleReaderBlocked && (subtitleState === "loading" || subtitleState === "error") && <p className="text-xs text-muted-foreground">{subtitleState === "loading" ? subtitleMessage(subtitleUi.loadingLanguage, { language: learningLanguageName(profile.targetLanguage, uiLocale) }) : (subtitleStatus ? typeof subtitleStatus === "string" ? subtitleStatus : subtitleFailureMessage(uiLocale, subtitleStatus) : subtitleMessage(subtitleUi.languageNotReady, { language: learningLanguageName(profile.targetLanguage, uiLocale) }))}</p>}
+              {subtitleReaderBlocked && subtitleState === "ready" && <p className="text-xs text-muted-foreground">{subtitleLayout.reloadNeeded}</p>}
+              {videoRecovery.failed && <p className="text-xs text-destructive">{subtitleUi.reloadFailed}</p>}
+              {subtitleState === "ready" && captionSource?.origin === "manual" && <p className="text-xs text-muted-foreground">{subtitleLayout.source}：{fileName ? fileName.split(".").pop()?.toUpperCase() : subtitleLayout.paste}</p>}
             </div>
-          </div>
+            {subtitleState === "ready" && <>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <Button variant="outline" size="sm" aria-expanded={subtitlePreview} aria-controls="subtitle-preview" onClick={() => setSubtitlePreview(value => !value)}>{subtitlePreview ? subtitleLayout.close : subtitleLayout.preview}</Button>
+                {!subtitleReaderBlocked && (subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <Button variant="ghost" size="sm"
+                  disabled={subtitleReaderBlocked || subtitleBusy || metadataBusy || checking || generating}
+                  onClick={() => void fetchCurrentSubtitles()}>
+                  {subtitleBusy ? subtitleUi.busy : subtitleLayout.refresh}
+                </Button>}
+              </div>
+              {subtitlePreview && <ol id="subtitle-preview" aria-label={subtitleLayout.preview} tabIndex={0} className="grid max-h-64 gap-2 overflow-y-auto overscroll-contain rounded-[var(--radius)] border border-border p-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                {cues.map((cue, index) => <li key={index} className="flex min-w-0 items-start gap-3"><span className="shrink-0 tabular-nums text-muted-foreground">{cue.startMs === null ? "—" : String(Math.floor(cue.startMs / 60000)).padStart(2, "0") + ":" + String(Math.floor(cue.startMs / 1000) % 60).padStart(2, "0")}</span><span className="min-w-0 whitespace-pre-wrap wrap-anywhere">{cue.originalText}</span></li>)}
+              </ol>}
+            </>}
+          </section>
           {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && <>
-            {trackBusy && <p className="my-2 text-xs text-muted-foreground" role="status">{subtitleUi.tracksChecking}</p>}
-            {!trackBusy && trackInfo?.sourceKey === videoSourceKey(sourceUrl) && <p className="my-2 text-xs text-muted-foreground wrap-anywhere" role="status">{
-              trackInfo.status === "unknown" ? subtitleUi.tracksUnknown : (() => {
+            {!subtitleReaderBlocked && subtitleState !== "ready" && trackBusy && <p className="my-2 text-xs text-muted-foreground" role="status">{subtitleUi.tracksChecking}</p>}
+            {!subtitleReaderBlocked && subtitleState !== "ready" && !trackBusy && trackInfo?.status !== "unknown" && trackInfo?.sourceKey === videoSourceKey(sourceUrl) && <p className="my-2 text-xs text-muted-foreground wrap-anywhere" role="status">{
+              (() => {
                 const available = LEARNING_LANGUAGES.filter(language => trackInfo.tracks.some(track =>
                   subtitleLanguageMatches(language, track.language)));
                 const names = available.map(language => learningLanguageName(language, uiLocale) +
@@ -1685,71 +1596,55 @@ export default function App() {
               })()
             }</p>}
 
-            <Button className="h-9 min-w-0 px-3 text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere"
-              disabled={subtitleBusy || metadataBusy || checking || generating}
+            {!subtitleReaderBlocked && subtitleState !== "ready" && <Button size="sm" className="min-w-0 text-center leading-[1.4] whitespace-normal wrap-anywhere"
+              disabled={subtitleReaderBlocked || subtitleBusy || metadataBusy || checking || generating}
               onClick={() => void fetchCurrentSubtitles()}>
-              {subtitleBusy ? subtitleUi.busy : subtitleUi.button}
-            </Button>
-            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{subtitleUi.hint}</p>
-            {videoRecoveryUrl && <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
+              {subtitleBusy ? subtitleUi.busy : subtitleState === "error" ? subtitleLayout.retry : subtitleUi.button}
+            </Button>}
+            {(videoRecoveryUrl || videoRecovery.unavailable) && <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
               <Button variant="outline" size="sm"
-                disabled={reloadingVideoTab || subtitleBusy || metadataBusy}
-                onClick={() => void reloadVideoReader()}>
-                {reloadingVideoTab ? subtitleUi.reloadingTab : subtitleUi.reloadTab}
+                disabled={reloadingVideoTab || videoRecovery.busy || subtitleBusy || metadataBusy}
+                onClick={() => {
+                  if (videoRecovery.unavailable) { setVideoRecoveryUrl(""); void videoRecovery.reload(); }
+                  else void reloadVideoReader();
+                }}>
+                {reloadingVideoTab || videoRecovery.busy ? subtitleUi.reloadingTab : subtitleLayout.reloadVideo}
               </Button>
             </div>}
           </>}
-          <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px]" open={subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube"}>
-            <summary className="cursor-pointer font-semibold">{subtitleUi.manual}</summary>
+          <Disclosure className="mt-2 min-w-0 [&>div]:border-b-0" key={subtitlePlatform + ":" + String(subtitleState === "error")} defaultOpen={subtitleState === "error"} title={<>{flow.otherSubtitles}</>}>
             {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("subtitleHint")}</p>}
-            <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("subtitleFile")} <Input type="file" className="h-auto min-h-10 p-[7px] text-xs" accept=".srt,.vtt,.txt,text/plain" onChange={event => void onFile(event.target.files?.[0])} /></label>
-            {fileName && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("importedFile", { name: fileName })}</p>}
-            <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("pasteSubtitles")} <Textarea className="resize-y" rows={5} value={raw} onChange={event => {
-              ++metadataRequestRef.current;
-              setMetadataBusy(false);
-              setMetadataStatus("");
-              ++captionRequestRef.current;
-              setSubtitleBusy(false);
-              const source: CaptionProvenance = {
-                origin: "manual", sourceKey: videoSourceKey(sourceUrl), language: profile.targetLanguage,
-              };
-              setRaw(event.target.value);
-              setCaptionSource(event.target.value.trim() ? source : null);
-              setFileName("");
-              if (event.target.value.trim()) captionDraftsRef.current.set(
-                captionCacheKey(sourceUrl, profile.targetLanguage),
-                { raw: event.target.value, fileName: "", source },
-              );
-              setSubtitleStatus(event.target.value.trim()
-                ? subtitleMessage(subtitleUi.manualLanguageReady, {
-                    language: learningLanguageName(profile.targetLanguage, uiLocale),
-                  }) : "");
-            }}
-              placeholder={t("subtitlePlaceholder")} /></label>
-          </details>
-          {subtitleStatus && <div className={subtitleTone === "missing" || subtitleTone === "error"
-            ? "my-[10px] flex min-w-0 items-start gap-2 rounded-[var(--radius)] border border-destructive/60 bg-destructive/10 p-[10px] text-xs leading-[1.5] text-foreground wrap-anywhere"
-            : "my-[10px] min-w-0 rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs leading-[1.5] text-foreground wrap-anywhere"}
-            role={subtitleTone === "missing" || subtitleTone === "error" ? "alert" : "status"}
-            data-ui="subtitleStatus" data-tone={subtitleTone}>
-            {(subtitleTone === "missing" || subtitleTone === "error") &&
-              <AlertCircle aria-hidden="true" className="mt-[1px] size-4 shrink-0 text-destructive" />}
-            <div className="min-w-0">
-              <p className="m-0">{subtitleStatus}</p>
-              {subtitleTone === "missing" && <p className="mt-1 mb-0 text-muted-foreground">{subtitleUi.trackUnavailableAction}</p>}
+            <SubtitleImport
+              value={subtitlePasteDrafts[captionCacheKey(sourceUrl, profile.targetLanguage)] ??
+                (captionSource?.origin === "manual" && !fileName ? raw : "")}
+              onValueChange={text => setSubtitlePasteDrafts(current => ({
+                ...current, [captionCacheKey(sourceUrl, profile.targetLanguage)]: text,
+              }))}
+              onFile={onFile} onPaste={usePastedSubtitles} disabled={subtitleBusy || checking || generating}
+              importedFileLabel={fileName ? t("importedFile", { name: fileName }) : undefined}
+              copy={{ hint: t("subtitleImportHint"), fileTab: t("subtitleFileTab"),
+                pasteTab: t("subtitlePasteTab"), fileHint: t("subtitleFileHint"),
+                fileButton: t("importSubtitleFile"), pasteLabel: t("pasteSubtitles"),
+                pasteButton: t("usePastedSubtitles"), placeholder: t("subtitlePlaceholder") }} />
+          </Disclosure>
+
+
+        </PageSection>
+
+        <PageSection framed className="[&_[data-ui=hint]]:my-[4px_9px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:min-h-8 [&_[data-ui=settingField]_[data-slot=select-trigger]]:w-full [&_[data-ui=advancedLessonSettings]]:mt-4 [&_[data-ui=advancedLessonSettings]>div]:border-b-0">
+          <h2>{flow.learning}</h2>
+          <div className="my-3 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-x-4 gap-y-3 [&_[data-ui=settingField]]:m-0">
+            <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
+              <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="learning-target">{t("targetLanguage")}</label>
+                <SettingInfo label={t("targetLanguage")} infoLabel={settingsCopy.infoLabel}
+                  explanation={settingsCopy.fieldHints.targetLanguage}
+                  />
+              </div>
+              <SearchableSelectField id="learning-target" ariaLabel={t("targetLanguage")}
+                value={profile.targetLanguage} onValueChange={chooseLearningLanguage} disabled={checking || generating}
+                options={learningLanguageOptions(uiLocale)} copy={LEARNING_LANGUAGE_SEARCH_COPY[uiLocale]} />
             </div>
-          </div>}
-          {!!raw.trim() && !captionsReady && !subtitleStatus && !subtitleBusy &&
-            <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-destructive/60 bg-destructive/10 p-[10px] text-xs leading-[1.5] text-foreground wrap-anywhere" role="alert" data-ui="subtitleLanguageMismatch">{subtitleMessage(subtitleUi.languageNotReady, {
-              language: learningLanguageName(profile.targetLanguage, uiLocale),
-            })}</p>}
-          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("parsedCues", { count: cues.length })}</p>
-
-        </AppPanel>
-
-        <AppPanel className="[&_[data-ui=settingField]]:my-[13px] [&_[data-ui=hint]]:my-[4px_9px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:min-h-[38px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:w-full [&_[data-ui=advancedLessonSettings]]:mt-4">
-          <h2>{t("learningHeading")}</h2>
-          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground mt-[2px]! mb-3!" data-ui="hint">{t("lessonSettingsIntro")}</p>
           <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
             <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
               <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="learning-level">{t("level")}</label>
@@ -1775,7 +1670,7 @@ export default function App() {
             <SelectField id="learning-length" ariaLabel={t("lessonLength")}
               value={String(profile.sceneCount)}
               onValueChange={value => setProfile(current => contextualGenerationProfile({
-                ...current, sceneCount: Number(value),
+                ...current, sceneCount: normalizeLessonLength(Number(value)),
               }))}
               options={[
                 { value: "2", label: t("lessonLengthShort") },
@@ -1798,8 +1693,8 @@ export default function App() {
                 value: String(value), label: t("contextualExamplesValue", { count: value }),
               }))} />
           </div>
-          <details className="my-[8px_12px] rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:text-xs [&>summary]:text-muted-foreground" data-ui="advancedLessonSettings">
-            <summary className="cursor-pointer font-semibold">{t("advancedLessonSettings")}</summary>
+          </div>
+          <Disclosure className="my-2 min-w-0" data-ui="advancedLessonSettings" title={<>{t("advancedLessonSettings")}</>}>
             <div className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full" data-ui="settingField">
               <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
                 <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="learning-explanation-language">{t("instructionLanguage")}</label>
@@ -1826,46 +1721,13 @@ export default function App() {
                   })),
                 ]} />
             </div>
-          </details>
-        </AppPanel>
+          </Disclosure>
+        </PageSection>
 
-        <AppPanel>
-          <h2>{t("generationHeading")}</h2>
-          {!agent.provider && <div className="my-3 grid gap-2 border border-border p-3 text-xs" role="status">
-            <p>{agentUi.empty}</p>
-            <Button variant="outline" size="sm" onClick={() => setPage("settings")}>{agentUi.add}</Button>
-          </div>}
-          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("storageLocation")}</label>
-          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("currentFolder", { path: destination.kind === "local"
-            ? destination.directory ?? t("defaultFolder") : t("defaultFolder") })}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-            <Button variant="outline" disabled={storageBusy || generating}
-              onClick={() => void chooseFolder()}>{t("chooseFolder")}</Button>
-            {destination.kind === "local" && destination.directory && <Button variant="ghost" size="sm"
-              onClick={() => setDestination({ kind: "local" })}>{t("useDefaultFolder")}</Button>}
-          </div>
-          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("localAlways")}</p>
-          <div className="my-[12px_4px] flex items-center justify-between gap-3">
-            <div className="min-w-0 flex-1 text-[13px] [&_[data-ui=hint]]:mt-1 [&_[data-ui=hint]]:mb-0">
-              <strong>{t("autoBackup")}</strong>
-              <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupHint")}</p>
-            </div>
-            <Button role="switch" aria-checked={backup.enabled} aria-label={t("autoBackup")}
-              className="group relative inline-flex h-9 w-11 shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0" disabled={storageBusy}
-              onClick={() => backup.enabled ? setBackup(current => ({ ...current, enabled: false }))
-                : void enableBackup()}><span aria-hidden="true" className="relative block h-[22px] w-[38px] shrink-0 rounded-full bg-muted-foreground transition-colors duration-200 group-aria-checked:bg-primary motion-reduce:transition-none"><span className="absolute top-[3px] left-[3px] block size-4 rounded-full bg-white shadow-[0_1px_3px_#0003] transition-transform duration-200 group-aria-checked:translate-x-4 motion-reduce:transition-none" /></span></Button>
-          </div>
-          {backup.enabled && driveAccessVerified && <div className="flex items-center justify-between gap-2 [&_[data-ui=hint]]:my-[3px] [&_[data-ui=hint]]:min-w-0 [&_[data-ui=hint]]:wrap-anywhere">
-            <span className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupConnected", { email:
-              driveAccounts.find(account => account.id === backup.accountId)?.email ?? t("backupUnknownAccount") })}</span>
-            <Button variant="ghost" size="sm" onClick={() => setPage("settings")}>{t("manageDrive")}</Button>
-          </div>}
-          {!backup.enabled && !driveAccounts.length && driveConfigured &&
-            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupConnectToEnable")}</p>}
-          {driveConnectError && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere" role="status">{driveConnectError}</p>}
-          {backupStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{backupStatus}</p>}
-          {duplicateWarning && <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere" role="alertdialog" aria-label={t("duplicateConfirmLabel")}>
-            <strong>{t("duplicateFound", { count: duplicateWarning.matches.length })}</strong>
+        <PageSection framed>
+          <h2>{flow.generate}</h2>
+          {duplicateWarning && <Alert className="my-3 min-w-0 wrap-anywhere" aria-label={t("duplicateConfirmLabel")}>
+            <AlertTitle>{t("duplicateFound", { count: duplicateWarning.matches.length })}</AlertTitle>
             <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("duplicateNewVersion")}</p>
             {duplicateWarning.matches.map(match => <div className="mb-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border p-3 text-[13px] wrap-anywhere [&_strong]:mr-2 [&_strong]:text-primary [&_p]:mt-[6px] [&_p]:text-xs [&_p]:text-muted-foreground" key={match.documentId}>
               <strong>{match.title}</strong>
@@ -1882,173 +1744,76 @@ export default function App() {
               <Button variant="destructive" size="sm" onClick={confirmRegeneration}>{t("confirmNewVersion")}</Button>
               <Button variant="outline" size="sm" onClick={cancelDuplicate}>{t("cancelNoGeneration")}</Button>
             </div>
-          </div>}
+          </Alert>}
           <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere mt-[5px] mb-[14px]">{t("lessonContentSummary", {
             scenes: profile.sceneCount, examples: profile.contextualExampleCount ?? 2,
           })}</p>
-          {isImportedAgentId(agent.provider) && <div className="my-3 min-w-0 rounded-[var(--radius)] border border-border bg-muted p-3 [&_dl]:mt-[10px] [&_dl]:grid [&_dl]:gap-2 [&_dl>div]:grid [&_dl>div]:grid-cols-[minmax(50px,auto)_minmax(0,1fr)] [&_dl>div]:items-start [&_dl>div]:gap-[10px] [&_dt]:text-xs [&_dt]:text-muted-foreground [&_dd]:m-0 [&_dd]:min-w-0 [&_dd]:text-right [&_dd]:text-xs [&_dd]:font-semibold [&_dd]:wrap-anywhere">
-            <div className="flex flex-wrap items-center justify-between gap-2 [&>strong]:text-xs">
-              <strong>{t("generationSummary")}</strong>
-              <Button variant="outline" size="sm" onClick={() => {
-                setPage("settings");
-                window.requestAnimationFrame(() => {
-                  const heading = window.document.getElementById("agent-settings-heading");
-                  heading?.scrollIntoView({ block: "start" });
-                  heading?.focus({ preventScroll: true });
-                });
-              }}>{t("editAgentModel")}</Button>
-            </div>
-            <dl>
-              <div><dt>{t("generationAgentLabel")}</dt><dd>{agent.provider ? agentDisplayName(agent.provider, selectedAgentInfo?.label) : agentUi.empty}</dd></div>
-              {agent.accountConfigDir && <div><dt>{t("agentAccount")}</dt>
-                <dd title={agent.accountConfigDir}>{selectedSavedProfile?.label ?? t("accountLegacy", { path: agent.accountConfigDir })}</dd>
-              </div>}
-              <div><dt>{t("generationModelLabel")}</dt>
-                <dd title={agent.modelId || undefined}>{modelDisplayName(agent.modelId, modelOptions, t("cliDefault"))}</dd>
-              </div>
-            </dl>
-          </div>}
-          <Button className="h-auto min-h-10 w-full px-4 py-[9px] text-center text-sm font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={!hostReady || generating || checking || subtitleBusy || !isImportedAgentId(agent.provider) || installed?.[agent.provider] !== true || !captionsReady || !cues.length || !title.trim()}>
+          <GenerationService locale={uiLocale} selected={generationAgent} defaultAgent={agent}
+            providers={agentCatalog} available={hostReady} modelPreferences={agentModelPreferences}
+            disabled={checking} onChange={setTemporaryAgent} onReady={setGenerationServiceReady}
+            onConfigure={() => { setReturnPage("create"); setSettingsSection("ai"); setPage("settings"); }} />
+          <Button className="h-auto min-h-9 w-full px-3 py-2 text-center text-xs font-semibold leading-[1.4] whitespace-normal wrap-anywhere" onClick={startGeneration} disabled={!hostReady || !generationServiceReady || checking || subtitleBusy || !isPiProviderId(generationAgent.provider) || installed?.[generationAgent.provider] !== true || !captionsReady || !cues.length || !title.trim()}>
             {(generating || checking) && <span className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" aria-hidden="true" />}
-            {generating ? t("generating") : checking ? t("checkingExistingShort") : t("checkThenGenerate")}
+            {checking ? t("checkingExistingShort") : t("create")}
           </Button>
-          {generating && activeJob && <div className="my-[10px_5px] h-[5px] overflow-hidden rounded-full bg-muted [&>span]:block [&>span]:h-full [&>span]:rounded-[inherit] [&>span]:bg-primary [&>span]:transition-[width] [&>span]:duration-200 motion-reduce:[&>span]:transition-none" role="progressbar"
-            aria-label={t("generationProgressLabel")} aria-valuemin={0}
-            aria-valuenow={activeJob.completed} aria-valuemax={activeJob.total}>
-            <span style={{ width: (100 * activeJob.completed / activeJob.total) + "%" }} />
-          </div>}
-          {generating && <Button variant="outline" onClick={cancelGeneration}>{t("cancelGeneration")}</Button>}
-          {progress && <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere" role="status">{progress}</p>}
-          {publishedLocation && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("publishedTo", { location: publishedLocation })}</p>}
-        </AppPanel>
-        <AppPanel>
-          <h2>{t("jobHistory")}</h2>
-          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("jobHistoryHint")}</p>
-          <div className="flex items-center justify-between gap-2 [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:flex-1">
-            <SelectField ariaLabel={t("jobFilterLabel")} value={jobFilter}
-              onValueChange={value => {
-                if (value === "all" || value === "active" || value === "completed") setJobFilter(value);
-                setShowAllJobs(false);
-              }} options={[
-                { value: "all", label: t("jobFilterAll") },
-                { value: "active", label: t("jobFilterActive") },
-                { value: "completed", label: t("jobFilterCompleted") },
-              ]} />
-            <Button variant="outline" size="sm" disabled={loadingJobs} aria-busy={loadingJobs}
-              onClick={loadJobs}>{loadingJobs && <span aria-hidden="true" className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />}{t("refreshJobs")}</Button>
-          </div>
-          <div className="my-[10px] grid gap-[7px]">
-            {visibleJobs.map(job => <div className="min-w-0 rounded-[var(--radius)] border border-border px-[11px] py-[9px] [&_p]:my-[3px] [&_p]:text-[11px] [&_[data-ui=actions]]:mt-[5px] [&_[data-ui=actions]]:gap-[5px] [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-7" key={job.id}>
-              <div className="flex min-w-0 items-center justify-between gap-2 [&_strong]:min-w-0 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-xs">
-                <strong className="min-w-0 flex-1 truncate" title={job.sourceTitle}>{job.sourceTitle}</strong>
-                <Badge className="shrink-0 whitespace-nowrap text-[11px] leading-4">{t(jobStatusKeys[job.status])}</Badge>
-              </div>
-              <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)} · {job.completed}/{job.total}
-                {job.backup && " · " + t(job.backup.status === "backed-up"
-                  ? "backupSaved" : ["pending", "uploading"].includes(job.backup.status)
-                    ? "backupProcessing" : "backupFailedMessage")}</p>
-              {job.error && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere">{job.error}</p>}
-              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-                {["queued", "waiting", "failed"].includes(job.status) &&
-                  (isImportedAgentId(job.provider)
-                    ? <Button variant="outline" size="sm" disabled={!hostReady || generating}
-                        onClick={() => runGeneration({ type: "resume", jobId: job.id })}>{t("resume")}</Button>
-                    : <p role="status" className="text-xs text-muted-foreground">{t("legacyJobCannotResume")}</p>)}
-                {job.documentId && <>
-                  <Button variant="outline" size="sm" disabled={generating}
-                    onClick={() => openSavedDocument(job.documentId!)}>{t("openLesson")}</Button>
-                  {job.publication?.status !== "published" &&
-                    <Button variant="outline" size="sm" disabled={storageBusy}
-                      onClick={() => void retryPublication(job.id)}>{t("retryPublish")}</Button>}
-                  {job.backup && ["failed", "conflict"].includes(job.backup.status) &&
-                    <Button variant="outline" size="sm" disabled={storageBusy}
-                      onClick={() => void retryBackup(job.id)}>{t("retryBackup")}</Button>}
-                </>}
-              </div>
-            </div>)}
-          </div>
-          {filteredJobs.length > visibleJobs.length && <Button variant="ghost" size="sm"
-            onClick={() => setShowAllJobs(true)}>{t("showMoreJobs", { count: filteredJobs.length - visibleJobs.length })}</Button>}
-          {showAllJobs && filteredJobs.length > 3 && <Button variant="ghost" size="sm"
-            onClick={() => setShowAllJobs(false)}>{t("showLessJobs")}</Button>}
-        </AppPanel>
+        </PageSection>
+
+        </>}
       </main>}
 
-      {page === "lessons" && <main>
-        <AppPanel>
-          <h2>{t("lessonLibrary")}</h2>
-          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("lessonLibraryHint")}</p>
-          <div className="flex items-center justify-between gap-2 [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:flex-1">
-            <SelectField ariaLabel={t("lessonFilterLabel")} value={lessonFilter}
-              onValueChange={value => {
-                if (value === "all" || value === "local" || value === "drive") setLessonFilter(value);
-              }} options={[
-                { value: "all", label: t("lessonFilterAll") },
-                { value: "local", label: t("lessonFilterLocal") },
-                { value: "drive", label: t("lessonFilterDrive") },
-              ]} />
-            <Button variant="outline" size="sm" disabled={lessonsBusy}
-              onClick={() => void loadLessons()}>{lessonsBusy ? t("loading") : t("refreshJobs")}</Button>
-          </div>
-          {catalogError && <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere" role="alert">
-            <p>{catalogError}</p>
-            <Button variant="outline" size="sm" disabled={lessonsBusy}
-              onClick={() => void loadLessons()}>{t("refreshJobs")}</Button>
-          </div>}
-          {lessonFilter === "drive" && !driveAccounts.length && <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere">
-            <p>{t("connectDriveToBrowse")}</p>
-            <Button variant="outline" size="sm" disabled={storageBusy || !driveConfigured}
-              onClick={() => void connectDrive()}>{t("connectGoogle")}</Button>
-          </div>}
-          {!lessonsBusy && !catalogError && visibleLessons.length === 0 &&
-            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("lessonLibraryEmpty")}</p>}
-          <div className="mt-3 grid gap-2">
-            {visibleLessons.map(lesson => <div className="min-w-0 rounded-[var(--radius)] border border-border px-[11px] py-[9px] [&_p]:my-[3px] [&_p]:text-[11px] [&_[data-ui=actions]]:mt-[5px] [&_[data-ui=actions]]:gap-[5px] [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-7" key={lesson.documentId}>
-              <div className="flex min-w-0 items-center justify-between gap-2 [&_strong]:min-w-0 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-xs"><strong title={lesson.title}>{lesson.title}</strong></div>
-              <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{new Date(lesson.createdAt).toLocaleString(uiLocale)}
-                {lesson.local && " · " + lesson.local.targetLanguage.toUpperCase() + " · " + lesson.local.level}</p>
-              <div className="flex flex-wrap items-center gap-[6px] [&_[data-ui=hint]]:m-0">
-                {lesson.local && <Badge>{t("localCopy")}</Badge>}
-                {lesson.drive && <Badge>{t("cloudCopy")}</Badge>}
-                {lesson.local?.backup && !lesson.drive &&
-                  <span className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t(lesson.local.backup.status === "backed-up"
-                    ? "backupSaved" : ["pending", "uploading"].includes(lesson.local.backup.status)
-                      ? "backupProcessing" : "backupFailedMessage")}</span>}
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-                {lesson.local && <Button variant="outline" size="sm" disabled={generating}
-                  onClick={() => openSavedDocument(lesson.documentId)}>{t("openLesson")}</Button>}
-                {lesson.local && <>
-                  <Button variant="ghost" size="sm" disabled={generating}
-                    onClick={() => downloadSavedDocument(lesson.documentId, "json")}>{t("saveJson")}</Button>
-                  <Button variant="ghost" size="sm" disabled={generating}
-                    onClick={() => downloadSavedDocument(lesson.documentId, "md")}>{t("saveMarkdown")}</Button>
-                </>}
-                {lesson.drive && !lesson.local && <Button variant="outline" size="sm"
-                  disabled={restoreBusy !== null || generating}
-                  onClick={() => void restoreLesson(lesson.drive!)}>{restoreBusy === lesson.documentId
-                    ? t("restoringLesson") : t("restoreLesson")}</Button>}
-                {lesson.drive && <Button variant="ghost" size="sm"
-                  onClick={() => void chrome.tabs.create({ url: lesson.drive!.url })}>{t("openInDrive")}</Button>}
-              </div>
-            </div>)}
-          </div>
-        </AppPanel>
+      <main id={page === "lesson" ? undefined : "page-panel-lessons"} aria-labelledby="page-nav-lessons" hidden={page !== "lessons"}>
+        {jobs.filter(job => ["running", "queued", "waiting", "failed"].includes(job.status)).sort((a, b) => Number(["running", "queued"].includes(b.status)) - Number(["running", "queued"].includes(a.status))).slice(0, 1).map(job =>
+          <GenerationStatus key={job.id} compact locale={uiLocale} job={job} title={job.sourceTitle} progress=""
+            notificationsEnabled={analysisNotificationsEnabled} onLibrary={() => setPage("lessons")}
+            onActivity={() => { setReturnPage("lessons"); setPage("activity"); loadJobs(); }}
+            onResume={hostReady && !generating && agentCatalog.some(provider => provider.id === job.provider && provider.installed)
+              ? () => runGeneration({ type: "resume", jobId: job.id }) : undefined} />)}
+        <VideoLibrary localLessons={localLessons} cloudLessons={cloudLessons}
+          driveAccounts={driveAccounts} driveConfigured={driveConfigured}
+          lessonsBusy={lessonsBusy} catalogError={catalogError} restoreBusy={restoreBusy}
+          generating={generating} storageBusy={storageBusy} uiLocale={uiLocale} t={t}
+          onRefresh={loadLessons} onConnectDrive={connectDrive}
+          onOpen={openSavedDocument} onRestore={restoreLesson} />
+      </main>
+
+      {page === "activity" && <main id="page-panel-activity" aria-labelledby="activity-title">
+        <Button variant="ghost" size="sm" className="mb-2 justify-start rounded-sm px-0 text-muted-foreground hover:bg-transparent hover:text-foreground" onClick={() => setPage(returnPage)}><ArrowLeft className="size-4" aria-hidden="true" />{layout.back}</Button>
+        <h1 id="activity-title" className="text-sm font-semibold">{layout.activity}</h1>
+        <TaskHistory jobs={jobs} loadingJobs={loadingJobs} hostReady={hostReady}
+          generating={generating} storageBusy={storageBusy} agentCatalog={agentCatalog} locale={uiLocale} onConfigure={() => { setSettingsSection("ai"); setPage("settings"); }} t={t}
+          onRefresh={loadJobs} onResume={jobId => runGeneration({ type: "resume", jobId })}
+          onOpen={openSavedDocument} onRetryPublication={retryPublication}
+          onRetryBackup={retryBackup} onListEnded={listEndedJobs} onDeleteRecords={deleteJobRecords} />
       </main>}
 
-      {page === "settings" && <main>
-        <AppPanel>
-          <h2>{t("uiLanguage")} · {t("appearance")}</h2>
+      {page === "settings" && <main id="page-panel-settings" aria-label={t("settings")}>
+        {settingsSection ? ((settingsSection !== "ai" || !providerDetail) && <Button variant="ghost" size="sm" className="mb-1 justify-start rounded-sm px-0 text-muted-foreground hover:bg-transparent hover:text-foreground" onClick={() => setSettingsSection(null)}>
+          <ArrowLeft className="size-4" aria-hidden="true" />{layout.back}</Button>) : <PageSection>
+          <Button variant="ghost" size="sm" className="mb-2 justify-start rounded-sm px-0 text-muted-foreground hover:bg-transparent hover:text-foreground" onClick={() => setPage(returnPage)}><ArrowLeft className="size-4" aria-hidden="true" />{layout.back}</Button>
+          <h1 className="text-sm font-semibold">{t("settings")}</h1>
+          <nav aria-label={t("settings")} className="mt-2 grid divide-y divide-border">
+            {(["general", "ai", "storage", "advanced"] as const).map(section => <Button key={section}
+              variant="ghost" className="h-auto min-h-12 justify-between rounded-none px-1 py-2.5 text-left"
+              onClick={() => setSettingsSection(section)}>
+              <span className="min-w-0"><span className="block text-xs font-semibold">{layout[section]}</span>
+                <span className="mt-0.5 block whitespace-normal text-[11px] text-muted-foreground">{section === "ai" && agent.provider
+                  ? agentDisplayName(agent.provider, agentCatalog.find(provider => provider.id === agent.provider)?.label) + (agent.modelId ? " · " + agent.modelId : "")
+                  : section === "storage" ? (backup.enabled ? layout.storageHint : t("localCopy")) : layout[(section + "Hint") as "generalHint"]}</span></span>
+              <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
+            </Button>)}
+          </nav>
+        </PageSection>}
+
+        {settingsSection === "general" && <PageSection>
+          <h2>{layout.general}</h2>
           <div className="my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
             <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
               <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="ui-language-select">{t("uiLanguage")}</label>
-              <SettingInfo label={t("uiLanguage")} infoLabel={settingsCopy.infoLabel}
-                explanation={t("uiLanguageHint")} />
             </div>
             <Select value={localePreference} onValueChange={next => {
               if (isLocalePreference(next)) setLocalePreference(next);
             }}>
-              <SelectTrigger id="ui-language-select" aria-label={t("uiLanguage")}>
+              <SelectTrigger id="ui-language-select" aria-label={t("uiLanguage")} aria-describedby="ui-language-hint">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -2060,12 +1825,11 @@ export default function App() {
                 <SelectItem value="ko">{nativeLanguageName("ko")}</SelectItem>
               </SelectContent>
             </Select>
+            <p id="ui-language-hint" className="mt-2 text-sm text-muted-foreground">{t("uiLanguageHint")}</p>
           </div>
           <div className="my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
             <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
               <label className="m-0 min-w-0 text-xs font-semibold leading-5" htmlFor="appearance-select">{t("appearance")}</label>
-              <SettingInfo label={t("appearance")} infoLabel={settingsCopy.infoLabel}
-                explanation={t("appearanceHint")} />
             </div>
             <Select value={themePreference} onValueChange={next => {
               if (isThemePreference(next)) setThemePreference(next);
@@ -2080,124 +1844,56 @@ export default function App() {
               </SelectContent>
             </Select>
           </div>
-        </AppPanel>
-        <AppPanel>
-          <h2 id="agent-settings-heading" tabIndex={-1}>{t("agentHeading")}</h2>
-          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("agentHint")}</p>
-          <HostConnectionSettings locale={uiLocale} connected={installed !== null} checked={hostChecked}
-            importedOnly={hostImportedOnly}
-            version={hostVersion} busy={hostBusy} error={hostStatus} onCheck={checkHost} />
-          <CustomAgentSettings locale={uiLocale} available={hostReady}
-            selectedProvider={agent.provider} selectedModelId={agent.modelId}
-            selectedProfileDir={agent.accountConfigDir} nativeOnce={nativeOnce}
-            onSelect={selectAgent}
-            onSaved={(provider, created, config) => {
-              if (created && !agent.provider) selectAgent(provider);
-              if (!created && agent.provider === provider &&
-                  ((!config.profileEnvVar && agent.accountConfigDir) ||
-                   (!config.modelArgument && agent.modelId))) {
-                updateAgent({ ...agent,
-                  accountConfigDir: config.profileEnvVar ? agent.accountConfigDir : undefined,
-                  modelId: config.modelArgument ? agent.modelId : "",
-                });
-              }
-              checkHost();
-            }}
-            onRemoved={provider => {
-              if (agent.provider === provider) setAgent(DEFAULT_AGENT);
-              setSavedAgentProfiles(current => current.filter(item => item.provider !== provider));
-              setAgentProfiles(current => {
-                const next = { ...current }; delete next[provider]; return next;
-              });
-              setAgentModelPreferences(current => {
-                const next = { ...current };
-                for (const key of Object.keys(next)) {
-                  if (key.startsWith("[" + JSON.stringify(provider) + ",")) delete next[key];
-                }
-                return next;
-              });
-              checkHost();
-            }} />
-          {isImportedAgentId(agent.provider) && selectedAgentInfo?.supportsAccountProfiles &&
-            <section className="mt-3 border-t border-border pt-[10px]">
-            <div className="relative flex min-w-0 items-center gap-2 text-xs">
-              <strong>{t("useOtherCliAccount")}</strong>
-              <SettingInfo label={t("useOtherCliAccount")} infoLabel={settingsCopy.infoLabel}
-                explanation={t("agentProfileInfo")} />
+          <NotificationSettings locale={uiLocale} completed={analysisNotificationsEnabled}
+            attention={attentionNotificationsEnabled} onCompleted={setAnalysisNotificationsEnabled}
+            onAttention={setAttentionNotificationsEnabled} />
+        </PageSection>}
+        {settingsSection === "ai" && <PageSection>
+          <div hidden={providerDetail}>
+          <h2 id="agent-settings-heading" tabIndex={-1}>{piCopy[uiLocale].title}</h2>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{piCopy[uiLocale].hint}</p>
+          <AiModelSelection locale={uiLocale} id="settings" provider={agent.provider} modelId={agent.modelId}
+            providers={agentCatalog} models={modelOptions} available={hostReady && !generating}
+            busy={modelBusy} notice={modelNotice} onProvider={selectAgent}
+            onModel={modelId => updateAgent({ ...agent, modelId, thinkingLevel: undefined })}
+            thinkingLevel={agent.thinkingLevel} onThinking={thinkingLevel => updateAgent({ ...agent, thinkingLevel })}
+            onRefresh={() => { setModelBusy(true); setModelRefreshVersion(current => current + 1); }}
+            />
+          </div>
+          <PiSettings onDetailChange={setProviderDetail} locale={uiLocale} available={hostReady}
+            selectedProvider={agent.provider} onSelect={selectAgent} onChanged={checkHost} />
+        </PageSection>}
+        {settingsSection === "storage" && <PageSection>
+          <h2>{layout.storage}</h2>
+          <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("storageLocation")}</label>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("currentFolder", { path: destination.kind === "local"
+            ? destination.directory ?? t("defaultFolder") : t("defaultFolder") })}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
+            <Button variant="outline" disabled={storageBusy || generating}
+              onClick={() => void chooseFolder()}>{t("chooseFolder")}</Button>
+            {destination.kind === "local" && destination.directory && <Button variant="ghost" size="sm"
+              onClick={() => setDestination({ kind: "local" })}>{t("useDefaultFolder")}</Button>}
+          </div>
+          <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("localAlways")}</p>
+          <h3 className="mt-5 border-t border-border pt-4 text-sm font-semibold">Google Drive</h3>
+          <div className="my-[12px_4px] flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1 text-[13px] [&_[data-ui=hint]]:mt-1 [&_[data-ui=hint]]:mb-0">
+              <strong>{t("autoBackup")}</strong>
+              <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupHint")}</p>
             </div>
-            {(savedAgentProfiles.some(item => item.provider === agent.provider) || !!agent.accountConfigDir) &&
-              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("agentAccount")}
-                <SelectField ariaLabel={t("agentAccount")}
-                  value={selectedSavedProfile?.id ?? (agent.accountConfigDir ? "__legacy__" : "")}
-                  onValueChange={chooseAgentProfile}
-                  options={[
-                    { value: "", label: t("accountDefault") },
-                    ...(agent.accountConfigDir && !selectedSavedProfile
-                      ? [{ value: "__legacy__", label: t("accountLegacy", { path: agent.accountConfigDir }) }] : []),
-                    ...savedAgentProfiles.filter(item => item.provider === agent.provider)
-                      .map(item => ({ value: item.id, label: item.label })),
-                  ]} />
-              </label>}
-            <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
-              <summary className="cursor-pointer font-semibold">{t("manageAgentProfiles")}</summary>
-              <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("accountFolderHint")}</p>
-              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("profileName")}
-                <Input value={draftProfileName} onChange={event => setDraftProfileName(event.target.value)}
-                  placeholder={t("profileNamePlaceholder")} />
-              </label>
-              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("accountFolder")}
-                <Input value={draftProfileDir} onChange={event => setDraftProfileDir(event.target.value)}
-                  placeholder={t("accountFolderPlaceholder")} />
-              </label>
-              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-                <Button variant="outline" size="sm"
-                  disabled={profileBusy || installed === null || !draftProfileName.trim() || !draftProfileDir.trim()}
-                  onClick={() => void saveProfile()}>{t("saveProfile")}</Button>
-                {selectedSavedProfile && <Button variant="outline" size="sm"
-                  disabled={profileBusy || installed === null}
-                  onClick={() => void removeProfile()}>{t("removeProfile")}</Button>}
-              </div>
-              {profileStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{profileStatus}</p>}
-            </details>
-          </section>}
-          {isImportedAgentId(agent.provider) && <><label className="my-3 grid gap-[6px] text-xs font-semibold">{agentUi.modelLabel}
-            <SelectField ariaLabel={agentUi.modelLabel} disabled={modelBusy} value={modelSelection}
-              onValueChange={value => {
-                if (value === "__custom__") {
-                  setCustomModelMode(true);
-                  updateAgent({ ...agent, modelId: "" });
-                } else {
-                  setCustomModelMode(false);
-                  updateAgent({ ...agent, modelId: value });
-                }
-              }}
-              options={[
-                { value: "", label: t("cliDefault") },
-                ...modelOptions.map(model => ({
-                  value: model.id,
-                  label: model.label === model.id ? model.id : model.label + " · " + model.id,
-                })),
-                { value: "__custom__", label: t("customModel") },
-              ]} />
-          </label>
-          {modelSelection === "__custom__" && <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("modelId")}
-            <Input value={agent.modelId} onChange={event => updateAgent({ ...agent, modelId: event.target.value })}
-              placeholder={t("modelPlaceholder")} />
-          </label>}
-          {modelNotice && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{modelNotice}</p>}</>}
-          {isImportedAgentId(agent.provider) && <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
-            <summary className="cursor-pointer font-semibold">{t("agentDiagnostics")}</summary>
-            <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-              <Button variant="outline" size="sm" disabled={hostBusy} aria-busy={hostBusy} onClick={checkHost}>{hostBusy && <span aria-hidden="true" className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />}{t("checkHost")}</Button>
-              <Button variant="outline" size="sm" disabled={modelBusy || installed === null}
-                onClick={() => setInstalled(current => current ? { ...current } : current)}>
-                {modelBusy && <span aria-hidden="true" className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" />}{t("refreshModels")}
-              </Button>
-            </div>
-          </details>}
-        </AppPanel>
-        <AppPanel>
-          <h2>{t("driveAccountHeading")}</h2>
+            <Switch checked={backup.enabled} aria-label={t("autoBackup")} disabled={storageBusy}
+              onCheckedChange={enabled => enabled ? void enableBackup()
+                : setBackup(current => ({ ...current, enabled: false }))} />
+          </div>
+          {backup.enabled && driveAccessVerified && <div className="flex items-center justify-between gap-2 [&_[data-ui=hint]]:my-[3px] [&_[data-ui=hint]]:min-w-0 [&_[data-ui=hint]]:wrap-anywhere">
+            <span className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupConnected", { email:
+              driveAccounts.find(account => account.id === backup.accountId)?.email ?? t("backupUnknownAccount") })}</span>
+            <Button variant="ghost" size="sm" onClick={() => { setSettingsSection("storage"); setPage("settings"); }}>{t("manageDrive")}</Button>
+          </div>}
+          {!backup.enabled && !driveAccounts.length && driveConfigured &&
+            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupConnectToEnable")}</p>}
+          {driveConnectError && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere" role="status">{driveConnectError}</p>}
+          {backupStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{backupStatus}</p>}
           <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("driveOauthHelp")}</p>
           {!driveConfigured && <p className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere">{t("oauthFirst")}</p>}
           {driveAccounts.length === 1 && <div className="my-3 flex min-w-0 items-center justify-between gap-2 rounded-[var(--radius)] border border-border px-[11px] py-[10px] [&>div]:min-w-0 [&_strong]:block [&_strong]:text-xs [&_strong]:wrap-anywhere [&_[data-ui=hint]]:mt-[2px] [&_[data-ui=hint]]:mb-0 [&_[data-ui=hint]]:block">
@@ -2221,8 +1917,7 @@ export default function App() {
               disabled={storageBusy || driveAccess?.status === "checking"}
               onClick={() => void enableBackup()}>{t("retryDriveAccess")}</Button>}
           </div>
-          {driveAccounts.length > 0 && <details className="mt-[10px] rounded-[var(--radius)] border border-border px-[11px] py-[10px] text-xs [&_p]:mb-[2px] [&_p]:text-muted-foreground [&>summary]:font-semibold" data-ui="agentProfileAdvanced">
-            <summary className="cursor-pointer font-semibold">{t("manageDrive")} · {driveAccounts.length}</summary>
+          {driveAccounts.length > 0 && <Disclosure className="my-2 min-w-0" data-ui="agentProfileAdvanced" title={<>{t("manageDrive")} · {driveAccounts.length}</>}>
             <div className="mt-[10px] grid gap-[5px]">
               {driveAccounts.map(account => <div className="flex min-w-0 items-center justify-between gap-2 py-[5px] not-first:border-t not-first:border-border [&_span]:min-w-0 [&_span]:text-xs [&_span]:wrap-anywhere" key={account.id}>
                 <span title={account.email}>{account.email}</span>
@@ -2230,7 +1925,7 @@ export default function App() {
                   onClick={() => void disconnectDrive(account.id)}>{t("disconnectGoogle")}</Button>
               </div>)}
             </div>
-          </details>}
+          </Disclosure>}
           {driveAccounts.length > 0 && <section className="mt-[14px] grid justify-items-start gap-1 border-t border-border pt-3 [&_strong]:text-xs [&_[data-ui=hint]]:mt-0 [&_[data-ui=hint]]:mb-[5px]">
             <strong>{t("backupExisting")}</strong>
             <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("backupExistingHint")}</p>
@@ -2239,22 +1934,18 @@ export default function App() {
           </section>}
           {driveConnectError && <p className="my-[5px] text-[11px] text-destructive wrap-anywhere" role="status">{driveConnectError}</p>}
           {backupStatus && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint" role="status">{backupStatus}</p>}
-        </AppPanel>
+        </PageSection>}
+        {settingsSection === "advanced" && <PageSection><h2>{layout.advanced}</h2>
+          <p className="my-3 text-xs text-muted-foreground">{layout.hostHelp}</p>
+          <HostConnectionSettings locale={uiLocale} connected={installed !== null} checked={hostChecked}
+            sdkMode={hostSdkMode} protocolVersion={hostProtocolVersion}
+            version={hostVersion} busy={hostBusy} error={hostStatus} onCheck={checkHost} />
+        </PageSection>}
       </main>}
 
-      {page === "reader" && <main>
-        {document && document.schemaVersion !== 3 && <Card className="mb-3 grid gap-2 p-3" role="note">
-          <p className="m-0 text-xs leading-[1.55] text-muted-foreground">
-            {t("legacyReaderNotice", { version: document.schemaVersion })}
-          </p>
-          <Button variant="outline" size="sm" className="w-fit" onClick={() => setPage("create")}>
-            {t("createV3FromLegacy")}
-          </Button>
-        </Card>}
-        {!document ? <AppPanel className="px-[18px] py-8 text-center">
-          <h2>{t("emptyHeading")}</h2><p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("emptyHint")}</p>
-          <Button variant="outline" onClick={() => setPage("create")}>{t("create")}</Button>
-        </AppPanel> : document.schemaVersion === 3 ? <ContextualSceneReader key={document.id}
+      {page === "lesson" && <main className="flex min-h-0 flex-1 flex-col" id="page-panel-lessons" aria-labelledby="page-nav-lessons">
+        <Button variant="ghost" size="sm" className="mb-2" onClick={() => setPage("lessons")}>{t("lessonLibrary")}</Button>
+        {document ? <ContextualSceneReader key={document.id}
           document={document} adapter={readerAdapter} locale={uiLocale}
           repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
           sceneRepeat={sceneRepeat} setSceneRepeat={setSceneRepeat} sceneDelay={sceneDelay} setSceneDelay={setSceneDelay}
@@ -2262,109 +1953,9 @@ export default function App() {
           onError={setError} onNotice={setNotice}
           onSaveRange={(cueId, range) => saveDocumentPlaybackRange(document.id, cueId, range)}
           onSaveSceneRange={(sceneId, range) => saveDocumentScenePlaybackRange(document.id, sceneId, range)}
-        /> : document.schemaVersion === 2 ? <SceneReader key={document.id}
-          document={document} adapter={readerAdapter} locale={uiLocale}
-          repeat={repeat} setRepeat={setRepeat} delay={delay} setDelay={setDelay}
-          playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
-          onError={setError} onNotice={setNotice} onDownload={format => downloadDocument(document, format)}
-        /> : <>
-          <AppPanel>
-            <Badge data-ui="chip">{document.profile.targetLanguage.toUpperCase()} · {document.profile.level}</Badge>
-            <h1>{document.source.title}</h1>
-            <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("lessonOverview", { count: document.sections.length, language: document.profile.instructionLanguage })}</p>
-            {publishedLocation && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("publishedTo", { location: publishedLocation })}</p>}
-            <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-              <Button variant="outline" onClick={() => downloadDocument(document, "json")}>{t("saveJson")}</Button>
-              <Button variant="outline" onClick={() => downloadDocument(document, "md")}>{t("saveMarkdown")}</Button>
-            </div>
-          </AppPanel>
-          <AppPanel>
-            <h2>{t("videoCompanion")}</h2>
-            {document.source.url && readerAdapter.id !== "import" &&
-              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-                <Button variant="outline" disabled={openingVideo}
-                  onClick={() => void openVideo()}>
-                  {openingVideo ? t("openingVideo") : t("openOrFocusVideo")}
-                </Button>
-              </div>}
-            <div className="grid grid-cols-2 gap-[10px]">
-              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("repeatCount")}
-                <SelectField ariaLabel={t("repeatCount")} value={repeat}
-                  onValueChange={value => setRepeat(value as RepeatOption)}
-                  options={[
-                    { value: "2", label: t("repeatTwice") },
-                    { value: "3", label: t("repeatThrice") },
-                    { value: "5", label: t("repeatFive") },
-                    { value: "infinite", label: t("repeatForever") },
-                  ]} />
-              </label>
-              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("repeatDelay")}
-                <SelectField ariaLabel={t("repeatDelay")} value={delay}
-                  onValueChange={value => setDelay(Number(value))}
-                  options={[0, 1, 2, 3].map(seconds => ({
-                    value: seconds, label: t("seconds", { count: seconds }),
-                  }))} />
-              </label>
-            </div>
-            {readerAdapter.setPlaybackRate && <div className="grid grid-cols-2 gap-[10px]">
-              <label className="my-3 grid gap-[6px] text-xs font-semibold">{t("playbackRateLabel")}
-                <SelectField ariaLabel={t("playbackRateLabel")} value={playbackRate} disabled={rateApplying}
-                  onValueChange={value => setPlaybackRate(Number(value))}
-                  options={[0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map(rate => ({
-                    value: rate, label: rate + "×",
-                  }))} />
-              </label>
-              <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions" style={{ alignSelf: "center" }}>
-                <Button variant="outline" disabled={rateApplying}
-                  onClick={() => void applyPlaybackRate()}>
-                  {rateApplying ? t("applyingRate") : t("applyPlaybackRate")}
-                </Button>
-              </div>
-            </div>}
-            {readerAdapter.setPlaybackRate && <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("ratePreferenceHint")}</p>}
-            {readerAdapter.diagnose
-              ? <div className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere">
-                  {t("experimentalVideoHint", { name: readerAdapter.label })}
-                  <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions"><Button variant="outline" onClick={() => void diagnoseVideo()}>{t("checkPlayer", { name: readerAdapter.label })}</Button></div>
-                </div>
-              : readerAdapter.loop
-                ? <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("youtubeVideoHint", { name: readerAdapter.label })}</p>
-                : <p className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground" data-ui="hint">{t("noVideoControl")}</p>}
-            {loopActive && <Button variant="outline" onClick={() => void stopLoop()}>{t("stopLoop")}</Button>}
-          </AppPanel>
-          {document.sections.map(section => <AppPanel className="pt-5 [&>p]:text-[13px] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:text-[13px] [&_li]:mb-[6px]" key={section.id}>
-            <Badge data-ui="chip">{formatTime(section.startMs)}–{formatTime(section.endMs)}</Badge>
-            <h2>{section.title}</h2>
-            <p>{section.context}</p>
-            <h3>{t("originalSubtitles")}</h3>
-            {section.cueIds.map(id => {
-              const cue = document.cues.find(item => item.id === id);
-              if (!cue) return null;
-              const link = cue.startMs !== null && document.source.url
-                ? readerAdapter.timestampLink?.(document.source.url, cuePlaybackStart(cue.startMs)) ?? null : null;
-              const canSeek = cue.startMs !== null && !!readerAdapter.seek;
-              const canLoop = cue.startMs !== null && cue.endMs !== null && !!readerAdapter.loop;
-              return <div className="my-2 max-w-full min-w-0 rounded-[var(--radius)] border-l-[3px] border-primary bg-muted p-3 wrap-anywhere [&_p]:my-1 [&_p]:text-sm" key={id}>
-                <span className="text-[11px] text-muted-foreground tabular-nums">{formatTime(cue.startMs)}</span>
-                <p>{cue.originalText}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full" data-ui="actions">
-                  {link && <Button variant="link" className="h-auto px-0 py-[2px] text-xs text-primary underline underline-offset-[3px] dark:text-primary" onClick={() => void openTimestampCue(cue)}>{t("openTimestamp")}</Button>}
-                  {canSeek && <Button variant="link" className="h-auto px-0 py-[2px] text-xs text-primary underline underline-offset-[3px] dark:text-primary" onClick={() => void seekCue(cue)}>{t("seekTo")}</Button>}
-                  {canLoop && <Button variant="link" className="h-auto px-0 py-[2px] text-xs text-primary underline underline-offset-[3px] dark:text-primary" onClick={() => void loopCue(cue)}>{t("loopSentence")}</Button>}
-                  {!link && cue.startMs !== null && <Button variant="link" className="h-auto px-0 py-[2px] text-xs text-primary underline underline-offset-[3px] dark:text-primary" onClick={() => void navigator.clipboard.writeText(formatTime(cue.startMs))}>{t("copyTime")}</Button>}
-                </div>
-              </div>;
-            })}
-            {section.vocabulary.length > 0 && <><h3>{t("vocabulary")}</h3>
-              {section.vocabulary.map((word, index) => <div className="mb-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border p-3 text-[13px] wrap-anywhere [&_strong]:mr-2 [&_strong]:text-primary [&_p]:mt-[6px] [&_p]:text-xs [&_p]:text-muted-foreground" key={word.expression + index}>
-                <strong>{word.expression}</strong><span>{word.meaning}</span>
-                <p>{word.explanation}</p>{word.example && <p className="italic">{word.example}</p>}
-              </div>)}</>}
-            {section.insights.length > 0 && <><h3>{t("insights")}</h3><ul>{section.insights.map((insight, index) => <li key={index}>{insight}</li>)}</ul></>}
-            {section.exercises.length > 0 && <><h3>{t("exercises")}</h3>
-              {section.exercises.map((exercise, index) => <details className="[&_p]:text-muted-foreground my-2 rounded-[var(--radius)] border border-border p-[10px] text-[13px] [&_p]:mb-[2px]" key={index}><summary className="cursor-pointer font-semibold">{exercise.question}</summary><p>{exercise.answer}</p></details>)}</>}
-          </AppPanel>)}
-        </>}
+        /> : <AppPanel><h2>{t("emptyHeading")}</h2>
+          <Button variant="outline" onClick={() => setPage("lessons")}>{t("lessonLibrary")}</Button>
+        </AppPanel>}
       </main>}
     </div>
   );

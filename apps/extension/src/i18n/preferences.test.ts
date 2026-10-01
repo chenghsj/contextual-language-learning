@@ -3,7 +3,7 @@ import test from "node:test";
 import { messages, translate } from "./messages";
 import {
   isLocalePreference, isThemePreference, localeFromBrowser, nativeLanguageName, resolveTheme,
-  learningLanguageName, explanationLanguageName,
+  learningLanguageName, learningLanguageOptions, explanationLanguageName,
 } from "./preferences";
 import { LEARNING_LANGUAGES } from "@immersive/core";
 
@@ -61,5 +61,16 @@ test("study language names follow the selected interface locale; interface prefe
     for (const locale of ["en", "zh-TW", "zh-CN", "ja", "ko"] as const) {
       assert.ok(learningLanguageName(language, locale).length > 1);
     }
+  }
+});
+
+test("learning-language choices include every supported language once and sort in the interface locale", () => {
+  for (const locale of ["en", "zh-TW", "zh-CN", "ja", "ko"] as const) {
+    const options = learningLanguageOptions(locale);
+    assert.deepEqual(new Set(options.map(option => option.value)), new Set(LEARNING_LANGUAGES));
+    const collator = new Intl.Collator(locale);
+    assert.deepEqual(options.map(option => option.label),
+      [...options].sort((a, b) => collator.compare(a.label, b.label) || a.value.localeCompare(b.value))
+        .map(option => option.label));
   }
 });

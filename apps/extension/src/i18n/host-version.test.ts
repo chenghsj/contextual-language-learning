@@ -9,12 +9,14 @@ test("Native Host version mismatch is actionable without presenting install befo
   const component = await readFile(new URL("../components/host-connection-settings.tsx", import.meta.url), "utf8");
   assert.match(app, /setHostVersion\(typeof message.version === "string" \? message.version : null\)/);
   assert.match(app, /checked=\{hostChecked\}/);
-  assert.match(app, /setHostImportedOnly\(message\.agentMode === "imported-only"\)/);
+  assert.match(app, /setHostSdkMode\(message\.agentMode === "pi-sdk"\)/);
   assert.match(app, /available=\{hostReady\}/);
   assert.match(component, /version === chrome\.runtime\.getManifest\(\)\.version/);
-  assert.match(component, /checked && \(!connected \|\| !versionMatches \|\| !importedOnly\)/);
-  assert.match(component, /!importedOnly && <p/);
+  assert.match(component, /checked && \(!connected \|\| !compatible\)/);
+  assert.match(component, /!sdkMode && <p/);
   assert.match(component, /immersive-language-learning\/releases/);
+  assert.match(component, /protocolVersion === HOST_PROTOCOL_VERSION/);
+  assert.match(component, /ui.protocolMismatch/);
   assert.match(component, /SelectField ariaLabel=\{ui\.chooseOS\}/);
   assert.match(component, /SelectField ariaLabel=\{ui\.chooseBrowser\}/);
   const keys = Object.keys(hostConnectionCopy.en).sort();

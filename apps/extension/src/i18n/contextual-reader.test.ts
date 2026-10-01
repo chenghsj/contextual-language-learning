@@ -6,17 +6,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { LearningDocument } from "@immersive/core";
 import { ContextualSceneReader } from "../components/contextual-scene-reader";
 import { getVideoAdapter } from "../video";
+import { unifiedPlayerMessages } from "./unified-player";
 import { contextualReaderMessages } from "./contextual-reader";
 import { messages, type UiLocale } from "./messages";
 
-const document: Extract<LearningDocument, { schemaVersion: 3 }> = {
-  schemaVersion: 3, id: "00000000-0000-4000-8000-000000000001",
+const document: LearningDocument = {
+  schemaVersion: 4, id: "00000000-0000-4000-8000-000000000001",
   createdAt: "2026-09-26T00:00:00.000Z",
   source: { platform: "youtube", title: "An original video",
     url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
   profile: { targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-    mode: "adaptive", maxNewVocabulary: 2, exerciseCount: 0, sceneCount: 2,
-    contextualExampleCount: 2 },
+    sceneCount: 2, contextualExampleCount: 2 },
   generation: { provider: "claude", modelId: "" },
   cues: [
     { id: "cue-1", startMs: 1000, endMs: 2900, originalText: "What about dinner?" },
@@ -26,17 +26,13 @@ const document: Extract<LearningDocument, { schemaVersion: 3 }> = {
   sections: [{
     id: "00000000-0000-4000-8000-000000000002",
     title: "Dinner plans", context: "Someone is asked about dinner and has not decided.",
-    learningGoal: "Discuss an undecided plan.",
-    cueIds: ["cue-1", "cue-2", "cue-3"], focusCueIds: ["cue-2"],
+    cueIds: ["cue-1", "cue-2", "cue-3"],
     startMs: 1000, endMs: 7500,
     translations: [
       { cueId: "cue-1", text: "晚餐怎麼辦？" },
       { cueId: "cue-2", text: "還沒決定。" },
       { cueId: "cue-3", text: "明天再決定。" },
     ],
-    vocabulary: [{ expression: "I haven't decided yet.", meaning: "我還沒決定。",
-      explanation: "The question and reply show an undecided plan.", example: "I haven't decided yet." }],
-    insights: [], exercises: [],
     focusItems: [{
       expression: "I haven't decided yet.", sourceCueIds: ["cue-2"],
       meaning: "我還沒決定。",
@@ -69,7 +65,7 @@ function render(locale: UiLocale, doc: typeof document = document): string {
   }));
 }
 
-test("V3 reader presents original dialogue first, then focus, word notes and one contextual example", () => {
+test("V4 reader presents original dialogue first, then focus, word notes and one contextual example", () => {
   const html = render("zh-TW");
   const copy = contextualReaderMessages["zh-TW"];
   assert.ok(html.indexOf(copy.dialogue) < html.indexOf(copy.focus));
@@ -80,21 +76,20 @@ test("V3 reader presents original dialogue first, then focus, word notes and one
   assert.ok(!html.includes("A colleague asks about lunch."), "only one contextual example visible by default");
   assert.ok(html.includes(copy.anotherExamples.replace("{count}", "1")));
   assert.ok(html.includes(copy.words), "essential word notes are available on demand");
-  assert.match(html, /<details[^>]*class="[^"]*my-\[11px\]/, "word notes retain their on-demand styling");
-  assert.ok(html.includes(copy.previousCue) && html.includes(copy.nextCue));
-  assert.ok(html.includes(copy.loopCue));
-  assert.ok(html.includes('aria-pressed="true"'), "selected source cue has accessible state");
-  assert.ok(!html.includes("sceneSteps"), "V3 has no mandatory learning steps");
-  assert.ok(!html.includes("<textarea"), "V3 has no sentence-building answer form");
+  assert.match(html, /data-state="closed"/, "word notes use collapsible sections");
+  assert.ok(html.includes(copy.previousScene) && html.includes(copy.nextScene));
+  assert.ok(html.includes('data-ui="unifiedPlayer"'));
+  assert.ok(!html.includes("sceneSteps"), "V4 has no mandatory learning steps");
+  assert.ok(!html.includes("<textarea"), "V4 has no sentence-building answer form");
 });
 
-test("V3 reader stays localized in five UI languages and retains source-only dialogue", () => {
+test("V4 reader stays localized in five UI languages and retains source-only dialogue", () => {
   for (const locale of Object.keys(messages) as UiLocale[]) {
     const html = render(locale);
     const copy = contextualReaderMessages[locale];
     assert.ok(html.includes(copy.dialogue), locale);
     assert.ok(html.includes(copy.playScene), locale);
-    assert.ok(html.includes(copy.loopScene), locale);
+    assert.ok(html.includes('aria-label="' + unifiedPlayerMessages[locale].loop + '"'), locale);
     assert.ok(html.includes(copy.aiExamples), locale);
     assert.ok(html.includes(copy.previousScene), locale);
     assert.ok(html.includes("What about dinner?"), locale);
@@ -104,7 +99,7 @@ test("V3 reader stays localized in five UI languages and retains source-only dia
   assert.ok(!importOnly.includes('z-[5]'), "import-only lessons have no sticky contextual player");
 });
 
-test("V3 reader places pronunciation under the title and renders only aligned saved readings", () => {
+test("V4 reader puts pronunciation settings in its header and renders only aligned saved readings", () => {
   const japanese = {
     ...document,
     profile: { ...document.profile, targetLanguage: "ja" as const, level: "N4" },
@@ -114,102 +109,67 @@ test("V3 reader places pronunciation under the title and renders only aligned sa
     ] }],
   };
   const html = render("zh-TW", japanese);
-  assert.ok(html.indexOf("發音標註") > html.indexOf(document.source.title));
-  assert.ok(html.indexOf("發音標註") < html.indexOf("直接選擇場景"));
+  assert.ok(html.includes('aria-label="發音標註"'));
   assert.match(html, /<ruby[^>]*>昨日<rp>\(<\/rp><rt[^>]*>きのう<\/rt>/);
-  assert.ok(html.includes("假名") && html.includes("羅馬字") && html.includes("臺灣注音"));
+
+  assert.ok(!html.includes("臺灣注音"));
   assert.ok(!html.includes(">JSON</button>"));
   const older = render("zh-TW", { ...japanese, sections: [{ ...japanese.sections[0], pronunciations: undefined }] });
   assert.ok(older.includes("昨日"));
   assert.ok(!older.includes("<ruby"));
 });
 
-test("V3 route keeps V2 unchanged, original cue refs and export actions available", async () => {
+test("V4 reader keeps existing Japanese kana outside ruby annotations", () => {
+  const japanese = {
+    ...document,
+    profile: { ...document.profile, targetLanguage: "ja" as const, level: "N4" },
+    cues: [{ ...document.cues[0], originalText: "面白い設定ですね。" }, ...document.cues.slice(1)],
+    sections: [{ ...document.sections[0], pronunciations: [
+      { cueId: "cue-1", segments: [{ text: "面白い設定ですね。", reading: "おもしろいせっていですね" }] },
+    ] }],
+  };
+  const html = render("zh-TW", japanese);
+  assert.match(html, /<ruby[^>]*>面白<rp>\(<\/rp><rt[^>]*>おもしろ<\/rt>/);
+  assert.match(html, /<ruby[^>]*>設定<rp>\(<\/rp><rt[^>]*>せってい<\/rt>/);
+  assert.doesNotMatch(html, /<ruby[^>]*>い<rp>/);
+  assert.doesNotMatch(html, /<ruby[^>]*>ですね/);
+});
+
+test("V4 reader explains when the selected pronunciation has no saved readings", () => {
+  const withoutReadings = render("zh-TW");
+  assert.ok(withoutReadings.includes("發音標註"));
+  const withReadings = render("zh-TW", {
+    ...document,
+    sections: [{ ...document.sections[0], pronunciations: [
+      { cueId: "cue-1", segments: [{ text: "What about dinner?", reading: "/wʌt əˈbaʊt ˈdɪnər/" }] },
+    ] }],
+  });
+  assert.ok(!withReadings.includes("本場景沒有已儲存的發音標註"));
+});
+
+test("V4 reader preserves cue references and requires no manual export", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  assert.match(app, /document\.schemaVersion === 3 \? <ContextualSceneReader/);
-  assert.match(app, /document\.schemaVersion === 2 \? <SceneReader/);
+  assert.match(app, /<ContextualSceneReader/);
+  assert.doesNotMatch(app, /<SceneReader/);
   const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
-  assert.ok(source.includes("sticky bottom-0"));
-  assert.ok(source.includes("focus-visible:outline-2"));
+  assert.ok(source.includes("min-h-0 flex-1 overflow-y-auto"));
+  assert.ok(source.includes("return <Button key={cue.id}"));
   assert.match(source, /scene\.cueIds\.map\(id => cues\.get\(id\)\)/);
-  assert.match(source, /item\.sourceCueIds/);
-  assert.ok(!source.includes('onDownload("json")'));
-  assert.match(app, /downloadSavedDocument\(lesson\.documentId, "json"\)/);
-  assert.match(app, /downloadSavedDocument\(lesson\.documentId, "md"\)/);
+  assert.ok(source.includes("<SceneFocusItems"));
+  const manifest = await readFile(new URL("../../public/manifest.json", import.meta.url), "utf8");
+  assert.ok(!source.includes("onDownload"));
+  assert.ok(!app.includes("downloadSavedDocument"));
+  assert.ok(!app.includes("chrome.downloads"));
+  assert.ok(!JSON.parse(manifest).permissions.includes("downloads"));
 });
 
-test("V3 keeps playback tracking and uses the requested inline guided calibration", async () => {
-  const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
-  assert.match(source, /playingCueAt\(scene\.cueIds, cues, ms\)/);
-  assert.match(source, /aria-current=\{playing \? "true" : undefined\}/);
-  assert.match(source, /await stopPreviousLoop\(\)/);
-  assert.match(source, /loopingSceneRef\.current/);
-  assert.match(source, /async function toggleSceneLoop\(\)/);
-  assert.match(source, /sceneLoopStarted/);
-  assert.match(source, /stopSceneLoop/);
-  assert.match(source, /await adapter\.stopLoop\(sourceUrl\)/);
-  assert.match(source, /const loopKey = "sceneLoopRanges:" \+ document\.id/);
-  assert.match(source, /document\.playbackOverrides === undefined/);
-  assert.match(source, /\[loopKey\]: loopRanges/);
-  assert.match(source, /loopRanges\[selectedCue\.id\] \?\? cuePlaybackWindow/);
-  assert.match(source, /adapter\.status\(sourceUrl\)/);
-  assert.match(source, /captureBoundary\("start"\)/);
-  assert.match(source, /captureBoundary\("end"\)/);
-  assert.match(source, /await onSaveRange\(cueId, draftRange\)/);
-  assert.match(source, /!sceneCalibrationOpen && <Button/);
-  assert.match(source, /!cueCalibrationOpen && <Button/);
-  assert.equal((source.match(/onClick=\{cancelCalibration\}/g) ?? []).length, 3,
-    "each calibration stage has one cancel action");
-  assert.doesNotMatch(source, /cancelAdjustShort|cancelAdjustScene/);
-  assert.match(source, /id=\{scope === "scene" \? "contextual-scene-calibration" : "contextual-inline-calibration"\}/);
-  assert.doesNotMatch(source, /<dialog|\.showModal\(|updateRange\(|−0\.5s|\+0\.5s/);
+test("unified reader has one player, contextual navigation and advanced timing entry", () => {
   for (const locale of Object.keys(messages) as UiLocale[]) {
-    const copy = contextualReaderMessages[locale];
-    for (const key of ["calibrateStart", "calibrateEnd", "markStart", "markEnd", "saveTiming",
-      "cancelTiming", "restoreTiming"] as const) assert.ok(copy[key].trim(), locale + " " + key);
-  }
-  const html = render("zh-TW");
-  assert.ok(html.includes(contextualReaderMessages["zh-TW"].adjustPosition));
-  assert.ok(!html.includes("<dialog"), "no modal, even while closed");
-  assert.ok(!html.includes('id="contextual-inline-calibration"'),
-    "calibration is expanded inline only on demand");
-});
-
-test("V3 can rewind, adjust and audition a draft; both readers offer 2×", async () => {
-  const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
-  const legacy = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
-  for (const code of [source, legacy]) assert.ok(code.includes("1.5, 1.75, 2"));
-  for (const action of ["async function rewindCalibration()", "adjustDraftStart(-500)",
-    "async function previewCalibration()", "keepCurrentBoundary(\"start\")",
-    "keepCurrentBoundary(\"end\")", "void finishCalibration()"]) {
-    assert.ok(source.includes(action), action);
-  }
-  for (const locale of Object.keys(contextualReaderMessages) as UiLocale[]) {
-    const copy = contextualReaderMessages[locale];
-    assert.ok(copy.rewind3 && copy.startEarlier && copy.startLater && copy.preview &&
-      copy.keepStart && copy.keepEnd && copy.adjustPosition && copy.adjustScene, locale);
-  }
-  assert.equal(contextualReaderMessages["zh-TW"].adjustPosition, "調整句子時間");
-  assert.equal(contextualReaderMessages["zh-TW"].adjustScene, "調整場景時間");
-});
-
-test("scene and sentence calibration share guided editor but persist distinct document ranges", async () => {
-  const source = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
-  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  assert.ok(source.includes('renderCalibration("scene")'));
-  assert.ok(source.includes('renderCalibration("cue")'));
-  assert.ok(source.includes('openCalibration("scene")'));
-  assert.ok(source.includes('openCalibration("cue")'));
-  assert.ok(source.includes("scenePlaybackOverrides"));
-  assert.ok(source.includes("await onSaveSceneRange(scene.id, draftRange)"));
-  assert.ok(source.includes("await onSaveRange(cueId, draftRange)"));
-  assert.ok(source.includes("selectedSceneRange"));
-  assert.ok(app.includes('type: "saveScenePlaybackRange"'));
-  assert.ok(app.includes('response.type !== "scenePlaybackRangeSaved"'));
-  const html = render("zh-TW");
-  assert.ok(html.includes(contextualReaderMessages["zh-TW"].adjustScene));
-  assert.ok(html.includes(contextualReaderMessages["zh-TW"].loopScene));
-  for (const copy of Object.values(contextualReaderMessages)) {
-    assert.ok(copy.adjustScene && copy.calibrateSceneStart && copy.calibrateSceneEnd && copy.adjusted);
+    const html = render(locale);
+    assert.equal((html.match(/data-ui="unifiedPlayer"/g) ?? []).length, 1);
+    assert.ok(html.includes('aria-label="' + unifiedPlayerMessages[locale].options + '"'));
+    assert.ok(html.includes('aria-label="' + unifiedPlayerMessages[locale].play + '"'));
+    assert.ok(!html.includes('contextual-inline-calibration'));
+    assert.ok(!html.includes(contextualReaderMessages[locale].loopCue));
   }
 });

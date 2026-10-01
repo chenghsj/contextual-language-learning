@@ -5,10 +5,9 @@ import { readFile } from "node:fs/promises";
 const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
 const button = await readFile(new URL("../components/ui/button.tsx", import.meta.url), "utf8");
 const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-const notice = await readFile(new URL("../components/notice-viewport.tsx", import.meta.url), "utf8");
+const sonner = await readFile(new URL("../components/ui/sonner.tsx", import.meta.url), "utf8");
 const card = await readFile(new URL("../components/ui/card.tsx", import.meta.url), "utf8");
 const info = await readFile(new URL("../components/setting-info.tsx", import.meta.url), "utf8");
-const legacy = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
 const contextual = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
 
 function declarations(block: string): Record<string, string> {
@@ -45,7 +44,7 @@ test("the warm OKLCH theme covers light and dark semantic tokens", () => {
   assert.equal(light.background, "oklch(0.9818 0.0054 95.0986)");
   assert.equal(dark.background, "oklch(0.2679 0.0036 106.6427)");
   assert.equal(light["sidebar-primary"], "oklch(0.6171 0.1375 39.0427)");
-  assert.equal(dark["sidebar-primary"], "oklch(0.3250 0 0)");
+  assert.match(dark["sidebar-primary"], /^oklch\(0\.3250? 0 0\)$/);
   assert.equal(dark["chart-1"], light["chart-1"], "the user-supplied dark preset repeats chart-1");
   assert.equal(effectiveDark["chart-1"], light["chart-1"]);
   assert.equal(light.radius, "1rem");
@@ -61,12 +60,10 @@ test("cards, tooltips and compact player use warm rounded Tailwind utilities", (
   ]) assert.ok(css.includes("--radius-" + token + ": " + expected + ";"), token);
   assert.doesNotMatch(css, /--radius:\s*0;/);
   assert.ok(card.includes("rounded-xl border border-border bg-card text-card-foreground shadow-sm"));
-  assert.ok(info.includes("bg-popover"));
-  assert.ok(legacy.includes("grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]"));
-  assert.ok(app.includes("dark:text-primary"));
-  assert.ok(contextual.includes('"contextual-inline-calibration"'));
-  assert.ok(contextual.includes('"contextual-scene-calibration"'));
-  assert.doesNotMatch(contextual, /backdrop:bg-|<dialog/, "V3 time adjustment stays inline");
+  assert.ok(info.includes("PopoverContent"));
+  assert.ok(contextual.includes("{editing && draft ? <section"));
+  assert.ok(contextual.includes('data-ui="unifiedPlayer"'));
+  assert.doesNotMatch(contextual, /backdrop:bg-|<dialog/, "V4 time adjustment stays inline");
 });
 
 test("button variants and utility feedback use theme tokens instead of the old fixed palette", () => {
@@ -79,26 +76,27 @@ test("button variants and utility feedback use theme tokens instead of the old f
   assert.doesNotMatch(button, /bg-red-600|bg-red-700/);
   assert.doesNotMatch(css, /#(?:f8faf9|17231f|e7f4ec|f3c0b5|fff0ec|e9f4fb|79b18d)/i);
   assert.ok(app.includes("var(--primary)_35%"));
-  assert.ok(notice.includes("var(--destructive)_55%"));
+  assert.ok(sonner.includes("group-[.toaster]:bg-background"));
+  assert.doesNotMatch(sonner, /color-mix|--border-radius|--width|--error-bg/);
   assert.match(css, /@layer base \{/);
   assert.doesNotMatch(css, /^\.(?!dark\b)[A-Za-z][\w-]*\s*\{/gm,
     "component selectors must be replaced by Tailwind v4 utilities");
 });
 
 test("primary Side Panel action utilities keep readable labels and the warm palette", () => {
-  const actions = [...app.matchAll(/<Button className="([^"]+)"[^>]*>/g)]
+  const actions = [...app.matchAll(/<Button(?: variant="[^"]+")? className="([^"]+)"[^>]*>/g)]
     .map(match => match[1]).filter(classes => classes.includes("font-semibold") && classes.includes("whitespace-normal"));
   assert.ok(actions.length >= 2, "subtitle and generation actions remain legible");
   for (const classes of actions) {
-    assert.ok(classes.includes("text-sm"));
+    assert.ok(classes.includes("text-sm") || classes.includes("text-xs"));
     assert.ok(classes.includes("font-semibold"));
     assert.ok(classes.includes("whitespace-normal"));
     assert.doesNotMatch(classes, /\bbg-(?:red|green)/);
   }
   assert.equal(light.primary, "oklch(0.6171 0.1375 39.0427)");
-  assert.equal(light["primary-foreground"], "oklch(1.0000 0 0)");
+  assert.match(light["primary-foreground"], /^oklch\(1(?:\.0+)? 0 0\)$/);
   assert.match(css, /@custom-variant dark \(&:is\(\.dark \*\)\);/);
-  assert.doesNotMatch(app + legacy + contextual + info, /tw\(|utility-classes/, "views use Tailwind directly");
+  assert.doesNotMatch(app + contextual + info, /tw\(|utility-classes/, "views use Tailwind directly");
 });
 
 

@@ -1,3 +1,5 @@
+import { Textarea } from "./ui/textarea";
+import { Disclosure } from "./disclosure";
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { type CustomAgentConfig, type CustomAgentImport, type HostMessage } from "@immersive/core";
@@ -201,11 +203,11 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
           <strong className="text-xs">{editing ? ui.edit : ui.import}</strong>
           {!editing && <p className="text-xs leading-relaxed text-muted-foreground">{ui.importHelp}</p>}
           <label htmlFor={editing ? "edit-agent-json" : "import-agent-json"} className="text-xs font-semibold">{editing ? ui.edit : ui.import}</label>
-          <textarea id={editing ? "edit-agent-json" : "import-agent-json"} rows={7} value={json} placeholder={ui.placeholder}
+          <Textarea id={editing ? "edit-agent-json" : "import-agent-json"} rows={7} value={json} placeholder={ui.placeholder}
             disabled={busy} onChange={event => {
               setJson(event.target.value); setValidated(null); setStatus(""); setFailed(false);
             }}
-            className="w-full min-w-0 resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground focus-visible:outline-2 focus-visible:outline-ring" />
+            className="resize-y font-mono" />
           <Button variant="outline" size="sm" disabled={busy || !json.trim()}
             onClick={validate}>{ui.validate}</Button>
           {validated && <div className="grid min-w-0 gap-1 rounded-[var(--radius)] border border-border p-2 text-xs">
@@ -262,8 +264,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
       {renderJsonEditor()}
       <p className="text-xs leading-relaxed text-muted-foreground">{ui.safety}</p>
     </section>}
-    {!editing && <details className="min-w-0 border border-border p-3" open={agents.length === 0 ? true : undefined}>
-      <summary className="cursor-pointer text-sm font-semibold">{ui.add}</summary>
+    {!editing && <Disclosure className="my-2 min-w-0" defaultOpen={agents.length === 0} title={<>{ui.add}</>}>
       <div className="mt-3 grid min-w-0 gap-3">
         <div className="grid gap-2">
           <strong className="text-xs">{ui.prompt}</strong>
@@ -280,7 +281,7 @@ export function CustomAgentSettings({ locale, available, selectedProvider, selec
         {renderJsonEditor()}
         <p className="text-xs leading-relaxed text-muted-foreground">{ui.safety}</p>
       </div>
-    </details>}
+    </Disclosure>}
     {status && <p className={failed ? "text-xs text-destructive wrap-anywhere" :
       "text-xs text-muted-foreground wrap-anywhere"} role="status" aria-live="polite">{status}</p>}
   </section>;

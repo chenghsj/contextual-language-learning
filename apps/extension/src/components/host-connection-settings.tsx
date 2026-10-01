@@ -1,5 +1,7 @@
+import { Disclosure } from "./disclosure";
 import { useState } from "react";
 import type { UiLocale } from "../i18n/messages";
+import { HOST_PROTOCOL_VERSION } from "@immersive/core";
 import { hostConnectionCopy } from "../i18n/host-connection";
 import { Button } from "./ui/button";
 import { SelectField } from "./ui/select";
@@ -18,8 +20,8 @@ function detectedBrowser(): Browser {
 }
 
 /** Browser registration is per extension ID; installing new Agents does not change it. */
-export function HostConnectionSettings({ locale, connected, checked, importedOnly, version, busy, error, onCheck }: {
-  locale: UiLocale; connected: boolean; checked: boolean; importedOnly: boolean; version: string | null;
+export function HostConnectionSettings({ locale, connected, checked, sdkMode, version, protocolVersion, busy, error, onCheck }: {
+  locale: UiLocale; connected: boolean; checked: boolean; sdkMode: boolean; version: string | null; protocolVersion: number | null;
   busy: boolean; error: string; onCheck: () => void;
 }) {
   const ui = hostConnectionCopy[locale];
@@ -28,29 +30,31 @@ export function HostConnectionSettings({ locale, connected, checked, importedOnl
   const [copied, setCopied] = useState("");
   const extensionId = chrome.runtime.id;
   const versionMatches = version === chrome.runtime.getManifest().version;
+  const protocolMatches = protocolVersion === HOST_PROTOCOL_VERSION;
+  const compatible = versionMatches && protocolMatches && sdkMode;
   const command = "node scripts/install-host.mjs " + extensionId +
     (browser === "chrome" ? "" : " --browser " + browser);
   async function copy(value: string): Promise<void> {
     try { await navigator.clipboard.writeText(value); setCopied(ui.copied); }
     catch { setCopied(ui.error); }
   }
-  return <section className="grid min-w-0 gap-3 border border-border p-3" data-ui="hostConnection">
+  return <section className="grid min-w-0 gap-2 rounded-[var(--radius)] border border-border px-[11px] py-[10px]" data-ui="hostConnection">
     <div className="flex min-w-0 items-center justify-between gap-2">
-      <strong className="text-sm">{ui.title}</strong>
-      <span className={connected && versionMatches && importedOnly ? "text-xs text-primary" : "text-xs text-muted-foreground"}>
-        {connected ? (versionMatches && importedOnly ? ui.connected : ui.updateNeeded) : checked ? ui.disconnected : ui.checking}
+      <strong className="text-xs">{ui.title}</strong>
+      <span className={connected && compatible ? "text-xs text-primary" : "text-xs text-muted-foreground"}>
+        {connected ? (compatible ? ui.connected : ui.updateNeeded) : checked ? ui.disconnected : ui.checking}
       </span>
     </div>
-    <details className="text-xs text-muted-foreground">
-      <summary className="cursor-pointer">{ui.name}</summary>
+    <Disclosure className="min-w-0 [&_h3>button]:py-2 [&_h3>button]:text-xs" title={<>{ui.name}</>}>
       <p className="mt-2 leading-relaxed">{ui.help}</p>
-    </details>
-    {connected && versionMatches && importedOnly && <p className="text-xs text-muted-foreground">
+    </Disclosure>
+    {connected && compatible && <p className="text-xs text-muted-foreground">
       {ui.version}: {version}</p>}
     {connected && !versionMatches && <p className="text-xs text-destructive" role="status">
       {ui.mismatch} {ui.version}: {version ?? "unknown"}</p>}
-    {connected && versionMatches && !importedOnly && <p className="text-xs text-destructive" role="status">{ui.unsupportedMode}</p>}
-    {checked && (!connected || !versionMatches || !importedOnly) && <div className="grid min-w-0 gap-3">
+    {connected && versionMatches && !protocolMatches && <p className="text-xs text-destructive" role="status">{ui.protocolMismatch}</p>}
+    {connected && versionMatches && protocolMatches && !sdkMode && <p className="text-xs text-destructive" role="status">{ui.unsupportedMode}</p>}
+    {checked && (!connected || !compatible) && <div className="grid min-w-0 gap-3">
       <strong className="text-xs">{ui.install}</strong>
       <label className="grid gap-1 text-xs">{ui.chooseOS}
         <SelectField ariaLabel={ui.chooseOS} value={os} onValueChange={value => setOS(value as OS)}
@@ -78,6 +82,6 @@ export function HostConnectionSettings({ locale, connected, checked, importedOnl
     </div>}
     {error && <p className="text-xs text-destructive break-all" role="status">{error}</p>}
     {copied && <p className="text-xs text-muted-foreground" role="status">{copied}</p>}
-    <Button variant="outline" size="sm" disabled={busy} onClick={onCheck}>{ui.check}</Button>
+    <Button variant="outline" size="sm" disabled={busy} aria-busy={busy} onClick={onCheck}>{ui.check}</Button>
   </section>;
 }

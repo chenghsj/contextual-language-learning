@@ -1,3 +1,4 @@
+import { notifyAnalysisComplete, notifyLessonOutcome, notificationDestination } from "./native/analysis-notifications";
 import { fetchNetflixCaptionText } from "./video/netflix-caption-fetch";
 import { validateNetflixCaptionSender } from "./video/netflix-caption-sender";
 import { installGenerationController } from "./native/generation-controller";
@@ -40,4 +41,17 @@ void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((
 });
 
 // Long-running generation must belong to the worker, never to the Side Panel.
-if ("onConnect" in chrome.runtime) installGenerationController();
+if ("onConnect" in chrome.runtime) installGenerationController(chrome.runtime, (jobId, title, documentId) => {
+  void notifyAnalysisComplete(jobId, title, documentId).catch(() => { /* System notifications may be disabled. */ });
+}, (jobId, title, outcome) => {
+  void notifyLessonOutcome(jobId, title, outcome).catch(() => {});
+});
+
+// Open a durable extension page even when the Side Panel is closed.
+function openNotification(id: string): void {
+  const destination = notificationDestination(id);
+  if (!destination) return;
+  void chrome.tabs.create({ url: chrome.runtime.getURL(destination) }).then(() => chrome.notifications.clear(id)).catch(() => {});
+}
+chrome.notifications.onClicked.addListener(openNotification);
+chrome.notifications.onButtonClicked.addListener(id => openNotification(id));

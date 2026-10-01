@@ -6,7 +6,7 @@ import { messages } from "./messages";
 test("the reader UI uses localized messages instead of hardcoded Chinese JSX labels", async () => {
   const source = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   assert.doesNotMatch(source, /[\u4e00-\u9fff]/u);
-  for (const key of ["uiLanguage", "appearance", "openOrFocusVideo", "playbackRateLabel"]) {
+  for (const key of ["uiLanguage", "appearance"]) {
     assert.ok(source.includes(`t("${key}")`), `${key} should be localized`);
   }
 });

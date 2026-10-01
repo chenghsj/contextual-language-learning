@@ -1,11 +1,11 @@
 {
   "extensionName": {
-    "message": "AI-powered Contextual Language Learning"
+    "message": "Contextual Language Learning"
   },
   "extensionDescription": {
     "message": "Turn video subtitles into level-appropriate AI lessons with dialogue context and focused listening practice."
   },
   "actionTitle": {
-    "message": "Open AI-powered Contextual Language Learning"
+    "message": "Open Contextual Language Learning"
   }
 }

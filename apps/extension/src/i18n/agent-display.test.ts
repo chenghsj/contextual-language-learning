@@ -18,20 +18,18 @@ test("generation summary displays the selected model label or the honest CLI def
   assert.equal(modelDisplayName(" ", models, "CLI default"), "CLI default");
 });
 
-test("generation card shows Agent and model before submitting and links directly to Agent settings", async () => {
+test("generation screen shows a compact service summary before submitting and links to settings", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  const section = app.slice(app.indexOf('<h2>{t("generationHeading")}</h2>'), app.indexOf('<h2>{t("jobHistory")}</h2>'));
-  assert.ok(section.includes('className="my-3 min-w-0 rounded-[var(--radius)] border border-border bg-muted p-3'));
-  assert.ok(section.includes('agentDisplayName(agent.provider, selectedAgentInfo?.label)'));
-  assert.ok(section.includes('modelDisplayName(agent.modelId, modelOptions, t("cliDefault"))'));
-  assert.ok(section.includes('onClick={() => {') && section.includes('setPage("settings")'));
-  assert.ok(section.includes('getElementById("agent-settings-heading")'));
-  assert.ok(section.indexOf('className="my-3 min-w-0 rounded-[var(--radius)] border border-border bg-muted p-3') < section.indexOf('onClick={startGeneration}'));
+  const section = app.slice(app.indexOf('<h2>{flow.generate}</h2>'), app.indexOf('<TaskHistory jobs={jobs}'));
+  assert.match(section, /<GenerationService locale=\{uiLocale\}/);
+  assert.ok(section.includes('setSettingsSection("ai")'));
+  assert.ok(section.indexOf('<GenerationService') < section.indexOf('onClick={startGeneration}'));
   // New users select imported Agents; legacy built-in provider IDs are not a picker.
-  const imported = await readFile(new URL("../components/custom-agent-settings.tsx", import.meta.url), "utf8");
-  assert.match(imported, /onSelect\(agent\.id\)/);
+  const imported = await readFile(new URL("../components/pi-settings.tsx", import.meta.url), "utf8");
+  assert.match(imported, /onSelect\(provider\.id\)/);
   assert.doesNotMatch(app, /options=\{agentCatalog\.map\(entry =>/);
-  assert.ok(app.includes('agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)'));
+  const history = await readFile(new URL("../components/task-history.tsx", import.meta.url), "utf8");
+  assert.ok(history.includes('agentDisplayName(job.provider, agentCatalog.find(item => item.id === job.provider)?.label)'));
   assert.match(app, /id="agent-settings-heading" tabIndex=\{-1\}/);
 });
 
@@ -41,17 +39,13 @@ test("new generation-summary controls are localized in all interface languages",
     for (const key of ["generationSummary", "generationAgentLabel", "generationModelLabel", "editAgentModel"] as const) {
       assert.ok(copy[key].trim(), locale + ": " + key);
     }
-    assert.ok(copy.legacyJobCannotResume.trim(), locale);
   }
 });
 
-test("Agent and optional CLI Profile share one persisted model setting", async () => {
+test("SDK settings replace CLI import and profile controls", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  assert.match(app, /agentModelPreferences/);
-  assert.match(app, /savedAgentModel\(agent.provider, entry\?\.directory, agentModelPreferences\)/);
-  assert.match(app, /<SettingInfo label=\{t\("useOtherCliAccount"\)\}/);
-  assert.match(app, /<details className="[^"]*mt-\[10px\][^"]*"/);
-  assert.match(app, /agent.accountConfigDir && <div><dt>\{t\("agentAccount"\)\}/);
+  assert.match(app, /<PiSettings/);
+  assert.doesNotMatch(app, /<CustomAgentSettings|useOtherCliAccount/);
 });
 
 test("Drive connection verifies actual API access before enabling backup", async () => {

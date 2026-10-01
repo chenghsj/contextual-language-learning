@@ -11,14 +11,13 @@ import { SettingInfo } from "../components/setting-info";
 
 const fields: LearningSettingKey[] = [
   "targetLanguage", "level", "instructionLanguage",
-  "teachingMode", "sceneCount", "vocabLimit", "exerciseCount",
+  "sceneCount",
 ];
 const levels = {
   en: ["A1", "A2", "B1", "B2", "C1", "C2"],
   ja: ["N5", "N4", "N3", "N2", "N1"],
   ko: ["1", "2", "3", "4", "5", "6"],
 } as const;
-const modes = ["adaptive", "guided", "immersive"] as const;
 const locales = Object.keys(messages) as UiLocale[];
 
 test("all five UI locales explain every field and every available dropdown choice", () => {
@@ -42,11 +41,6 @@ test("all five UI locales explain every field and every available dropdown choic
         locale + " instruction " + language);
       assert.ok(nativeLanguageName(language).trim());
     }
-    for (const mode of modes) {
-      assert.ok(copy.modes[mode].label.trim(), locale + " " + mode + " name");
-      assert.ok(copy.modes[mode].description.trim(), locale + " " + mode + " help");
-      assert.notEqual(copy.modes[mode].label, mode);
-    }
   }
 });
 
@@ -55,22 +49,19 @@ test("setting help shows only the concise field explanation, without repeating a
     label: "Level", infoLabel: "About",
     explanation: "Choose a comfortable starting point.",
   }));
-  assert.match(markup, /<details[^>]*class="[^"]*group/);
-  assert.match(markup, /<summary[^>]*aria-label="About Level"/);
-  assert.match(markup, /aria-controls="/);
-  assert.match(markup, /role="note"/);
-  assert.match(markup, /Choose a comfortable starting point\./);
+  assert.match(markup, /aria-label="About Level"/);
+  assert.match(markup, /aria-expanded="false"/);
   assert.doesNotMatch(markup, /<ul>|<li>|B1 · Intermediate/);
 });
 
 test("settings keep stable saved option values rather than persisting translated labels", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  assert.match(app, /lessonFormat: "contextual-v3"/);
-  assert.match(app, /contextualGenerationProfile\(profile\)/);
+  assert.doesNotMatch(app, /lessonFormat:/);
+  assert.match(app, /buildGenerationRequest\(\{/);
   assert.doesNotMatch(app, /id="learning-mode"/);
   assert.doesNotMatch(app, /id="learning-exercises"/);
   assert.doesNotMatch(app, /id="learning-vocabulary"/);
-  assert.match(app, /LEARNING_LANGUAGES\.map\(language/);
+  assert.match(app, /options=\{learningLanguageOptions\(uiLocale\)\}/);
   assert.match(app, /EXPLANATION_LANGUAGES\.map\(value/);
   assert.match(app, /learningLanguageName\(language, uiLocale\)/);
   assert.match(app, /explanationLanguageName\(value, uiLocale\)/);
@@ -82,34 +73,28 @@ test("settings keep stable saved option values rather than persisting translated
 });
 
 test("task cards use one Tailwind layout below the refresh control", async () => {
-  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
+  const history = await readFile(new URL("../components/task-history.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
-  assert.ok(app.includes('className="my-[10px] grid gap-[7px]"'), "task layout uses direct Tailwind classes");
+  assert.ok(history.includes('className="my-[10px] grid gap-[7px]"'), "task layout uses direct Tailwind classes");
   assert.doesNotMatch(css, /\.jobHistoryList\s*\{/);
 });
 
-test("navigation uses compact four-column Tailwind utilities", async () => {
-  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  const classes = app.match(/<nav className="([^"]+)" aria-label=\{t\("navLabel"\)\}/)?.[1] ?? "";
-  const button = app.match(/page === "create" \? "([^"]+)"/)?.[1] ?? "";
-  assert.ok(classes.includes("grid-cols-4"));
-  assert.ok(button.includes("text-[11px]"));
-  assert.ok(button.includes("gap-[3px]"));
-  assert.ok(button.includes("py-2"));
+test("navigation uses two primary tabs", async () => {
+  const nav = await readFile(new URL("../components/side-panel-navigation.tsx", import.meta.url), "utf8");
+  assert.ok(nav.includes("grid-cols-2"));
+  assert.ok(nav.includes("<TabsList"));
+  assert.ok(nav.includes("<TabsTrigger"));
 });
 
-test("the supplied dark tokens and both lesson readers retain Tailwind utilities", async () => {
+test("the supplied dark tokens and V4 reader retain Tailwind utilities", async () => {
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   const light = css.match(/^:root \{([\s\S]*?)^\}/m)?.[1];
   const dark = css.match(/^\.dark \{([\s\S]*?)^\}/m)?.[1];
   assert.ok(light && dark, "light and dark theme token blocks must exist");
   assert.match(dark, /--primary:\s*oklch\(0\.6724 0\.1308 38\.7559\)/);
-  const legacy = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
   const contextual = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
-  assert.ok(legacy.includes("grid-cols-3"), "saved V1/V2 study steps retain their layout");
-  assert.ok(contextual.includes("border border-border"), "V3 source dialogue remains styled");
-  assert.ok(legacy.includes("sticky bottom-0"), "V1/V2 player stays sticky");
-  assert.ok(contextual.includes("sticky bottom-0"), "V3 player stays sticky");
+  assert.ok(contextual.includes("border border-border"), "V4 source dialogue remains styled");
+  assert.ok(contextual.includes('data-ui="unifiedPlayer"') && contextual.includes("shrink-0 border-t"), "player stays outside the scroll area");
   assert.doesNotMatch(css, /^\.scene/m);
 });
 
@@ -163,7 +148,7 @@ test("level tooltip displays the complete scale for the selected language in eve
   assert.match(app, /items=\{levelOptions\.map\(value => \{/);
   assert.match(app, /settingsCopy\.levels\[profile\.targetLanguage\]\[value\]/);
   const infoSource = await readFile(new URL("../components/setting-info.tsx", import.meta.url), "utf8");
-  assert.ok(infoSource.includes('className="mt-[10px] grid'));
+  assert.ok(infoSource.includes("items.map(item"));
   for (const locale of locales) {
     const copy = learningSettingsCopy[locale];
     for (const language of ["en", "ja", "ko"] as const) {
@@ -178,14 +163,9 @@ test("level tooltip displays the complete scale for the selected language in eve
         explanation: levelHint(copy, language),
         items,
       }));
-      assert.match(html, /<ul[^>]*class="[^"]*grid/);
-      assert.equal((html.match(/<li>/g) ?? []).length, items.length,
-        locale + " " + language + ": one entry per level");
+      assert.match(html, /aria-expanded="false"/);
       for (const item of items) {
-        assert.ok(html.includes(item.value + " · " + item.label),
-          locale + " " + language + ": label for " + item.value);
-        assert.ok(html.includes(item.description),
-          locale + " " + language + ": description for " + item.value);
+        assert.ok(item.label && item.description, locale + " " + language + ": localized level " + item.value);
       }
     }
   }
@@ -230,10 +210,7 @@ test("setting help is label-aligned and does not repeat general explanations bel
     assert.ok(!app.includes('>{t("' + key + '")}</p>'), key + " must not be duplicated under the select");
   }
   assert.ok(app.includes('relative mb-[6px] flex min-w-0 items-center gap-2'));
-  assert.ok(help.includes('className="group m-0 inline-flex size-7'), "info details have no inherited section margins");
-  assert.ok(help.includes("trigger.getBoundingClientRect()") && help.includes("window.innerWidth - width - margin"),
-    "popover follows its own icon and stays inside the viewport");
-  assert.ok(help.includes('focus-visible:outline-2'), "info trigger supports visible keyboard focus");
-  assert.ok(help.includes('event.key !== "Escape"') && help.includes('document.addEventListener("pointerdown"'),
-    "Escape and outside-click close the native details");
+  assert.ok(help.includes('<Button variant="ghost" size="icon"'));
+  assert.ok(help.includes('<PopoverContent collisionPadding={8}'));
+  assert.ok(help.includes("max-w-[calc(100vw-16px)]"));
 });

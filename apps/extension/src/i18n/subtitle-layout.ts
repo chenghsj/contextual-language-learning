@@ -1,0 +1,9 @@
+import type { UiLocale } from "./messages";
+
+export const subtitleLayoutCopy = {
+  "en": { reloadVideo: "Reload video", reloadNeeded: "Reload the video to get subtitles.", heading: "Subtitles", empty: "No subtitles yet", hint: "Video subtitles have not been loaded.", ready: "Ready", preview: "Preview subtitles", close: "Close preview", retry: "Retry", refresh: "Fetch again", failed: "Unable to get subtitles", paste: "Pasted subtitles", source: "Source", count: "{count} cues" },
+  "zh-TW": { reloadVideo: "重新載入影片", reloadNeeded: "需要重新載入影片才能取得字幕。", heading: "字幕", empty: "尚未取得字幕", hint: "目前尚未載入影片字幕。", ready: "已準備完成", preview: "預覽字幕", close: "關閉預覽", retry: "重試", refresh: "重新取得", failed: "無法取得目前影片字幕", paste: "貼上字幕", source: "來源", count: "{count} 段" },
+  "zh-CN": { reloadVideo: "重新加载视频", reloadNeeded: "需要重新加载视频才能获取字幕。", heading: "字幕", empty: "尚未获取字幕", hint: "当前尚未加载视频字幕。", ready: "已准备完成", preview: "预览字幕", close: "关闭预览", retry: "重试", refresh: "重新获取", failed: "无法获取当前视频字幕", paste: "粘贴字幕", source: "来源", count: "{count} 段" },
+  "ja": { reloadVideo: "動画を再読み込み", reloadNeeded: "字幕を取得するには動画を再読み込みしてください。", heading: "字幕", empty: "字幕は未取得です", hint: "動画の字幕はまだ読み込まれていません。", ready: "準備完了", preview: "字幕をプレビュー", close: "プレビューを閉じる", retry: "再試行", refresh: "再取得", failed: "字幕を取得できません", paste: "貼り付けた字幕", source: "ソース", count: "{count} 件" },
+  "ko": { reloadVideo: "동영상 새로고침", reloadNeeded: "자막을 가져오려면 동영상을 새로고침하세요.", heading: "자막", empty: "아직 자막이 없습니다", hint: "동영상 자막을 아직 불러오지 않았습니다.", ready: "준비 완료", preview: "자막 미리보기", close: "미리보기 닫기", retry: "다시 시도", refresh: "다시 가져오기", failed: "자막을 가져올 수 없습니다", paste: "붙여넣은 자막", source: "소스", count: "{count}개" },
+} satisfies Record<UiLocale, Record<string, string>>;

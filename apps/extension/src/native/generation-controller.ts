@@ -1,5 +1,5 @@
 import {
-  HostRequestSchema, type HostMessage, type HostRequest, type JobSummary,
+  HostRequestSchema, HostMessageSchema, type HostMessage, type HostRequest, type JobSummary,
 } from "@immersive/core";
 
 export const GENERATION_CONTROLLER_PORT = "immersive:background-generation";
@@ -25,11 +25,23 @@ export type GenerationControllerMessage = HostMessage | GenerationControllerStat
  */
 export function installGenerationController(
   runtime: typeof chrome.runtime = chrome.runtime,
+  onCompleted: (jobId: string, title: string, documentId?: string) => void = () => {},
+  onAttention: (jobId: string, title: string, outcome: "interrupted" | "failed") => void = () => {},
 ): void {
   const clients = new Set<chrome.runtime.Port>();
   const pending = new Map<string, ForwardedRequest["type"]>();
   let host: chrome.runtime.Port | null = null;
   let active: GenerationControllerState["active"] = null;
+
+  let cancellationRequested = false;
+  let delivered = false;
+  let deliveredDocumentId: string | undefined;
+  function notifyAttention(outcome: "interrupted" | "failed"): void {
+    if (!active || delivered) return;
+    delivered = true;
+    try { onAttention(active.jobId, active.summary?.sourceTitle ?? "", outcome); }
+    catch { /* Notification failures must not affect the job. */ }
+  }
 
   function state(): GenerationControllerState {
     return { type: "generationState", active: active ? { ...active } : null };
@@ -53,8 +65,20 @@ export function installGenerationController(
     if (host) return host;
     const native = runtime.connectNative(HOST_NAME);
     host = native;
-    native.onMessage.addListener((message: HostMessage) => {
+    native.onMessage.addListener((raw: unknown) => {
       if (host !== native) return;
+      const parsed = HostMessageSchema.safeParse(raw);
+      if (!parsed.success) {
+        const reason = "Native Host returned an invalid response. Update the Host and resume from task history.";
+        for (const id of pending.keys()) broadcast({ id, type: "error", message: reason });
+        notifyAttention("interrupted");
+        pending.clear();
+        active = null;
+        broadcast(state());
+        native.disconnect();
+        return;
+      }
+      const message = parsed.data as HostMessage;
       const type = pending.get(message.id);
 
       if (active && message.id === active.requestId && message.type === "job") {
@@ -65,6 +89,27 @@ export function installGenerationController(
       const terminal = message.type === "error" || message.type === "generationSettled" ||
         message.type === "backupsFinished" || message.type === "duplicates" ||
         message.type === "cancelled";
+      if (type === "cancel" && cancellationRequested) {
+        if (message.type === "cancelled") notifyAttention("interrupted");
+        if (message.type === "error") cancellationRequested = false;
+      }
+      if (active?.requestId === message.id && (type === "generate" || type === "resume")) {
+        if (message.type === "result") deliveredDocumentId = message.document.id;
+        if (message.type === "documentChunk") deliveredDocumentId = message.documentId;
+        if (message.type === "job" && message.job.status === "completed") deliveredDocumentId = message.job.documentId;
+        // Completion follows a saved lesson, never AI output alone or failed backup.
+        if (message.type === "generationSettled" && !delivered) {
+          if (active.summary?.status === "completed" && deliveredDocumentId) {
+            delivered = true;
+            try { onCompleted(active.jobId, active.summary.sourceTitle, deliveredDocumentId); }
+            catch { /* Notification failures must not interrupt task completion. */ }
+          } else notifyAttention("interrupted");
+        }
+        if (message.type === "job" && ["waiting", "cancelled", "failed"].includes(message.job.status))
+          notifyAttention(message.job.status === "failed" ? "failed" : "interrupted");
+        if (message.type === "error") notifyAttention(cancellationRequested || active.summary?.status === "waiting" || active.summary?.status === "cancelled" ? "interrupted" : "failed");
+        if (message.type === "cancelled") notifyAttention("interrupted");
+      }
       if (terminal) {
         pending.delete(message.id);
         if (active && message.id === active.requestId &&
@@ -87,6 +132,7 @@ export function installGenerationController(
       if (active && !pending.has(active.requestId)) {
         broadcast({ id: active.requestId, type: "error", message: reason });
       }
+      notifyAttention("interrupted");
       pending.clear();
       active = null;
       broadcast(state());
@@ -139,17 +185,22 @@ export function installGenerationController(
       try {
         const native = connectHost();
         if (request.type === "generate" || request.type === "resume") {
+          cancellationRequested = false;
+          delivered = false;
+          deliveredDocumentId = undefined;
           active = {
             requestId: request.id,
             jobId: request.type === "generate" ? request.payload.id : request.jobId,
           };
           broadcast(state());
         }
+        if (request.type === "cancel" && active?.jobId === request.jobId) cancellationRequested = true;
         pending.set(request.id, request.type);
         native.postMessage(request);
       } catch (error) {
         pending.delete(request.id);
         if (active?.requestId === request.id) {
+          notifyAttention("failed");
           active = null;
           broadcast(state());
         }

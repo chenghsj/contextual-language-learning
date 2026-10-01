@@ -38,19 +38,16 @@ test("all six shared shadcn wrappers retain their original styles and variants",
 test("application-specific Card layout stays outside the shadcn Card", async () => {
   const panel = await readFile(new URL("../components/app-panel.tsx", import.meta.url), "utf8");
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
-  const legacy = await readFile(new URL("../components/scene-reader.tsx", import.meta.url), "utf8");
   const contextual = await readFile(new URL("../components/contextual-scene-reader.tsx", import.meta.url), "utf8");
   assert.match(panel, /<Card\s/);
   assert.match(panel, /mb-3 min-w-0 max-w-full p-4/);
   assert.doesNotMatch(panel, /(?:bg-card|shadow-|rounded-|border-border)/,
     "AppPanel should add spacing/heading layout, not override the shadcn Card's appearance");
   assert.match(app, /<AppPanel>/);
-  assert.match(legacy, /<AppPanel>/);
-  assert.match(contextual, /<Card className="mb-3 min-w-0 max-w-full/);
-  assert.match(app, /<Input type="file" className="h-auto min-h-10 p-\[7px\] text-xs"/,
-    "the special subtitle upload size belongs only to this usage");
-  assert.match(app, /<Textarea className="resize-y" rows=\{5\}/,
-    "textarea resize is a usage-level choice, not a global default");
+  assert.match(contextual, /data-ui="unifiedReader"/);
+  const importing = await readFile(new URL("../components/subtitle-import.tsx", import.meta.url), "utf8");
+  assert.match(importing, /<Input ref=\{fileInput\} type="file" className="hidden"/);
+  assert.match(importing, /<Textarea id=\{pasteId\} className="resize-y" rows=\{5\}/);
   assert.doesNotMatch(app, /<Button variant="outline" className="bg-secondary/,
     "the original shadcn outline variant must not be recolored by page CSS");
 });

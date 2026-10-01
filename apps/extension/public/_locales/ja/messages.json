@@ -1,11 +1,11 @@
 {
   "extensionName": {
-    "message": "AIで学ぶ文脈型語学学習"
+    "message": "Contextual Language Learning"
   },
   "extensionDescription": {
     "message": "動画の字幕をAIでレベルに合った教材にし、会話の文脈理解と文ごとの繰り返し再生で学べます。"
   },
   "actionTitle": {
-    "message": "AIで学ぶ文脈型語学学習を開く"
+    "message": "Contextual Language Learningを開く"
   }
 }

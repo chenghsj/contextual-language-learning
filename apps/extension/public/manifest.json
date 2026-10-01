@@ -5,10 +5,10 @@
   "version": "0.1.0",
   "permissions": [
     "sidePanel",
+    "notifications",
     "nativeMessaging",
     "storage",
-    "tabs",
-    "downloads"
+    "tabs"
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
