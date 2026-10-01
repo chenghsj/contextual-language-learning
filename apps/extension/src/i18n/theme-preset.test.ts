@@ -84,15 +84,16 @@ test("button variants and utility feedback use theme tokens instead of the old f
 });
 
 test("primary Side Panel action utilities keep readable labels and the warm palette", () => {
-  const actions = [...app.matchAll(/<Button(?: variant="[^"]+")? className="([^"]+)"[^>]*>/g)]
-    .map(match => match[1]).filter(classes => classes.includes("font-semibold") && classes.includes("whitespace-normal"));
-  assert.ok(actions.length >= 2, "subtitle and generation actions remain legible");
-  for (const classes of actions) {
-    assert.ok(classes.includes("text-sm") || classes.includes("text-xs"));
-    assert.ok(classes.includes("font-semibold"));
-    assert.ok(classes.includes("whitespace-normal"));
+  const generation = app.match(/<Button className="([^"]+)" onClick=\{startGeneration\}/)?.[1];
+  const subtitles = app.match(/<Button size="sm" className="([^"]+)"[\s\S]*?onClick=\{\(\) => void fetchCurrentSubtitles\(\)\}/)?.[1];
+  assert.ok(generation && subtitles, "generation and subtitle actions remain present");
+  assert.match(generation, /text-xs font-semibold/);
+  for (const classes of [generation, subtitles]) {
+    assert.match(classes, /whitespace-normal/);
+    assert.match(classes, /wrap-anywhere/);
     assert.doesNotMatch(classes, /\bbg-(?:red|green)/);
   }
+  assert.match(button, /sm: "h-8[^"\n]*text-xs/);
   assert.equal(light.primary, "oklch(0.6171 0.1375 39.0427)");
   assert.match(light["primary-foreground"], /^oklch\(1(?:\.0+)? 0 0\)$/);
   assert.match(css, /@custom-variant dark \(&:is\(\.dark \*\)\);/);

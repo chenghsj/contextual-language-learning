@@ -121,7 +121,7 @@ test("setting help opens its level descriptions and Escape returns focus to its 
   } finally { await view.close(); }
 });
 
-test("Tabs navigate by keyboard, Accordion toggles content and Switch preserves controlled state", async () => {
+test("page buttons navigate, Accordion toggles content and Switch preserves controlled state", async () => {
   function Controls() {
     const [page, setPage] = useState<"create" | "lessons" | "settings">("create");
     const [checked, setChecked] = useState(false);
@@ -131,12 +131,16 @@ test("Tabs navigate by keyboard, Accordion toggles content and Switch preserves 
   }
   const view = await mount(<Controls />);
   try {
-    const tabs = view.container.querySelectorAll('[role="tab"]');
-    await act(async () => { (tabs[0] as HTMLElement).focus(); });
-    await key(tabs[0], "ArrowRight");
-    assert.equal(tabs[1].getAttribute("aria-selected"), "true");
-    assert.equal(tabs.length, 2);
-    await key(tabs[1], "ArrowLeft"); assert.equal(tabs[0].getAttribute("aria-selected"), "true");
+    const pages = view.container.querySelectorAll<HTMLButtonElement>("nav button");
+    assert.equal(pages.length, 2);
+    assert.equal(pages[0].getAttribute("aria-current"), "page");
+    await act(async () => { pages[1].focus(); });
+    assert.equal(document.activeElement, pages[1]);
+    await click(pages[1]);
+    assert.equal(pages[1].getAttribute("aria-current"), "page");
+    assert.equal(pages[0].getAttribute("aria-current"), null);
+    await click(pages[0]);
+    assert.equal(pages[0].getAttribute("aria-current"), "page");
     const accordion = view.container.querySelector('button[aria-expanded]')!;
     assert.equal(accordion.getAttribute("aria-expanded"), "false");
     await click(accordion);

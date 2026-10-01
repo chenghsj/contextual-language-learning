@@ -79,11 +79,12 @@ test("task cards use one Tailwind layout below the refresh control", async () =>
   assert.doesNotMatch(css, /\.jobHistoryList\s*\{/);
 });
 
-test("navigation uses two primary tabs", async () => {
+test("navigation uses two primary page buttons", async () => {
   const nav = await readFile(new URL("../components/side-panel-navigation.tsx", import.meta.url), "utf8");
-  assert.ok(nav.includes("grid-cols-2"));
-  assert.ok(nav.includes("<TabsList"));
-  assert.ok(nav.includes("<TabsTrigger"));
+  assert.match(nav, /<nav[^>]*aria-label/);
+  assert.match(nav, /<Button variant="ghost" size="sm"/);
+  assert.match(nav, /aria-current=\{active === id \? "page" : undefined\}/);
+  assert.doesNotMatch(nav, /<TabsTrigger/);
 });
 
 test("the supplied dark tokens and V4 reader retain Tailwind utilities", async () => {
@@ -199,17 +200,19 @@ test("all twelve learning languages have localized names, levels and help withou
 });
 
 
-test("setting help is label-aligned and does not repeat general explanations below selects", async () => {
+test("learning help is label-aligned and general settings describe the language inline", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   const help = await readFile(new URL("../components/setting-info.tsx", import.meta.url), "utf8");
   for (const id of ["learning-target", "learning-level", "learning-length", "contextual-examples", "learning-explanation-language", "ui-language-select", "appearance-select"]) {
     assert.ok(app.includes('htmlFor="' + id + '"'), id + " must have a real label");
   }
-  for (const key of ["lessonLengthHint", "contextualExamplesHint", "uiLanguageHint", "appearanceHint"]) {
+  for (const key of ["lessonLengthHint", "contextualExamplesHint"]) {
     assert.ok(app.includes('explanation={t("' + key + '")}'), key + " belongs in info help");
     assert.ok(!app.includes('>{t("' + key + '")}</p>'), key + " must not be duplicated under the select");
   }
   assert.ok(app.includes('relative mb-[6px] flex min-w-0 items-center gap-2'));
+  assert.match(app, /aria-describedby="ui-language-hint"/);
+  assert.match(app, /<p id="ui-language-hint"[^>]*>\{t\("uiLanguageHint"\)\}<\/p>/);
   assert.ok(help.includes('<Button variant="ghost" size="icon"'));
   assert.ok(help.includes('<PopoverContent collisionPadding={8}'));
   assert.ok(help.includes("max-w-[calc(100vw-16px)]"));

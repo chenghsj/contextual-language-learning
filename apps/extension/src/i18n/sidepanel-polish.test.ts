@@ -29,10 +29,11 @@ test("task actions show pending state and status badges never wrap vertically", 
   assert.match(history, /<strong className="min-w-0 flex-1 truncate" title=\{job\.sourceTitle\}>/);
 });
 
-test("navigation and Drive backup use standard Tabs and Switch components", async () => {
+test("navigation and Drive backup use standard Button and Switch components", async () => {
   const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8");
   const nav = await readFile(new URL("../components/side-panel-navigation.tsx", import.meta.url), "utf8");
-  assert.match(nav, /<TabsTrigger/);
+  assert.match(nav, /<Button variant="ghost" size="sm"/);
+  assert.match(nav, /aria-current=/);
   assert.match(app, /<Switch checked=\{backup.enabled\}/);
   assert.doesNotMatch(nav, /bg-card!|hover:bg-transparent|shadow-\[/);
 });
