@@ -59,7 +59,7 @@ try {
     const hostName = hostNames[index];
     await writeFile(join(hostStage, "README.md"), [
       "# AI-powered Contextual Language Learning — " + platform + " Native Host", "",
-      "Requires Node.js 22+, at least one installed and signed-in CLI Agent,",
+      "Requires Node.js 22+ and an account/API key for a supported Pi provider,",
       "and the matching Chromium extension. Windows additionally requires Windows PowerShell 5.1",
       "and .NET Framework to compile the small launcher executable during installation.", "",
       "1. Extract the Chromium ZIP separately and load it from chrome://extensions",
@@ -76,7 +76,7 @@ try {
       "to the installed Node runtime; do not point Chrome's manifest at a .cmd file.",
       "On Linux, install zenity or kdialog for the native folder picker.",
       "Google Drive OAuth and Keychain storage remain macOS-only and experimental.",
-      "CLI credentials are never included in this ZIP.", "",
+      "Connect your AI provider from Extension Settings. Credentials are never included in this ZIP.", "",
     ].join("\n"));
     await exec("zip", ["-X", "-q", "-r", join(assetDir, hostName), "."], { cwd: hostStage });
   }

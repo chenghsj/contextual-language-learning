@@ -1,4 +1,5 @@
 import { build } from "esbuild";
+import { piBundlePlugin, piRequireBanner } from "./pi-bundle.mjs";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -17,13 +18,14 @@ if (clientId && !/^[A-Za-z0-9_.-]+[.]apps[.]googleusercontent[.]com$/.test(clien
 }
 if (clientSecret.length > 512) throw new Error("GOOGLE_OAUTH_CLIENT_SECRET is too long");
 await build({
+  plugins: [piBundlePlugin],
   entryPoints: [resolve(root, "src/index.ts")],
   outfile: resolve(root, "dist/native-host.mjs"),
   bundle: true,
   platform: "node",
   format: "esm",
   target: "node22",
-  banner: { js: "#!/usr/bin/env node" },
+  banner: { js: "#!/usr/bin/env node\n" + piRequireBanner },
   define: {
     __GOOGLE_OAUTH_CLIENT_ID__: JSON.stringify(clientId),
     __GOOGLE_OAUTH_CLIENT_SECRET__: JSON.stringify(clientSecret),
