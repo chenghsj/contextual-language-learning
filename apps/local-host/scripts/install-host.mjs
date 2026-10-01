@@ -3,7 +3,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { installNativeHost } from "./native-host-platform.mjs";
 
-const usage = "Usage: node scripts/install-host.mjs <32-character Chromium extension ID> " +
+const usage =
+  "Usage: node scripts/install-host.mjs <32-character Chromium extension ID> " +
   "[--browser chrome|edge|chromium]\n";
 const [extensionId, ...options] = process.argv.slice(2);
 if (!extensionId || !/^[a-p]{32}$/.test(extensionId)) {
@@ -35,12 +36,24 @@ try {
   await access(sourceEntry);
   const result = await installNativeHost({ extensionId, browser, sourceRoot, sourceEntry });
   process.stdout.write(
-    "Installed " + process.platform + " Native Host for " + browser +
-    " extension " + extensionId + "\n" +
-    "Launcher: " + result.launcher + "\nManifest: " + result.manifestPath + "\n",
+    "Installed " +
+      process.platform +
+      " Native Host for " +
+      browser +
+      " extension " +
+      extensionId +
+      "\n" +
+      "Launcher: " +
+      result.launcher +
+      "\nManifest: " +
+      result.manifestPath +
+      "\n",
   );
 } catch (error) {
-  process.stderr.write("Native Host installation failed: " +
-    (error instanceof Error ? error.message : String(error)) + "\n");
+  process.stderr.write(
+    "Native Host installation failed: " +
+      (error instanceof Error ? error.message : String(error)) +
+      "\n",
+  );
   process.exitCode = 1;
 }

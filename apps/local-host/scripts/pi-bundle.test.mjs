@@ -12,10 +12,26 @@ test("standalone SDK bundle generates without node_modules and includes cancella
   const root = await mkdtemp(join(tmpdir(), "immersive-pi-bundle-"));
   try {
     const entries = ["pi.test", "provider-registry.test"];
-    await build({ entryPoints: entries.map(name => fileURLToPath(new URL(`../src/agents/${name}.ts`, import.meta.url))),
-      outdir: root, outExtension: { ".js": ".mjs" }, bundle: true, platform: "node", format: "esm", target: "node22",
-      banner: { js: piRequireBanner }, plugins: [piBundlePlugin], logLevel: "silent" });
-    await promisify(execFile)(process.execPath, ["--test", ...entries.map(name => join(root, `${name}.mjs`))],
-      { cwd: root, timeout: 30000 });
-  } finally { await rm(root, { recursive: true, force: true }); }
+    await build({
+      entryPoints: entries.map(name =>
+        fileURLToPath(new URL(`../src/agents/${name}.ts`, import.meta.url)),
+      ),
+      outdir: root,
+      outExtension: { ".js": ".mjs" },
+      bundle: true,
+      platform: "node",
+      format: "esm",
+      target: "node22",
+      banner: { js: piRequireBanner },
+      plugins: [piBundlePlugin],
+      logLevel: "silent",
+    });
+    await promisify(execFile)(
+      process.execPath,
+      ["--test", ...entries.map(name => join(root, `${name}.mjs`))],
+      { cwd: root, timeout: 30000 },
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

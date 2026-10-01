@@ -3,13 +3,7 @@
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
   "version": "0.1.0",
-  "permissions": [
-    "sidePanel",
-    "notifications",
-    "nativeMessaging",
-    "storage",
-    "tabs"
-  ],
+  "permissions": ["sidePanel", "notifications", "nativeMessaging", "storage", "tabs"],
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://m.youtube.com/*",
@@ -37,45 +31,25 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "https://www.youtube.com/*",
-        "https://m.youtube.com/*"
-      ],
-      "js": [
-        "youtube-page.js"
-      ],
+      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
+      "js": ["youtube-page.js"],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
-      "matches": [
-        "https://www.youtube.com/*",
-        "https://m.youtube.com/*"
-      ],
-      "js": [
-        "youtube.js"
-      ],
+      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
+      "js": ["youtube.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": [
-        "https://www.netflix.com/*",
-        "https://netflix.com/*"
-      ],
-      "js": [
-        "netflix-page.js"
-      ],
+      "matches": ["https://www.netflix.com/*", "https://netflix.com/*"],
+      "js": ["netflix-page.js"],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
-      "matches": [
-        "https://www.netflix.com/*",
-        "https://netflix.com/*"
-      ],
-      "js": [
-        "netflix.js"
-      ],
+      "matches": ["https://www.netflix.com/*", "https://netflix.com/*"],
+      "js": ["netflix.js"],
       "run_at": "document_idle"
     }
   ],

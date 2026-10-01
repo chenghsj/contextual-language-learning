@@ -30,6 +30,7 @@ jobs:
             exit 1
           fi
       - run: pnpm install --no-frozen-lockfile
+      - run: pnpm format:check
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
@@ -64,6 +65,7 @@ jobs:
         with:
           node-version: 22
       - run: pnpm install --no-frozen-lockfile
+      - run: pnpm format:check
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build

@@ -47,19 +47,19 @@ Create a new task with a connected provider. Completed lessons remain readable.
 Install and register the matching Native Host package once for your OS and current
 browser extension ID. The Host includes the SDK and runs on Node.js 22+.
 The Extension requires matching package versions, Pi SDK mode and Native Messaging
-protocol version 3. Rebuild/reinstall the Host when upgrading from CLI mode.
+protocol version 4. Rebuild/reinstall the Host when upgrading from CLI mode.
 Connecting or disconnecting an AI service does not change browser registration.
 
-### V4 data policy
+### V5 data policy
 
-V4 lessons use one contextual document format. The canonical local repository is
-`~/Documents/Immersive Learning/data-v4/`; jobs and lessons are stored separately
+V5 lessons use one contextual document format. The canonical local repository is
+`~/Documents/Immersive Learning/data-v5/`; jobs and lessons are stored separately
 under that directory. An optional selected folder receives a JSON/Markdown copy.
-Earlier V1/V2/V3 development lessons and jobs stay at their original paths for
-manual recovery, but the V4 app does not load, resume, migrate or delete them.
-Earlier Drive lesson files likewise remain untouched and are hidden from the V4
-library. Agent definitions, CLI login data, and compatible interface preferences
-are retained. There is no automatic legacy migration.
+Earlier V1/V2/V3/V4 development lessons and jobs stay at their original paths for
+manual recovery, but the V5 app does not load, resume, migrate or delete them.
+Earlier Drive lesson files likewise remain untouched and are hidden from the V5
+library. Old Agent definitions, CLI login data, and interface keys remain untouched.
+Only the new `preferencesV2` key is read; older settings are not restored. There is no automatic legacy migration.
 
 ## Features
 
@@ -69,7 +69,7 @@ are retained. There is no automatic legacy migration.
 - Connect an AI service through the bundled Pi SDK and select a model; catalog membership does not prove account entitlement.
 - Keep AI credentials in a product-owned Host directory, independent of installed CLIs.
 - Native Messaging bridge to macOS, Windows and Linux Hosts; no API keys or CLI credentials are stored in the extension.
-- Run a checkpointed V4 pipeline: chunk subtitles, select grounded scenes, validate and save each successful scene, then publish JSON/Markdown. Reopen the Side Panel and use Library task history to resume interrupted or failed V4 jobs.
+- Run a checkpointed V5 pipeline: chunk subtitles, select grounded scenes, validate and save each successful scene, then publish JSON/Markdown. Reopen the Side Panel and use Library task history to resume interrupted or failed V5 jobs.
 - Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping and user-triggered playback speed (0.5×–2×).
 - Netflix has optional, user-initiated seek, per-sentence looping and playback speed (0.5×–2×) via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). Subtitle retrieval is user-initiated and conditional on Netflix exposing a readable timed-text document in the active session. It does not bypass DRM, intercept keyboard shortcuts or open a second playback session.
 
@@ -87,11 +87,33 @@ Extract the **Chromium** ZIP, open chrome://extensions, enable Developer mode, s
 
 Copy the extension's 32-character ID from `chrome://extensions` (or `edge://extensions`). Extract the **Host ZIP for your operating system** separately and run this from the extracted folder (Node.js 22+ required):
 
-~~~sh
+```sh
 node scripts/install-host.mjs YOUR_EXTENSION_ID
-~~~
+```
+
+The Host settings page separates **Download a Host package** (run from the extracted ZIP folder) from **Update from the project** (run `pnpm build`, then `pnpm host:install YOUR_EXTENSION_ID`, from the project root). After either method, reload the extension and check the connection again.
 
 For Edge append `--browser edge`; for Chromium append `--browser chromium`. The installer copies the Host to a permanent per-user location and registers the extension ID for that browser, without administrator privileges. Windows also requires Windows PowerShell 5.1 and .NET Framework to compile a tiny native `.exe` stdio launcher locally. Linux requires `zenity` or `kdialog` for graphical local-folder selection. You can remove the Host extraction afterward. Connect an AI service in Settings; the release contains no API keys or account tokens. To update the unpacked extension, extract the new Chromium ZIP into the **same** extension folder and reload it; if Chrome assigns a different extension ID, run the Host installer again with the new ID.
+
+### Uninstalling the Native Host
+
+In **Settings → Advanced**, expand **Uninstall Host** to select the browser and choose the extracted Host ZIP folder or project root. Copy the displayed command before closing the browser. The instructions also explain which functions require reinstalling the Host and which data is preserved.
+
+Fully quit the browser you are unregistering so its running Host can exit. From the extracted Host ZIP folder, run:
+
+```sh
+node scripts/uninstall-host.mjs
+```
+
+From this project's root, use:
+
+```sh
+pnpm host:uninstall
+```
+
+Both commands default to Chrome. Append `--browser edge` or `--browser chromium` for another browser. No extension ID is required. The command removes only the selected browser's registration and removes the shared Host program once no supported browser registrations remain. Repeating the command is safe when the Host is already absent.
+
+Lessons, task history, AI credentials and settings are preserved. This does not uninstall the extension. Reopen the browser afterward; the extension will report that its Host is not connected.
 
 ### Publishing the Chromium release
 
@@ -99,12 +121,12 @@ The workflow at .github/workflows/release.yml follows the ZIP packaging used by 
 
 First merge the tested PR into main. Make sure package.json and apps/extension/public/manifest.json have the same version, then create and push the matching version tag:
 
-~~~sh
+```sh
 git switch main
 git pull
 git tag v0.1.0
 git push origin v0.1.0
-~~~
+```
 
 A tag push runs the Release workflow and uploads the Chromium ZIP, three OS Host ZIPs and SHA256SUMS. Alternatively, after this workflow exists on the default branch, use GitHub Actions > Release > Run workflow with an **existing** version tag. Tag/version mismatches fail instead of shipping mismatched files. Ordinary PR builds expose the same packages as a short-lived Actions artifact called release-preview-SHA; this is not a GitHub Release. Do not tag a development branch unless you explicitly intend to release that commit.
 
@@ -112,26 +134,26 @@ A tag push runs the Release workflow and uploads the Chromium ZIP, three OS Host
 
 Prerequisites: Node.js 22+, pnpm 9, Chrome / Edge / Chromium, and an account or API key for a supported AI service. Windows additionally needs Windows PowerShell 5.1 and .NET Framework for the Host installer.
 
-~~~sh
+```sh
 git clone https://github.com/chenghsj/immersive-language-learning.git
 cd immersive-language-learning
 corepack enable
 pnpm install
 pnpm build
-~~~
+```
 
 1. Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, and select `apps/extension/dist`.
 2. Copy the newly loaded extension ID (32 characters).
 3. Register its Native Messaging Host for your OS (append `--browser edge` for Edge or `--browser chromium` for Chromium):
 
-~~~sh
+```sh
 pnpm host:install YOUR_EXTENSION_ID
-~~~
+```
 
 4. Open the Side Panel and check the **local connection service / Native Host** in Settings.
 5. In **AI services**, sign in or enter an API key, then choose a provider and model.
-6. In **建立教材**, fetch/import subtitles, set the lesson profile and generate. Canonical lessons are saved under `~/Documents/Immersive Learning/data-v4/videos/<video title>--<source ID>/`. Repeat generations of the same source share a folder even when its title changes.
-7. In **我的教材**, recover an interrupted V4 task or search by video title and expand a video to open a lesson. The reader is a Library detail page.
+6. In **建立教材**, fetch/import subtitles, set the lesson profile and generate. Canonical lessons are saved under `~/Documents/Immersive Learning/data-v5/videos/<video title>--<source ID>/`. Repeat generations of the same source share a folder even when its title changes.
+7. In **我的教材**, recover an interrupted V5 task or search by video title and expand a video to open a lesson. The reader is a Library detail page.
 
 If your browser reports a missing Native Host, confirm you installed it for the same browser and its **current extension ID**. The macOS/Linux installer writes a browser-specific NativeMessagingHosts manifest; Windows writes its path to the browser's per-user HKCU NativeMessagingHosts registry key. Re-run `pnpm build` and `pnpm host:install YOUR_EXTENSION_ID` after changing the Node installation or extension ID.
 
@@ -150,14 +172,15 @@ Adding HBO Max or Apple TV+ requires a purpose-built adapter and an explicit bro
 
 ## Engineering
 
-~~~sh
+```sh
 pnpm typecheck
 pnpm test
 pnpm build
-~~~
+```
 
 Packages:
-- `packages/core`: V4 lesson and job schemas, Native Messaging validation, subtitle parsers/chunking and time links.
+
+- `packages/core`: V5 lesson and job schemas, Native Messaging validation, subtitle parsers/chunking and time links.
 - `apps/local-host`: Native Messaging framing, isolated Pi SDK sessions and provider authentication, Job State Machine, resumable Generation Pipeline and file-backed repository ports.
 - `apps/extension`: React side panel, settings, reader, and opt-in YouTube loop content script.
 
@@ -169,7 +192,6 @@ The Reader's **開啟／切換到影片** button reuses an existing tab showing 
 
 If a watch tab was opened before installing/reloading the extension, reload **that same tab** to initialize its content scripts. Do not open a second tab to work around a missing bridge.
 
-
 Open the Netflix /watch/<video-id> page, select the learning language in **建立教材**, and click **一鍵取得目前影片字幕**. The extension reads the current playback session's available timed-text document when Netflix exposes it; it does not read protected video/audio streams. If Netflix does not expose a usable track, the UI reports the limitation instead of silently generating from incomplete captions. You may also supply a subtitle file you are permitted to process. In the Reader, open the same Netflix /watch/<video-id> URL saved with the lesson. Use the reader controls for explicit scene or sentence playback when the matching Netflix player is available. This uses a MAIN-world bridge with Netflix's **undocumented** player session API, following the pattern in your [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override) repository. Session seek times are in milliseconds.
 
 This is not an official Netflix API. The extension retrieves subtitle text only when you click the button; it may briefly select and then restore the requested track. It does not bypass content protection, extract audio/video or intercept the Netflix keyboard. Playback controls remain idle except when explicitly requested. Stop the loop before using other playback controls; manual pause/seek, page navigation or an unavailable player automatically cancel it. If the API changes, copy the timestamp and seek manually.
@@ -178,24 +200,24 @@ A real-browser test with your Netflix account is required: confirm successful ca
 
 ### Resumable job workflow
 
-The Host saves V4 snapshots under `~/Documents/Immersive Learning/data-v4/jobs/`
-after candidate selection and each validated scene. Library lists V4 tasks. Closing
+The Host saves V5 snapshots under `~/Documents/Immersive Learning/data-v5/jobs/`
+after candidate selection and each validated scene. Library lists V5 tasks. Closing
 the Side Panel leaves the background worker's active Host connection running;
-closing the browser stops it. Reopen Library to resume a waiting or failed V4
+closing the browser stops it. Reopen Library to resume a waiting or failed V5
 job from the last checkpoint. Cancelled jobs do not resume. A completed job
 can be reopened without rerunning the Agent. Large documents are split into
 bounded Native Messaging chunks and validated after reassembly.
 
 The file repository is designed for one Host writer, not simultaneous edits
 from independent browser profiles. A persistent daemon and cross-device sync
-are not implemented. Original V1/V2/V3 files remain outside the V4 repository
+are not implemented. Original V1/V2/V3/V4 files remain outside the V5 repository
 and are available only for manual recovery.
 
 ## Local-first lessons, duplicate protection and optional Drive backup
 
 Every completed lesson is saved locally first. The Create page lets you choose a local export folder and independently enable **automatic Google Drive backup**. The backup switch checks the selected account's authorization; if no account is connected, **Connect Google Drive** opens Google's consent flow. You can read completed material immediately while its backup runs. Turning the switch off does not remove local or cloud files.
 
-The V4 local library and selected export folder group JSON and Markdown files by source video. Legacy flat files are not moved when the Host lists V4 lessons. App-created Google Drive backups use a matching video subfolder under `AI-powered Contextual Language Learning`; existing app-created files still at that folder's top level are organized when the library is browsed. Folder names keep their original readable title after a source title change, while **My Lessons** shows the newest title and searches prior titles.
+The V5 local library and selected export folder group JSON and Markdown files by source video. Legacy flat files are not moved when the Host lists V5 lessons. App-created Google Drive backups use a matching video subfolder under `AI-powered Contextual Language Learning`; library browsing never moves existing cloud files. Folder names keep their original readable title after a source title change, while **My Lessons** shows the newest title and searches prior titles.
 
 Before generation, the Host searches saved local lessons and existing app-owned Drive lessons when an account is available. It compares source and transcript, and asks before generating another version. Regeneration creates a new document ID and never silently overwrites an older lesson or its progress.
 

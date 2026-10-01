@@ -4,7 +4,7 @@ This project is still private. Complete this checklist **before** changing GitHu
 
 ## Project ownership and permissions
 
-- [ ] Confirm that MIT is the intended license for *all* project-owned source and that you may publish every included dependency, asset and borrowed implementation. Review the Netflix shortcut reference and any third-party UI/icons for attribution requirements.
+- [ ] Confirm that MIT is the intended license for _all_ project-owned source and that you may publish every included dependency, asset and borrowed implementation. Review the Netflix shortcut reference and any third-party UI/icons for attribution requirements.
 - [ ] Review git history, issues, workflow logs and release archives for credentials, private subtitles, internal URLs and personal files. Deleting a secret from the latest commit does not remove it from history; rotate exposed credentials.
 - [ ] Check that screenshots, samples, tests and example transcripts are synthetic or licensed for redistribution.
 - [ ] Decide what project title, author credit, logo and screenshots should be public. The repo is currently not made public by these files.

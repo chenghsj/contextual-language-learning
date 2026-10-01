@@ -7,16 +7,16 @@ input values are preserved.
 
 ## Display boundaries
 
-| Pi output | Extension boundary | Behavior |
-| --- | --- | --- |
-| Provider listing, login, logout and transport errors | `PiSettings` | Localized feedback with diagnostic details |
-| OAuth URL instructions and device codes | `PiSettings` | Localized instructions; original URL/code retained |
-| Authentication prompts and choices | `PiSettings` | Known SDK copy translated; unknown requirements shown under localized copy, with original instructions expanded |
-| Login completion | Sonner success toast | Uses the current locale even if changed during login |
-| Model discovery errors and notices | `AiModelSelection` | Localized summary and expandable diagnostics |
-| Generation, preflight, resume and background transport failures | `NoticeViewport` | Localized summary and expandable diagnostics |
-| Generation progress | `App` | Application status and counts localized at display time |
-| Persisted job failures | `TaskHistory` | Localized at display time without rewriting stored errors |
+| Pi output                                                       | Extension boundary   | Behavior                                                                                                        |
+| --------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Provider listing, login, logout and transport errors            | `PiSettings`         | Localized feedback with diagnostic details                                                                      |
+| OAuth URL instructions and device codes                         | `PiSettings`         | Localized instructions; original URL/code retained                                                              |
+| Authentication prompts and choices                              | `PiSettings`         | Known SDK copy translated; unknown requirements shown under localized copy, with original instructions expanded |
+| Login completion                                                | Sonner success toast | Uses the current locale even if changed during login                                                            |
+| Model discovery errors and notices                              | `AiModelSelection`   | Localized summary and expandable diagnostics                                                                    |
+| Generation, preflight, resume and background transport failures | `NoticeViewport`     | Localized summary and expandable diagnostics                                                                    |
+| Generation progress                                             | `App`                | Application status and counts localized at display time                                                         |
+| Persisted job failures                                          | `TaskHistory`        | Localized at display time without rewriting stored errors                                                       |
 
 `pi-auth.ts` covers interactive SDK strings from the six supported providers:
 OpenAI, Anthropic, Google/Gemini, GitHub Copilot, OpenRouter and Antigravity.

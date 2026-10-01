@@ -18,26 +18,50 @@ assert.match(version, /^\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?$/, "Invalid package ve
 
 const extensionManifest = JSON.parse(await readFile(join(extensionDist, "manifest.json"), "utf8"));
 assert.equal(extensionManifest.manifest_version, 3, "Chromium package must use Manifest V3");
-assert.equal(extensionManifest.version, version, "Extension manifest version must match package.json");
-assert.ok(!Object.hasOwn(extensionManifest, "key"), "Release manifest must not embed an extension key");
-for (const name of ["manifest.json", "sidepanel.html", "background.js", "youtube.js", "netflix.js", "netflix-page.js"]) {
+assert.equal(
+  extensionManifest.version,
+  version,
+  "Extension manifest version must match package.json",
+);
+assert.ok(
+  !Object.hasOwn(extensionManifest, "key"),
+  "Release manifest must not embed an extension key",
+);
+for (const name of [
+  "manifest.json",
+  "sidepanel.html",
+  "background.js",
+  "youtube.js",
+  "netflix.js",
+  "netflix-page.js",
+]) {
   await access(join(extensionDist, name));
 }
 for (const size of [16, 32, 48, 128]) {
   const path = "icons/icon" + size + ".png";
   assert.equal(extensionManifest.icons?.[size], path, "Manifest icon missing for " + size);
-  assert.equal(extensionManifest.action?.default_icon?.[size], path,
-    "Toolbar icon missing for " + size);
+  assert.equal(
+    extensionManifest.action?.default_icon?.[size],
+    path,
+    "Toolbar icon missing for " + size,
+  );
   await access(join(extensionDist, path));
 }
 await access(hostDist);
-const installerFiles = ["install-host.mjs", "native-host-platform.mjs", "windows-launcher.cs", "compile-launcher.ps1"];
+const installerFiles = [
+  "install-host.mjs",
+  "uninstall-host.mjs",
+  "native-host-platform.mjs",
+  "windows-launcher.cs",
+  "compile-launcher.ps1",
+];
 for (const name of installerFiles) await access(join(hostRoot, "scripts", name));
 
 const chromiumName = "immersive-language-learning-chromium-" + version + ".zip";
 const platforms = ["macos", "windows", "linux"];
-const hostNames = platforms.map(platform =>
-  "immersive-language-learning-" + platform + "-host-" + version + ".zip");
+const hostNames = platforms.map(
+  platform => "immersive-language-learning-" + platform + "-host-" + version + ".zip",
+);
 await rm(assetDir, { recursive: true, force: true });
 await mkdir(assetDir, { recursive: true });
 const stage = await mkdtemp(join(tmpdir(), "immersive-release-"));
@@ -57,27 +81,42 @@ try {
   for (let index = 0; index < platforms.length; index++) {
     const platform = platforms[index];
     const hostName = hostNames[index];
-    await writeFile(join(hostStage, "README.md"), [
-      "# AI-powered Contextual Language Learning — " + platform + " Native Host", "",
-      "Requires Node.js 22+ and an account/API key for a supported Pi provider,",
-      "and the matching Chromium extension. Windows additionally requires Windows PowerShell 5.1",
-      "and .NET Framework to compile the small launcher executable during installation.", "",
-      "1. Extract the Chromium ZIP separately and load it from chrome://extensions",
-      "   (or edge://extensions for Edge).",
-      "2. Copy the extension's 32-character ID from the browser's extensions page.",
-      "3. Inside this extracted Host directory run:", "",
-      "   node scripts/install-host.mjs YOUR_EXTENSION_ID",
-      "",
-      "For Edge: add --browser edge. For Chromium: add --browser chromium.",
-      "The installer copies the Host to a stable user directory and registers",
-      "Native Messaging for the selected browser. It requires no administrator rights.",
-      "Use the same extension ID in the Host installer as the loaded extension.",
-      "On Windows, the installed native-host.exe is a locally compiled stdio proxy",
-      "to the installed Node runtime; do not point Chrome's manifest at a .cmd file.",
-      "On Linux, install zenity or kdialog for the native folder picker.",
-      "Google Drive OAuth and Keychain storage remain macOS-only and experimental.",
-      "Connect your AI provider from Extension Settings. Credentials are never included in this ZIP.", "",
-    ].join("\n"));
+    await writeFile(
+      join(hostStage, "README.md"),
+      [
+        "# AI-powered Contextual Language Learning — " + platform + " Native Host",
+        "",
+        "Requires Node.js 22+ and an account/API key for a supported Pi provider,",
+        "and the matching Chromium extension. Windows additionally requires Windows PowerShell 5.1",
+        "and .NET Framework to compile the small launcher executable during installation.",
+        "",
+        "1. Extract the Chromium ZIP separately and load it from chrome://extensions",
+        "   (or edge://extensions for Edge).",
+        "2. Copy the extension's 32-character ID from the browser's extensions page.",
+        "3. Inside this extracted Host directory run:",
+        "",
+        "   node scripts/install-host.mjs YOUR_EXTENSION_ID",
+        "",
+        "For Edge: add --browser edge. For Chromium: add --browser chromium.",
+        "The installer copies the Host to a stable user directory and registers",
+        "Native Messaging for the selected browser. It requires no administrator rights.",
+        "Use the same extension ID in the Host installer as the loaded extension.",
+        "On Windows, the installed native-host.exe is a locally compiled stdio proxy",
+        "to the installed Node runtime; do not point Chrome's manifest at a .cmd file.",
+        "On Linux, install zenity or kdialog for the native folder picker.",
+        "Google Drive OAuth and Keychain storage remain macOS-only and experimental.",
+        "Connect your AI provider from Extension Settings. Credentials are never included in this ZIP.",
+        "",
+        "To uninstall, fully quit the selected browser, then run from this extracted directory:",
+        "",
+        "   node scripts/uninstall-host.mjs",
+        "",
+        "For Edge: add --browser edge. For Chromium: add --browser chromium.",
+        "This removes only that browser's registration. The shared Host program is removed",
+        "after the last browser is unregistered. Lessons, task history, credentials and settings are preserved.",
+        "",
+      ].join("\n"),
+    );
     await exec("zip", ["-X", "-q", "-r", join(assetDir, hostName), "."], { cwd: hostStage });
   }
 
@@ -86,11 +125,15 @@ try {
   const chromiumContents = names(await exec("unzip", ["-Z", "-1", join(assetDir, chromiumName)]));
   assert.ok(chromiumContents.includes("manifest.json"), "Chromium ZIP lacks root manifest.json");
   for (const size of [16, 32, 48, 128]) {
-    assert.ok(chromiumContents.includes("icons/icon" + size + ".png"),
-      "Chromium ZIP lacks icon" + size + ".png");
+    assert.ok(
+      chromiumContents.includes("icons/icon" + size + ".png"),
+      "Chromium ZIP lacks icon" + size + ".png",
+    );
   }
-  assert.ok(!chromiumContents.some(path => path.startsWith("apps/") || path.startsWith("node_modules/")),
-    "Chromium ZIP contains unexpected project directories");
+  assert.ok(
+    !chromiumContents.some(path => path.startsWith("apps/") || path.startsWith("node_modules/")),
+    "Chromium ZIP contains unexpected project directories",
+  );
   for (const hostName of hostNames) {
     const contents = names(await exec("unzip", ["-Z", "-1", join(assetDir, hostName)]));
     for (const path of ["dist/native-host.mjs", ...installerFiles.map(name => "scripts/" + name)]) {
@@ -99,12 +142,15 @@ try {
   }
   const lines = [];
   for (const name of archiveNames) {
-    const digest = createHash("sha256").update(await readFile(join(assetDir, name))).digest("hex");
+    const digest = createHash("sha256")
+      .update(await readFile(join(assetDir, name)))
+      .digest("hex");
     lines.push(digest + "  " + name);
   }
   await writeFile(join(assetDir, "SHA256SUMS"), lines.join("\n") + "\n");
-  process.stdout.write("Release assets verified:\n" +
-    [...archiveNames, "SHA256SUMS"].join("\n") + "\n");
+  process.stdout.write(
+    "Release assets verified:\n" + [...archiveNames, "SHA256SUMS"].join("\n") + "\n",
+  );
 } finally {
   await rm(stage, { recursive: true, force: true });
 }

@@ -18,7 +18,14 @@ for (const locale of ["en", "zh_TW", "zh_CN", "ja", "ko"]) {
     assert.ok(catalog[key].message.trim(), locale + "/" + key + " is empty");
   }
 }
-for (const file of ["background.js", "youtube.js", "youtube-page.js", "netflix-page.js", "netflix.js", "sidepanel.html"]) {
+for (const file of [
+  "background.js",
+  "youtube.js",
+  "youtube-page.js",
+  "netflix-page.js",
+  "netflix.js",
+  "sidepanel.html",
+]) {
   await access(resolve(dist, file));
 }
 for (const script of manifest.content_scripts) {
@@ -28,24 +35,41 @@ for (const script of manifest.content_scripts) {
     // scripts by the Manifest. A shared Rollup chunk leaves `import{...}`
     // in minified entrypoints; the former regex missed this exact failure.
     // Parse the actual compiled bytes as a classic script, not as a module.
-    assert.doesNotThrow(() => new Script(source, { filename: path }),
-      path + " must be standalone classic JavaScript; check for ESM imports/exports");
-    assert.ok(!/\bimport\s*\(/.test(source),
-      path + " must not load dynamic modules in a content script");
-
+    assert.doesNotThrow(
+      () => new Script(source, { filename: path }),
+      path + " must be standalone classic JavaScript; check for ESM imports/exports",
+    );
+    assert.ok(
+      !/\bimport\s*\(/.test(source),
+      path + " must not load dynamic modules in a content script",
+    );
   }
 }
-assert.ok(manifest.content_scripts.some(script => script.world === "MAIN" && script.js.includes("netflix-page.js")));
-assert.ok(manifest.content_scripts.some(script => script.world === "MAIN" && script.js.includes("youtube-page.js")));
-// Tailwind v4 must discover the static utility groups in utility-classes.ts.
+assert.ok(
+  manifest.content_scripts.some(
+    script => script.world === "MAIN" && script.js.includes("netflix-page.js"),
+  ),
+);
+assert.ok(
+  manifest.content_scripts.some(
+    script => script.world === "MAIN" && script.js.includes("youtube-page.js"),
+  ),
+);
+// Tailwind must include the reader and controls used in the packaged Side Panel.
 const styles = (await readdir(resolve(dist, "assets"))).filter(name => name.endsWith(".css"));
 assert.ok(styles.length > 0, "the packaged Side Panel must include compiled CSS");
-const compiledCss = (await Promise.all(styles.map(name =>
-  readFile(resolve(dist, "assets", name), "utf8")
-))).join("\n");
+const compiledCss = (
+  await Promise.all(styles.map(name => readFile(resolve(dist, "assets", name), "utf8")))
+).join("\n");
 for (const selector of [".grid-cols-4", ".sticky", ".bg-card", ".text-muted-foreground"]) {
   assert.ok(compiledCss.includes(selector), "missing packaged Tailwind utility " + selector);
 }
-assert.ok(compiledCss.includes("355px"), "narrow-width contextual reader utilities were not compiled");
-assert.ok(compiledCss.includes("group-aria-checked"), "Drive backup switch state utility was not compiled");
+assert.ok(
+  compiledCss.includes("max-width:calc(100vw - 24px)"),
+  "viewport-bounded reader pronunciation controls were not compiled",
+);
+assert.ok(
+  compiledCss.includes("data-state=checked"),
+  "Drive backup switch state utility was not compiled",
+);
 process.stdout.write("Extension manifest and content-script assets OK\n");
