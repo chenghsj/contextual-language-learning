@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import {
-  CandidateBatchSchema, ContextualSceneContentSchema, FinalSelectionSchema, LearningDocumentSchema, StudySceneContentSchema, StudySceneV3Schema,
-  chunkCues, normalizeLearningCues, type CandidateScene, type JobSummary, type LearningLanguage, type PronunciationSegment, type SubtitleCue, type StudyScene, type StudySceneV3,
+  CandidateBatchSchema, ContextualSceneContentSchema, ContextualSceneSchema, FinalSelectionSchema, LearningDocumentSchema,
+  chunkCues, normalizeLearningCues, type CandidateScene, type ContextualScene, type JobSummary, type LearningLanguage, type PronunciationSegment, type SubtitleCue,
 } from "@immersive/core";
 import type { PipelineDependencies } from "./pipeline";
 import { generateWithAgent } from "../agents";
-import { candidatePrompt, contextualScenePrompt, selectionPrompt, studyScenePrompt } from "./scene-prompts";
+import { candidatePrompt, contextualScenePrompt, selectionPrompt } from "./scene-prompts";
 import { toMarkdown } from "./markdown";
 
 function assertRunning(signal: AbortSignal): void {
@@ -77,18 +77,16 @@ function validatedCandidate(
 }
 
 /** Only source-backed candidates may become scenes. Never accept model timestamps. */
-export function validateCandidateBatch(
-  chunk: SubtitleCue[], raw: unknown, chunkIndex: number, requireNeighbors = false,
-): CandidateScene[] {
+export function validateCandidateBatch(chunk: SubtitleCue[], raw: unknown, chunkIndex: number): CandidateScene[] {
   const parsed = CandidateBatchSchema.parse(raw);
   const result: CandidateScene[] = [];
   const occupied = new Set<string>();
   for (const [index, candidate] of parsed.candidates.entries()) {
     const validated = validatedCandidate(chunk, candidate, chunkIndex, index);
-    // A V3 context explanation needs a real source line *outside* its focus phrase.
+    // A context explanation needs a real source line outside its focus phrase.
     // Reject unusable candidates before writing the candidate/selection checkpoint.
     const selected = validated.cueIds.map(id => chunk.find(cue => cue.id === id)!);
-    if (requireNeighbors && validated.focusExpressions.some(expression =>
+    if (validated.focusExpressions.some(expression =>
       expressionCueIds(selected, expression).length >= validated.cueIds.length)) continue;
     if (validated.cueIds.some(id => occupied.has(id))) continue;
     for (const id of validated.cueIds) occupied.add(id);
@@ -99,7 +97,7 @@ export function validateCandidateBatch(
 
 export function chooseFinalScenes(
   raw: unknown, candidates: CandidateScene[], request: {
-    profile: { sceneCount: number; maxNewVocabulary: number };
+    profile: { sceneCount: number };
   }, allCues: SubtitleCue[],
 ): CandidateScene[] {
   const { selectedCandidateIds } = FinalSelectionSchema.parse(raw);
@@ -107,8 +105,8 @@ export function chooseFinalScenes(
   const usedCues = new Set<string>();
   const usedExpressions = new Set<string>();
   const chosen: CandidateScene[] = [];
-  const limit = Math.min(request.profile.sceneCount, request.profile.maxNewVocabulary);
-  let remaining = request.profile.maxNewVocabulary;
+  const limit = request.profile.sceneCount;
+  let remaining = request.profile.sceneCount * 2;
   for (const id of selectedCandidateIds) {
     const candidate = lookup.get(id);
     if (!candidate) throw new Error("AI selected an unknown scene ID");
@@ -130,48 +128,11 @@ export function chooseFinalScenes(
   return chosen;
 }
 
-export function assembleStudyScene(
-  candidate: CandidateScene, cues: SubtitleCue[], raw: unknown, vocabularyLimit: number, exerciseLimit: number,
-): StudyScene {
-  const content = StudySceneContentSchema.parse(raw);
-  if (content.vocabulary.length > vocabularyLimit || content.exercises.length > exerciseLimit) {
-    throw new Error("Generated scene exceeds its allocated learning budget");
-  }
-  const cueIds = candidate.cueIds;
-  const expected = new Set(cueIds);
-  if (content.translations.length !== cueIds.length ||
-      content.translations.some((translation, index) =>
-        translation.cueId !== cueIds[index] || !expected.has(translation.cueId))) {
-    throw new Error("Scene translations must reference every selected cue exactly once and in order");
-  }
-  for (const word of content.vocabulary) {
-    if (!candidate.focusExpressions.some(focus => normalizeExpression(focus) === normalizeExpression(word.expression))) {
-      throw new Error("AI introduced a vocabulary item outside the selected focus expressions");
-    }
-  }
-  const byId = new Map(cues.map(cue => [cue.id, cue]));
-  const selected = cueIds.map(id => byId.get(id));
-  if (selected.some(cue => !cue)) throw new Error("Selected source subtitles no longer exist");
-  const focusCueIds: string[] = [];
-  for (const expression of candidate.focusExpressions) {
-    const matched = expressionCueIds(selected.map(cue => cue!), expression);
-    if (!matched.length) throw new Error("Focus expression is no longer present in the original transcript");
-    if (!focusCueIds.includes(matched[0])) focusCueIds.push(matched[0]);
-  }
-  const timed = selected.every(cue => cue!.startMs !== null && cue!.endMs !== null);
-  const startMs = timed ? Math.min(...selected.map(cue => cue!.startMs!)) : null;
-  const endMs = timed ? Math.max(...selected.map(cue => cue!.endMs!)) : null;
-  return {
-    ...content, id: randomUUID(), learningGoal: candidate.learningGoal,
-    cueIds, focusCueIds, startMs, endMs,
-  };
-}
-
 /** Reject model-provided source references or examples that contradict the canonical scene. */
 export function assembleContextualScene(
   candidate: CandidateScene, cues: SubtitleCue[], raw: unknown, vocabularyLimit: number, exampleCount: number,
   language: LearningLanguage = "en",
-): StudySceneV3 {
+): ContextualScene {
   const content = ContextualSceneContentSchema.parse(raw);
   if (content.focusItems.length !== candidate.focusExpressions.length ||
       content.focusItems.length > vocabularyLimit) {
@@ -204,7 +165,6 @@ export function assembleContextualScene(
     })),
   }));
   const inScene = new Set(candidate.cueIds);
-  const focusCueIds: string[] = [];
   for (const [index, item] of content.focusItems.entries()) {
     if (normalizeExpression(item.expression) !== normalizeExpression(candidate.focusExpressions[index])) {
       throw new Error("Contextual expression must match the selected source phrase in order");
@@ -214,7 +174,6 @@ export function assembleContextualScene(
         actual.some((id, position) => id !== item.sourceCueIds[position])) {
       throw new Error("Contextual expression source cue IDs do not match the original transcript");
     }
-    if (!focusCueIds.includes(actual[0])) focusCueIds.push(actual[0]);
     if (item.contextCueIds.some(id => !inScene.has(id)) ||
         (candidate.cueIds.length > 1 && !item.contextCueIds.some(id => !actual.includes(id)))) {
       throw new Error("Context evidence must reference real neighboring dialogue cues");
@@ -233,17 +192,11 @@ export function assembleContextualScene(
     }
   }
   const timed = original.every(cue => cue.startMs !== null && cue.endMs !== null);
-  return StudySceneV3Schema.parse({
-    ...content, pronunciations, focusItems, id: randomUUID(), learningGoal: candidate.learningGoal,
-    cueIds: candidate.cueIds, focusCueIds,
+  return ContextualSceneSchema.parse({
+    ...content, pronunciations, focusItems, id: randomUUID(),
+    cueIds: candidate.cueIds,
     startMs: timed ? Math.min(...original.map(cue => cue.startMs!)) : null,
     endMs: timed ? Math.max(...original.map(cue => cue.endMs!)) : null,
-    vocabulary: content.focusItems.map(item => ({
-      expression: item.expression, meaning: item.meaning, explanation: item.contextExplanation,
-      example: item.examples[0].dialogue.find(line =>
-        normalizeExpression(line.text).includes(normalizeExpression(item.expression)))?.text ?? "",
-    })),
-    insights: [], exercises: [],
   });
 }
 
@@ -257,26 +210,19 @@ export async function runSceneGenerationPipeline(
   if (!job || job.summary.status !== "running" || !job.scenePlan) {
     throw new Error("Scene job is not in the running state");
   }
+  async function reportPhase(phase: "analyzing" | "selecting" | "creating" | "saving"): Promise<void> {
+    job = await storage.jobs.update(jobId, current => {
+      assertRunning(signal);
+      if (current.summary.status !== "running") throw new Error("Job was interrupted");
+      return { ...current, summary: { ...current.summary, phase } };
+    });
+    onProgress(job.summary);
+  }
   const chunks = chunkCues(job.request.cues);
-  const contextual = job.request.lessonFormat === "contextual-v3";
   const plan = job.scenePlan;
   if (plan.candidateChunks.length > chunks.length) throw new Error("Saved candidate checkpoint exceeds transcript");
 
-  const existing = await storage.documents.get(jobId);
-  if (existing) {
-    if (job.summary.completed !== job.summary.total || existing.schemaVersion !== (contextual ? 3 : 2)) {
-      throw new Error("Existing document conflicts with an incomplete scene job");
-    }
-    const finished = await storage.jobs.update(jobId, current => ({
-      ...current, summary: {
-        ...current.summary, status: "completed", documentId: existing.id,
-        updatedAt: new Date().toISOString(), ownerPid: undefined,
-      },
-    }));
-    onProgress(finished.summary);
-    return existing;
-  }
-
+  if (plan.candidateChunks.length < chunks.length) await reportPhase("analyzing");
   for (let index = plan.candidateChunks.length; index < chunks.length; index++) {
     assertRunning(signal);
     const normalized = normalizeLearningCues(chunks[index]);
@@ -285,7 +231,7 @@ export async function runSceneGenerationPipeline(
           job.request.agent, candidatePrompt(job.request, normalized, index, chunks.length), signal)
       : { candidates: [] };
     assertRunning(signal);
-    const candidates = validateCandidateBatch(normalized, raw, index, contextual);
+    const candidates = validateCandidateBatch(normalized, raw, index);
     job = await storage.jobs.update(jobId, current => {
       assertRunning(signal);
       if (!current.scenePlan || current.summary.status !== "running" ||
@@ -297,7 +243,7 @@ export async function runSceneGenerationPipeline(
           ...current.scenePlan, candidateChunks: [...current.scenePlan.candidateChunks, candidates],
         },
         summary: {
-          ...current.summary, completed: index + 1, updatedAt: new Date().toISOString(),
+          ...current.summary, phase: "analyzing", completed: index + 1, updatedAt: new Date().toISOString(),
         },
       };
     });
@@ -305,6 +251,7 @@ export async function runSceneGenerationPipeline(
   }
   assertRunning(signal);
   if (!job.scenePlan!.selected) {
+    await reportPhase("selecting");
     const candidates = job.scenePlan!.candidateChunks.flat();
     if (!candidates.length) throw new Error("No learnable dialogue scenes were found in this transcript");
     const raw = await (deps.generateSelection ?? generate)(
@@ -321,7 +268,7 @@ export async function runSceneGenerationPipeline(
       return {
         ...current, scenePlan: { ...current.scenePlan, selected },
         summary: {
-          ...current.summary, completed: chunks.length + 1,
+          ...current.summary, phase: "selecting", completed: chunks.length + 1,
           total: chunks.length + 1 + selected.length, updatedAt: new Date().toISOString(),
         },
       };
@@ -331,52 +278,44 @@ export async function runSceneGenerationPipeline(
 
   const selected = job.scenePlan!.selected!;
   const allCues = new Map(job.request.cues.map(cue => [cue.id, cue]));
+  if (job.sections.length < selected.length) await reportPhase("creating");
   for (let index = job.sections.length; index < selected.length; index++) {
     assertRunning(signal);
     const candidate = selected[index];
     const cues = candidate.cueIds.map(id => allCues.get(id)!);
-    const usedVocabulary = job.sections.reduce((sum, section) => sum + section.vocabulary.length, 0);
-    const usedExercises = job.sections.reduce((sum, section) => sum + section.exercises.length, 0);
+    const usedVocabulary = job.sections.reduce((sum, section) => sum + section.focusItems.length, 0);
     const vocabularyBudget = Math.min(candidate.focusExpressions.length,
-      job.request.profile.maxNewVocabulary - usedVocabulary);
-    const exerciseBudget = Math.min(1, job.request.profile.exerciseCount - usedExercises);
-    const exampleCount = job.request.profile.contextualExampleCount ?? 2;
-    let section: StudyScene | StudySceneV3 | undefined;
-    if (contextual) {
-      // A failed saved scene must not discard completed sections. Retry only
-      // the current scene when an agent's evidence IDs violate source grounding.
-      const allowedNeighbors = candidate.focusExpressions.slice(0, vocabularyBudget).map(expression => {
-        const focusIds = new Set(expressionCueIds(cues, expression));
-        return { expression, cueIds: candidate.cueIds.filter(id => !focusIds.has(id)) };
-      });
-      if (allowedNeighbors.some(item => !item.cueIds.length)) {
-        throw new Error("Selected scene lacks real neighboring dialogue for its focus expression. Choose a longer source-backed scene.");
-      }
-      for (let attempt = 0; attempt < 2; attempt++) {
-        const prompt = contextualScenePrompt(job.request, candidate, cues, vocabularyBudget, exampleCount) +
-          (attempt === 0 ? "" : "\nVALIDATION REPAIR: Previous JSON failed source-evidence validation. " +
-            "Return the complete corrected scene JSON. For each focus expression, contextCueIds MUST " +
-            "include at least one of its actual neighboring cue IDs from this allowed list: " +
-            JSON.stringify(allowedNeighbors) + ". Only reference these original cue IDs; never invent dialogue.");
-        const raw = await generate(job.request.agent, prompt, signal);
-        assertRunning(signal);
-        try {
-          section = assembleContextualScene(candidate, job.request.cues, raw, vocabularyBudget, exampleCount,
-            job.request.profile.targetLanguage);
-          break;
-        } catch (error) {
-          if (!(error instanceof Error) ||
-              !error.message.includes("Context evidence must reference real neighboring dialogue cues")) throw error;
-          if (attempt === 1) {
-            throw new Error("Context evidence is still invalid after one targeted retry: " + error.message);
-          }
+      job.request.profile.sceneCount * 2 - usedVocabulary);
+    const exampleCount = job.request.profile.contextualExampleCount;
+    let section: ContextualScene | undefined;
+    // A failed saved scene must not discard completed sections. Retry only
+    // the current scene when an agent's evidence IDs violate source grounding.
+    const allowedNeighbors = candidate.focusExpressions.slice(0, vocabularyBudget).map(expression => {
+      const focusIds = new Set(expressionCueIds(cues, expression));
+      return { expression, cueIds: candidate.cueIds.filter(id => !focusIds.has(id)) };
+    });
+    if (allowedNeighbors.some(item => !item.cueIds.length)) {
+      throw new Error("Selected scene lacks real neighboring dialogue for its focus expression. Choose a longer source-backed scene.");
+    }
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const prompt = contextualScenePrompt(job.request, candidate, cues, vocabularyBudget, exampleCount) +
+        (attempt === 0 ? "" : "\nVALIDATION REPAIR: Previous JSON failed source-evidence validation. " +
+          "Return the complete corrected scene JSON. For each focus expression, contextCueIds MUST " +
+          "include at least one of its actual neighboring cue IDs from this allowed list: " +
+          JSON.stringify(allowedNeighbors) + ". Only reference these original cue IDs; never invent dialogue.");
+      const raw = await generate(job.request.agent, prompt, signal);
+      assertRunning(signal);
+      try {
+        section = assembleContextualScene(candidate, job.request.cues, raw, vocabularyBudget, exampleCount,
+          job.request.profile.targetLanguage);
+        break;
+      } catch (error) {
+        if (!(error instanceof Error) ||
+            !error.message.includes("Context evidence must reference real neighboring dialogue cues")) throw error;
+        if (attempt === 1) {
+          throw new Error("Context evidence is still invalid after one targeted retry: " + error.message);
         }
       }
-    } else {
-      const raw = await generate(job.request.agent,
-        studyScenePrompt(job.request, candidate, cues, vocabularyBudget, exerciseBudget), signal);
-      assertRunning(signal);
-      section = assembleStudyScene(candidate, job.request.cues, raw, vocabularyBudget, exerciseBudget);
     }
     if (!section) throw new Error("Scene generation returned no validated content");
     job = await storage.jobs.update(jobId, current => {
@@ -388,7 +327,7 @@ export async function runSceneGenerationPipeline(
       return {
         ...current, sections: [...current.sections, section],
         summary: {
-          ...current.summary, completed: chunks.length + 2 + index,
+          ...current.summary, phase: "creating", completed: chunks.length + 2 + index,
           updatedAt: new Date().toISOString(),
         },
       };
@@ -396,20 +335,28 @@ export async function runSceneGenerationPipeline(
     onProgress(job.summary);
   }
   assertRunning(signal);
+  await reportPhase("saving");
   const document = LearningDocumentSchema.parse({
-    id: job.summary.id, schemaVersion: contextual ? 3 : 2, createdAt: job.summary.createdAt,
+    id: job.summary.id, schemaVersion: 4, createdAt: job.summary.createdAt,
     source: job.request.source, profile: job.request.profile, generation: job.request.agent,
     cues: job.request.cues, sections: job.sections,
   });
-  if (document.schemaVersion !== (contextual ? 3 : 2)) throw new Error("Scene generation created an unexpected document version");
-  const vocabulary = document.sections.reduce((sum, scene) => sum + scene.vocabulary.length, 0);
-  const exercises = document.sections.reduce((sum, scene) => sum + scene.exercises.length, 0);
-  if (vocabulary > job.request.profile.maxNewVocabulary ||
-      exercises > job.request.profile.exerciseCount ||
+  const vocabulary = document.sections.reduce((sum, scene) => sum + scene.focusItems.length, 0);
+  if (vocabulary > job.request.profile.sceneCount * 2 ||
       document.sections.length > job.request.profile.sceneCount) {
     throw new Error("Final lesson exceeds the configured video-wide learning budget");
   }
-  await storage.documents.save(document, toMarkdown(document));
+  // A crash can happen after the canonical document was saved but before the
+  // completed status was checkpointed. Resume is idempotent only for the exact
+  // same validated content; a conflicting saved document is never overwritten.
+  const existingDocument = await storage.documents.get(document.id);
+  if (existingDocument) {
+    if (JSON.stringify(existingDocument) !== JSON.stringify(document)) {
+      throw new Error("Saved document conflicts with the resumed V4 checkpoint");
+    }
+  } else {
+    await storage.documents.save(document, toMarkdown(document));
+  }
   const finished = await storage.jobs.update(jobId, current => {
     if (current.summary.status !== "running" || signal.aborted) {
       throw new Error("Job was interrupted while saving its document");

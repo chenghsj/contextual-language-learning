@@ -3,10 +3,11 @@ import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promise
 import { homedir } from "node:os";
 import { join } from "node:path";
 import {
-  JobSnapshotSchema, StudyProgressSchema, readLearningDocument, learningDocumentToMarkdown,
-  type JobSnapshot, type JobSummary, type LearningDocument, type PlaybackOverride, type StudyProgress,
+  JobSnapshotSchema, readLearningDocument, learningDocumentToMarkdown, withSentenceTiming,
+  type JobSnapshot, type JobSummary, type LearningDocument, type PlaybackOverride,
 } from "@immersive/core";
-import type { DocumentRepository, JobRepository, ProgressRepository, StoragePorts } from "./ports";
+import { LessonJobRecordSchema, type LessonJobRecord, type DocumentRepository, type JobRepository, type StoragePorts } from "./ports";
+import { findVideoDocument, listVideoDocumentIds, videoFolder } from "./video-folders";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -28,7 +29,11 @@ async function atomicWrite(path: string, content: string): Promise<void> {
 export class FileJobRepository implements JobRepository {
   private readonly folder: string;
   private readonly locks = new Map<string, Promise<void>>();
-  constructor(root: string) { this.folder = join(root, "jobs"); }
+  private readonly recordsFolder: string;
+  constructor(root: string) {
+    this.folder = join(root, "jobs");
+    this.recordsFolder = join(root, "lesson-records");
+  }
 
   private filename(id: string): string { return join(this.folder, safeId(id) + ".json"); }
 
@@ -45,7 +50,7 @@ export class FileJobRepository implements JobRepository {
     const valid = JobSnapshotSchema.parse(job);
     await mkdir(this.folder, { recursive: true, mode: 0o700 });
     const filename = this.filename(valid.summary.id);
-    if (await this.get(valid.summary.id)) throw new Error("This job ID already exists");
+    if (await this.getRecord(valid.summary.id)) throw new Error("This job ID already exists");
     await atomicWrite(filename, JSON.stringify(valid, null, 2) + "\n");
   }
 
@@ -58,36 +63,113 @@ export class FileJobRepository implements JobRepository {
       return job?.summary ?? null;
     }));
     return items.filter((item): item is JobSummary => item !== null)
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, Math.min(limit, 5000));
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, limit);
   }
 
   async update(id: string, change: (current: JobSnapshot) => JobSnapshot): Promise<JobSnapshot> {
-    const prior = this.locks.get(id) ?? Promise.resolve();
-    let release!: () => void;
-    const pending = new Promise<void>(resolve => { release = resolve; });
-    const lock = prior.then(() => pending);
-    this.locks.set(id, lock);
-    await prior;
-    try {
+    return this.withLock(id, async () => {
       const current = await this.get(id);
       if (!current) throw new Error("Job does not exist: " + id);
       const updated = JobSnapshotSchema.parse(change(current));
       if (updated.summary.id !== id) throw new Error("Job identity cannot change");
       await atomicWrite(this.filename(id), JSON.stringify(updated, null, 2) + "\n");
       return updated;
-    } finally {
+    });
+  }
+
+  private async withLock<T>(id: string, work: () => Promise<T>): Promise<T> {
+    const prior = this.locks.get(id) ?? Promise.resolve();
+    let release!: () => void;
+    const pending = new Promise<void>(resolve => { release = resolve; });
+    const lock = prior.then(() => pending);
+    this.locks.set(id, lock);
+    await prior;
+    try { return await work(); }
+    finally {
       release();
       if (this.locks.get(id) === lock) this.locks.delete(id);
     }
   }
+
+  async getRecord(id: string): Promise<LessonJobRecord | null> {
+    const job = await this.get(id);
+    if (job) return LessonJobRecordSchema.parse(job);
+    try {
+      const record = LessonJobRecordSchema.parse(JSON.parse(await readFile(join(this.recordsFolder, safeId(id) + ".json"), "utf8")));
+      if (record.summary.id !== id) throw new Error("Lesson record identity mismatch");
+      return record;
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return null;
+      throw error;
+    }
+  }
+
+  async listRecords(): Promise<JobSummary[]> {
+    const jobs = await this.list(Number.MAX_SAFE_INTEGER);
+    let names: string[];
+    try { names = await readdir(this.recordsFolder); }
+    catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return jobs;
+      throw error;
+    }
+    const known = new Set(jobs.map(job => job.id));
+    for (const name of names) {
+      if (!name.endsWith(".json") || !UUID.test(name.slice(0, -5)) || known.has(name.slice(0, -5))) continue;
+      const record = await this.getRecord(name.slice(0, -5));
+      if (record) jobs.push(record.summary);
+    }
+    return jobs;
+  }
+
+  async updateRecord(id: string, change: (current: LessonJobRecord) => LessonJobRecord): Promise<LessonJobRecord> {
+    return this.withLock(id, async () => {
+      const job = await this.get(id);
+      const current = job ? LessonJobRecordSchema.parse(job) : await this.getRecord(id);
+      if (!current) throw new Error("Lesson record not found");
+      const next = LessonJobRecordSchema.parse(change(current));
+      if (next.summary.id !== id) throw new Error("Lesson record identity cannot change");
+      if (job) {
+        const updated = JobSnapshotSchema.parse({ ...job, summary: next.summary,
+          request: { ...job.request, ...next.request } });
+        await atomicWrite(this.filename(id), JSON.stringify(updated, null, 2) + "\n");
+      } else {
+        await atomicWrite(join(this.recordsFolder, safeId(id) + ".json"), JSON.stringify(next, null, 2) + "\n");
+      }
+      return next;
+    });
+  }
+
+  async deleteHistory(id: string): Promise<void> {
+    await this.withLock(id, async () => {
+      const job = await this.get(id);
+      if (!job) return;
+      if (!["completed", "failed", "cancelled"].includes(job.summary.status)) {
+        throw new Error("Only ended jobs can be deleted");
+      }
+      if (job.summary.documentId) {
+        await mkdir(this.recordsFolder, { recursive: true, mode: 0o700 });
+        const record = LessonJobRecordSchema.parse(job);
+        await atomicWrite(join(this.recordsFolder, safeId(id) + ".json"), JSON.stringify(record, null, 2) + "\n");
+      }
+      await rm(this.filename(id), { force: true });
+    });
+  }
+
 }
 
 export class FileDocumentRepository implements DocumentRepository {
   private readonly locks = new Map<string, Promise<void>>();
   constructor(private readonly root: string) {}
+
+  private documentPath(id: string): Promise<string | null> {
+    return findVideoDocument(this.root, id);
+  }
   async get(id: string): Promise<LearningDocument | null> {
+    const safe = safeId(id);
+    const path = await this.documentPath(safe);
+    if (!path) return null;
     try {
-      return readLearningDocument(JSON.parse(await readFile(join(this.root, safeId(id) + ".json"), "utf8")) as unknown);
+      return readLearningDocument(JSON.parse(await readFile(path, "utf8")) as unknown);
     } catch (error) {
       if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return null;
       throw new Error("Cannot load document " + id + ": " + String(error));
@@ -95,15 +177,14 @@ export class FileDocumentRepository implements DocumentRepository {
   }
   async list(limit = 5000): Promise<LearningDocument[]> {
     await mkdir(this.root, { recursive: true, mode: 0o700 });
-    const entries = (await readdir(this.root))
-      .filter(name => name.endsWith(".json") && UUID.test(name.slice(0, -5)));
-    const documents = await Promise.all(entries.map(name => this.get(name.slice(0, -5))));
+    const ids = await listVideoDocumentIds(this.root);
+    const documents = await Promise.all(ids.map(id => this.get(id)));
     return documents.filter((value): value is LearningDocument => value !== null)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, Math.min(limit, 5000));
   }
 
-  /** The only intentional mutation of a finished V3 lesson: calibrated playback, never source cues. */
+  /** The only intentional mutation of a finished V4 lesson: calibrated playback, never source cues. */
   async updatePlaybackRange(id: string, cueId: string, range: PlaybackOverride | null): Promise<LearningDocument> {
     return this.updateCalibratedRange(id, cueId, range, "cue");
   }
@@ -122,7 +203,7 @@ export class FileDocumentRepository implements DocumentRepository {
     await prior;
     try {
       const document = await this.get(safe);
-      if (!document || document.schemaVersion !== 3) throw new Error("Saved V3 document not found");
+      if (!document || document.schemaVersion !== 4) throw new Error("Saved V4 document not found");
       if (kind === "cue" && (!document.cues.some(cue => cue.id === targetId) ||
           !document.sections.some(scene => scene.cueIds.includes(targetId)))) {
         throw new Error("Playback cue is not part of this lesson");
@@ -134,10 +215,12 @@ export class FileDocumentRepository implements DocumentRepository {
       const overrides = { ...document[field] };
       if (range) overrides[targetId] = range;
       else delete overrides[targetId];
-      const updated = readLearningDocument({ ...document, [field]: overrides });
-      if (updated.schemaVersion !== 3) throw new Error("Playback update changed document schema");
-      await atomicWrite(join(this.root, safe + ".json"), JSON.stringify(updated, null, 2) + "\n");
-      await atomicWrite(join(this.root, safe + ".md"), learningDocumentToMarkdown(updated));
+      const updated = readLearningDocument(kind === "cue" ? withSentenceTiming(document, targetId, range) : { ...document, [field]: overrides });
+      if (updated.schemaVersion !== 4) throw new Error("Playback update changed document schema");
+      const path = await this.documentPath(safe);
+      if (!path) throw new Error("Saved V4 document not found");
+      await atomicWrite(path, JSON.stringify(updated, null, 2) + "\n");
+      await atomicWrite(path.slice(0, -5) + ".md", learningDocumentToMarkdown(updated));
       return updated;
     } finally {
       release();
@@ -149,34 +232,18 @@ export class FileDocumentRepository implements DocumentRepository {
     const id = safeId(document.id);
     await mkdir(this.root, { recursive: true, mode: 0o700 });
     if (await this.get(id)) throw new Error("Document already exists; refusing to overwrite existing learning material");
-    // JSON is the canonical document. Markdown is a convenience export and can be repaired.
-    await atomicWrite(join(this.root, id + ".json"), JSON.stringify(document, null, 2) + "\n");
-    await atomicWrite(join(this.root, id + ".md"), markdown);
+    // Commit canonical JSON last. A crash before that point can safely retry
+    // both files; a crash afterward leaves a complete lesson for resume.
+    const folder = await videoFolder(this.root, document);
+    await atomicWrite(join(folder, id + ".md"), markdown);
+    await atomicWrite(join(folder, id + ".json"), JSON.stringify(document, null, 2) + "\n");
   }
 }
 
-export class FileProgressRepository implements ProgressRepository {
-  private readonly folder: string;
-  constructor(root: string) { this.folder = join(root, "progress"); }
-  async get(id: string): Promise<StudyProgress | null> {
-    try {
-      return StudyProgressSchema.parse(JSON.parse(await readFile(join(this.folder, safeId(id) + ".json"), "utf8")) as unknown);
-    } catch (error) {
-      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return null;
-      throw new Error("Cannot load study progress: " + String(error));
-    }
-  }
-  async save(progress: StudyProgress): Promise<void> {
-    const valid = StudyProgressSchema.parse(progress);
-    await mkdir(this.folder, { recursive: true, mode: 0o700 });
-    await atomicWrite(join(this.folder, safeId(valid.documentId) + ".json"), JSON.stringify(valid, null, 2) + "\n");
-  }
-}
-
-export function localStoragePorts(root = join(homedir(), "Documents", "Immersive Learning")): StoragePorts {
+export function localStoragePorts(root = join(homedir(), "Documents", "Immersive Learning", "data-v4")): StoragePorts {
+  const jobs = new FileJobRepository(root);
   return {
-    jobs: new FileJobRepository(root),
+    jobs,
     documents: new FileDocumentRepository(root),
-    progress: new FileProgressRepository(root),
   };
 }

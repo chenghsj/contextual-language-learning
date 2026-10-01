@@ -1,8 +1,6 @@
 import { spawn } from "node:child_process";
 import type { AgentSettings, AgentModel, AgentModelSource } from "@immersive/core";
-import { assertImportedAgentProvider } from "../agents";
-import { cliInvocation, profileEnvironment } from "./process";
-import { getCustomAgent, resolveCustomExecutable } from "./custom";
+import { cliInvocation } from "./process";
 
 const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/;
 const MODEL_LIMIT = 80;
@@ -83,25 +81,4 @@ export function probeCli(command: string, args: readonly string[], env: NodeJS.P
   });
 }
 
-export async function discoverAgentModels(settings: AgentSettings): Promise<{
-  models: AgentModel[]; source: AgentModelSource; notice?: string;
-}> {
-  assertImportedAgentProvider(settings.provider);
-  const config = await getCustomAgent(settings.provider);
-  const executable = await resolveCustomExecutable(config.executable);
-  if (!executable) return { models: [], source: "unavailable", notice: "Imported CLI not found." };
-  if (!config.modelListArgs?.length) return { models: [], source: "unavailable",
-    notice: "Use CLI default or enter a model ID. Optional model discovery is not configured." };
-  try {
-    const env = await profileEnvironment(settings, config.profileEnvVar ?? null);
-    const output = await probeCli(executable, config.modelListArgs, env);
-    let models: AgentModel[] = [];
-    try { models = parseCatalogModels(JSON.parse(output.stdout) as unknown); }
-    catch { /* A CLI may produce a plain text table instead of a JSON catalog. */ }
-    if (!models.length) models = parseCliModelTable(output.stdout || output.stderr);
-    return models.length ? { models, source: "cli" as const }
-      : { models: [], source: "unavailable" as const, notice: "No parseable models. Enter a model ID manually." };
-  } catch {
-    return { models: [], source: "unavailable" as const, notice: "Model discovery failed. Enter a model ID manually." };
-  }
-}
+export { piModels as discoverAgentModels } from "./pi";

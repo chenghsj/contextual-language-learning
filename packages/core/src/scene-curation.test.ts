@@ -22,7 +22,7 @@ test("a scene job tracks curation checkpoints separately from sections", () => {
     id: "11111111-1111-4111-8111-111111111111",
     source: { platform: "youtube", title: "Example" },
     profile: { targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-      mode: "adaptive", maxNewVocabulary: 2, exerciseCount: 1, sceneCount: 3 },
+      sceneCount: 2, contextualExampleCount: 2 },
     agent: { provider: "claude", modelId: "" },
     cues: [{ id: "cue-1", startMs: 0, endMs: 2000, originalText: "Hello." }],
   });

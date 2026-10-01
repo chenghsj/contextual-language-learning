@@ -38,5 +38,5 @@ test("generic text catalogs accept nonbreaking spaces and stderr", async () => {
 
 test("removed built-in Agent cannot fetch a model catalog", async () => {
   await assert.rejects(() => discoverAgentModels({ provider: "agy", modelId: "" }),
-    /no longer supported/);
+    /old CLI/);
 });

@@ -1,19 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertImportedAgentProvider, generateWithAgent, getAgentCatalog } from "./agents";
-
-test("the Host catalog contains only user-imported Agent definitions", async () => {
-  const agents = await getAgentCatalog();
-  assert.ok(agents.every(entry =>
-    /^custom-[a-f0-9]{24}$/.test(entry.id) && entry.custom === true &&
-      typeof entry.label === "string" && typeof entry.installed === "boolean"));
+import { assertPiProvider, generateWithAgent, getAgentCatalog } from "./agents";
+import { PI_PROVIDER_IDS } from "@immersive/core";
+test("Host advertises SDK providers without CLI executable discovery", async () => {
+ const agents = await getAgentCatalog();
+ assert.deepEqual(agents.map(a => a.id), [...PI_PROVIDER_IDS]);
+ assert.ok(agents.every(a => !a.custom && !a.supportsAccountProfiles));
 });
-
-test("removed built-in providers cannot execute or be selected", async () => {
-  for (const provider of ["claude", "codex", "agy", "../../bin/sh", ""]) {
-    assert.throws(() => assertImportedAgentProvider(provider), /no longer supported/);
-    await assert.rejects(() => generateWithAgent({ provider, modelId: "" },
-      "Hello", new AbortController().signal), /no longer supported/);
-  }
-  assert.doesNotThrow(() => assertImportedAgentProvider("custom-" + "a".repeat(24)));
+test("old CLI tasks cannot silently execute with different provider semantics", async () => {
+ for (const provider of ["custom-" + "a".repeat(24), "claude", "codex", "agy", "../../bin/sh", ""]) {
+  assert.throws(() => assertPiProvider(provider), /old CLI/);
+  await assert.rejects(generateWithAgent({provider, modelId:""}, "Hello", new AbortController().signal), /old CLI/);
+ }
+ assert.doesNotThrow(() => assertPiProvider("openai"));
 });

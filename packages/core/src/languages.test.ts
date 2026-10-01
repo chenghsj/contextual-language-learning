@@ -10,8 +10,7 @@ test("language choices are valid in saved learning profiles independently of int
   for (const language of LEARNING_LANGUAGES) {
     const profile = LearningProfileSchema.parse({
       targetLanguage: language, instructionLanguage: "zh-TW",
-      level: defaultLevelForTargetLanguage(language), mode: "adaptive",
-      maxNewVocabulary: 8, exerciseCount: 3,
+      level: defaultLevelForTargetLanguage(language), sceneCount: 4, contextualExampleCount: 2,
     });
     assert.equal(profile.targetLanguage, language);
     assert.ok(levelsForTargetLanguage(language).includes(profile.level));
@@ -19,13 +18,13 @@ test("language choices are valid in saved learning profiles independently of int
   for (const language of EXPLANATION_LANGUAGES) {
     const profile = LearningProfileSchema.parse({
       targetLanguage: "es", instructionLanguage: language,
-      level: "B1", mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3,
+      level: "B1", sceneCount: 4, contextualExampleCount: 2,
     });
     assert.equal(profile.instructionLanguage, language);
   }
   assert.throws(() => LearningProfileSchema.parse({
     targetLanguage: "xx", instructionLanguage: "en", level: "B1",
-    mode: "adaptive", maxNewVocabulary: 8, exerciseCount: 3,
+    sceneCount: 4, contextualExampleCount: 2,
   }));
 });
 

@@ -26,6 +26,26 @@ export function sourceKey(source: VideoSource, cues: SubtitleCue[]): string {
   return hash("import:" + transcriptKey(cues));
 }
 
+export function videoFolderName(source: VideoSource, cues: SubtitleCue[]): string {
+  return videoFolderNameFromKey(source.title, sourceKey(source, cues));
+}
+
+export function videoFolderNameFromKey(sourceTitle: string, key: string): string {
+  if (!/^[a-f0-9]{64}$/.test(key)) throw new Error("Invalid video source key");
+  const title = sourceTitle.normalize("NFKC")
+    .replace(/[\\/:*?"<>|\x00-\x1f]/g, " ")
+    .replace(/\s+/g, " ").replace(/^\.+|\.+$/g, "").trim();
+  let safeTitle = "";
+  let characters = 0;
+  for (const character of title) {
+    if (characters >= 72 || Buffer.byteLength(safeTitle + character, "utf8") > 180) break;
+    safeTitle += character;
+    characters++;
+  }
+  safeTitle = safeTitle.trim() || "Untitled video";
+  return safeTitle + "--" + key.slice(0, 16);
+}
+
 export function settingsKey(request: Pick<GenerationRequest, "profile" | "agent">): string {
   return hash(JSON.stringify({
     profile: request.profile,
@@ -42,7 +62,7 @@ export async function findLocalDuplicates(request: GenerationRequest, storage: S
   const expectedTranscript = transcriptKey(request.cues);
   const expectedSettings = settingsKey(request);
   const documents = await storage.documents.list(5000);
-  const jobs = await storage.jobs.list(5000);
+  const jobs = await storage.jobs.listRecords();
   const byId = new Map(jobs.map(job => [job.id, job]));
   const matches: DuplicateMatch[] = [];
   for (const document of documents) {

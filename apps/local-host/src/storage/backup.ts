@@ -14,7 +14,7 @@ export async function backupSavedJob(
   const inflight = running.get(jobId);
   if (inflight) return inflight;
   const work = (async () => {
-    const job = await storage.jobs.get(jobId);
+    const job = await storage.jobs.getRecord(jobId);
     if (!job || job.summary.status !== "completed") throw new Error("Completed lesson not found");
     const setting = job.request.backup;
     if (!setting?.enabled || !setting.accountId) return null;
@@ -26,7 +26,7 @@ export async function backupSavedJob(
     }
     const document = await storage.documents.get(job.summary.documentId ?? jobId);
     if (!document) throw new Error("Local lesson is missing");
-    await storage.jobs.update(jobId, current => ({
+    await storage.jobs.updateRecord(jobId, current => ({
       ...current, summary: { ...current.summary, backup: {
         status: "uploading", accountId: setting.accountId!, updatedAt: new Date().toISOString(),
       }, updatedAt: new Date().toISOString() },
@@ -43,7 +43,7 @@ export async function backupSavedJob(
           await delay(1000 * 2 ** attempt);
         }
       }
-      await storage.jobs.update(jobId, current => ({
+      await storage.jobs.updateRecord(jobId, current => ({
         ...current, summary: { ...current.summary, backup: {
           status: "backed-up", accountId: setting.accountId!, location, updatedAt: new Date().toISOString(),
         }, updatedAt: new Date().toISOString() },
@@ -51,7 +51,7 @@ export async function backupSavedJob(
       return location;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      await storage.jobs.update(jobId, current => ({
+      await storage.jobs.updateRecord(jobId, current => ({
         ...current, summary: { ...current.summary, backup: {
           status: error instanceof DriveContentConflict ? "conflict" : "failed",
           accountId: setting.accountId!, error: message.slice(0, 500), updatedAt: new Date().toISOString(),
@@ -66,7 +66,7 @@ export async function backupSavedJob(
 
 /** Recover interrupted uploads after a Host restart; explicit failures need user action. */
 export async function resumePendingBackups(storage: StoragePorts, publisher?: BackupPublisher): Promise<void> {
-  const jobs = await storage.jobs.list(5000);
+  const jobs = await storage.jobs.listRecords();
   for (const job of jobs) {
     if (job.status !== "completed" || !job.backup || !["pending", "uploading"].includes(job.backup.status)) continue;
     try { await backupSavedJob(storage, job.id, publisher); } catch { /* failed status is persisted */ }

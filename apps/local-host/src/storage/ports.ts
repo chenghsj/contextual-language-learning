@@ -1,6 +1,17 @@
-import type { Destination, JobSnapshot, JobSummary, LearningDocument, PlaybackOverride, StudyProgress } from "@immersive/core";
+import { z } from "zod";
+import { DestinationSchema, BackupSettingsSchema, JobSummarySchema, type Destination, type JobSnapshot, type JobSummary, type LearningDocument, type PlaybackOverride } from "@immersive/core";
+
+export const LessonJobRecordSchema = z.object({
+  summary: JobSummarySchema,
+  request: z.object({ destination: DestinationSchema.optional(), backup: BackupSettingsSchema.optional() }),
+});
+export type LessonJobRecord = z.infer<typeof LessonJobRecordSchema>;
 
 export interface JobRepository {
+  deleteHistory(id: string): Promise<void>;
+  getRecord(id: string): Promise<LessonJobRecord | null>;
+  listRecords(): Promise<JobSummary[]>;
+  updateRecord(id: string, change: (current: LessonJobRecord) => LessonJobRecord): Promise<LessonJobRecord>;
   create(job: JobSnapshot): Promise<void>;
   get(id: string): Promise<JobSnapshot | null>;
   list(limit?: number): Promise<JobSummary[]>;
@@ -15,16 +26,10 @@ export interface DocumentRepository {
   updateScenePlaybackRange(id: string, sceneId: string, range: PlaybackOverride | null): Promise<LearningDocument>;
 }
 
-export interface ProgressRepository {
-  get(documentId: string): Promise<StudyProgress | null>;
-  save(progress: StudyProgress): Promise<void>;
-}
-
 /** One repository instance is a single writer. Synchronization across processes belongs to a future daemon. */
 export interface StoragePorts {
   jobs: JobRepository;
   documents: DocumentRepository;
-  progress: ProgressRepository;
 }
 
 export interface DocumentPublisher {

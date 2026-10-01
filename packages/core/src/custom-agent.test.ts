@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CustomAgentConfigSchema, HostRequestSchema } from "./schema";
+import { CustomAgentConfigSchema } from "./schema";
+import { HostRequestSchema } from "./protocol-schema";
 
 const valid = {
   id: "custom-" + "a".repeat(24), label: "My CLI", executable: "gemini",

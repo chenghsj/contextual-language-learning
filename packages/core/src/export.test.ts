@@ -3,14 +3,14 @@ import test from "node:test";
 import { LearningDocumentSchema } from "./schema";
 import { compactStudyExport, learningDocumentToMarkdown } from "./export";
 
-const v3 = LearningDocumentSchema.parse({
-  schemaVersion: 3,
+const document = LearningDocumentSchema.parse({
+  schemaVersion: 4,
   id: "00000000-0000-4000-8000-000000000001",
   createdAt: "2026-09-26T00:00:00.000Z",
   source: { platform: "youtube", title: "Context * lesson" },
   profile: { targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-    mode: "adaptive", maxNewVocabulary: 2, exerciseCount: 0, sceneCount: 1, contextualExampleCount: 1 },
-  generation: { provider: "claude", modelId: "" },
+    sceneCount: 2, contextualExampleCount: 1 },
+  generation: { provider: "custom-" + "a".repeat(24), modelId: "" },
   cues: [
     { id: "unused", startMs: 0, endMs: 500, originalText: "Unused" },
     { id: "q", startMs: 1000, endMs: 2000, originalText: "What about dinner?" },
@@ -19,10 +19,8 @@ const v3 = LearningDocumentSchema.parse({
   sections: [{
     id: "00000000-0000-4000-8000-000000000002",
     title: "Dinner plans", context: "A real exchange about an undecided plan.",
-    learningGoal: "Understand an undecided plan.",
-    cueIds: ["q", "a"], focusCueIds: ["a"], startMs: 1000, endMs: 3300,
+    cueIds: ["q", "a"], startMs: 1000, endMs: 3300,
     translations: [{ cueId: "q", text: "晚餐呢？" }, { cueId: "a", text: "我還沒決定。" }],
-    vocabulary: [], insights: [], exercises: [],
     focusItems: [{
       expression: "I haven't decided yet.", sourceCueIds: ["a"],
       meaning: "我還沒決定。", contextExplanation: "The question shows what is still undecided.",
@@ -35,119 +33,35 @@ const v3 = LearningDocumentSchema.parse({
   }],
 });
 
-test("V3 Markdown includes original context, word notes and clearly labeled AI examples", () => {
-  const md = learningDocumentToMarkdown(v3);
+test("V4 Markdown keeps source evidence, word notes and labeled AI examples", () => {
+  const md = learningDocumentToMarkdown(document);
   assert.ok(md.includes("Context \\* lesson"));
   assert.match(md, /> \[1s\] What about dinner\?/);
-  assert.match(md, /### Focus expressions/);
   assert.match(md, /The question shows what is still undecided/);
   assert.match(md, /\*\*Word notes\*\*/);
   assert.match(md, /\*\*AI-created contextual examples\*\*/);
-  assert.match(md, /A friend asks about a trip/);
 });
 
-test("compact V3 JSON keeps focus content but removes transcript cues outside selected scenes", () => {
-  const compact = compactStudyExport(v3);
-  assert.equal(compact.schemaVersion, 3);
+test("compact V4 export retains contextual content and selected source cues", () => {
+  const compact = compactStudyExport(document);
   assert.deepEqual(compact.cues.map(cue => cue.id), ["q", "a"]);
   assert.equal(compact.sections[0].focusItems[0].examples.length, 1);
 });
 
-
-const legacyProfile = {
-  targetLanguage: "en" as const, instructionLanguage: "zh-TW" as const, level: "B1",
-  mode: "adaptive" as const, maxNewVocabulary: 2, exerciseCount: 1, sceneCount: 2,
-};
-const legacyBase = {
-  id: v3.id, createdAt: v3.createdAt, source: v3.source, generation: v3.generation,
-  profile: legacyProfile, cues: v3.cues,
-};
-const legacyVocabulary = [{
-  expression: "decide", meaning: "決定", explanation: "Choose an option.",
-  example: "Let's decide tomorrow.",
-}];
-
-test("saved V1 lessons still parse and export without dropping historical cues or practice", () => {
-  const v1 = LearningDocumentSchema.parse({
-    ...legacyBase, schemaVersion: 1,
-    sections: [{
-      id: "00000000-0000-4000-8000-000000000002", title: "Old study card",
-      context: "The dinner conversation.", cueIds: ["q", "a"],
-      startMs: 1000, endMs: 3300,
-      vocabulary: legacyVocabulary, insights: ["Still deciding"],
-      exercises: [{ question: "What is undecided?", answer: "Dinner" }],
-    }],
-  });
-  const compact = compactStudyExport(v1);
-  assert.equal(compact.schemaVersion, 1);
-  assert.equal(compact.cues.length, 3, "V1 keeps its complete original transcript");
-  assert.equal(LearningDocumentSchema.parse(JSON.parse(JSON.stringify(compact))).schemaVersion, 1);
-  const md = learningDocumentToMarkdown(v1);
-  assert.match(md, /Old study card/);
-  assert.match(md, /### Vocabulary/);
-  assert.match(md, /decide/);
-  assert.match(md, /### Practice/);
-  assert.match(md, /What is undecided/);
-  assert.doesNotMatch(md, /AI-created contextual examples/);
-});
-
-test("saved V2 lessons still parse and export translations and exercises without V3 focus items", () => {
-  const v2 = LearningDocumentSchema.parse({
-    ...legacyBase, schemaVersion: 2,
-    sections: [{
-      id: "00000000-0000-4000-8000-000000000002", title: "Old contextual scene",
-      context: "The dinner conversation.", learningGoal: "Understand a decision.",
-      cueIds: ["q", "a"], focusCueIds: ["a"], startMs: 1000, endMs: 3300,
-      translations: [{ cueId: "a", text: "我還沒決定。" }],
-      vocabulary: legacyVocabulary, insights: ["Still deciding"],
-      exercises: [{ type: "situational", question: "What is undecided?", answer: "Dinner" }],
-    }],
-  });
-  const compact = compactStudyExport(v2);
-  assert.equal(compact.schemaVersion, 2);
-  assert.deepEqual(compact.cues.map(cue => cue.id), ["q", "a"]);
-  assert.equal(LearningDocumentSchema.parse(JSON.parse(JSON.stringify(compact))).schemaVersion, 2);
-  const md = learningDocumentToMarkdown(v2);
-  assert.match(md, /Old contextual scene/);
-  assert.match(md, /我還沒決定/);
-  assert.match(md, /### Vocabulary/);
-  assert.match(md, /### Practice/);
-  assert.doesNotMatch(md, /AI-created contextual examples/);
-});
-
-test("V3 calibration is optional, portable in compact JSON and Markdown, and never edits original captions", () => {
-  const calibrated = LearningDocumentSchema.parse({
-    ...v3, playbackOverrides: { a: { startMs: 2300, endMs: 3500 } },
-  });
-  if (calibrated.schemaVersion !== 3) throw new Error("Unexpected version");
-  const exported = compactStudyExport(calibrated);
-  const imported = LearningDocumentSchema.parse(JSON.parse(JSON.stringify(exported)));
-  assert.equal(imported.schemaVersion, 3);
-  if (imported.schemaVersion !== 3) throw new Error("Unexpected export version");
-  assert.deepEqual(imported.playbackOverrides?.a, { startMs: 2300, endMs: 3500 });
-  assert.equal(imported.cues.find(cue => cue.id === "a")?.startMs, 2100);
-  assert.match(learningDocumentToMarkdown(calibrated), /User-calibrated playback/);
-  assert.match(learningDocumentToMarkdown(calibrated), /a: 2300–3500 ms/);
-  assert.equal(LearningDocumentSchema.parse(v3).schemaVersion, 3,
-    "an uncalibrated old V3 document must remain valid");
-  assert.equal(LearningDocumentSchema.safeParse({
-    ...v3, playbackOverrides: { a: { startMs: 3500, endMs: 2300 } },
-  }).success, false, "reversed calibration cannot enter the document");
-});
-
-test("scene calibration round-trips JSON and Markdown without editing scene or subtitle source", () => {
-  const sceneId = v3.sections[0].id;
+test("V4 playback calibration round trips without editing source timestamps", () => {
+  const sceneId = document.sections[0].id;
   const saved = LearningDocumentSchema.parse({
-    ...v3, scenePlaybackOverrides: { [sceneId]: { startMs: 800, endMs: 3900 } },
+    ...document,
+    playbackOverrides: { a: { startMs: 2300, endMs: 3500 } },
+    scenePlaybackOverrides: { [sceneId]: { startMs: 800, endMs: 3900 } },
   });
-  if (saved.schemaVersion !== 3) throw new Error("Expected V3 document");
   const imported = LearningDocumentSchema.parse(JSON.parse(JSON.stringify(compactStudyExport(saved))));
-  if (imported.schemaVersion !== 3) throw new Error("Expected exported V3 document");
+  assert.deepEqual(imported.playbackOverrides?.a, { startMs: 2300, endMs: 3500 });
   assert.deepEqual(imported.scenePlaybackOverrides?.[sceneId], { startMs: 800, endMs: 3900 });
-  assert.equal(imported.sections[0].startMs, 1000);
-  assert.equal(imported.cues.find(cue => cue.id === "q")?.startMs, 1000);
+  assert.equal(imported.cues.find(cue => cue.id === "a")?.startMs, 2100);
   assert.match(learningDocumentToMarkdown(saved), /User-calibrated scene playback/);
   assert.equal(LearningDocumentSchema.safeParse({
-    ...v3, scenePlaybackOverrides: { [sceneId]: { startMs: 4200, endMs: 3800 } },
+    ...document, playbackOverrides: { a: { startMs: 3500, endMs: 2300 } },
   }).success, false);
+  assert.equal(LearningDocumentSchema.safeParse({ ...document, schemaVersion: 3 }).success, false);
 });

@@ -9,13 +9,14 @@ import assert from "node:assert/strict";
 const host = resolve(dirname(fileURLToPath(import.meta.url)), "../dist/native-host.mjs");
 const home = await mkdtemp(join(tmpdir(), "immersive-host-smoke-"));
 const library = join(home, "Documents", "Immersive Learning");
+const v4Library = join(library, "data-v4");
 await mkdir(library, { recursive: true });
 const existingId = randomUUID();
 const profile = {
   targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-  mode: "guided", maxNewVocabulary: 3, exerciseCount: 1,
+  sceneCount: 2, contextualExampleCount: 1,
 };
-// Old document metadata remains readable even though the built-in adapter is removed.
+// Historical development files remain untouched but are outside the V4 namespace.
 const legacyAgent = { provider: "claude", modelId: "" };
 const cues = [{ id: "cue-1", startMs: null, endMs: null, originalText: "Good morning." }];
 await writeFile(join(library, existingId + ".json"), JSON.stringify({
@@ -86,39 +87,55 @@ const deadline = setTimeout(() => {
 try {
   const health = await send({ type: "health", id: randomUUID() });
   assert.equal(health.type, "health");
-  assert.equal(health.agentMode, "imported-only");
-  // Installer smoke invokes the Host again; its imported CLI registry may already persist.
-  assert.ok(health.agents.every(entry => /^custom-[a-f0-9]{24}$/.test(entry.id)),
-    "Host must expose only user-imported CLI definitions");
-  assert.deepEqual(Object.keys(health.installed).sort(), health.agents.map(entry => entry.id).sort(),
-    "no removed built-in provider can appear in the Host catalog");
-  const registration = await send({ id: randomUUID(), type: "customAgentImport", config: {
-    label: "Smoke CLI", executable: process.execPath,
-    args: ["-e", "process.stdout.write(JSON.stringify({ok:true}))"],
-    promptMode: "stdin", outputMode: "stdout-json",
-  } });
-  assert.equal(registration.type, "customAgentImported");
-  assert.match(registration.agent.id, /^custom-[a-f0-9]{24}$/);
-  const agent = { provider: registration.agent.id, modelId: "" };
-  const afterImport = await send({ type: "health", id: randomUUID() });
-  assert.ok(afterImport.agents.some(entry => entry.id === agent.provider));
-  assert.equal(afterImport.installed[agent.provider], true);
-  const legacyModel = await send({ type: "agentModels", id: randomUUID(),
-    settings: legacyAgent });
+  assert.equal(health.agentMode, "pi-sdk");
+  assert.equal(health.protocolVersion, 3);
+  assert.ok(health.agents.some(entry => entry.id === "openai"));
+  assert.ok(health.agents.every(entry => !entry.custom));
+  const providers = await send({ type: "piProviders", id: randomUUID() });
+  assert.equal(providers.type, "piProviders");
+  assert.deepEqual(providers.providers.find(entry => entry.id === "antigravity")?.methods, ["oauth"]);
+  assert.ok(providers.providers.every(entry => !entry.connected));
+  const agent = { provider: "openai", modelId: "" };
+  const models = await send({ type: "agentModels", id: randomUUID(), settings: agent });
+  assert.equal(models.source, "sdk");
+  assert.ok(models.models.length);
+  const legacyModel = await send({ type: "agentModels", id: randomUUID(), settings: legacyAgent });
   assert.equal(legacyModel.type, "error");
-  assert.match(legacyModel.message, /no longer supported/);
+  assert.match(legacyModel.message, /old CLI/);
   const payload = {
     id: randomUUID(), source: { platform: "import", title: "Same subtitle, new title" },
     profile, agent, destination: { kind: "local" }, cues,
   };
   const check = await send({ type: "checkDuplicates", id: randomUUID(), payload });
   assert.equal(check.type, "duplicates");
-  assert.ok(check.matches.some(match => match.documentId === existingId));
+  assert.deepEqual(check.matches, [], "old development files must not appear as V4 duplicates");
   assert.equal(typeof check.token, "string");
 
+  const contextualId = randomUUID();
+  const contextual = {
+    id: contextualId, schemaVersion: 4, createdAt: new Date().toISOString(),
+    source: payload.source, profile, generation: agent, cues,
+    sections: [{ id: randomUUID(), title: "Morning", context: "A greeting",
+      cueIds: ["cue-1"], startMs: null, endMs: null,
+      translations: [{ cueId: "cue-1", text: "早安。" }],
+      focusItems: [{ expression: "Good morning", sourceCueIds: ["cue-1"],
+        meaning: "早安", contextExplanation: "A morning greeting", contextCueIds: ["cue-1"],
+        wordNotes: [], examples: [{ situation: "At home", dialogue: [
+          { text: "Good morning", translation: "早安" },
+          { text: "Morning", translation: "早" },
+        ] }] }],
+    }],
+  };
+  // Saving through the grouped V4 folder layout is covered by repository tests.
+  // Here a same-source V4 document checks the live Host duplicate path.
+  const folder = join(v4Library, "videos", "import--smoke");
+  await mkdir(folder, { recursive: true });
+  await writeFile(join(folder, contextualId + ".json"), JSON.stringify(contextual));
+  const v4Check = await send({ type: "checkDuplicates", id: randomUUID(), payload });
+  assert.ok(v4Check.matches.some(match => match.documentId === contextualId));
   const blocked = await send({
     type: "generate", id: payload.id, payload,
-    checkToken: check.token, confirmRegeneration: false,
+    checkToken: v4Check.token, confirmRegeneration: false,
   });
   assert.equal(blocked.type, "error");
   assert.match(blocked.message, /確認|生成過/);
@@ -130,7 +147,8 @@ try {
   assert.equal(invalidTicket.type, "error");
   assert.match(invalidTicket.message, /檢查/);
   await assert.rejects(access(join(library, "jobs", payload.id + ".json")), { code: "ENOENT" });
-  process.stdout.write("Native Host imported-only health, historical duplicates and regeneration confirmation OK\n");
+  assert.equal(JSON.parse(await import("node:fs/promises").then(fs => fs.readFile(join(library, existingId + ".json"), "utf8"))).schemaVersion, 1);
+  process.stdout.write("Native Host V4 protocol, old data isolation and duplicate confirmation OK\n");
 } finally {
   clearTimeout(deadline);
   child.kill();

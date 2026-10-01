@@ -46,35 +46,33 @@ function content() {
 }
 function request() {
   return GenerationRequestSchema.parse({
-    id: randomUUID(), lessonFormat: "contextual-v3",
+    id: randomUUID(),
     source: { platform: "import", title: "Video dialogue" }, cues,
     profile: { targetLanguage: "en", instructionLanguage: "zh-TW", level: "B1",
-      mode: "adaptive", sceneCount: 1, maxNewVocabulary: 1, exerciseCount: 0,
-      contextualExampleCount: 2 },
-    agent: { provider: "custom-" + "a".repeat(24), modelId: "" },
+      sceneCount: 2, contextualExampleCount: 2 },
+    agent: { provider: "openai", modelId: "" },
   });
 }
 
-test("V3 maps contextual learning to original cue times, counts and saved documents", () => {
+test("V4 maps contextual learning to original cue times, counts and saved documents", () => {
   const section = assembleContextualScene(candidate, cues, content(), 1, 2);
-  assert.deepEqual(section.focusCueIds, ["cue-2"]);
+  assert.deepEqual(section.focusItems[0].sourceCueIds, ["cue-2"]);
   assert.equal(section.startMs, 1_000);
   assert.equal(section.endMs, 5_500);
   assert.equal(section.focusItems[0].examples.length, 2);
-  assert.equal(section.exercises.length, 0);
   const doc = LearningDocumentSchema.parse({
-    id: randomUUID(), schemaVersion: 3, createdAt: new Date().toISOString(),
+    id: randomUUID(), schemaVersion: 4, createdAt: new Date().toISOString(),
     source: { platform: "import", title: "Example" }, profile: request().profile,
-    generation: { provider: "custom-" + "a".repeat(24), modelId: "" }, cues, sections: [section],
+    generation: { provider: "openai", modelId: "" }, cues, sections: [section],
   });
-  if (doc.schemaVersion !== 3) throw new Error("Unexpected lesson version");
-  assert.equal(readLearningDocument(doc).schemaVersion, 3);
+  if (doc.schemaVersion !== 4) throw new Error("Unexpected lesson version");
+  assert.equal(readLearningDocument(doc).schemaVersion, 4);
   assert.equal(doc.sections[0].focusItems[0].examples.length, 2);
   assert.match(toMarkdown(doc), /AI-created contextual examples/);
   assert.doesNotMatch(toMarkdown(doc), /### Practice/);
 });
 
-test("V3 keeps only pronunciation segments aligned with unchanged source and example text", () => {
+test("V4 keeps only pronunciation segments aligned with unchanged source and example text", () => {
   const input = content();
   const section = assembleContextualScene(candidate, cues, {
     ...input,
@@ -95,19 +93,19 @@ test("V3 keeps only pronunciation segments aligned with unchanged source and exa
   assert.equal(section.focusItems[0].examples[0].dialogue[0].pronunciation, undefined);
   assert.ok(section.focusItems[0].examples[0].dialogue[1].pronunciation);
   const doc = LearningDocumentSchema.parse({
-    id: randomUUID(), schemaVersion: 3, createdAt: new Date().toISOString(),
+    id: randomUUID(), schemaVersion: 4, createdAt: new Date().toISOString(),
     source: { platform: "import", title: "Example" }, profile: request().profile,
-    generation: { provider: "custom-" + "a".repeat(24), modelId: "" }, cues, sections: [section],
+    generation: { provider: "openai", modelId: "" }, cues, sections: [section],
   });
-  assert.equal(readLearningDocument(doc).schemaVersion, 3);
+  assert.equal(readLearningDocument(doc).schemaVersion, 4);
   assert.match(toMarkdown(doc), /Pronunciation: I haven't decided yet/);
   const imported = LearningDocumentSchema.parse(JSON.parse(JSON.stringify(compactStudyExport(doc))));
-  assert.equal(imported.schemaVersion, 3);
-  if (imported.schemaVersion !== 3) throw new Error("Unexpected lesson version");
+  assert.equal(imported.schemaVersion, 4);
+  if (imported.schemaVersion !== 4) throw new Error("Unexpected lesson version");
   assert.equal(imported.sections[0].pronunciations?.[0].segments[0].reading, "/aɪ hævənt dɪˈsaɪdɪd jɛt/");
 });
 
-test("V3 omits readings in the wrong script while preserving exact source text", () => {
+test("V4 omits readings in the wrong script while preserving exact source text", () => {
   const input = content();
   const annotated = {
     ...input,
@@ -123,7 +121,7 @@ test("V3 omits readings in the wrong script while preserving exact source text",
   assert.equal(cues[1].originalText, "I haven't decided yet.");
 });
 
-test("V3 rejects invented cue references, ungrounded word notes and invalid examples", () => {
+test("V4 rejects invented cue references, ungrounded word notes and invalid examples", () => {
   assert.throws(() => assembleContextualScene(candidate, cues, {
     ...content(), focusItems: [{ ...content().focusItems[0], sourceCueIds: ["cue-404"] }],
   }, 1, 2), /source cue IDs/);
@@ -147,15 +145,25 @@ test("V3 rejects invented cue references, ungrounded word notes and invalid exam
   }, 1, 2), /focus expression/i);
 });
 
-test("V3 prompt distinguishes evidence-based video explanations and AI-created contexts", () => {
+test("V4 prompt distinguishes evidence-based video explanations and AI-created contexts", () => {
   const prompt = contextualScenePrompt(request(), candidate, cues, 1, 2);
   assert.match(prompt, /EXACTLY 2 contextual examples PER focus expression/);
   assert.match(prompt, /ACTUAL neighboring source cues/);
   assert.match(prompt, /NEVER imply examples appeared in the original video/);
   assert.ok(prompt.includes("cue-1") && prompt.includes("cue-3"));
+  assert.match(prompt, /For EACH original cue and EACH AI example dialogue line, provide pronunciation segments/);
+  const japanesePrompt = contextualScenePrompt({ ...request(), profile: { ...request().profile, targetLanguage: "ja" } }, candidate, cues, 1, 2);
+  assert.match(japanesePrompt, /short word-level segments/);
+  assert.match(japanesePrompt, /Include okurigana in the same segment as its kanji/);
+  assert.match(japanesePrompt, /kana-only words and particles their context-correct hiragana readings/);
+  assert.match(japanesePrompt, /standalone topic particle は, output reading わ/);
+  assert.match(japanesePrompt, /keep lexical は as は/);
+  assert.match(japanesePrompt, /Do not output Zhuyin\/Bopomofo or romanization/);
+  const koreanPrompt = contextualScenePrompt({ ...request(), profile: { ...request().profile, targetLanguage: "ko" } }, candidate, cues, 1, 2);
+  assert.match(koreanPrompt, /Do not output Zhuyin\/Bopomofo or romanization/);
 });
 
-test("V3 resolves expressions spanning adjacent original subtitle cues", () => {
+test("V4 resolves expressions spanning adjacent original subtitle cues", () => {
   const split = [
     { id: "a", startMs: 100, endMs: 500, originalText: "I haven't" },
     { id: "b", startMs: 510, endMs: 900, originalText: "decided yet." },
@@ -170,10 +178,10 @@ test("V3 resolves expressions spanning adjacent original subtitle cues", () => {
   };
   const scene = assembleContextualScene(candidates[0], split, splitContent, 1, 2);
   assert.deepEqual(scene.focusItems[0].sourceCueIds, ["a", "b"]);
-  assert.deepEqual(scene.focusCueIds, ["a"]);
+  assert.deepEqual(scene.focusItems[0].sourceCueIds, ["a", "b"]);
 });
 
-test("V3 generation completes through the existing resumable scene job pipeline", async () => {
+test("V4 generation completes through the existing resumable scene job pipeline", async () => {
   const root = await mkdtemp(join(tmpdir(), "immersive-contextual-"));
   try {
     const storage = localStoragePorts(root);
@@ -188,32 +196,31 @@ test("V3 generation completes through the existing resumable scene job pipeline"
       generateSection: async () => content(),
     }, () => undefined);
     const doc = await manager.start(req.id, req);
-    assert.equal(doc.schemaVersion, 3);
-    if (doc.schemaVersion !== 3) throw new Error("Unexpected lesson version");
+    assert.equal(doc.schemaVersion, 4);
+    if (doc.schemaVersion !== 4) throw new Error("Unexpected lesson version");
     assert.equal(doc.sections[0].focusItems[0].examples.length, 2);
     assert.equal((await storage.jobs.get(req.id))?.summary.status, "completed");
-    assert.equal((await storage.documents.get(req.id))?.schemaVersion, 3);
+    assert.equal((await storage.documents.get(req.id))?.schemaVersion, 4);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test("V3 candidate selection excludes scenes with no independent source context", () => {
+test("V4 candidate selection excludes scenes with no independent source context", () => {
   const isolated = { cueIds: ["cue-2"], focusExpressions: ["I haven't decided yet."],
     learningGoal: "Express uncertainty" };
   const batch = { candidates: [isolated] };
-  assert.equal(validateCandidateBatch(cues, batch, 0).length, 1,
-    "legacy V2 candidate behavior remains unchanged");
-  assert.deepEqual(validateCandidateBatch(cues, batch, 0, true), [],
-    "V3 must not save an isolated focus line as a contextual scene");
+  assert.equal(validateCandidateBatch(cues, batch, 0).length, 0);
+  assert.deepEqual(validateCandidateBatch(cues, batch, 0), [],
+    "V4 must not save an isolated focus line as a contextual scene");
   const spanning = { cueIds: ["cue-1", "cue-2"],
     focusExpressions: ["What about dinner? I haven't decided yet."],
     learningGoal: "Understand a two-cue utterance" };
-  assert.deepEqual(validateCandidateBatch(cues, { candidates: [spanning] }, 0, true), [],
+  assert.deepEqual(validateCandidateBatch(cues, { candidates: [spanning] }, 0), [],
     "a focus spanning every cue still needs actual neighboring dialogue");
 });
 
-test("V3 repairs only a scene with invalid evidence and keeps canonical cue IDs", async () => {
+test("V4 repairs only a scene with invalid evidence and keeps canonical cue IDs", async () => {
   const root = await mkdtemp(join(tmpdir(), "immersive-evidence-retry-"));
   try {
     const storage = localStoragePorts(root);
@@ -236,7 +243,7 @@ test("V3 repairs only a scene with invalid evidence and keeps canonical cue IDs"
       },
     }, () => undefined);
     const doc = await manager.start(req.id, req);
-    assert.equal(doc.schemaVersion, 3);
+    assert.equal(doc.schemaVersion, 4);
     assert.equal(attempts, 2, "only the invalid scene should be regenerated once");
     assert.match(prompts[1], /VALIDATION REPAIR/);
     assert.ok(prompts[1].includes("cue-1") && prompts[1].includes("cue-3"));

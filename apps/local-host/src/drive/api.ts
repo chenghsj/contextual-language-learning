@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { readLearningDocument, type DriveLessonSummary, type DuplicateMatch, type GenerationRequest, type LearningDocument } from "@immersive/core";
-import { settingsKey, sourceKey, transcriptKey } from "../duplicates";
+import { settingsKey, sourceKey, transcriptKey, videoFolderNameFromKey } from "../duplicates";
 import { learningDocumentToMarkdown as toMarkdownForDrive } from "@immersive/core";
 import { accessTokenFor, listGoogleAccounts } from "./oauth";
 
@@ -10,12 +10,18 @@ interface DriveFile {
   createdTime?: string;
   webViewLink?: string;
   appProperties?: Record<string, string>;
+  parents?: string[];
+}
+
+/** Old Drive files remain untouched and invisible to V4 browsing/restore. */
+export function isV4DriveFile(file: Pick<DriveFile, "appProperties">): boolean {
+  return file.appProperties?.immersiveSchemaVersion === "4";
 }
 interface DriveList { files?: DriveFile[]; nextPageToken?: string }
 const API = "https://www.googleapis.com/drive/v3";
 const UPLOAD = "https://www.googleapis.com/upload/drive/v3";
 const FOLDER_TYPE = "application/vnd.google-apps.folder";
-const FOLDER_NAME = "Immersive Learning";
+const FOLDER_NAME = "AI-powered Contextual Language Learning";
 /** Drive limits every appProperties key + value pair to 124 UTF-8 bytes, not characters. */
 export const MAX_DRIVE_PROPERTY_BYTES = 124;
 const MAX_DRIVE_PRIVATE_PROPERTIES = 30;
@@ -152,6 +158,58 @@ async function appFolder(accountId: string): Promise<string> {
   return created.id;
 }
 
+async function videoFolder(accountId: string, appFolderId: string, title: string, key: string): Promise<string> {
+  const name = videoFolderNameFromKey(title, key);
+  const suffix = name.slice(name.lastIndexOf("--"));
+  const folders = await listFiles(accountId,
+    "'" + appFolderId + "' in parents and mimeType = '" + FOLDER_TYPE + "' and trashed = false",
+    "id,name,appProperties", 5000);
+  const matches = folders.filter(folder => folder.appProperties?.immersiveSourceKey === key ||
+    folder.name.endsWith(suffix));
+  if (matches.length > 1) throw new DriveContentConflict("Multiple Drive folders exist for the same video");
+  if (matches[0]) return matches[0].id;
+  const created = await apiJSON<DriveFile>(accountId, API + "/files?fields=id,name", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, mimeType: FOLDER_TYPE, parents: [appFolderId],
+      appProperties: { immersiveSourceKey: key } }),
+  }, "備份教材");
+  return created.id;
+}
+
+async function moveAppFileToVideoFolder(accountId: string, file: DriveFile,
+  appFolderId: string, videoFolderId: string): Promise<void> {
+  if (!file.parents?.includes(appFolderId)) return;
+  const url = new URL(API + "/files/" + encodeURIComponent(file.id));
+  url.searchParams.set("addParents", videoFolderId);
+  url.searchParams.set("removeParents", appFolderId);
+  url.searchParams.set("fields", "id,parents");
+  await apiJSON<DriveFile>(accountId, url.toString(), { method: "PATCH" }, "備份教材");
+}
+
+/** Move only verified app-created lesson files still in our top-level folder. */
+async function organizeDriveRoot(accountId: string, appFolderId: string): Promise<void> {
+  const files = await listFiles(accountId,
+    "'" + appFolderId + "' in parents and trashed = false and " +
+      "(appProperties has { key='immersiveFormat' and value='json' } or " +
+      "appProperties has { key='immersiveFormat' and value='md' })",
+    "id,name,parents,appProperties", 5000);
+  const folders = new Map<string, string>();
+  for (const file of files) {
+    const properties = file.appProperties;
+    const key = properties?.immersiveSourceKey;
+    if (!key || !/^[a-f0-9]{64}$/.test(key) ||
+        !isV4DriveFile(file) ||
+        !["json", "md"].includes(properties?.immersiveFormat ?? "") ||
+        !/^[0-9a-f-]{36}$/i.test(properties?.immersiveDocumentId ?? "")) continue;
+    let folderId = folders.get(key);
+    if (!folderId) {
+      folderId = await videoFolder(accountId, appFolderId, properties?.immersiveTitle || "Untitled video", key);
+      folders.set(key, folderId);
+    }
+    await moveAppFileToVideoFolder(accountId, file, appFolderId, folderId);
+  }
+}
+
 async function uploadFile(
   accountId: string, folderId: string, fileName: string, mimeType: string, data: Buffer,
   properties: Record<string, string>,
@@ -211,7 +269,8 @@ export async function findDriveDuplicates(request: GenerationRequest): Promise<D
       propertyMatch("immersiveTranscriptKey", transcript) + ") and trashed = false",
     "id,name,createdTime,webViewLink,appProperties", 100);
   const expected = settingsKey(request);
-  return files.filter(file => file.appProperties?.immersiveFormat === "json")
+  return files.filter(file => file.appProperties?.immersiveFormat === "json" &&
+    isV4DriveFile(file))
     .map(file => ({
       documentId: file.appProperties?.immersiveDocumentId ?? "",
       title: file.name, createdAt: file.createdTime ?? new Date(0).toISOString(),
@@ -225,9 +284,9 @@ export class DriveContentConflict extends Error {
   constructor(message: string) { super(message); this.name = "DriveContentConflict"; }
 }
 
-/** A revision may change ONLY the user's optional V3 playback windows, never the video or lesson. */
+/** A revision may change only the user's optional V4 playback windows. */
 export function isPlaybackOnlyDriveRevision(before: LearningDocument, after: LearningDocument): boolean {
-  if (before.schemaVersion !== 3 || after.schemaVersion !== 3 || before.id !== after.id) return false;
+  if (before.id !== after.id) return false;
   const { playbackOverrides: oldRanges, scenePlaybackOverrides: oldScenes, ...oldContent } = before;
   const { playbackOverrides: newRanges, scenePlaybackOverrides: newScenes, ...newContent } = after;
   return JSON.stringify(oldContent) === JSON.stringify(newContent) &&
@@ -286,8 +345,9 @@ export async function publishDriveDocument(
   }
   const account = (await listGoogleAccounts()).find(item => item.id === accountId);
   if (!account) throw new Error("Google Drive 帳號尚未連線");
-  const folderId = await appFolder(accountId);
   const fingerprint = sourceKey(document.source, document.cues);
+  const appFolderId = await appFolder(accountId);
+  const folderId = await videoFolder(accountId, appFolderId, document.source.title, fingerprint);
   const properties = {
     immersiveSourceKey: fingerprint,
     immersiveTranscriptKey: transcriptKey(document.cues),
@@ -296,11 +356,15 @@ export async function publishDriveDocument(
     immersiveSchemaVersion: String(document.schemaVersion),
     immersiveTitle: boundedDriveProperty("immersiveTitle", document.source.title),
     immersiveCreatedAt: document.createdAt,
+    immersiveLanguage: document.profile.targetLanguage,
+    immersiveLevel: document.profile.level,
+    immersiveScenes: String(document.sections.length),
+    immersiveExpressions: String(document.sections.reduce((count, scene) => count + scene.focusItems.length, 0)),
   };
   const docKey = createHash("sha256").update(document.id).digest("hex");
   const found = await listFiles(accountId,
     "trashed = false and " + propertyMatch("immersiveDocumentKey", docKey),
-    "id,name,webViewLink,appProperties", 100);
+    "id,name,webViewLink,appProperties,parents", 100);
   let jsonUrl = "";
   for (const format of ["json", "md"] as const) {
     const name = "Immersive-" + document.id + "." + format;
@@ -348,6 +412,7 @@ export async function publishDriveDocument(
           })()
       : await uploadFile(accountId, folderId, name,
           format === "json" ? "application/json" : "text/markdown", content, metadata);
+    if (existing[0]) await moveAppFileToVideoFolder(accountId, existing[0], appFolderId, folderId);
     if (format === "json") jsonUrl = file.webViewLink ??
       "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view";
   }
@@ -358,17 +423,25 @@ export async function listDriveLessons(accountId: string): Promise<DriveLessonSu
   if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
     throw new Error("Google Drive account is not connected");
   }
+  await organizeDriveRoot(accountId, await appFolder(accountId));
   const files = await listFiles(accountId,
     "trashed = false and appProperties has { key='immersiveFormat' and value='json' }",
     "id,name,createdTime,webViewLink,appProperties", 500);
   const unique = new Map<string, DriveLessonSummary>();
   for (const file of files) {
+    if (!isV4DriveFile(file)) continue;
     const id = file.appProperties?.immersiveDocumentId;
     if (!id || !/^[0-9a-f-]{36}$/i.test(id) || unique.has(id)) continue;
     unique.set(id, {
       documentId: id,
       title: file.appProperties?.immersiveTitle || "Immersive lesson " + id.slice(0, 8),
       createdAt: file.appProperties?.immersiveCreatedAt || file.createdTime || new Date(0).toISOString(),
+      ...(/^[a-f0-9]{64}$/.test(file.appProperties?.immersiveSourceKey ?? "")
+        ? { sourceKey: file.appProperties!.immersiveSourceKey } : {}),
+      ...(file.appProperties?.immersiveLanguage ? { targetLanguage: file.appProperties.immersiveLanguage } : {}),
+      ...(file.appProperties?.immersiveLevel ? { level: file.appProperties.immersiveLevel } : {}),
+      ...(/^\d{1,3}$/.test(file.appProperties?.immersiveScenes ?? "") ? { sceneCount: Number(file.appProperties!.immersiveScenes) } : {}),
+      ...(/^\d{1,4}$/.test(file.appProperties?.immersiveExpressions ?? "") ? { expressionCount: Number(file.appProperties!.immersiveExpressions) } : {}),
       accountId,
       url: file.webViewLink || "https://drive.google.com/file/d/" + encodeURIComponent(file.id) + "/view",
     });
@@ -387,7 +460,8 @@ export async function getDriveDocument(accountId: string, documentId: string): P
     "trashed = false and " + propertyMatch("immersiveDocumentKey", key),
     "id,name,appProperties", 100);
   const file = files.find(item => item.appProperties?.immersiveFormat === "json" &&
-    item.appProperties?.immersiveDocumentId === documentId);
+    item.appProperties?.immersiveDocumentId === documentId &&
+    isV4DriveFile(item));
   if (!file) throw new Error("Lesson not found in Google Drive");
   const response = await googleFetch(accountId,
     API + "/files/" + encodeURIComponent(file.id) + "?alt=media");

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { boundedDriveProperty, driveApiError, isPlaybackOnlyDriveRevision,
-  isPlaybackOnlyMarkdownRevision, MAX_DRIVE_PROPERTY_BYTES, validateDriveAppProperties } from "./api";
+  isPlaybackOnlyMarkdownRevision, isV4DriveFile, MAX_DRIVE_PROPERTY_BYTES, validateDriveAppProperties } from "./api";
 import { LearningDocumentSchema, learningDocumentToMarkdown } from "@immersive/core";
 
 test("Drive permission diagnostics show safe reason and relevant next action", () => {
@@ -70,7 +70,7 @@ test("Drive property length errors do not ask the user to reauthorize", () => {
 });
 
 test("Drive validation calls the Drive API rather than only refreshing OAuth", async () => {
-  const index = await readFile(new URL("../index.ts", import.meta.url), "utf8");
+  const index = await readFile(new URL("../host/drive.ts", import.meta.url), "utf8");
   const api = await readFile(new URL("api.ts", import.meta.url), "utf8");
   assert.match(index, /case "driveValidate":\s*await validateDriveAccess\(request.accountId\)/);
   assert.match(api, /await listFiles\(accountId, "trashed = false", "id", 1, "驗證 Drive 權限"\)/);
@@ -102,11 +102,11 @@ test("HTTP 403 permission denied alone does not incorrectly insist the user must
 
 test("Drive accepts only a calibrated playback revision of an unchanged app lesson", () => {
   const before = LearningDocumentSchema.parse({
-    id: "00000000-0000-4000-8000-000000000001", schemaVersion: 3,
+    id: "00000000-0000-4000-8000-000000000001", schemaVersion: 4,
     createdAt: "2026-09-26T00:00:00.000Z",
     source: { platform: "import", title: "Context" },
     profile: { targetLanguage: "en", instructionLanguage: "en", level: "B1",
-      mode: "adaptive", maxNewVocabulary: 1, exerciseCount: 0, sceneCount: 1 },
+      sceneCount: 2, contextualExampleCount: 1 },
     generation: { provider: "claude", modelId: "" },
     cues: [{ id: "a", startMs: 1000, endMs: 2000, originalText: "Hello" }],
     sections: [{
@@ -122,7 +122,7 @@ test("Drive accepts only a calibrated playback revision of an unchanged app less
       }],
     }],
   });
-  if (before.schemaVersion !== 3) throw new Error("Unexpected schema");
+  if (before.schemaVersion !== 4) throw new Error("Unexpected schema");
   const after = LearningDocumentSchema.parse({
     ...before, playbackOverrides: { a: { startMs: 1100, endMs: 2200 } },
   });
@@ -146,4 +146,10 @@ test("Drive accepts only a calibrated playback revision of an unchanged app less
     learningDocumentToMarkdown(sceneRevision)), true);
   assert.equal(isPlaybackOnlyMarkdownRevision(learningDocumentToMarkdown(before),
     learningDocumentToMarkdown({ ...after, source: { ...after.source, title: "Changed lesson" } })), false);
+});
+
+test("old Drive lesson files are excluded from V4 operations", () => {
+  assert.equal(isV4DriveFile({ appProperties: { immersiveSchemaVersion: "4" } }), true);
+  assert.equal(isV4DriveFile({ appProperties: { immersiveSchemaVersion: "3" } }), false);
+  assert.equal(isV4DriveFile({ appProperties: { immersiveFormat: "json" } }), false);
 });
