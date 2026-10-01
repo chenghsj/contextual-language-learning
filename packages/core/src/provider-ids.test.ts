@@ -2,9 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { AgentSettingsSchema, SourceSchema } from "./schema";
 
-test("new providers can be represented without changing the document schema", () => {
+test("supported video platforms and SDK providers use explicit contracts", () => {
   assert.equal(SourceSchema.parse({ platform: "apple-tv", title: "Example" }).platform, "apple-tv");
-  assert.equal(AgentSettingsSchema.parse({ provider: "other-cli", modelId: "" }).provider, "other-cli");
+  assert.equal(AgentSettingsSchema.parse({ provider: "openai", modelId: "" }).provider, "openai");
+  assert.equal(
+    AgentSettingsSchema.safeParse({ provider: "other-cli", modelId: "" }).success,
+    false,
+  );
 });
 
 test("invalid provider IDs are rejected before adapter lookup", () => {

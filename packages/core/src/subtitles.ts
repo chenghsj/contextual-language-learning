@@ -23,7 +23,8 @@ export function parseSubtitles(input: string): SubtitleCue[] {
     const startMs = timestampToMs(left);
     const endMs = timestampToMs(right.trim().split(/\s+/)[0]);
     if (startMs === null || endMs === null || endMs < startMs) continue;
-    const originalText = lines.slice(timeIndex + 1)
+    const originalText = lines
+      .slice(timeIndex + 1)
       .join(" ")
       .replace(/<[^>]+>/g, "")
       .replace(/\s+/g, " ")
@@ -35,7 +36,9 @@ export function parseSubtitles(input: string): SubtitleCue[] {
 }
 
 export function parsePlainText(input: string): SubtitleCue[] {
-  const paragraphs = input.replace(/\r\n?/g, "\n").split(/\n\s*\n/)
+  const paragraphs = input
+    .replace(/\r\n?/g, "\n")
+    .split(/\n\s*\n/)
     .map(text => text.trim().replace(/\s+/g, " "))
     .filter(Boolean);
   const segments: string[] = [];
@@ -66,10 +69,15 @@ export function normalizeLearningCues(cues: readonly SubtitleCue[]): SubtitleCue
     const text = cue.originalText.trim().replace(/\s+/g, " ");
     if (!text || /^[♪♫～〜\s]+$/.test(text)) continue;
     const previous = cleaned[cleaned.length - 1];
-    const repeatedOverlay = previous && previous.originalText === text &&
-      previous.startMs !== null && previous.endMs !== null &&
-      cue.startMs !== null && cue.endMs !== null &&
-      cue.startMs <= previous.endMs + 100 && cue.startMs >= previous.startMs &&
+    const repeatedOverlay =
+      previous &&
+      previous.originalText === text &&
+      previous.startMs !== null &&
+      previous.endMs !== null &&
+      cue.startMs !== null &&
+      cue.endMs !== null &&
+      cue.startMs <= previous.endMs + 100 &&
+      cue.startMs >= previous.startMs &&
       cue.startMs - previous.startMs < 1500;
     if (repeatedOverlay) {
       cleaned[cleaned.length - 1] = { ...previous, endMs: Math.max(previous.endMs!, cue.endMs!) };
@@ -80,13 +88,19 @@ export function normalizeLearningCues(cues: readonly SubtitleCue[]): SubtitleCue
   return cleaned;
 }
 
-export function chunkCues(cues: SubtitleCue[], maxChars = 4500, maxDurationMs = 300000): SubtitleCue[][] {
+export function chunkCues(
+  cues: SubtitleCue[],
+  maxChars = 4500,
+  maxDurationMs = 300000,
+): SubtitleCue[][] {
   const result: SubtitleCue[][] = [];
   let current: SubtitleCue[] = [];
   let size = 0;
   for (const cue of cues) {
-    const duration = current.length && cue.endMs !== null && current[0].startMs !== null
-      ? cue.endMs - current[0].startMs : 0;
+    const duration =
+      current.length && cue.endMs !== null && current[0].startMs !== null
+        ? cue.endMs - current[0].startMs
+        : 0;
     if (current.length && (size + cue.originalText.length > maxChars || duration > maxDurationMs)) {
       result.push(current);
       current = [];
@@ -113,9 +127,12 @@ export function youtubeTimeLink(url: string | undefined, ms: number | null): str
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.toLowerCase();
-    const id = host === "youtu.be" ? parsed.pathname.slice(1)
-      : ["youtube.com", "www.youtube.com", "m.youtube.com"].includes(host)
-        ? parsed.searchParams.get("v") : null;
+    const id =
+      host === "youtu.be"
+        ? parsed.pathname.slice(1)
+        : ["youtube.com", "www.youtube.com", "m.youtube.com"].includes(host)
+          ? parsed.searchParams.get("v")
+          : null;
     if (!id || !/^[a-zA-Z0-9_-]{11}$/.test(id)) return null;
     return "https://www.youtube.com/watch?v=" + id + "&t=" + Math.floor(ms / 1000) + "s";
   } catch {

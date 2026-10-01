@@ -1,9 +1,22 @@
 /** Learning languages are independent of the extension's interface languages. */
-export const LEARNING_LANGUAGES = ["en", "ja", "ko", "es", "fr", "de", "it", "pt", "id", "th", "ms", "vi"] as const;
-export type LearningLanguage = typeof LEARNING_LANGUAGES[number];
+export const LEARNING_LANGUAGES = [
+  "en",
+  "ja",
+  "ko",
+  "es",
+  "fr",
+  "de",
+  "it",
+  "pt",
+  "id",
+  "th",
+  "ms",
+  "vi",
+] as const;
+export type LearningLanguage = (typeof LEARNING_LANGUAGES)[number];
 
 export const EXPLANATION_LANGUAGES = ["zh-TW", "zh-CN", ...LEARNING_LANGUAGES] as const;
-export type ExplanationLanguage = typeof EXPLANATION_LANGUAGES[number];
+export type ExplanationLanguage = (typeof EXPLANATION_LANGUAGES)[number];
 
 export const CEFR_LANGUAGES = ["en", "es", "fr", "de", "it", "pt", "id", "th", "ms", "vi"] as const;
 export const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
@@ -21,8 +34,18 @@ export function defaultLevelForTargetLanguage(language: LearningLanguage): strin
 
 /** English names are used only in Agent prompts; user-facing names follow the interface locale. */
 export const ENGLISH_LANGUAGE_NAMES: Readonly<Record<ExplanationLanguage, string>> = {
-  "en": "English", "ja": "Japanese", "ko": "Korean",
-  "es": "Spanish", "fr": "French", "de": "German",
-  "it": "Italian", "pt": "Portuguese", "id": "Indonesian", "th": "Thai", "ms": "Malay", "vi": "Vietnamese",
-  "zh-TW": "Traditional Chinese", "zh-CN": "Simplified Chinese",
+  en: "English",
+  ja: "Japanese",
+  ko: "Korean",
+  es: "Spanish",
+  fr: "French",
+  de: "German",
+  it: "Italian",
+  pt: "Portuguese",
+  id: "Indonesian",
+  th: "Thai",
+  ms: "Malay",
+  vi: "Vietnamese",
+  "zh-TW": "Traditional Chinese",
+  "zh-CN": "Simplified Chinese",
 };

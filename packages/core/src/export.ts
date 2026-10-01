@@ -5,16 +5,23 @@ function safeMarkdown(value: string): string {
 }
 
 function pronunciationText(segments: PronunciationSegment[]): string {
-  return segments.map(segment => safeMarkdown(segment.text) +
-    (segment.reading ? " (" + safeMarkdown(segment.reading) + ")" : "")).join("");
+  return segments
+    .map(
+      segment =>
+        safeMarkdown(segment.text) +
+        (segment.reading ? " (" + safeMarkdown(segment.reading) + ")" : ""),
+    )
+    .join("");
 }
 
 /** One canonical Markdown representation is shared by the Native Host, Drive backup and extension download. */
 export function learningDocumentToMarkdown(doc: LearningDocument): string {
   const parts = [
-    "# " + safeMarkdown(doc.source.title), "",
+    "# " + safeMarkdown(doc.source.title),
+    "",
     "Target: " + doc.profile.targetLanguage + " · Level: " + doc.profile.level,
-    "Teaching language: " + doc.profile.instructionLanguage, "",
+    "Teaching language: " + doc.profile.instructionLanguage,
+    "",
   ];
   for (const section of doc.sections) {
     parts.push("## " + safeMarkdown(section.title), "", safeMarkdown(section.context), "");
@@ -30,26 +37,40 @@ export function learningDocumentToMarkdown(doc: LearningDocument): string {
     }
     parts.push("", "### Focus expressions", "");
     for (const focus of section.focusItems) {
-      parts.push("#### " + safeMarkdown(focus.expression),
-        "", safeMarkdown(focus.meaning), "", safeMarkdown(focus.contextExplanation),
-        "", "Evidence cues: " + focus.contextCueIds.map(safeMarkdown).join(", "), "");
+      parts.push(
+        "#### " + safeMarkdown(focus.expression),
+        "",
+        safeMarkdown(focus.meaning),
+        "",
+        safeMarkdown(focus.contextExplanation),
+        "",
+        "Evidence cues: " + focus.contextCueIds.map(safeMarkdown).join(", "),
+        "",
+      );
       if (focus.wordNotes.length) parts.push("**Word notes**", "");
-      for (const note of focus.wordNotes) parts.push("- **" + safeMarkdown(note.surface) +
-        "** — " + safeMarkdown(note.meaning) + ": " + safeMarkdown(note.explanation));
+      for (const note of focus.wordNotes)
+        parts.push(
+          "- **" +
+            safeMarkdown(note.surface) +
+            "** — " +
+            safeMarkdown(note.meaning) +
+            ": " +
+            safeMarkdown(note.explanation),
+        );
       parts.push("", "**AI-created contextual examples**", "");
       for (const example of focus.examples) {
         parts.push("- " + safeMarkdown(example.situation));
         for (const line of example.dialogue) {
           parts.push("  - " + safeMarkdown(line.text) + " — " + safeMarkdown(line.translation));
-          if (line.pronunciation) parts.push("    - Pronunciation: " + pronunciationText(line.pronunciation));
+          if (line.pronunciation)
+            parts.push("    - Pronunciation: " + pronunciationText(line.pronunciation));
         }
       }
       parts.push("");
     }
     parts.push("");
   }
-  if (doc.playbackOverrides &&
-      Object.keys(doc.playbackOverrides).length > 0) {
+  if (doc.playbackOverrides && Object.keys(doc.playbackOverrides).length > 0) {
     parts.push("## User-calibrated playback (original subtitle times unchanged)", "");
     for (const cue of doc.cues) {
       const window = doc.playbackOverrides[cue.id];
@@ -58,14 +79,22 @@ export function learningDocumentToMarkdown(doc: LearningDocument): string {
     }
     parts.push("");
   }
-  if (doc.scenePlaybackOverrides &&
-      Object.keys(doc.scenePlaybackOverrides).length > 0) {
+  if (doc.scenePlaybackOverrides && Object.keys(doc.scenePlaybackOverrides).length > 0) {
     parts.push("## User-calibrated scene playback (original source times unchanged)", "");
     for (const scene of doc.sections) {
       const window = doc.scenePlaybackOverrides[scene.id];
       if (!window) continue;
-      parts.push("- " + safeMarkdown(scene.title) + " (" + safeMarkdown(scene.id) + "): " +
-        window.startMs + "–" + window.endMs + " ms");
+      parts.push(
+        "- " +
+          safeMarkdown(scene.title) +
+          " (" +
+          safeMarkdown(scene.id) +
+          "): " +
+          window.startMs +
+          "–" +
+          window.endMs +
+          " ms",
+      );
     }
     parts.push("");
   }

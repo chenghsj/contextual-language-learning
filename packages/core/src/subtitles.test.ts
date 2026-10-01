@@ -1,9 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { chunkCues, formatTime, parsePlainText, parseSubtitles, youtubeTimeLink } from "./subtitles";
+import {
+  chunkCues,
+  formatTime,
+  parsePlainText,
+  parseSubtitles,
+  youtubeTimeLink,
+} from "./subtitles";
 
 test("SRT and VTT preserve timestamps and original text", () => {
-  const cues = parseSubtitles("WEBVTT\n\n00:00:01.250 --> 00:00:03.500 align:start\n<v A>Hello</v> there\n\n2\n00:00:04,000 --> 00:00:05,000\nGoodbye");
+  const cues = parseSubtitles(
+    "WEBVTT\n\n00:00:01.250 --> 00:00:03.500 align:start\n<v A>Hello</v> there\n\n2\n00:00:04,000 --> 00:00:05,000\nGoodbye",
+  );
   assert.equal(cues.length, 2);
   assert.equal(cues[0].startMs, 1250);
   assert.equal(cues[0].originalText, "Hello there");
@@ -11,18 +19,28 @@ test("SRT and VTT preserve timestamps and original text", () => {
 });
 
 test("invalid and empty cues are skipped", () => {
-  assert.equal(parseSubtitles("1\n00:00:05,000 --> 00:00:01,000\nNo\n\n2\n00:00:01,000 --> 00:00:02,000\nYes").length, 1);
+  assert.equal(
+    parseSubtitles("1\n00:00:05,000 --> 00:00:01,000\nNo\n\n2\n00:00:01,000 --> 00:00:02,000\nYes")
+      .length,
+    1,
+  );
 });
 
 test("text import and chunking keep all cues in order", () => {
   const cues = parsePlainText("First paragraph.\n\nSecond paragraph.\n\nThird paragraph.");
   assert.equal(cues.length, 3);
   const chunks = chunkCues(cues, 18);
-  assert.deepEqual(chunks.flat().map(c => c.id), cues.map(c => c.id));
+  assert.deepEqual(
+    chunks.flat().map(c => c.id),
+    cues.map(c => c.id),
+  );
 });
 
 test("YouTube timestamps use an allowlisted video host", () => {
-  assert.equal(youtubeTimeLink("https://youtu.be/dQw4w9WgXcQ", 125000), "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=125s");
+  assert.equal(
+    youtubeTimeLink("https://youtu.be/dQw4w9WgXcQ", 125000),
+    "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=125s",
+  );
   assert.equal(youtubeTimeLink("https://evil.example/watch?v=dQw4w9WgXcQ", 125000), null);
   assert.equal(formatTime(125000), "02:05");
 });

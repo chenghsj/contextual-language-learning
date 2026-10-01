@@ -1,31 +1,45 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  CEFR_LANGUAGES, EXPLANATION_LANGUAGES, LEARNING_LANGUAGES,
-  defaultLevelForTargetLanguage, levelsForTargetLanguage,
+  CEFR_LANGUAGES,
+  EXPLANATION_LANGUAGES,
+  LEARNING_LANGUAGES,
+  defaultLevelForTargetLanguage,
+  levelsForTargetLanguage,
 } from "./languages";
 import { LearningProfileSchema } from "./schema";
 
 test("language choices are valid in saved learning profiles independently of interface locale", () => {
   for (const language of LEARNING_LANGUAGES) {
     const profile = LearningProfileSchema.parse({
-      targetLanguage: language, instructionLanguage: "zh-TW",
-      level: defaultLevelForTargetLanguage(language), sceneCount: 4, contextualExampleCount: 2,
+      targetLanguage: language,
+      instructionLanguage: "zh-TW",
+      level: defaultLevelForTargetLanguage(language),
+      sceneCount: 4,
+      contextualExampleCount: 2,
     });
     assert.equal(profile.targetLanguage, language);
     assert.ok(levelsForTargetLanguage(language).includes(profile.level));
   }
   for (const language of EXPLANATION_LANGUAGES) {
     const profile = LearningProfileSchema.parse({
-      targetLanguage: "es", instructionLanguage: language,
-      level: "B1", sceneCount: 4, contextualExampleCount: 2,
+      targetLanguage: "es",
+      instructionLanguage: language,
+      level: "B1",
+      sceneCount: 4,
+      contextualExampleCount: 2,
     });
     assert.equal(profile.instructionLanguage, language);
   }
-  assert.throws(() => LearningProfileSchema.parse({
-    targetLanguage: "xx", instructionLanguage: "en", level: "B1",
-    sceneCount: 4, contextualExampleCount: 2,
-  }));
+  assert.throws(() =>
+    LearningProfileSchema.parse({
+      targetLanguage: "xx",
+      instructionLanguage: "en",
+      level: "B1",
+      sceneCount: 4,
+      contextualExampleCount: 2,
+    }),
+  );
 });
 
 test("ten languages share CEFR without overwriting Japanese or Korean levels", () => {
