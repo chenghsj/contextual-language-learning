@@ -11,9 +11,12 @@ export const youtubeAdapter: VideoAdapter = {
   getVideoId: videoIdFromUrl,
   timestampLink: (url, ms) => youtubeTimeLink(url, ms),
   async status(url) {
-    const result = await sendToVideo<{ ok: boolean; error?: string; currentMs?: number; playing?: boolean }>(
-      youtubeAdapter, url, { type: "PLAYBACK_STATUS_GET" },
-    );
+    const result = await sendToVideo<{
+      ok: boolean;
+      error?: string;
+      currentMs?: number;
+      playing?: boolean;
+    }>(youtubeAdapter, url, { type: "PLAYBACK_STATUS_GET" });
     return { currentMs: result.currentMs, playing: result.playing };
   },
   async seek(url, startMs) {
@@ -23,17 +26,24 @@ export const youtubeAdapter: VideoAdapter = {
     const videoId = videoIdFromUrl(url);
     if (!videoId) throw new Error("Open a supported YouTube watch page first.");
     const result = await sendToVideo<{
-      ok: boolean; error?: string; status?: "available" | "unknown";
+      ok: boolean;
+      error?: string;
+      status?: "available" | "unknown";
       tracks?: { language: string; kind: "manual" | "auto" }[];
     }>(youtubeAdapter, url, { type: "YOUTUBE_CAPTION_TRACKS_GET", videoId });
-    return { status: result.status === "available" ? "available" as const : "unknown" as const,
-      tracks: result.tracks ?? [] };
+    return {
+      status: result.status === "available" ? ("available" as const) : ("unknown" as const),
+      tracks: result.tracks ?? [],
+    };
   },
   async fetchSubtitles(url, language) {
     const videoId = videoIdFromUrl(url);
     if (!videoId) throw new Error("Open a supported YouTube watch page first.");
     const result = await sendToVideo<{
-      ok: boolean; error?: string; text?: string; language?: string;
+      ok: boolean;
+      error?: string;
+      text?: string;
+      language?: string;
     }>(youtubeAdapter, url, { type: "YOUTUBE_SUBTITLES_GET", videoId, language });
     if (!result.text || !result.language) throw new Error("YouTube did not return subtitle text.");
     return { text: result.text, language: result.language };

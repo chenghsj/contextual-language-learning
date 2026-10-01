@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  adjustLoopBoundary, formatLoopTimestamp, isLoopWindow, readLoopWindows,
-  MAX_LOOP_DURATION_MS, MIN_LOOP_DURATION_MS,
+  adjustLoopBoundary,
+  formatLoopTimestamp,
+  isLoopWindow,
+  readLoopWindows,
+  MAX_LOOP_DURATION_MS,
+  MIN_LOOP_DURATION_MS,
 } from "./loop-window";
 
 test("A/B boundaries accept calibrated time but never a reversed or excessively long loop", () => {
@@ -24,11 +28,14 @@ test("saved ranges are strictly validated per cue and ignore stale or malformed 
   assert.equal(isLoopWindow({ startMs: 1_000, endMs: 1_050 }), false);
   assert.equal(isLoopWindow({ startMs: -1, endMs: 1_000 }), false);
   assert.equal(isLoopWindow({ startMs: 1_000, endMs: Infinity }), false);
-  const saved = readLoopWindows({
-    "cue-1": { startMs: 1_000, endMs: 2_000 },
-    "cue-2": { startMs: 5_000, endMs: 4_000 },
-    "old-cue": { startMs: 1_000, endMs: 2_000 },
-  }, ["cue-1", "cue-2"]);
+  const saved = readLoopWindows(
+    {
+      "cue-1": { startMs: 1_000, endMs: 2_000 },
+      "cue-2": { startMs: 5_000, endMs: 4_000 },
+      "old-cue": { startMs: 1_000, endMs: 2_000 },
+    },
+    ["cue-1", "cue-2"],
+  );
   assert.deepEqual(saved, { "cue-1": { startMs: 1_000, endMs: 2_000 } });
   assert.deepEqual(readLoopWindows([], ["cue-1"]), {});
 });

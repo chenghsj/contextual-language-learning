@@ -9,14 +9,21 @@ export function isAllowedCaptionDeliveryUrl(raw: string): boolean {
   try {
     const url = new URL(raw);
     const host = url.hostname.toLowerCase();
-    return url.protocol === "https:" && !url.username && !url.password &&
+    return (
+      url.protocol === "https:" &&
+      !url.username &&
+      !url.password &&
       (!url.port || url.port === "443") &&
-      NETFLIX_HOSTS.some(domain => host === domain || host.endsWith("." + domain));
-  } catch { return false; }
+      NETFLIX_HOSTS.some(domain => host === domain || host.endsWith("." + domain))
+    );
+  } catch {
+    return false;
+  }
 }
 
 export async function fetchNetflixCaptionText(
-  url: string, fetchDocument: typeof fetch = fetch,
+  url: string,
+  fetchDocument: typeof fetch = fetch,
 ): Promise<string> {
   if (!isAllowedCaptionDeliveryUrl(url)) {
     // Never include the signed URL, query parameters, cookies, or response body
@@ -24,14 +31,18 @@ export async function fetchNetflixCaptionText(
     let detail = "invalid URL";
     try {
       const parsed = new URL(url);
-      detail = parsed.protocol === "https:"
-        ? "host " + parsed.hostname.toLowerCase()
-        : "scheme " + parsed.protocol.replace(":", "");
+      detail =
+        parsed.protocol === "https:"
+          ? "host " + parsed.hostname.toLowerCase()
+          : "scheme " + parsed.protocol.replace(":", "");
     } catch {
       detail = "malformed URL";
     }
-    throw new Error("Netflix subtitle address rejected by the extension worker (" +
-      detail + "). No network request was sent.");
+    throw new Error(
+      "Netflix subtitle address rejected by the extension worker (" +
+        detail +
+        "). No network request was sent.",
+    );
   }
   let response: Response;
   try {
@@ -48,11 +59,17 @@ export async function fetchNetflixCaptionText(
       "Netflix subtitle request failed. Reload the watch tab and verify that Chrome has granted this extension access to Netflix subtitle delivery domains.",
     );
   }
-  if (response.type === "opaqueredirect" || response.status >= 300 && response.status < 400) {
-    throw new Error("Netflix redirected the subtitle request; this extension will not follow an unverified subtitle address.");
+  if (response.type === "opaqueredirect" || (response.status >= 300 && response.status < 400)) {
+    throw new Error(
+      "Netflix redirected the subtitle request; this extension will not follow an unverified subtitle address.",
+    );
   }
   if (!response.ok) {
-    throw new Error("Netflix subtitle request failed (HTTP " + response.status + "). The current track may be unavailable or expired.");
+    throw new Error(
+      "Netflix subtitle request failed (HTTP " +
+        response.status +
+        "). The current track may be unavailable or expired.",
+    );
   }
   if (response.url && !isAllowedCaptionDeliveryUrl(response.url)) {
     throw new Error("Netflix subtitle request returned an unexpected address.");

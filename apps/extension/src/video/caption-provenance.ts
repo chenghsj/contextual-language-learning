@@ -25,10 +25,16 @@ export function captionCacheKey(url: string | undefined, language: LearningLangu
 }
 
 export function isCurrentCaption(
-  caption: CaptionProvenance | null, language: LearningLanguage, sourceUrl: string | undefined,
+  caption: CaptionProvenance | null,
+  language: LearningLanguage,
+  sourceUrl: string | undefined,
 ): boolean {
-  if (!caption || caption.language !== language || caption.sourceKey !== videoSourceKey(sourceUrl)) return false;
+  if (!caption || caption.language !== language || caption.sourceKey !== videoSourceKey(sourceUrl))
+    return false;
   if (caption.origin === "manual") return true; // The user has declared the imported language.
-  return caption.sourceKey !== null && !!caption.actualLanguage &&
-    subtitleLanguageMatches(language, caption.actualLanguage);
+  return (
+    caption.sourceKey !== null &&
+    !!caption.actualLanguage &&
+    subtitleLanguageMatches(language, caption.actualLanguage)
+  );
 }

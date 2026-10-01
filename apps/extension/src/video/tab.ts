@@ -10,11 +10,13 @@ export function cuePlaybackStart(startMs: number): number {
   if (!Number.isFinite(startMs) || startMs < 0) throw new Error("Invalid subtitle start time.");
   return Math.max(0, Math.round(startMs) - CUE_LEAD_IN_MS);
 }
-export function cuePlaybackWindow(startMs: number, endMs: number): { startMs: number; endMs: number } {
+export function cuePlaybackWindow(
+  startMs: number,
+  endMs: number,
+): { startMs: number; endMs: number } {
   if (!Number.isFinite(endMs) || endMs <= startMs) throw new Error("Invalid subtitle end time.");
   return { startMs: cuePlaybackStart(startMs), endMs: Math.round(endMs) + CUE_TAIL_MS };
 }
-
 
 /** Resolve the browser window hosting the Side Panel instead of relying on an
  * extension page's potentially stale currentWindow query. */
@@ -39,7 +41,10 @@ function assertVideoId(adapter: VideoAdapter, sourceUrl: string): string {
 }
 
 /** Only tabs showing this exact video are eligible; never choose a generic Netflix homepage. */
-async function matchingVideoTabs(adapter: VideoAdapter, sourceUrl: string): Promise<chrome.tabs.Tab[]> {
+async function matchingVideoTabs(
+  adapter: VideoAdapter,
+  sourceUrl: string,
+): Promise<chrome.tabs.Tab[]> {
   const expectedId = assertVideoId(adapter, sourceUrl);
   const tabs = await chrome.tabs.query({});
   return tabs.filter(tab => tab.id !== undefined && adapter.getVideoId(tab.url) === expectedId);
@@ -77,14 +82,20 @@ async function focusVideoTab(tab: chrome.tabs.Tab): Promise<void> {
   }
 }
 
-export async function findVideoTab(adapter: VideoAdapter, sourceUrl: string): Promise<chrome.tabs.Tab> {
+export async function findVideoTab(
+  adapter: VideoAdapter,
+  sourceUrl: string,
+): Promise<chrome.tabs.Tab> {
   const tab = await chooseExistingVideoTab(await matchingVideoTabs(adapter, sourceUrl));
   if (!tab) throw new Error("請先在 Chrome 開啟教材所屬的影片分頁，或使用「開啟／切換到影片」。");
   return tab;
 }
 
 /** Detect an outdated or missing content/page reader before waiting for a caption request. */
-export async function assertVideoReaderReady(tab: chrome.tabs.Tab, adapter: VideoAdapter): Promise<void> {
+export async function assertVideoReaderReady(
+  tab: chrome.tabs.Tab,
+  adapter: VideoAdapter,
+): Promise<void> {
   if (tab.id === undefined || !adapter.getVideoId(tab.url)) {
     throw new Error("找不到正確的影片分頁，請切換到要學習的影片。");
   }
@@ -94,14 +105,18 @@ export async function assertVideoReaderReady(tab: chrome.tabs.Tab, adapter: Vide
   }
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const response = await Promise.race([
+    const response = (await Promise.race([
       chrome.tabs.sendMessage(tab.id, { type: VIDEO_READER_STATUS }) as Promise<unknown>,
       new Promise<never>((_resolve, reject) => {
         timer = setTimeout(() => reject(new Error(RELOAD_READER_MESSAGE)), 2_200);
       }),
-    ]) as { ok?: boolean; platform?: string; bridgeVersion?: string } | undefined;
-    if (response?.ok !== true || response.platform !== adapter.id ||
-      response.bridgeVersion !== VIDEO_READER_VERSION) throw new Error(RELOAD_READER_MESSAGE);
+    ])) as { ok?: boolean; platform?: string; bridgeVersion?: string } | undefined;
+    if (
+      response?.ok !== true ||
+      response.platform !== adapter.id ||
+      response.bridgeVersion !== VIDEO_READER_VERSION
+    )
+      throw new Error(RELOAD_READER_MESSAGE);
   } catch {
     throw new Error(RELOAD_READER_MESSAGE);
   } finally {
@@ -110,7 +125,10 @@ export async function assertVideoReaderReady(tab: chrome.tabs.Tab, adapter: Vide
 }
 
 /** Reload only the already-open, matching watch tab, and only on explicit user action. */
-export async function reloadExistingVideoTab(adapter: VideoAdapter, sourceUrl: string): Promise<void> {
+export async function reloadExistingVideoTab(
+  adapter: VideoAdapter,
+  sourceUrl: string,
+): Promise<void> {
   const tab = await findVideoTab(adapter, sourceUrl);
   if (tab.id === undefined) throw new Error("找不到正確的影片分頁。");
   const current = await chrome.tabs.get(tab.id);
@@ -122,7 +140,8 @@ export async function reloadExistingVideoTab(adapter: VideoAdapter, sourceUrl: s
 
 /** Reuse a matching watch tab; open at most one new tab only when none exists. */
 export async function openOrFocusVideoTab(
-  adapter: VideoAdapter, sourceUrl: string,
+  adapter: VideoAdapter,
+  sourceUrl: string,
 ): Promise<{ tab: chrome.tabs.Tab; reused: boolean }> {
   const tabs = await matchingVideoTabs(adapter, sourceUrl);
   const existing = await chooseExistingVideoTab(tabs);
@@ -135,29 +154,40 @@ export async function openOrFocusVideoTab(
 }
 
 export class VideoCommandError extends Error {
-  constructor(message: string, readonly code?: VideoCommandErrorCode) {
+  constructor(
+    message: string,
+    readonly code?: VideoCommandErrorCode,
+  ) {
     super(message);
     this.name = "VideoCommandError";
   }
 }
 
 export async function sendToVideo<T extends { ok: boolean; error?: string; errorCode?: string }>(
-  adapter: VideoAdapter, sourceUrl: string, message: unknown, activate = false,
+  adapter: VideoAdapter,
+  sourceUrl: string,
+  message: unknown,
+  activate = false,
 ): Promise<T> {
   const tab = await findVideoTab(adapter, sourceUrl);
   if (tab.id === undefined) throw new Error("無法識別影片分頁。");
   let response: T | undefined;
   try {
-    response = await chrome.tabs.sendMessage(tab.id, message) as T | undefined;
+    response = (await chrome.tabs.sendMessage(tab.id, message)) as T | undefined;
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     if (/Receiving end does not exist|Could not establish connection/i.test(reason)) {
-      throw new Error("影片分頁尚未載入擴充功能。請重新整理原本的影片分頁後重試，不必再開啟另一個分頁。");
+      throw new Error(
+        "影片分頁尚未載入擴充功能。請重新整理原本的影片分頁後重試，不必再開啟另一個分頁。",
+      );
     }
     throw error;
   }
-  if (!response?.ok) throw new VideoCommandError(response?.error ?? "播放器無法執行這個操作。",
-    isVideoCommandErrorCode(response?.errorCode) ? response.errorCode : undefined);
+  if (!response?.ok)
+    throw new VideoCommandError(
+      response?.error ?? "播放器無法執行這個操作。",
+      isVideoCommandErrorCode(response?.errorCode) ? response.errorCode : undefined,
+    );
   if (activate) await focusVideoTab(tab);
   return response;
 }

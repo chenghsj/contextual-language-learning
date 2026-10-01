@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  CAPTION_BYTE_LIMIT, fetchNetflixCaptionText, isAllowedCaptionDeliveryUrl,
+  CAPTION_BYTE_LIMIT,
+  fetchNetflixCaptionText,
+  isAllowedCaptionDeliveryUrl,
 } from "./netflix-caption-fetch";
 
 const url = "https://ipv4-c001.nflxvideo.net/track.vtt?token=session-signed";
@@ -11,9 +13,15 @@ test("only HTTPS Netflix-owned delivery domains are accepted", () => {
   assert.equal(isAllowedCaptionDeliveryUrl(url), true);
   assert.equal(isAllowedCaptionDeliveryUrl("https://nflximg.net/sub.xml"), true);
   assert.equal(isAllowedCaptionDeliveryUrl("https://www.netflix.com/timedtext"), true);
-  assert.equal(isAllowedCaptionDeliveryUrl("https://nflxvideo.net.attacker.example/sub.xml"), false);
+  assert.equal(
+    isAllowedCaptionDeliveryUrl("https://nflxvideo.net.attacker.example/sub.xml"),
+    false,
+  );
   assert.equal(isAllowedCaptionDeliveryUrl("http://nflxvideo.net/sub.xml"), false);
-  assert.equal(isAllowedCaptionDeliveryUrl("https://username:password@nflxvideo.net/sub.xml"), false);
+  assert.equal(
+    isAllowedCaptionDeliveryUrl("https://username:password@nflxvideo.net/sub.xml"),
+    false,
+  );
   assert.equal(isAllowedCaptionDeliveryUrl("https://attacker.example/sub.xml"), false);
 });
 
@@ -35,9 +43,13 @@ test("does not make any request for an untrusted subtitle URL", async () => {
     requested = true;
     return new Response(vtt);
   };
-  await assert.rejects(() => fetchNetflixCaptionText("https://evil.example/vtt?token=secret", request),
-    error => error instanceof Error && /host evil.example/.test(error.message) &&
-      !error.message.includes("secret"));
+  await assert.rejects(
+    () => fetchNetflixCaptionText("https://evil.example/vtt?token=secret", request),
+    error =>
+      error instanceof Error &&
+      /host evil.example/.test(error.message) &&
+      !error.message.includes("secret"),
+  );
   assert.equal(requested, false);
 });
 
@@ -54,28 +66,52 @@ test("rejects redirects and HTTP failures instead of leaking signed URLs", async
 
 test("replaces raw Failed to fetch errors with an actionable permission message", async () => {
   await assert.rejects(
-    () => fetchNetflixCaptionText(url, async () => { throw new TypeError("Failed to fetch"); }),
+    () =>
+      fetchNetflixCaptionText(url, async () => {
+        throw new TypeError("Failed to fetch");
+      }),
     /Chrome has granted this extension access/,
   );
 });
 
 test("enforces document size even when Content-Length is missing or wrong", async () => {
-  await assert.rejects(() => fetchNetflixCaptionText(url, async () =>
-    new Response("text", { headers: { "content-length": String(CAPTION_BYTE_LIMIT + 1) } })),
-  /2 MB limit/);
+  await assert.rejects(
+    () =>
+      fetchNetflixCaptionText(
+        url,
+        async () =>
+          new Response("text", { headers: { "content-length": String(CAPTION_BYTE_LIMIT + 1) } }),
+      ),
+    /2 MB limit/,
+  );
   const bytes = new Uint8Array(CAPTION_BYTE_LIMIT + 1);
-  await assert.rejects(() => fetchNetflixCaptionText(url, async () =>
-    new Response(new ReadableStream({
-      start(controller) { controller.enqueue(bytes); controller.close(); },
-    }))),
-  /2 MB limit/);
+  await assert.rejects(
+    () =>
+      fetchNetflixCaptionText(
+        url,
+        async () =>
+          new Response(
+            new ReadableStream({
+              start(controller) {
+                controller.enqueue(bytes);
+                controller.close();
+              },
+            }),
+          ),
+      ),
+    /2 MB limit/,
+  );
 });
 
 test("a malformed Netflix subtitle URL is rejected by the worker before any fetch", async () => {
   let called = false;
-  await assert.rejects(() => fetchNetflixCaptionText("not-an-absolute-url", async () => {
-    called = true;
-    return new Response(vtt);
-  }), /malformed URL/);
+  await assert.rejects(
+    () =>
+      fetchNetflixCaptionText("not-an-absolute-url", async () => {
+        called = true;
+        return new Response(vtt);
+      }),
+    /malformed URL/,
+  );
   assert.equal(called, false);
 });

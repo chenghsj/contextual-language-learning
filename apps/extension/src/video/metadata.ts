@@ -14,7 +14,9 @@ type MetadataResponse = {
 
 /** Never fill the lesson title with a generic browser tab label. */
 export function cleanVideoTitle(value: string | null | undefined): string | null {
-  const candidate = (value ?? "").replace(/\s+/g, " ").trim()
+  const candidate = (value ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
     .replace(/\s*[-–—|]\s*(?:Netflix|YouTube(?: Premium)?)(?:\s*(?:TW|台灣))?\s*$/i, "")
     .trim();
   if (!candidate || /^(?:netflix|youtube(?: premium)?|video|watch on netflix)$/i.test(candidate)) {
@@ -25,7 +27,9 @@ export function cleanVideoTitle(value: string | null | undefined): string | null
 
 /** Resolve visible Netflix player titles before the browser's often generic "Netflix" tab label.
  * Do not treat stale og:title from Netflix SPA navigation as the current episode. */
-export function netflixPlayerTitle(candidates: readonly (string | null | undefined)[]): string | null {
+export function netflixPlayerTitle(
+  candidates: readonly (string | null | undefined)[],
+): string | null {
   for (const candidate of candidates) {
     const title = cleanVideoTitle(candidate);
     if (title) return title;
@@ -44,11 +48,10 @@ export async function titleForVideoTab(
   if (typeof tab.id !== "number" || !expectedId) return fallback;
 
   try {
-    const result = await chrome.tabs.sendMessage(tab.id, {
+    const result = (await chrome.tabs.sendMessage(tab.id, {
       type: "VIDEO_METADATA_GET",
-    }) as MetadataResponse | undefined;
-    if (result?.ok && result.url &&
-      adapter.getVideoId(result.url) === expectedId) {
+    })) as MetadataResponse | undefined;
+    if (result?.ok && result.url && adapter.getVideoId(result.url) === expectedId) {
       return cleanVideoTitle(result.title) ?? fallback;
     }
   } catch {

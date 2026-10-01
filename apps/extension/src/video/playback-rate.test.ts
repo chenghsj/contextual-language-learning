@@ -23,7 +23,9 @@ test("speed command is sent only to the matching video tab, without disrupting t
           sent.push({ id, message });
           return { ok: true };
         },
-        update: async () => { activated = true; },
+        update: async () => {
+          activated = true;
+        },
       },
     } as unknown as typeof chrome;
     await youtubeAdapter.setPlaybackRate?.(youtubeUrl, 0.75);

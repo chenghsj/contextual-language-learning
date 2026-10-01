@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  captionCacheKey, isCurrentCaption, subtitleLanguageMatches, videoSourceKey, type CaptionProvenance,
+  captionCacheKey,
+  isCurrentCaption,
+  subtitleLanguageMatches,
+  videoSourceKey,
+  type CaptionProvenance,
 } from "./caption-provenance";
 
 const youtube = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
@@ -20,7 +24,12 @@ test("accepts same-language regional caption tracks and rejects other languages"
   assert.equal(subtitleLanguageMatches("ja", "ja_JP"), true);
   assert.equal(subtitleLanguageMatches("ja", "en"), false);
   assert.equal(subtitleLanguageMatches("en", "english"), false);
-  for (const [language, regional] of [["id", "id-ID"], ["th", "th-TH"], ["ms", "ms-MY"], ["vi", "vi-VN"]] as const) {
+  for (const [language, regional] of [
+    ["id", "id-ID"],
+    ["th", "th-TH"],
+    ["ms", "ms-MY"],
+    ["vi", "vi-VN"],
+  ] as const) {
     assert.equal(subtitleLanguageMatches(language, regional), true);
     assert.equal(subtitleLanguageMatches(language, "en-US"), false);
   }
@@ -28,7 +37,10 @@ test("accepts same-language regional caption tracks and rejects other languages"
 
 test("generation requires a matching requested and actual caption language and video", () => {
   const ready: CaptionProvenance = {
-    sourceKey: videoSourceKey(youtube), language: "ja", actualLanguage: "ja-JP", origin: "video",
+    sourceKey: videoSourceKey(youtube),
+    language: "ja",
+    actualLanguage: "ja-JP",
+    origin: "video",
   };
   assert.equal(isCurrentCaption(ready, "ja", youtube), true);
   assert.equal(isCurrentCaption(ready, "en", youtube), false);
@@ -36,6 +48,12 @@ test("generation requires a matching requested and actual caption language and v
   assert.equal(isCurrentCaption({ ...ready, actualLanguage: "en" }, "ja", youtube), false);
   assert.equal(isCurrentCaption({ ...ready, actualLanguage: undefined }, "ja", youtube), false);
   assert.equal(isCurrentCaption({ ...ready, sourceKey: null }, "ja", undefined), false);
-  assert.equal(isCurrentCaption({ sourceKey: null, origin: "manual", language: "ja" }, "ja", ""), true);
-  assert.equal(isCurrentCaption({ sourceKey: null, origin: "manual", language: "ja" }, "en", ""), false);
+  assert.equal(
+    isCurrentCaption({ sourceKey: null, origin: "manual", language: "ja" }, "ja", ""),
+    true,
+  );
+  assert.equal(
+    isCurrentCaption({ sourceKey: null, origin: "manual", language: "ja" }, "en", ""),
+    false,
+  );
 });

@@ -9,12 +9,18 @@ export function allowedNetflixSubtitleUrl(input: string): boolean {
   try {
     const url = new URL(input);
     const host = url.hostname.toLowerCase();
-    return url.protocol === "https:" && !url.username && !url.password &&
+    return (
+      url.protocol === "https:" &&
+      !url.username &&
+      !url.password &&
       (!url.port || url.port === "443") &&
       ["netflix.com", "nflxvideo.net", "nflximg.net", "nflxext.com"].some(
         domain => host === domain || host.endsWith("." + domain),
-      );
-  } catch { return false; }
+      )
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function subtitleUrlFromTrack(track: unknown): string | null {
@@ -34,7 +40,13 @@ export function subtitleUrlFromTrack(track: unknown): string | null {
   const entries: unknown[] = [];
   if (source.ttDownloadables && typeof source.ttDownloadables === "object") {
     const downloadables = source.ttDownloadables as Record<string, unknown>;
-    for (const name of ["webvtt-lssdh-ios8", "webvtt-lssdh", "dfxp-ls-sdh", "imsc1.1", "simplesdh"]) {
+    for (const name of [
+      "webvtt-lssdh-ios8",
+      "webvtt-lssdh",
+      "dfxp-ls-sdh",
+      "imsc1.1",
+      "simplesdh",
+    ]) {
       if (name in downloadables) entries.push(downloadables[name]);
     }
   }
@@ -47,7 +59,10 @@ export function subtitleUrlFromTrack(track: unknown): string | null {
 }
 
 export function subtitleClockMs(
-  value: string, frameRate = 30, tickRate = 1, subFrameRate = 1,
+  value: string,
+  frameRate = 30,
+  tickRate = 1,
+  subFrameRate = 1,
 ): number | null {
   const raw = value.trim();
   const clock = raw.match(/^(\d+):([0-5]\d):([0-5]\d)(?:[.,](\d+)|:(\d+)(?:\.(\d+))?)?$/);
@@ -59,11 +74,16 @@ export function subtitleClockMs(
       // represents 1234.567 ms, not an invalid clock expression.
       extra = Number("0." + clock[4]) * 1000;
     } else if (clock[5] !== undefined) {
-      if (!Number.isFinite(frameRate) || frameRate <= 0 ||
-        !Number.isFinite(subFrameRate) || subFrameRate <= 0) return null;
-      const frame = Number(clock[5]) +
-        (clock[6] === undefined ? 0 : Number(clock[6]) / subFrameRate);
-      extra = frame / frameRate * 1000;
+      if (
+        !Number.isFinite(frameRate) ||
+        frameRate <= 0 ||
+        !Number.isFinite(subFrameRate) ||
+        subFrameRate <= 0
+      )
+        return null;
+      const frame =
+        Number(clock[5]) + (clock[6] === undefined ? 0 : Number(clock[6]) / subFrameRate);
+      extra = (frame / frameRate) * 1000;
     }
     const result = base + extra;
     return Number.isFinite(result) && result >= 0 ? Math.round(result) : null;
@@ -73,8 +93,12 @@ export function subtitleClockMs(
   if (!offset) return null;
   const amount = Number(offset[1]);
   const scale: Record<string, number> = {
-    ms: 1, s: 1000, m: 60_000, h: 3_600_000,
-    f: 1000 / frameRate, t: 1000 / tickRate,
+    ms: 1,
+    s: 1000,
+    m: 60_000,
+    h: 3_600_000,
+    f: 1000 / frameRate,
+    t: 1000 / tickRate,
   };
   const result = amount * scale[offset[2]];
   return Number.isFinite(result) && result >= 0 ? Math.round(result) : null;
@@ -82,22 +106,38 @@ export function subtitleClockMs(
 
 export function formatVttClock(ms: number): string {
   const seconds = Math.floor(ms / 1000);
-  return String(Math.floor(seconds / 3600)).padStart(2, "0") + ":" +
-    String(Math.floor(seconds / 60) % 60).padStart(2, "0") + ":" +
-    String(seconds % 60).padStart(2, "0") + "." +
-    String(ms % 1000).padStart(3, "0");
+  return (
+    String(Math.floor(seconds / 3600)).padStart(2, "0") +
+    ":" +
+    String(Math.floor(seconds / 60) % 60).padStart(2, "0") +
+    ":" +
+    String(seconds % 60).padStart(2, "0") +
+    "." +
+    String(ms % 1000).padStart(3, "0")
+  );
 }
 
-export function normalizedVttCues(cues: readonly { startMs: number; endMs: number; text: string }[]): string {
+export function normalizedVttCues(
+  cues: readonly { startMs: number; endMs: number; text: string }[],
+): string {
   let size = 0;
-  if (cues.length === 0 || cues.length > MAX_SUBTITLE_CUES) throw new Error("No usable subtitle cues or too many cues.");
+  if (cues.length === 0 || cues.length > MAX_SUBTITLE_CUES)
+    throw new Error("No usable subtitle cues or too many cues.");
   const lines: string[] = ["WEBVTT", ""];
   for (const cue of cues) {
-    const text = cue.text.replace(/\r/g, "").replace(/[\t ]+/g, " ").trim();
+    const text = cue.text
+      .replace(/\r/g, "")
+      .replace(/[\t ]+/g, " ")
+      .trim();
     if (!text || cue.startMs < 0 || cue.endMs <= cue.startMs) continue;
     size += text.length;
-    if (size > MAX_SUBTITLE_CHARS) throw new Error("Subtitle text is too long. Select a shorter video.");
-    lines.push(formatVttClock(Math.round(cue.startMs)) + " --> " + formatVttClock(Math.round(cue.endMs)), text, "");
+    if (size > MAX_SUBTITLE_CHARS)
+      throw new Error("Subtitle text is too long. Select a shorter video.");
+    lines.push(
+      formatVttClock(Math.round(cue.startMs)) + " --> " + formatVttClock(Math.round(cue.endMs)),
+      text,
+      "",
+    );
   }
   if (lines.length <= 2) throw new Error("No usable subtitle cues were found.");
   return lines.join("\n");
@@ -111,15 +151,19 @@ function xmlText(node: Node): string {
 }
 
 export function normalizeNetflixTimedText(
-  input: string, parseXml: (input: string) => Document =
-    text => new DOMParser().parseFromString(text, "application/xml"),
+  input: string,
+  parseXml: (input: string) => Document = text =>
+    new DOMParser().parseFromString(text, "application/xml"),
 ): string {
-  if (input.length > MAX_SUBTITLE_BYTES) throw new Error("Subtitle document exceeds the size limit.");
+  if (input.length > MAX_SUBTITLE_BYTES)
+    throw new Error("Subtitle document exceeds the size limit.");
   const body = input.trim().replace(/^\uFEFF/, "");
   if (/^WEBVTT(?:\s|$)/.test(body)) return body;
-  if (!body.startsWith("<")) throw new Error("Netflix did not return a supported subtitle document.");
+  if (!body.startsWith("<"))
+    throw new Error("Netflix did not return a supported subtitle document.");
   const xml = parseXml(body);
-  if (xml.getElementsByTagName("parsererror").length) throw new Error("Netflix subtitle XML is invalid.");
+  if (xml.getElementsByTagName("parsererror").length)
+    throw new Error("Netflix subtitle XML is invalid.");
   const root = xml.documentElement;
   if (!root || !["tt", "timedtext"].includes(root.localName)) {
     throw new Error("Netflix returned an unsupported subtitle XML format.");
@@ -130,44 +174,59 @@ export function normalizeNetflixTimedText(
   const ttmlParameterNamespace = "http://www.w3.org/ns/ttml#parameter";
   const rootParameter = (name: string): string | null =>
     root.getAttributeNS?.(ttmlParameterNamespace, name) ??
-    root.getAttribute("ttp:" + name) ?? root.getAttribute(name);
+    root.getAttribute("ttp:" + name) ??
+    root.getAttribute(name);
   const baseRateRaw = rootParameter("frameRate");
   const baseRate = Number(baseRateRaw ?? 30);
   const multiplierRaw = rootParameter("frameRateMultiplier") ?? "1 1";
   const multiplierMatch = multiplierRaw.trim().match(/^(\d+)\s+(\d+)$/);
-  const multiplier = multiplierMatch && Number(multiplierMatch[2]) > 0
-    ? Number(multiplierMatch[1]) / Number(multiplierMatch[2]) : 1;
-  const frameRate = Number.isFinite(baseRate * multiplier) && baseRate * multiplier > 0
-    ? baseRate * multiplier : 30;
+  const multiplier =
+    multiplierMatch && Number(multiplierMatch[2]) > 0
+      ? Number(multiplierMatch[1]) / Number(multiplierMatch[2])
+      : 1;
+  const frameRate =
+    Number.isFinite(baseRate * multiplier) && baseRate * multiplier > 0
+      ? baseRate * multiplier
+      : 30;
   const subFrameRateRaw = Number(rootParameter("subFrameRate") ?? 1);
-  const subFrameRate = Number.isFinite(subFrameRateRaw) && subFrameRateRaw > 0
-    ? subFrameRateRaw : 1;
+  const subFrameRate =
+    Number.isFinite(subFrameRateRaw) && subFrameRateRaw > 0 ? subFrameRateRaw : 1;
   const tickRateRaw = rootParameter("tickRate");
-  const computedTickRate = tickRateRaw === null
-    ? (baseRateRaw === null ? 1 : frameRate * subFrameRate)
-    : Number(tickRateRaw);
-  const tickRate = Number.isFinite(computedTickRate) && computedTickRate > 0
-    ? computedTickRate : 1;
+  const computedTickRate =
+    tickRateRaw === null
+      ? baseRateRaw === null
+        ? 1
+        : frameRate * subFrameRate
+      : Number(tickRateRaw);
+  const tickRate = Number.isFinite(computedTickRate) && computedTickRate > 0 ? computedTickRate : 1;
   const parseTime = (expression: string | null): number | null =>
     subtitleClockMs(expression ?? "", frameRate, tickRate, subFrameRate);
 
   const cues: { startMs: number; endMs: number; text: string }[] = [];
   const paragraphs = Array.from(xml.getElementsByTagNameNS("*", "p"));
-  if (!paragraphs.length) throw new Error("Netflix subtitle XML contains no timed-text paragraphs.");
+  if (!paragraphs.length)
+    throw new Error("Netflix subtitle XML contains no timed-text paragraphs.");
   for (const paragraph of paragraphs) {
     // TTML begin/end are relative to the enclosing time container. Account
     // for nested <body>/<div> offsets without inventing missing cue timings.
     let parentOffset = 0;
     let validParent = true;
     const ancestors: Element[] = [];
-    for (let parent = paragraph.parentElement; parent && parent !== root; parent = parent.parentElement) {
+    for (
+      let parent = paragraph.parentElement;
+      parent && parent !== root;
+      parent = parent.parentElement
+    ) {
       ancestors.push(parent);
     }
     for (const ancestor of ancestors.reverse()) {
       const rawBegin = ancestor.getAttribute("begin");
       if (!rawBegin) continue;
       const offset = parseTime(rawBegin);
-      if (offset === null) { validParent = false; break; }
+      if (offset === null) {
+        validParent = false;
+        break;
+      }
       parentOffset += offset;
     }
     if (!validParent) continue;
@@ -194,7 +253,9 @@ export function normalizeNetflixTimedText(
     if (end !== null) end += parentOffset;
     const until = end ?? (duration === null ? null : begin + duration);
     if (until === null || !Number.isFinite(until) || until <= begin) continue;
-    const text = xmlText(paragraph).replace(/[ \t]+/g, " ").trim();
+    const text = xmlText(paragraph)
+      .replace(/[ \t]+/g, " ")
+      .trim();
     if (text) cues.push({ startMs: begin, endMs: until, text });
     if (cues.length > MAX_SUBTITLE_CUES) throw new Error("Too many subtitle cues.");
   }
@@ -202,14 +263,21 @@ export function normalizeNetflixTimedText(
     // Only expose timing attributes, never protected subtitle text or signed
     // delivery addresses. This identifies the next unrecognized TTML variant.
     const sample = paragraphs[0];
-    const describe = (value: string | null): string => value === null ? "missing"
-      : value.slice(0, 60).replace(/[^a-zA-Z0-9:.,+-]/g, "?");
-    throw new Error("Netflix subtitle XML has " + paragraphs.length +
-      " paragraphs but no usable timed cues. First paragraph timing: begin=" +
-      describe(sample.getAttribute("begin") ?? sample.getAttribute("t")) +
-      ", end=" + describe(sample.getAttribute("end")) +
-      ", dur=" + describe(sample.getAttribute("dur") ?? sample.getAttribute("d")) +
-      ", tickRate=" + tickRate + ".");
+    const describe = (value: string | null): string =>
+      value === null ? "missing" : value.slice(0, 60).replace(/[^a-zA-Z0-9:.,+-]/g, "?");
+    throw new Error(
+      "Netflix subtitle XML has " +
+        paragraphs.length +
+        " paragraphs but no usable timed cues. First paragraph timing: begin=" +
+        describe(sample.getAttribute("begin") ?? sample.getAttribute("t")) +
+        ", end=" +
+        describe(sample.getAttribute("end")) +
+        ", dur=" +
+        describe(sample.getAttribute("dur") ?? sample.getAttribute("d")) +
+        ", tickRate=" +
+        tickRate +
+        ".",
+    );
   }
   return normalizedVttCues(cues);
 }

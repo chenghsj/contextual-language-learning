@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  NETFLIX_SEEK_GRACE_MS, isManagedNetflixSeek,
-  reachedNetflixSeekTarget, netflixLoopReachedEnd,
+  NETFLIX_SEEK_GRACE_MS,
+  isManagedNetflixSeek,
+  reachedNetflixSeekTarget,
+  netflixLoopReachedEnd,
 } from "./netflix-loop-timing";
 
 test("Netflix seeking event before currentTime updates is still a managed seek", () => {
@@ -12,7 +14,10 @@ test("Netflix seeking event before currentTime updates is still a managed seek",
   assert.equal(reachedNetflixSeekTarget(83_500, 83_500, true), false);
   assert.equal(reachedNetflixSeekTarget(83_500, 83_500, false), true);
   assert.equal(isManagedNetflixSeek(null, now + NETFLIX_SEEK_GRACE_MS, now + 1), false);
-  assert.equal(isManagedNetflixSeek(83_500, now + NETFLIX_SEEK_GRACE_MS, now + NETFLIX_SEEK_GRACE_MS + 1), false);
+  assert.equal(
+    isManagedNetflixSeek(83_500, now + NETFLIX_SEEK_GRACE_MS, now + NETFLIX_SEEK_GRACE_MS + 1),
+    false,
+  );
 });
 
 test("Netflix loop uses the actual HTML video cursor and waits until the cue end", () => {

@@ -1,9 +1,16 @@
 import { LEARNING_LANGUAGES, type LearningLanguage } from "@immersive/core";
 import { netflixPlayerTitle } from "../video/metadata";
-import { VIDEO_READER_STATUS, VIDEO_READER_VERSION, RELOAD_READER_MESSAGE } from "../video/reader-health";
 import {
-  NETFLIX_SEEK_GRACE_MS, NETFLIX_SEEK_TOLERANCE_MS, isManagedNetflixSeek,
-  reachedNetflixSeekTarget, netflixLoopReachedEnd,
+  VIDEO_READER_STATUS,
+  VIDEO_READER_VERSION,
+  RELOAD_READER_MESSAGE,
+} from "../video/reader-health";
+import {
+  NETFLIX_SEEK_GRACE_MS,
+  NETFLIX_SEEK_TOLERANCE_MS,
+  isManagedNetflixSeek,
+  reachedNetflixSeekTarget,
+  netflixLoopReachedEnd,
 } from "../video/netflix-loop-timing";
 
 // ISOLATED world: only handles user-initiated control requests from our Side Panel.
@@ -14,28 +21,60 @@ import {
   const CAPTION_FETCH_RESPONSE_EVENT = "immersive-learning:netflix:caption-fetch-response";
   const pendingCaptionRequests = new Set<string>();
   const captionRequestsInFlight = new Set<string>();
-  type Action = "bridgeHealth" | "diagnose" | "status" | "seekTo" | "pause" | "play" | "setPlaybackRate" | "subtitlesGet";
+  type Action =
+    | "bridgeHealth"
+    | "diagnose"
+    | "status"
+    | "seekTo"
+    | "pause"
+    | "play"
+    | "setPlaybackRate"
+    | "subtitlesGet";
   type PageResponse = {
-    source: "immersive-learning"; id: string; ok: boolean; available: boolean;
+    source: "immersive-learning";
+    id: string;
+    ok: boolean;
+    available: boolean;
     bridgeVersion?: string;
-    currentMs?: number; playing?: boolean | null; sessionId?: string;
-    seekCalled?: boolean; playbackRate?: number; text?: string; language?: string; error?: string;
+    currentMs?: number;
+    playing?: boolean | null;
+    sessionId?: string;
+    seekCalled?: boolean;
+    playbackRate?: number;
+    text?: string;
+    language?: string;
+    error?: string;
   };
   type Message =
     | { type: "VIDEO_METADATA_GET" }
     | { type: "NETFLIX_DIAGNOSE" }
     | { type: "NETFLIX_SEEK"; timeMs: number }
-    | { type: "NETFLIX_LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number; resumeMs?: number }
+    | {
+        type: "NETFLIX_LOOP_SET";
+        startMs: number;
+        endMs: number;
+        repeats: number | "infinite";
+        delaySeconds: number;
+        resumeMs?: number;
+      }
     | { type: "NETFLIX_LOOP_CLEAR" }
     | { type: "NETFLIX_PLAYBACK_PLAY" | "NETFLIX_PLAYBACK_PAUSE" }
     | { type: "NETFLIX_PLAYBACK_RATE_SET"; rate: number }
     | { type: "NETFLIX_SUBTITLES_GET"; language: LearningLanguage }
     | { type: typeof VIDEO_READER_STATUS };
   type Loop = {
-    startMs: number; endMs: number; repeats: number | "infinite"; delayMs: number;
-    count: number; busy: boolean; managedPause: boolean; expectedSeekUntil: number;
-    expectedSeekTarget: number | null; playbackGraceUntil: number;
-    pathname: string; video: HTMLVideoElement | null;
+    startMs: number;
+    endMs: number;
+    repeats: number | "infinite";
+    delayMs: number;
+    count: number;
+    busy: boolean;
+    managedPause: boolean;
+    expectedSeekUntil: number;
+    expectedSeekTarget: number | null;
+    playbackGraceUntil: number;
+    pathname: string;
+    video: HTMLVideoElement | null;
     interval: ReturnType<typeof setInterval> | null;
     timeout: ReturnType<typeof setTimeout> | null;
   };
@@ -45,14 +84,29 @@ import {
     return new Promise(resolve => {
       const id = crypto.randomUUID();
       if (action === "subtitlesGet") pendingCaptionRequests.add(id);
-      const timer = setTimeout(() => {
-        pendingCaptionRequests.delete(id);
-        window.removeEventListener(RESPONSE_EVENT, onResponse);
-        resolve({ source: "immersive-learning", id, ok: false, available: false,
-          error: action === "subtitlesGet"
-            ? "Netflix subtitle retrieval timed out. Start playback, enable subtitles, then retry on this watch tab."
-            : "Netflix page bridge did not respond." });
-      }, action === "subtitlesGet" ? 22_000 : action === "bridgeHealth" ? 1_100 : action === "status" ? 900 : 2_000);
+      const timer = setTimeout(
+        () => {
+          pendingCaptionRequests.delete(id);
+          window.removeEventListener(RESPONSE_EVENT, onResponse);
+          resolve({
+            source: "immersive-learning",
+            id,
+            ok: false,
+            available: false,
+            error:
+              action === "subtitlesGet"
+                ? "Netflix subtitle retrieval timed out. Start playback, enable subtitles, then retry on this watch tab."
+                : "Netflix page bridge did not respond.",
+          });
+        },
+        action === "subtitlesGet"
+          ? 22_000
+          : action === "bridgeHealth"
+            ? 1_100
+            : action === "status"
+              ? 900
+              : 2_000,
+      );
       function onResponse(event: Event): void {
         const detail = (event as CustomEvent<PageResponse>).detail;
         if (detail?.source !== "immersive-learning" || detail.id !== id) return;
@@ -62,9 +116,11 @@ import {
         resolve(detail);
       }
       window.addEventListener(RESPONSE_EVENT, onResponse);
-      window.dispatchEvent(new CustomEvent(REQUEST_EVENT, {
-        detail: { source: "immersive-learning", id, action, value, language },
-      }));
+      window.dispatchEvent(
+        new CustomEvent(REQUEST_EVENT, {
+          detail: { source: "immersive-learning", id, action, value, language },
+        }),
+      );
     });
   }
 
@@ -74,34 +130,67 @@ import {
     const detail = (event as CustomEvent<unknown>).detail;
     if (!detail || typeof detail !== "object") return;
     const request = detail as { source?: string; id?: string; url?: string };
-    if (request.source !== "immersive-learning" || typeof request.id !== "string" ||
-        !pendingCaptionRequests.has(request.id) || captionRequestsInFlight.has(request.id) ||
-        typeof request.url !== "string") return;
+    if (
+      request.source !== "immersive-learning" ||
+      typeof request.id !== "string" ||
+      !pendingCaptionRequests.has(request.id) ||
+      captionRequestsInFlight.has(request.id) ||
+      typeof request.url !== "string"
+    )
+      return;
     const id = request.id;
     const watchId = location.pathname.match(/^\/watch\/(\d+)(?:\/|$)/)?.[1];
     if (!watchId) {
-      window.dispatchEvent(new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
-        detail: { source: "immersive-learning", id, ok: false,
-          error: "The Netflix watch page changed before its subtitle request. Retry on the video." },
-      }));
+      window.dispatchEvent(
+        new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
+          detail: {
+            source: "immersive-learning",
+            id,
+            ok: false,
+            error:
+              "The Netflix watch page changed before its subtitle request. Retry on the video.",
+          },
+        }),
+      );
       return;
     }
     captionRequestsInFlight.add(id);
-    void chrome.runtime.sendMessage({
-      type: "NETFLIX_CAPTION_DOCUMENT_FETCH", url: request.url, watchId,
-    }).then((response: { ok: boolean; text?: string; error?: string } | undefined) => {
-      if (!pendingCaptionRequests.has(id)) return;
-      window.dispatchEvent(new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
-        detail: { source: "immersive-learning", id, ok: response?.ok === true,
-          text: response?.text, error: response?.error },
-      }));
-    }).catch(error => {
-      if (!pendingCaptionRequests.has(id)) return;
-      window.dispatchEvent(new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
-        detail: { source: "immersive-learning", id, ok: false,
-          error: error instanceof Error ? error.message : "Netflix caption request failed." },
-      }));
-    }).finally(() => { captionRequestsInFlight.delete(id); });
+    void chrome.runtime
+      .sendMessage({
+        type: "NETFLIX_CAPTION_DOCUMENT_FETCH",
+        url: request.url,
+        watchId,
+      })
+      .then((response: { ok: boolean; text?: string; error?: string } | undefined) => {
+        if (!pendingCaptionRequests.has(id)) return;
+        window.dispatchEvent(
+          new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
+            detail: {
+              source: "immersive-learning",
+              id,
+              ok: response?.ok === true,
+              text: response?.text,
+              error: response?.error,
+            },
+          }),
+        );
+      })
+      .catch(error => {
+        if (!pendingCaptionRequests.has(id)) return;
+        window.dispatchEvent(
+          new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
+            detail: {
+              source: "immersive-learning",
+              id,
+              ok: false,
+              error: error instanceof Error ? error.message : "Netflix caption request failed.",
+            },
+          }),
+        );
+      })
+      .finally(() => {
+        captionRequestsInFlight.delete(id);
+      });
   });
 
   function findVideo(): HTMLVideoElement | null {
@@ -123,8 +212,12 @@ import {
     const state = current;
     if (!state) return;
     // Netflix may pause internally while a programmatic seek is still loading.
-    if (state.managedPause || Date.now() <= state.playbackGraceUntil ||
-      isManagedNetflixSeek(state.expectedSeekTarget, state.expectedSeekUntil, Date.now())) return;
+    if (
+      state.managedPause ||
+      Date.now() <= state.playbackGraceUntil ||
+      isManagedNetflixSeek(state.expectedSeekTarget, state.expectedSeekUntil, Date.now())
+    )
+      return;
     clearLoop();
   }
 
@@ -135,9 +228,12 @@ import {
     // player settles. Ignore a near-target follow-up inside the grace window.
     const video = event.currentTarget as HTMLVideoElement;
     const now = Date.now();
-    if (isManagedNetflixSeek(state.expectedSeekTarget, state.expectedSeekUntil, now) ||
+    if (
+      isManagedNetflixSeek(state.expectedSeekTarget, state.expectedSeekUntil, now) ||
       (now <= state.playbackGraceUntil &&
-        Math.abs(video.currentTime * 1000 - state.startMs) <= NETFLIX_SEEK_TOLERANCE_MS)) return;
+        Math.abs(video.currentTime * 1000 - state.startMs) <= NETFLIX_SEEK_TOLERANCE_MS)
+    )
+      return;
     clearLoop(); // A user scrub or another extension overrides this loop.
   }
 
@@ -145,7 +241,9 @@ import {
     const state = current;
     if (!state) return;
     const video = event.currentTarget as HTMLVideoElement;
-    if (reachedNetflixSeekTarget(state.expectedSeekTarget, video.currentTime * 1000, video.seeking)) {
+    if (
+      reachedNetflixSeekTarget(state.expectedSeekTarget, video.currentTime * 1000, video.seeking)
+    ) {
       state.expectedSeekTarget = null;
       state.expectedSeekUntil = 0;
     }
@@ -178,9 +276,9 @@ import {
         if (reachedNetflixSeekTarget(state.expectedSeekTarget, actualMs, video.seeking)) {
           state.expectedSeekTarget = null;
           state.expectedSeekUntil = 0;
-        } else if (isManagedNetflixSeek(
-          state.expectedSeekTarget, state.expectedSeekUntil, Date.now(),
-        )) {
+        } else if (
+          isManagedNetflixSeek(state.expectedSeekTarget, state.expectedSeekUntil, Date.now())
+        ) {
           return; // Wait for Netflix's asynchronous internal seek.
         } else {
           clearLoop(); // The requested seek never completed.
@@ -196,8 +294,11 @@ import {
       // The main-world API may select a different Netflix session as it loads.
       // The same HTML video element used for pause/seek events is the stable
       // source of actual playback time; no extra asynchronous status request.
-      if (!Number.isFinite(actualMs) ||
-        actualMs < state.startMs - 1_500 || actualMs > state.endMs + 5_000) {
+      if (
+        !Number.isFinite(actualMs) ||
+        actualMs < state.startMs - 1_500 ||
+        actualMs > state.endMs + 5_000
+      ) {
         clearLoop();
         return;
       }
@@ -214,7 +315,10 @@ import {
         state.managedPause = true;
         const pause = await requestPage("pause");
         if (current !== state) return;
-        if (!pause.ok) { clearLoop(); return; }
+        if (!pause.ok) {
+          clearLoop();
+          return;
+        }
         state.timeout = setTimeout(() => {
           state.timeout = null;
           void (async () => {
@@ -225,7 +329,10 @@ import {
               return;
             }
             const played = await requestPage("play");
-            if (current !== state || !played.ok) { clearLoop(); return; }
+            if (current !== state || !played.ok) {
+              clearLoop();
+              return;
+            }
             state.playbackGraceUntil = Date.now() + 3_000;
             state.managedPause = false;
             state.busy = false;
@@ -238,7 +345,10 @@ import {
           return;
         }
         const played = await requestPage("play");
-        if (current !== state || !played.ok) { clearLoop(); return; }
+        if (current !== state || !played.ok) {
+          clearLoop();
+          return;
+        }
         state.playbackGraceUntil = Date.now() + 3_000;
       }
     } catch {
@@ -250,7 +360,14 @@ import {
     }
   }
 
-  async function handle(message: Message): Promise<{ ok: boolean; error?: string; currentMs?: number; playing?: boolean; text?: string; language?: string }> {
+  async function handle(message: Message): Promise<{
+    ok: boolean;
+    error?: string;
+    currentMs?: number;
+    playing?: boolean;
+    text?: string;
+    language?: string;
+  }> {
     if (message.type === "NETFLIX_LOOP_CLEAR") {
       clearLoop();
       return { ok: true };
@@ -262,8 +379,12 @@ import {
     }
     if (message.type === "NETFLIX_DIAGNOSE") {
       const diagnostic = await requestPage("diagnose");
-      return { ok: diagnostic.ok, error: diagnostic.error, currentMs: diagnostic.currentMs,
-        ...(typeof diagnostic.playing === "boolean" ? { playing: diagnostic.playing } : {}) };
+      return {
+        ok: diagnostic.ok,
+        error: diagnostic.error,
+        currentMs: diagnostic.currentMs,
+        ...(typeof diagnostic.playing === "boolean" ? { playing: diagnostic.playing } : {}),
+      };
     }
     if (message.type === "NETFLIX_SUBTITLES_GET") {
       if (!LEARNING_LANGUAGES.some(language => language === message.language)) {
@@ -271,7 +392,10 @@ import {
       }
       const result = await requestPage("subtitlesGet", undefined, message.language);
       if (!result.ok) {
-        return { ok: false, error: result.error ?? "Netflix did not provide a readable transcript." };
+        return {
+          ok: false,
+          error: result.error ?? "Netflix did not provide a readable transcript.",
+        };
       }
       if (result.bridgeVersion !== "netflix-worker-url-check-v3") {
         return { ok: false, error: RELOAD_READER_MESSAGE };
@@ -287,8 +411,10 @@ import {
       }
       // Changing playback rate does not cancel an active sentence loop.
       const result = await requestPage("setPlaybackRate", message.rate);
-      return { ok: result.ok && typeof result.playbackRate === "number",
-        error: result.error ?? (result.ok ? undefined : "Netflix could not change playback speed.") };
+      return {
+        ok: result.ok && typeof result.playbackRate === "number",
+        error: result.error ?? (result.ok ? undefined : "Netflix could not change playback speed."),
+      };
     }
     if (message.type === "NETFLIX_SEEK") {
       if (!Number.isInteger(message.timeMs) || message.timeMs < 0 || message.timeMs > 43_200_000) {
@@ -297,22 +423,40 @@ import {
       clearLoop();
       const result = await requestPage("seekTo", message.timeMs);
       if (!result.ok || !result.seekCalled) {
-        return { ok: false, error: result.error ?? "Netflix could not seek to the subtitle timestamp." };
+        return {
+          ok: false,
+          error: result.error ?? "Netflix could not seek to the subtitle timestamp.",
+        };
       }
       // Jump-to-cue is a playback action; merely positioning a paused video
       // would not let the user hear the sentence.
       const played = await requestPage("play");
-      return { ok: played.ok, error: played.error ?? (played.ok ? undefined :
-        "Netflix positioned the video, but could not start playback. Press Play in the video tab.") };
+      return {
+        ok: played.ok,
+        error:
+          played.error ??
+          (played.ok
+            ? undefined
+            : "Netflix positioned the video, but could not start playback. Press Play in the video tab."),
+      };
     }
     if (message.type !== "NETFLIX_LOOP_SET") return { ok: false, error: "Unsupported action." };
-    if ((message.resumeMs !== undefined && (!Number.isInteger(message.resumeMs) || message.resumeMs < message.startMs || message.resumeMs >= message.endMs)) ||
-      !Number.isInteger(message.startMs) || !Number.isInteger(message.endMs)
-      || message.startMs < 0 || message.endMs <= message.startMs
-      || message.endMs - message.startMs > 600_000
-      || ![0, 1, 2, 3].includes(message.delaySeconds)
-      || !(message.repeats === "infinite" ||
-        (Number.isInteger(message.repeats) && message.repeats >= 1 && message.repeats <= 20))) {
+    if (
+      (message.resumeMs !== undefined &&
+        (!Number.isInteger(message.resumeMs) ||
+          message.resumeMs < message.startMs ||
+          message.resumeMs >= message.endMs)) ||
+      !Number.isInteger(message.startMs) ||
+      !Number.isInteger(message.endMs) ||
+      message.startMs < 0 ||
+      message.endMs <= message.startMs ||
+      message.endMs - message.startMs > 600_000 ||
+      ![0, 1, 2, 3].includes(message.delaySeconds) ||
+      !(
+        message.repeats === "infinite" ||
+        (Number.isInteger(message.repeats) && message.repeats >= 1 && message.repeats <= 20)
+      )
+    ) {
       return { ok: false, error: "Invalid loop settings." };
     }
     clearLoop();
@@ -322,10 +466,20 @@ import {
       return { ok: false, error: diagnostic.error ?? "Netflix player is not ready for looping." };
     }
     const state: Loop = {
-      startMs: message.startMs, endMs: message.endMs, repeats: message.repeats,
-      delayMs: message.delaySeconds * 1000, count: 0, busy: false,
-      managedPause: false, expectedSeekUntil: 0, expectedSeekTarget: null,
-      playbackGraceUntil: 0, pathname: location.pathname, video, interval: null, timeout: null,
+      startMs: message.startMs,
+      endMs: message.endMs,
+      repeats: message.repeats,
+      delayMs: message.delaySeconds * 1000,
+      count: 0,
+      busy: false,
+      managedPause: false,
+      expectedSeekUntil: 0,
+      expectedSeekTarget: null,
+      playbackGraceUntil: 0,
+      pathname: location.pathname,
+      video,
+      interval: null,
+      timeout: null,
     };
     current = state;
     video.addEventListener("pause", onPause);
@@ -334,7 +488,10 @@ import {
     const jumped = await seek(state, message.resumeMs ?? state.startMs);
     if (current !== state || !jumped.ok || !jumped.seekCalled) {
       clearLoop();
-      return { ok: false, error: jumped.error ?? "Netflix could not seek to the start of the segment." };
+      return {
+        ok: false,
+        error: jumped.error ?? "Netflix could not seek to the start of the segment.",
+      };
     }
     const played = await requestPage("play");
     if (!played.ok) {
@@ -350,18 +507,22 @@ import {
     if (!incoming || typeof incoming !== "object") return false;
     const candidate = incoming as Partial<Message>;
     if (candidate.type === VIDEO_READER_STATUS) {
-      void requestPage("bridgeHealth").then(result => {
-        sendResponse(result.ok && result.bridgeVersion === "netflix-worker-url-check-v3"
-          ? { ok: true, platform: "netflix", bridgeVersion: VIDEO_READER_VERSION }
-          : { ok: false, error: RELOAD_READER_MESSAGE });
-      }).catch(() => sendResponse({ ok: false, error: RELOAD_READER_MESSAGE }));
+      void requestPage("bridgeHealth")
+        .then(result => {
+          sendResponse(
+            result.ok && result.bridgeVersion === "netflix-worker-url-check-v3"
+              ? { ok: true, platform: "netflix", bridgeVersion: VIDEO_READER_VERSION }
+              : { ok: false, error: RELOAD_READER_MESSAGE },
+          );
+        })
+        .catch(() => sendResponse({ ok: false, error: RELOAD_READER_MESSAGE }));
       return true;
     }
     if (candidate.type === "VIDEO_METADATA_GET") {
       const title = netflixPlayerTitle([
         document.querySelector('[data-uia="video-title"]')?.textContent,
         document.querySelector('[data-uia="player-title"]')?.textContent,
-        document.querySelector('.video-title h4')?.textContent,
+        document.querySelector(".video-title h4")?.textContent,
         document.querySelector('[data-uia="title-info"]')?.textContent,
         document.querySelector('[data-uia="episode-title"]')?.textContent,
         document.querySelector('[data-uia="video-title"] [aria-label]')?.getAttribute("aria-label"),
@@ -373,12 +534,28 @@ import {
       sendResponse({ ok: true, url: location.href, title: title ?? undefined });
       return false;
     }
-    if (!["NETFLIX_PLAYBACK_PLAY", "NETFLIX_PLAYBACK_PAUSE", "NETFLIX_DIAGNOSE", "NETFLIX_SEEK", "NETFLIX_LOOP_SET", "NETFLIX_LOOP_CLEAR", "NETFLIX_PLAYBACK_RATE_SET", "NETFLIX_SUBTITLES_GET"].includes(candidate.type ?? "")) {
+    if (
+      ![
+        "NETFLIX_PLAYBACK_PLAY",
+        "NETFLIX_PLAYBACK_PAUSE",
+        "NETFLIX_DIAGNOSE",
+        "NETFLIX_SEEK",
+        "NETFLIX_LOOP_SET",
+        "NETFLIX_LOOP_CLEAR",
+        "NETFLIX_PLAYBACK_RATE_SET",
+        "NETFLIX_SUBTITLES_GET",
+      ].includes(candidate.type ?? "")
+    ) {
       return false;
     }
-    void handle(candidate as Message).then(sendResponse).catch(error => {
-      sendResponse({ ok: false, error: error instanceof Error ? error.message : "Netflix playback is unavailable." });
-    });
+    void handle(candidate as Message)
+      .then(sendResponse)
+      .catch(error => {
+        sendResponse({
+          ok: false,
+          error: error instanceof Error ? error.message : "Netflix playback is unavailable.",
+        });
+      });
     return true;
   });
 

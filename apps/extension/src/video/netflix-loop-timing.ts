@@ -4,16 +4,24 @@ export const NETFLIX_SEEK_GRACE_MS = 8_000;
 export const NETFLIX_SEEK_TOLERANCE_MS = 2_500;
 
 export function isManagedNetflixSeek(
-  targetMs: number | null, deadlineMs: number, nowMs: number,
+  targetMs: number | null,
+  deadlineMs: number,
+  nowMs: number,
 ): boolean {
   return targetMs !== null && nowMs <= deadlineMs;
 }
 
 export function reachedNetflixSeekTarget(
-  targetMs: number | null, actualMs: number, isSeeking: boolean,
+  targetMs: number | null,
+  actualMs: number,
+  isSeeking: boolean,
 ): boolean {
-  return targetMs !== null && Number.isFinite(actualMs) && !isSeeking &&
-    Math.abs(actualMs - targetMs) <= NETFLIX_SEEK_TOLERANCE_MS;
+  return (
+    targetMs !== null &&
+    Number.isFinite(actualMs) &&
+    !isSeeking &&
+    Math.abs(actualMs - targetMs) <= NETFLIX_SEEK_TOLERANCE_MS
+  );
 }
 
 export function netflixLoopReachedEnd(actualMs: number, endMs: number): boolean {

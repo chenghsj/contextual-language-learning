@@ -16,9 +16,14 @@ function netflixDocumentUrl(raw: string | undefined): URL | null {
   if (!raw) return null;
   try {
     const url = new URL(raw);
-    if (url.protocol !== "https:" ||
+    if (
+      url.protocol !== "https:" ||
       !["netflix.com", "www.netflix.com"].includes(url.hostname.toLowerCase()) ||
-      url.username || url.password || (url.port && url.port !== "443")) return null;
+      url.username ||
+      url.password ||
+      (url.port && url.port !== "443")
+    )
+      return null;
     return url;
   } catch {
     return null;
@@ -38,7 +43,8 @@ export function validateNetflixCaptionSender(
 
   const current = netflixDocumentUrl(currentTabUrl);
   const currentWatchId = current?.pathname.match(/^\/watch\/(\d+)(?:\/|$)/)?.[1];
-  if (!currentWatchId) return "The Netflix tab is not on a video watch page. Switch to the video and retry.";
+  if (!currentWatchId)
+    return "The Netflix tab is not on a video watch page. Switch to the video and retry.";
   if (currentWatchId !== expectedWatchId) {
     return "The Netflix video changed during subtitle retrieval. Retry on the intended video.";
   }

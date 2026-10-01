@@ -20,13 +20,17 @@ test("prefer matching video metadata over a generic Netflix browser tab title", 
   let requested = 0;
   try {
     globalChrome.chrome = {
-      tabs: { sendMessage: async (id: number) => {
-        requested = id;
-        return { ok: true, url, title: "Real episode name - Netflix" };
-      } },
+      tabs: {
+        sendMessage: async (id: number) => {
+          requested = id;
+          return { ok: true, url, title: "Real episode name - Netflix" };
+        },
+      },
     } as unknown as typeof chrome;
-    assert.equal(await titleForVideoTab({ id: 42, url, title: "Netflix" }, netflixAdapter),
-      "Real episode name");
+    assert.equal(
+      await titleForVideoTab({ id: 42, url, title: "Netflix" }, netflixAdapter),
+      "Real episode name",
+    );
     assert.equal(requested, 42);
   } finally {
     if (previous) globalChrome.chrome = previous;
@@ -39,12 +43,18 @@ test("never use stale metadata from a different Netflix video", async () => {
   const previous = globalChrome.chrome;
   try {
     globalChrome.chrome = {
-      tabs: { sendMessage: async () => ({
-        ok: true, url: "https://www.netflix.com/watch/76543210", title: "Wrong episode",
-      }) },
+      tabs: {
+        sendMessage: async () => ({
+          ok: true,
+          url: "https://www.netflix.com/watch/76543210",
+          title: "Wrong episode",
+        }),
+      },
     } as unknown as typeof chrome;
-    assert.equal(await titleForVideoTab({ id: 42, url, title: "Right episode - Netflix" }, netflixAdapter),
-      "Right episode");
+    assert.equal(
+      await titleForVideoTab({ id: 42, url, title: "Right episode - Netflix" }, netflixAdapter),
+      "Right episode",
+    );
   } finally {
     if (previous) globalChrome.chrome = previous;
     else delete globalChrome.chrome;
@@ -56,10 +66,16 @@ test("fallback to browser tab title when the page metadata is unavailable", asyn
   const previous = globalChrome.chrome;
   try {
     globalChrome.chrome = {
-      tabs: { sendMessage: async () => { throw new Error("Receiving end does not exist"); } },
+      tabs: {
+        sendMessage: async () => {
+          throw new Error("Receiving end does not exist");
+        },
+      },
     } as unknown as typeof chrome;
-    assert.equal(await titleForVideoTab({ id: 42, url, title: "Known title - Netflix" }, netflixAdapter),
-      "Known title");
+    assert.equal(
+      await titleForVideoTab({ id: 42, url, title: "Known title - Netflix" }, netflixAdapter),
+      "Known title",
+    );
     assert.equal(await titleForVideoTab({ id: 42, url, title: "Netflix" }, netflixAdapter), null);
   } finally {
     if (previous) globalChrome.chrome = previous;
@@ -68,8 +84,10 @@ test("fallback to browser tab title when the page metadata is unavailable", asyn
 });
 
 test("Netflix title selection prefers visible player titles over generic page labels", () => {
-  assert.equal(netflixPlayerTitle(["Netflix", "第 12 話・新的開始", "Old episode - Netflix"]),
-    "第 12 話・新的開始");
+  assert.equal(
+    netflixPlayerTitle(["Netflix", "第 12 話・新的開始", "Old episode - Netflix"]),
+    "第 12 話・新的開始",
+  );
   assert.equal(netflixPlayerTitle([null, "Netflix", "Watch on Netflix"]), null);
   assert.equal(netflixPlayerTitle(["", "Episode 12 - Netflix"]), "Episode 12");
 });

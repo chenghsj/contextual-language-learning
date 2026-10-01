@@ -9,7 +9,10 @@ test("resolves registered platforms using a validated video identity", () => {
   assert.equal(getVideoAdapter(yt).id, "youtube");
   assert.equal(getVideoAdapter(nf).id, "netflix");
   assert.equal(getVideoAdapter("https://www.netflix.com.evil.example/watch/81234567").id, "import");
-  assert.equal(getVideoAdapter("https://www.youtube.com.evil.example/watch?v=dQw4w9WgXcQ").id, "import");
+  assert.equal(
+    getVideoAdapter("https://www.youtube.com.evil.example/watch?v=dQw4w9WgXcQ").id,
+    "import",
+  );
   assert.equal(getVideoAdapter("https://tv.apple.com/show/sample").id, "import");
 });
 
@@ -24,7 +27,10 @@ test("capabilities derive from the adapter, not from platform conditionals in th
 test("speed controls are provided only by adapters with playback rate support", () => {
   assert.equal(supports(getVideoAdapter(yt), "playbackRate"), true);
   assert.equal(supports(getVideoAdapter(nf), "playbackRate"), true);
-  assert.equal(supports(getVideoAdapter("https://tv.apple.com/watch/example"), "playbackRate"), false);
+  assert.equal(
+    supports(getVideoAdapter("https://tv.apple.com/watch/example"), "playbackRate"),
+    false,
+  );
 });
 
 test("YouTube and Netflix offer user-initiated subtitle retrieval; unsupported videos do not", () => {

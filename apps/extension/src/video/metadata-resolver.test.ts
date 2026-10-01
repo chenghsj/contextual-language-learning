@@ -55,7 +55,11 @@ test("with no source, detects the active supported video and tolerates missing t
       },
     } as unknown as typeof chrome;
     assert.deepEqual(await detectCurrentVideoMetadata("", 0), {
-      tabId: 9, url: netflix, videoId: "82036383", platform: "netflix", title: null,
+      tabId: 9,
+      url: netflix,
+      videoId: "82036383",
+      platform: "netflix",
+      title: null,
     });
   } finally {
     if (previous) globalChrome.chrome = previous;
@@ -72,7 +76,9 @@ test("rejects tab navigation during video metadata lookup", async () => {
       tabs: {
         query: async () => [{ id: 5, url: netflix, title: "Netflix", active: true }],
         get: async () => ({
-          id: 5, url: ++reads === 1 ? netflix : anotherNetflix, title: "Netflix",
+          id: 5,
+          url: ++reads === 1 ? netflix : anotherNetflix,
+          title: "Netflix",
         }),
         sendMessage: async () => ({ ok: true, url: netflix, title: "Correct title" }),
       },
@@ -92,11 +98,15 @@ test("ignores the previous active watch tab when the user switches during detect
     globalChrome.chrome = {
       windows: { getCurrent: async () => ({ id: 1 }) },
       tabs: {
-        query: async () => [{
-          id: ++queries === 1 ? 11 : 12,
-          url: queries === 1 ? netflix : youtube,
-          title: "Netflix", active: true, windowId: 1,
-        }],
+        query: async () => [
+          {
+            id: ++queries === 1 ? 11 : 12,
+            url: queries === 1 ? netflix : youtube,
+            title: "Netflix",
+            active: true,
+            windowId: 1,
+          },
+        ],
         get: async () => ({ id: 11, url: netflix, title: "Netflix" }),
         sendMessage: async () => ({ ok: true, url: netflix, title: "Episode title" }),
       },

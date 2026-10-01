@@ -32,7 +32,10 @@ export interface VideoAdapter {
   play?(url: string): Promise<void>;
   pause?(url: string): Promise<void>;
   setPlaybackRate?(url: string, rate: number): Promise<void>;
-  fetchSubtitles?(url: string, language: LearningLanguage): Promise<{ text: string; language: string }>;
+  fetchSubtitles?(
+    url: string,
+    language: LearningLanguage,
+  ): Promise<{ text: string; language: string }>;
   availableSubtitleTracks?(url: string): Promise<SubtitleTrackAvailability>;
   loop?(url: string, options: LoopSettings): Promise<void>;
   stopLoop?(url: string): Promise<void>;
@@ -40,10 +43,15 @@ export interface VideoAdapter {
 
 export function supports(adapter: VideoAdapter, capability: PlaybackCapability): boolean {
   switch (capability) {
-    case "timestampLink": return typeof adapter.timestampLink === "function";
-    case "diagnose": return typeof adapter.diagnose === "function";
-    case "seek": return typeof adapter.seek === "function";
-    case "loop": return typeof adapter.loop === "function";
-    case "playbackRate": return typeof adapter.setPlaybackRate === "function";
+    case "timestampLink":
+      return typeof adapter.timestampLink === "function";
+    case "diagnose":
+      return typeof adapter.diagnose === "function";
+    case "seek":
+      return typeof adapter.seek === "function";
+    case "loop":
+      return typeof adapter.loop === "function";
+    case "playbackRate":
+      return typeof adapter.setPlaybackRate === "function";
   }
 }

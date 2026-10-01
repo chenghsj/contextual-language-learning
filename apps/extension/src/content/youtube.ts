@@ -1,9 +1,20 @@
 import { isVideoCommandErrorCode, type VideoCommandErrorCode } from "../video/command-errors";
 import type { LearningLanguage } from "@immersive/core";
-import { VIDEO_READER_STATUS, VIDEO_READER_VERSION, RELOAD_READER_MESSAGE } from "../video/reader-health";
+import {
+  VIDEO_READER_STATUS,
+  VIDEO_READER_VERSION,
+  RELOAD_READER_MESSAGE,
+} from "../video/reader-health";
 
 type LoopMessage =
-  | { type: "LOOP_SET"; startMs: number; endMs: number; repeats: number | "infinite"; delaySeconds: number; resumeMs?: number }
+  | {
+      type: "LOOP_SET";
+      startMs: number;
+      endMs: number;
+      repeats: number | "infinite";
+      delaySeconds: number;
+      resumeMs?: number;
+    }
   | { type: "LOOP_CLEAR" }
   | { type: "PLAYBACK_PLAY" | "PLAYBACK_PAUSE" }
   | { type: "VIDEO_METADATA_GET" }
@@ -14,7 +25,14 @@ type LoopMessage =
   | { type: "YOUTUBE_CAPTION_TRACKS_GET"; videoId: string }
   | { type: typeof VIDEO_READER_STATUS };
 
-let active: { video: HTMLVideoElement; start: number; end: number; repeats: number | "infinite"; completed: number; delayMs: number } | null = null;
+let active: {
+  video: HTMLVideoElement;
+  start: number;
+  end: number;
+  repeats: number | "infinite";
+  completed: number;
+  delayMs: number;
+} | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let managedPause = false;
 let internalSeek = false;
@@ -34,7 +52,13 @@ function clearLoop(): void {
 
 function seek(video: HTMLVideoElement, position: number): void {
   internalSeek = true;
-  video.addEventListener("seeked", () => { internalSeek = false; }, { once: true });
+  video.addEventListener(
+    "seeked",
+    () => {
+      internalSeek = false;
+    },
+    { once: true },
+  );
   video.currentTime = position;
 }
 
@@ -68,8 +92,14 @@ function onTimeUpdate(): void {
 }
 
 type CaptionResponse = {
-  source: "immersive-learning"; id: string; ok: boolean; bridgeVersion?: string;
-  text?: string; language?: string; error?: string; errorCode?: VideoCommandErrorCode;
+  source: "immersive-learning";
+  id: string;
+  ok: boolean;
+  bridgeVersion?: string;
+  text?: string;
+  language?: string;
+  error?: string;
+  errorCode?: VideoCommandErrorCode;
 };
 
 function requestYouTubeCaptions(videoId: string, language: string): Promise<CaptionResponse> {
@@ -78,8 +108,12 @@ function requestYouTubeCaptions(videoId: string, language: string): Promise<Capt
     const RESPONSE = "immersive-learning:youtube:caption-response";
     const timer = setTimeout(() => {
       window.removeEventListener(RESPONSE, receive);
-      resolve({ source: "immersive-learning", id, ok: false,
-        error: "YouTube subtitle reader did not respond. Reload this video tab and retry." });
+      resolve({
+        source: "immersive-learning",
+        id,
+        ok: false,
+        error: "YouTube subtitle reader did not respond. Reload this video tab and retry.",
+      });
     }, 32_000);
     function receive(event: Event): void {
       const reply = (event as CustomEvent<CaptionResponse>).detail;
@@ -89,35 +123,58 @@ function requestYouTubeCaptions(videoId: string, language: string): Promise<Capt
       resolve(reply);
     }
     window.addEventListener(RESPONSE, receive);
-    window.dispatchEvent(new CustomEvent("immersive-learning:youtube:caption-request", {
-      detail: { source: "immersive-learning", id, videoId, language },
-    }));
+    window.dispatchEvent(
+      new CustomEvent("immersive-learning:youtube:caption-request", {
+        detail: { source: "immersive-learning", id, videoId, language },
+      }),
+    );
   });
 }
 
 function requestYouTubeTrackList(videoId: string): Promise<{
-  source: string; id: string; ok: boolean; bridgeVersion?: string; status?: string;
-  tracks?: { language: string; kind: "manual" | "auto" }[]; error?: string;
+  source: string;
+  id: string;
+  ok: boolean;
+  bridgeVersion?: string;
+  status?: string;
+  tracks?: { language: string; kind: "manual" | "auto" }[];
+  error?: string;
 }> {
   return new Promise(resolve => {
     const id = crypto.randomUUID();
     const eventName = "immersive-learning:youtube:track-response";
     const timer = setTimeout(() => {
       window.removeEventListener(eventName, receive);
-      resolve({ source: "immersive-learning", id, ok: false, error: "Caption metadata timed out." });
+      resolve({
+        source: "immersive-learning",
+        id,
+        ok: false,
+        error: "Caption metadata timed out.",
+      });
     }, 4_000);
     function receive(event: Event): void {
-      const result = (event as CustomEvent<{ source: string; id: string; ok: boolean; bridgeVersion?: string;
-        status?: string; tracks?: { language: string; kind: "manual" | "auto" }[]; error?: string }>).detail;
+      const result = (
+        event as CustomEvent<{
+          source: string;
+          id: string;
+          ok: boolean;
+          bridgeVersion?: string;
+          status?: string;
+          tracks?: { language: string; kind: "manual" | "auto" }[];
+          error?: string;
+        }>
+      ).detail;
       if (result?.source !== "immersive-learning" || result.id !== id) return;
       clearTimeout(timer);
       window.removeEventListener(eventName, receive);
       resolve(result);
     }
     window.addEventListener(eventName, receive);
-    window.dispatchEvent(new CustomEvent("immersive-learning:youtube:track-request", {
-      detail: { source: "immersive-learning", id, videoId },
-    }));
+    window.dispatchEvent(
+      new CustomEvent("immersive-learning:youtube:track-request", {
+        detail: { source: "immersive-learning", id, videoId },
+      }),
+    );
   });
 }
 
@@ -130,30 +187,41 @@ function youtubePageReaderReady(): Promise<boolean> {
       resolve(false);
     }, 900);
     function receive(event: Event): void {
-      const reply = (event as CustomEvent<{
-        source?: string; id?: string; bridgeVersion?: string;
-      }>).detail;
+      const reply = (
+        event as CustomEvent<{
+          source?: string;
+          id?: string;
+          bridgeVersion?: string;
+        }>
+      ).detail;
       if (reply?.source !== "immersive-learning" || reply.id !== id) return;
       clearTimeout(timer);
       window.removeEventListener(responseEvent, receive);
       resolve(reply.bridgeVersion === "native-caption-capture-v2");
     }
     window.addEventListener(responseEvent, receive);
-    window.dispatchEvent(new CustomEvent("immersive-learning:youtube:bridge-health-request", {
-      detail: { source: "immersive-learning", id },
-    }));
+    window.dispatchEvent(
+      new CustomEvent("immersive-learning:youtube:bridge-health-request", {
+        detail: { source: "immersive-learning", id },
+      }),
+    );
   });
 }
 
 chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) => {
   if (message.type === VIDEO_READER_STATUS) {
-    void youtubePageReaderReady().then(ready => respond(ready
-      ? { ok: true, platform: "youtube", bridgeVersion: VIDEO_READER_VERSION }
-      : { ok: false, error: RELOAD_READER_MESSAGE }));
+    void youtubePageReaderReady().then(ready =>
+      respond(
+        ready
+          ? { ok: true, platform: "youtube", bridgeVersion: VIDEO_READER_VERSION }
+          : { ok: false, error: RELOAD_READER_MESSAGE },
+      ),
+    );
     return true;
   }
   if (message.type === "VIDEO_METADATA_GET") {
-    const title = document.querySelector("h1.ytd-watch-metadata yt-formatted-string")?.textContent?.trim() ??
+    const title =
+      document.querySelector("h1.ytd-watch-metadata yt-formatted-string")?.textContent?.trim() ??
       document.querySelector('meta[property="og:title"]')?.getAttribute("content") ??
       document.title;
     respond({ ok: true, url: location.href, title });
@@ -165,37 +233,71 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
       respond({ ok: false, error: "The active YouTube video changed." });
       return false;
     }
-    void requestYouTubeTrackList(message.videoId).then(result => {
-      if (!result.ok || result.bridgeVersion !== "native-caption-capture-v2") {
-        respond({ ok: false, error: result.error ?? RELOAD_READER_MESSAGE });
-        return;
-      }
-      const tracks = Array.isArray(result.tracks) ? result.tracks.filter(track =>
-        typeof track?.language === "string" && /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(track.language) &&
-        (track.kind === "manual" || track.kind === "auto")).slice(0, 100) : [];
-      respond({ ok: true, status: result.status === "available" ? "available" : "unknown", tracks });
-    }).catch(() => respond({ ok: false, error: "Caption metadata unavailable." }));
+    void requestYouTubeTrackList(message.videoId)
+      .then(result => {
+        if (!result.ok || result.bridgeVersion !== "native-caption-capture-v2") {
+          respond({ ok: false, error: result.error ?? RELOAD_READER_MESSAGE });
+          return;
+        }
+        const tracks = Array.isArray(result.tracks)
+          ? result.tracks
+              .filter(
+                track =>
+                  typeof track?.language === "string" &&
+                  /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(track.language) &&
+                  (track.kind === "manual" || track.kind === "auto"),
+              )
+              .slice(0, 100)
+          : [];
+        respond({
+          ok: true,
+          status: result.status === "available" ? "available" : "unknown",
+          tracks,
+        });
+      })
+      .catch(() => respond({ ok: false, error: "Caption metadata unavailable." }));
     return true;
   }
   if (message.type === "YOUTUBE_SUBTITLES_GET") {
     const videoId = new URL(location.href).searchParams.get("v");
     if (location.pathname !== "/watch" || videoId !== message.videoId) {
-      respond({ ok: false, error: "The active YouTube video changed. Retry on the current watch tab." });
+      respond({
+        ok: false,
+        error: "The active YouTube video changed. Retry on the current watch tab.",
+      });
       return;
     }
-    void requestYouTubeCaptions(message.videoId, message.language).then(result => {
-      if (result.bridgeVersion !== "native-caption-capture-v2") {
-        respond({ ok: false, error: "The YouTube page has an outdated caption reader. Rebuild the extension and reload this video tab before retrying." });
-        return;
-      }
-      respond(result.ok && result.text && result.text.length <= 3_000_000 &&
-        typeof result.language === "string"
-        ? { ok: true, text: result.text, language: result.language }
-        : { ok: false, error: result.error ?? "YouTube did not return readable subtitles.",
-            ...(isVideoCommandErrorCode(result.errorCode) ? { errorCode: result.errorCode } : {}) });
-    }).catch(error => {
-      respond({ ok: false, error: error instanceof Error ? error.message : "YouTube subtitles are unavailable." });
-    });
+    void requestYouTubeCaptions(message.videoId, message.language)
+      .then(result => {
+        if (result.bridgeVersion !== "native-caption-capture-v2") {
+          respond({
+            ok: false,
+            error:
+              "The YouTube page has an outdated caption reader. Rebuild the extension and reload this video tab before retrying.",
+          });
+          return;
+        }
+        respond(
+          result.ok &&
+            result.text &&
+            result.text.length <= 3_000_000 &&
+            typeof result.language === "string"
+            ? { ok: true, text: result.text, language: result.language }
+            : {
+                ok: false,
+                error: result.error ?? "YouTube did not return readable subtitles.",
+                ...(isVideoCommandErrorCode(result.errorCode)
+                  ? { errorCode: result.errorCode }
+                  : {}),
+              },
+        );
+      })
+      .catch(error => {
+        respond({
+          ok: false,
+          error: error instanceof Error ? error.message : "YouTube subtitles are unavailable.",
+        });
+      });
     return true;
   }
   if (message.type === "YOUTUBE_SEEK") {
@@ -203,7 +305,8 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
       respond({ ok: false, error: "Invalid video timestamp." });
       return;
     }
-    const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
+    const video =
+      document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
       document.querySelector<HTMLVideoElement>("video");
     if (!video) {
       respond({ ok: false, error: "YouTube player is not ready. Start the video and retry." });
@@ -212,34 +315,60 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
     clearLoop();
     try {
       video.currentTime = message.timeMs / 1000;
-      void video.play().then(() => respond({ ok: true })).catch(() =>
-        respond({ ok: false, error: "Video was positioned, but YouTube blocked playback. Press Play in the existing video tab." }));
+      void video
+        .play()
+        .then(() => respond({ ok: true }))
+        .catch(() =>
+          respond({
+            ok: false,
+            error:
+              "Video was positioned, but YouTube blocked playback. Press Play in the existing video tab.",
+          }),
+        );
     } catch {
       respond({ ok: false, error: "YouTube could not seek to the subtitle timestamp." });
     }
     return true;
   }
   if (message.type === "PLAYBACK_PLAY" || message.type === "PLAYBACK_PAUSE") {
-    const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ?? document.querySelector<HTMLVideoElement>("video");
-    if (!video) { respond({ ok: false, error: "The video player is not ready." }); return; }
+    const video =
+      document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
+      document.querySelector<HTMLVideoElement>("video");
+    if (!video) {
+      respond({ ok: false, error: "The video player is not ready." });
+      return;
+    }
     clearLoop();
-    if (message.type === "PLAYBACK_PAUSE") { video.pause(); respond({ ok: true }); }
-    else void video.play().then(() => respond({ ok: true })).catch(() => respond({ ok: false, error: "YouTube blocked playback. Press Play in the video tab." }));
+    if (message.type === "PLAYBACK_PAUSE") {
+      video.pause();
+      respond({ ok: true });
+    } else
+      void video
+        .play()
+        .then(() => respond({ ok: true }))
+        .catch(() =>
+          respond({ ok: false, error: "YouTube blocked playback. Press Play in the video tab." }),
+        );
     return true;
   }
   if (message.type === "PLAYBACK_STATUS_GET") {
-    const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
+    const video =
+      document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
       document.querySelector<HTMLVideoElement>("video");
     if (!video || !Number.isFinite(video.currentTime)) {
       respond({ ok: false, error: "The video player is not ready." });
     } else {
-      respond({ ok: true, currentMs: Math.round(video.currentTime * 1000),
-        playing: !video.paused && !video.ended });
+      respond({
+        ok: true,
+        currentMs: Math.round(video.currentTime * 1000),
+        playing: !video.paused && !video.ended,
+      });
     }
     return;
   }
   if (message.type === "PLAYBACK_RATE_SET") {
-    const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
+    const video =
+      document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
       document.querySelector<HTMLVideoElement>("video");
     if (!video) {
       respond({ ok: false, error: "YouTube player is not available." });
@@ -267,18 +396,29 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
     return;
   }
   if (message.type !== "LOOP_SET") return;
-  const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
+  const video =
+    document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
     document.querySelector<HTMLVideoElement>("video");
   if (!video) {
     respond({ ok: false, error: "No YouTube video player is available in this tab." });
     return;
   }
-  if ((message.resumeMs !== undefined && (!Number.isInteger(message.resumeMs) || message.resumeMs < message.startMs || message.resumeMs >= message.endMs)) ||
-      !Number.isFinite(message.startMs) || !Number.isFinite(message.endMs) ||
-      message.startMs < 0 || message.endMs <= message.startMs ||
-      message.endMs - message.startMs > 600000 ||
-      ![0, 1, 2, 3].includes(message.delaySeconds) ||
-      !(message.repeats === "infinite" || Number.isInteger(message.repeats) && message.repeats >= 1 && message.repeats <= 20)) {
+  if (
+    (message.resumeMs !== undefined &&
+      (!Number.isInteger(message.resumeMs) ||
+        message.resumeMs < message.startMs ||
+        message.resumeMs >= message.endMs)) ||
+    !Number.isFinite(message.startMs) ||
+    !Number.isFinite(message.endMs) ||
+    message.startMs < 0 ||
+    message.endMs <= message.startMs ||
+    message.endMs - message.startMs > 600000 ||
+    ![0, 1, 2, 3].includes(message.delaySeconds) ||
+    !(
+      message.repeats === "infinite" ||
+      (Number.isInteger(message.repeats) && message.repeats >= 1 && message.repeats <= 20)
+    )
+  ) {
     respond({ ok: false, error: "Invalid loop range or repeat setting." });
     return;
   }
