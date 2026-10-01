@@ -1,12 +1,12 @@
 # AI-powered Contextual Language Learning
 
-A local-first Chrome side-panel extension that uses your locally installed CLI agent to turn **video subtitles you have permission to use** into structured, level-appropriate language lessons. Learn vocabulary and expressions in dialogue context, then return to the original video for focused listening practice.
+A local-first Chrome side-panel extension that uses its bundled Pi SDK to turn **video subtitles you have permission to use** into structured, level-appropriate language lessons. Learn expressions in dialogue context, then return to the original video for focused listening practice.
 
 ## Learning approach
 
-This is **contextual, video-based language learning**, not a promise of full language immersion. AI organizes subtitle excerpts into lessons with grounded explanations, vocabulary and exercises for the learner's level. An interactive reader connects lessons to source timestamps, with optional sentence looping and playback speed controls on supported video platforms.
+This is **contextual, video-based language learning**, not a promise of full language immersion. AI selects meaningful subtitle scenes and adds grounded explanations, translations, pronunciation notes and contextual examples for the learner's level. An interactive reader connects lessons to source timestamps, with optional sentence looping and playback speed controls on supported video platforms.
 
-> MVP status: the working implementation covers subtitle import, user-imported CLI Agent JSON, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Netflix one-click subtitle retrieval is **experimental** and works only when the currently playing session exposes a readable subtitle track; a durable background daemon is **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a developer-configured Desktop OAuth client at build time and live account testing are required. Generated chapters and jobs now have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
+> MVP status: the working implementation covers subtitle import, Pi provider connections, lesson generation, an interactive reader, YouTube timestamp links/opt-in loop playback, and local JSON/Markdown export. Netflix one-click subtitle retrieval is **experimental** and works only when the currently playing session exposes a readable subtitle track; a durable background daemon is **not implemented**. Google Drive OAuth, multi-account selection and upload are experimental: a developer-configured Desktop OAuth client at build time and live account testing are required. Generated scenes and jobs have durable local checkpoints; reopening Chrome can resume interrupted work **on user request**.
 
 ## Open source and project status
 
@@ -14,66 +14,62 @@ This repository remains **private** pending the public-release checklist and liv
 
 **No production-ready Google Drive or Netflix compatibility guarantee:** Google OAuth and Netflix's undocumented playback API require manual platform testing before a public stable release. This project is not affiliated with the streaming platforms or model providers.
 
-## Bring your own CLI Agent
+## Connect an AI service
 
-There is **no default Agent** for a new user. Install and sign in to a trusted
-CLI yourself. Open Settings → My Agents, copy the fixed configuration prompt,
-ask your chosen CLI to return a single JSON configuration object, then paste
-the result into the extension. A Codex CLI configuration is one possible
-example, not a preset or a claim of access to a model. The extension validates
-the JSON, shows the executable/argument preview and can check the binary
-without invoking a model. Only your explicit **Test CLI** action makes a test
-request, which may be billable. A passing JSON test is not proof that the CLI
-can produce every lesson schema.
+The Native Host embeds Pi SDK 0.99.1. No separate Pi, Codex, Claude or other CLI
+installation is required. Open Settings → AI services, choose a provider, then
+use its supported OAuth or API-key flow. Select the connected provider and model.
+The initial catalog includes OpenAI, Anthropic, Google, GitHub Copilot, OpenRouter and Antigravity;
+SDK support is not a guarantee of subscription entitlement or official approval.
+These integrations still require real-account acceptance testing before release.
 
-On first import, the Native Host generates the Agent ID and stores the CLI
-definition in its local registry. You can edit the JSON (retaining the ID),
-add more Agents, switch between them, or remove an Agent after its running or
-resumable jobs have finished or been cancelled. Deleting a definition never
-uninstalls the CLI or removes login data, saved lessons or history.
+Antigravity is provided by the pinned `pi-antigravity` package (an unofficial Google
+integration). Use **Sign in with Google** in AI services with an eligible account.
+Only its OAuth, chat models and transport are registered; image/search tools and
+multi-account commands are not loaded. Credentials remain in this product's
+`pi/auth.json`, and the transport's optional account lookup is isolated under
+`pi/antigravity/`. Package updates ship with a rebuilt Native Host.
 
-Normally each Agent uses the CLI's current login and default model. Optional
-**account environments** refer only to an existing separately authenticated
-configuration directory and are available when the imported CLI supports a
-verified configuration-directory environment variable. Model choices are
-remembered separately for each Agent/environment. The extension does not read,
-copy or store credentials. Generated prompts/subtitles may be sent to the
-selected model provider under that provider's terms.
+This product stores credentials only in its own local configuration directory,
+under `pi/auth.json`. The Extension holds login form input temporarily and forwards
+it to the Host; credentials are not saved in browser storage, jobs or lessons.
+Disconnect deletes this product's stored credential without revoking it at the
+provider. Login data from installed CLIs is never imported or removed.
+
+Each generation stage has an isolated in-memory Session, no tools, and no global
+Skills, extensions, settings or project instructions. Existing prompts, validation
+and durable checkpoints remain authoritative. Old CLI jobs cannot be resumed using
+a different SDK provider; their saved results and original files are preserved.
+Create a new task with a connected provider. Completed lessons remain readable.
 
 ### Native Host / local connection service
 
-Chrome/Edge cannot execute CLI binaries directly. Install and register the
-matching Native Host package once for your OS and **current browser extension
-ID**. The Side Panel detects the connection and shows OS/browser-aware
-installation instructions, a copyable extension ID and installer command.
-The macOS/Windows/Linux Host packages share one Node.js core but have
-OS-specific launchers; Chrome/Edge/Chromium registrations may differ.
-Adding, editing or removing Agents **does not** require reinstalling Host.
-Changing extension ID or updating an incompatible Host may require
-re-registration. There is currently no silent/graphical one-click installer:
-download the matching ZIP and run its included installation script
-(Node.js 22+ required). The Host executes only directly validated executable
-plus argv, without a shell.
+Install and register the matching Native Host package once for your OS and current
+browser extension ID. The Host includes the SDK and runs on Node.js 22+.
+The Extension requires matching package versions, Pi SDK mode and Native Messaging
+protocol version 3. Rebuild/reinstall the Host when upgrading from CLI mode.
+Connecting or disconnecting an AI service does not change browser registration.
 
-There are **no built-in Claude, Codex or AGY Agent adapters** in the Host. An
-existing completed lesson keeps its original provider metadata and can still be
-read or exported. A prior built-in queued/waiting/failed job is retained in task
-history but cannot resume; import a CLI configuration and generate a new lesson.
-Updating from an older release requires installing the updated Native Host once.
-The extension checks an explicit `imported-only` Host capability as well as its
-version: an older Host with the same version string is still rejected and
-prompted to update. Adding or removing imported Agents afterward does not
-change Host registration.
+### V4 data policy
+
+V4 lessons use one contextual document format. The canonical local repository is
+`~/Documents/Immersive Learning/data-v4/`; jobs and lessons are stored separately
+under that directory. An optional selected folder receives a JSON/Markdown copy.
+Earlier V1/V2/V3 development lessons and jobs stay at their original paths for
+manual recovery, but the V4 app does not load, resume, migrate or delete them.
+Earlier Drive lesson files likewise remain untouched and are hidden from the V4
+library. Agent definitions, CLI login data, and compatible interface preferences
+are retained. There is no automatic legacy migration.
 
 ## Features
 
 - On the currently selected YouTube watch tab, click **一鍵取得目前影片字幕** to read the video player's available English/Japanese/Korean caption track (including automatic captions when available). The extension reads the track only on request, preserves cue timestamps and never requires a file upload for a readable caption track. YouTube can change its page/player interfaces; if it offers no readable track, use manual import. Switching tabs updates the source of the next empty lesson form without replacing an existing transcript.
 - On an open Netflix watch page, click **一鍵取得目前影片字幕** to read the selected learning language's available timed-text track into the lesson form, without uploading a file. Netflix's signed caption document is requested by the extension worker from allowlisted Netflix delivery domains, not by a cross-origin page fetch. Chrome may ask you to approve the extension's new Netflix delivery-domain permissions after updating; if denied, one-click retrieval cannot work. Manual SRT, VTT and pasted text remain a fallback; original cue times are preserved.
-- Select target language (English/Japanese/Korean), level, **instruction language**, teaching mode, vocabulary cap, and exercises per section.
-- Import a trusted installed CLI Agent through strict JSON rather than a provider-specific preset. Use its default model or an optional supported model flag; an exposed model catalog never guarantees account entitlement.
-- Optionally save named account environments for CLIs supporting a verified configuration-directory environment variable (for example Codex `CODEX_HOME`). Profiles store names/paths only, never credentials; the normal case is the existing CLI login.
+- Select a target language, level, **instruction language**, scene count and number of contextual examples.
+- Connect an AI service through the bundled Pi SDK and select a model; catalog membership does not prove account entitlement.
+- Keep AI credentials in a product-owned Host directory, independent of installed CLIs.
 - Native Messaging bridge to macOS, Windows and Linux Hosts; no API keys or CLI credentials are stored in the extension.
-- Run a checkpointed generation pipeline: chunk subtitles, validate AI sections with Zod, save each successful chapter, then export the JSON/Markdown document. Reopen the Side Panel and use **任務紀錄與恢復** to resume interrupted/failed jobs created with a currently imported Agent; historical built-in jobs require a fresh generation.
+- Run a checkpointed V4 pipeline: chunk subtitles, select grounded scenes, validate and save each successful scene, then publish JSON/Markdown. Reopen the Side Panel and use Library task history to resume interrupted or failed V4 jobs.
 - Open YouTube timestamp links in a new tab; optionally control an already-open YouTube tab for sentence looping and user-triggered playback speed (0.5×–2×).
 - Netflix has optional, user-initiated seek, per-sentence looping and playback speed (0.5×–2×) via an experimental internal player bridge adapted from [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). Subtitle retrieval is user-initiated and conditional on Netflix exposing a readable timed-text document in the active session. It does not bypass DRM, intercept keyboard shortcuts or open a second playback session.
 
@@ -95,7 +91,7 @@ Copy the extension's 32-character ID from `chrome://extensions` (or `edge://exte
 node scripts/install-host.mjs YOUR_EXTENSION_ID
 ~~~
 
-For Edge append `--browser edge`; for Chromium append `--browser chromium`. The installer copies the Host to a permanent per-user location and registers the extension ID for that browser, without administrator privileges. Windows also requires Windows PowerShell 5.1 and .NET Framework to compile a tiny native `.exe` stdio launcher locally. Linux requires `zenity` or `kdialog` for graphical local-folder selection. You can remove the Host extraction afterward. Install and sign in to a supported CLI Agent separately; the release contains no API keys or account tokens. To update the unpacked extension, extract the new Chromium ZIP into the **same** extension folder and reload it; if Chrome assigns a different extension ID, run the Host installer again with the new ID.
+For Edge append `--browser edge`; for Chromium append `--browser chromium`. The installer copies the Host to a permanent per-user location and registers the extension ID for that browser, without administrator privileges. Windows also requires Windows PowerShell 5.1 and .NET Framework to compile a tiny native `.exe` stdio launcher locally. Linux requires `zenity` or `kdialog` for graphical local-folder selection. You can remove the Host extraction afterward. Connect an AI service in Settings; the release contains no API keys or account tokens. To update the unpacked extension, extract the new Chromium ZIP into the **same** extension folder and reload it; if Chrome assigns a different extension ID, run the Host installer again with the new ID.
 
 ### Publishing the Chromium release
 
@@ -114,7 +110,7 @@ A tag push runs the Release workflow and uploads the Chromium ZIP, three OS Host
 
 ## Quick start (macOS / Windows / Linux)
 
-Prerequisites: Node.js 22+, pnpm 9, Chrome / Edge / Chromium, and at least one **installed and signed-in** compatible CLI Agent of your choice. Windows additionally needs Windows PowerShell 5.1 and .NET Framework for the Host installer.
+Prerequisites: Node.js 22+, pnpm 9, Chrome / Edge / Chromium, and an account or API key for a supported AI service. Windows additionally needs Windows PowerShell 5.1 and .NET Framework for the Host installer.
 
 ~~~sh
 git clone https://github.com/chenghsj/immersive-language-learning.git
@@ -133,70 +129,22 @@ pnpm host:install YOUR_EXTENSION_ID
 ~~~
 
 4. Open the Side Panel and check the **local connection service / Native Host** in Settings.
-5. In **My Agents**, copy the setup prompt, ask your own installed CLI to produce its JSON configuration, paste it, validate it and save. Test only when you explicitly want a model call.
-6. In **建立教材**, fetch/import subtitles, set the lesson profile and generate. Lessons are also saved to `~/Documents/Immersive Learning`.
-7. In **閱讀文件**, save JSON or Markdown when needed.
+5. In **AI services**, sign in or enter an API key, then choose a provider and model.
+6. In **建立教材**, fetch/import subtitles, set the lesson profile and generate. Canonical lessons are saved under `~/Documents/Immersive Learning/data-v4/videos/<video title>--<source ID>/`. Repeat generations of the same source share a folder even when its title changes.
+7. In **我的教材**, recover an interrupted V4 task or search by video title and expand a video to open a lesson. The reader is a Library detail page.
 
 If your browser reports a missing Native Host, confirm you installed it for the same browser and its **current extension ID**. The macOS/Linux installer writes a browser-specific NativeMessagingHosts manifest; Windows writes its path to the browser's per-user HKCU NativeMessagingHosts registry key. Re-run `pnpm build` and `pnpm host:install YOUR_EXTENSION_ID` after changing the Node installation or extension ID.
 
-### Models and optional account environments
+### Models and authentication
 
-Imported Agents use their CLI's current login and default model unless you
-explicitly choose a model or configure another account environment. A model
-catalog is queried only if the imported definition supplies a supported
-model-list command; it does not prove that your account can use every model.
-The selected model is remembered independently for each Agent and account
-environment. Without a supported model flag, leave the model on CLI default.
-
-Extra account environments are **optional** and appear only when the imported
-Agent defines a verified profile environment variable. Create and authenticate
-the separate CLI configuration directory with that CLI before selecting it.
-For example, Codex can use an existing account environment via `CODEX_HOME`:
-
-~~~sh
-mkdir -p "$HOME/.codex-work"
-CODEX_HOME="$HOME/.codex-work" codex login
-~~~
-
-This is an example only; verify your installed CLI's actual version and flags.
-Saving or deleting a profile only changes the Host's local name/path record.
-It never signs in, signs out, copies credentials or deletes the CLI directory.
-
-### Host installation troubleshooting
-
-If you see **Specified native messaging host not found**, copy the current
-extension ID from `chrome://extensions` and run these commands from the
-project root:
-
-~~~sh
-pnpm build
-pnpm host:install YOUR_EXTENSION_ID
-~~~
-
-Reload the extension. For a Release installation, use
-`node scripts/install-host.mjs YOUR_EXTENSION_ID` from the extracted OS Host
-ZIP instead of pnpm. For Edge append `--browser edge`; for Chromium append
-`--browser chromium`. The browser and extension ID must match the Host
-registration; changing the extension ID may require re-registration.
-Extensions cannot silently install a Native Messaging Host.
-
-### Interface language and appearance
-
-The Side Panel automatically uses Chrome's browser UI language on first launch. Supported interface languages are English, Traditional Chinese, Simplified Chinese, Japanese and Korean; unsupported browser languages fall back to English. In **Settings**, choose **Interface language → Automatic (browser language)** or override it manually. This changes only the extension's interface: the language being learned, lesson explanation language, imported subtitle text and saved documents remain independent.
-
-Appearance defaults to **Use system setting**, following your OS light or dark appearance. You can choose Light or Dark in Settings; both language and theme preferences are saved in Chrome extension-local storage. The release ZIP also includes Chrome `_locales` metadata so the extension's displayed name and description follow supported browser languages. Chrome's interface language may require restarting the browser before its extension metadata updates.
-
-### Video playback speed and sentence loops
-
-In the Reader's **影片伴讀** section, choose a speed from 0.5× to 2× and click **套用播放速度**. The selection is remembered as a preference, but does not automatically change a newly opened video. Speed controls appear only when the current Video Adapter supports them. Changing speed while a sentence is looping does not intentionally stop the loop. YouTube uses the active HTML video element; Netflix uses an experimental bridge and may reject or reset the requested speed. There is no speed control for imported subtitles without an attached supported video.
-
-### YouTube loops
-
-Open the source YouTube watch page in Chrome before clicking **循環此句** in the Reader. The extension uses a content script **only on YouTube**, and the loop ends on manual pause/seek or when the selected repetition count is reached. A loop cannot be guaranteed if YouTube changes its player DOM. Netflix playback controls are opt-in and do not intercept keyboard shortcuts. Subtitle retrieval may temporarily select the requested language and restores the original subtitle track when the player exposes a restorable selection.
+Model lists come from the bundled SDK. A blank model selection uses the first
+available model for the selected provider. Login does not generate a test lesson.
+Authorization failures preserve validated stage checkpoints for retry after
+reconnecting. Only product-owned credentials are removed on disconnect.
 
 ## Extensible providers
 
-Video playback uses capability-based Video Adapters, while CLI generation uses only user-imported JSON definitions in the Native Host registry. The Side Panel renders video actions based on the current adapter and reports installed status for imported CLI Agents only. See [Architecture and adding providers](docs/architecture.md) for the exact extension points and per-platform Chrome permission requirements.
+Video playback uses capability-based Video Adapters, while generation uses the bundled Pi SDK. The Side Panel displays provider connection metadata and model choices returned by the Host. See [Architecture and adding providers](docs/architecture.md) for the exact extension points and per-platform Chrome permission requirements.
 
 Adding HBO Max or Apple TV+ requires a purpose-built adapter and an explicit browser permission review; neither service is currently implemented. An unsupported video URL falls back to subtitle import without player control.
 
@@ -209,11 +157,11 @@ pnpm build
 ~~~
 
 Packages:
-- `packages/core`: shared Zod schema, subtitle parsers/chunking, time links.
-- `apps/local-host`: Native Messaging framing, restricted temporary workspace, imported CLI registry/executor, Job State Machine, resumable Generation Pipeline and file-backed repository ports.
+- `packages/core`: V4 lesson and job schemas, Native Messaging validation, subtitle parsers/chunking and time links.
+- `apps/local-host`: Native Messaging framing, isolated Pi SDK sessions and provider authentication, Job State Machine, resumable Generation Pipeline and file-backed repository ports.
 - `apps/extension`: React side panel, settings, reader, and opt-in YouTube loop content script.
 
-Read [Scope and limitations](docs/scope.md) before using an external-model CLI with sensitive or copyrighted transcripts.
+Read [Scope and limitations](docs/scope.md) before sending sensitive or copyrighted transcripts to an external AI provider.
 
 ### Experimental Netflix controls
 
@@ -222,7 +170,7 @@ The Reader's **開啟／切換到影片** button reuses an existing tab showing 
 If a watch tab was opened before installing/reloading the extension, reload **that same tab** to initialize its content scripts. Do not open a second tab to work around a missing bridge.
 
 
-Open the Netflix /watch/<video-id> page, select the learning language in **建立教材**, and click **一鍵取得目前影片字幕**. The extension reads the current playback session's available timed-text document when Netflix exposes it; it does not read protected video/audio streams. If Netflix does not expose a usable track, the UI reports the limitation instead of silently generating from incomplete captions. You may also supply a subtitle file you are permitted to process. In the Reader, open the same Netflix /watch/<video-id> URL saved with the lesson. In **閱讀文件**, select **檢查 Netflix 播放器** before clicking **跳到 Netflix 指定時間** or **循環此句**. This uses a MAIN-world bridge with Netflix's **undocumented** player session API, following the pattern in your [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override) repository. Session seek times are in milliseconds.
+Open the Netflix /watch/<video-id> page, select the learning language in **建立教材**, and click **一鍵取得目前影片字幕**. The extension reads the current playback session's available timed-text document when Netflix exposes it; it does not read protected video/audio streams. If Netflix does not expose a usable track, the UI reports the limitation instead of silently generating from incomplete captions. You may also supply a subtitle file you are permitted to process. In the Reader, open the same Netflix /watch/<video-id> URL saved with the lesson. Use the reader controls for explicit scene or sentence playback when the matching Netflix player is available. This uses a MAIN-world bridge with Netflix's **undocumented** player session API, following the pattern in your [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override) repository. Session seek times are in milliseconds.
 
 This is not an official Netflix API. The extension retrieves subtitle text only when you click the button; it may briefly select and then restore the requested track. It does not bypass content protection, extract audio/video or intercept the Netflix keyboard. Playback controls remain idle except when explicitly requested. Stop the loop before using other playback controls; manual pause/seek, page navigation or an unavailable player automatically cancel it. If the API changes, copy the timestamp and seek manually.
 
@@ -230,21 +178,30 @@ A real-browser test with your Netflix account is required: confirm successful ca
 
 ### Resumable job workflow
 
-The local Host saves snapshots under ~/Documents/Immersive Learning/jobs/ after each **validated** chapter. The Side Panel's **任務紀錄與恢復** button lists saved jobs. If Chrome closes, the Host terminates and stops generating; reopening the Side Panel allows you to continue a waiting/failed job from its checkpoint. Explicitly cancelled jobs do not resume. Historical jobs using removed built-in Agents also cannot resume; they remain visible and require a new generation with an imported Agent. A completed job's document can be reopened from history. Documents are chunked across Native Messaging responses when needed, respecting Chrome's Host-to-extension message limit.
+The Host saves V4 snapshots under `~/Documents/Immersive Learning/data-v4/jobs/`
+after candidate selection and each validated scene. Library lists V4 tasks. Closing
+the Side Panel leaves the background worker's active Host connection running;
+closing the browser stops it. Reopen Library to resume a waiting or failed V4
+job from the last checkpoint. Cancelled jobs do not resume. A completed job
+can be reopened without rerunning the Agent. Large documents are split into
+bounded Native Messaging chunks and validated after reassembly.
 
-A single Host instance executes one generation at a time. Current file-backed storage is designed for one writer per job, not simultaneous editing across several independent Chrome profiles/processes. Persistent background generation and cross-device synchronization require a separate managed daemon and transactional storage in a later phase. Progress and personal annotations have a separate repository contract; a full learning-progress UI is not yet implemented.
-
-Existing version-1 learning documents retain their original format and remain readable; future schema versions must use an explicit migration. Local canonical JSON is saved before the Markdown convenience export.
+The file repository is designed for one Host writer, not simultaneous edits
+from independent browser profiles. A persistent daemon and cross-device sync
+are not implemented. Original V1/V2/V3 files remain outside the V4 repository
+and are available only for manual recovery.
 
 ## Local-first lessons, duplicate protection and optional Drive backup
 
 Every completed lesson is saved locally first. The Create page lets you choose a local export folder and independently enable **automatic Google Drive backup**. The backup switch checks the selected account's authorization; if no account is connected, **Connect Google Drive** opens Google's consent flow. You can read completed material immediately while its backup runs. Turning the switch off does not remove local or cloud files.
 
+The V4 local library and selected export folder group JSON and Markdown files by source video. Legacy flat files are not moved when the Host lists V4 lessons. App-created Google Drive backups use a matching video subfolder under `AI-powered Contextual Language Learning`; existing app-created files still at that folder's top level are organized when the library is browsed. Folder names keep their original readable title after a source title change, while **My Lessons** shows the newest title and searches prior titles.
+
 Before generation, the Host searches saved local lessons and existing app-owned Drive lessons when an account is available. It compares source and transcript, and asks before generating another version. Regeneration creates a new document ID and never silently overwrites an older lesson or its progress.
 
 The background backup checks document identity and content hashes before uploading JSON and Markdown. Identical files are skipped; a conflicting remote version is preserved and reported rather than overwritten. If only one file uploaded, retrying fills in the missing file without regenerating the lesson. Backup status is independent of generation status. Closing the Side Panel does not interrupt an active Host task; an interrupted pending upload can resume when the extension reconnects. Closing the browser does not make the Host a permanent background service.
 
-Task History shows generation progress, recovery and backup retry separately. **My Lessons** combines local and cloud copies of the same lesson, supports local/cloud filtering and can restore a missing local copy from an app-owned Drive file with checksum and schema validation. Settings includes connected accounts and an explicit **Back up existing lessons** action; enabling automatic backup does not silently upload the old library. Cross-device learning-progress and note synchronization are not yet implemented.
+Library shows generation progress, recovery and backup retry alongside lessons. **My Lessons** combines local and cloud copies of the same lesson, supports local/cloud filtering and can restore a missing local copy from an app-owned Drive file with checksum and schema validation. Settings includes connected accounts and an explicit **Back up existing lessons** action; enabling automatic backup does not silently upload the old library. Cross-device learning-progress and note synchronization are not yet implemented.
 
 ### Google Drive one-click authorization on macOS
 

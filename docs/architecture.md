@@ -1,128 +1,68 @@
-# Extensible platform and agent architecture
+# Architecture and data contracts
 
-The source transcript, learning profile, generated sections and document renderer are independent of the originating video provider or CLI. **Adding a provider is an engineering change, not a way to bypass a site's access controls.**
+The project has three runtime parts: the Chromium Side Panel and background worker, a per-user Native Messaging Host, and shared `@immersive/core` contracts. Video adapters identify supported URLs and expose optional playback capabilities. The Host embeds Pi SDK and owns provider credentials; the Extension only forwards transient login input and displays non-secret connection metadata.
 
-## Video providers: Adapter + Registry + capability-based UI
+## V4 lesson and job data
 
-The reader uses apps/extension/src/video/index.ts to resolve the correct VideoAdapter by **validated video URL identity**, not by a generic hostname suffix. Adapter IDs persist with the document (source.platform). All timestamps and section cue references use milliseconds.
+`packages/core/src/schema.ts` defines the only current lesson format, `schemaVersion: 4`. Each document keeps the complete original subtitle cues, the source and learning profile, contextual scenes with original cue IDs and times, translations, pronunciation segments, focus expressions, explanations, examples, and optional playback overrides. Overrides change playback windows without rewriting original cue timestamps. `packages/core/src/jobs.ts` defines `schemaVersion: 2` job snapshots: the original V4 generation request, candidate selection plan, completed contextual scenes, and status. It validates progress against those checkpoints when read. `packages/core/src/protocol-schema.ts` defines Native Messaging requests and response types; `native-messaging.ts` validates incoming responses and declares protocol version 3.
 
-Each adapter may implement these optional capabilities:
+V4 deliberately has no V1/V2/V3 migration. The Host's canonical V4 repository is `~/Documents/Immersive Learning/data-v4/`, with `jobs/` and grouped `videos/` below it. The Host does not scan, restore, or delete older development files in `~/Documents/Immersive Learning/`. Drive browsing, duplicate checks, and restore select only app-created files marked `immersiveSchemaVersion=4`; older Drive files remain in place. Existing CLI registry/login files remain untouched; old CLI jobs cannot execute under SDK provider semantics. A chosen publication folder receives a JSON/Markdown copy after the canonical V4 document is saved; publication or backup failure does not erase completed content.
 
-| Capability | Reader behavior |
-| --- | --- |
-| getVideoId | Recognize video and match the already-open Chrome tab |
-| timestampLink | Open a supported timed video URL |
-| diagnose | Check whether playback control is currently available |
-| seek | Position an existing video at a timestamp, if available and permitted |
-| setPlaybackRate | Set playback speed for an existing player (0.5×–2×) on explicit user action |
-| loop / stopLoop | User-triggered repeat/stop for a cue, if available and permitted |
+## Extension flow
 
-The reader never branches on "youtube", "netflix" or another platform ID. It renders available actions from the adapter capabilities. Playback speed preferences belong to the local reader, not to the generated document, and changing the selected speed does not control the player until the user applies it. Without playback capabilities, a subtitle file still generates a document and its time cues can be copied.
+The Side Panel has three top-level destinations: Create, Library, and Settings. The V4 reader is a Library detail view. Create owns subtitle acquisition, profile and Agent selection, duplicate preflight, and generation status. Library shows resumable tasks plus lessons grouped by video, including local and Drive copies. Settings owns Host connection, Agent setup, interface language, and appearance. Theme styling uses shared semantic light/dark tokens.
 
-Existing platform modules:
+The background worker (`apps/extension/src/native/generation-controller.ts`) owns the long-lived Native Messaging connection for duplicate checks and generation. Closing the Side Panel does not close an active Agent job. The worker validates Host responses and relays interruption errors; the next panel reads durable job summaries. Short operations use `native/host-client.ts`. The health handshake requires matching extension package version, Pi SDK mode, and protocol version 3. An older Host shows installation guidance and generation remains disabled.
 
-- apps/extension/src/video/youtube.ts — timestamp links, opt-in looping.
-- apps/extension/src/video/netflix.ts — opt-in diagnose, seek and loop through its **undocumented** internal player API, which may stop working.
-- apps/extension/src/video/tab.ts — shared tab resolution by exact video ID and messaging. A matching active tab in the current window takes precedence; ambiguous duplicate tabs fail rather than controlling an arbitrary player. The reader's open/switch action reuses an existing matching video before opening another tab.
-- apps/extension/src/content/* — platform-specific browser scripts, isolated from the reader.
+The reader keeps presentation of focus items in `components/scene-focus-items.tsx`; cue tracking, loop windows, playback range calculation, and calibration validation are in `video/` modules. It requests player actions only through a capability-based `VideoAdapter`. YouTube and Netflix adapters have separate URL, subtitle, and playback code; unsupported sources remain readable without player control. Netflix's internal player bridge is experimental. Adapter registration alone does not grant browser permissions.
 
-**To add HBO Max, Apple TV+ or another service:** implement an adapter (even if its only capability is identification and opening the video), register it in video/index.ts, add its exact domains to the Chrome extension manifest and, **only when necessary**, add content scripts and build entries in Vite. Add tests for URL matching, capabilities and playback failure. Browser permissions and content-script injection require manifest/build registration; the Adapter registry does not grant arbitrary sites runtime access.
+## Native Host flow
 
-Do not assume every video site exposes a playback API or a permitted subtitle API. Subtitle ingestion stays separately pluggable: licensed/user-supplied SRT/VTT/text is the supported baseline. A new provider can support reading documents without any seek/loop or subtitle extraction.
+`apps/local-host/src/index.ts` owns binary framing, process lifetime, and the final response writer. `host/dispatcher.ts` validates and routes requests using injected storage, JobManager, reply function, and version. `host/agents.ts`, `host/drive.ts`, `host/lessons.ts`, `host/generation.ts`, and `host/publication.ts` own their respective operations. The generation handler keeps a short-lived duplicate-check ticket bound to the exact request. It checks again before starting so a new duplicate cannot be silently overwritten.
 
-## Agents: strict bring-your-own CLI registry (no built-in providers)
+`generation/scene-pipeline.ts` chunks subtitles, selects grounded scene candidates, validates each generated scene, writes a checkpoint, then assembles and saves the V4 document. A failed scene leaves prior checkpoints intact. `jobs/manager.ts` controls queued, running, waiting, failed, completed, and cancelled transitions. Native Messaging interruption stops active execution and a later list/resume reconciles orphaned jobs. No daemon is installed.
 
-New users have **no preselected provider**. The Side Panel accepts one
-user-supplied JSON object describing the executable, argv, stdin/argument
-prompt transport, single JSON response/file transport, optional model flag
-and optional isolated account-directory environment variable. A fixed prompt
-helps users ask their own CLI for this JSON; the extension does not call a
-provider to manufacture its own setup. The imported object must not contain
-an ID, unknown keys or credentials. The Host generates a unique ID on import
-and retains it for edits. Strict shared Zod validation enforces transport and
-placeholder rules before the Host can persist the definition.
+`storage/ports.ts` has job and document repositories. File adapters use UUID-derived paths and atomic writes. A complete canonical document is saved before publication and optional Drive backup. Publication and backup have separate status and retry actions. Calibrated playback updates sync only a matching app-published copy; independently edited exports are left untouched. The Host is a single-writer process boundary, not a cross-process transactional database.
 
-`apps/local-host/src/agents/custom.ts` resolves only validated executable
-names/absolute paths, runs direct argv through `spawn(..., { shell: false })`,
-uses bounded temporary workspace/output, and parses the single JSON result.
-An explicit user-initiated test may contact a paid provider. A valid JSON
-test does not establish complete V3 lesson-schema compatibility; the
-generation pipeline continues to validate model content against the
-existing document schemas.
+## Platform and security boundaries
 
-Definitions and optional named account-environment directory references
-are stored in separate local Host registries, **never** with credentials.
-The default environment is the CLI's existing login. Model selection is
-keyed by Agent and environment. Removing a custom Agent first checks **all**
-persisted jobs; queued, running, waiting and failed/resumable jobs block
-removal. Only Host-owned Agent/profile records and the extension's model
-preferences are removed; the CLI executable, directory, login, lessons and
-job history remain untouched.
+The Host embeds Pi SDK with an explicit resource loader, no tools and an in-memory Session per stage. Credentials live in the product-owned pi/auth.json; CLI jobs are retained but cannot execute with SDK semantics. Folder pickers and Host installers retain their platform implementations.
 
-The Native Host no longer contains built-in Claude, Codex or AGY adapters,
-model aliases or account switching logic. `agents.ts` dispatches solely to
-the imported CLI registry; the generic model catalog parser and optional
-account-directory environment variable apply equally to any imported CLI.
-A Native Host health response lists **only** imported Agent definitions.
-Existing V1/V2/V3 documents and job snapshots retain historical provider IDs
-as metadata, but a queued/waiting/failed job using a removed built-in Agent
-cannot resume. The Side Panel shows a localized explanation and preserves
-the old checkpoint and completed documents. Users can create a new lesson
-after importing their CLI JSON; no job is silently re-assigned.
+A new video service needs an exact URL adapter, capability/failure tests, and a separate permission review for any manifest or content-script changes. Source acquisition and playback control are independent capabilities. Do not add blanket `<all_urls>` access or infer that a site's undocumented API will remain available.
 
-Host setup/status handles registration and version compatibility across
-macOS, Windows and Linux and Chrome, Edge and Chromium. The health response
-explicitly advertises `agentMode: "imported-only"`. A newer extension refuses
-generation and Agent mutation when connected to a Host without that capability,
-even when an older Host reports the same package version. Updating an older
-Host requires installing the new Host once; future Agent imports never change
-Host registration or require reinstalling it.
+### Antigravity provider
 
-No plugin code is loaded dynamically from a webpage, subtitle or model
-response. Imported JSON is configuration data, not executable JavaScript.
+`packages/core/src/pi-providers.ts` is the provider registry shared by the Host
+and Extension. It declares provider IDs, adapter selection and catalog policy.
+`agents/provider-registry.ts` configures adapters on each ModelRuntime and
+checks that every declared provider is available.
 
-## Native Host OS Strategy (no inheritance hierarchy)
+`agents/antigravity.ts` adapts the third-party provider to Pi SDK.
+The pinned pi-antigravity 0.8.1 package supplies OAuth, chat model discovery and
+streaming; its extension factory, tools and account manager are never loaded.
+The reproducible pnpm patch in `patches/pi-antigravity@0.8.1.patch` narrows the
+upstream model definitions to Pi 0.99's chat kind, so direct TypeScript imports
+retain SDK type checking. Registration also validates model properties at runtime.
+The standalone bundle test exercises the actual provider stream with a synthetic
+SSE response and account-directory isolation without installed node_modules.
 
-apps/local-host/src/platform/paths.ts supplies per-OS user configuration directories. apps/local-host/src/platform/folder-picker.ts dispatches to one OS-specific native folder-picker strategy: macOS osascript, Windows PowerShell WinForms, or Linux zenity/kdialog. All results pass through the same directory realpath, writability and allowed-folder checks in storage/folders.ts.
+The patch adds AsyncLocalStorage-based account-directory scoping. Each adapter
+wraps streaming with its own `pi/antigravity` directory, including asynchronous
+quota-error account lookup. Creating a runtime never changes process environment
+variables, and concurrent runtimes keep their account directories isolated. Login and
+logout use SDK credentials at `pi/auth.json`; this integration does not maintain
+an upstream linked-account store. Model listing refreshes only Antigravity's
+catalog and reports forced refresh errors; health checks remain offline.
+Package upgrades require reviewing and regenerating this compatibility patch,
+then running type checks and standalone bundle tests before rebuilding the Host.
 
-apps/local-host/scripts/native-host-platform.mjs selects the per-OS installer strategy: POSIX executable shell launcher and browser-specific manifest on macOS/Linux; a locally compiled Windows .exe binary stdio proxy plus HKCU browser registry entry on Windows. The browser selector chooses Chrome, Edge or Chromium. Chrome Native Messaging requires an executable on Windows; an npm .cmd shim is not used as the Host. Windows Agent npm shims are resolved to adjacent JS entrypoints and invoked directly with Node rather than forwarding subtitle text through cmd.exe.
+### Provider authentication UI
 
-This is a small **Strategy + Factory** boundary: a single platform lookup at the Host/installer entry point and shared logic for the remainder of the system. There is no need for abstract classes or a separate code path in React or the learning pipeline. Add another OS/browser by extending this boundary and its cross-platform tests; do not duplicate document generation.
-
-## Stable document contract
-
-A document refers to source.platform as a provider identifier. The platform can be unknown to an older reader; the fallback still displays source text, metadata and times without attempting player control. All agents return the same SectionContentSchema. Existing learning documents do not need to be regenerated when adapters are added.
-
-## Design constraints
-
-- Do not hardcode platform comparisons in React App.tsx or the learning engine.
-- Never let subtitle content dictate executable paths, shell commands, host permissions or player actions.
-- One source video, one tab; navigation, manual controls and unsupported APIs must stop looping rather than forcibly resume playback.
-- Permissions for a new service are reviewed per provider, not granted as a blanket <all_urls> host permission.
-- Netflix control is experimental and user initiated, not an official API or a guarantee of future compatibility.
-
-## Generation Pipeline + Job State Machine
-
-The generation pipeline in apps/local-host/src/generation/pipeline.ts owns six explicit stages: plan (subtitle cue chunking), generate (injected SectionGenerator/imported CLI executor), validate (Zod and configured learning-load limits), checkpoint (persist each successful LearningSection), assemble (stable version-1 document), and persist (document repository + Markdown export). A failed chapter never overwrites earlier validated checkpoints. Resuming uses the original saved request snapshot and preserved section IDs, not whatever settings are currently selected in the Side Panel. Historical snapshots using removed built-in provider IDs remain readable but their unfinished jobs are not resumable.
-
-The JobManager in apps/local-host/src/jobs/manager.ts owns the state machine (queued → running → completed | failed | waiting | cancelled). Failed/waiting jobs may return to queued, but completed and cancelled jobs are terminal. The Host records the generating process PID so another live Host's running job is not misclassified as interrupted. Closing the Native Messaging port aborts active execution and leaves durable checkpoints; the next job-list/resume operation reconciles orphaned running jobs to waiting. A separate background daemon is **not** implemented.
-
-## Storage Ports & Repositories
-
-The storage/ports.ts module defines JobRepository, DocumentRepository and ProgressRepository contracts. The initial file adapters use atomic temporary-file writes and fixed UUID-derived paths. Canonical document JSON and optional Markdown are separate from checkpoint files (jobs/) and private study progress (progress/). All persisted data is Zod-validated when read; malformed checkpoints fail visibly instead of silently restarting.
-
-The pipeline depends on these interfaces, not on fs, Chrome or Google Drive. Future SQLite adapters can implement the same ports. Google Drive is better introduced as a separate DocumentPublisher rather than replacing durable local storage, so upload failures cannot erase the generated document.
-
-**Operational boundary:** storage has a per-process update lock, but it is not a fully transactional cross-process database. A future daemon must own single-writer scheduling/locking before multi-window or cross-device concurrent edits are supported.
-
-## Document versioning and Native Messaging
-
-Version-1 documents preserve the existing JSON structure. readLearningDocument() dispatches by explicit schemaVersion and rejects unsupported versions instead of dropping fields. Large Host responses are encoded as ordered, bounded base64 document chunks; the reader reassembles, UTF-8 decodes and validates the complete schema.
-
-## Destination Publisher and duplicate preflight
-
-The canonical local DocumentRepository is authoritative for job recovery. GenerationRequest includes an immutable Destination snapshot: a selected local directory or a Google account ID. DestinationPublisher writes JSON and Markdown copies after canonical material is saved; JobSummary records publication separately from generation. A publication failure does not invalidate the completed job. Publish Again retries the saved destination without invoking the Agent.
-
-The Native Host selects the macOS, Windows or Linux folder picker and per-user allowlist via an OS-specific Strategy. Google Desktop OAuth with PKCE, Keychain-backed refresh tokens and the Drive API remain macOS-only and experimental. The Chrome extension does not receive refresh tokens. Drive uses the limited drive.file scope and appProperties on app-created documents for duplicate detection and repeat-safe publishing. An authentication or network failure aborts the preflight instead of reporting an empty Drive.
-
-Duplicate matching combines canonical local documents, incomplete jobs and visible app-created Drive files. A short-lived preflight ticket binds the generation request. The Host rejects unconfirmed regeneration, altered requests, and matches that appeared after the preflight. Each regenerated version has a fresh document UUID. Existing content and learning progress remain unchanged.
+`lib/pi-auth-state.ts` defines idle, login and logout as a discriminated state
+machine. Its reducer clears prompts, transient secrets and progress atomically
+on completion, cancellation or failure. Operation IDs reject stale callbacks;
+prompt IDs prevent a late close event from clearing a newer prompt.
+`hooks/use-pi-auth.ts` owns the Native Messaging transport and cleanup. Cancel
+releases the UI immediately even when local disconnect emits no callback, and
+losing Host availability or unmounting the component closes the active transport.
+`components/pi-settings.tsx` renders this state and owns provider catalog display.

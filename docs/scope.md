@@ -1,38 +1,22 @@
-# MVP scope, security and limitations
+# MVP scope and limitations
 
-## Supported now
+## Supported
 
-- User-initiated one-click Netflix subtitle acquisition when the active player exposes a readable timed-text track; local SRT/VTT/text import remains available. Input is size-limited and the generated sections have durable checkpoints and job recovery.
-- User-imported noninteractive CLI Agents via strict JSON configuration and a generic Native Host executor. No built-in provider presets or password/token handling.
-- Level + target language + instruction language + per-section learning load.
-- Zod-validated structured sections; saved JSON and Markdown documents.
-- Vite + React + Tailwind CSS and local shadcn-style UI components. Side Panel document reading, YouTube time links, and opt-in per-cue looping on an already open YouTube watch tab.
-- YouTube playback speed and experimental Netflix user-initiated diagnostics, seeking, looping and playback speed on a matching open watch tab, subject to availability of Netflix's undocumented player session API.
-- Native Host installation on macOS.
+- User-triggered YouTube and experimental Netflix subtitle acquisition when the active session exposes a readable track; SRT/VTT/text import remains available.
+- Bundled Pi SDK provider connections through OAuth or API keys, model selection and isolated generation sessions. Existing CLI login data is not read or changed.
+- One contextual V4 lesson format with complete original subtitle cues, grounded scenes, translations, pronunciation, focused expressions and examples. Selection and each scene have durable checkpoints.
+- A three-destination Side Panel: Create, Library and Settings. Library contains resumable V4 jobs, video-grouped lessons and the reader detail view.
+- Native Host installation and folder pickers on macOS, Windows and Linux. Local JSON/Markdown publication, duplicate checks and optional Google Drive backup with explicit retry.
+- User-triggered YouTube playback controls and experimental Netflix controls, subject to the site's available player APIs.
 
-## Not implemented yet
+## Data and compatibility
 
-- Google Drive two-way synchronization/conflict handling, remote edits, multi-device sync, a persistent *background daemon*, continuous subtitle capture or DRM decryption, automatic Agent sign-in, and learning-progress/spaced-repetition UI.
-- Guaranteed full-subtitle access on every Netflix title or Netflix-version compatibility. Automatic acquisition is limited to a user click and readable tracks in the current session; it fails visibly if subtitles are inaccessible.
-- Hosted AI API integration. Local CLI means the **CLI is local**; model inference may still run on the provider's remote servers.
-- Cross-platform native folder selection: the current local folder picker supports macOS only; canonical checkpoints remain in ~/Documents/Immersive Learning.
+Canonical V4 documents and jobs live under `~/Documents/Immersive Learning/data-v4/`. Older V1/V2/V3 development files stay at their original paths but are not loaded, resumed, migrated or automatically deleted. Older Drive lesson files remain untouched and are hidden from V4 library and duplicate checks. Agent definitions, CLI credentials and compatible interface preferences remain in their existing locations. Extension and Host require Native Messaging protocol version 3 plus matching package version.
 
-## Security notes
+## Limitations
 
-The subtitle file and Agent configuration JSON are untrusted inputs. The host validates the imported executable and argument-array schema and invokes that CLI directly (never through a shell string), in a temporary workspace. **There is no universal sandbox for arbitrary imported CLIs.** A CLI can still access local files or run tools depending on its own permissions and user-supplied flags. Review its actual settings and install only trusted CLI programs; the extension cannot guarantee model-provider data handling or prevent a trusted executable from performing its own actions. Do not include credentials or secrets in imported settings or transcripts.
-
-The host validates all messages and all generated section JSON. Its Native Messaging manifest permits only the specific installed Extension ID. Messages from host to Chrome are bounded below Chrome's 1 MB maximum.
-
-The Host lives only while the Side Panel holds its native messaging port. Closing the panel interrupts active CLI work, but every successfully validated chapter is checkpointed to local disk and may be resumed on user request after reopening Chrome. Native Messaging splits large document responses into bounded chunks. True background generation while the browser is closed requires a future daemon. Generation of very large documents may still require shorter transcript ranges.
-
-Only import transcripts/media you have rights to process. Do not bypass DRM, player protection, or site terms. For YouTube, timestamp links work independently of transcript extraction; the public YouTube captions API does not guarantee access to arbitrary videos.
-
-## Experimental Netflix playback
-
-The bridge is adapted from the session-oriented design in [netflix-shortcut-override](https://github.com/chenghsj/netflix-shortcut-override). A MAIN-world listener uses playerApp.getAPI().videoPlayer and chooses the session closest to the active video timestamp. It exposes only diagnostics, read-only position, play, pause, and absolute seek for explicit learning controls. A separate isolated content script handles Side Panel requests and opt-in loops. An explicit **Get subtitles** action may read a session-exposed timed-text document for the chosen learning language and temporarily select that subtitle track, restoring the original selection when possible. It never accesses protected video/audio streams or decrypts DRM.
-
-This is an **undocumented** Netflix interface, not a stable official API. It may fail after a player update. Stop or clear a loop on manual pause/seek, tab navigation or player failure. Playback should remain usable without the extension.
-
-## Storage and duplicate safety
-
-A user-initiated macOS folder picker, per-job destinations, limited Google Drive OAuth account selection, local/remote duplicate checks and explicit regeneration confirmation are implemented. Google Drive is an experimental user-configured integration and has not been tested against a live account. Local canonical documents and checkpoints survive cloud upload failures; publication can be retried without generating again. The extension does not scan arbitrary third-party Drive files, pick arbitrary existing Drive folders, provide full two-way sync, or continue generating after Chrome is closed.
+- Google Drive OAuth/upload and Netflix's undocumented playback API need real-account browser acceptance. CI uses synthetic data and cannot prove live platform compatibility.
+- The Host remains active while the background worker has an active Native Messaging connection; closing the browser stops it. There is no permanent daemon, two-way Drive sync, cross-device progress sync, automatic Agent sign-in, continuous subtitle capture or DRM decryption.
+- SDK generation exposes no tools and loads no global Skills or project instructions. The selected provider receives submitted prompts and subtitles. Credentials remain in the product-owned Host directory and must not be included in transcripts.
+- Playback support does not imply subtitle access. Any site can change its player or caption behavior. Unavailable tracks or controls must fail visibly without inventing content.
+- File repositories assume one writer per job. Separate browser profiles or Host processes are not a transactional shared database.
