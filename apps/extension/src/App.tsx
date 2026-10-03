@@ -2,6 +2,8 @@ import { subtitleLayoutCopy } from "./i18n/subtitle-layout";
 import { useSubtitleDraft } from "./hooks/use-subtitle-draft";
 import { usePlatformVideoNotice } from "./hooks/use-platform-video-notice";
 import { IconTooltip } from "./components/icon-tooltip";
+import { AnalysisRangePicker } from "./components/analysis-range";
+import { analysisRangeCopy } from "./i18n/analysis-range";
 import { HeaderActions } from "./components/header-actions";
 import { PageHeading } from "./components/page-heading";
 import { PageSection } from "./components/page-section";
@@ -19,6 +21,10 @@ import { Disclosure } from "./components/disclosure";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   withSentenceTiming,
+  timedCues,
+  subtitleDuration,
+  selectAnalysisCues,
+  type RangeSelection,
   LearningDocumentSchema,
   HOST_PROTOCOL_VERSION,
   LEARNING_LANGUAGES,
@@ -267,6 +273,42 @@ export default function App() {
   const platform = getVideoAdapter(sourceUrl).id;
   // A valid saved source remains actionable when the Side Panel temporarily loses its tab context.
   const subtitlePlatform = getVideoAdapter(activeVideo?.url ?? sourceUrl).id;
+  const [analysisSelection, setAnalysisSelection] = useState<RangeSelection>({
+    mode: "full",
+    startMs: 0,
+    endMs: 0,
+  });
+  const [videoDurationMs, setVideoDurationMs] = useState<number | undefined>();
+  const analysisAdapter = getVideoAdapter(sourceUrl);
+  const analysisDurationMs = videoDurationMs ?? subtitleDuration(cues);
+  useEffect(() => {
+    setAnalysisSelection({ mode: "full", startMs: 0, endMs: subtitleDuration(cues) });
+    setVideoDurationMs(undefined);
+    let live = true;
+    if (sourceUrl && analysisAdapter.status)
+      void analysisAdapter
+        .status(sourceUrl)
+        .then(status => {
+          if (live && status.durationMs !== undefined && status.durationMs > 0) {
+            setVideoDurationMs(status.durationMs);
+            setAnalysisSelection(current =>
+              current.mode === "full" ? { ...current, endMs: status.durationMs! } : current,
+            );
+          }
+        })
+        .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [sourceUrl, cues, draftState.activeVideo?.url]);
+  const analysisValid =
+    analysisSelection.mode === "full" ||
+    (Number.isFinite(analysisSelection.startMs) &&
+      analysisSelection.startMs >= 0 &&
+      analysisSelection.startMs < analysisSelection.endMs &&
+      analysisSelection.endMs <= analysisDurationMs &&
+      timedCues(cues) &&
+      selectAnalysisCues(cues, analysisSelection).length > 0);
   const readerAdapter = getVideoAdapter(document?.source.url);
   const selectedDriveId = backup.accountId ?? driveAccounts[0]?.id;
   const driveAccessVerified =
@@ -952,6 +994,10 @@ export default function App() {
 
   function startGeneration(): void {
     if (checking || generating) return;
+    if (!analysisValid) {
+      setError(analysisRangeCopy(uiLocale).invalid);
+      return;
+    }
     if (!hostReady) {
       setError(installed === null ? piCopy[uiLocale].unavailable : hostUi.unsupportedMode);
       setSettingsSection("advanced");
@@ -994,6 +1040,16 @@ export default function App() {
         destination,
         backup,
         cues,
+        ...(timedCues(cues) && analysisDurationMs > 0
+          ? {
+              analysisRange: {
+                ...analysisSelection,
+                durationMs: analysisDurationMs,
+                durationSource:
+                  videoDurationMs === undefined ? ("subtitles" as const) : ("video" as const),
+              },
+            }
+          : {}),
       });
       setProgress(t("checkingExisting"));
       generationSession.start(payload);
@@ -1234,6 +1290,21 @@ export default function App() {
               />
             ) : (
               <>
+                {cues.length > 0 && (
+                  <PageSection framed>
+                    <AnalysisRangePicker
+                      cues={cues}
+                      value={analysisSelection}
+                      onChange={setAnalysisSelection}
+                      durationMs={analysisDurationMs}
+                      estimated={videoDurationMs === undefined}
+                      adapter={analysisAdapter}
+                      url={sourceUrl}
+                      locale={uiLocale}
+                      onError={setError}
+                    />
+                  </PageSection>
+                )}
                 <PageSection framed>
                   <h2>{flow.video}</h2>
                   <div className="min-w-0 border-b border-border pb-4">
@@ -1406,7 +1477,7 @@ export default function App() {
                             tabIndex={0}
                             className="grid max-h-64 gap-2 overflow-y-auto overscroll-contain rounded-[var(--radius)] border border-border p-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
-                            {cues.map((cue, index) => (
+                            {cues.slice(0, 10).map((cue, index) => (
                               <li key={index} className="flex min-w-0 items-start gap-3">
                                 <span className="shrink-0 tabular-nums text-muted-foreground">
                                   {cue.startMs === null
@@ -1852,6 +1923,7 @@ export default function App() {
                     className="h-auto min-h-9 w-full px-3 py-2 text-center text-xs font-semibold leading-[1.4] whitespace-normal wrap-anywhere"
                     onClick={startGeneration}
                     disabled={
+                      !analysisValid ||
                       !hostReady ||
                       !generationServiceReady ||
                       checking ||

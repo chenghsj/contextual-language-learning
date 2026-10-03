@@ -26,7 +26,7 @@ export interface VideoAdapter {
   timestampLink?(url: string, startMs: number): string | null;
   diagnose?(url: string): Promise<PlaybackStatus>;
   /** Read-only current playback state for the optional companion view. */
-  status?(url: string): Promise<{ currentMs?: number; playing?: boolean }>;
+  status?(url: string): Promise<{ currentMs?: number; durationMs?: number; playing?: boolean }>;
   seek?(url: string, startMs: number): Promise<void>;
   /** Unbounded transport for timing inspection. */
   play?(url: string): Promise<void>;

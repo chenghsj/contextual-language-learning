@@ -37,6 +37,7 @@ import {
     available: boolean;
     bridgeVersion?: string;
     currentMs?: number;
+    durationMs?: number;
     playing?: boolean | null;
     sessionId?: string;
     seekCalled?: boolean;
@@ -364,6 +365,7 @@ import {
     ok: boolean;
     error?: string;
     currentMs?: number;
+    durationMs?: number;
     playing?: boolean;
     text?: string;
     language?: string;
@@ -383,6 +385,7 @@ import {
         ok: diagnostic.ok,
         error: diagnostic.error,
         currentMs: diagnostic.currentMs,
+        durationMs: diagnostic.durationMs,
         ...(typeof diagnostic.playing === "boolean" ? { playing: diagnostic.playing } : {}),
       };
     }

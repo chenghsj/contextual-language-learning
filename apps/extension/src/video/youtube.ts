@@ -15,9 +15,10 @@ export const youtubeAdapter: VideoAdapter = {
       ok: boolean;
       error?: string;
       currentMs?: number;
+      durationMs?: number;
       playing?: boolean;
     }>(youtubeAdapter, url, { type: "PLAYBACK_STATUS_GET" });
-    return { currentMs: result.currentMs, playing: result.playing };
+    return { currentMs: result.currentMs, durationMs: result.durationMs, playing: result.playing };
   },
   async seek(url, startMs) {
     await sendToVideo(youtubeAdapter, url, { type: "YOUTUBE_SEEK", timeMs: startMs }, true);

@@ -12,3 +12,5 @@ export * from "./pi-providers";
 export * from "./playback-timing";
 
 export * from "./preferences";
+
+export * from "./analysis-range";

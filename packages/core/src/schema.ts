@@ -1,3 +1,4 @@
+import { AnalysisRangeSchema } from "./analysis-range";
 import { z } from "zod";
 import { isPiProviderId } from "./pi-providers";
 import { LEARNING_LANGUAGES, EXPLANATION_LANGUAGES } from "./languages";
@@ -120,6 +121,7 @@ export const GenerationRequestSchema = z
     agent: AgentSettingsSchema,
     destination: DestinationSchema.optional(),
     backup: BackupSettingsSchema.optional(),
+    analysisRange: AnalysisRangeSchema.optional(),
     cues: z.array(SubtitleCueSchema).min(1).max(3000),
   })
   .refine(

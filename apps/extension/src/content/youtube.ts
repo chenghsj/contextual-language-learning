@@ -361,6 +361,9 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
       respond({
         ok: true,
         currentMs: Math.round(video.currentTime * 1000),
+        ...(Number.isFinite(video.duration)
+          ? { durationMs: Math.round(video.duration * 1000) }
+          : {}),
         playing: !video.paused && !video.ended,
       });
     }

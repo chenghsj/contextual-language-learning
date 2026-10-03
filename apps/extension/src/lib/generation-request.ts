@@ -1,5 +1,8 @@
 import {
   GenerationRequestSchema,
+  AnalysisRangeSchema,
+  selectAnalysisCues,
+  type AnalysisRange,
   type AgentSettings,
   type BackupSettings,
   type Destination,
@@ -19,6 +22,7 @@ export function buildGenerationRequest(
     destination: Destination;
     backup: BackupSettings;
     cues: SubtitleCue[];
+    analysisRange?: AnalysisRange;
   },
   id: string = crypto.randomUUID(),
 ): GenerationRequest {
@@ -29,6 +33,9 @@ export function buildGenerationRequest(
     agent: input.agent,
     destination: input.destination,
     backup: input.backup,
-    cues: input.cues,
+    cues: selectAnalysisCues(input.cues, input.analysisRange),
+    ...(input.analysisRange
+      ? { analysisRange: AnalysisRangeSchema.parse(input.analysisRange) }
+      : {}),
   });
 }

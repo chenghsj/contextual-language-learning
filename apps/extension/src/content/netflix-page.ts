@@ -234,6 +234,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
       ok: boolean;
       available: boolean;
       currentMs?: number;
+      durationMs?: number;
       playing?: boolean | null;
       sessionId?: string;
       seekCalled?: boolean;
@@ -274,6 +275,8 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
       if (request.action === "status" || request.action === "diagnose") {
         const currentMs = chosen.player.getCurrentTime();
         if (Number.isFinite(currentMs)) result.currentMs = currentMs;
+        if (chosen.video && Number.isFinite(chosen.video.duration))
+          result.durationMs = Math.round(chosen.video.duration * 1000);
         result.playing = chosen.video ? !chosen.video.paused && !chosen.video.ended : null;
       }
       result.ok = true;

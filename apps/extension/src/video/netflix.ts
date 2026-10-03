@@ -21,9 +21,10 @@ export const netflixAdapter: VideoAdapter = {
       ok: boolean;
       error?: string;
       currentMs?: number;
+      durationMs?: number;
       playing?: boolean;
     }>(netflixAdapter, url, { type: "NETFLIX_DIAGNOSE" });
-    return { currentMs: result.currentMs, playing: result.playing };
+    return { currentMs: result.currentMs, durationMs: result.durationMs, playing: result.playing };
   },
   async diagnose(url) {
     const result = await sendToVideo<{ ok: boolean; error?: string; currentMs?: number }>(

@@ -33,3 +33,39 @@ test("preflight and generation share a lean V5 request", () => {
   assert.equal(request.profile.sceneCount, 4);
   assert.equal("lessonFormat" in request, false);
 });
+
+test("selected input is detached from subsequent subtitle and settings edits", () => {
+  const input = {
+    source: { platform: "import", title: "Dialogue" },
+    profile: {
+      targetLanguage: "en" as const,
+      instructionLanguage: "zh-TW" as const,
+      level: "B1",
+      sceneCount: 4 as const,
+      contextualExampleCount: 2,
+    },
+    agent: { provider: "openai", modelId: "fixed" },
+    destination: { kind: "local" as const },
+    backup: { enabled: false },
+    cues: [
+      { id: "keep-id", startMs: 1000, endMs: 2000, originalText: "Hello" },
+      { id: "excluded", startMs: 2000, endMs: 3000, originalText: "Later" },
+    ],
+    analysisRange: {
+      mode: "custom" as const,
+      startMs: 1000,
+      endMs: 2000,
+      durationMs: 3000,
+      durationSource: "subtitles" as const,
+    },
+  };
+  const snapshot = buildGenerationRequest(input, randomUUID());
+  input.cues[0].originalText = "edited";
+  input.agent.modelId = "changed";
+  input.analysisRange.endMs = 3000;
+  assert.deepEqual(snapshot.cues, [
+    { id: "keep-id", startMs: 1000, endMs: 2000, originalText: "Hello" },
+  ]);
+  assert.equal(snapshot.agent.modelId, "fixed");
+  assert.equal(snapshot.analysisRange?.endMs, 2000);
+});
