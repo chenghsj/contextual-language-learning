@@ -25,7 +25,7 @@ export function SidePanelNavigation({
   const active =
     page === "lesson" ? "lessons" : page === "create" || page === "lessons" ? page : "";
   return (
-    <nav className="mb-2" aria-label={t("navLabel")}>
+    <nav className="shrink-0 border-b border-border pb-2" aria-label={t("navLabel")}>
       <ul className="flex flex-wrap items-center gap-1">
         {tabs.map(({ id, label, icon: Icon }) => (
           <li key={id}>
@@ -37,7 +37,7 @@ export function SidePanelNavigation({
               aria-controls={"page-panel-" + id}
               onClick={() => onNavigate(id)}
               className={cn(
-                "gap-1.5",
+                "h-12 gap-1.5",
                 active === id ? "bg-muted text-foreground" : "text-muted-foreground",
               )}
             >

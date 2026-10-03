@@ -7,7 +7,7 @@ export const messages = {
     analysisNotificationsHint:
       "Show a system notification when learning content is ready. Allow browser notifications in your computer’s system settings. Focus mode may hide notification banners.",
     navLabel: "Main navigation",
-    create: "Create lesson",
+    create: "Create content",
     reader: "Study",
     settings: "Settings",
     closeNotification: "Dismiss notification",
@@ -258,7 +258,7 @@ export const messages = {
     backupFailedMessage: "Backup needs attention; your local lesson is safe.",
     retryBackup: "Retry backup",
     backupAccount: "Backup account",
-    lessonLibrary: "My Lessons",
+    lessonLibrary: "Content library",
     lessonLibraryHint:
       "Lessons are grouped by video. Local and Google Drive copies of the same lesson appear together.",
     lessonSearchLabel: "Search videos",
@@ -305,7 +305,7 @@ export const messages = {
     analysisNotificationsHint:
       "學習內容準備好時，顯示電腦的系統通知。需在電腦的系統設定中允許瀏覽器通知；專注模式可能會隱藏彈出提示。",
     navLabel: "主要導覽",
-    create: "建立教材",
+    create: "建立內容",
     reader: "學習",
     settings: "設定",
     closeNotification: "關閉通知",
@@ -541,7 +541,7 @@ export const messages = {
     backupFailedMessage: "備份需要處理，本地教材仍可正常使用。",
     retryBackup: "重試備份",
     backupAccount: "備份帳號",
-    lessonLibrary: "我的教材",
+    lessonLibrary: "內容庫",
     lessonLibraryHint: "依影片整理教材；同一份教材的本地與 Google Drive 副本合併顯示。",
     lessonSearchLabel: "搜尋影片",
     lessonSearchPlaceholder: "搜尋影片名稱…",
@@ -586,7 +586,7 @@ export const messages = {
     analysisNotificationsHint:
       "学习内容准备好时，显示电脑的系统通知。需在电脑的系统设置中允许浏览器通知；专注模式可能会隐藏弹出提示。",
     navLabel: "主导航",
-    create: "创建教材",
+    create: "创建内容",
     reader: "阅读文档",
     settings: "设置",
     closeNotification: "关闭通知",
@@ -822,7 +822,7 @@ export const messages = {
     backupFailedMessage: "备份需要处理，本地教材仍可正常使用。",
     retryBackup: "重试备份",
     backupAccount: "备份账号",
-    lessonLibrary: "我的教材",
+    lessonLibrary: "内容库",
     lessonLibraryHint: "按视频整理教材；同一份教材的本地与 Google Drive 副本合并显示。",
     lessonSearchLabel: "搜索视频",
     lessonSearchPlaceholder: "搜索视频名称…",
@@ -867,7 +867,7 @@ export const messages = {
     analysisNotificationsHint:
       "学習コンテンツの準備ができたらシステム通知を表示します。パソコンのシステム設定でブラウザの通知を許可してください。集中モードでは通知バナーが表示されない場合があります。",
     navLabel: "メインナビゲーション",
-    create: "教材を作成",
+    create: "コンテンツを作成",
     reader: "教材を読む",
     settings: "設定",
     closeNotification: "通知を閉じる",
@@ -1116,7 +1116,7 @@ export const messages = {
     backupFailedMessage: "バックアップに対応が必要です。ローカル教材は利用できます。",
     retryBackup: "バックアップを再試行",
     backupAccount: "バックアップ用アカウント",
-    lessonLibrary: "My Lessons",
+    lessonLibrary: "コンテンツライブラリ",
     lessonLibraryHint:
       "動画ごとに教材を表示します。同じ教材のローカル版と Google Drive 版はまとめて表示されます。",
     lessonSearchLabel: "動画を検索",
@@ -1163,7 +1163,7 @@ export const messages = {
     analysisNotificationsHint:
       "학습 콘텐츠가 준비되면 시스템 알림을 표시합니다. 컴퓨터의 시스템 설정에서 브라우저 알림을 허용해 주세요. 집중 모드에서는 알림 배너가 표시되지 않을 수 있습니다.",
     navLabel: "기본 탐색",
-    create: "학습 자료 만들기",
+    create: "콘텐츠 만들기",
     reader: "자료 읽기",
     settings: "설정",
     closeNotification: "알림 닫기",
@@ -1411,7 +1411,7 @@ export const messages = {
     backupFailedMessage: "백업을 확인해야 합니다. 로컬 교재는 계속 사용할 수 있습니다.",
     retryBackup: "백업 다시 시도",
     backupAccount: "백업 계정",
-    lessonLibrary: "My Lessons",
+    lessonLibrary: "콘텐츠 라이브러리",
     lessonLibraryHint:
       "동영상별로 자료를 묶고 같은 자료의 로컬 및 Google Drive 사본을 함께 표시합니다.",
     lessonSearchLabel: "동영상 검색",

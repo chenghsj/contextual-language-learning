@@ -32,7 +32,7 @@ test("two primary navigation items keep reader within Library and secondary page
     );
   }
   const detail = render("lesson");
-  assert.match(detail, /aria-current="page"[^>]*>.*我的教材/s);
+  assert.match(detail, /aria-current="page"[^>]*>.*內容庫/s);
   assert.doesNotMatch(detail, /grid-cols-4/);
 });
 
@@ -134,9 +134,8 @@ test("Library screen renders a recoverable task and an openable grouped V5 lesso
 
 test("secondary pages use a concise back label and retain their navigation targets", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
-  assert.match(app, /<h1 id="activity-title"/);
-  assert.equal((app.match(/\{layout.back\}<\/Button>/g) ?? []).length, 3);
-  assert.match(app, /onClick=\{\(\) => setPage\(returnPage\)\}/);
-  assert.match(app, /onClick=\{\(\) => setSettingsSection\(null\)\}/);
-  assert.match(app, /\{layout.back\}<\/Button>/);
+  assert.match(app, /<PageHeading id="activity-title"/);
+  assert.equal((app.match(/backLabel=\{layout.back\}/g) ?? []).length, 2);
+  assert.match(app, /onBack=\{\(\) => setPage\(returnPage\)\}/);
+  assert.match(app, /settingsSection \? setSettingsSection\(null\) : setPage\(returnPage\)/);
 });
