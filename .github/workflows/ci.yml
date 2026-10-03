@@ -38,7 +38,7 @@ jobs:
       - run: node apps/local-host/scripts/smoke-host.mjs
       - name: Install and smoke real Linux Native Host launcher
         run: |
-          node apps/local-host/scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser chromium
+          node scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser chromium
           test -f "$HOME/.config/chromium/NativeMessagingHosts/dev.immersive.language_learning.json"
           node apps/local-host/scripts/smoke-host.mjs "$HOME/.local/share/immersive-language-learning/native-host/launch.sh"
       - name: Package and verify release archives
@@ -75,7 +75,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           try {
-            node apps/local-host/scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser chrome
+            node scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser chrome
             if ($LASTEXITCODE -ne 0) { throw 'Windows Host installer failed' }
             $launcher = Join-Path $env:LOCALAPPDATA 'Immersive Learning\native-host\native-host.exe'
             if (!(Test-Path -LiteralPath $launcher)) { throw 'Native Host .exe not created' }
@@ -84,3 +84,22 @@ jobs:
           } finally {
             reg.exe delete 'HKCU\Software\Google\Chrome\NativeMessagingHosts\dev.immersive.language_learning' /f | Out-Null
           }
+
+  macos-host:
+    name: macOS Host install and native stdio
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm build
+      - name: Register and exercise macOS Native Host launcher
+        run: |
+          node scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser edge
+          test -f "$HOME/Library/Application Support/Microsoft Edge/NativeMessagingHosts/dev.immersive.language_learning.json"
+          node apps/local-host/scripts/smoke-host.mjs "$HOME/Library/Application Support/Immersive Learning/native-host/launch.sh"

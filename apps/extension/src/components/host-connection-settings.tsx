@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import { SelectField } from "./ui/select";
 
 type OS = "macos" | "windows" | "linux";
-type Browser = "chrome" | "edge";
+type Browser = "chrome" | "edge" | "chromium";
 
 function detectedOS(): OS {
   const ua = navigator.userAgent;
@@ -16,11 +16,7 @@ function detectedOS(): OS {
 }
 function detectedBrowser(): Browser {
   const ua = navigator.userAgent;
-  return /Edg\//.test(ua)
-    ? "edge"
-    : /Chromium/.test(ua) && !/Chrome/.test(ua)
-      ? "chrome"
-      : "chrome";
+  return /Edg\//.test(ua) ? "edge" : /Chromium/.test(ua) ? "chromium" : "chrome";
 }
 
 /** Browser registration and install commands use the current extension ID. */
@@ -175,12 +171,21 @@ export function HostConnectionSettings({
               options={[
                 { value: "chrome", label: "Chrome" },
                 { value: "edge", label: "Edge" },
+                { value: "chromium", label: "Chromium" },
               ]}
             />
           </label>
           <p className="text-xs leading-relaxed text-muted-foreground">
             {installMethod === "package" ? ui.steps : ui.sourceSteps}
           </p>
+          {os !== "macos" && (
+            <p
+              className="text-xs leading-relaxed text-muted-foreground"
+              data-ui="host-os-requirements"
+            >
+              {os === "windows" ? ui.windowsRequirements : ui.linuxRequirements}
+            </p>
+          )}
           {installMethod === "package" && (
             <Button
               variant="outline"
@@ -264,6 +269,7 @@ export function HostConnectionSettings({
               options={[
                 { value: "chrome", label: "Chrome" },
                 { value: "edge", label: "Edge" },
+                { value: "chromium", label: "Chromium" },
               ]}
             />
           </label>

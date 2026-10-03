@@ -124,7 +124,7 @@ jobs:
           enable Developer mode and Load unpacked. Choose the folder containing
           manifest.json at its root. This is not a signed CRX.
 
-          ## Native Host for macOS, Windows or Linux (required for CLI generation)
+          ## Native Host for macOS, Windows or Linux (required for local AI generation)
           Download and extract the matching OS Host ZIP. With Node.js 22+ run
           from its extracted directory:
 
@@ -135,7 +135,8 @@ jobs:
           The installer registers the Host for that ID and browser. On Windows
           it compiles a native .exe stdio launcher locally using Windows
           PowerShell 5.1 and .NET Framework; macOS/Linux use a shell launcher.
-          A signed-in supported CLI Agent must be installed separately.
+          The Host includes Pi SDK. Connect your AI provider in Extension Settings;
+          no separate CLI Agent installation is required.
           Linux GUI folder selection requires zenity or kdialog.
 
           All four ZIPs are covered by SHA256SUMS. Google Drive OAuth remains

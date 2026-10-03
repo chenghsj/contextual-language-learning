@@ -1,6 +1,10 @@
 /** Native Host setup and connection status in each supported interface language. */
 export const hostConnectionCopy = {
   en: {
+    windowsRequirements:
+      "Windows requires Windows PowerShell 5.1 and .NET Framework to create the Native Host launcher during installation. Run Node.js commands in PowerShell or Command Prompt; administrator rights are not required.",
+    linuxRequirements:
+      "Linux folder selection requires zenity or kdialog. Host installation and AI generation do not require these tools.",
     uninstall: "Uninstall Host",
     uninstallSteps:
       "Copy the command below. Wait for generation and backups to finish, fully quit the selected browser, then run the command in a terminal.",
@@ -45,7 +49,7 @@ export const hostConnectionCopy = {
     checkSucceeded: "Check complete. Host is connected.",
     lastChecked: "Last checked",
     manual:
-      "Confirm the selected browser. Chrome and Edge each require their own Host registration.",
+      "Confirm the selected browser. Chrome, Edge and Chromium each require their own Host registration.",
     error: "Could not copy. Select and copy the command manually.",
     connectionFailed:
       "Unable to connect to the Host. Install it for this extension ID and browser, then reload the extension and check again.",
@@ -58,6 +62,10 @@ export const hostConnectionCopy = {
       "After installing, reload the extension on your browser’s extensions page, then check the connection again.",
   },
   "zh-TW": {
+    windowsRequirements:
+      "Windows 安裝時需要 Windows PowerShell 5.1 與 .NET Framework 建立 Host launcher。Node.js 指令可在 PowerShell 或命令提示字元執行，不需系統管理員權限。",
+    linuxRequirements:
+      "Linux 的圖形化資料夾選擇需要 zenity 或 kdialog；安裝 Host 與 AI 生成不需要這兩項工具。",
     uninstall: "解除安裝 Host",
     uninstallSteps: "先複製下方指令；等生成與備份完成後，完全關閉所選瀏覽器，再於終端機執行。",
     uninstallEffects:
@@ -97,7 +105,7 @@ export const hostConnectionCopy = {
     check: "檢查連線",
     checkSucceeded: "檢查完成，Host 已連線。",
     lastChecked: "上次檢查",
-    manual: "請確認所選瀏覽器。Chrome 與 Edge 需要分別註冊 Host。",
+    manual: "請確認所選瀏覽器。Chrome、Edge 與 Chromium 需要分別註冊 Host。",
     error: "無法複製，請手動選取指令。",
     connectionFailed:
       "無法連接 Host。請使用目前的擴充功能 ID，為所選瀏覽器安裝 Host，再重新載入擴充功能並檢查連線。",
@@ -108,6 +116,10 @@ export const hostConnectionCopy = {
     afterInstall: "安裝完成後，到瀏覽器的擴充功能頁重新載入此擴充功能，再檢查連線。",
   },
   "zh-CN": {
+    windowsRequirements:
+      "Windows 安装时需要 Windows PowerShell 5.1 与 .NET Framework 创建 Host launcher。Node.js 命令可在 PowerShell 或命令提示符执行，无需管理员权限。",
+    linuxRequirements:
+      "Linux 的图形化文件夹选择需要 zenity 或 kdialog；安装 Host 与 AI 生成不需要这两项工具。",
     uninstall: "卸载 Host",
     uninstallSteps: "先复制下方命令；等待生成与备份完成后，完全关闭所选浏览器，再在终端中执行。",
     uninstallEffects:
@@ -147,7 +159,7 @@ export const hostConnectionCopy = {
     check: "检查连接",
     checkSucceeded: "检查完成，Host 已连接。",
     lastChecked: "上次检查",
-    manual: "请确认所选浏览器。Chrome 和 Edge 需要分别注册 Host。",
+    manual: "请确认所选浏览器。Chrome、Edge 和 Chromium 需要分别注册 Host。",
     error: "无法复制，请手动选择命令。",
     connectionFailed:
       "无法连接 Host。请使用当前扩展 ID，为所选浏览器安装 Host，再重新加载扩展并检查连接。",
@@ -158,6 +170,10 @@ export const hostConnectionCopy = {
     afterInstall: "安装完成后，到浏览器扩展页面重新加载此扩展，再检查连接。",
   },
   ja: {
+    windowsRequirements:
+      "Windows のインストールでは Host launcher の作成に Windows PowerShell 5.1 と .NET Framework が必要です。Node.js コマンドは PowerShell またはコマンドプロンプトで実行できます。管理者権限は不要です。",
+    linuxRequirements:
+      "Linux のグラフィカルなフォルダー選択には zenity または kdialog が必要です。Host のインストールや AI 生成には不要です。",
     uninstall: "Host をアンインストール",
     uninstallSteps:
       "下のコマンドをコピーしてください。生成とバックアップが完了するまで待ち、選択したブラウザーを完全に終了してから、ターミナルで実行してください。",
@@ -202,7 +218,7 @@ export const hostConnectionCopy = {
     checkSucceeded: "確認が完了しました。Host に接続しています。",
     lastChecked: "最終確認",
     manual:
-      "選択したブラウザーを確認してください。Chrome と Edge はそれぞれ Host の登録が必要です。",
+      "選択したブラウザーを確認してください。Chrome・Edge・Chromium はそれぞれ Host の登録が必要です。",
     error: "コピーできません。手動でコマンドを選択してください。",
     connectionFailed:
       "Host に接続できません。現在の拡張機能 ID とブラウザーで Host を登録し、拡張機能を再読み込みして接続を確認してください。",
@@ -215,6 +231,10 @@ export const hostConnectionCopy = {
       "インストール後、ブラウザーの拡張機能ページでこの拡張機能を再読み込みし、接続を確認してください。",
   },
   ko: {
+    windowsRequirements:
+      "Windows 설치 시 Host launcher를 만들려면 Windows PowerShell 5.1과 .NET Framework가 필요합니다. Node.js 명령은 PowerShell 또는 명령 프롬프트에서 실행할 수 있으며 관리자 권한은 필요하지 않습니다.",
+    linuxRequirements:
+      "Linux의 그래픽 폴더 선택에는 zenity 또는 kdialog가 필요합니다. Host 설치와 AI 생성에는 필요하지 않습니다.",
     uninstall: "Host 제거",
     uninstallSteps:
       "아래 명령을 복사하세요. 생성과 백업이 완료될 때까지 기다린 후 선택한 브라우저를 완전히 종료하고 터미널에서 실행하세요.",
@@ -258,7 +278,7 @@ export const hostConnectionCopy = {
     check: "연결 확인",
     checkSucceeded: "확인이 완료되었습니다. Host에 연결되었습니다.",
     lastChecked: "마지막 확인",
-    manual: "선택한 브라우저를 확인하세요. Chrome과 Edge는 각각 Host 등록이 필요합니다.",
+    manual: "선택한 브라우저를 확인하세요. Chrome, Edge, Chromium은 각각 Host 등록이 필요합니다.",
     error: "복사할 수 없습니다. 명령을 수동 선택하세요.",
     connectionFailed:
       "Host에 연결할 수 없습니다. 현재 확장 프로그램 ID와 선택한 브라우저로 Host를 등록한 뒤 확장 프로그램을 다시 로드하고 연결을 확인하세요.",

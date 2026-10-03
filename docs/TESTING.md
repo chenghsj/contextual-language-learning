@@ -29,6 +29,14 @@ Run `pnpm --filter @immersive/extension test:ux-layout-ui` for the three-step wo
 
 See [the current CLL UX Layout implementation record](cll-ux-layout-implementation.md) for phased commits, the spec comparison and live acceptance boundaries. The [earlier five-stage record](core-redesign-implementation.md) is historical.
 
+## Host installer entry points and OS coverage
+
+Run `node --test scripts/host-entrypoints.test.mjs apps/local-host/scripts/native-host-platform.test.mjs` to verify the displayed root command, missing-build guidance, browser selection, preserved data, and the macOS/Linux/Windows registration strategies. These use isolated homes; Windows compiler and registry calls are injected fixtures. Unix launcher tests execute Node through paths containing spaces and apostrophes. They do not replace execution on Windows or Linux.
+
+CI installs via `node scripts/install-host.mjs` on Linux, Windows and macOS runners, then exercises the production Native Messaging launcher. Windows uses its real compiled `.exe`, while macOS/Linux use the shell launcher. A local macOS pass does not mean these remote jobs have run; inspect their results after pushing.
+
+The source UI defaults to project instructions and labels the command directory explicitly. Test Chrome/Edge/Chromium command flags, Windows PowerShell/.NET guidance and Linux folder-picker requirements. Package commands run from the extracted Host ZIP; the same root install/uninstall entry points are also available in the project after building.
+
 ## Side Panel and V5 lifecycle
 
 1. Load `apps/extension/dist` into a clean Chromium profile and register the matching Native Host for that extension ID. Check that Settings reports connected. Try an older Host or a health response without protocol version 6; the panel should show update guidance and disable generation. The old Host should be labeled as requiring an update, with localized instructions to reinstall and reload. Check both package and project installation methods: their command roots must differ, copied commands must use the current extension ID and selected browser, and project updates must not show a release-download button.

@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import {
   browserManifestLocation,
   installationDir,
+  installNativeHost,
   uninstallNativeHost,
   HOST_NAME,
 } from "./native-host-platform.mjs";
@@ -241,3 +242,97 @@ test(
     }
   },
 );
+
+for (const platform of ["darwin", "linux", "win32"]) {
+  for (const browser of ["chrome", "edge", "chromium"]) {
+    test(`${platform} installs the selected ${browser} registration and launcher in isolated paths`, async () => {
+      const temporary = await mkdtemp(join(tmpdir(), "cll-install-platform-"));
+      const home = join(temporary, "home with spaces and ' quote");
+      const sourceRoot = join(temporary, "Host package with spaces");
+      const sourceEntry = join(sourceRoot, "dist/native-host.mjs");
+      const env = {
+        LOCALAPPDATA: join(home, "AppData/Local"),
+        XDG_CONFIG_HOME: join(home, "custom config"),
+        XDG_DATA_HOME: join(home, "custom data"),
+      };
+      const extensionId = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      const calls = [];
+      try {
+        await mkdir(join(sourceRoot, "dist"), { recursive: true });
+        await mkdir(join(sourceRoot, "scripts"), { recursive: true });
+        await writeFile(sourceEntry, 'process.stdout.write("launcher-ok");\n');
+        await writeFile(join(sourceRoot, "scripts/windows-launcher.cs"), "Windows launcher source");
+        await writeFile(
+          join(sourceRoot, "scripts/compile-launcher.ps1"),
+          "Windows compiler script",
+        );
+        const run = async (command, args, options) => {
+          calls.push({ command, args, options });
+          if (command === "powershell.exe") {
+            assert.equal(
+              args[args.indexOf("-File") + 1],
+              join(sourceRoot, "scripts/compile-launcher.ps1"),
+            );
+            await writeFile(args[args.indexOf("-Output") + 1], "compiled executable fixture");
+          } else assert.equal(command, "reg.exe");
+          return { stdout: "", stderr: "" };
+        };
+        const result = await installNativeHost({
+          platform,
+          browser,
+          extensionId,
+          sourceRoot,
+          sourceEntry,
+          home,
+          env,
+          run,
+        });
+        const location = browserManifestLocation(platform, browser, home, env);
+        const root = installationDir(platform, home, env);
+        assert.deepEqual(result.location, location);
+        const manifest = JSON.parse(await readFile(result.manifestPath, "utf8"));
+        assert.equal(manifest.path, result.launcher);
+        assert.equal(manifest.type, "stdio");
+        assert.deepEqual(manifest.allowed_origins, ["chrome-extension://" + extensionId + "/"]);
+        assert.equal(
+          await readFile(join(root, "native-host.mjs"), "utf8"),
+          await readFile(sourceEntry, "utf8"),
+        );
+        if (platform === "win32") {
+          assert.equal(result.launcher, join(root, "native-host.exe"));
+          assert.equal(
+            await readFile(join(root, "node-path.txt"), "utf8"),
+            process.execPath + "\n",
+          );
+          assert.equal(await readFile(result.launcher, "utf8"), "compiled executable fixture");
+          assert.deepEqual(
+            calls.map(call => call.command),
+            ["powershell.exe", "reg.exe"],
+          );
+          assert.deepEqual(calls[1].args, [
+            "add",
+            location.key,
+            "/ve",
+            "/t",
+            "REG_SZ",
+            "/d",
+            result.manifestPath,
+            "/f",
+          ]);
+          assert.equal(calls[1].options.windowsHide, true);
+        } else {
+          assert.equal(result.manifestPath, location.path);
+          assert.equal(calls.length, 0);
+          assert.match(await readFile(result.launcher, "utf8"), /#!\/bin\/sh/);
+          // Exercise shell quoting on Unix; Windows CI exercises its native .exe.
+          if (process.platform !== "win32") {
+            const launched = await promisify(execFile)(result.launcher);
+            assert.equal(launched.stdout, "launcher-ok");
+          }
+        }
+      } finally {
+        await rm(temporary, { recursive: true, force: true });
+      }
+    });
+  }
+}

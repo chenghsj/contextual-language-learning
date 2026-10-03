@@ -741,3 +741,50 @@ test("video recovery toast persists, contains reload, shows busy state and suppo
     await mounted.close();
   }
 });
+
+for (const [os, userAgent, prerequisite] of [
+  ["Windows", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0", "windowsRequirements"],
+  ["Linux", "Mozilla/5.0 (X11; Linux x86_64) Chromium/130.0", "linuxRequirements"],
+] as const) {
+  test(`Host setup shows the ${os} prerequisites and retains commands for that browser`, async () => {
+    const originalChrome = globalThis.chrome;
+    const originalUA = Object.getOwnPropertyDescriptor(navigator, "userAgent");
+    globalThis.chrome = {
+      runtime: {
+        id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        getManifest: () => ({ version: "0.1.0" }),
+      },
+    } as typeof chrome;
+    Object.defineProperty(navigator, "userAgent", { configurable: true, value: userAgent });
+    const view = await mount(
+      <HostConnectionSettings
+        locale="zh-TW"
+        connected={false}
+        checked
+        sdkMode={false}
+        version={null}
+        protocolVersion={null}
+        busy={false}
+        error=""
+        onCheck={() => {}}
+      />,
+    );
+    try {
+      const ui = hostConnectionCopy["zh-TW"];
+      assert.equal(
+        view.container.querySelector('[data-ui="host-os-requirements"]')?.textContent,
+        ui[prerequisite],
+      );
+      assert.equal(
+        view.container.querySelector("code")?.textContent,
+        "pnpm build\npnpm host:install aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+          (os === "Linux" ? " --browser chromium" : ""),
+      );
+    } finally {
+      await view.close();
+      globalThis.chrome = originalChrome;
+      if (originalUA) Object.defineProperty(navigator, "userAgent", originalUA);
+      else Reflect.deleteProperty(navigator, "userAgent");
+    }
+  });
+}

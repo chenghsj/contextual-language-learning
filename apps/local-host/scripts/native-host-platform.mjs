@@ -100,14 +100,14 @@ async function atomicWrite(target, content, mode = 0o600) {
 
 const shQuote = value => "'" + value.replaceAll("'", "'\\''") + "'";
 
-async function installLauncher(platform, installDir, sourceRoot, entry, nodePath) {
+async function installLauncher(platform, installDir, sourceRoot, entry, nodePath, home, run) {
   if (platform !== "win32") {
     const searchPath = [
       dirname(nodePath),
       "/opt/homebrew/bin",
       "/usr/local/bin",
-      join(homedir(), ".local/bin"),
-      join(homedir(), ".npm-global/bin"),
+      join(home, ".local/bin"),
+      join(home, ".npm-global/bin"),
     ].join(":");
     const launcher = join(installDir, "launch.sh");
     await atomicWrite(
@@ -136,7 +136,7 @@ async function installLauncher(platform, installDir, sourceRoot, entry, nodePath
   const launcher = join(installDir, "native-host.exe");
   const temporary = join(installDir, "native-host." + randomUUID() + ".exe");
   try {
-    await exec(
+    await run(
       "powershell.exe",
       [
         "-NoProfile",
@@ -172,16 +172,19 @@ export async function installNativeHost({
   sourceRoot,
   sourceEntry,
   nodePath = process.execPath,
+  home = homedir(),
+  env = process.env,
+  run = exec,
 }) {
   if (!/^[a-p]{32}$/.test(extensionId))
     throw new Error("Invalid 32-character Chromium extension ID.");
-  const location = browserManifestLocation(platform, browser);
+  const location = browserManifestLocation(platform, browser, home, env);
   await access(sourceEntry);
-  const root = installationDir(platform);
+  const root = installationDir(platform, home, env);
   await mkdir(root, { recursive: true, mode: 0o700 });
   const entry = join(root, "native-host.mjs");
   await atomicCopy(sourceEntry, entry);
-  const launcher = await installLauncher(platform, root, sourceRoot, entry, nodePath);
+  const launcher = await installLauncher(platform, root, sourceRoot, entry, nodePath, home, run);
   const manifest = {
     name: HOST_NAME,
     description: "Local agent host for Immersive Language Learning",
@@ -193,7 +196,7 @@ export async function installNativeHost({
   await atomicWrite(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
   if (location.type === "registry") {
     // HKCU is per-user; no admin privileges and no global browser setting changes.
-    await exec("reg.exe", ["add", location.key, "/ve", "/t", "REG_SZ", "/d", manifestPath, "/f"], {
+    await run("reg.exe", ["add", location.key, "/ve", "/t", "REG_SZ", "/d", manifestPath, "/f"], {
       timeout: 20_000,
       maxBuffer: 8192,
       windowsHide: true,
