@@ -118,7 +118,7 @@ try {
       await page.locator("#header-settings").click();
       const sheet = page.getByRole("dialog");
       await sheet.waitFor();
-      assert.equal(Math.round((await sheet.boundingBox()).width), Math.min(width, 640));
+      assert.equal(Math.round((await sheet.boundingBox()).width), Math.min(width, 400));
       await sheet.getByRole("button", { name: /^AI 與模型/ }).click();
       await sheet.getByRole("button", { name: /OpenAI/ }).click();
       const row = sheet
@@ -144,6 +144,7 @@ try {
       await page.screenshot({ path: join(output, `confirm-${width}-${height}-${theme}.png`) });
       await page.locator("#header-activity").click();
       await sheet.waitFor();
+      assert.equal(Math.round((await sheet.boundingBox()).width), Math.min(width, 400));
       await sheet.getByRole("button", { name: "關閉", exact: true }).click();
       assert.equal(await wizard.locator("[aria-current=step]").innerText(), "建立");
       assert.deepEqual(errors, []);

@@ -21,7 +21,7 @@ export function SheetContent({
       <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/40" />
       <DialogPrimitive.Content
         aria-describedby={undefined}
-        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[640px] flex-col border-l border-border bg-background shadow-xl outline-none"
+        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[400px] flex-col border-l border-border bg-background shadow-xl outline-none"
         onCloseAutoFocus={onCloseAutoFocus}
         onInteractOutside={onInteractOutside}
         onEscapeKeyDown={onEscapeKeyDown}
