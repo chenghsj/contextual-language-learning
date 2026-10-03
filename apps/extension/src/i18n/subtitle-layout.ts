@@ -5,6 +5,8 @@ export const subtitleLayoutCopy = {
     reloadVideo: "Reload video",
     reloadNeeded: "Reload the video to get subtitles.",
     heading: "Subtitles",
+    languageHint:
+      "Subtitles are retrieved in this language. If they are unavailable, choose another language or import subtitles.",
     empty: "No subtitles yet",
     hint: "Video subtitles have not been loaded.",
     ready: "Ready",
@@ -21,6 +23,7 @@ export const subtitleLayoutCopy = {
     reloadVideo: "重新載入影片",
     reloadNeeded: "需要重新載入影片才能取得字幕。",
     heading: "字幕",
+    languageHint: "依此語言取得字幕。若沒有對應字幕，可在這裡改選語言或匯入字幕。",
     empty: "尚未取得字幕",
     hint: "目前尚未載入影片字幕。",
     ready: "已準備完成",
@@ -37,6 +40,7 @@ export const subtitleLayoutCopy = {
     reloadVideo: "重新加载视频",
     reloadNeeded: "需要重新加载视频才能获取字幕。",
     heading: "字幕",
+    languageHint: "按此语言获取字幕。若没有对应字幕，可在这里更换语言或导入字幕。",
     empty: "尚未获取字幕",
     hint: "当前尚未加载视频字幕。",
     ready: "已准备完成",
@@ -53,6 +57,8 @@ export const subtitleLayoutCopy = {
     reloadVideo: "動画を再読み込み",
     reloadNeeded: "字幕を取得するには動画を再読み込みしてください。",
     heading: "字幕",
+    languageHint:
+      "この言語の字幕を取得します。字幕がない場合は、ここで言語を変更するか字幕をインポートしてください。",
     empty: "字幕は未取得です",
     hint: "動画の字幕はまだ読み込まれていません。",
     ready: "準備完了",
@@ -69,6 +75,8 @@ export const subtitleLayoutCopy = {
     reloadVideo: "동영상 새로고침",
     reloadNeeded: "자막을 가져오려면 동영상을 새로고침하세요.",
     heading: "자막",
+    languageHint:
+      "이 언어로 자막을 가져옵니다. 자막이 없으면 여기에서 언어를 변경하거나 자막을 가져오세요.",
     empty: "아직 자막이 없습니다",
     hint: "동영상 자막을 아직 불러오지 않았습니다.",
     ready: "준비 완료",

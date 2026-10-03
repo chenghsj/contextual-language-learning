@@ -7,7 +7,8 @@
     "build": "vite build && node scripts/build-content.mjs",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
-    "test:redesign-ui": "node scripts/redesign-acceptance.mjs"
+    "test:redesign-ui": "node scripts/redesign-acceptance.mjs",
+    "test:subtitle-recovery-ui": "node scripts/subtitle-recovery-acceptance.mjs"
   },
   "dependencies": {
     "@immersive/core": "workspace:*",

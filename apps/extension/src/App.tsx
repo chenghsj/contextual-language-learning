@@ -1,3 +1,4 @@
+import { cleanVideoTitle } from "./video/metadata";
 import { subtitleLayoutCopy } from "./i18n/subtitle-layout";
 import { useSubtitleDraft } from "./hooks/use-subtitle-draft";
 import { usePlatformVideoNotice } from "./hooks/use-platform-video-notice";
@@ -1528,7 +1529,9 @@ export default function App() {
                   <h2>{flow.video}</h2>
                   <div className="min-w-0 border-b border-border pb-4">
                     <strong className="block text-sm wrap-anywhere">
-                      {title || activeVideo?.title || flow.videoEmpty}
+                      {title ||
+                        cleanVideoTitle(activeVideo?.title) ||
+                        (activeVideo ? flow.videoTitlePending : flow.videoEmpty)}
                     </strong>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {!activeVideo
@@ -1591,6 +1594,34 @@ export default function App() {
                     className="my-3 grid min-w-0 gap-2"
                   >
                     <h3 className="text-sm font-semibold">{subtitleLayout.heading}</h3>
+                    <div
+                      className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
+                      data-ui="settingField"
+                    >
+                      <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                        <label
+                          className="m-0 min-w-0 text-xs font-semibold leading-5"
+                          htmlFor="learning-target"
+                        >
+                          {t("targetLanguage")}
+                        </label>
+                        <SettingInfo
+                          label={t("targetLanguage")}
+                          infoLabel={settingsCopy.infoLabel}
+                          explanation={settingsCopy.fieldHints.targetLanguage}
+                        />
+                      </div>
+                      <SearchableSelectField
+                        id="learning-target"
+                        ariaLabel={t("targetLanguage")}
+                        value={profile.targetLanguage}
+                        onValueChange={chooseLearningLanguage}
+                        disabled={checking || generating}
+                        options={learningLanguageOptions(uiLocale)}
+                        copy={LEARNING_LANGUAGE_SEARCH_COPY[uiLocale]}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">{subtitleLayout.languageHint}</p>
                     <div
                       role={subtitleState === "error" ? "alert" : "status"}
                       className="grid gap-1 text-sm wrap-anywhere"
@@ -1898,33 +1929,6 @@ export default function App() {
                 >
                   <h2>{customUi.settings}</h2>
                   <div className="my-3 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-x-4 gap-y-3 [&_[data-ui=settingField]]:m-0">
-                    <div
-                      className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
-                      data-ui="settingField"
-                    >
-                      <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
-                        <label
-                          className="m-0 min-w-0 text-xs font-semibold leading-5"
-                          htmlFor="learning-target"
-                        >
-                          {t("targetLanguage")}
-                        </label>
-                        <SettingInfo
-                          label={t("targetLanguage")}
-                          infoLabel={settingsCopy.infoLabel}
-                          explanation={settingsCopy.fieldHints.targetLanguage}
-                        />
-                      </div>
-                      <SearchableSelectField
-                        id="learning-target"
-                        ariaLabel={t("targetLanguage")}
-                        value={profile.targetLanguage}
-                        onValueChange={chooseLearningLanguage}
-                        disabled={checking || generating}
-                        options={learningLanguageOptions(uiLocale)}
-                        copy={LEARNING_LANGUAGE_SEARCH_COPY[uiLocale]}
-                      />
-                    </div>
                     <div
                       className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
                       data-ui="settingField"

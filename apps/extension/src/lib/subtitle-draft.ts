@@ -352,22 +352,30 @@ export class SubtitleDraft {
     this.set("videoRecoveryUrl", "");
     const cached = this.cache.get(captionCacheKey(this.state.sourceUrl, language));
     if (cached) {
-      this.set("raw", cached.raw);
-      this.set("fileName", cached.fileName);
-      this.set("captionSource", cached.source);
+      this.update({
+        raw: cached.raw,
+        fileName: cached.fileName,
+        captionSource: cached.source,
+        metadataBusy: false,
+        subtitleTone: cached.source.origin === "manual" ? "neutral" : "success",
+        subtitleStatus: subtitleMessage(
+          cached.source.origin === "manual"
+            ? this.subtitleUi.manualLanguageReady
+            : this.subtitleUi.success,
+          {
+            language: learningLanguageName(language, this.locale),
+            count: cached.raw.includes("-->")
+              ? parseSubtitles(cached.raw).length
+              : parsePlainText(cached.raw).length,
+          },
+        ),
+      });
+      // Switching back must work even if the video reader or network is unavailable.
+      // An explicit refresh remains available when the user wants new captions.
+      return;
     } else {
       // Keep the old draft visible; its source-language identity prevents generation.
       this.set("captionSource", null);
-    }
-    if (cached?.source.origin === "manual") {
-      this.set("subtitleTone", "neutral");
-      this.set(
-        "subtitleStatus",
-        subtitleMessage(this.subtitleUi.manualLanguageReady, {
-          language: learningLanguageName(language, this.locale),
-        }),
-      );
-      return;
     }
     if (!cached && previousOrigin === "manual" && this.state.raw.trim()) {
       this.set("subtitleTone", "missing");

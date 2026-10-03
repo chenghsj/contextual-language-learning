@@ -3,6 +3,7 @@ import type { UiLocale } from "./messages";
 export const sidePanelLayoutCopy = {
   en: {
     videoEmpty: "No video selected",
+    videoTitlePending: "Video title not available yet",
     videoEntryHint:
       "Use the current video to fill in its title and URL, or name your imported subtitles below. The video URL is optional.",
     editVideoDetails: "Edit title and URL",
@@ -49,6 +50,7 @@ export const sidePanelLayoutCopy = {
   },
   "zh-TW": {
     videoEmpty: "尚未選擇影片",
+    videoTitlePending: "尚未取得影片標題",
     videoEntryHint:
       "按「使用目前影片」帶入標題與網址，或在下方為匯入的字幕填寫教材名稱。影片網址可留空。",
     editVideoDetails: "修改標題與網址",
@@ -95,6 +97,7 @@ export const sidePanelLayoutCopy = {
   },
   "zh-CN": {
     videoEmpty: "尚未选择视频",
+    videoTitlePending: "尚未获取视频标题",
     videoEntryHint:
       "点击“使用当前视频”填入标题与网址，或在下方为导入的字幕填写教材名称。视频网址可留空。",
     editVideoDetails: "修改标题与网址",
@@ -141,6 +144,7 @@ export const sidePanelLayoutCopy = {
   },
   ja: {
     videoEmpty: "動画が選択されていません",
+    videoTitlePending: "動画タイトルはまだ取得できていません",
     videoEntryHint:
       "「現在の動画を使用」でタイトルと URL を取得するか、下にインポートした字幕の教材名を入力してください。動画 URL は任意です。",
     editVideoDetails: "タイトルと URL を変更",
@@ -187,6 +191,7 @@ export const sidePanelLayoutCopy = {
   },
   ko: {
     videoEmpty: "선택한 영상이 없습니다",
+    videoTitlePending: "영상 제목을 아직 가져오지 못했습니다",
     videoEntryHint:
       "「현재 영상 사용」으로 제목과 URL을 가져오거나, 아래에 가져온 자막의 교재 이름을 입력하세요. 영상 URL은 선택 사항입니다.",
     editVideoDetails: "제목 및 URL 수정",
