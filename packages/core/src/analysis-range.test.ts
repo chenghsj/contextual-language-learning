@@ -56,3 +56,8 @@ test("partially timed input only allows full content", () => {
     /Untimed/,
   );
 });
+
+test("exact range time formatting preserves milliseconds on round trip", () => {
+  for (const ms of [1, 500, 999, 1500, 61523, 3600001])
+    assert.equal(parseRangeTime(formatRangeTime(ms)), ms);
+});

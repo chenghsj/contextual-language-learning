@@ -6,7 +6,8 @@
   "scripts": {
     "build": "vite build && node scripts/build-content.mjs",
     "dev": "vite",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:redesign-ui": "node scripts/redesign-acceptance.mjs"
   },
   "dependencies": {
     "@immersive/core": "workspace:*",
@@ -25,6 +26,8 @@
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "rehype-sanitize": "^6.0.0",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.3.0"
   },
@@ -36,6 +39,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.4.0",
     "jsdom": "^30.1.1",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4.1.0",
     "vite": "^6.1.0"
   }

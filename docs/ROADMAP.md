@@ -5,12 +5,15 @@ This is a planning aid, not a promise of release dates. Please verify a feature 
 ## MVP implemented in the development branch
 
 - Vite/React Chrome Side Panel, local SRT/VTT/plain-text import and original-cue preservation.
-- Level/instruction-language settings, user-imported CLI Agent registry, structured lesson generation and local JSON/Markdown export.
+- Level/instruction-language settings, Pi SDK provider/model settings, structured V5 lessons and independent custom Markdown generation/export.
 - Checkpointed generation with explicit resume; no daemon running after Chrome closes.
 - YouTube video time links, sentence looping and user-triggered playback speed.
 - Experimental Netflix diagnose, seek, loop and playback speed via an undocumented player interface, with manual timestamp fallback.
 - Local folder publishing, experimental Google Drive publishing with independently selected accounts, duplicate preflight and confirmed new-version regeneration.
 - CI, versioned Chromium/macOS Host ZIP packaging and preview artifacts.
+
+- Five-step Create flow, analysis ranges, editable custom Prompt templates, standard/custom library filtering and checkpointed hierarchical Markdown integration.
+- Controlled Host reconnection, Activity execution metadata and local deletion with retained Drive backups.
 
 ## Needs validation before a stable public release
 

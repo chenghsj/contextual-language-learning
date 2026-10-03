@@ -29,6 +29,7 @@ export type PiPrompt = z.infer<typeof PiPromptSchema>;
 export type PiEvent = z.infer<typeof PiEventSchema>;
 
 export const HostRequestSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("getJobExecution"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({
     type: z.literal("checkCustomDuplicates"),
     id: z.string().uuid(),
@@ -43,6 +44,17 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("resumeCustom"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({ type: z.literal("cancelCustom"), id: z.string().uuid(), jobId: z.string().uuid() }),
+  z.object({
+    type: z.literal("listCustomDriveDocuments"),
+    id: z.string().uuid(),
+    accountId: z.string().min(1).max(256),
+  }),
+  z.object({
+    type: z.literal("restoreCustomDriveDocument"),
+    id: z.string().uuid(),
+    accountId: z.string().min(1).max(256),
+    documentId: z.string().uuid(),
+  }),
   z.object({ type: z.literal("listCustomDocuments"), id: z.string().uuid() }),
   z.object({
     type: z.literal("getCustomDocument"),

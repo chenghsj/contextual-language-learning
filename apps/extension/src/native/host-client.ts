@@ -1,3 +1,4 @@
+import { CustomChunkAssembler } from "./custom-chunks";
 import {
   BackgroundGenerationStateSchema,
   HostMessageSchema,
@@ -63,7 +64,10 @@ export function openHostStream(
 const responseTypes = {
   health: "health",
   checkCustomDuplicates: "duplicates",
+  getJobExecution: "jobExecution",
   listCustomDocuments: "customDocuments",
+  listCustomDriveDocuments: "customDriveDocuments",
+  restoreCustomDriveDocument: "customDocumentChanged",
   renameCustomDocument: "customDocumentChanged",
   deleteCustomDocument: "customDocumentChanged",
   agentModels: "agentModels",
@@ -178,6 +182,63 @@ export function getDocument(
     );
     try {
       stream.send({ type: "getDocument", id, documentId });
+    } catch (error) {
+      stream.close();
+      reject(error);
+    }
+  });
+}
+
+export async function getCustomResource(
+  resource: "document",
+  resourceId: string,
+  runtime?: typeof chrome.runtime,
+): Promise<import("@immersive/core").CustomDocument>;
+export async function getCustomResource(
+  resource: "job",
+  resourceId: string,
+  runtime?: typeof chrome.runtime,
+): Promise<import("@immersive/core").CustomJobSnapshot>;
+export async function getCustomResource(
+  resource: "document" | "job",
+  resourceId: string,
+  runtime: typeof chrome.runtime = chrome.runtime,
+) {
+  return new Promise<
+    import("@immersive/core").CustomDocument | import("@immersive/core").CustomJobSnapshot
+  >((resolve, reject) => {
+    const id = crypto.randomUUID(),
+      chunks = new CustomChunkAssembler();
+    const stream = openHostStream(
+      message => {
+        if (message.type === "generationState" || message.id !== id) return;
+        try {
+          if (message.type === "error") throw new Error(message.message);
+          if (
+            message.type !== "customChunk" ||
+            message.resource !== resource ||
+            message.resourceId !== resourceId
+          )
+            throw new Error("Unexpected custom result");
+          const result = chunks.push(message);
+          if (result) {
+            stream.close();
+            resolve(result);
+          } else if (message.index === message.total - 1) throw new Error("Missing custom chunks");
+        } catch (error) {
+          stream.close();
+          reject(error);
+        }
+      },
+      reject,
+      runtime,
+    );
+    try {
+      stream.send(
+        resource === "document"
+          ? { id, type: "getCustomDocument", documentId: resourceId }
+          : { id, type: "getCustomJob", jobId: resourceId },
+      );
     } catch (error) {
       stream.close();
       reject(error);

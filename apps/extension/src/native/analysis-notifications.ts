@@ -1,3 +1,4 @@
+import { customContentCopy } from "../i18n/custom-content";
 import { translate, type UiLocale } from "../i18n/messages";
 import { settingsLayoutCopy } from "../i18n/settings-layout";
 import { PreferencesStore } from "../lib/preferences-store";
@@ -11,6 +12,7 @@ export async function notifyLessonOutcome(
   title: string,
   outcome: LessonNotificationOutcome,
   documentId?: string,
+  kind?: "standard" | "custom",
 ): Promise<void> {
   const saved = await new PreferencesStore(chrome.storage.local, getBrowserLocale()).load();
   if (
@@ -32,7 +34,12 @@ export async function notifyLessonOutcome(
   await chrome.notifications.create(id, {
     type: "basic",
     iconUrl: chrome.runtime.getURL("icons/icon128.png"),
-    title: outcome === "completed" ? translate(locale, "analysisCompleteTitle") : ui[outcome],
+    title:
+      outcome === "completed"
+        ? kind === "custom"
+          ? customContentCopy(locale).created
+          : translate(locale, "analysisCompleteTitle")
+        : ui[outcome],
     message:
       outcome === "completed"
         ? title
@@ -59,8 +66,9 @@ export async function notifyAnalysisComplete(
   jobId: string,
   title: string,
   documentId?: string,
+  kind?: "standard" | "custom",
 ): Promise<void> {
-  return notifyLessonOutcome(jobId, title, "completed", documentId);
+  return notifyLessonOutcome(jobId, title, "completed", documentId, kind);
 }
 
 export async function sendTestNotification(locale: UiLocale): Promise<void> {

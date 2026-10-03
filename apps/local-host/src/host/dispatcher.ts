@@ -1,3 +1,6 @@
+import { accessTokenFor } from "../drive/oauth";
+import { createCustomPublication } from "../storage/custom-backup";
+import { getCustomDriveDocument, listCustomDriveDocuments } from "../drive/api";
 import { FileCustomRepository } from "../storage/custom";
 import { CustomJobManager } from "../jobs/custom-manager";
 import { createCustomHandler } from "./custom";
@@ -30,7 +33,13 @@ export function createHostDispatcher({
       () => manager.isRunning(),
     );
   manager.setExternalBusyGuard(() => custom.isRunning());
-  const handleCustom = createCustomHandler(custom.deps.repository, custom, reply);
+  const customPublication = createCustomPublication(custom.deps.repository, reply);
+  const handleCustom = createCustomHandler(
+    custom.deps.repository,
+    custom,
+    reply,
+    customPublication.afterSave,
+  );
   const handleGeneration = createGenerationHandler({ storage, manager, reply }, finishDocument);
 
   async function handle(input: unknown): Promise<void> {
@@ -48,8 +57,51 @@ export function createHostDispatcher({
       return;
     }
     const request = parsed.data;
+    let customBackupCount = 0;
     try {
+      if (request.type === "getJobExecution") {
+        const job = await custom.deps.repository.getJob(request.jobId);
+        const standard = job ? null : await storage.jobs.get(request.jobId);
+        const doc = !job && !standard ? await storage.documents.get(request.jobId) : null;
+        reply({
+          id: request.id,
+          type: "jobExecution",
+          execution: job?.execution ?? standard?.execution ?? doc?.execution ?? null,
+        });
+        return;
+      }
       if (await handleCustom(request)) return;
+      if (request.type === "listCustomDriveDocuments") {
+        reply({
+          id: request.id,
+          type: "customDriveDocuments",
+          documents: (await listCustomDriveDocuments(request.accountId)).slice(0, 500),
+        });
+        return;
+      }
+      if (request.type === "restoreCustomDriveDocument") {
+        await custom.deps.repository.saveDocument(
+          await getCustomDriveDocument(request.accountId, request.documentId),
+        );
+        reply({ id: request.id, type: "customDocumentChanged", documentId: request.documentId });
+        return;
+      }
+      if (request.type === "retryBackup" && (await custom.deps.repository.getJob(request.jobId))) {
+        await customPublication.backup(request.jobId, request.id);
+        return;
+      }
+      if (request.type === "publishJob" && (await custom.deps.repository.getJob(request.jobId))) {
+        const doc = await custom.deps.repository.getDocument(request.jobId);
+        if (!doc) throw new Error("Custom document not found");
+        await customPublication.localCopy(doc, request.id);
+        return;
+      }
+      if (request.type === "backupExisting") {
+        await accessTokenFor(request.accountId);
+        customBackupCount = await customPublication.schedule(request.accountId);
+      }
+      if (request.type === "resumeBackups") await customPublication.resume(request.id);
+
       if (request.type === "listJobs" || request.type === "listEndedJobs") {
         const jobs = [...(await manager.list()), ...(await custom.list())].sort((a, b) =>
           b.updatedAt.localeCompare(a.updatedAt),
@@ -102,7 +154,18 @@ export function createHostDispatcher({
         return;
       }
       if (await handleAgentRequest(request, { storage, manager, reply, hostVersion })) return;
-      if (await handleDriveRequest(request, { storage, reply })) return;
+      if (
+        await handleDriveRequest(request, {
+          storage,
+          reply: message =>
+            reply(
+              message.type === "backupsScheduled"
+                ? { ...message, count: message.count + customBackupCount }
+                : message,
+            ),
+        })
+      )
+        return;
       if (await handleLessonRequest(request, { storage, manager, reply }, deliverDocument)) return;
       if (await handleGeneration(request)) return;
       if (await handlePublication(request)) return;

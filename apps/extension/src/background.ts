@@ -69,8 +69,8 @@ void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((
 if ("onConnect" in chrome.runtime)
   installGenerationController(
     chrome.runtime,
-    (jobId, title, documentId) => {
-      void notifyAnalysisComplete(jobId, title, documentId).catch(() => {
+    (jobId, title, documentId, kind) => {
+      void notifyAnalysisComplete(jobId, title, documentId, kind).catch(() => {
         /* System notifications may be disabled. */
       });
     },

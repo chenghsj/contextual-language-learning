@@ -1,3 +1,5 @@
+import { customContentCopy } from "../i18n/custom-content";
+import type { CustomContentSummary, CustomDriveSummary } from "@immersive/core";
 import React, { useEffect, useMemo, useState } from "react";
 import type {
   DriveAccount,
@@ -17,6 +19,11 @@ import { Disclosure } from "./disclosure";
 import { Alert, AlertDescription } from "./ui/alert";
 
 type Props = {
+  localCustom?: CustomContentSummary[];
+  cloudCustom?: CustomDriveSummary[];
+  onOpenCustom?: (id: string) => void;
+  onRestoreCustom?: (item: CustomDriveSummary) => Promise<void>;
+  onCreate?: () => void;
   localLessons: LessonSummary[];
   cloudLessons: DriveLessonSummary[];
   driveAccounts: DriveAccount[];
@@ -36,6 +43,11 @@ type Props = {
 
 /** The library is about studying; storage and pipeline details belong elsewhere. */
 export function VideoLibrary({
+  localCustom = [],
+  cloudCustom = [],
+  onOpenCustom,
+  onRestoreCustom,
+  onCreate,
   localLessons,
   cloudLessons,
   lessonsBusy,
@@ -48,9 +60,30 @@ export function VideoLibrary({
   onOpen,
   onRestore,
 }: Props) {
+  const customUi = customContentCopy(uiLocale);
+  const [contentType, setContentType] = useState("all");
   const ui = sidePanelLayoutCopy[uiLocale];
   const [language, setLanguage] = useState("all");
   const [search, setSearch] = useState("");
+  const customCatalog = useMemo(() => {
+    const entries = new Map<string, { local?: CustomContentSummary; drive?: CustomDriveSummary }>();
+    for (const item of cloudCustom) entries.set(item.documentId, { drive: item });
+    for (const item of localCustom)
+      entries.set(item.documentId, { ...entries.get(item.documentId), local: item });
+    return [...entries.values()]
+      .filter(item => {
+        const content = item.local ?? item.drive!;
+        return (
+          (language === "all" || language === "unspecified") &&
+          (content.title + " " + content.sourceTitle)
+            .toLocaleLowerCase()
+            .includes(search.trim().toLocaleLowerCase())
+        );
+      })
+      .sort((a, b) =>
+        (b.local ?? b.drive!).createdAt.localeCompare((a.local ?? a.drive!).createdAt),
+      );
+  }, [localCustom, cloudCustom, language, search]);
   const [refreshing, setRefreshing] = useState(false);
   const busy = lessonsBusy || refreshing;
   async function refresh() {
@@ -218,7 +251,11 @@ export function VideoLibrary({
         placeholder={t("lessonSearchPlaceholder")}
       />
       <div className="flex flex-wrap gap-1" role="group" aria-label={ui.filterLanguage}>
-        {["all", ...languages].map(code => (
+        {[
+          "all",
+          ...languages,
+          ...(localCustom.length || cloudCustom.length ? ["unspecified"] : []),
+        ].map(code => (
           <Button
             key={code}
             variant={language === code ? "secondary" : "ghost"}
@@ -228,9 +265,28 @@ export function VideoLibrary({
           >
             {code === "all"
               ? ui.allLanguages
-              : code in LEARNING_LANGUAGE_LABELS[uiLocale]
-                ? learningLanguageName(code as LearningLanguage, uiLocale)
-                : code}
+              : code === "unspecified"
+                ? customUi.unspecified
+                : code in LEARNING_LANGUAGE_LABELS[uiLocale]
+                  ? learningLanguageName(code as LearningLanguage, uiLocale)
+                  : code}
+          </Button>
+        ))}
+      </div>
+      <div role="group" aria-label={customUi.type} className="flex flex-wrap gap-1">
+        {[
+          ["all", customUi.all],
+          ["standard", customUi.standard],
+          ["custom", customUi.custom],
+        ].map(([value, label]) => (
+          <Button
+            key={value}
+            size="sm"
+            variant={contentType === value ? "secondary" : "ghost"}
+            aria-pressed={contentType === value}
+            onClick={() => setContentType(value)}
+          >
+            {label}
           </Button>
         ))}
       </div>
@@ -242,28 +298,71 @@ export function VideoLibrary({
           </Button>
         </Alert>
       )}
-      {!lessonsBusy && !catalogError && !groups.length && (
-        <p className="text-xs text-muted-foreground">
-          {t(search.trim() || language !== "all" ? "lessonSearchEmpty" : "lessonLibraryEmpty")}
-        </p>
+      {!lessonsBusy &&
+        !catalogError &&
+        !(contentType !== "custom" && groups.length) &&
+        !(contentType !== "standard" && customCatalog.length) && (
+          <p className="text-xs text-muted-foreground">
+            {t(search.trim() || language !== "all" ? "lessonSearchEmpty" : "lessonLibraryEmpty")}
+          </p>
+        )}
+      {onCreate && !catalog.length && !localCustom.length && !cloudCustom.length && !busy && (
+        <Button onClick={onCreate}>{customUi.createAction}</Button>
       )}
-      {groups.map(group =>
-        group.lessons.length === 1 ? (
-          lessonCard(group.lessons[0])
-        ) : (
-          <Disclosure
-            key={group.key}
-            title={
-              <>
-                {group.title} · {t("lessonGroupCount", { count: group.lessons.length })}
-              </>
-            }
-            defaultOpen={!!search.trim()}
-          >
-            <div className="grid gap-3 pt-2">{group.lessons.map(lessonCard)}</div>
-          </Disclosure>
-        ),
-      )}
+      {contentType !== "standard" &&
+        customCatalog.map(item => {
+          const content = item.local ?? item.drive!;
+          return (
+            <article
+              key={content.documentId}
+              className="grid gap-2 rounded-[var(--radius)] border border-border p-3"
+            >
+              <h3 className="text-sm font-semibold wrap-anywhere">{content.title}</h3>
+              <p className="text-xs text-muted-foreground">
+                {customUi.markdown} · {customUi.unspecified}
+              </p>
+              <p className="text-xs text-muted-foreground wrap-anywhere">{content.sourceTitle}</p>
+              <div className="flex justify-end">
+                {item.local ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onOpenCustom?.(content.documentId)}
+                  >
+                    {t("openLesson")}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={restoreBusy !== null}
+                    onClick={() => void (item.drive && onRestoreCustom?.(item.drive))}
+                  >
+                    {restoreBusy === content.documentId ? t("restoringLesson") : t("restoreLesson")}
+                  </Button>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      {contentType !== "custom" &&
+        groups.map(group =>
+          group.lessons.length === 1 ? (
+            lessonCard(group.lessons[0])
+          ) : (
+            <Disclosure
+              key={group.key}
+              title={
+                <>
+                  {group.title} · {t("lessonGroupCount", { count: group.lessons.length })}
+                </>
+              }
+              defaultOpen={!!search.trim()}
+            >
+              <div className="grid gap-3 pt-2">{group.lessons.map(lessonCard)}</div>
+            </Disclosure>
+          ),
+        )}
     </section>
   );
 }

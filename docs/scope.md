@@ -4,14 +4,15 @@
 
 - User-triggered YouTube and experimental Netflix subtitle acquisition when the active session exposes a readable track; SRT/VTT/text import remains available.
 - Bundled Pi SDK provider connections through OAuth or API keys, model selection and isolated generation sessions. Existing CLI login data is not read or changed.
-- One contextual V5 lesson format with complete original subtitle cues, grounded scenes, translations, pronunciation, focused expressions and examples. Selection and each scene have durable checkpoints.
-- A three-destination Side Panel: Create, Library and Settings. Library contains resumable V5 jobs, video-grouped lessons and the reader detail view.
+- One contextual V5 lesson format with original selected subtitle cues, grounded scenes, translations, pronunciation, focused expressions and examples. Selection and each scene have durable checkpoints.
+- A fixed Header and Create/Library navigation with four-category Settings and Activity. Create uses five steps, including timed analysis range selection. Library contains resumable jobs, video-grouped V5 lessons and independent custom Markdown content.
 - Native Host installation and folder pickers on macOS, Windows and Linux. Local JSON/Markdown publication, duplicate checks and optional Google Drive backup with explicit retry.
+- Independent `custom-v1` Prompt-to-Markdown generation, automatic segmentation/hierarchical integration, checkpoint recovery, a safe Viewer, Prompt reuse, new versions, rename, export and local deletion with retained backups.
 - User-triggered YouTube playback controls and experimental Netflix controls, subject to the site's available player APIs.
 
 ## Data and compatibility
 
-Canonical V5 documents and jobs live under `~/Documents/Immersive Learning/data-v5/`. Older V1/V2/V3/V4 development files stay at their original paths but are not loaded, resumed, migrated or automatically deleted. Older Drive lesson files remain untouched and are hidden from V5 library and duplicate checks. Pi and Drive credentials remain in their existing locations. Interface settings use only `preferencesV2`; older keys remain untouched and are never read or migrated. Extension and Host require Native Messaging protocol version 4 plus matching package version.
+Canonical V5 documents and jobs live under `~/Documents/Immersive Learning/data-v5/`; custom documents/jobs use the separate `custom-v1/` namespace. Older V1/V2/V3/V4 development files stay at their original paths but are not loaded, resumed, migrated or automatically deleted. Older Drive lesson files remain untouched and are hidden from V5 library and duplicate checks. Pi and Drive credentials remain in their existing locations. Interface settings use only `preferencesV2`; older keys remain untouched and are never read or migrated. Extension and Host require Native Messaging protocol version 5 plus matching package version.
 
 ## Limitations
 

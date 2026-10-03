@@ -244,10 +244,7 @@ function TimeField({
 }) {
   const [text, setText] = useState(formatRangeTime(value));
   useEffect(() => {
-    if (Number.isFinite(value))
-      setText(
-        formatRangeTime(value) + (value % 1000 ? `.${String(value % 1000).padStart(3, "0")}` : ""),
-      );
+    if (Number.isFinite(value)) setText(formatRangeTime(value));
   }, [value]);
   return (
     <Input

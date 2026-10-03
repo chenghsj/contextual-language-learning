@@ -4,6 +4,17 @@ import { usePlatformVideoNotice } from "./hooks/use-platform-video-notice";
 import { IconTooltip } from "./components/icon-tooltip";
 import { AnalysisRangePicker } from "./components/analysis-range";
 import { analysisRangeCopy } from "./i18n/analysis-range";
+import { CustomPrompt } from "./components/custom-prompt";
+import { CustomViewer, exportMarkdown } from "./components/custom-viewer";
+import { ExecutionDetails } from "./components/execution-details";
+import { customContentCopy, promptTemplates } from "./i18n/custom-content";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "./components/ui/dialog";
 import { HeaderActions } from "./components/header-actions";
 import { PageHeading } from "./components/page-heading";
 import { PageSection } from "./components/page-section";
@@ -21,6 +32,11 @@ import { Disclosure } from "./components/disclosure";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   withSentenceTiming,
+  CustomGenerationRequestSchema,
+  type CustomDocument,
+  type CustomContentSummary,
+  type CustomDriveSummary,
+  type ExecutionMetadata,
   timedCues,
   subtitleDuration,
   selectAnalysisCues,
@@ -62,7 +78,12 @@ import {
   videoSourceKey,
 } from "./video/caption-provenance";
 import { getActiveWindowTab } from "./video/tab";
-import { getDocument, nativeOnce as sendHostRequest, type OnceRequest } from "./native/host-client";
+import {
+  getDocument,
+  getCustomResource,
+  nativeOnce as sendHostRequest,
+  type OnceRequest,
+} from "./native/host-client";
 import { AiModelSelection } from "./components/ai-model-selection";
 import { PiSettings } from "./components/pi-settings";
 import { agentDisplayName } from "./i18n/agent-display";
@@ -70,7 +91,7 @@ import { piCopy } from "./i18n/pi";
 import { HostConnectionSettings } from "./components/host-connection-settings";
 import { hostConnectionCopy } from "./i18n/host-connection";
 import { isPiProviderId } from "./agent-selection";
-import { GenerationSession } from "./native/generation-session";
+import { GenerationSession, type GenerationState } from "./native/generation-session";
 import { AlertCircle } from "lucide-react";
 import { SidePanelNavigation, type SidePanelPage } from "./components/side-panel-navigation";
 import { Button } from "./components/ui/button";
@@ -128,7 +149,9 @@ export default function App() {
   const [settingsSection, setSettingsSection] = useState<
     "general" | "ai" | "storage" | "advanced" | null
   >(null);
-  const [returnPage, setReturnPage] = useState<"create" | "lessons" | "lesson">("create");
+  const [returnPage, setReturnPage] = useState<"create" | "lessons" | "lesson" | "custom">(
+    "create",
+  );
   const [editingVideo, setEditingVideo] = useState(false);
   const [generationServiceReady, setGenerationServiceReady] = useState(false);
   const [attentionNotificationsEnabled, setAttentionNotificationsEnabled] = useState(true);
@@ -211,11 +234,23 @@ export default function App() {
   } | null>(null);
   const [storageBusy, setStorageBusy] = useState(false);
   const [checking, setChecking] = useState(false);
-  const [duplicateWarning, setDuplicateWarning] = useState<{
-    payload: GenerationRequest;
-    token: string;
-    matches: DuplicateMatch[];
+  const [duplicateWarning, setDuplicateWarning] = useState<GenerationState["duplicate"]>(null);
+  const [contentMode, setContentMode] = useState<"standard" | "custom">("standard");
+  const [createStep, setCreateStep] = useState(0);
+  const [customPrompt, setCustomPrompt] = useState(
+    promptTemplates.summary + `\nWrite in ${browserLocale}.`,
+  );
+  const [customContext, setCustomContext] = useState({ subtitles: true, title: true });
+  const [customDocument, setCustomDocument] = useState<CustomDocument | null>(null);
+  const [localCustom, setLocalCustom] = useState<CustomContentSummary[]>([]);
+  const [cloudCustom, setCloudCustom] = useState<CustomDriveSummary[]>([]);
+  const [connection, setConnection] = useState<GenerationState["connection"]>();
+  const [executionDetails, setExecutionDetails] = useState<{
+    title: string;
+    execution: ExecutionMetadata | null;
+    markdown?: string;
   } | null>(null);
+  const customUi = customContentCopy(uiLocale);
   const [hydrated, setHydrated] = useState(false);
   const [repeat, setRepeat] = useState<RepeatOption>("3");
   const [delay, setDelay] = useState(1);
@@ -309,6 +344,14 @@ export default function App() {
       analysisSelection.endMs <= analysisDurationMs &&
       timedCues(cues) &&
       selectAnalysisCues(cues, analysisSelection).length > 0);
+  const allowedStep =
+    !cues.length || !title.trim() || !captionsReady
+      ? 0
+      : !analysisValid
+        ? 1
+        : contentMode === "custom" && !customPrompt.trim()
+          ? 3
+          : 4;
   const readerAdapter = getVideoAdapter(document?.source.url);
   const selectedDriveId = backup.accountId ?? driveAccounts[0]?.id;
   const driveAccessVerified =
@@ -319,7 +362,8 @@ export default function App() {
     installed !== null &&
     hostSdkMode &&
     hostProtocolVersion === HOST_PROTOCOL_VERSION &&
-    hostVersion === chrome.runtime.getManifest().version;
+    hostVersion === chrome.runtime.getManifest().version &&
+    !["failed", "incompatible", "reconnecting"].includes(connection?.status ?? "");
   useEffect(() => {
     let live = true;
     setDriveFolderUrl(null);
@@ -411,11 +455,19 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = generationSession.subscribe(event => {
       if (event.type === "state") {
+        setConnection(event.state.connection);
+        if (event.state.connection?.status === "ready") void loadJobs();
         setChecking(event.state.checking);
         setDuplicateWarning(event.state.duplicate);
         setGenerating(!!event.state.active);
         if (event.state.lastJobId) lastJobIdRef.current = event.state.lastJobId;
         if (event.state.active?.summary) updateJob(event.state.active.summary);
+        return;
+      }
+      if (event.type === "customDocument") {
+        setCustomDocument(event.document);
+        setPage("custom");
+        void loadLessons();
         return;
       }
       if (event.type === "document") {
@@ -989,7 +1041,10 @@ export default function App() {
     setError("");
     setPage("create");
     setProgress(t("statusResuming"));
-    generationSession.resume(input.jobId);
+    generationSession.resume(
+      input.jobId,
+      jobs.find(job => job.id === input.jobId)?.kind ?? "standard",
+    );
   }
 
   function startGeneration(): void {
@@ -1052,7 +1107,22 @@ export default function App() {
           : {}),
       });
       setProgress(t("checkingExisting"));
-      generationSession.start(payload);
+      generationSession.start(
+        contentMode === "custom"
+          ? CustomGenerationRequestSchema.parse({
+              id: payload.id,
+              kind: "custom",
+              source: payload.source,
+              agent: payload.agent,
+              cues: payload.cues,
+              analysisRange: payload.analysisRange,
+              destination: payload.destination,
+              backup: payload.backup,
+              prompt: customPrompt,
+              context: customContext,
+            })
+          : payload,
+      );
     } catch (cause) {
       setChecking(false);
       setError(cause instanceof Error ? cause.message : t("errorGenerationSettings"));
@@ -1072,6 +1142,9 @@ export default function App() {
       if (response.type !== "lessons") throw new Error("Unexpected lesson catalog response");
       if (version !== catalogLoadIdRef.current) return;
       setLocalLessons(response.lessons);
+      const custom = await nativeOnce({ id: crypto.randomUUID(), type: "listCustomDocuments" });
+      if (custom.type === "customDocuments" && version === catalogLoadIdRef.current)
+        setLocalCustom(custom.documents);
       const accountId = backup.accountId ?? driveAccounts[0]?.id;
       if (accountId) {
         try {
@@ -1082,6 +1155,13 @@ export default function App() {
           });
           if (cloud.type !== "driveLessons") throw new Error("Unexpected Drive catalog response");
           if (version === catalogLoadIdRef.current) setCloudLessons(cloud.lessons);
+          const customCloud = await nativeOnce({
+            id: crypto.randomUUID(),
+            type: "listCustomDriveDocuments",
+            accountId,
+          });
+          if (customCloud.type === "customDriveDocuments" && version === catalogLoadIdRef.current)
+            setCloudCustom(customCloud.documents);
         } catch (cause) {
           if (version === catalogLoadIdRef.current) {
             // Keep previously loaded cloud rows visible while the API is
@@ -1089,7 +1169,10 @@ export default function App() {
             setCatalogError(cause instanceof Error ? cause.message : t("lessonCatalogError"));
           }
         }
-      } else setCloudLessons([]);
+      } else {
+        setCloudLessons([]);
+        setCloudCustom([]);
+      }
     } catch (cause) {
       if (version === catalogLoadIdRef.current)
         setCatalogError(cause instanceof Error ? cause.message : t("lessonCatalogError"));
@@ -1185,13 +1268,112 @@ export default function App() {
   }, [hydrated, hostReady]);
 
   function openSavedDocument(documentId: string): void {
+    const kind = jobs.find(job => job.documentId === documentId || job.id === documentId)?.kind;
+    if (kind === "custom" || localCustom.some(doc => doc.documentId === documentId)) {
+      void openCustomDocument(documentId);
+      return;
+    }
+    // A notification can arrive before the catalog; resolve the document kind from storage.
+    if (!localLessons.some(doc => doc.documentId === documentId)) {
+      void getDocument(documentId)
+        .then(showDocument)
+        .catch(() => openCustomDocument(documentId));
+      return;
+    }
     fetchSavedDocument(documentId, showDocument);
   }
 
   useEffect(() => {
     generationSession.invalidatePreflight();
-  }, [raw, title, sourceUrl, profile, generationAgent, destination, backup]);
+  }, [
+    raw,
+    title,
+    sourceUrl,
+    profile,
+    generationAgent,
+    destination,
+    backup,
+    analysisSelection,
+    contentMode,
+    customPrompt,
+    customContext,
+  ]);
 
+  async function openCustomDocument(documentId: string) {
+    setStorageBusy(true);
+    try {
+      setCustomDocument(await getCustomResource("document", documentId));
+      setPage("custom");
+    } catch (error) {
+      setError(String(error));
+    } finally {
+      setStorageBusy(false);
+    }
+  }
+  async function restoreCustom(lesson: CustomDriveSummary) {
+    setRestoreBusy(lesson.documentId);
+    try {
+      await nativeOnce({
+        id: crypto.randomUUID(),
+        type: "restoreCustomDriveDocument",
+        accountId: lesson.accountId,
+        documentId: lesson.documentId,
+      });
+      await loadLessons();
+      await openCustomDocument(lesson.documentId);
+    } catch (error) {
+      setError(String(error));
+    } finally {
+      setRestoreBusy(null);
+    }
+  }
+  async function customMutation(
+    type: "renameCustomDocument" | "deleteCustomDocument",
+    title?: string,
+  ) {
+    if (!customDocument) return;
+    setStorageBusy(true);
+    try {
+      await nativeOnce(
+        type === "renameCustomDocument"
+          ? { id: crypto.randomUUID(), type, documentId: customDocument.id, title: title! }
+          : { id: crypto.randomUUID(), type, documentId: customDocument.id },
+      );
+      if (type === "renameCustomDocument")
+        setCustomDocument(await getCustomResource("document", customDocument.id));
+      else {
+        setCustomDocument(null);
+        setPage("lessons");
+      }
+      await loadLessons();
+    } catch (error) {
+      setError(String(error));
+      throw error;
+    } finally {
+      setStorageBusy(false);
+    }
+  }
+  const executionFocus = useRef<HTMLElement | null>(null);
+  async function showExecution(job: JobSummary) {
+    executionFocus.current =
+      window.document.activeElement instanceof HTMLElement ? window.document.activeElement : null;
+    try {
+      const response = await nativeOnce({
+        id: crypto.randomUUID(),
+        type: "getJobExecution",
+        jobId: job.id,
+      });
+      if (response.type !== "jobExecution") return;
+      let markdown: string | undefined;
+      if (job.kind === "custom" && job.phase === "saving" && job.status !== "completed") {
+        const saved = await getCustomResource("job", job.id);
+        markdown = saved.nodes.at(-1)?.output;
+      }
+      setExecutionDetails({ title: job.sourceTitle, execution: response.execution, markdown });
+    } catch (error) {
+      setError(String(error));
+    }
+  }
   function cancelGeneration(): void {
     generationSession.cancel();
     setProgress(t("statusCancelling"));
@@ -1242,12 +1424,14 @@ export default function App() {
           attentionCount={jobs.filter(job => ["waiting", "failed"].includes(job.status)).length}
           onActivity={() => {
             if (page === "activity") return;
-            if (page === "create" || page === "lessons" || page === "lesson") setReturnPage(page);
+            if (page === "create" || page === "lessons" || page === "lesson" || page === "custom")
+              setReturnPage(page);
             setPage("activity");
             loadJobs();
           }}
           onSettings={() => {
-            if (page === "create" || page === "lessons" || page === "lesson") setReturnPage(page);
+            if (page === "create" || page === "lessons" || page === "lesson" || page === "custom")
+              setReturnPage(page);
             setSettingsSection(null);
             setPage("settings");
           }}
@@ -1269,6 +1453,30 @@ export default function App() {
         }}
       />
 
+      {connection && ["reconnecting", "failed", "incompatible"].includes(connection.status) && (
+        <div
+          className="flex shrink-0 items-center justify-between gap-2 py-2 text-xs"
+          role="status"
+        >
+          <span>
+            {connection.status === "reconnecting"
+              ? `${customUi.reconnecting} · ${connection.attempt}/3`
+              : connection.status === "incompatible"
+                ? hostUi.updateNeeded
+                : customUi.connectionFailed}
+          </span>
+          {connection.status !== "reconnecting" && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={hostBusy}
+              onClick={() => void checkHost(true)}
+            >
+              {customUi.retry}
+            </Button>
+          )}
+        </div>
+      )}
       <div
         className={
           page === "lesson"
@@ -1280,32 +1488,43 @@ export default function App() {
           <main id="page-panel-create" aria-labelledby="page-nav-create" className="space-y-4 py-3">
             {generating ? (
               <GenerationStatus
+                kind={contentMode}
                 locale={uiLocale}
                 job={activeJob}
                 title={title}
                 progress={progress}
                 notificationsEnabled={analysisNotificationsEnabled}
                 onLibrary={() => setPage("lessons")}
+                onActivity={() => {
+                  setPage("activity");
+                  loadJobs();
+                }}
                 onCancel={cancelGeneration}
               />
             ) : (
               <>
-                {cues.length > 0 && (
-                  <PageSection framed>
-                    <AnalysisRangePicker
-                      cues={cues}
-                      value={analysisSelection}
-                      onChange={setAnalysisSelection}
-                      durationMs={analysisDurationMs}
-                      estimated={videoDurationMs === undefined}
-                      adapter={analysisAdapter}
-                      url={sourceUrl}
-                      locale={uiLocale}
-                      onError={setError}
-                    />
-                  </PageSection>
-                )}
-                <PageSection framed>
+                <nav aria-label={customUi.create} className="grid grid-cols-5 gap-1">
+                  {[
+                    flow.video,
+                    analysisRangeCopy(uiLocale).title,
+                    customUi.type,
+                    customUi.settings,
+                    customUi.create,
+                  ].map((label, index) => (
+                    <Button
+                      key={index}
+                      variant={createStep === index ? "secondary" : "ghost"}
+                      size="sm"
+                      className="h-auto min-h-12 whitespace-normal px-1 text-[11px]"
+                      aria-current={createStep === index ? "step" : undefined}
+                      disabled={index > allowedStep}
+                      onClick={() => setCreateStep(index)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </nav>
+                <PageSection framed hidden={createStep !== 0}>
                   <h2>{flow.video}</h2>
                   <div className="min-w-0 border-b border-border pb-4">
                     <strong className="block text-sm wrap-anywhere">
@@ -1635,11 +1854,49 @@ export default function App() {
                   </Disclosure>
                 </PageSection>
 
+                {cues.length > 0 && (
+                  <PageSection framed hidden={createStep !== 1}>
+                    <AnalysisRangePicker
+                      cues={cues}
+                      value={analysisSelection}
+                      onChange={setAnalysisSelection}
+                      durationMs={analysisDurationMs}
+                      estimated={videoDurationMs === undefined}
+                      adapter={analysisAdapter}
+                      url={sourceUrl}
+                      locale={uiLocale}
+                      onError={setError}
+                    />
+                  </PageSection>
+                )}
+                <PageSection framed hidden={createStep !== 2}>
+                  <h2>{customUi.type}</h2>
+                  <SelectField
+                    ariaLabel={customUi.type}
+                    value={contentMode}
+                    onValueChange={value => setContentMode(value as "standard" | "custom")}
+                    options={[
+                      { value: "standard", label: customUi.standard },
+                      { value: "custom", label: customUi.markdown },
+                    ]}
+                  />
+                </PageSection>
+                <PageSection framed hidden={createStep !== 3 || contentMode !== "custom"}>
+                  <h2>{customUi.settings}</h2>
+                  <CustomPrompt
+                    locale={uiLocale}
+                    prompt={customPrompt}
+                    onPrompt={setCustomPrompt}
+                    context={customContext}
+                    onContext={setCustomContext}
+                  />
+                </PageSection>
                 <PageSection
                   framed
+                  hidden={createStep !== 3 || contentMode !== "standard"}
                   className="[&_[data-ui=hint]]:my-[4px_9px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:min-h-8 [&_[data-ui=settingField]_[data-slot=select-trigger]]:w-full [&_[data-ui=advancedLessonSettings]]:mt-4 [&_[data-ui=advancedLessonSettings]>div]:border-b-0"
                 >
-                  <h2>{flow.learning}</h2>
+                  <h2>{customUi.settings}</h2>
                   <div className="my-3 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-x-4 gap-y-3 [&_[data-ui=settingField]]:m-0">
                     <div
                       className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
@@ -1831,8 +2088,8 @@ export default function App() {
                   </Disclosure>
                 </PageSection>
 
-                <PageSection framed>
-                  <h2>{flow.generate}</h2>
+                <PageSection framed hidden={createStep !== 4}>
+                  <h2>{customUi.create}</h2>
                   {duplicateWarning && (
                     <Alert
                       className="my-3 min-w-0 wrap-anywhere"
@@ -1900,12 +2157,14 @@ export default function App() {
                       </div>
                     </Alert>
                   )}
-                  <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere mt-[5px] mb-[14px]">
-                    {t("lessonContentSummary", {
-                      scenes: profile.sceneCount,
-                      examples: profile.contextualExampleCount ?? 2,
-                    })}
-                  </p>
+                  {contentMode === "standard" && (
+                    <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere mt-[5px] mb-[14px]">
+                      {t("lessonContentSummary", {
+                        scenes: profile.sceneCount,
+                        examples: profile.contextualExampleCount ?? 2,
+                      })}
+                    </p>
+                  )}
                   <GenerationService
                     locale={uiLocale}
                     selected={generationAgent}
@@ -1923,6 +2182,7 @@ export default function App() {
                     className="h-auto min-h-9 w-full px-3 py-2 text-center text-xs font-semibold leading-[1.4] whitespace-normal wrap-anywhere"
                     onClick={startGeneration}
                     disabled={
+                      (contentMode === "custom" && !customPrompt.trim()) ||
                       !analysisValid ||
                       !hostReady ||
                       !generationServiceReady ||
@@ -1944,6 +2204,24 @@ export default function App() {
                     {checking ? t("checkingExistingShort") : t("create")}
                   </Button>
                 </PageSection>
+                <div className="flex justify-between gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={createStep === 0}
+                    onClick={() => setCreateStep(step => step - 1)}
+                  >
+                    {customUi.previous}
+                  </Button>
+                  {createStep < 4 && (
+                    <Button
+                      disabled={createStep >= allowedStep}
+                      onClick={() => setCreateStep(step => step + 1)}
+                    >
+                      {customUi.next}
+                    </Button>
+                  )}
+                </div>
               </>
             )}
           </main>
@@ -1987,6 +2265,14 @@ export default function App() {
               />
             ))}
           <VideoLibrary
+            localCustom={localCustom}
+            cloudCustom={cloudCustom}
+            onOpenCustom={openCustomDocument}
+            onRestoreCustom={restoreCustom}
+            onCreate={() => {
+              setCreateStep(0);
+              setPage("create");
+            }}
             localLessons={localLessons}
             cloudLessons={cloudLessons}
             driveAccounts={driveAccounts}
@@ -2014,6 +2300,7 @@ export default function App() {
               onBack={() => setPage(returnPage)}
             />
             <TaskHistory
+              onDetails={showExecution}
               jobs={jobs}
               loadingJobs={loadingJobs}
               hostReady={hostReady}
@@ -2507,6 +2794,71 @@ export default function App() {
           </main>
         )}
 
+        {page === "custom" && customDocument && (
+          <main aria-labelledby="page-nav-lessons">
+            <Button variant="ghost" size="sm" onClick={() => setPage("lessons")}>
+              {t("lessonLibrary")}
+            </Button>
+            <CustomViewer
+              document={customDocument}
+              locale={uiLocale}
+              busy={storageBusy || generating}
+              onRename={title => customMutation("renameCustomDocument", title)}
+              onDelete={() => customMutation("deleteCustomDocument")}
+              onReuse={() => {
+                setContentMode("custom");
+                setCustomPrompt(customDocument.request.prompt);
+                setCustomContext(customDocument.request.context);
+                setCreateStep(0);
+                setPage("create");
+              }}
+              onRegenerate={() => {
+                const snapshot = CustomGenerationRequestSchema.parse({
+                  ...customDocument.request,
+                  id: crypto.randomUUID(),
+                  previousDocumentId: customDocument.id,
+                  agent: {
+                    ...customDocument.request.agent,
+                    provider: customDocument.execution.provider,
+                    modelId: customDocument.execution.modelId,
+                  },
+                });
+                setPage("create");
+                setCreateStep(4);
+                generationSession.start(snapshot, true);
+              }}
+            />
+          </main>
+        )}
+        <Dialog
+          open={!!executionDetails}
+          onOpenChange={open => {
+            if (!open) setExecutionDetails(null);
+          }}
+        >
+          <DialogContent
+            className="max-h-[85dvh] overflow-y-auto"
+            closeLabel={t("cancel")}
+            onCloseAutoFocus={event => {
+              event.preventDefault();
+              executionFocus.current?.focus();
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>{customUi.details}</DialogTitle>
+              <DialogDescription>{executionDetails?.title}</DialogDescription>
+            </DialogHeader>
+            <ExecutionDetails execution={executionDetails?.execution ?? null} locale={uiLocale} />
+            {executionDetails?.markdown && (
+              <Button
+                variant="outline"
+                onClick={() => exportMarkdown(executionDetails.markdown!, executionDetails.title)}
+              >
+                {customUi.exportMarkdown}
+              </Button>
+            )}
+          </DialogContent>
+        </Dialog>
         {page === "lesson" && (
           <main
             className="flex min-h-0 flex-1 flex-col"

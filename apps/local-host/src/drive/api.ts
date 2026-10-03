@@ -1,6 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import {
   readLearningDocument,
+  CustomDocumentSchema,
+  CustomDriveSummarySchema,
   type DriveLessonSummary,
   type DuplicateMatch,
   type GenerationRequest,
@@ -185,8 +187,8 @@ export async function validateDriveAccess(accountId: string): Promise<void> {
   await listFiles(accountId, "trashed = false", "id", 1, "驗證 Drive 權限");
 }
 
-function propertyMatch(key: string, value: string): string {
-  if (!/^[A-Za-z0-9]{1,80}$/.test(key) || !/^[a-f0-9]{64}$/.test(value)) {
+export function propertyMatch(key: string, value: string): string {
+  if (!/^[A-Za-z0-9]{1,80}$/.test(key) || !/^[A-Za-z0-9_-]{1,120}$/.test(value)) {
     throw new Error("Invalid Drive lookup property");
   }
   return "appProperties has { key='" + key + "' and value='" + value + "' }";
@@ -685,4 +687,193 @@ export async function getDriveDocument(
   if (document.id !== documentId)
     throw new DriveContentConflict("Drive lesson ID does not match requested ID");
   return document;
+}
+
+/** Custom files are immutable per document id, independently of V5 lessons. */
+async function customDriveFiles(accountId: string, documentId?: string) {
+  return listFiles(
+    accountId,
+    "trashed = false and " +
+      propertyMatch("immersiveSchemaVersion", "custom-v1") +
+      (documentId
+        ? " and " +
+          propertyMatch(
+            "immersiveDocumentKey",
+            createHash("sha256").update(documentId).digest("hex"),
+          )
+        : ""),
+    "id,name,appProperties,webViewLink",
+    1000,
+  );
+}
+export interface CustomDrivePorts {
+  files: typeof customDriveFiles;
+  fetch: typeof googleFetch;
+  folder(accountId: string, document: import("@immersive/core").CustomDocument): Promise<string>;
+  upload: typeof uploadFile;
+}
+const customDrivePorts: CustomDrivePorts = {
+  files: customDriveFiles,
+  fetch: googleFetch,
+  upload: uploadFile,
+  folder: async (accountId, document) =>
+    videoFolder(
+      accountId,
+      await appFolder(accountId),
+      document.request.source.title,
+      sourceKey(document.request.source, document.request.cues),
+    ),
+};
+async function checkedCustomBytes(
+  accountId: string,
+  file: DriveFile,
+  fetchFile = googleFetch,
+): Promise<Buffer> {
+  const response = await fetchFile(
+    accountId,
+    API + "/files/" + encodeURIComponent(file.id) + "?alt=media",
+  );
+  if (Number(response.headers.get("Content-Length") ?? 0) > 20_000_000)
+    throw new DriveContentConflict("Custom Drive file exceeds the restore limit");
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (
+    bytes.length > 20_000_000 ||
+    !file.appProperties?.immersiveContentHash ||
+    createHash("sha256").update(bytes).digest("hex") !== file.appProperties.immersiveContentHash
+  )
+    throw new DriveContentConflict(
+      "Custom Drive content changed outside the application; both versions are preserved",
+    );
+  return bytes;
+}
+export async function publishCustomDriveDocument(
+  accountId: string,
+  document: import("@immersive/core").CustomDocument,
+  ports = customDrivePorts,
+): Promise<string> {
+  const parsed = CustomDocumentSchema.parse(document),
+    files = await ports.files(accountId, parsed.id);
+  const folder = await ports.folder(accountId, parsed);
+  const { markdown, ...metadata } = parsed;
+  let url = "";
+  for (const format of ["md", "json"] as const) {
+    const text =
+      format === "md"
+        ? markdown
+        : JSON.stringify(
+            { ...metadata, markdownHash: createHash("sha256").update(markdown).digest("hex") },
+            null,
+            2,
+          );
+    const bytes = Buffer.from(text, "utf8"),
+      hash = createHash("sha256").update(bytes).digest("hex");
+    const matches = files.filter(file => file.appProperties?.immersiveFormat === format);
+    if (matches.length > 1)
+      throw new DriveContentConflict(
+        "Multiple custom Drive backups exist; no file was overwritten",
+      );
+    const properties = {
+      immersiveSchemaVersion: "custom-v1",
+      immersiveKind: "custom",
+      immersiveDocumentId: parsed.id,
+      immersiveDocumentKey: createHash("sha256").update(parsed.id).digest("hex"),
+      immersiveInputKey: parsed.execution.inputFingerprint,
+      immersiveFormat: format,
+      immersiveContentHash: hash,
+      immersiveTitle: boundedDriveProperty("immersiveTitle", parsed.title),
+      immersiveSourceTitle: boundedDriveProperty(
+        "immersiveSourceTitle",
+        parsed.request.source.title,
+      ),
+      immersiveCreatedAt: parsed.createdAt,
+    };
+    const file = matches[0];
+    if (file) {
+      if (!Buffer.from(await checkedCustomBytes(accountId, file, ports.fetch)).equals(bytes))
+        throw new DriveContentConflict(
+          "Saved custom Drive version differs; no file was overwritten",
+        );
+      if (format === "json")
+        url = file.webViewLink ?? `https://drive.google.com/file/d/${file.id}/view`;
+    } else {
+      const created = await ports.upload(
+        accountId,
+        folder,
+        `Custom-${parsed.id}.${format}`,
+        format === "md" ? "text/markdown" : "application/json",
+        bytes,
+        properties,
+      );
+      if (format === "json")
+        url = created.webViewLink ?? `https://drive.google.com/file/d/${created.id}/view`;
+    }
+  }
+  return url;
+}
+export async function listCustomDriveDocuments(
+  accountId: string,
+  ports = customDrivePorts,
+): Promise<import("@immersive/core").CustomDriveSummary[]> {
+  const files = (await ports.files(accountId)).filter(
+    file => file.appProperties?.immersiveFormat === "json",
+  );
+  const seen = new Set<string>();
+  return files.map(file => {
+    const properties = file.appProperties!,
+      id = properties.immersiveDocumentId;
+    if (seen.has(id)) throw new DriveContentConflict("Multiple custom Drive metadata files exist");
+    seen.add(id);
+    return CustomDriveSummarySchema.parse({
+      kind: "custom",
+      documentId: id,
+      title: properties.immersiveTitle,
+      sourceTitle: properties.immersiveSourceTitle,
+      createdAt: properties.immersiveCreatedAt,
+      accountId,
+      url: file.webViewLink ?? `https://drive.google.com/file/d/${file.id}/view`,
+    });
+  });
+}
+export async function getCustomDriveDocument(
+  accountId: string,
+  documentId: string,
+  ports = customDrivePorts,
+): Promise<import("@immersive/core").CustomDocument> {
+  const files = await ports.files(accountId, documentId);
+  const metadata = files.filter(file => file.appProperties?.immersiveFormat === "json"),
+    content = files.filter(file => file.appProperties?.immersiveFormat === "md");
+  if (metadata.length !== 1 || content.length !== 1)
+    throw new DriveContentConflict(
+      "Custom backup is incomplete or duplicated; no local content was replaced",
+    );
+  const json = JSON.parse(
+      (await checkedCustomBytes(accountId, metadata[0], ports.fetch)).toString("utf8"),
+    ),
+    markdown = (await checkedCustomBytes(accountId, content[0], ports.fetch)).toString("utf8");
+  if (json.markdownHash !== createHash("sha256").update(markdown).digest("hex"))
+    throw new DriveContentConflict("Custom backup pair does not match");
+  const doc = CustomDocumentSchema.parse({ ...json, markdown });
+  if (doc.id !== documentId) throw new DriveContentConflict("Custom backup identity differs");
+  return doc;
+}
+
+export async function findCustomDriveDuplicates(
+  accountId: string,
+  fingerprint: string,
+  ports = customDrivePorts,
+): Promise<import("@immersive/core").DuplicateMatch[]> {
+  const files = (await ports.files(accountId)).filter(
+    file =>
+      file.appProperties?.immersiveFormat === "json" &&
+      file.appProperties.immersiveInputKey === fingerprint,
+  );
+  return files.map(file => ({
+    documentId: file.appProperties!.immersiveDocumentId,
+    title: file.appProperties!.immersiveTitle,
+    createdAt: file.appProperties!.immersiveCreatedAt,
+    local: false,
+    destination: "drive",
+    exactSettings: true,
+    url: file.webViewLink ?? `https://drive.google.com/file/d/${file.id}/view`,
+  }));
 }

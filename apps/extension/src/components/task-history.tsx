@@ -1,3 +1,4 @@
+import { customContentCopy } from "../i18n/custom-content";
 import { layoutText, sidePanelLayoutCopy } from "../i18n/side-panel-layout";
 import { PageSection } from "./page-section";
 import React, { useEffect, useRef, useState } from "react";
@@ -31,6 +32,7 @@ type Props = {
   onRefresh: () => void;
   onResume: (id: string) => void;
   onOpen: (id: string) => void;
+  onDetails?: (job: JobSummary) => void | Promise<void>;
   onRetryPublication: (id: string) => Promise<void>;
   onRetryBackup: (id: string) => Promise<void>;
   onListEnded?: () => Promise<JobSummary[]>;
@@ -78,11 +80,21 @@ export function TaskHistory({
   onRefresh,
   onResume,
   onOpen,
+  onDetails,
   onRetryPublication,
   onRetryBackup,
   onListEnded,
   onDeleteRecords,
 }: Props) {
+  const customUi = customContentCopy(locale);
+  const phaseLabel = (job: JobSummary) =>
+    job.kind === "custom" && job.phase === "selecting"
+      ? customUi.merge
+      : job.kind === "custom" && job.phase === "creating"
+        ? customUi.segments
+        : job.phase
+          ? flow[job.phase]
+          : "";
   const ui = piCopy[locale];
   const flow = sidePanelLayoutCopy[locale];
   const [jobFilter, setJobFilter] = useState<JobFilter>("all");
@@ -275,8 +287,8 @@ export function TaskHistory({
                     })
                   : job.phase
                     ? job.status === "cancelled"
-                      ? layoutText(flow.cancelledAtPhase, { phase: flow[job.phase] })
-                      : flow[job.phase]
+                      ? layoutText(flow.cancelledAtPhase, { phase: phaseLabel(job) })
+                      : phaseLabel(job)
                     : new Date(job.updatedAt).toLocaleTimeString(locale, {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -287,6 +299,16 @@ export function TaskHistory({
                 className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
                 data-ui="actions"
               >
+                {onDetails && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={!hostReady}
+                    onClick={() => void onDetails(job)}
+                  >
+                    {customUi.details}
+                  </Button>
+                )}
                 {["queued", "waiting", "failed", "cancelled"].includes(job.status) &&
                   (!isPiProviderId(job.provider) ? (
                     <p className="text-muted-foreground">{ui.legacy}</p>
@@ -319,7 +341,7 @@ export function TaskHistory({
                     >
                       {t("openLesson")}
                     </Button>
-                    {job.publication?.status !== "published" && (
+                    {job.publication && job.publication.status !== "published" && (
                       <Button
                         variant="outline"
                         size="sm"

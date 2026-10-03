@@ -37,9 +37,11 @@ export function selectAnalysisCues(cues: SubtitleCue[], range?: RangeSelection):
 export function formatRangeTime(ms: number): string {
   if (!Number.isFinite(ms)) return "";
   const seconds = Math.floor(ms / 1000);
-  return [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60]
+  const clock = [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60]
     .map(value => String(value).padStart(2, "0"))
     .join(":");
+  const milliseconds = Math.round(ms) % 1000;
+  return clock + (milliseconds ? "." + String(milliseconds).padStart(3, "0") : "");
 }
 export function parseRangeTime(text: string): number {
   const match = /^(\d{2,}):([0-5]\d):([0-5]\d)(?:\.(\d{1,3}))?$/.exec(text);

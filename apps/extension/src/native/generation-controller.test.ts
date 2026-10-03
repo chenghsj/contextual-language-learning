@@ -499,3 +499,128 @@ test("a separate cancel request reports interruption without duplicating the lat
   app.native.onMessage.fire({ type: "error", id, message: "aborted" });
   assert.deepEqual(outcomes, ["interrupted"]);
 });
+
+test("reconnection waits 1/2/4 seconds, queries only and never replays generation", () => {
+  const onConnect = emitter<ReturnType<typeof fakePort>>();
+  const natives: ReturnType<typeof fakePort>[] = [];
+  const delays: number[] = [];
+  let retry: (() => void) | undefined;
+  const runtime = {
+    id: "immersive-extension-test",
+    onConnect,
+    getManifest: () => ({ version: "0.1.0" }),
+    connectNative: () => {
+      const native = fakePort("native");
+      natives.push(native);
+      return native;
+    },
+  } as unknown as typeof chrome.runtime;
+  installGenerationController(
+    runtime,
+    () => {},
+    () => {},
+    {
+      set: (callback, delay) => {
+        retry = callback;
+        delays.push(delay);
+        return 1 as unknown as ReturnType<typeof setTimeout>;
+      },
+      clear: () => {
+        retry = undefined;
+      },
+    },
+  );
+  const panel = fakePort(GENERATION_CONTROLLER_PORT);
+  onConnect.fire(panel);
+  panel.onMessage.fire({ type: "listJobs", id: randomUUID() });
+  const handshake = (native: ReturnType<typeof fakePort>) => {
+    const health = native.sent.find(item => (item as { type: string }).type === "health") as {
+      id: string;
+    };
+    native.onMessage.fire({
+      type: "health",
+      id: health.id,
+      installed: { openai: true },
+      agents: [{ id: "openai", label: "OpenAI", installed: true }],
+      protocolVersion: 5,
+      version: "0.1.0",
+      agentMode: "pi-sdk",
+    });
+  };
+  handshake(natives[0]);
+  // A lost mutating operation must fail once, then recovery uses fresh health and listJobs only.
+  panel.onMessage.fire({ type: "resumeCustom", id: randomUUID(), jobId: randomUUID() });
+  natives[0].disconnect();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    assert.ok(retry);
+    const scheduled = retry;
+    retry = undefined;
+    scheduled();
+    const native = natives.at(-1)!;
+    assert.deepEqual(
+      native.sent.map(item => (item as { type: string }).type),
+      ["health"],
+    );
+    handshake(native);
+    assert.deepEqual(
+      native.sent.map(item => (item as { type: string }).type),
+      ["health", "listJobs"],
+    );
+    const query = native.sent.at(-1) as { id: string };
+    native.onMessage.fire({ type: "error", id: query.id, message: "status unavailable" });
+  }
+  assert.deepEqual(delays, [1000, 2000, 4000]);
+  assert.ok(
+    panel.sent.some(item => {
+      const state = item as { connection?: { status: string } };
+      return state.connection?.status === "failed";
+    }),
+  );
+  assert.equal(natives.length, 4);
+  assert.equal(retry, undefined);
+  panel.disconnect();
+});
+
+test("custom completion survives panel closure and notifies once with its content kind", () => {
+  const completed: unknown[][] = [];
+  const app = setup((...values) => completed.push(values));
+  const panel = app.connectPanel(),
+    id = randomUUID(),
+    jobId = randomUUID();
+  panel.onMessage.fire({ id, type: "resumeCustom", jobId });
+  panel.disconnect();
+  assert.equal(app.native.disconnected, false);
+  const now = new Date().toISOString();
+  app.native.onMessage.fire({
+    id,
+    type: "job",
+    job: {
+      id: jobId,
+      kind: "custom",
+      provider: "openai",
+      sourceTitle: "Custom notes",
+      status: "completed",
+      createdAt: now,
+      updatedAt: now,
+      completed: 1,
+      total: 1,
+      documentId: jobId,
+    },
+  });
+  app.native.onMessage.fire({
+    id,
+    type: "customChunk",
+    resource: "document",
+    resourceId: jobId,
+    total: 1,
+    index: 0,
+    dataBase64: "e30=",
+  });
+  app.native.onMessage.fire({ id, type: "generationSettled" });
+  app.native.onMessage.fire({ id, type: "generationSettled" });
+  assert.deepEqual(completed, [[jobId, "Custom notes", jobId, "custom"]]);
+  assert.equal(
+    app.native.sent.some(value => (value as { type: string }).type === "cancelCustom"),
+    false,
+  );
+});

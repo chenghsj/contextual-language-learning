@@ -1,3 +1,4 @@
+import { findCustomDriveDuplicates } from "../drive/api";
 import { randomUUID } from "node:crypto";
 import {
   type HostRequest,
@@ -7,7 +8,7 @@ import {
 } from "@immersive/core";
 import { CustomJobManager } from "../jobs/custom-manager";
 import { customFingerprint } from "../generation/custom-pipeline";
-import type { CustomRepository } from "../storage/custom";
+import { contentHash, type CustomRepository } from "../storage/custom";
 
 export function deliverCustom(
   reply: (message: HostMessage) => void,
@@ -36,11 +37,12 @@ export function createCustomHandler(
   manager: CustomJobManager,
   reply: (message: HostMessage) => void,
   afterSave?: (document: CustomDocument, id: string) => Promise<void>,
+  findRemote = findCustomDriveDuplicates,
 ) {
   const checks = new Map<string, { fingerprint: string; ids: Set<string>; expires: number }>();
   async function duplicates(request: CustomGenerationRequest) {
     const fingerprint = customFingerprint(request);
-    return (await repository.listDocuments())
+    const local = (await repository.listDocuments())
       .filter(doc => doc.execution.inputFingerprint === fingerprint)
       .map(doc => ({
         documentId: doc.id,
@@ -50,6 +52,14 @@ export function createCustomHandler(
         destination: "local",
         exactSettings: true,
       }));
+    const remote =
+      request.backup?.enabled && request.backup.accountId
+        ? await findRemote(request.backup.accountId, fingerprint)
+        : [];
+    return [
+      ...local,
+      ...remote.filter(item => !local.some(doc => doc.documentId === item.documentId)),
+    ];
   }
   async function finish(id: string, document: CustomDocument) {
     deliverCustom(reply, id, "document", document.id, document);
@@ -65,7 +75,7 @@ export function createCustomHandler(
         const matches = await duplicates(request.payload),
           token = randomUUID();
         checks.set(token, {
-          fingerprint: customFingerprint(request.payload),
+          fingerprint: contentHash(JSON.stringify(request.payload)),
           ids: new Set(matches.map(doc => doc.documentId)),
           expires: Date.now() + 600000,
         });
@@ -78,7 +88,7 @@ export function createCustomHandler(
         if (
           !checked ||
           checked.expires < Date.now() ||
-          checked.fingerprint !== customFingerprint(request.payload)
+          checked.fingerprint !== contentHash(JSON.stringify(request.payload))
         )
           throw new Error("Check duplicates again after changing custom generation settings");
         const matches = await duplicates(request.payload);

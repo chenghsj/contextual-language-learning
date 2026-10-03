@@ -125,3 +125,77 @@ test("late chunk recovery delivers after settlement, but a newer job suppresses 
     app.session.dispose();
   }
 });
+
+test("custom generation freezes its prompt and preserves multi-chunk delivery across progress updates", () => {
+  const app = setup();
+  const payload = {
+    id: randomUUID(),
+    kind: "custom" as const,
+    source: document.source,
+    agent: document.generation,
+    cues: document.cues,
+    prompt: "Summarize the source",
+    context: { title: true, subtitles: true },
+    backup: { enabled: false },
+  };
+  app.session.start(payload, true);
+  const port = app.ports[0],
+    check = port.sent.at(-1)!;
+  assert.equal(check.type, "checkCustomDuplicates");
+  payload.prompt = "Changed draft";
+  port.receive({ id: check.id, type: "duplicates", token: randomUUID(), matches: [] });
+  const request = port.sent.at(-1)!;
+  assert.equal(request.type, "generateCustom");
+  const frozen = request.payload as typeof payload;
+  assert.equal(frozen.prompt, "Summarize the source");
+  assert.equal(request.confirmRegeneration, true);
+  const doc = {
+    schemaVersion: "custom-v1",
+    kind: "custom",
+    id: payload.id,
+    title: "Custom",
+    createdAt: document.createdAt,
+    request: frozen,
+    markdown: "# 自訂\n\nSafe content",
+    execution: {
+      workflowVersion: "custom-workflow-v1",
+      promptVersion: "custom-prompt-v1",
+      schemaVersion: "custom-v1",
+      inputFingerprint: "a".repeat(64),
+      provider: "openai",
+      modelId: "pinned",
+      contextWindow: 16384,
+      maxOutputTokens: 4096,
+      chunkPlan: [document.cues.map(cue => cue.id)],
+      calls: [],
+    },
+  };
+  const bytes = Buffer.from(JSON.stringify(doc)),
+    middle = Math.floor(bytes.length / 2);
+  port.receive({
+    id: payload.id,
+    type: "customChunk",
+    resource: "document",
+    resourceId: payload.id,
+    total: 2,
+    index: 0,
+    dataBase64: bytes.subarray(0, middle).toString("base64"),
+  });
+  port.receive({
+    type: "generationState",
+    active: { requestId: payload.id, jobId: payload.id, kind: "custom" },
+  });
+  port.receive({
+    id: payload.id,
+    type: "customChunk",
+    resource: "document",
+    resourceId: payload.id,
+    total: 2,
+    index: 1,
+    dataBase64: bytes.subarray(middle).toString("base64"),
+  });
+  assert.equal(app.events.filter(event => event.type === "customDocument").length, 1);
+  app.session.cancel();
+  assert.equal(port.sent.at(-1)?.type, "cancelCustom");
+  app.session.dispose();
+});

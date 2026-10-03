@@ -1,23 +1,32 @@
 import {
   GenerationRequestSchema,
+  CustomGenerationRequestSchema,
+  type CustomGenerationRequest,
+  type CustomDocument,
   type GenerationRequest,
   type HostMessage,
   type LearningDocument,
   type DuplicateMatch,
 } from "@immersive/core";
-import { getDocument, openHostStream, type HostStream } from "./host-client";
+import { getDocument, getCustomResource, openHostStream, type HostStream } from "./host-client";
+import { CustomChunkAssembler } from "./custom-chunks";
 import { DocumentChunkAssembler } from "./document-chunks";
 import type { GenerationControllerState } from "./generation-controller";
 
+export type GenerationInput = GenerationRequest | CustomGenerationRequest;
+const isCustom = (input: GenerationInput): input is CustomGenerationRequest =>
+  "kind" in input && input.kind === "custom";
 export type GenerationState = {
   active: GenerationControllerState["active"];
+  connection?: GenerationControllerState["connection"];
   lastJobId: string | null;
   checking: boolean;
-  duplicate: { payload: GenerationRequest; token: string; matches: DuplicateMatch[] } | null;
+  duplicate: { payload: GenerationInput; token: string; matches: DuplicateMatch[] } | null;
 };
 export type GenerationEvent =
   | { type: "state"; state: GenerationState }
   | { type: "document"; document: LearningDocument }
+  | { type: "customDocument"; document: CustomDocument }
   | HostMessage;
 
 function freezeRequest<T>(value: T): T {
@@ -38,7 +47,8 @@ export class GenerationSession {
     duplicate: null,
   };
   private listeners = new Set<(event: GenerationEvent) => void>();
-  private preflight: { id: string; payload: GenerationRequest } | null = null;
+  private preflight: { id: string; payload: GenerationInput; confirmed?: boolean } | null = null;
+  private customChunks = new CustomChunkAssembler();
   private chunks = new DocumentChunkAssembler();
   private delivered = new Set<string>();
   private deliveryRequestId: string | null = null;
@@ -65,21 +75,28 @@ export class GenerationSession {
         if (message.type === "generationState") {
           const active = message.active;
           if (active) this.deliveryRequestId = active.requestId;
-          if (active?.requestId !== this.state.active?.requestId)
+          if (active?.requestId !== this.state.active?.requestId) {
             this.chunks = new DocumentChunkAssembler();
-          this.update({ active, ...(active ? { lastJobId: active.jobId } : {}) });
+            this.customChunks = new CustomChunkAssembler();
+          }
+          this.update({
+            active,
+            connection: message.connection,
+            ...(active ? { lastJobId: active.jobId } : {}),
+          });
           return;
         }
         if (message.id === this.preflight?.id) {
           const payload = this.preflight.payload;
+          const confirmed = this.preflight.confirmed;
           this.preflight = null;
           this.update({ checking: false });
           if (message.type === "duplicates") {
-            if (message.matches.length)
+            if (message.matches.length && !confirmed)
               this.update({
                 duplicate: { payload, token: message.token, matches: message.matches },
               });
-            else this.generate(payload, message.token, false);
+            else this.generate(payload, message.token, !!confirmed);
           } else if (message.type === "error") this.emit(message);
           return;
         }
@@ -96,6 +113,14 @@ export class GenerationSession {
             else if (message.index === message.total - 1) void this.recover(message.documentId);
           } catch {
             void this.recover(message.documentId);
+          }
+        } else if (message.type === "customChunk") {
+          try {
+            const document = this.customChunks.push(message);
+            if (document && "markdown" in document) this.deliverCustom(message.id, document);
+            else if (message.index === message.total - 1) void this.recover(message.resourceId);
+          } catch {
+            void this.recover(message.resourceId);
           }
         } else this.emit(message);
       },
@@ -126,8 +151,13 @@ export class GenerationSession {
     if (!requestId || this.delivered.has(requestId) || this.recovering.has(requestId)) return;
     this.recovering.add(requestId);
     try {
-      const document = await getDocument(documentId, this.runtime);
-      if (this.deliveryRequestId === requestId) this.deliver(requestId, document);
+      if (this.state.active?.kind === "custom" || this.state.active?.summary?.kind === "custom") {
+        const document = await getCustomResource("document", documentId, this.runtime);
+        if (this.deliveryRequestId === requestId) this.deliverCustom(requestId, document);
+      } else {
+        const document = await getDocument(documentId, this.runtime);
+        if (this.deliveryRequestId === requestId) this.deliver(requestId, document);
+      }
     } catch (error) {
       if (this.deliveryRequestId === requestId)
         this.emit({ id: requestId, type: "error", message: String(error) });
@@ -140,16 +170,29 @@ export class GenerationSession {
     this.delivered.add(id);
     this.emit({ type: "document", document });
   }
-  start(input: GenerationRequest) {
+  private deliverCustom(id: string, document: CustomDocument) {
+    if (this.delivered.has(id)) return;
+    this.delivered.add(id);
+    this.emit({ type: "customDocument", document });
+  }
+  start(input: GenerationInput, confirmed = false) {
     if (this.state.active || this.state.checking) return;
     this.connect();
     this.deliveryRequestId = null;
     this.invalidatePreflight();
-    const payload = freezeRequest(GenerationRequestSchema.parse(structuredClone(input)));
+    const payload = freezeRequest(
+      isCustom(input)
+        ? CustomGenerationRequestSchema.parse(structuredClone(input))
+        : GenerationRequestSchema.parse(structuredClone(input)),
+    );
     const id = crypto.randomUUID();
-    this.preflight = { id, payload };
+    this.preflight = { id, payload, confirmed };
     this.update({ checking: true, duplicate: null });
-    this.connect().send({ id, type: "checkDuplicates", payload });
+    this.connect().send(
+      isCustom(payload)
+        ? { id, type: "checkCustomDuplicates", payload }
+        : { id, type: "checkDuplicates", payload },
+    );
   }
   confirmRegeneration() {
     if (!this.state.duplicate || this.state.active) return;
@@ -163,36 +206,58 @@ export class GenerationSession {
     this.preflight = null;
     this.update({ checking: false, duplicate: null });
   }
-  private generate(payload: GenerationRequest, token: string, confirm: boolean) {
+  private generate(payload: GenerationInput, token: string, confirm: boolean) {
     this.deliveryRequestId = payload.id;
     this.chunks = new DocumentChunkAssembler();
+    this.customChunks = new CustomChunkAssembler();
     this.update({
       duplicate: null,
-      active: { requestId: payload.id, jobId: payload.id },
+      active: {
+        requestId: payload.id,
+        jobId: payload.id,
+        ...(isCustom(payload) ? { kind: "custom" as const } : {}),
+      },
       lastJobId: payload.id,
     });
-    this.connect().send({
-      id: payload.id,
-      type: "generate",
-      payload,
-      checkToken: token,
-      confirmRegeneration: confirm,
-    });
+    this.connect().send(
+      isCustom(payload)
+        ? {
+            id: payload.id,
+            type: "generateCustom",
+            payload,
+            checkToken: token,
+            confirmRegeneration: confirm,
+          }
+        : {
+            id: payload.id,
+            type: "generate",
+            payload,
+            checkToken: token,
+            confirmRegeneration: confirm,
+          },
+    );
   }
-  resume(jobId: string) {
+  resume(jobId: string, kind: "standard" | "custom" = "standard") {
     if (this.state.active) return;
     this.connect();
     this.invalidatePreflight();
     const id = crypto.randomUUID();
     this.deliveryRequestId = id;
     this.chunks = new DocumentChunkAssembler();
-    this.update({ active: { requestId: id, jobId }, lastJobId: jobId });
-    this.connect().send({ type: "resume", id, jobId });
+    this.customChunks = new CustomChunkAssembler();
+    this.update({
+      active: { requestId: id, jobId, ...(kind === "custom" ? { kind } : {}) },
+      lastJobId: jobId,
+    });
+    this.connect().send({ type: kind === "custom" ? "resumeCustom" : "resume", id, jobId });
   }
   cancel() {
     if (this.state.active)
       this.connect().send({
-        type: "cancel",
+        type:
+          this.state.active.kind === "custom" || this.state.active.summary?.kind === "custom"
+            ? "cancelCustom"
+            : "cancel",
         id: crypto.randomUUID(),
         jobId: this.state.active.jobId,
       });

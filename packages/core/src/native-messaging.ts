@@ -1,4 +1,5 @@
-import { CustomContentSummarySchema } from "./custom";
+import { ExecutionMetadataSchema } from "./execution";
+import { CustomContentSummarySchema, CustomDriveSummarySchema } from "./custom";
 import { z } from "zod";
 import {
   DriveAccountSchema,
@@ -56,6 +57,11 @@ const base = z.object({ id });
 
 /** Validate untrusted messages at the Extension boundary before reading their fields. */
 export const HostMessageSchema = z.discriminatedUnion("type", [
+  base.extend({ type: z.literal("jobExecution"), execution: ExecutionMetadataSchema.nullable() }),
+  base.extend({
+    type: z.literal("customDriveDocuments"),
+    documents: z.array(CustomDriveSummarySchema).max(500),
+  }),
   base.extend({
     type: z.literal("customDocuments"),
     documents: z.array(CustomContentSummarySchema).max(500),
@@ -177,8 +183,19 @@ export function isCompatibleHostHealth(message: HostMessage): boolean {
 /** Worker-to-panel state is a separate transport message, never a Native Host business reply. */
 export const BackgroundGenerationStateSchema = z.object({
   type: z.literal("generationState"),
+  connection: z
+    .object({
+      status: z.enum(["reconnecting", "ready", "failed", "incompatible"]),
+      attempt: z.number().int().min(0).max(3),
+    })
+    .optional(),
   active: z
-    .object({ requestId: uuid, jobId: uuid, summary: JobSummarySchema.optional() })
+    .object({
+      requestId: uuid,
+      jobId: uuid,
+      kind: z.enum(["standard", "custom"]).optional(),
+      summary: JobSummarySchema.optional(),
+    })
     .nullable(),
 });
 export type BackgroundGenerationState = z.infer<typeof BackgroundGenerationStateSchema>;

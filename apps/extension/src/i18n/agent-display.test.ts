@@ -24,10 +24,7 @@ test("generation summary displays the selected model label or the honest CLI def
 
 test("generation screen shows a compact service summary before submitting and links to settings", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
-  const section = app.slice(
-    app.indexOf("<h2>{flow.generate}</h2>"),
-    app.indexOf("<TaskHistory jobs={jobs}"),
-  );
+  const section = app.slice(app.indexOf("<h2>{customUi.create}</h2>"), app.indexOf("<TaskHistory"));
   assert.match(section, /<GenerationService locale=\{uiLocale\}/);
   assert.ok(section.includes('setSettingsSection("ai")'));
   assert.ok(section.indexOf("<GenerationService") < section.indexOf("onClick={startGeneration}"));

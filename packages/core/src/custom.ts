@@ -105,3 +105,9 @@ export type CustomNode = z.infer<typeof CustomNodeSchema>;
 export type CustomJobSnapshot = z.infer<typeof CustomJobSnapshotSchema>;
 export type CustomDocument = z.infer<typeof CustomDocumentSchema>;
 export type CustomContentSummary = z.infer<typeof CustomContentSummarySchema>;
+
+export const CustomDriveSummarySchema = CustomContentSummarySchema.extend({
+  accountId: z.string().min(1).max(256),
+  url: z.string().url(),
+});
+export type CustomDriveSummary = z.infer<typeof CustomDriveSummarySchema>;

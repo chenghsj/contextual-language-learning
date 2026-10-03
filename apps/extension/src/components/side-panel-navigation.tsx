@@ -4,7 +4,7 @@ import type { MessageKey } from "../i18n/messages";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 
-export type SidePanelPage = "create" | "lessons" | "lesson" | "settings" | "activity";
+export type SidePanelPage = "create" | "lessons" | "lesson" | "settings" | "activity" | "custom";
 export type PrimaryPage = "create" | "lessons";
 type Tab = PrimaryPage;
 const tabs: { id: Tab; label: MessageKey; icon: typeof Library }[] = [
@@ -23,7 +23,11 @@ export function SidePanelNavigation({
 }) {
   if (page === "settings" || page === "activity") return null;
   const active =
-    page === "lesson" ? "lessons" : page === "create" || page === "lessons" ? page : "";
+    page === "lesson" || page === "custom"
+      ? "lessons"
+      : page === "create" || page === "lessons"
+        ? page
+        : "";
   return (
     <nav className="shrink-0 border-b border-border pb-2" aria-label={t("navLabel")}>
       <ul className="flex flex-wrap items-center gap-1">

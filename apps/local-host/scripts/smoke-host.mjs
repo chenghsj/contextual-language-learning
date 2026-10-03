@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -132,7 +132,11 @@ try {
   const agent = { provider: "openai", modelId: "" };
   const models = await send({ type: "agentModels", id: randomUUID(), settings: agent });
   assert.equal(models.source, "sdk");
-  assert.ok(models.models.length);
+  assert.deepEqual(
+    models.models,
+    [],
+    "Disconnected provider has no available authenticated models",
+  );
   const legacyModel = await send({ type: "agentModels", id: randomUUID(), settings: legacyAgent });
   assert.equal(legacyModel.type, "error");
   assert.ok(legacyModel.message.length);
@@ -224,8 +228,86 @@ try {
     ).schemaVersion,
     1,
   );
+  const customId = randomUUID();
+  const customRequest = {
+    id: customId,
+    kind: "custom",
+    source: { platform: "import", title: "Custom smoke" },
+    agent,
+    cues,
+    prompt: "Summarize",
+    context: { subtitles: true, title: true },
+    backup: { enabled: false },
+  };
+  const customCheck = await send({
+    id: randomUUID(),
+    type: "checkCustomDuplicates",
+    payload: customRequest,
+  });
+  assert.equal(customCheck.type, "duplicates");
+  assert.deepEqual(customCheck.matches, []);
+  const execution = {
+    workflowVersion: "custom-markdown-1",
+    promptVersion: "custom-prompt-1",
+    schemaVersion: "custom-v1",
+    inputFingerprint: "a".repeat(64),
+    provider: "openai",
+    modelId: "fixture",
+    contextWindow: 16384,
+    maxOutputTokens: 4096,
+    chunkPlan: [["cue-1"]],
+    calls: [],
+  };
+  const markdown = "# Native custom smoke\n\nSaved Markdown.";
+  const metadata = {
+    schemaVersion: "custom-v1",
+    kind: "custom",
+    id: customId,
+    title: "Custom smoke",
+    createdAt: new Date().toISOString(),
+    request: customRequest,
+    execution,
+    markdownHash: createHash("sha256").update(markdown).digest("hex"),
+  };
+  const customFolder = join(library, "custom-v1", "documents", customId);
+  await mkdir(customFolder, { recursive: true });
+  await writeFile(join(customFolder, "content.md"), markdown);
+  await writeFile(join(customFolder, "metadata.json"), JSON.stringify(metadata));
+  const customList = await send({ id: randomUUID(), type: "listCustomDocuments" });
+  assert.equal(customList.type, "customDocuments");
+  assert.equal(customList.documents[0].documentId, customId);
+  const customRead = await send({
+    id: randomUUID(),
+    type: "getCustomDocument",
+    documentId: customId,
+  });
+  assert.equal(customRead.type, "customChunk");
+  assert.equal(customRead.total, 1);
+  assert.equal(JSON.parse(Buffer.from(customRead.dataBase64, "base64")).markdown, markdown);
+  const customRename = await send({
+    id: randomUUID(),
+    type: "renameCustomDocument",
+    documentId: customId,
+    title: "Renamed custom smoke",
+  });
+  assert.equal(customRename.type, "customDocumentChanged");
+  assert.equal(
+    (await send({ id: randomUUID(), type: "listCustomDocuments" })).documents[0].title,
+    "Renamed custom smoke",
+  );
+  const customDelete = await send({
+    id: randomUUID(),
+    type: "deleteCustomDocument",
+    documentId: customId,
+  });
+  assert.equal(customDelete.type, "customDocumentChanged");
+  assert.deepEqual((await send({ id: randomUUID(), type: "listCustomDocuments" })).documents, []);
+  assert.equal(
+    (await send({ id: randomUUID(), type: "getJobExecution", jobId: randomUUID() })).execution,
+    null,
+  );
   process.stdout.write(
-    "Native Host V5 protocol, old data isolation and duplicate confirmation OK\n",
+    "Native Host V5/custom-v1 protocol, read/rename/delete, old data isolation and duplicate confirmation OK\n",
   );
 } finally {
   clearTimeout(deadline);

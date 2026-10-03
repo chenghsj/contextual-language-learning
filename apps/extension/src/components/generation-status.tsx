@@ -1,3 +1,4 @@
+import { customContentCopy } from "../i18n/custom-content";
 import React from "react";
 import { AlertCircle, Check, Circle, LoaderCircle } from "lucide-react";
 import type { JobSummary } from "@immersive/core";
@@ -11,6 +12,7 @@ import { Progress } from "./ui/progress";
 export function GenerationStatus({
   locale,
   job,
+  kind,
   title,
   progress,
   notificationsEnabled,
@@ -22,6 +24,7 @@ export function GenerationStatus({
 }: {
   locale: UiLocale;
   job?: JobSummary;
+  kind?: "standard" | "custom";
   title: string;
   progress: string;
   notificationsEnabled: boolean;
@@ -34,7 +37,12 @@ export function GenerationStatus({
   const ui = sidePanelLayoutCopy[locale],
     layout = settingsLayoutCopy[locale];
   const attention = job && ["waiting", "failed"].includes(job.status);
-  const phases = ["analyzing", "selecting", "creating", "saving"] as const;
+  const customUi = customContentCopy(locale);
+  const isCustom = (job?.kind ?? kind) === "custom";
+  const generationTitle = isCustom ? customUi.generationTitle : ui.generationTitle;
+  const phases: NonNullable<JobSummary["phase"]>[] = isCustom
+    ? ["creating", "selecting", "saving"]
+    : ["analyzing", "selecting", "creating", "saving"];
   const phase = phases.findIndex(phase => phase === job?.phase);
   const percent = job?.total ? Math.min(100, (100 * job.completed) / job.total) : 0;
   return (
@@ -44,7 +52,7 @@ export function GenerationStatus({
           ? "mb-3 grid gap-2 rounded-[var(--radius)] border border-border p-3"
           : "grid gap-4 py-8"
       }
-      aria-label={attention ? layout.needsAttention : ui.generationTitle}
+      aria-label={attention ? layout.needsAttention : generationTitle}
       aria-live="polite"
     >
       <h2 className="flex items-center gap-2 text-sm font-semibold">
@@ -53,7 +61,7 @@ export function GenerationStatus({
           ? job.status === "failed"
             ? layout.failed
             : layout.interrupted
-          : ui.generationTitle}
+          : generationTitle}
       </h2>
       <p className="text-sm wrap-anywhere">{job?.sourceTitle || title}</p>
       {!compact && phase >= 0 && (
@@ -68,7 +76,11 @@ export function GenerationStatus({
                   }
                   aria-hidden="true"
                 />
-                {ui[name]}
+                {isCustom && name === "creating"
+                  ? customUi.segments
+                  : isCustom && name === "selecting"
+                    ? customUi.merge
+                    : ui[name]}
               </li>
             );
           })}
@@ -96,9 +108,9 @@ export function GenerationStatus({
             {translate(locale, "resume")}
           </Button>
         )}
-        {compact && onActivity && (
+        {onActivity && (
           <Button variant="ghost" onClick={onActivity}>
-            {layout.activity}
+            {compact ? layout.activity : ui.details}
           </Button>
         )}
         {!compact && onCancel && (

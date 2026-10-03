@@ -86,3 +86,32 @@ test("completion and attention preferences are independent; test notification by
     else Reflect.deleteProperty(globalThis, "chrome");
   }
 });
+
+test("custom completion uses localized content wording and a durable viewer destination", async () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, "chrome");
+  const sent: { id: string; title: string }[] = [];
+  Object.defineProperty(globalThis, "chrome", {
+    configurable: true,
+    value: {
+      storage: {
+        local: {
+          get: async () => ({
+            preferencesV2: { ...defaultPreferences("zh-TW"), uiLocalePreference: "zh-TW" },
+          }),
+        },
+      },
+      runtime: { getURL: (path: string) => path },
+      notifications: {
+        create: async (id: string, copy: { title: string }) => sent.push({ id, title: copy.title }),
+      },
+    },
+  });
+  try {
+    const id = "00000000-0000-4000-8000-000000000001";
+    await notifyAnalysisComplete(id, "Custom notes", id, "custom");
+    assert.deepEqual(sent, [{ id: `lesson-complete:${id}`, title: "內容建立完成" }]);
+  } finally {
+    if (original) Object.defineProperty(globalThis, "chrome", original);
+    else Reflect.deleteProperty(globalThis, "chrome");
+  }
+});

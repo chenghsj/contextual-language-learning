@@ -23,8 +23,17 @@ export type GenerationControllerMessage = HostMessage | GenerationControllerStat
  */
 export function installGenerationController(
   runtime: typeof chrome.runtime = chrome.runtime,
-  onCompleted: (jobId: string, title: string, documentId?: string) => void = () => {},
+  onCompleted: (
+    jobId: string,
+    title: string,
+    documentId?: string,
+    kind?: "standard" | "custom",
+  ) => void = () => {},
   onAttention: (jobId: string, title: string, outcome: "interrupted" | "failed") => void = () => {},
+  reconnectTimers = {
+    set: (callback: () => void, delay: number) => setTimeout(callback, delay),
+    clear: (timer: ReturnType<typeof setTimeout>) => clearTimeout(timer),
+  },
 ): void {
   const clients = new Set<chrome.runtime.Port>();
   const pending = new Map<string, ForwardedRequest["type"]>();
@@ -36,6 +45,32 @@ export function installGenerationController(
   let host: chrome.runtime.Port | null = null;
   let active: GenerationControllerState["active"] = null;
 
+  let connection: GenerationControllerState["connection"];
+  let reconnectAttempt = 0;
+  let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+  let reconnectBlocked = false;
+  let recoveryQueryId = "";
+  function scheduleReconnect() {
+    if (!clients.size || reconnectBlocked || reconnectTimer) return;
+    if (reconnectAttempt >= 3) {
+      connection = { status: "failed", attempt: 3 };
+      broadcast(state());
+      return;
+    }
+    const delay = [1000, 2000, 4000][reconnectAttempt++];
+    connection = { status: "reconnecting", attempt: reconnectAttempt };
+    broadcast(state());
+    reconnectTimer = reconnectTimers.set(() => {
+      reconnectTimer = undefined;
+      if (!clients.size) return;
+      try {
+        const native = connectHost(true);
+        native.postMessage({ id: handshakeId, type: "health" });
+      } catch {
+        scheduleReconnect();
+      }
+    }, delay);
+  }
   let cancellationRequested = false;
   let delivered = false;
   let deliveredDocumentId: string | undefined;
@@ -50,7 +85,11 @@ export function installGenerationController(
   }
 
   function state(): GenerationControllerState {
-    return { type: "generationState", active: active ? { ...active } : null };
+    return {
+      type: "generationState",
+      active: active ? { ...active } : null,
+      ...(connection ? { connection } : {}),
+    };
   }
 
   function broadcast(message: GenerationControllerMessage): void {
@@ -72,8 +111,13 @@ export function installGenerationController(
     idle.disconnect();
   }
 
-  function connectHost(): chrome.runtime.Port {
+  function connectHost(recovering = false): chrome.runtime.Port {
     if (host) return host;
+    if (!recovering) {
+      if (reconnectTimer) reconnectTimers.clear(reconnectTimer);
+      reconnectTimer = undefined;
+      reconnectBlocked = false;
+    }
     const native = runtime.connectNative(HOST_NAME);
     host = native;
     ready = false;
@@ -82,6 +126,8 @@ export function installGenerationController(
       if (host !== native) return;
       const parsed = HostMessageSchema.safeParse(raw);
       if (!parsed.success) {
+        reconnectBlocked = true;
+        connection = { status: "incompatible", attempt: reconnectAttempt };
         const reason =
           "Native Host returned an invalid response. Update the Host and resume from task history.";
         for (const id of pending.keys()) broadcast({ id, type: "error", message: reason });
@@ -102,6 +148,8 @@ export function installGenerationController(
           message.agentMode !== "pi-sdk" ||
           (version && message.version !== version)
         ) {
+          reconnectBlocked = true;
+          connection = { status: "incompatible", attempt: reconnectAttempt };
           // Health is diagnostic: retain the installed Host's metadata even when
           // business requests are blocked, so the panel can explain the mismatch.
           for (const [id, type] of pending) {
@@ -124,6 +172,19 @@ export function installGenerationController(
           return;
         }
         ready = true;
+        if (recovering) {
+          recoveryQueryId = crypto.randomUUID();
+          pending.set(recoveryQueryId, "listJobs");
+          native.postMessage({ id: recoveryQueryId, type: "listJobs" });
+          if (recoveryQueryId)
+            handshakeTimer = setTimeout(() => {
+              if (host === native && recoveryQueryId) native.disconnect();
+            }, 10_000);
+        } else if (connection) {
+          reconnectAttempt = 0;
+          connection = { status: "ready", attempt: 0 };
+          broadcast(state());
+        }
         const queued = outbox;
         outbox = [];
         for (const request of queued) {
@@ -134,6 +195,18 @@ export function installGenerationController(
         }
         disconnectIdleHost();
         return;
+      }
+      if (message.id === recoveryQueryId && message.type === "error") {
+        recoveryQueryId = "";
+        native.disconnect();
+        return;
+      }
+      if (message.id === recoveryQueryId && message.type === "jobs") {
+        clearTimeout(handshakeTimer);
+        reconnectAttempt = 0;
+        connection = { status: "ready", attempt: 0 };
+        recoveryQueryId = "";
+        broadcast(state());
       }
       const type = pending.get(message.id);
 
@@ -181,7 +254,12 @@ export function installGenerationController(
           if (active.summary?.status === "completed" && deliveredDocumentId) {
             delivered = true;
             try {
-              onCompleted(active.jobId, active.summary.sourceTitle, deliveredDocumentId);
+              onCompleted(
+                active.jobId,
+                active.summary.sourceTitle,
+                deliveredDocumentId,
+                active.kind ?? active.summary.kind,
+              );
             } catch {
               /* Notification failures must not interrupt task completion. */
             }
@@ -240,6 +318,7 @@ export function installGenerationController(
       pending.clear();
       active = null;
       broadcast(state());
+      scheduleReconnect();
     });
     handshakeTimer = setTimeout(() => {
       if (host === native && !ready) native.disconnect();
@@ -344,6 +423,9 @@ export function installGenerationController(
           deliveredDocumentId = undefined;
           active = {
             requestId: request.id,
+            ...(request.type === "generateCustom" || request.type === "resumeCustom"
+              ? { kind: "custom" as const }
+              : {}),
             jobId:
               request.type === "generate" || request.type === "generateCustom"
                 ? request.payload.id
@@ -384,6 +466,10 @@ export function installGenerationController(
 
     client.onDisconnect.addListener(() => {
       clients.delete(client);
+      if (!clients.size && reconnectTimer) {
+        reconnectTimers.clear(reconnectTimer);
+        reconnectTimer = undefined;
+      }
       for (const [id, owner] of authOwners) {
         if (owner !== client) continue;
         authOwners.delete(id);
