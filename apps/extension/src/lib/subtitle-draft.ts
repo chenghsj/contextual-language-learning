@@ -1,6 +1,7 @@
 import {
   parseSubtitles,
   parsePlainText,
+  formatRangeTime,
   LEARNING_LANGUAGES,
   type LearningLanguage,
   type SubtitleCue,
@@ -35,6 +36,15 @@ import { translate, type UiLocale } from "../i18n/messages";
 export type SelectedVideo = { tabId: number; windowId: number; url: string; title: string };
 export type SubtitleDraftState = {
   raw: string;
+  originalRaw: string;
+  edited: boolean;
+  pendingCaption: {
+    raw: string;
+    source: CaptionProvenance;
+    url: string;
+    title: string;
+    fileName: string;
+  } | null;
   fileName: string;
   sourceUrl: string;
   title: string;
@@ -73,6 +83,9 @@ export const browserSubtitleAdapters = {
 export class SubtitleDraft {
   private state: SubtitleDraftState = {
     raw: "",
+    originalRaw: "",
+    edited: false,
+    pendingCaption: null,
     fileName: "",
     sourceUrl: "",
     title: "",
@@ -93,7 +106,17 @@ export class SubtitleDraft {
     cues: [],
   };
   private listeners = new Set<(state: SubtitleDraftState) => void>();
-  private cache = new Map<string, { raw: string; fileName: string; source: CaptionProvenance }>();
+  private cache = new Map<
+    string,
+    {
+      raw: string;
+      originalRaw?: string;
+      cues?: SubtitleCue[];
+      fileName: string;
+      source: CaptionProvenance;
+    }
+  >();
+  private revisions: { key: string; raw: string; originalRaw: string; cues: SubtitleCue[] }[] = [];
   private metadataVersion = 0;
   private captionVersion = 0;
   private trackVersion = 0;
@@ -135,7 +158,16 @@ export class SubtitleDraft {
   }
   private update(next: Partial<SubtitleDraftState>) {
     const state = { ...this.state, ...next };
-    state.cues = state.raw.includes("-->") ? parseSubtitles(state.raw) : parsePlainText(state.raw);
+    if (next.raw !== undefined) {
+      state.cues =
+        next.cues ??
+        (state.raw.includes("-->") ? parseSubtitles(state.raw) : parsePlainText(state.raw));
+      state.originalRaw = next.originalRaw ?? (next.cues ? state.originalRaw : state.raw);
+      const original = state.originalRaw.includes("-->")
+        ? parseSubtitles(state.originalRaw)
+        : parsePlainText(state.originalRaw);
+      state.edited = JSON.stringify(state.cues) !== JSON.stringify(original);
+    }
     state.ready =
       state.cues.length > 0 &&
       state.cues.length <= 3000 &&
@@ -143,7 +175,115 @@ export class SubtitleDraft {
       state.cues.reduce((count, cue) => count + cue.originalText.length, 0) <= 220000 &&
       isCurrentCaption(state.captionSource, this.language, state.sourceUrl);
     this.state = state;
+    if (state.ready && !state.subtitleBusy && state.captionSource)
+      this.cache.set(captionCacheKey(state.sourceUrl, this.language), {
+        raw: state.raw,
+        originalRaw: state.originalRaw,
+        cues: state.cues,
+        fileName: state.fileName,
+        source: state.captionSource,
+      });
     for (const listener of this.listeners) listener(state);
+  }
+  editCue(
+    id: string,
+    changes: Pick<SubtitleCue, "originalText" | "startMs" | "endMs">,
+    duration?: number,
+  ) {
+    if (!this.state.ready || !this.state.cues.some(cue => cue.id === id))
+      throw new Error(this.subtitleUi.unavailable);
+    const { startMs, endMs, originalText } = changes;
+    if (
+      !originalText.trim() ||
+      originalText.length > 1500 ||
+      (startMs === null) !== (endMs === null) ||
+      (startMs !== null &&
+        endMs !== null &&
+        (!Number.isInteger(startMs) ||
+          !Number.isInteger(endMs) ||
+          startMs < 0 ||
+          startMs >= endMs ||
+          (duration !== undefined && endMs > duration)))
+    )
+      throw new Error("Invalid subtitle text or timing");
+    const cues = this.state.cues.map(cue => (cue.id === id ? { ...cue, ...changes } : cue));
+    if (cues.reduce((sum, cue) => sum + cue.originalText.length, 0) > 220000)
+      throw new Error("Subtitle size limit exceeded");
+    const clock = (ms: number) => {
+      const value = formatRangeTime(ms);
+      return value.includes(".") ? value : value + ".000";
+    };
+    const raw = cues
+      .map((cue, index) =>
+        cue.startMs === null
+          ? cue.originalText
+          : `${index + 1}\n${clock(cue.startMs)} --> ${clock(cue.endMs!)}\n${cue.originalText}`,
+      )
+      .join("\n\n");
+    ++this.captionVersion;
+    this.update({ raw, cues, originalRaw: this.state.originalRaw, subtitleBusy: false });
+  }
+  restoreOriginal() {
+    this.update({ raw: this.state.originalRaw, pendingCaption: null });
+  }
+  resolveCaption(useNew: boolean) {
+    const next = this.state.pendingCaption;
+    if (!next) return;
+    ++this.captionVersion;
+    if (useNew) {
+      this.revisions.push({
+        key: captionCacheKey(this.state.sourceUrl, this.language),
+        raw: this.state.raw,
+        originalRaw: this.state.originalRaw,
+        cues: this.state.cues,
+      });
+      this.revisions = this.revisions.slice(-10);
+    }
+    if (useNew)
+      this.update({
+        raw: next.raw,
+        captionSource: next.source,
+        sourceUrl: next.url,
+        title: next.title || this.state.title,
+        fileName: next.fileName,
+        pendingCaption: null,
+        subtitleTone: "success",
+        subtitleStatus: "",
+      });
+    else this.update({ pendingCaption: null });
+  }
+  exportSaved() {
+    return {
+      version: 1 as const,
+      entries: [...this.cache.entries()],
+      revisions: this.revisions,
+      latest: { sourceUrl: this.state.sourceUrl, title: this.state.title, language: this.language },
+    };
+  }
+  hydrateSaved(saved: ReturnType<SubtitleDraft["exportSaved"]>) {
+    if (saved?.version !== 1 || !Array.isArray(saved.entries)) return;
+    this.revisions = saved.revisions ?? [];
+    for (const [key, value] of saved.entries)
+      if (typeof key === "string" && value && typeof value.raw === "string" && value.source)
+        this.cache.set(key, value);
+    // A manually owned source survives an unrelated selected browser tab.
+    const latest = saved.latest;
+    const manual = this.cache.get(captionCacheKey(latest.sourceUrl, latest.language));
+    const restoreManual = manual?.source.origin === "manual";
+    const sourceUrl = restoreManual ? latest.sourceUrl : this.state.sourceUrl || latest.sourceUrl;
+
+    const cached = this.cache.get(captionCacheKey(sourceUrl, this.language));
+    if (cached && !this.state.raw)
+      this.update({
+        raw: cached.raw,
+        originalRaw: cached.originalRaw ?? cached.raw,
+        cues: cached.cues,
+        captionSource: cached.source,
+        fileName: cached.fileName,
+        sourceUrl,
+        title: sourceUrl === latest.sourceUrl ? latest.title : this.state.title,
+        subtitleTone: "success",
+      });
   }
   setTitle(title: string) {
     ++this.metadataVersion;
@@ -206,6 +346,9 @@ export class SubtitleDraft {
       this.manualTitle = false;
       this.update({
         raw: cached?.raw ?? "",
+        originalRaw: cached?.originalRaw ?? cached?.raw ?? "",
+        cues: cached?.cues,
+        pendingCaption: null,
         fileName: cached?.fileName ?? "",
         captionSource: cached?.source ?? null,
         sourceUrl: activeVideo.url,
@@ -354,6 +497,9 @@ export class SubtitleDraft {
     if (cached) {
       this.update({
         raw: cached.raw,
+        originalRaw: cached.originalRaw ?? cached.raw,
+        cues: cached.cues,
+        pendingCaption: null,
         fileName: cached.fileName,
         captionSource: cached.source,
         metadataBusy: false,
@@ -414,7 +560,8 @@ export class SubtitleDraft {
       return;
     const request = ++this.captionVersion;
     let attemptedUrl = "";
-    this.set("captionSource", null);
+    const previousCaption = this.state.captionSource;
+    if (!this.state.edited) this.set("captionSource", null);
     this.set("subtitleBusy", true);
     this.set("subtitleTone", "loading");
     this.set(
@@ -482,6 +629,25 @@ export class SubtitleDraft {
         origin: "video",
         actualLanguage: fetched.language,
       };
+      if (
+        this.state.edited &&
+        previousCaption?.language === language &&
+        previousCaption.sourceKey === source.sourceKey
+      ) {
+        this.update({
+          pendingCaption: {
+            raw: fetched.text,
+            source,
+            url: actualUrl,
+            title: videoTitle ?? "",
+            fileName: "",
+          },
+          captionSource: previousCaption,
+          subtitleTone: "success",
+          subtitleStatus: "",
+        });
+        return;
+      }
       this.cache.set(captionCacheKey(actualUrl, language), {
         raw: fetched.text,
         fileName: "",
@@ -563,6 +729,18 @@ export class SubtitleDraft {
       sourceKey: videoSourceKey(this.state.sourceUrl),
       language: this.language,
     };
+    if (this.state.edited) {
+      this.update({
+        pendingCaption: {
+          raw: text,
+          source,
+          url: this.state.sourceUrl,
+          title: this.state.title,
+          fileName: "",
+        },
+      });
+      return;
+    }
     this.set("raw", text);
     this.set("captionSource", source);
     this.set("fileName", "");
@@ -603,11 +781,27 @@ export class SubtitleDraft {
       return;
     }
     if (request !== this.captionVersion) return;
+    if (/\.(srt|vtt)$/i.test(file.name) && !parseSubtitles(text).length) {
+      this.set("error", this.subtitleUi.unavailable);
+      return;
+    }
     const source: CaptionProvenance = {
       origin: "manual",
       sourceKey: videoSourceKey(this.state.sourceUrl),
       language: this.language,
     };
+    if (this.state.edited) {
+      this.update({
+        pendingCaption: {
+          raw: text,
+          source,
+          url: this.state.sourceUrl,
+          title: this.state.title,
+          fileName: file.name,
+        },
+      });
+      return;
+    }
     this.cache.set(captionCacheKey(this.state.sourceUrl, this.language), {
       raw: text,
       fileName: file.name,

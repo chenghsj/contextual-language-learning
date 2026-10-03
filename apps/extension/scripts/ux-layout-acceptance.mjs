@@ -25,7 +25,43 @@ try {
       const wizard = page.locator("#page-panel-create");
       assert.equal(await wizard.locator("nav button").count(), 3);
       assert.equal(await wizard.locator("nav button").nth(1).isDisabled(), true);
-      await page.getByRole("button", { name: "取得字幕", exact: true }).click();
+      await page.locator('[data-ui="subtitleState"][data-state="ready"]').waitFor();
+      const range = page.locator('section[aria-label="分析範圍"]');
+      assert.equal(await range.getByRole("slider").count(), 0);
+      await range.getByRole("combobox").click();
+      await page.getByRole("option", { name: "自訂", exact: true }).click();
+      assert.equal(await range.getByRole("slider").count(), 2);
+      await range.getByRole("textbox", { name: "開始", exact: true }).fill("00:00:40");
+      assert.equal(
+        await page.getByRole("button", { name: "下一步", exact: true }).isDisabled(),
+        true,
+      );
+      await range.getByRole("textbox", { name: "開始", exact: true }).fill("00:00:05");
+      await range.getByRole("textbox", { name: "結束", exact: true }).fill("00:00:15");
+      await page.getByRole("button", { name: "預覽字幕", exact: true }).click();
+      const editor = page.locator("[data-ui=subtitle-editor]");
+      await editor.waitFor();
+      assert.equal(await wizard.locator("footer").isVisible(), false);
+      assert.ok((await editor.locator("ol li").count()) < 60);
+      await editor.getByRole("button", { name: "修改", exact: true }).first().click();
+      await page
+        .getByRole("textbox", { name: "字幕文字", exact: true })
+        .fill("Edited caption retained on reopen.");
+      await page.getByRole("dialog").getByRole("button", { name: "完成", exact: true }).click();
+      await editor.getByRole("textbox", { name: "搜尋字幕", exact: true }).fill("Edited caption");
+      assert.equal(await editor.locator("ol li").count(), 1);
+      await editor.getByRole("button", { name: "← 影片", exact: true }).click();
+      await page.getByRole("button", { name: "重新取得", exact: true }).click();
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { name: "保留既有編輯", exact: true })
+        .click();
+      await page.waitForTimeout(350);
+      await page.reload();
+      await page.locator('[data-ui="subtitleState"][data-state="ready"]').waitFor();
+      await page.getByRole("button", { name: "預覽字幕", exact: true }).click();
+      assert.match(await editor.innerText(), /Edited caption retained on reopen/);
+      await editor.getByRole("button", { name: "← 影片", exact: true }).click();
       await page.getByRole("button", { name: "下一步", exact: true }).click();
       await page.getByRole("tab", { name: "自訂 Markdown", exact: true }).click();
       await page
@@ -33,6 +69,15 @@ try {
         .fill("Test retained prompt.");
       await page.getByRole("tab", { name: "標準教材", exact: true }).click();
       await page.getByRole("tab", { name: "自訂 Markdown", exact: true }).click();
+      assert.equal(
+        await page.getByRole("textbox", { name: "Prompt", exact: true }).inputValue(),
+        "Test retained prompt.",
+      );
+      await page.waitForTimeout(350);
+      await page.reload();
+      await page.waitForFunction(
+        () => document.querySelector('[aria-current="step"]')?.textContent === "設定",
+      );
       assert.equal(
         await page.getByRole("textbox", { name: "Prompt", exact: true }).inputValue(),
         "Test retained prompt.",

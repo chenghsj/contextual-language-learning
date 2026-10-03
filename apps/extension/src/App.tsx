@@ -1,3 +1,7 @@
+import { useCreateDraft } from "./hooks/use-create-draft";
+import { draftRevision, type CreateDraft } from "./lib/create-draft";
+import { readDraft, writeDraft } from "./lib/draft-db";
+import { SubtitleEditor } from "./components/subtitle-editor";
 import { RequestModelSelection } from "./components/request-model-selection";
 import { createFlowCopy } from "./i18n/create-flow";
 import { Sheet, SheetContent, SheetTitle } from "./components/ui/sheet";
@@ -281,10 +285,12 @@ export default function App() {
   const lastJobSummaryRef = useRef<JobSummary | null>(null);
   const catalogLoadIdRef = useRef(0);
 
-  const { draft: subtitleDraft, state: draftState } = useSubtitleDraft(
-    profile.targetLanguage,
-    uiLocale,
-  );
+  const {
+    draft: subtitleDraft,
+    state: draftState,
+    saveStatus: subtitleSaveStatus,
+    loaded: subtitlesLoaded,
+  } = useSubtitleDraft(profile.targetLanguage, uiLocale);
   const {
     raw,
     fileName,
@@ -311,6 +317,36 @@ export default function App() {
   useEffect(() => {
     if (draftState.error) setError(draftState.error);
   }, [draftState.error]);
+  const autoCaptionAttempts = useRef(new Set<string>());
+  useEffect(() => {
+    if (
+      !subtitlesLoaded ||
+      subtitleBusy ||
+      metadataBusy ||
+      raw.trim() ||
+      subtitleReaderBlocked ||
+      checking
+    )
+      return;
+    const key = captionCacheKey(sourceUrl, profile.targetLanguage);
+    if (
+      !sourceUrl ||
+      !getVideoAdapter(sourceUrl).fetchSubtitles ||
+      autoCaptionAttempts.current.has(key)
+    )
+      return;
+    autoCaptionAttempts.current.add(key);
+    void subtitleDraft.fetchSubtitles();
+  }, [
+    subtitlesLoaded,
+    subtitleBusy,
+    metadataBusy,
+    sourceUrl,
+    raw,
+    profile.targetLanguage,
+    subtitleReaderBlocked,
+    checking,
+  ]);
   const subtitleState = subtitleBusy
     ? "loading"
     : subtitleStatus && (subtitleTone === "missing" || subtitleTone === "error")
@@ -322,7 +358,7 @@ export default function App() {
           : "idle";
   useEffect(() => {
     setSubtitlePreview(false);
-  }, [raw, sourceUrl, profile.targetLanguage]);
+  }, [sourceUrl, profile.targetLanguage]);
   const platform = getVideoAdapter(sourceUrl).id;
   // A valid saved source remains actionable when the Side Panel temporarily loses its tab context.
   const subtitlePlatform = getVideoAdapter(activeVideo?.url ?? sourceUrl).id;
@@ -331,11 +367,19 @@ export default function App() {
     startMs: 0,
     endMs: 0,
   });
+  const restoredRange = useRef<{ url: string; language: string; range: RangeSelection } | null>(
+    null,
+  );
   const [videoDurationMs, setVideoDurationMs] = useState<number | undefined>();
   const analysisAdapter = getVideoAdapter(sourceUrl);
   const analysisDurationMs = videoDurationMs ?? subtitleDuration(cues);
   useEffect(() => {
-    setAnalysisSelection({ mode: "full", startMs: 0, endMs: subtitleDuration(cues) });
+    const restored = restoredRange.current;
+    setAnalysisSelection(
+      restored && restored.url === sourceUrl && restored.language === profile.targetLanguage
+        ? restored.range
+        : { mode: "full", startMs: 0, endMs: subtitleDuration(cues) },
+    );
     setVideoDurationMs(undefined);
     let live = true;
     if (sourceUrl && analysisAdapter.status)
@@ -353,7 +397,11 @@ export default function App() {
     return () => {
       live = false;
     };
-  }, [sourceUrl, cues, draftState.activeVideo?.url]);
+  }, [sourceUrl, profile.targetLanguage, draftState.activeVideo?.url]);
+  useEffect(() => {
+    if (analysisSelection.mode === "full")
+      setAnalysisSelection(current => ({ ...current, endMs: analysisDurationMs }));
+  }, [analysisDurationMs]);
   const analysisValid =
     analysisSelection.mode === "full" ||
     (Number.isFinite(analysisSelection.startMs) &&
@@ -370,6 +418,110 @@ export default function App() {
         : contentMode === "custom" && !customPrompt.trim()
           ? 1
           : 2;
+  const acceptedDraftRef = useRef<CreateDraft | null>(null);
+  const [lastSettings, setLastSettings] = useState<CreateDraft | null>(null);
+  const creationSourceKey =
+    videoSourceKey(sourceUrl) ??
+    (draftState.originalRaw ? "manual:" + draftRevision(draftState.originalRaw) : "manual:empty");
+  const creationSnapshot: CreateDraft = {
+    version: 1,
+    sourceKey: creationSourceKey,
+    title,
+    language: profile.targetLanguage,
+    subtitleRevision: draftRevision(raw),
+    profile,
+    mode: contentMode,
+    prompt: customPrompt,
+    context: customContext,
+    range: analysisSelection,
+    step: createStep,
+    completedStep,
+    agent: requestAgent,
+    destination: requestDestination,
+    backup: requestBackup,
+  };
+  const createDraft = useCreateDraft(
+    creationSnapshot,
+    hydrated && subtitlesLoaded,
+    saved => {
+      setSubtitlePreview(false);
+      if (!saved) {
+        setCreateStep(0);
+        setCompletedStep(0);
+        setAnalysisSelection({ mode: "full", startMs: 0, endMs: analysisDurationMs });
+        setRequestAgent(null);
+        setRequestDestination(null);
+        setRequestBackup(null);
+        return;
+      }
+      restoredRange.current = {
+        url: sourceUrl,
+        language: saved.profile.targetLanguage,
+        range: saved.range,
+      };
+      subtitleDraft.setTitle(saved.title);
+      setProfile(saved.profile);
+      setContentMode(saved.mode);
+      setCustomPrompt(saved.prompt);
+      setCustomContext(saved.context);
+      setAnalysisSelection(saved.range);
+      setRequestAgent(saved.agent);
+      setRequestDestination(saved.destination);
+      setRequestBackup(saved.backup);
+      const sameSubtitles = saved.subtitleRevision === draftRevision(raw);
+      setCreateStep(sameSubtitles ? saved.step : 0);
+      setCompletedStep(sameSubtitles ? saved.completedStep : 0);
+    },
+    setError,
+  );
+  useEffect(() => {
+    void readDraft<CreateDraft>("last-create-settings")
+      .then(saved => {
+        if (saved) setLastSettings(saved);
+      })
+      .catch(() => {});
+  }, []);
+  function quickCreate() {
+    if (!lastSettings || !captionsReady || !analysisValid) return;
+    // A video's own draft is the source of truth; last-run settings seed only new drafts.
+    if (!createDraft.hasSaved) {
+      setContentMode(lastSettings.mode);
+      setCustomPrompt(lastSettings.prompt);
+      setCustomContext(lastSettings.context);
+      setProfile({
+        ...lastSettings.profile,
+        targetLanguage: profile.targetLanguage,
+        level:
+          lastSettings.profile.targetLanguage === profile.targetLanguage
+            ? lastSettings.profile.level
+            : defaultLevelForTargetLanguage(profile.targetLanguage),
+      });
+      setRequestAgent(lastSettings.agent);
+      setRequestDestination(lastSettings.destination);
+      setRequestBackup(lastSettings.backup);
+      const range = lastSettings.range;
+      if (range.mode === "full")
+        setAnalysisSelection({ mode: "full", startMs: 0, endMs: analysisDurationMs });
+      else if (range.mode === "first" || range.mode === "second") {
+        if (videoDurationMs === undefined) {
+          setError(analysisRangeCopy(uiLocale).estimated);
+          return;
+        }
+        const half = Math.floor(analysisDurationMs / 2);
+        setAnalysisSelection({
+          mode: range.mode,
+          startMs: range.mode === "second" ? half : 0,
+          endMs: range.mode === "first" ? half : analysisDurationMs,
+        });
+      } else if (range.endMs <= analysisDurationMs && timedCues(cues)) setAnalysisSelection(range);
+      else {
+        setError(analysisRangeCopy(uiLocale).invalid);
+        return;
+      }
+    }
+    setCompletedStep(2);
+    setCreateStep(2);
+  }
   const readerAdapter = getVideoAdapter(document?.source.url);
   const selectedDriveId = backup.accountId ?? driveAccounts[0]?.id;
   const driveAccessVerified =
@@ -479,6 +631,12 @@ export default function App() {
         setDuplicateWarning(event.state.duplicate);
         setGenerating(!!event.state.active);
         if (event.state.lastJobId) lastJobIdRef.current = event.state.lastJobId;
+        if (event.state.active && acceptedDraftRef.current) {
+          const saved = acceptedDraftRef.current;
+          acceptedDraftRef.current = null;
+          setLastSettings(saved);
+          void writeDraft("last-create-settings", saved).catch(error => setError(String(error)));
+        }
         if (event.state.active?.summary) updateJob(event.state.active.summary);
         return;
       }
@@ -823,6 +981,7 @@ export default function App() {
   }
 
   function cancelDuplicate(): void {
+    acceptedDraftRef.current = null;
     generationSession.dismissDuplicate();
   }
 
@@ -1127,6 +1286,12 @@ export default function App() {
           : {}),
       });
       setProgress(t("checkingExisting"));
+      acceptedDraftRef.current = {
+        ...creationSnapshot,
+        agent: generationAgent,
+        destination: requestDestination ?? destination,
+        backup: requestBackup ?? backup,
+      };
       generationSession.start(
         contentMode === "custom"
           ? CustomGenerationRequestSchema.parse({
@@ -1313,6 +1478,8 @@ export default function App() {
     generationAgent,
     destination,
     backup,
+    requestDestination,
+    requestBackup,
     analysisSelection,
     contentMode,
     customPrompt,
@@ -1527,7 +1694,27 @@ export default function App() {
             />
           )}
           <>
-            <nav aria-label={customUi.create} className="grid shrink-0 grid-cols-3 gap-1 py-2">
+            {subtitlePreview && (
+              <SubtitleEditor
+                draft={subtitleDraft}
+                cues={cues}
+                locale={uiLocale}
+                duration={videoDurationMs}
+                connected={videoDurationMs !== undefined && !subtitleReaderBlocked}
+                onSeek={ms => {
+                  void analysisAdapter
+                    .seek?.(sourceUrl, ms)
+                    .catch(error => setError(String(error)));
+                }}
+                onBack={() => setSubtitlePreview(false)}
+                saveStatus={subtitleSaveStatus}
+              />
+            )}
+            <nav
+              hidden={subtitlePreview}
+              aria-label={customUi.create}
+              className="grid shrink-0 grid-cols-3 gap-1 py-2"
+            >
               {[ux.video, ux.settings, ux.create].map((label, index) => (
                 <Button
                   key={index}
@@ -1545,6 +1732,7 @@ export default function App() {
             <div
               ref={formScroll}
               data-ui="create-scroll"
+              hidden={subtitlePreview}
               className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain py-3"
             >
               <PageSection framed hidden={createStep !== 0}>
@@ -1735,29 +1923,6 @@ export default function App() {
                             </Button>
                           )}
                       </div>
-                      {subtitlePreview && (
-                        <ol
-                          id="subtitle-preview"
-                          aria-label={subtitleLayout.preview}
-                          tabIndex={0}
-                          className="grid max-h-64 gap-2 overflow-y-auto overscroll-contain rounded-[var(--radius)] border border-border p-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          {cues.slice(0, 10).map((cue, index) => (
-                            <li key={index} className="flex min-w-0 items-start gap-3">
-                              <span className="shrink-0 tabular-nums text-muted-foreground">
-                                {cue.startMs === null
-                                  ? "—"
-                                  : String(Math.floor(cue.startMs / 60000)).padStart(2, "0") +
-                                    ":" +
-                                    String(Math.floor(cue.startMs / 1000) % 60).padStart(2, "0")}
-                              </span>
-                              <span className="min-w-0 whitespace-pre-wrap wrap-anywhere">
-                                {cue.originalText}
-                              </span>
-                            </li>
-                          ))}
-                        </ol>
-                      )}
                     </>
                   )}
                 </section>
@@ -1901,6 +2066,7 @@ export default function App() {
                       onChange={setAnalysisSelection}
                       durationMs={analysisDurationMs}
                       estimated={videoDurationMs === undefined}
+                      connected={videoDurationMs !== undefined && !subtitleReaderBlocked}
                       adapter={analysisAdapter}
                       url={sourceUrl}
                       locale={uiLocale}
@@ -2270,7 +2436,8 @@ export default function App() {
             </div>
             <footer
               data-ui="create-footer"
-              className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border bg-background py-3 pb-[max(12px,env(safe-area-inset-bottom))]"
+              hidden={subtitlePreview}
+              className="flex hidden:!hidden shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border bg-background py-3 pb-[max(12px,env(safe-area-inset-bottom))]"
             >
               <Button
                 variant="ghost"
@@ -2279,9 +2446,19 @@ export default function App() {
               >
                 {customUi.previous}
               </Button>
+              {createStep === 0 && lastSettings && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!createDraft.ready || !captionsReady || !analysisValid}
+                  onClick={quickCreate}
+                >
+                  {ux.quick}
+                </Button>
+              )}
               {createStep < 2 ? (
                 <Button
-                  disabled={createStep >= allowedStep}
+                  disabled={!createDraft.ready || createStep >= allowedStep}
                   onClick={() => {
                     setCompletedStep(current => Math.max(current, createStep + 1));
                     setCreateStep(step => step + 1);
@@ -2296,6 +2473,7 @@ export default function App() {
                   onClick={startGeneration}
                   disabled={
                     (contentMode === "custom" && !customPrompt.trim()) ||
+                    !createDraft.ready ||
                     !analysisValid ||
                     !hostReady ||
                     !generationServiceReady ||
@@ -2955,6 +3133,28 @@ export default function App() {
             />
           </main>
         )}
+        <Dialog
+          open={!!draftState.pendingCaption}
+          onOpenChange={open => {
+            if (!open) subtitleDraft.resolveCaption(false);
+          }}
+        >
+          <DialogContent closeLabel={ux.cancel}>
+            <DialogHeader>
+              <DialogTitle>{ux.conflict}</DialogTitle>
+              <DialogDescription>
+                {ux.keepEdits} / {ux.useNew}
+              </DialogDescription>
+            </DialogHeader>
+            <Button variant="outline" onClick={() => subtitleDraft.resolveCaption(false)}>
+              {ux.keepEdits}
+            </Button>
+            <Button onClick={() => subtitleDraft.resolveCaption(true)}>{ux.useNew}</Button>
+            <Button variant="ghost" onClick={() => subtitleDraft.resolveCaption(false)}>
+              {ux.cancel}
+            </Button>
+          </DialogContent>
+        </Dialog>
         <Dialog
           open={!!executionDetails}
           onOpenChange={open => {

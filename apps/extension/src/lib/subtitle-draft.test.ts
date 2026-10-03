@@ -161,3 +161,52 @@ test("late file failure and metadata response are discarded; oversized files are
   assert.equal(draft.snapshot.raw, "Newest");
   assert.ok(draft.snapshot.error);
 });
+
+test("edits keep original source IDs, survive restoration, and reject invalid timing", async () => {
+  const draft = new SubtitleDraft("en", "en", adapters());
+  draft.setSource(url);
+  await draft.fetchSubtitles();
+  draft.editCue("cue-1", { originalText: "Edited line", startMs: 1100, endMs: 2100 }, 3000);
+  assert.equal(draft.snapshot.originalRaw, caption);
+  assert.equal(draft.snapshot.cues[0].id, "cue-1");
+  assert.equal(draft.snapshot.edited, true);
+  assert.throws(() =>
+    draft.editCue("cue-1", { originalText: "Bad", startMs: 2000, endMs: 1000 }, 3000),
+  );
+  assert.equal(draft.snapshot.cues[0].originalText, "Edited line");
+  const reopened = new SubtitleDraft("en", "en", adapters());
+  reopened.setSource(url);
+  reopened.hydrateSaved(structuredClone(draft.exportSaved()));
+  assert.equal(reopened.snapshot.cues[0].originalText, "Edited line");
+  assert.equal(reopened.snapshot.originalRaw, caption);
+  reopened.restoreOriginal();
+  assert.equal(reopened.snapshot.cues[0].originalText, "Hello");
+  assert.equal(reopened.snapshot.edited, false);
+});
+test("refresh preserves edited subtitles until explicit acceptance of the fetched version", async () => {
+  const draft = new SubtitleDraft("en", "en", adapters());
+  draft.setSource(url);
+  await draft.fetchSubtitles();
+  draft.editCue("cue-1", { originalText: "Working copy", startMs: 1000, endMs: 2000 });
+  await draft.fetchSubtitles();
+  assert.equal(draft.snapshot.ready, true);
+  assert.equal(draft.snapshot.cues[0].originalText, "Working copy");
+  assert.equal(draft.snapshot.pendingCaption?.raw, caption);
+  draft.resolveCaption(false);
+  assert.equal(draft.snapshot.pendingCaption, null);
+  assert.equal(draft.snapshot.cues[0].originalText, "Working copy");
+  await draft.fetchSubtitles();
+  draft.resolveCaption(true);
+  assert.equal(draft.snapshot.cues[0].originalText, "Hello");
+  assert.equal(draft.snapshot.edited, false);
+});
+test("edited source cache remains distinct across subtitle languages", async () => {
+  const draft = new SubtitleDraft("en", "en", adapters());
+  draft.setSource(url);
+  await draft.fetchSubtitles();
+  draft.editCue("cue-1", { originalText: "English edit", startMs: 1000, endMs: 2000 });
+  draft.setLanguage("ja");
+  draft.setLanguage("en");
+  assert.equal(draft.snapshot.cues[0].originalText, "English edit");
+  assert.equal(draft.snapshot.originalRaw, caption);
+});

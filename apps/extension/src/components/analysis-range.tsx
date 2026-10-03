@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   formatRangeTime,
   parseRangeTime,
@@ -9,14 +8,12 @@ import {
   type RangeSelection,
 } from "@immersive/core";
 import { analysisRangeCopy } from "../i18n/analysis-range";
+import { createFlowCopy } from "../i18n/create-flow";
 import type { UiLocale } from "../i18n/messages";
 import type { VideoAdapter } from "../video/types";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { SelectField } from "./ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Disclosure } from "./disclosure";
-
 export function AnalysisRangePicker({
   cues,
   value,
@@ -27,6 +24,7 @@ export function AnalysisRangePicker({
   url,
   locale,
   onError,
+  connected = false,
 }: {
   cues: SubtitleCue[];
   value: RangeSelection;
@@ -37,11 +35,11 @@ export function AnalysisRangePicker({
   url: string;
   locale: UiLocale;
   onError: (message: string) => void;
+  connected?: boolean;
 }) {
-  const ui = analysisRangeCopy(locale);
-  const timed = timedCues(cues);
-  const [page, setPage] = useState(0);
-  useEffect(() => setPage(0), [cues, value.mode]);
+  const ui = analysisRangeCopy(locale),
+    ux = createFlowCopy(locale),
+    timed = timedCues(cues);
   const selected = (() => {
     try {
       return selectAnalysisCues(cues, value);
@@ -58,32 +56,25 @@ export function AnalysisRangePicker({
       selected.length > 0);
   const setTime = (key: "startMs" | "endMs", time: number) =>
     onChange({ ...value, mode: "custom", [key]: time });
-  const seek = (ms: number) => {
-    if (url && adapter.seek) void adapter.seek(url, ms).catch(error => onError(String(error)));
-  };
   async function current(key: "startMs" | "endMs") {
     try {
-      const result = await adapter.status?.(url);
-      if (result?.currentMs !== undefined) setTime(key, Math.round(result.currentMs));
+      const status = await adapter.status?.(url);
+      if (status?.currentMs !== undefined) setTime(key, Math.round(status.currentMs));
     } catch (error) {
       onError(String(error));
     }
   }
   return (
-    <section className="grid gap-4" aria-label={ui.title}>
+    <section className="grid gap-3" aria-label={ui.title}>
       <h2>{ui.title}</h2>
       <SelectField
         ariaLabel={ui.title}
         value={timed ? value.mode : "full"}
         options={[
           { value: "full", label: ui.full },
-          ...(timed
-            ? [
-                { value: "first", label: ui.first },
-                { value: "second", label: ui.second },
-                { value: "custom", label: ui.custom },
-              ]
-            : []),
+          { value: "first", label: ui.first, disabled: !timed || estimated || durationMs <= 0 },
+          { value: "second", label: ui.second, disabled: !timed || estimated || durationMs <= 0 },
+          { value: "custom", label: ui.custom, disabled: !timed || durationMs <= 0 },
         ]}
         onValueChange={mode => {
           const half = Math.floor(durationMs / 2);
@@ -99,135 +90,87 @@ export function AnalysisRangePicker({
       ) : (
         <>
           {estimated && <p className="text-xs text-muted-foreground">{ui.estimated}</p>}
-          <div className="grid grid-cols-2 gap-3">
-            {(["startMs", "endMs"] as const).map(key => (
-              <div key={key} className="grid gap-2">
-                <label className="grid gap-1 text-xs">
-                  {key === "startMs" ? ui.start : ui.end}
-                  <TimeField
-                    value={value[key]}
-                    onChange={ms => setTime(key, ms)}
-                    invalid={!valid}
-                  />
-                </label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-auto min-h-8 whitespace-normal"
-                  disabled={!url || !adapter.status}
-                  onClick={() => void current(key)}
-                >
-                  {ui.current}
-                </Button>
+          {value.mode === "custom" && (
+            <>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,160px),1fr))] gap-3">
+                {(["startMs", "endMs"] as const).map(key => (
+                  <div key={key} className="grid gap-2">
+                    <label className="grid gap-1 text-xs">
+                      {key === "startMs" ? ui.start : ui.end}
+                      <TimeField
+                        value={value[key]}
+                        onChange={ms => setTime(key, ms)}
+                        invalid={!valid}
+                      />
+                    </label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-auto min-h-9 whitespace-normal"
+                      disabled={!connected || !adapter.status}
+                      onClick={() => void current(key)}
+                    >
+                      {ui.current}
+                    </Button>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div role="group" aria-label={ui.title} className="grid gap-2">
-            {(["startMs", "endMs"] as const).map(key => (
-              <input
-                key={key}
-                type="range"
-                className="w-full accent-primary"
-                aria-label={key === "startMs" ? ui.start : ui.end}
-                min={0}
-                max={durationMs}
-                step={1}
-                value={Number.isFinite(value[key]) ? value[key] : 0}
-                onChange={event => setTime(key, Number(event.target.value))}
-              />
-            ))}
-          </div>
+              <div role="group" aria-label={ui.title} className="relative h-11">
+                <div className="absolute inset-x-0 top-5 h-1 rounded-full bg-muted">
+                  <div
+                    className="absolute h-1 rounded-full bg-primary"
+                    style={{
+                      left: Math.max(0, (value.startMs / durationMs) * 100) + "%",
+                      right: Math.max(0, 100 - (value.endMs / durationMs) * 100) + "%",
+                    }}
+                  />
+                </div>
+                {(["startMs", "endMs"] as const).map(key => (
+                  <input
+                    key={key}
+                    type="range"
+                    className="dual-range absolute inset-0 h-11 w-full"
+                    aria-label={key === "startMs" ? ui.start : ui.end}
+                    aria-valuetext={formatRangeTime(value[key])}
+                    min={0}
+                    max={durationMs}
+                    step={1}
+                    value={Number.isFinite(value[key]) ? value[key] : 0}
+                    onChange={event =>
+                      setTime(
+                        key,
+                        key === "startMs"
+                          ? Math.min(Number(event.target.value), value.endMs - 1)
+                          : Math.max(Number(event.target.value), value.startMs + 1),
+                      )
+                    }
+                  />
+                ))}
+              </div>
+              {!connected && <p className="text-xs text-muted-foreground">{ux.disconnected}</p>}
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!valid || !connected || !adapter.seek}
+                onClick={() =>
+                  void adapter.seek?.(url, value.startMs).catch(error => onError(String(error)))
+                }
+              >
+                {ui.jump}
+              </Button>
+            </>
+          )}
+          {value.mode !== "full" && (
+            <p className="text-xs tabular-nums">
+              {formatRangeTime(value.startMs)} — {formatRangeTime(value.endMs)} · {selected.length}{" "}
+              / {cues.length}
+            </p>
+          )}
           {!valid && (
             <p role="alert" className="text-xs text-destructive">
               {ui.invalid}
             </p>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!valid || !url || !adapter.seek}
-            onClick={() => seek(value.startMs)}
-          >
-            {ui.jump}
-          </Button>
-          <Disclosure title={`${ui.subtitles} · ${selected.length} / ${cues.length}`}>
-            <ol className="grid max-h-72 gap-1 overflow-y-auto overscroll-contain">
-              {cues.slice(page * 50, (page + 1) * 50).map(cue => (
-                <li
-                  key={cue.id}
-                  className={
-                    "flex min-w-0 items-start gap-1 rounded-md p-2 " +
-                    (selected.includes(cue) ? "bg-accent" : "text-muted-foreground")
-                  }
-                >
-                  <Button
-                    variant="ghost"
-                    className="h-auto min-h-8 flex-1 justify-start whitespace-normal text-left"
-                    disabled={!url || !adapter.seek}
-                    onClick={() => seek(cue.startMs!)}
-                  >
-                    <span className="grid min-w-0 gap-1">
-                      <span className="text-[11px] tabular-nums">
-                        {formatRangeTime(cue.startMs!)}
-                      </span>
-                      <span className="wrap-anywhere">{cue.originalText}</span>
-                    </span>
-                  </Button>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        aria-label={ui.actions}
-                      >
-                        <MoreHorizontal />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-40 p-1" collisionPadding={8}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setTime("startMs", cue.startMs!)}
-                      >
-                        {ui.setStart}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setTime("endMs", cue.endMs!)}
-                      >
-                        {ui.setEnd}
-                      </Button>
-                    </PopoverContent>
-                  </Popover>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={page === 0}
-                onClick={() => setPage(page - 1)}
-              >
-                {ui.previous}
-              </Button>
-              <span className="text-xs">
-                {page + 1} / {Math.max(1, Math.ceil(cues.length / 50))}
-              </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={(page + 1) * 50 >= cues.length}
-                onClick={() => setPage(page + 1)}
-              >
-                {ui.next}
-              </Button>
-            </div>
-          </Disclosure>
         </>
       )}
     </section>
@@ -249,7 +192,7 @@ function TimeField({
   return (
     <Input
       value={text}
-      placeholder="HH:MM:SS"
+      placeholder="HH:MM:SS.mmm"
       aria-invalid={invalid}
       onChange={event => {
         setText(event.target.value);

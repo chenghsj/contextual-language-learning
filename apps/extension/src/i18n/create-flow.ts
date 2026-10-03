@@ -249,6 +249,7 @@ export function createFlowCopy(locale: UiLocale) {
     failed,
   ] = copy[locale];
   return {
+    done: { en: "Done", "zh-TW": "完成", "zh-CN": "完成", ja: "完了", ko: "완료" }[locale],
     video,
     settings,
     create,

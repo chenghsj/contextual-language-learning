@@ -20,7 +20,7 @@ try {
     const errors = [];
     page.on("pageerror", error => errors.push(error.message));
     await page.goto("http://127.0.0.1:5177/dev/redesign-preview.html");
-    await page.getByRole("button", { name: "取得字幕", exact: true }).click();
+    await page.locator('[data-ui="subtitleState"][data-state="ready"]').waitFor();
     await page.locator('[data-ui="subtitleState"][data-state="ready"]').waitFor();
     await page.evaluate(() => {
       const original = chrome.tabs.sendMessage;
@@ -39,7 +39,7 @@ try {
     }
     await page.locator("#learning-target").click();
     await page.getByRole("option", { name: "日語", exact: true }).click();
-    await page.getByRole("button", { name: "1. 影片與字幕", exact: true }).click();
+    await page.getByRole("button", { name: "影片", exact: true }).click();
     await page.locator('[data-ui="subtitleState"][data-state="error"]').waitFor();
     assert.equal(
       await page.getByRole("button", { name: "下一步", exact: true }).isDisabled(),
@@ -63,8 +63,8 @@ try {
       ["ja"],
       "returning to cached subtitles must recover even when caption retrieval is unavailable",
     );
+    await page.locator('section[aria-label="分析範圍"]').waitFor();
     await page.getByRole("button", { name: "下一步", exact: true }).click();
-    await page.locator('section[aria-label="2. 分析範圍"]').waitFor();
     assert.equal(
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
       true,

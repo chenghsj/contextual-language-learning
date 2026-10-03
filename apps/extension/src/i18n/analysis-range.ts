@@ -1,7 +1,7 @@
 import type { UiLocale } from "./messages";
 const text = {
   en: [
-    "2. Analysis range",
+    "Analysis range",
     "Full content",
     "First half",
     "Second half",
@@ -21,7 +21,7 @@ const text = {
     "Range actions",
   ],
   "zh-TW": [
-    "2. 分析範圍",
+    "分析範圍",
     "完整內容",
     "前半",
     "後半",
@@ -41,7 +41,7 @@ const text = {
     "範圍操作",
   ],
   "zh-CN": [
-    "2. 分析范围",
+    "分析范围",
     "完整内容",
     "前半",
     "后半",
@@ -61,7 +61,7 @@ const text = {
     "范围操作",
   ],
   ja: [
-    "2. 分析範囲",
+    "分析範囲",
     "全体",
     "前半",
     "後半",
@@ -81,7 +81,7 @@ const text = {
     "範囲の操作",
   ],
   ko: [
-    "2. 분석 범위",
+    "분석 범위",
     "전체",
     "전반",
     "후반",

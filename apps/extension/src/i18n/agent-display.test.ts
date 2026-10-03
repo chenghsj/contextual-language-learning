@@ -22,9 +22,10 @@ test("generation summary displays the selected model label or the honest CLI def
   assert.equal(modelDisplayName(" ", models, "CLI default"), "CLI default");
 });
 
-test("generation screen shows a compact service summary before submitting and links to settings", async () => {
+test("confirmation screen allows a request model selection and verifies the service before submission", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
-  const section = app.slice(app.indexOf("<h2>{customUi.create}</h2>"), app.indexOf("<TaskHistory"));
+  const section = app.slice(app.indexOf("<h2>{ux.confirm}</h2>"), app.indexOf("<TaskHistory"));
+  assert.match(section, /<RequestModelSelection/);
   assert.match(section, /<GenerationService locale=\{uiLocale\}/);
   assert.ok(section.includes('setSettingsSection("ai")'));
   assert.ok(section.indexOf("<GenerationService") < section.indexOf("onClick={startGeneration}"));
