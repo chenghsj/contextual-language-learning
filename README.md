@@ -91,7 +91,9 @@ Copy the extension's 32-character ID from `chrome://extensions` (or `edge://exte
 node scripts/install-host.mjs YOUR_EXTENSION_ID
 ```
 
-The Host settings page separates **Download a Host package** (run from the extracted ZIP folder) from **Update from the project** (run `pnpm build`, then `pnpm host:install YOUR_EXTENSION_ID`, from the project root). After either method, reload the extension and check the connection again.
+For a source checkout, run `pnpm build` once from the project root before installation. Both `node scripts/install-host.mjs YOUR_EXTENSION_ID` and `pnpm host:install YOUR_EXTENSION_ID` work from that root. The root entry point forwards to the shared installer in `apps/local-host/scripts/`.
+
+The Host settings page defaults to **Update from the project** and separates **Download a Host package** (run from the extracted ZIP folder) from **Update from the project** (run `pnpm build`, then `pnpm host:install YOUR_EXTENSION_ID`, from the project root). After either method, reload the extension and check the connection again.
 
 For Edge append `--browser edge`; for Chromium append `--browser chromium`. The installer copies the Host to a permanent per-user location and registers the extension ID for that browser, without administrator privileges. Windows also requires Windows PowerShell 5.1 and .NET Framework to compile a tiny native `.exe` stdio launcher locally. Linux requires `zenity` or `kdialog` for graphical local-folder selection. You can remove the Host extraction afterward. Connect an AI service in Settings; the release contains no API keys or account tokens. To update the unpacked extension, extract the new Chromium ZIP into the **same** extension folder and reload it; if Chrome assigns a different extension ID, run the Host installer again with the new ID.
 

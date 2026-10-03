@@ -140,8 +140,25 @@ test("Host diagnostics show localized update guidance and distinguish package in
     assert.ok(view.container.textContent?.includes(ui.afterInstall));
     assert.equal(
       view.container.querySelector("code")?.textContent,
+      "pnpm build\npnpm host:install " + extensionId,
+    );
+    assert.ok(view.container.textContent?.includes(ui.projectFolder));
+    assert.ok(
+      ![...view.container.querySelectorAll("button")].some(button =>
+        button.textContent?.includes(ui.releases),
+      ),
+    );
+    const initialMethod = view.container.querySelector('[aria-label="安裝方式"]')!;
+    await key(initialMethod, "Enter");
+    const packageOption = [...document.querySelectorAll('[role="option"]')].find(
+      option => option.textContent === ui.packageInstall,
+    )!;
+    await key(packageOption, "Enter");
+    assert.equal(
+      view.container.querySelector("code")?.textContent,
       "node scripts/install-host.mjs " + extensionId,
     );
+    assert.ok(view.container.textContent?.includes(ui.packageFolder));
     assert.ok(
       [...view.container.querySelectorAll("button")].some(button =>
         button.textContent?.includes(ui.releases),

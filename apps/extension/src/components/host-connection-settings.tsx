@@ -51,7 +51,7 @@ export function HostConnectionSettings({
   const [os, setOS] = useState<OS>(detectedOS);
   const [browser, setBrowser] = useState<Browser>(detectedBrowser);
   const [copied, setCopied] = useState("");
-  const [installMethod, setInstallMethod] = useState<"package" | "source">("package");
+  const [installMethod, setInstallMethod] = useState<"package" | "source">("source");
   const [uninstallMethod, setUninstallMethod] = useState<"package" | "source">("package");
   const [uninstallCopied, setUninstallCopied] = useState("");
   const extensionId = chrome.runtime.id;
@@ -195,6 +195,10 @@ export function HostConnectionSettings({
             </Button>
           )}
           <div className="grid min-w-0 gap-1">
+            <p className="text-xs font-semibold">
+              {ui.commandLocation}:{" "}
+              {installMethod === "package" ? ui.packageFolder : ui.projectFolder}
+            </p>
             <code className="min-w-0 select-all whitespace-pre-wrap break-all border border-border p-2 text-xs">
               {command}
             </code>

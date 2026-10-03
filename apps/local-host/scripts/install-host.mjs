@@ -33,7 +33,15 @@ if (Number(process.versions.node.split(".")[0]) < 22) {
 try {
   const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
   const sourceEntry = resolve(sourceRoot, "dist/native-host.mjs");
-  await access(sourceEntry);
+  try {
+    await access(sourceEntry);
+  } catch {
+    throw new Error(
+      "Host bundle not found at " +
+        sourceEntry +
+        ". From the project root run pnpm build first, or extract the complete matching Host ZIP.",
+    );
+  }
   const result = await installNativeHost({ extensionId, browser, sourceRoot, sourceEntry });
   process.stdout.write(
     "Installed " +
