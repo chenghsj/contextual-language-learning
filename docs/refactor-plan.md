@@ -4,7 +4,7 @@ Implemented in the main checkout, based on `b171f106194a4883383bee04f376ab457a9d
 
 ## Completed scope
 
-1. **Host transport:** all panel requests use the worker-owned Native connection. The worker checks protocol 4, package version and Pi SDK mode before forwarding requests, tracks pending operations, validates panel senders and releases idle connections. Closing the panel retains running generation and backup work. No daemon is installed.
+1. **Host transport:** all panel requests use the worker-owned Native connection. The worker checks protocol 6, package version and Pi SDK mode before forwarding requests, tracks pending operations, validates panel senders and releases idle connections. Closing the panel retains running generation and backup work. No daemon is installed.
 2. **Generation session:** immutable duplicate-check payloads, confirmation tickets, request identity, resume/cancel, worker state attachment, document chunks, recovery and delivery deduplication live behind one interface.
 3. **Subtitle draft:** provenance, manual import protection, per-video/language caches, file limits and stale async result suppression are owned by one module with browser/file adapters.
 4. **Preferences:** shared schema, defaults, hydration, subscriptions and ordered writes use only `preferencesV2`. Provider selection defaults to none; model preferences use provider keys. Reader pronunciation uses the same store.

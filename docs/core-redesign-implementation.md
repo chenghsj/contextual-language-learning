@@ -1,5 +1,7 @@
 # 五階段實作與驗證紀錄
 
+> 此為先前五步建立流程的歷史紀錄。最新三步 UX、protocol 6 與驗證結果請見 [CLL UX Layout 實作紀錄](cll-ux-layout-implementation.md)。
+
 日期：2026-10-03。起點為乾淨的 `main @ 4440cbd`，在原 checkout 建立 `codex/core-redesign`。每階段各一個 commit；未 push、發布或變更真實帳號資料。
 
 ## 階段交付

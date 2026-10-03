@@ -47,7 +47,7 @@ Create a new task with a connected provider. Completed lessons remain readable.
 Install and register the matching Native Host package once for your OS and current
 browser extension ID. The Host includes the SDK and runs on Node.js 22+.
 The Extension requires matching package versions, Pi SDK mode and Native Messaging
-protocol version 4. Rebuild/reinstall the Host when upgrading from CLI mode.
+protocol version 6. Rebuild/reinstall the Host when upgrading from CLI mode.
 Connecting or disconnecting an AI service does not change browser registration.
 
 ### V5 data policy
