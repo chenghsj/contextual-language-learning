@@ -57,8 +57,8 @@ test("each navigation action selects its page and reader detail returns to Libra
 test("Library exposes lessons; Activity owns the full history and resume actions", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
   assert.match(app, /page === "activity" && <main/);
-  assert.match(app, /hidden=\{page !== "lessons"\}/);
-  assert.match(app, /page === "lesson" && <main/);
+  assert.match(app, /hidden=\{basePage !== "lessons"\}/);
+  assert.match(app, /basePage === "lesson" && <main/);
   const tasks = await readSource(new URL("../components/task-history.tsx", import.meta.url));
   const videos = await readSource(new URL("../components/video-library.tsx", import.meta.url));
   assert.match(tasks, /onResume\(job\.id\)/);
@@ -132,10 +132,10 @@ test("Library screen renders a recoverable task and an openable grouped V5 lesso
   assert.match(library, />開啟教材</);
 });
 
-test("secondary pages use a concise back label and retain their navigation targets", async () => {
+test("secondary views use one modal Sheet while retaining the base navigation", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
-  assert.match(app, /<PageHeading id="activity-title"/);
-  assert.equal((app.match(/backLabel=\{layout.back\}/g) ?? []).length, 2);
-  assert.match(app, /onBack=\{\(\) => setPage\(returnPage\)\}/);
-  assert.match(app, /settingsSection \? setSettingsSection\(null\) : setPage\(returnPage\)/);
+  assert.match(app, /<Sheet open=\{overlay\}/);
+  assert.match(app, /<SidePanelNavigation page=\{basePage\}/);
+  assert.match(app, /if \(!open\) setPage\(returnPage\)/);
+  assert.match(app, /setSettingsSection\(null\)/);
 });

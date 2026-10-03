@@ -1,3 +1,7 @@
+import { RequestModelSelection } from "./components/request-model-selection";
+import { createFlowCopy } from "./i18n/create-flow";
+import { Sheet, SheetContent, SheetTitle } from "./components/ui/sheet";
+import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { cleanVideoTitle } from "./video/metadata";
 import { subtitleLayoutCopy } from "./i18n/subtitle-layout";
 import { useSubtitleDraft } from "./hooks/use-subtitle-draft";
@@ -170,6 +174,13 @@ export default function App() {
   const uiLocale = localePreference === "auto" ? browserLocale : localePreference;
   const layout = settingsLayoutCopy[uiLocale];
   const flow = sidePanelLayoutCopy[uiLocale];
+  const ux = createFlowCopy(uiLocale);
+  const overlay = page === "settings" || page === "activity";
+  const basePage = overlay ? returnPage : page;
+  const sheetOrigin = useRef("header-settings");
+  if (overlay) sheetOrigin.current = page === "settings" ? "header-settings" : "header-activity";
+  const [completedStep, setCompletedStep] = useState(0);
+  const formScroll = useRef<HTMLDivElement>(null);
   const subtitleUi = subtitleAcquisition[uiLocale];
   const subtitleLayout = subtitleLayoutCopy[uiLocale];
   const [subtitlePreview, setSubtitlePreview] = useState(false);
@@ -186,7 +197,8 @@ export default function App() {
   }));
   const [explanationLanguageMode, setExplanationLanguageMode] = useState<"auto" | "custom">("auto");
   const [agent, setAgent] = useState<AgentSettings>(DEFAULT_AGENT);
-  const generationAgent = agent;
+  const [requestAgent, setRequestAgent] = useState<AgentSettings | null>(null);
+  const generationAgent = requestAgent ?? agent;
   const [providerSettings, setProviderSettings] = useState<
     Record<string, Pick<AgentSettings, "modelId" | "thinkingLevel">>
   >({});
@@ -222,6 +234,11 @@ export default function App() {
   const [destination, setDestination] = useState<Extract<Destination, { kind: "local" }>>({
     kind: "local",
   });
+  const [requestDestination, setRequestDestination] = useState<Extract<
+    Destination,
+    { kind: "local" }
+  > | null>(null);
+  const [requestBackup, setRequestBackup] = useState<BackupSettings | null>(null);
   const [backup, setBackup] = useState<BackupSettings>({ enabled: false });
   const [backupStatus, setBackupStatus] = useState("");
   const [driveFolderUrl, setDriveFolderUrl] = useState<string | null>(null);
@@ -349,10 +366,10 @@ export default function App() {
     !cues.length || !title.trim() || !captionsReady
       ? 0
       : !analysisValid
-        ? 1
+        ? 0
         : contentMode === "custom" && !customPrompt.trim()
-          ? 3
-          : 4;
+          ? 1
+          : 2;
   const readerAdapter = getVideoAdapter(document?.source.url);
   const selectedDriveId = backup.accountId ?? driveAccounts[0]?.id;
   const driveAccessVerified =
@@ -467,7 +484,6 @@ export default function App() {
       }
       if (event.type === "customDocument") {
         setCustomDocument(event.document);
-        setPage("custom");
         void loadLessons();
         return;
       }
@@ -651,13 +667,16 @@ export default function App() {
     };
   }, [hydrated, driveAccountsLoaded, backup.accountId, driveAccounts, storageBusy]);
 
-  async function chooseFolder(): Promise<void> {
+  async function chooseFolder(forRequest = false): Promise<void> {
     setStorageBusy(true);
     setError("");
     try {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "chooseFolder" });
       if (response.type !== "folder") throw new Error("Unexpected folder picker response");
-      setDestination({ kind: "local", directory: response.directory });
+      (forRequest ? setRequestDestination : setDestination)({
+        kind: "local",
+        directory: response.directory,
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("folderError"));
     } finally {
@@ -951,7 +970,7 @@ export default function App() {
     const parsed = LearningDocumentSchema.safeParse(raw);
     if (!parsed.success) throw new Error("Host returned an invalid learning document.");
     setProgress(t("statusSaved"));
-    setPage(current => (current === "create" ? "lessons" : current));
+
     void loadLessons();
   }
 
@@ -1077,7 +1096,7 @@ export default function App() {
       );
       return;
     }
-    if (backup.enabled && !driveAccessVerified) {
+    if ((requestBackup ?? backup).enabled && !driveAccessVerified) {
       setError(t("driveAccessNotVerified"));
       return;
     }
@@ -1093,8 +1112,8 @@ export default function App() {
         },
         profile,
         agent: generationAgent,
-        destination,
-        backup,
+        destination: requestDestination ?? destination,
+        backup: requestBackup ?? backup,
         cues,
         ...(timedCues(cues) && analysisDurationMs > 0
           ? {
@@ -1407,7 +1426,7 @@ export default function App() {
     <div
       className={
         "h-dvh flex flex-col overflow-hidden " +
-        "mx-auto min-w-0 max-w-[780px] px-3 text-[13px] leading-[1.5] antialiased font-[Outfit,'Noto_Sans_TC',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] [color-scheme:light] dark:[color-scheme:dark] [font-synthesis:none]"
+        "mx-auto w-full min-w-0 px-4 text-[13px] leading-[1.5] antialiased font-[Outfit,'Noto_Sans_TC',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] [color-scheme:light] dark:[color-scheme:dark] [font-synthesis:none]"
       }
     >
       <header className="shrink-0 flex items-center justify-between gap-2 py-2.5 [&>div]:flex [&>div]:min-w-0 [&>div]:items-center [&>div]:gap-2 [&_strong]:min-w-0 [&_strong]:text-xs [&_strong]:leading-[1.25] [&_strong]:wrap-anywhere">
@@ -1438,7 +1457,7 @@ export default function App() {
           }}
         />
       </header>
-      <SidePanelNavigation page={page} onNavigate={setPage} t={t} />
+      <SidePanelNavigation page={basePage} onNavigate={setPage} t={t} />
 
       <NoticeViewport
         locale={uiLocale}
@@ -1480,413 +1499,402 @@ export default function App() {
       )}
       <div
         className={
-          page === "lesson"
+          basePage === "lesson" || basePage === "create"
             ? "flex min-h-0 flex-1 flex-col overflow-hidden"
             : "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-9"
         }
       >
-        {page === "create" && (
-          <main id="page-panel-create" aria-labelledby="page-nav-create" className="space-y-4 py-3">
-            {generating ? (
-              <GenerationStatus
-                kind={contentMode}
-                locale={uiLocale}
-                job={activeJob}
-                title={title}
-                progress={progress}
-                notificationsEnabled={analysisNotificationsEnabled}
-                onLibrary={() => setPage("lessons")}
-                onActivity={() => {
-                  setPage("activity");
-                  loadJobs();
-                }}
-                onCancel={cancelGeneration}
-              />
-            ) : (
-              <>
-                <nav aria-label={customUi.create} className="grid grid-cols-5 gap-1">
-                  {[
-                    flow.video,
-                    analysisRangeCopy(uiLocale).title,
-                    customUi.type,
-                    customUi.settings,
-                    customUi.create,
-                  ].map((label, index) => (
+        <main
+          hidden={basePage !== "create"}
+          id="page-panel-create"
+          aria-labelledby="page-nav-create"
+          className="mx-auto flex min-h-0 w-full max-w-[640px] flex-1 flex-col hidden:!hidden"
+        >
+          {generating && (
+            <GenerationStatus
+              kind={contentMode}
+              locale={uiLocale}
+              job={activeJob}
+              title={title}
+              progress={progress}
+              notificationsEnabled={analysisNotificationsEnabled}
+              onLibrary={() => setPage("lessons")}
+              onActivity={() => {
+                setPage("activity");
+                loadJobs();
+              }}
+              onCancel={cancelGeneration}
+            />
+          )}
+          <>
+            <nav aria-label={customUi.create} className="grid shrink-0 grid-cols-3 gap-1 py-2">
+              {[ux.video, ux.settings, ux.create].map((label, index) => (
+                <Button
+                  key={index}
+                  variant={createStep === index ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-auto min-h-12 whitespace-normal px-1 text-[11px]"
+                  aria-current={createStep === index ? "step" : undefined}
+                  disabled={index > Math.min(completedStep, allowedStep)}
+                  onClick={() => setCreateStep(index)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </nav>
+            <div
+              ref={formScroll}
+              data-ui="create-scroll"
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain py-3"
+            >
+              <PageSection framed hidden={createStep !== 0}>
+                <h2>{flow.video}</h2>
+                <div className="min-w-0 border-b border-border pb-4">
+                  <strong className="block text-sm wrap-anywhere">
+                    {title ||
+                      cleanVideoTitle(activeVideo?.title) ||
+                      (activeVideo ? flow.videoTitlePending : flow.videoEmpty)}
+                  </strong>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {!activeVideo
+                      ? flow.videoEntryHint
+                      : getVideoAdapter(sourceUrl || activeVideo.url).id === "import"
+                        ? t("providerImport")
+                        : getVideoAdapter(sourceUrl || activeVideo.url).label}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Button
-                      key={index}
-                      variant={createStep === index ? "secondary" : "ghost"}
+                      variant="outline"
                       size="sm"
-                      className="h-auto min-h-12 whitespace-normal px-1 text-[11px]"
-                      aria-current={createStep === index ? "step" : undefined}
-                      disabled={index > allowedStep}
-                      onClick={() => setCreateStep(index)}
+                      disabled={metadataBusy || subtitleBusy || checking}
+                      onClick={() => void fetchCurrentVideoMetadata()}
                     >
-                      {label}
+                      {metadataBusy ? metadataUi.busy : flow.useVideo}
                     </Button>
-                  ))}
-                </nav>
-                <PageSection framed hidden={createStep !== 0}>
-                  <h2>{flow.video}</h2>
-                  <div className="min-w-0 border-b border-border pb-4">
-                    <strong className="block text-sm wrap-anywhere">
-                      {title ||
-                        cleanVideoTitle(activeVideo?.title) ||
-                        (activeVideo ? flow.videoTitlePending : flow.videoEmpty)}
-                    </strong>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {!activeVideo
-                        ? flow.videoEntryHint
-                        : getVideoAdapter(sourceUrl || activeVideo.url).id === "import"
-                          ? t("providerImport")
-                          : getVideoAdapter(sourceUrl || activeVideo.url).label}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {activeVideo && (
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        disabled={metadataBusy || subtitleBusy || checking}
-                        onClick={() => void fetchCurrentVideoMetadata()}
+                        aria-expanded={editingVideo}
+                        onClick={() => setEditingVideo(value => !value)}
                       >
-                        {metadataBusy ? metadataUi.busy : flow.useVideo}
+                        {editingVideo ? flow.done : flow.editVideoDetails}
                       </Button>
-                      {activeVideo && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          aria-expanded={editingVideo}
-                          onClick={() => setEditingVideo(value => !value)}
-                        >
-                          {editingVideo ? flow.done : flow.editVideoDetails}
-                        </Button>
-                      )}
-                    </div>
-                    {metadataStatus && (
-                      <p className="my-2 text-xs text-muted-foreground" role="status">
-                        {metadataStatus}
-                      </p>
-                    )}
-                    {(editingVideo || !activeVideo) && (
-                      <>
-                        <label className="my-3 grid gap-[6px] text-xs font-semibold">
-                          {t("videoTitle")}{" "}
-                          <Input
-                            value={title}
-                            onChange={event => subtitleDraft.setTitle(event.target.value)}
-                            placeholder={t("titlePlaceholder")}
-                          />
-                        </label>
-                        <label className="my-3 grid gap-[6px] text-xs font-semibold">
-                          {t("videoUrl")}{" "}
-                          <Input
-                            type="url"
-                            value={sourceUrl}
-                            onChange={event => subtitleDraft.setSource(event.target.value)}
-                            placeholder="https://www.youtube.com/watch?v=…"
-                          />
-                        </label>
-                      </>
                     )}
                   </div>
-                  <section
-                    aria-label={subtitleLayout.heading}
-                    data-ui="subtitleState"
-                    data-state={subtitleState}
-                    className="my-3 grid min-w-0 gap-2"
-                  >
-                    <h3 className="text-sm font-semibold">{subtitleLayout.heading}</h3>
-                    <div
-                      className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
-                      data-ui="settingField"
-                    >
-                      <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
-                        <label
-                          className="m-0 min-w-0 text-xs font-semibold leading-5"
-                          htmlFor="learning-target"
-                        >
-                          {t("targetLanguage")}
-                        </label>
-                        <SettingInfo
-                          label={t("targetLanguage")}
-                          infoLabel={settingsCopy.infoLabel}
-                          explanation={settingsCopy.fieldHints.targetLanguage}
+                  {metadataStatus && (
+                    <p className="my-2 text-xs text-muted-foreground" role="status">
+                      {metadataStatus}
+                    </p>
+                  )}
+                  {(editingVideo || !activeVideo) && (
+                    <>
+                      <label className="my-3 grid gap-[6px] text-xs font-semibold">
+                        {t("videoTitle")}{" "}
+                        <Input
+                          value={title}
+                          onChange={event => subtitleDraft.setTitle(event.target.value)}
+                          placeholder={t("titlePlaceholder")}
                         />
-                      </div>
-                      <SearchableSelectField
-                        id="learning-target"
-                        ariaLabel={t("targetLanguage")}
-                        value={profile.targetLanguage}
-                        onValueChange={chooseLearningLanguage}
-                        disabled={checking || generating}
-                        options={learningLanguageOptions(uiLocale)}
-                        copy={LEARNING_LANGUAGE_SEARCH_COPY[uiLocale]}
+                      </label>
+                      <label className="my-3 grid gap-[6px] text-xs font-semibold">
+                        {t("videoUrl")}{" "}
+                        <Input
+                          type="url"
+                          value={sourceUrl}
+                          onChange={event => subtitleDraft.setSource(event.target.value)}
+                          placeholder="https://www.youtube.com/watch?v=…"
+                        />
+                      </label>
+                    </>
+                  )}
+                </div>
+                <section
+                  aria-label={subtitleLayout.heading}
+                  data-ui="subtitleState"
+                  data-state={subtitleState}
+                  className="my-3 grid min-w-0 gap-2"
+                >
+                  <h3 className="text-sm font-semibold">{subtitleLayout.heading}</h3>
+                  <div
+                    className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
+                    data-ui="settingField"
+                  >
+                    <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                      <label
+                        className="m-0 min-w-0 text-xs font-semibold leading-5"
+                        htmlFor="learning-target"
+                      >
+                        {t("targetLanguage")}
+                      </label>
+                      <SettingInfo
+                        label={t("targetLanguage")}
+                        infoLabel={settingsCopy.infoLabel}
+                        explanation={settingsCopy.fieldHints.targetLanguage}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">{subtitleLayout.languageHint}</p>
-                    <div
-                      role={subtitleState === "error" ? "alert" : "status"}
-                      className="grid gap-1 text-sm wrap-anywhere"
-                    >
-                      <p className="flex items-center gap-2 font-medium">
-                        {subtitleState === "ready" && (
-                          <Check aria-hidden="true" className="size-4 shrink-0" />
-                        )}
-                        {subtitleState === "loading" && (
-                          <LoaderCircle
-                            aria-hidden="true"
-                            className="size-4 shrink-0 motion-safe:animate-spin"
-                          />
-                        )}
-                        {subtitleState === "error" && (
-                          <AlertCircle
-                            aria-hidden="true"
-                            className="size-4 shrink-0 text-destructive"
-                          />
-                        )}
-                        {subtitleState === "ready"
-                          ? learningLanguageName(profile.targetLanguage, uiLocale) +
-                            " · " +
-                            subtitleMessage(subtitleLayout.count, { count: cues.length })
-                          : subtitleReaderBlocked
-                            ? subtitleLayout.reloadNeeded
-                            : subtitleState === "loading"
-                              ? subtitleUi.busy
-                              : subtitleState === "error"
-                                ? subtitleLayout.failed
-                                : subtitleLayout.empty}
-                      </p>
-                      {!subtitleReaderBlocked &&
-                        (subtitleState === "loading" || subtitleState === "error") && (
-                          <p className="text-xs text-muted-foreground">
-                            {subtitleState === "loading"
-                              ? subtitleMessage(subtitleUi.loadingLanguage, {
+                    <SearchableSelectField
+                      id="learning-target"
+                      ariaLabel={t("targetLanguage")}
+                      value={profile.targetLanguage}
+                      onValueChange={chooseLearningLanguage}
+                      disabled={checking || generating}
+                      options={learningLanguageOptions(uiLocale)}
+                      copy={LEARNING_LANGUAGE_SEARCH_COPY[uiLocale]}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{subtitleLayout.languageHint}</p>
+                  <div
+                    role={subtitleState === "error" ? "alert" : "status"}
+                    className="grid gap-1 text-sm wrap-anywhere"
+                  >
+                    <p className="flex items-center gap-2 font-medium">
+                      {subtitleState === "ready" && (
+                        <Check aria-hidden="true" className="size-4 shrink-0" />
+                      )}
+                      {subtitleState === "loading" && (
+                        <LoaderCircle
+                          aria-hidden="true"
+                          className="size-4 shrink-0 motion-safe:animate-spin"
+                        />
+                      )}
+                      {subtitleState === "error" && (
+                        <AlertCircle
+                          aria-hidden="true"
+                          className="size-4 shrink-0 text-destructive"
+                        />
+                      )}
+                      {subtitleState === "ready"
+                        ? learningLanguageName(profile.targetLanguage, uiLocale) +
+                          " · " +
+                          subtitleMessage(subtitleLayout.count, { count: cues.length })
+                        : subtitleReaderBlocked
+                          ? subtitleLayout.reloadNeeded
+                          : subtitleState === "loading"
+                            ? subtitleUi.busy
+                            : subtitleState === "error"
+                              ? subtitleLayout.failed
+                              : subtitleLayout.empty}
+                    </p>
+                    {!subtitleReaderBlocked &&
+                      (subtitleState === "loading" || subtitleState === "error") && (
+                        <p className="text-xs text-muted-foreground">
+                          {subtitleState === "loading"
+                            ? subtitleMessage(subtitleUi.loadingLanguage, {
+                                language: learningLanguageName(profile.targetLanguage, uiLocale),
+                              })
+                            : subtitleStatus
+                              ? typeof subtitleStatus === "string"
+                                ? subtitleStatus
+                                : subtitleFailureMessage(uiLocale, subtitleStatus)
+                              : subtitleMessage(subtitleUi.languageNotReady, {
                                   language: learningLanguageName(profile.targetLanguage, uiLocale),
-                                })
-                              : subtitleStatus
-                                ? typeof subtitleStatus === "string"
-                                  ? subtitleStatus
-                                  : subtitleFailureMessage(uiLocale, subtitleStatus)
-                                : subtitleMessage(subtitleUi.languageNotReady, {
+                                })}
+                        </p>
+                      )}
+                    {subtitleReaderBlocked && subtitleState === "ready" && (
+                      <p className="text-xs text-muted-foreground">{subtitleLayout.reloadNeeded}</p>
+                    )}
+                    {videoRecovery.failed && (
+                      <p className="text-xs text-destructive">{subtitleUi.reloadFailed}</p>
+                    )}
+                    {subtitleState === "ready" && captionSource?.origin === "manual" && (
+                      <p className="text-xs text-muted-foreground">
+                        {subtitleLayout.source}：
+                        {fileName ? fileName.split(".").pop()?.toUpperCase() : subtitleLayout.paste}
+                      </p>
+                    )}
+                  </div>
+                  {subtitleState === "ready" && (
+                    <>
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          aria-expanded={subtitlePreview}
+                          aria-controls="subtitle-preview"
+                          onClick={() => setSubtitlePreview(value => !value)}
+                        >
+                          {subtitlePreview ? subtitleLayout.close : subtitleLayout.preview}
+                        </Button>
+                        {!subtitleReaderBlocked &&
+                          (subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={
+                                subtitleReaderBlocked ||
+                                subtitleBusy ||
+                                metadataBusy ||
+                                checking ||
+                                generating
+                              }
+                              onClick={() => void fetchCurrentSubtitles()}
+                            >
+                              {subtitleBusy ? subtitleUi.busy : subtitleLayout.refresh}
+                            </Button>
+                          )}
+                      </div>
+                      {subtitlePreview && (
+                        <ol
+                          id="subtitle-preview"
+                          aria-label={subtitleLayout.preview}
+                          tabIndex={0}
+                          className="grid max-h-64 gap-2 overflow-y-auto overscroll-contain rounded-[var(--radius)] border border-border p-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {cues.slice(0, 10).map((cue, index) => (
+                            <li key={index} className="flex min-w-0 items-start gap-3">
+                              <span className="shrink-0 tabular-nums text-muted-foreground">
+                                {cue.startMs === null
+                                  ? "—"
+                                  : String(Math.floor(cue.startMs / 60000)).padStart(2, "0") +
+                                    ":" +
+                                    String(Math.floor(cue.startMs / 1000) % 60).padStart(2, "0")}
+                              </span>
+                              <span className="min-w-0 whitespace-pre-wrap wrap-anywhere">
+                                {cue.originalText}
+                              </span>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </>
+                  )}
+                </section>
+                {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && (
+                  <>
+                    {!subtitleReaderBlocked && subtitleState !== "ready" && trackBusy && (
+                      <p className="my-2 text-xs text-muted-foreground" role="status">
+                        {subtitleUi.tracksChecking}
+                      </p>
+                    )}
+                    {!subtitleReaderBlocked &&
+                      subtitleState !== "ready" &&
+                      !trackBusy &&
+                      trackInfo?.status !== "unknown" &&
+                      trackInfo?.sourceKey === videoSourceKey(sourceUrl) && (
+                        <p
+                          className="my-2 text-xs text-muted-foreground wrap-anywhere"
+                          role="status"
+                        >
+                          {(() => {
+                            const available = LEARNING_LANGUAGES.filter(language =>
+                              trackInfo.tracks.some(track =>
+                                subtitleLanguageMatches(language, track.language),
+                              ),
+                            );
+                            const names = available.map(
+                              language =>
+                                learningLanguageName(language, uiLocale) +
+                                (trackInfo.tracks.some(
+                                  track =>
+                                    subtitleLanguageMatches(language, track.language) &&
+                                    track.kind === "manual",
+                                )
+                                  ? ""
+                                  : " (" + subtitleUi.tracksAuto + ")"),
+                            );
+                            const summary = subtitleMessage(subtitleUi.tracksAvailable, {
+                              languages: names.join("、") || subtitleUi.tracksNone,
+                            });
+                            return available.includes(profile.targetLanguage)
+                              ? summary
+                              : summary +
+                                  " " +
+                                  subtitleMessage(subtitleUi.tracksMissing, {
                                     language: learningLanguageName(
                                       profile.targetLanguage,
                                       uiLocale,
                                     ),
-                                  })}
-                          </p>
-                        )}
-                      {subtitleReaderBlocked && subtitleState === "ready" && (
-                        <p className="text-xs text-muted-foreground">
-                          {subtitleLayout.reloadNeeded}
+                                  });
+                          })()}
                         </p>
                       )}
-                      {videoRecovery.failed && (
-                        <p className="text-xs text-destructive">{subtitleUi.reloadFailed}</p>
-                      )}
-                      {subtitleState === "ready" && captionSource?.origin === "manual" && (
-                        <p className="text-xs text-muted-foreground">
-                          {subtitleLayout.source}：
-                          {fileName
-                            ? fileName.split(".").pop()?.toUpperCase()
-                            : subtitleLayout.paste}
-                        </p>
-                      )}
-                    </div>
-                    {subtitleState === "ready" && (
-                      <>
-                        <div className="flex min-w-0 flex-wrap items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            aria-expanded={subtitlePreview}
-                            aria-controls="subtitle-preview"
-                            onClick={() => setSubtitlePreview(value => !value)}
-                          >
-                            {subtitlePreview ? subtitleLayout.close : subtitleLayout.preview}
-                          </Button>
-                          {!subtitleReaderBlocked &&
-                            (subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled={
-                                  subtitleReaderBlocked ||
-                                  subtitleBusy ||
-                                  metadataBusy ||
-                                  checking ||
-                                  generating
-                                }
-                                onClick={() => void fetchCurrentSubtitles()}
-                              >
-                                {subtitleBusy ? subtitleUi.busy : subtitleLayout.refresh}
-                              </Button>
-                            )}
-                        </div>
-                        {subtitlePreview && (
-                          <ol
-                            id="subtitle-preview"
-                            aria-label={subtitleLayout.preview}
-                            tabIndex={0}
-                            className="grid max-h-64 gap-2 overflow-y-auto overscroll-contain rounded-[var(--radius)] border border-border p-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            {cues.slice(0, 10).map((cue, index) => (
-                              <li key={index} className="flex min-w-0 items-start gap-3">
-                                <span className="shrink-0 tabular-nums text-muted-foreground">
-                                  {cue.startMs === null
-                                    ? "—"
-                                    : String(Math.floor(cue.startMs / 60000)).padStart(2, "0") +
-                                      ":" +
-                                      String(Math.floor(cue.startMs / 1000) % 60).padStart(2, "0")}
-                                </span>
-                                <span className="min-w-0 whitespace-pre-wrap wrap-anywhere">
-                                  {cue.originalText}
-                                </span>
-                              </li>
-                            ))}
-                          </ol>
-                        )}
-                      </>
-                    )}
-                  </section>
-                  {(subtitlePlatform === "netflix" || subtitlePlatform === "youtube") && (
-                    <>
-                      {!subtitleReaderBlocked && subtitleState !== "ready" && trackBusy && (
-                        <p className="my-2 text-xs text-muted-foreground" role="status">
-                          {subtitleUi.tracksChecking}
-                        </p>
-                      )}
-                      {!subtitleReaderBlocked &&
-                        subtitleState !== "ready" &&
-                        !trackBusy &&
-                        trackInfo?.status !== "unknown" &&
-                        trackInfo?.sourceKey === videoSourceKey(sourceUrl) && (
-                          <p
-                            className="my-2 text-xs text-muted-foreground wrap-anywhere"
-                            role="status"
-                          >
-                            {(() => {
-                              const available = LEARNING_LANGUAGES.filter(language =>
-                                trackInfo.tracks.some(track =>
-                                  subtitleLanguageMatches(language, track.language),
-                                ),
-                              );
-                              const names = available.map(
-                                language =>
-                                  learningLanguageName(language, uiLocale) +
-                                  (trackInfo.tracks.some(
-                                    track =>
-                                      subtitleLanguageMatches(language, track.language) &&
-                                      track.kind === "manual",
-                                  )
-                                    ? ""
-                                    : " (" + subtitleUi.tracksAuto + ")"),
-                              );
-                              const summary = subtitleMessage(subtitleUi.tracksAvailable, {
-                                languages: names.join("、") || subtitleUi.tracksNone,
-                              });
-                              return available.includes(profile.targetLanguage)
-                                ? summary
-                                : summary +
-                                    " " +
-                                    subtitleMessage(subtitleUi.tracksMissing, {
-                                      language: learningLanguageName(
-                                        profile.targetLanguage,
-                                        uiLocale,
-                                      ),
-                                    });
-                            })()}
-                          </p>
-                        )}
 
-                      {!subtitleReaderBlocked && subtitleState !== "ready" && (
-                        <Button
-                          size="sm"
-                          className="min-w-0 text-center leading-[1.4] whitespace-normal wrap-anywhere"
-                          disabled={
-                            subtitleReaderBlocked ||
-                            subtitleBusy ||
-                            metadataBusy ||
-                            checking ||
-                            generating
-                          }
-                          onClick={() => void fetchCurrentSubtitles()}
-                        >
-                          {subtitleBusy
-                            ? subtitleUi.busy
-                            : subtitleState === "error"
-                              ? subtitleLayout.retry
-                              : subtitleUi.button}
-                        </Button>
-                      )}
-                      {(videoRecoveryUrl || videoRecovery.unavailable) && (
-                        <div
-                          className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
-                          data-ui="actions"
-                        >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={
-                              reloadingVideoTab ||
-                              videoRecovery.busy ||
-                              subtitleBusy ||
-                              metadataBusy
-                            }
-                            onClick={() => {
-                              if (videoRecovery.unavailable) {
-                                subtitleDraft.clearRecovery();
-                                void videoRecovery.reload();
-                              } else void reloadVideoReader();
-                            }}
-                          >
-                            {reloadingVideoTab || videoRecovery.busy
-                              ? subtitleUi.reloadingTab
-                              : subtitleLayout.reloadVideo}
-                          </Button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  <Disclosure
-                    className="mt-2 min-w-0 [&>div]:border-b-0"
-                    key={subtitlePlatform + ":" + String(subtitleState === "error")}
-                    defaultOpen={subtitleState === "error"}
-                    title={<>{flow.otherSubtitles}</>}
-                  >
-                    {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && (
-                      <p
-                        className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                        data-ui="hint"
+                    {!subtitleReaderBlocked && subtitleState !== "ready" && (
+                      <Button
+                        size="sm"
+                        className="min-w-0 text-center leading-[1.4] whitespace-normal wrap-anywhere"
+                        disabled={
+                          subtitleReaderBlocked ||
+                          subtitleBusy ||
+                          metadataBusy ||
+                          checking ||
+                          generating
+                        }
+                        onClick={() => void fetchCurrentSubtitles()}
                       >
-                        {t("subtitleHint")}
-                      </p>
+                        {subtitleBusy
+                          ? subtitleUi.busy
+                          : subtitleState === "error"
+                            ? subtitleLayout.retry
+                            : subtitleUi.button}
+                      </Button>
                     )}
-                    <SubtitleImport
-                      value={
-                        subtitlePasteDrafts[captionCacheKey(sourceUrl, profile.targetLanguage)] ??
-                        (captionSource?.origin === "manual" && !fileName ? raw : "")
-                      }
-                      onValueChange={text => subtitleDraft.setPasteDraft(text)}
-                      onFile={onFile}
-                      onPaste={usePastedSubtitles}
-                      disabled={subtitleBusy || checking || generating}
-                      importedFileLabel={
-                        fileName ? t("importedFile", { name: fileName }) : undefined
-                      }
-                      copy={{
-                        hint: t("subtitleImportHint"),
-                        fileTab: t("subtitleFileTab"),
-                        pasteTab: t("subtitlePasteTab"),
-                        fileHint: t("subtitleFileHint"),
-                        fileButton: t("importSubtitleFile"),
-                        pasteLabel: t("pasteSubtitles"),
-                        pasteButton: t("usePastedSubtitles"),
-                        placeholder: t("subtitlePlaceholder"),
-                      }}
-                    />
-                  </Disclosure>
-                </PageSection>
-
+                    {(videoRecoveryUrl || videoRecovery.unavailable) && (
+                      <div
+                        className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
+                        data-ui="actions"
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={
+                            reloadingVideoTab || videoRecovery.busy || subtitleBusy || metadataBusy
+                          }
+                          onClick={() => {
+                            if (videoRecovery.unavailable) {
+                              subtitleDraft.clearRecovery();
+                              void videoRecovery.reload();
+                            } else void reloadVideoReader();
+                          }}
+                        >
+                          {reloadingVideoTab || videoRecovery.busy
+                            ? subtitleUi.reloadingTab
+                            : subtitleLayout.reloadVideo}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
+                <Disclosure
+                  className="mt-2 min-w-0 [&>div]:border-b-0"
+                  key={subtitlePlatform + ":" + String(subtitleState === "error")}
+                  defaultOpen={subtitleState === "error"}
+                  title={<>{flow.otherSubtitles}</>}
+                >
+                  {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && (
+                    <p
+                      className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                      data-ui="hint"
+                    >
+                      {t("subtitleHint")}
+                    </p>
+                  )}
+                  <SubtitleImport
+                    value={
+                      subtitlePasteDrafts[captionCacheKey(sourceUrl, profile.targetLanguage)] ??
+                      (captionSource?.origin === "manual" && !fileName ? raw : "")
+                    }
+                    onValueChange={text => subtitleDraft.setPasteDraft(text)}
+                    onFile={onFile}
+                    onPaste={usePastedSubtitles}
+                    disabled={subtitleBusy || checking || generating}
+                    importedFileLabel={fileName ? t("importedFile", { name: fileName }) : undefined}
+                    copy={{
+                      hint: t("subtitleImportHint"),
+                      fileTab: t("subtitleFileTab"),
+                      pasteTab: t("subtitlePasteTab"),
+                      fileHint: t("subtitleFileHint"),
+                      fileButton: t("importSubtitleFile"),
+                      pasteLabel: t("pasteSubtitles"),
+                      pasteButton: t("usePastedSubtitles"),
+                      placeholder: t("subtitlePlaceholder"),
+                    }}
+                  />
+                </Disclosure>
                 {cues.length > 0 && (
-                  <PageSection framed hidden={createStep !== 1}>
+                  <div className="border-t border-border pt-4">
                     <AnalysisRangePicker
                       cues={cues}
                       value={analysisSelection}
@@ -1898,343 +1906,426 @@ export default function App() {
                       locale={uiLocale}
                       onError={setError}
                     />
-                  </PageSection>
+                  </div>
                 )}
-                <PageSection framed hidden={createStep !== 2}>
-                  <h2>{customUi.type}</h2>
-                  <SelectField
-                    ariaLabel={customUi.type}
-                    value={contentMode}
-                    onValueChange={value => setContentMode(value as "standard" | "custom")}
-                    options={[
-                      { value: "standard", label: customUi.standard },
-                      { value: "custom", label: customUi.markdown },
-                    ]}
-                  />
-                </PageSection>
-                <PageSection framed hidden={createStep !== 3 || contentMode !== "custom"}>
-                  <h2>{customUi.settings}</h2>
-                  <CustomPrompt
-                    locale={uiLocale}
-                    prompt={customPrompt}
-                    onPrompt={setCustomPrompt}
-                    context={customContext}
-                    onContext={setCustomContext}
-                  />
-                </PageSection>
-                <PageSection
-                  framed
-                  hidden={createStep !== 3 || contentMode !== "standard"}
-                  className="[&_[data-ui=hint]]:my-[4px_9px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:min-h-8 [&_[data-ui=settingField]_[data-slot=select-trigger]]:w-full [&_[data-ui=advancedLessonSettings]]:mt-4 [&_[data-ui=advancedLessonSettings]>div]:border-b-0"
+              </PageSection>
+
+              <div hidden={createStep !== 1}>
+                <Tabs
+                  value={contentMode}
+                  onValueChange={value => setContentMode(value as "standard" | "custom")}
                 >
-                  <h2>{customUi.settings}</h2>
-                  <div className="my-3 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-x-4 gap-y-3 [&_[data-ui=settingField]]:m-0">
-                    <div
-                      className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
-                      data-ui="settingField"
-                    >
-                      <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
-                        <label
-                          className="m-0 min-w-0 text-xs font-semibold leading-5"
-                          htmlFor="learning-level"
-                        >
-                          {t("level")}
-                        </label>
-                        <SettingInfo
-                          label={t("level")}
-                          infoLabel={settingsCopy.infoLabel}
-                          explanation={levelHint(settingsCopy, profile.targetLanguage)}
-                          items={levelOptions.map(value => {
-                            const info = settingsCopy.levels[profile.targetLanguage][value];
-                            return {
-                              value,
-                              label: info?.label ?? value,
-                              description: info?.description ?? "",
-                            };
-                          })}
-                        />
-                      </div>
-                      <SelectField
-                        id="learning-level"
-                        ariaLabel={t("level")}
-                        value={profile.level}
-                        onValueChange={level => setProfile(current => ({ ...current, level }))}
-                        options={levelOptions.map(level => ({
-                          value: level,
-                          label:
-                            level +
-                            " · " +
-                            (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
-                        }))}
+                  <TabsList aria-label={customUi.type} className="grid h-auto grid-cols-2">
+                    <TabsTrigger value="standard" className="min-h-9 whitespace-normal text-xs">
+                      {customUi.standard}
+                    </TabsTrigger>
+                    <TabsTrigger value="custom" className="min-h-9 whitespace-normal text-xs">
+                      {customUi.markdown}
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+              <PageSection framed hidden={createStep !== 1 || contentMode !== "custom"}>
+                <h2>{ux.contentSettings}</h2>
+                <CustomPrompt
+                  locale={uiLocale}
+                  prompt={customPrompt}
+                  onPrompt={setCustomPrompt}
+                  context={customContext}
+                  onContext={setCustomContext}
+                />
+              </PageSection>
+              <PageSection
+                framed
+                hidden={createStep !== 1 || contentMode !== "standard"}
+                className="[&_[data-ui=hint]]:my-[4px_9px] [&_[data-ui=settingField]_[data-slot=select-trigger]]:min-h-8 [&_[data-ui=settingField]_[data-slot=select-trigger]]:w-full [&_[data-ui=advancedLessonSettings]]:mt-4 [&_[data-ui=advancedLessonSettings]>div]:border-b-0"
+              >
+                <h2>{ux.contentSettings}</h2>
+                <div className="my-3 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-x-4 gap-y-3 [&_[data-ui=settingField]]:m-0">
+                  <div
+                    className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
+                    data-ui="settingField"
+                  >
+                    <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                      <label
+                        className="m-0 min-w-0 text-xs font-semibold leading-5"
+                        htmlFor="learning-level"
+                      >
+                        {t("level")}
+                      </label>
+                      <SettingInfo
+                        label={t("level")}
+                        infoLabel={settingsCopy.infoLabel}
+                        explanation={levelHint(settingsCopy, profile.targetLanguage)}
+                        items={levelOptions.map(value => {
+                          const info = settingsCopy.levels[profile.targetLanguage][value];
+                          return {
+                            value,
+                            label: info?.label ?? value,
+                            description: info?.description ?? "",
+                          };
+                        })}
                       />
                     </div>
-                    <div
-                      className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
-                      data-ui="settingField"
-                    >
-                      <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
-                        <label
-                          className="m-0 min-w-0 text-xs font-semibold leading-5"
-                          htmlFor="learning-length"
-                        >
-                          {t("lessonLength")}
-                        </label>
-                        <SettingInfo
-                          label={t("lessonLength")}
-                          infoLabel={settingsCopy.infoLabel}
-                          explanation={t("lessonLengthHint")}
-                        />
-                      </div>
-                      <SelectField
-                        id="learning-length"
-                        ariaLabel={t("lessonLength")}
-                        value={String(profile.sceneCount)}
-                        onValueChange={value =>
-                          setProfile(current =>
-                            contextualGenerationProfile({
-                              ...current,
-                              sceneCount: normalizeLessonLength(Number(value)),
-                            }),
-                          )
-                        }
-                        options={[
-                          { value: "2", label: t("lessonLengthShort") },
-                          { value: "4", label: t("lessonLengthStandard") },
-                          { value: "6", label: t("lessonLengthRich") },
-                        ]}
+                    <SelectField
+                      id="learning-level"
+                      ariaLabel={t("level")}
+                      value={profile.level}
+                      onValueChange={level => setProfile(current => ({ ...current, level }))}
+                      options={levelOptions.map(level => ({
+                        value: level,
+                        label:
+                          level +
+                          " · " +
+                          (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
+                      }))}
+                    />
+                  </div>
+                  <div
+                    className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
+                    data-ui="settingField"
+                  >
+                    <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                      <label
+                        className="m-0 min-w-0 text-xs font-semibold leading-5"
+                        htmlFor="learning-length"
+                      >
+                        {t("lessonLength")}
+                      </label>
+                      <SettingInfo
+                        label={t("lessonLength")}
+                        infoLabel={settingsCopy.infoLabel}
+                        explanation={t("lessonLengthHint")}
                       />
                     </div>
-                    <div
-                      className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
-                      data-ui="settingField"
-                    >
-                      <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
-                        <label
-                          className="m-0 min-w-0 text-xs font-semibold leading-5"
-                          htmlFor="contextual-examples"
-                        >
-                          {t("contextualExamples")}
-                        </label>
-                        <SettingInfo
-                          label={t("contextualExamples")}
-                          infoLabel={settingsCopy.infoLabel}
-                          explanation={t("contextualExamplesHint")}
-                        />
-                      </div>
-                      <SelectField
-                        id="contextual-examples"
-                        ariaLabel={t("contextualExamples")}
-                        value={String(profile.contextualExampleCount ?? 2)}
-                        onValueChange={value =>
+                    <SelectField
+                      id="learning-length"
+                      ariaLabel={t("lessonLength")}
+                      value={String(profile.sceneCount)}
+                      onValueChange={value =>
+                        setProfile(current =>
+                          contextualGenerationProfile({
+                            ...current,
+                            sceneCount: normalizeLessonLength(Number(value)),
+                          }),
+                        )
+                      }
+                      options={[
+                        { value: "2", label: t("lessonLengthShort") },
+                        { value: "4", label: t("lessonLengthStandard") },
+                        { value: "6", label: t("lessonLengthRich") },
+                      ]}
+                    />
+                  </div>
+                </div>
+                <Disclosure
+                  className="my-2 min-w-0"
+                  data-ui="advancedLessonSettings"
+                  title={<>{t("advancedLessonSettings")}</>}
+                >
+                  <div
+                    className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
+                    data-ui="settingField"
+                  >
+                    <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                      <label
+                        className="m-0 min-w-0 text-xs font-semibold leading-5"
+                        htmlFor="contextual-examples"
+                      >
+                        {t("contextualExamples")}
+                      </label>
+                      <SettingInfo
+                        label={t("contextualExamples")}
+                        infoLabel={settingsCopy.infoLabel}
+                        explanation={t("contextualExamplesHint")}
+                      />
+                    </div>
+                    <SelectField
+                      id="contextual-examples"
+                      ariaLabel={t("contextualExamples")}
+                      value={String(profile.contextualExampleCount ?? 2)}
+                      onValueChange={value =>
+                        setProfile(current => ({
+                          ...current,
+                          contextualExampleCount: Number(value),
+                        }))
+                      }
+                      options={[1, 2, 3].map(value => ({
+                        value: String(value),
+                        label: t("contextualExamplesValue", { count: value }),
+                      }))}
+                    />
+                  </div>
+                  <div
+                    className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
+                    data-ui="settingField"
+                  >
+                    <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                      <label
+                        className="m-0 min-w-0 text-xs font-semibold leading-5"
+                        htmlFor="learning-explanation-language"
+                      >
+                        {t("instructionLanguage")}
+                      </label>
+                      <SettingInfo
+                        label={t("instructionLanguage")}
+                        infoLabel={settingsCopy.infoLabel}
+                        explanation={settingsCopy.fieldHints.instructionLanguage}
+                      />
+                    </div>
+                    <SelectField
+                      id="learning-explanation-language"
+                      ariaLabel={t("instructionLanguage")}
+                      value={
+                        explanationLanguageMode === "auto"
+                          ? "__auto__"
+                          : profile.instructionLanguage
+                      }
+                      onValueChange={value => {
+                        if (value === "__auto__") {
+                          setExplanationLanguageMode("auto");
+                          setProfile(current => ({ ...current, instructionLanguage: uiLocale }));
+                        } else {
+                          setExplanationLanguageMode("custom");
                           setProfile(current => ({
                             ...current,
-                            contextualExampleCount: Number(value),
-                          }))
+                            instructionLanguage: value as LearningProfile["instructionLanguage"],
+                          }));
                         }
-                        options={[1, 2, 3].map(value => ({
-                          value: String(value),
-                          label: t("contextualExamplesValue", { count: value }),
-                        }))}
-                      />
-                    </div>
+                      }}
+                      options={[
+                        { value: "__auto__", label: t("explanationAuto") },
+                        ...EXPLANATION_LANGUAGES.map(value => ({
+                          value,
+                          label: explanationLanguageName(value, uiLocale),
+                        })),
+                      ]}
+                    />
                   </div>
-                  <Disclosure
-                    className="my-2 min-w-0"
-                    data-ui="advancedLessonSettings"
-                    title={<>{t("advancedLessonSettings")}</>}
-                  >
-                    <div
-                      className="relative my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full only:col-span-full"
-                      data-ui="settingField"
-                    >
-                      <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
-                        <label
-                          className="m-0 min-w-0 text-xs font-semibold leading-5"
-                          htmlFor="learning-explanation-language"
-                        >
-                          {t("instructionLanguage")}
-                        </label>
-                        <SettingInfo
-                          label={t("instructionLanguage")}
-                          infoLabel={settingsCopy.infoLabel}
-                          explanation={settingsCopy.fieldHints.instructionLanguage}
-                        />
-                      </div>
-                      <SelectField
-                        id="learning-explanation-language"
-                        ariaLabel={t("instructionLanguage")}
-                        value={
-                          explanationLanguageMode === "auto"
-                            ? "__auto__"
-                            : profile.instructionLanguage
-                        }
-                        onValueChange={value => {
-                          if (value === "__auto__") {
-                            setExplanationLanguageMode("auto");
-                            setProfile(current => ({ ...current, instructionLanguage: uiLocale }));
-                          } else {
-                            setExplanationLanguageMode("custom");
-                            setProfile(current => ({
-                              ...current,
-                              instructionLanguage: value as LearningProfile["instructionLanguage"],
-                            }));
-                          }
-                        }}
-                        options={[
-                          { value: "__auto__", label: t("explanationAuto") },
-                          ...EXPLANATION_LANGUAGES.map(value => ({
-                            value,
-                            label: explanationLanguageName(value, uiLocale),
-                          })),
-                        ]}
-                      />
-                    </div>
-                  </Disclosure>
-                </PageSection>
+                </Disclosure>
+              </PageSection>
 
-                <PageSection framed hidden={createStep !== 4}>
-                  <h2>{customUi.create}</h2>
-                  {duplicateWarning && (
-                    <Alert
-                      className="my-3 min-w-0 wrap-anywhere"
-                      aria-label={t("duplicateConfirmLabel")}
-                    >
-                      <AlertTitle>
-                        {t("duplicateFound", { count: duplicateWarning.matches.length })}
-                      </AlertTitle>
-                      <p
-                        className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                        data-ui="hint"
-                      >
-                        {t("duplicateNewVersion")}
-                      </p>
-                      {duplicateWarning.matches.map(match => (
-                        <div
-                          className="mb-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border p-3 text-[13px] wrap-anywhere [&_strong]:mr-2 [&_strong]:text-primary [&_p]:mt-[6px] [&_p]:text-xs [&_p]:text-muted-foreground"
-                          key={match.documentId}
-                        >
-                          <strong>{match.title}</strong>
-                          <p>
-                            {new Date(match.createdAt).toLocaleString(uiLocale)} ·{" "}
-                            {match.destination} ·{" "}
-                            {t(match.exactSettings ? "sameSettings" : "differentSettings")}
-                            {match.jobStatus ? " · " + match.jobStatus : ""}
-                          </p>
-                          <div
-                            className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
-                            data-ui="actions"
-                          >
-                            {match.local && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  cancelDuplicate();
-                                  openSavedDocument(match.documentId);
-                                }}
-                              >
-                                {t("openExisting")}
-                              </Button>
-                            )}
-                            {match.url && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => void chrome.tabs.create({ url: match.url })}
-                              >
-                                {t("openInDrive")}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                      <div
-                        className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
-                        data-ui="actions"
-                      >
-                        <Button variant="destructive" size="sm" onClick={confirmRegeneration}>
-                          {t("confirmNewVersion")}
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={cancelDuplicate}>
-                          {t("cancelNoGeneration")}
-                        </Button>
-                      </div>
-                    </Alert>
-                  )}
-                  {contentMode === "standard" && (
-                    <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere mt-[5px] mb-[14px]">
-                      {t("lessonContentSummary", {
-                        scenes: profile.sceneCount,
-                        examples: profile.contextualExampleCount ?? 2,
-                      })}
-                    </p>
-                  )}
-                  <GenerationService
-                    locale={uiLocale}
-                    selected={generationAgent}
-                    providers={agentCatalog}
-                    available={hostReady}
-                    disabled={checking}
-                    onReady={setGenerationServiceReady}
-                    onConfigure={() => {
-                      setReturnPage("create");
-                      setSettingsSection("ai");
-                      setPage("settings");
-                    }}
-                  />
-                  <Button
-                    className="h-auto min-h-9 w-full px-3 py-2 text-center text-xs font-semibold leading-[1.4] whitespace-normal wrap-anywhere"
-                    onClick={startGeneration}
-                    disabled={
-                      (contentMode === "custom" && !customPrompt.trim()) ||
-                      !analysisValid ||
-                      !hostReady ||
-                      !generationServiceReady ||
-                      checking ||
-                      subtitleBusy ||
-                      !isPiProviderId(generationAgent.provider) ||
-                      installed?.[generationAgent.provider] !== true ||
-                      !captionsReady ||
-                      !cues.length ||
-                      !title.trim()
-                    }
-                  >
-                    {(generating || checking) && (
-                      <span
-                        className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
-                        aria-hidden="true"
-                      />
-                    )}
-                    {checking ? t("checkingExistingShort") : t("create")}
-                  </Button>
-                </PageSection>
-                <div className="flex justify-between gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={createStep === 0}
-                    onClick={() => setCreateStep(step => step - 1)}
-                  >
-                    {customUi.previous}
-                  </Button>
-                  {createStep < 4 && (
-                    <Button
-                      disabled={createStep >= allowedStep}
-                      onClick={() => setCreateStep(step => step + 1)}
-                    >
-                      {customUi.next}
+              <PageSection framed hidden={createStep !== 2}>
+                <h2>{ux.confirm}</h2>
+                <section className="grid gap-2 border-b border-border pb-3">
+                  <div className="flex justify-between gap-2">
+                    <h3>{flow.video}</h3>
+                    <Button size="sm" variant="ghost" onClick={() => setCreateStep(0)}>
+                      {ux.edit}
                     </Button>
+                  </div>
+                  <p className="wrap-anywhere">{title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {learningLanguageName(profile.targetLanguage, uiLocale)} · {cues.length} ·{" "}
+                    {
+                      analysisRangeCopy(uiLocale)[
+                        analysisSelection.mode === "first"
+                          ? "first"
+                          : analysisSelection.mode === "second"
+                            ? "second"
+                            : analysisSelection.mode === "custom"
+                              ? "custom"
+                              : "full"
+                      ]
+                    }
+                  </p>
+                  <div className="flex justify-between gap-2">
+                    <h3>{ux.contentSettings}</h3>
+                    <Button size="sm" variant="ghost" onClick={() => setCreateStep(1)}>
+                      {ux.edit}
+                    </Button>
+                  </div>
+                  <p>
+                    {contentMode === "standard"
+                      ? customUi.standard + " · " + profile.level
+                      : customUi.markdown}
+                  </p>
+                </section>
+                {duplicateWarning && (
+                  <Alert
+                    className="my-3 min-w-0 wrap-anywhere"
+                    aria-label={t("duplicateConfirmLabel")}
+                  >
+                    <AlertTitle>
+                      {t("duplicateFound", { count: duplicateWarning.matches.length })}
+                    </AlertTitle>
+                    <p
+                      className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                      data-ui="hint"
+                    >
+                      {t("duplicateNewVersion")}
+                    </p>
+                    {duplicateWarning.matches.map(match => (
+                      <div
+                        className="mb-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border p-3 text-[13px] wrap-anywhere [&_strong]:mr-2 [&_strong]:text-primary [&_p]:mt-[6px] [&_p]:text-xs [&_p]:text-muted-foreground"
+                        key={match.documentId}
+                      >
+                        <strong>{match.title}</strong>
+                        <p>
+                          {new Date(match.createdAt).toLocaleString(uiLocale)} · {match.destination}{" "}
+                          · {t(match.exactSettings ? "sameSettings" : "differentSettings")}
+                          {match.jobStatus ? " · " + match.jobStatus : ""}
+                        </p>
+                        <div
+                          className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
+                          data-ui="actions"
+                        >
+                          {match.local && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                cancelDuplicate();
+                                openSavedDocument(match.documentId);
+                              }}
+                            >
+                              {t("openExisting")}
+                            </Button>
+                          )}
+                          {match.url && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => void chrome.tabs.create({ url: match.url })}
+                            >
+                              {t("openInDrive")}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <div
+                      className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
+                      data-ui="actions"
+                    >
+                      <Button variant="destructive" size="sm" onClick={confirmRegeneration}>
+                        {t("confirmNewVersion")}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={cancelDuplicate}>
+                        {t("cancelNoGeneration")}
+                      </Button>
+                    </div>
+                  </Alert>
+                )}
+                {contentMode === "standard" && (
+                  <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere mt-[5px] mb-[14px]">
+                    {t("lessonContentSummary", {
+                      scenes: profile.sceneCount,
+                      examples: profile.contextualExampleCount ?? 2,
+                    })}
+                  </p>
+                )}
+                <RequestModelSelection
+                  locale={uiLocale}
+                  selected={generationAgent}
+                  providers={agentCatalog}
+                  available={hostReady && !checking}
+                  onChange={setRequestAgent}
+                  onError={setError}
+                />
+                <p className="text-xs text-muted-foreground">{ux.accountLimit}</p>
+                <section className="my-4 grid gap-2">
+                  <h3>{t("storageLocation")}</h3>
+                  <p className="text-xs wrap-anywhere">
+                    {requestDestination?.directory ?? destination.directory ?? t("defaultFolder")}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!hostReady || storageBusy || checking}
+                    onClick={() => void chooseFolder(true)}
+                  >
+                    {t("chooseFolder")}
+                  </Button>
+                  <label className="flex justify-between gap-3 text-xs">
+                    {t("autoBackup")}
+                    <Switch
+                      checked={(requestBackup ?? backup).enabled}
+                      disabled={!driveAccessVerified || checking}
+                      onCheckedChange={enabled =>
+                        setRequestBackup({ ...backup, enabled, accountId: selectedDriveId })
+                      }
+                    />
+                  </label>
+                </section>
+                <Disclosure title={ux.cost}>
+                  <p className="text-xs">{ux.unknownCost}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">{ux.costDetail}</p>
+                </Disclosure>
+                <p className="my-3 text-xs text-muted-foreground">{ux.backgroundLimit}</p>
+                <GenerationService
+                  locale={uiLocale}
+                  selected={generationAgent}
+                  providers={agentCatalog}
+                  available={hostReady}
+                  disabled={checking}
+                  onReady={setGenerationServiceReady}
+                  onConfigure={() => {
+                    setReturnPage("create");
+                    setSettingsSection("ai");
+                    setPage("settings");
+                  }}
+                />
+              </PageSection>
+            </div>
+            <footer
+              data-ui="create-footer"
+              className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border bg-background py-3 pb-[max(12px,env(safe-area-inset-bottom))]"
+            >
+              <Button
+                variant="ghost"
+                disabled={createStep === 0}
+                onClick={() => setCreateStep(step => step - 1)}
+              >
+                {customUi.previous}
+              </Button>
+              {createStep < 2 ? (
+                <Button
+                  disabled={createStep >= allowedStep}
+                  onClick={() => {
+                    setCompletedStep(current => Math.max(current, createStep + 1));
+                    setCreateStep(step => step + 1);
+                    formScroll.current?.scrollTo(0, 0);
+                  }}
+                >
+                  {customUi.next}
+                </Button>
+              ) : (
+                <Button
+                  className="h-auto min-h-9 px-3 py-2 text-center text-xs font-semibold leading-[1.4] whitespace-normal wrap-anywhere"
+                  onClick={startGeneration}
+                  disabled={
+                    (contentMode === "custom" && !customPrompt.trim()) ||
+                    !analysisValid ||
+                    !hostReady ||
+                    !generationServiceReady ||
+                    checking ||
+                    generating ||
+                    subtitleBusy ||
+                    !isPiProviderId(generationAgent.provider) ||
+                    installed?.[generationAgent.provider] !== true ||
+                    !captionsReady ||
+                    !cues.length ||
+                    !title.trim()
+                  }
+                >
+                  {(generating || checking) && (
+                    <span
+                      className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
+                      aria-hidden="true"
+                    />
                   )}
-                </div>
-              </>
-            )}
-          </main>
-        )}
+                  {checking ? t("checkingExistingShort") : t("create")}
+                </Button>
+              )}
+            </footer>
+          </>
+        </main>
 
         <main
           id={page === "lesson" ? undefined : "page-panel-lessons"}
           aria-labelledby="page-nav-lessons"
-          hidden={page !== "lessons"}
+          hidden={basePage !== "lessons"}
         >
           {jobs
             .filter(job => ["running", "queued", "waiting", "failed"].includes(job.status))
@@ -2295,510 +2386,540 @@ export default function App() {
           />
         </main>
 
-        {page === "activity" && (
-          <main id="page-panel-activity" aria-labelledby="activity-title">
-            <PageHeading
-              id="activity-title"
-              title={layout.activity}
-              backLabel={layout.back}
-              onBack={() => setPage(returnPage)}
-            />
-            <TaskHistory
-              onDetails={showExecution}
-              jobs={jobs}
-              loadingJobs={loadingJobs}
-              hostReady={hostReady}
-              generating={generating}
-              storageBusy={storageBusy}
-              agentCatalog={agentCatalog}
-              locale={uiLocale}
-              onConfigure={() => {
-                setSettingsSection("ai");
-                setPage("settings");
+        <Sheet
+          open={overlay}
+          onOpenChange={open => {
+            if (!open) setPage(returnPage);
+          }}
+        >
+          {overlay && (
+            <SheetContent
+              closeLabel={ux.close}
+              onCloseAutoFocus={event => {
+                event.preventDefault();
+                window.document.getElementById(sheetOrigin.current)?.focus();
               }}
-              t={t}
-              onRefresh={loadJobs}
-              onResume={jobId => runGeneration({ type: "resume", jobId })}
-              onOpen={openSavedDocument}
-              onRetryPublication={retryPublication}
-              onRetryBackup={retryBackup}
-              onListEnded={listEndedJobs}
-              onDeleteRecords={deleteJobRecords}
-            />
-          </main>
-        )}
-
-        {page === "settings" && (
-          <main id="page-panel-settings" aria-label={t("settings")}>
-            <PageHeading
-              title={settingsSection ? layout[settingsSection] : t("settings")}
-              backLabel={layout.back}
-              onBack={() => (settingsSection ? setSettingsSection(null) : setPage(returnPage))}
-            />
-            {!settingsSection && (
-              <PageSection>
-                <nav aria-label={t("settings")} className="mt-2 grid divide-y divide-border">
-                  {(["general", "ai", "storage", "advanced"] as const).map(section => (
-                    <Button
-                      key={section}
-                      variant="ghost"
-                      className="h-auto min-h-12 justify-between rounded-none px-1 py-2.5 text-left"
-                      onClick={() => setSettingsSection(section)}
-                    >
-                      <span className="min-w-0">
-                        <span className="block text-xs font-semibold">{layout[section]}</span>
-                        <span className="mt-0.5 block whitespace-normal text-[11px] text-muted-foreground">
-                          {section === "ai" && agent.provider
-                            ? agentDisplayName(
-                                agent.provider,
-                                agentCatalog.find(provider => provider.id === agent.provider)
-                                  ?.label,
-                              ) + (agent.modelId ? " · " + agent.modelId : "")
-                            : section === "storage"
-                              ? backup.enabled
-                                ? layout.storageHint
-                                : t("localCopy")
-                              : layout[(section + "Hint") as "generalHint"]}
-                        </span>
-                      </span>
-                      <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
-                    </Button>
-                  ))}
-                </nav>
-              </PageSection>
-            )}
-
-            {settingsSection === "general" && (
-              <PageSection>
-                <div className="my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
-                  <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
-                    <label
-                      className="m-0 min-w-0 text-xs font-semibold leading-5"
-                      htmlFor="ui-language-select"
-                    >
-                      {t("uiLanguage")}
-                    </label>
-                  </div>
-                  <Select
-                    value={localePreference}
-                    onValueChange={next => {
-                      if (isLocalePreference(next)) setLocalePreference(next);
-                    }}
-                  >
-                    <SelectTrigger
-                      id="ui-language-select"
-                      aria-label={t("uiLanguage")}
-                      aria-describedby="ui-language-hint"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="auto">
-                        {t("browserLanguage")} · {nativeLanguageName(browserLocale)}
-                      </SelectItem>
-                      <SelectItem value="en">{nativeLanguageName("en")}</SelectItem>
-                      <SelectItem value="zh-TW">{nativeLanguageName("zh-TW")}</SelectItem>
-                      <SelectItem value="zh-CN">{nativeLanguageName("zh-CN")}</SelectItem>
-                      <SelectItem value="ja">{nativeLanguageName("ja")}</SelectItem>
-                      <SelectItem value="ko">{nativeLanguageName("ko")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p id="ui-language-hint" className="mt-2 text-sm text-muted-foreground">
-                    {t("uiLanguageHint")}
-                  </p>
-                </div>
-                <div className="my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
-                  <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
-                    <label
-                      className="m-0 min-w-0 text-xs font-semibold leading-5"
-                      htmlFor="appearance-select"
-                    >
-                      {t("appearance")}
-                    </label>
-                  </div>
-                  <Select
-                    value={themePreference}
-                    onValueChange={next => {
-                      if (isThemePreference(next)) setThemePreference(next);
-                    }}
-                  >
-                    <SelectTrigger id="appearance-select" aria-label={t("appearance")}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="system">{t("themeSystem")}</SelectItem>
-                      <SelectItem value="light">{t("themeLight")}</SelectItem>
-                      <SelectItem value="dark">{t("themeDark")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <NotificationSettings
-                  locale={uiLocale}
-                  completed={analysisNotificationsEnabled}
-                  attention={attentionNotificationsEnabled}
-                  onCompleted={setAnalysisNotificationsEnabled}
-                  onAttention={setAttentionNotificationsEnabled}
-                />
-              </PageSection>
-            )}
-            {settingsSection === "ai" && (
-              <PageSection>
-                <div>
-                  <h2 id="agent-settings-heading" tabIndex={-1}>
-                    {piCopy[uiLocale].title}
-                  </h2>
-                  <p
-                    className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                    data-ui="hint"
-                  >
-                    {piCopy[uiLocale].hint}
-                  </p>
-                  <AiModelSelection
+            >
+              {page === "activity" && (
+                <main id="page-panel-activity" aria-labelledby="activity-title">
+                  <SheetTitle id="activity-title" className="py-5 pr-10 text-sm font-semibold">
+                    {layout.activity}
+                  </SheetTitle>
+                  <TaskHistory
+                    onDetails={showExecution}
+                    jobs={jobs}
+                    loadingJobs={loadingJobs}
+                    hostReady={hostReady}
+                    generating={generating}
+                    storageBusy={storageBusy}
+                    agentCatalog={agentCatalog}
                     locale={uiLocale}
-                    id="settings"
-                    provider={agent.provider}
-                    modelId={agent.modelId}
-                    providers={agentCatalog}
-                    models={modelOptions}
-                    available={hostReady && !generating}
-                    busy={modelBusy}
-                    notice={modelNotice}
-                    onProvider={selectAgent}
-                    onModel={modelId =>
-                      updateAgent({ ...agent, modelId, thinkingLevel: undefined })
-                    }
-                    thinkingLevel={agent.thinkingLevel}
-                    onThinking={thinkingLevel => updateAgent({ ...agent, thinkingLevel })}
-                    onRefresh={() => {
-                      setModelBusy(true);
-                      setModelRefreshVersion(current => current + 1);
+                    onConfigure={() => {
+                      setSettingsSection("ai");
+                      setPage("settings");
                     }}
+                    t={t}
+                    onRefresh={loadJobs}
+                    onResume={jobId => runGeneration({ type: "resume", jobId })}
+                    onOpen={openSavedDocument}
+                    onRetryPublication={retryPublication}
+                    onRetryBackup={retryBackup}
+                    onListEnded={listEndedJobs}
+                    onDeleteRecords={deleteJobRecords}
                   />
-                </div>
-                <PiSettings
-                  locale={uiLocale}
-                  available={hostReady}
-                  selectedProvider={agent.provider}
-                  onSelect={selectAgent}
-                  onChanged={checkHost}
-                />
-              </PageSection>
-            )}
-            {settingsSection === "storage" && (
-              <PageSection>
-                <label className="my-3 grid gap-[6px] text-xs font-semibold">
-                  {t("storageLocation")}
-                </label>
-                <p
-                  className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                  data-ui="hint"
-                >
-                  {t("currentFolder", {
-                    path:
-                      destination.kind === "local"
-                        ? (destination.directory ?? t("defaultFolder"))
-                        : t("defaultFolder"),
-                  })}
-                </p>
-                <div
-                  className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
-                  data-ui="actions"
-                >
-                  <Button
-                    variant="outline"
-                    disabled={storageBusy || generating}
-                    onClick={() => void chooseFolder()}
-                  >
-                    {t("chooseFolder")}
-                  </Button>
-                  {destination.kind === "local" && destination.directory && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDestination({ kind: "local" })}
-                    >
-                      {t("useDefaultFolder")}
-                    </Button>
+                </main>
+              )}
+
+              {page === "settings" && (
+                <main id="page-panel-settings" aria-label={t("settings")}>
+                  <div className="py-3 pr-10">
+                    {settingsSection && (
+                      <Button variant="ghost" size="sm" onClick={() => setSettingsSection(null)}>
+                        <ArrowLeft className="size-4" />
+                        {t("settings")}
+                      </Button>
+                    )}
+                    <SheetTitle className="py-2 text-sm font-semibold">
+                      {settingsSection ? layout[settingsSection] : t("settings")}
+                    </SheetTitle>
+                  </div>
+                  {!settingsSection && (
+                    <PageSection>
+                      <nav aria-label={t("settings")} className="mt-2 grid divide-y divide-border">
+                        {(["general", "ai", "storage", "advanced"] as const).map(section => (
+                          <Button
+                            key={section}
+                            variant="ghost"
+                            className="h-auto min-h-12 justify-between rounded-none px-1 py-2.5 text-left"
+                            onClick={() => setSettingsSection(section)}
+                          >
+                            <span className="min-w-0">
+                              <span className="block text-xs font-semibold">{layout[section]}</span>
+                              <span className="mt-0.5 block whitespace-normal text-[11px] text-muted-foreground">
+                                {section === "ai" && agent.provider
+                                  ? agentDisplayName(
+                                      agent.provider,
+                                      agentCatalog.find(provider => provider.id === agent.provider)
+                                        ?.label,
+                                    ) + (agent.modelId ? " · " + agent.modelId : "")
+                                  : section === "storage"
+                                    ? backup.enabled
+                                      ? layout.storageHint
+                                      : t("localCopy")
+                                    : layout[(section + "Hint") as "generalHint"]}
+                              </span>
+                            </span>
+                            <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
+                          </Button>
+                        ))}
+                      </nav>
+                    </PageSection>
                   )}
-                </div>
-                <p
-                  className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                  data-ui="hint"
-                >
-                  {t("localAlways")}
-                </p>
-                <div className="mt-5 flex items-center justify-between gap-2 border-t border-border pt-4">
-                  <h3 className="text-sm font-semibold">Google Drive</h3>
-                  <IconTooltip
-                    label={driveFolderUrl ? t("manageDrive") : t("driveAccessNotVerified")}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      aria-label={t("manageDrive")}
-                      disabled={!driveFolderUrl}
-                      onClick={() =>
-                        driveFolderUrl && void chrome.tabs.create({ url: driveFolderUrl })
-                      }
-                    >
-                      <ExternalLink className="size-4" aria-hidden="true" />
-                    </Button>
-                  </IconTooltip>
-                </div>
-                <div className="my-[12px_4px] flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex-1 text-[13px] [&_[data-ui=hint]]:mt-1 [&_[data-ui=hint]]:mb-0">
-                    <strong>{t("autoBackup")}</strong>
-                    <p
-                      className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                      data-ui="hint"
-                    >
-                      {t("backupHint")}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={backup.enabled}
-                    aria-label={t("autoBackup")}
-                    disabled={storageBusy}
-                    onCheckedChange={enabled =>
-                      enabled
-                        ? void enableBackup()
-                        : setBackup(current => ({ ...current, enabled: false }))
-                    }
-                  />
-                </div>
-                {backup.enabled && driveAccessVerified && (
-                  <div className="flex items-center justify-between gap-2 [&_[data-ui=hint]]:my-[3px] [&_[data-ui=hint]]:min-w-0 [&_[data-ui=hint]]:wrap-anywhere">
-                    <span
-                      className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                      data-ui="hint"
-                    >
-                      {t("backupConnected", {
-                        email:
-                          driveAccounts.find(account => account.id === backup.accountId)?.email ??
-                          t("backupUnknownAccount"),
-                      })}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSettingsSection("storage");
-                        setPage("settings");
-                      }}
-                    >
-                      {t("manageDrive")}
-                    </Button>
-                  </div>
-                )}
-                {!backup.enabled && !driveAccounts.length && driveConfigured && (
-                  <p
-                    className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                    data-ui="hint"
-                  >
-                    {t("backupConnectToEnable")}
-                  </p>
-                )}
-                {driveConnectError && (
-                  <p className="my-[5px] text-[11px] text-destructive wrap-anywhere" role="status">
-                    {driveConnectError}
-                  </p>
-                )}
-                {backupStatus && (
-                  <p
-                    className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                    data-ui="hint"
-                    role="status"
-                  >
-                    {backupStatus}
-                  </p>
-                )}
-                <p
-                  className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                  data-ui="hint"
-                >
-                  {t("driveOauthHelp")}
-                </p>
-                {!driveConfigured && (
-                  <p className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere">
-                    {t("oauthFirst")}
-                  </p>
-                )}
-                {driveAccounts.length === 1 && (
-                  <div className="my-3 flex min-w-0 items-center justify-between gap-2 rounded-[var(--radius)] border border-border px-[11px] py-[10px] [&>div]:min-w-0 [&_strong]:block [&_strong]:text-xs [&_strong]:wrap-anywhere [&_[data-ui=hint]]:mt-[2px] [&_[data-ui=hint]]:mb-0 [&_[data-ui=hint]]:block">
-                    <div>
-                      <strong>{driveAccounts[0].email}</strong>
-                      <span
+
+                  {settingsSection === "general" && (
+                    <PageSection>
+                      <div className="my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
+                        <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                          <label
+                            className="m-0 min-w-0 text-xs font-semibold leading-5"
+                            htmlFor="ui-language-select"
+                          >
+                            {t("uiLanguage")}
+                          </label>
+                        </div>
+                        <Select
+                          value={localePreference}
+                          onValueChange={next => {
+                            if (isLocalePreference(next)) setLocalePreference(next);
+                          }}
+                        >
+                          <SelectTrigger
+                            id="ui-language-select"
+                            aria-label={t("uiLanguage")}
+                            aria-describedby="ui-language-hint"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="auto">
+                              {t("browserLanguage")} · {nativeLanguageName(browserLocale)}
+                            </SelectItem>
+                            <SelectItem value="en">{nativeLanguageName("en")}</SelectItem>
+                            <SelectItem value="zh-TW">{nativeLanguageName("zh-TW")}</SelectItem>
+                            <SelectItem value="zh-CN">{nativeLanguageName("zh-CN")}</SelectItem>
+                            <SelectItem value="ja">{nativeLanguageName("ja")}</SelectItem>
+                            <SelectItem value="ko">{nativeLanguageName("ko")}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p id="ui-language-hint" className="mt-2 text-sm text-muted-foreground">
+                          {t("uiLanguageHint")}
+                        </p>
+                      </div>
+                      <div className="my-3 min-w-0 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full">
+                        <div className="relative mb-[6px] flex min-w-0 items-center gap-2">
+                          <label
+                            className="m-0 min-w-0 text-xs font-semibold leading-5"
+                            htmlFor="appearance-select"
+                          >
+                            {t("appearance")}
+                          </label>
+                        </div>
+                        <Select
+                          value={themePreference}
+                          onValueChange={next => {
+                            if (isThemePreference(next)) setThemePreference(next);
+                          }}
+                        >
+                          <SelectTrigger id="appearance-select" aria-label={t("appearance")}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="system">{t("themeSystem")}</SelectItem>
+                            <SelectItem value="light">{t("themeLight")}</SelectItem>
+                            <SelectItem value="dark">{t("themeDark")}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <NotificationSettings
+                        locale={uiLocale}
+                        completed={analysisNotificationsEnabled}
+                        attention={attentionNotificationsEnabled}
+                        onCompleted={setAnalysisNotificationsEnabled}
+                        onAttention={setAttentionNotificationsEnabled}
+                      />
+                    </PageSection>
+                  )}
+                  {settingsSection === "ai" && (
+                    <PageSection>
+                      <div>
+                        <h2 id="agent-settings-heading" tabIndex={-1}>
+                          {piCopy[uiLocale].title}
+                        </h2>
+                        <p
+                          className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                          data-ui="hint"
+                        >
+                          {piCopy[uiLocale].hint}
+                        </p>
+                        <AiModelSelection
+                          locale={uiLocale}
+                          id="settings"
+                          provider={agent.provider}
+                          modelId={agent.modelId}
+                          providers={agentCatalog}
+                          models={modelOptions}
+                          available={hostReady && !generating}
+                          busy={modelBusy}
+                          notice={modelNotice}
+                          onProvider={selectAgent}
+                          onModel={modelId =>
+                            updateAgent({ ...agent, modelId, thinkingLevel: undefined })
+                          }
+                          thinkingLevel={agent.thinkingLevel}
+                          onThinking={thinkingLevel => updateAgent({ ...agent, thinkingLevel })}
+                          onRefresh={() => {
+                            setModelBusy(true);
+                            setModelRefreshVersion(current => current + 1);
+                          }}
+                        />
+                      </div>
+                      <PiSettings
+                        locale={uiLocale}
+                        available={hostReady}
+                        selectedProvider={agent.provider}
+                        onSelect={selectAgent}
+                        onChanged={checkHost}
+                      />
+                    </PageSection>
+                  )}
+                  {settingsSection === "storage" && (
+                    <PageSection>
+                      <label className="my-3 grid gap-[6px] text-xs font-semibold">
+                        {t("storageLocation")}
+                      </label>
+                      <p
                         className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
                         data-ui="hint"
                       >
-                        {t("backupAccount")}
-                      </span>
-                    </div>
-                    <Badge>{t("driveConnectedStatus")}</Badge>
-                  </div>
-                )}
-                {driveAccounts.length > 1 && (
-                  <label className="my-3 grid gap-[6px] text-xs font-semibold">
-                    {t("backupAccount")}
-                    <SelectField
-                      ariaLabel={t("backupAccount")}
-                      value={backup.accountId ?? driveAccounts[0].id}
-                      onValueChange={accountId => setBackup(current => ({ ...current, accountId }))}
-                      options={driveAccounts.map(account => ({
-                        value: account.id,
-                        label: account.email,
-                      }))}
-                    />
-                  </label>
-                )}
-                {selectedDriveId && (
-                  <p
-                    className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                    data-ui="hint"
-                    role="status"
-                  >
-                    {driveAccess?.accountId === selectedDriveId && driveAccess.status === "checking"
-                      ? t("driveAccessChecking")
-                      : driveAccessVerified
-                        ? t("driveAccessVerified")
-                        : t("driveAccessNotVerified")}
-                  </p>
-                )}
-                <div
-                  className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
-                  data-ui="actions"
-                >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={storageBusy || !driveConfigured}
-                    onClick={() => void connectDrive()}
-                  >
-                    {driveAccounts.length ? t("connectAnother") : t("connectGoogle")}
-                  </Button>
-                  {selectedDriveId && !driveAccessVerified && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={storageBusy || driveAccess?.status === "checking"}
-                      onClick={() => void enableBackup()}
-                    >
-                      {t("retryDriveAccess")}
-                    </Button>
-                  )}
-                </div>
-                {driveAccounts.length > 0 && (
-                  <Disclosure
-                    className="my-2 min-w-0"
-                    data-ui="driveAccountsAdvanced"
-                    title={
-                      <>
-                        {t("manageDrive")} · {driveAccounts.length}
-                      </>
-                    }
-                  >
-                    <div className="mt-[10px] grid gap-[5px]">
-                      {driveAccounts.map(account => (
-                        <div
-                          className="flex min-w-0 items-center justify-between gap-2 py-[5px] not-first:border-t not-first:border-border [&_span]:min-w-0 [&_span]:text-xs [&_span]:wrap-anywhere"
-                          key={account.id}
+                        {t("currentFolder", {
+                          path:
+                            destination.kind === "local"
+                              ? (destination.directory ?? t("defaultFolder"))
+                              : t("defaultFolder"),
+                        })}
+                      </p>
+                      <div
+                        className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
+                        data-ui="actions"
+                      >
+                        <Button
+                          variant="outline"
+                          disabled={storageBusy || generating}
+                          onClick={() => void chooseFolder()}
                         >
-                          <span title={account.email}>{account.email}</span>
+                          {t("chooseFolder")}
+                        </Button>
+                        {destination.kind === "local" && destination.directory && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            disabled={storageBusy}
-                            onClick={() => void disconnectDrive(account.id)}
+                            onClick={() => setDestination({ kind: "local" })}
                           >
-                            {t("disconnectGoogle")}
+                            {t("useDefaultFolder")}
+                          </Button>
+                        )}
+                      </div>
+                      <p
+                        className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                        data-ui="hint"
+                      >
+                        {t("localAlways")}
+                      </p>
+                      <div className="mt-5 flex items-center justify-between gap-2 border-t border-border pt-4">
+                        <h3 className="text-sm font-semibold">Google Drive</h3>
+                        <IconTooltip
+                          label={driveFolderUrl ? t("manageDrive") : t("driveAccessNotVerified")}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                            aria-label={t("manageDrive")}
+                            disabled={!driveFolderUrl}
+                            onClick={() =>
+                              driveFolderUrl && void chrome.tabs.create({ url: driveFolderUrl })
+                            }
+                          >
+                            <ExternalLink className="size-4" aria-hidden="true" />
+                          </Button>
+                        </IconTooltip>
+                      </div>
+                      <div className="my-[12px_4px] flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1 text-[13px] [&_[data-ui=hint]]:mt-1 [&_[data-ui=hint]]:mb-0">
+                          <strong>{t("autoBackup")}</strong>
+                          <p
+                            className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                            data-ui="hint"
+                          >
+                            {t("backupHint")}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={backup.enabled}
+                          aria-label={t("autoBackup")}
+                          disabled={storageBusy}
+                          onCheckedChange={enabled =>
+                            enabled
+                              ? void enableBackup()
+                              : setBackup(current => ({ ...current, enabled: false }))
+                          }
+                        />
+                      </div>
+                      {backup.enabled && driveAccessVerified && (
+                        <div className="flex items-center justify-between gap-2 [&_[data-ui=hint]]:my-[3px] [&_[data-ui=hint]]:min-w-0 [&_[data-ui=hint]]:wrap-anywhere">
+                          <span
+                            className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                            data-ui="hint"
+                          >
+                            {t("backupConnected", {
+                              email:
+                                driveAccounts.find(account => account.id === backup.accountId)
+                                  ?.email ?? t("backupUnknownAccount"),
+                            })}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSettingsSection("storage");
+                              setPage("settings");
+                            }}
+                          >
+                            {t("manageDrive")}
                           </Button>
                         </div>
-                      ))}
-                    </div>
-                  </Disclosure>
-                )}
-                {driveAccounts.length > 0 && (
-                  <section className="mt-[14px] grid justify-items-start gap-1 border-t border-border pt-3 [&_strong]:text-xs [&_[data-ui=hint]]:mt-0 [&_[data-ui=hint]]:mb-[5px]">
-                    <strong>{t("backupExisting")}</strong>
-                    <p role="status" className="text-xs text-muted-foreground">
-                      {layout.backupResults
-                        .replace("{success}", String(backupDone.length))
-                        .replace("{failed}", String(backupFailed.length))
-                        .replace(
-                          "{pending}",
-                          String(
-                            backupJobs.filter(job =>
-                              ["pending", "uploading"].includes(job.backup?.status ?? ""),
-                            ).length,
-                          ),
-                        )}
-                      {lastBackupAt ? ` · ${new Date(lastBackupAt).toLocaleString(uiLocale)}` : ""}
-                    </p>
-                    {backupFailed.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={storageBusy}
-                        onClick={() => void backupExistingLessons()}
+                      )}
+                      {!backup.enabled && !driveAccounts.length && driveConfigured && (
+                        <p
+                          className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                          data-ui="hint"
+                        >
+                          {t("backupConnectToEnable")}
+                        </p>
+                      )}
+                      {driveConnectError && (
+                        <p
+                          className="my-[5px] text-[11px] text-destructive wrap-anywhere"
+                          role="status"
+                        >
+                          {driveConnectError}
+                        </p>
+                      )}
+                      {backupStatus && (
+                        <p
+                          className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                          data-ui="hint"
+                          role="status"
+                        >
+                          {backupStatus}
+                        </p>
+                      )}
+                      <p
+                        className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                        data-ui="hint"
                       >
-                        {t("retryBackup")}
-                      </Button>
-                    )}
+                        {t("driveOauthHelp")}
+                      </p>
+                      {!driveConfigured && (
+                        <p className="my-3 min-w-0 max-w-full rounded-[var(--radius)] border border-dashed border-border bg-muted p-3 text-xs leading-[1.6] text-muted-foreground wrap-anywhere">
+                          {t("oauthFirst")}
+                        </p>
+                      )}
+                      {driveAccounts.length === 1 && (
+                        <div className="my-3 flex min-w-0 items-center justify-between gap-2 rounded-[var(--radius)] border border-border px-[11px] py-[10px] [&>div]:min-w-0 [&_strong]:block [&_strong]:text-xs [&_strong]:wrap-anywhere [&_[data-ui=hint]]:mt-[2px] [&_[data-ui=hint]]:mb-0 [&_[data-ui=hint]]:block">
+                          <div>
+                            <strong>{driveAccounts[0].email}</strong>
+                            <span
+                              className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                              data-ui="hint"
+                            >
+                              {t("backupAccount")}
+                            </span>
+                          </div>
+                          <Badge>{t("driveConnectedStatus")}</Badge>
+                        </div>
+                      )}
+                      {driveAccounts.length > 1 && (
+                        <label className="my-3 grid gap-[6px] text-xs font-semibold">
+                          {t("backupAccount")}
+                          <SelectField
+                            ariaLabel={t("backupAccount")}
+                            value={backup.accountId ?? driveAccounts[0].id}
+                            onValueChange={accountId =>
+                              setBackup(current => ({ ...current, accountId }))
+                            }
+                            options={driveAccounts.map(account => ({
+                              value: account.id,
+                              label: account.email,
+                            }))}
+                          />
+                        </label>
+                      )}
+                      {selectedDriveId && (
+                        <p
+                          className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                          data-ui="hint"
+                          role="status"
+                        >
+                          {driveAccess?.accountId === selectedDriveId &&
+                          driveAccess.status === "checking"
+                            ? t("driveAccessChecking")
+                            : driveAccessVerified
+                              ? t("driveAccessVerified")
+                              : t("driveAccessNotVerified")}
+                        </p>
+                      )}
+                      <div
+                        className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
+                        data-ui="actions"
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={storageBusy || !driveConfigured}
+                          onClick={() => void connectDrive()}
+                        >
+                          {driveAccounts.length ? t("connectAnother") : t("connectGoogle")}
+                        </Button>
+                        {selectedDriveId && !driveAccessVerified && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={storageBusy || driveAccess?.status === "checking"}
+                            onClick={() => void enableBackup()}
+                          >
+                            {t("retryDriveAccess")}
+                          </Button>
+                        )}
+                      </div>
+                      {driveAccounts.length > 0 && (
+                        <Disclosure
+                          className="my-2 min-w-0"
+                          data-ui="driveAccountsAdvanced"
+                          title={
+                            <>
+                              {t("manageDrive")} · {driveAccounts.length}
+                            </>
+                          }
+                        >
+                          <div className="mt-[10px] grid gap-[5px]">
+                            {driveAccounts.map(account => (
+                              <div
+                                className="flex min-w-0 items-center justify-between gap-2 py-[5px] not-first:border-t not-first:border-border [&_span]:min-w-0 [&_span]:text-xs [&_span]:wrap-anywhere"
+                                key={account.id}
+                              >
+                                <span title={account.email}>{account.email}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={storageBusy}
+                                  onClick={() => void disconnectDrive(account.id)}
+                                >
+                                  {t("disconnectGoogle")}
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </Disclosure>
+                      )}
+                      {driveAccounts.length > 0 && (
+                        <section className="mt-[14px] grid justify-items-start gap-1 border-t border-border pt-3 [&_strong]:text-xs [&_[data-ui=hint]]:mt-0 [&_[data-ui=hint]]:mb-[5px]">
+                          <strong>{t("backupExisting")}</strong>
+                          <p role="status" className="text-xs text-muted-foreground">
+                            {layout.backupResults
+                              .replace("{success}", String(backupDone.length))
+                              .replace("{failed}", String(backupFailed.length))
+                              .replace(
+                                "{pending}",
+                                String(
+                                  backupJobs.filter(job =>
+                                    ["pending", "uploading"].includes(job.backup?.status ?? ""),
+                                  ).length,
+                                ),
+                              )}
+                            {lastBackupAt
+                              ? ` · ${new Date(lastBackupAt).toLocaleString(uiLocale)}`
+                              : ""}
+                          </p>
+                          {backupFailed.length > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={storageBusy}
+                              onClick={() => void backupExistingLessons()}
+                            >
+                              {t("retryBackup")}
+                            </Button>
+                          )}
 
-                    <p
-                      className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                      data-ui="hint"
-                    >
-                      {t("backupExistingHint")}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={storageBusy || !driveAccounts.length}
-                      onClick={() => void backupExistingLessons()}
-                    >
-                      {t("backupExisting")}
-                    </Button>
-                  </section>
-                )}
-                {driveConnectError && (
-                  <p className="my-[5px] text-[11px] text-destructive wrap-anywhere" role="status">
-                    {driveConnectError}
-                  </p>
-                )}
-                {backupStatus && (
-                  <p
-                    className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                    data-ui="hint"
-                    role="status"
-                  >
-                    {backupStatus}
-                  </p>
-                )}
-              </PageSection>
-            )}
-            {settingsSection === "advanced" && (
-              <PageSection>
-                <p className="my-3 text-xs text-muted-foreground">{layout.hostHelp}</p>
-                <HostConnectionSettings
-                  locale={uiLocale}
-                  connected={installed !== null}
-                  checked={hostChecked}
-                  sdkMode={hostSdkMode}
-                  protocolVersion={hostProtocolVersion}
-                  version={hostVersion}
-                  busy={hostBusy}
-                  lastCheckedAt={hostLastCheckedAt}
-                  error={hostStatus}
-                  onCheck={() => checkHost(true)}
-                />
-              </PageSection>
-            )}
-          </main>
-        )}
-
-        {page === "custom" && customDocument && (
+                          <p
+                            className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                            data-ui="hint"
+                          >
+                            {t("backupExistingHint")}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={storageBusy || !driveAccounts.length}
+                            onClick={() => void backupExistingLessons()}
+                          >
+                            {t("backupExisting")}
+                          </Button>
+                        </section>
+                      )}
+                      {driveConnectError && (
+                        <p
+                          className="my-[5px] text-[11px] text-destructive wrap-anywhere"
+                          role="status"
+                        >
+                          {driveConnectError}
+                        </p>
+                      )}
+                      {backupStatus && (
+                        <p
+                          className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                          data-ui="hint"
+                          role="status"
+                        >
+                          {backupStatus}
+                        </p>
+                      )}
+                    </PageSection>
+                  )}
+                  {settingsSection === "advanced" && (
+                    <PageSection>
+                      <p className="my-3 text-xs text-muted-foreground">{layout.hostHelp}</p>
+                      <HostConnectionSettings
+                        locale={uiLocale}
+                        connected={installed !== null}
+                        checked={hostChecked}
+                        sdkMode={hostSdkMode}
+                        protocolVersion={hostProtocolVersion}
+                        version={hostVersion}
+                        busy={hostBusy}
+                        lastCheckedAt={hostLastCheckedAt}
+                        error={hostStatus}
+                        onCheck={() => checkHost(true)}
+                      />
+                    </PageSection>
+                  )}
+                </main>
+              )}
+            </SheetContent>
+          )}
+        </Sheet>
+        {basePage === "custom" && customDocument && (
           <main aria-labelledby="page-nav-lessons">
             <Button variant="ghost" size="sm" onClick={() => setPage("lessons")}>
               {t("lessonLibrary")}
@@ -2828,7 +2949,7 @@ export default function App() {
                   },
                 });
                 setPage("create");
-                setCreateStep(4);
+                setCreateStep(2);
                 generationSession.start(snapshot, true);
               }}
             />
@@ -2863,7 +2984,7 @@ export default function App() {
             )}
           </DialogContent>
         </Dialog>
-        {page === "lesson" && (
+        {basePage === "lesson" && (
           <main
             className="flex min-h-0 flex-1 flex-col"
             id="page-panel-lessons"

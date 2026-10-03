@@ -1,3 +1,4 @@
+import { createFlowCopy } from "../i18n/create-flow";
 import { ChevronRight } from "lucide-react";
 import { settingsLayoutCopy } from "../i18n/settings-layout";
 import React, { useEffect, useState } from "react";
@@ -115,170 +116,178 @@ export function PiSettings({
           {providers
             .filter(provider => provider.connected === connected)
             .map(provider => (
-              <Button
-                key={provider.id}
-                variant="ghost"
-                className="h-auto min-h-12 justify-between text-left"
-                aria-expanded={detail === provider.id}
-                disabled={busy && detail !== provider.id}
-                onClick={() => setDetail(detail === provider.id ? null : provider.id)}
-              >
-                <span>
-                  <strong className="block">{provider.label}</strong>
-                  <span className="block text-xs text-muted-foreground">
-                    {provider.connected ? ui.connected : ui.disconnected}
-                    {selectedProvider === provider.id ? ` · ${ui.selected}` : ""}
-                  </span>
-                </span>
-                <ChevronRight className="size-4" aria-hidden="true" />
-              </Button>
-            ))}
-        </section>
-      ))}
-      {providers
-        .filter(provider => provider.id === detail)
-        .map(provider => (
-          <div
-            key={provider.id}
-            className="grid gap-2 rounded-[var(--radius)] border border-border px-[11px] py-[10px]"
-          >
-            <div className="flex flex-wrap justify-between gap-2 text-xs">
-              <strong>{provider.label}</strong>
-              <span className="text-muted-foreground">
-                {provider.connected ? ui.connected : ui.disconnected}
-              </span>
-            </div>
-            {provider.id === "antigravity" && (
-              <p className="text-xs text-muted-foreground">{ui.antigravityHint}</p>
-            )}
-            <div className="flex flex-wrap gap-2">
-              {provider.methods.map(method => (
+              <div key={provider.id}>
                 <Button
-                  key={method}
-                  variant="outline"
-                  size="sm"
-                  disabled={busy}
-                  onClick={() => login(provider.id, method)}
+                  variant="ghost"
+                  className="h-auto min-h-12 w-full justify-between text-left"
+                  aria-expanded={detail === provider.id}
+                  disabled={busy && detail !== provider.id}
+                  onClick={() => setDetail(detail === provider.id ? null : provider.id)}
                 >
-                  {method === "oauth"
-                    ? provider.connected
-                      ? ui.switchAccount
-                      : provider.id === "antigravity"
-                        ? ui.googleLogin
-                        : ui.login
-                    : ui.key}
+                  <span>
+                    <strong className="block">{provider.label}</strong>
+                    <span className="block text-xs text-muted-foreground">
+                      {provider.connected ? ui.connected : ui.disconnected}
+                      {selectedProvider === provider.id ? ` · ${ui.selected}` : ""}
+                    </span>
+                  </span>
+                  <ChevronRight className="size-4" aria-hidden="true" />
                 </Button>
-              ))}
-              {provider.connected && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={busy || selectedProvider === provider.id}
-                    onClick={() => onSelect(provider.id)}
+                {detail === provider.id && (
+                  <div
+                    key={provider.id}
+                    className="grid gap-2 rounded-[var(--radius)] border border-border px-[11px] py-[10px]"
                   >
-                    {selectedProvider === provider.id ? ui.selected : ui.use}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => void logout(provider.id)}
-                  >
-                    {ui.logout}
-                  </Button>
-                </>
-              )}
-            </div>
-            {loginProvider === provider.id && (
-              <div className="grid gap-2 text-xs" data-ui="piAuth">
-                {event && (
-                  <div className="grid gap-2">
-                    <PiFeedback locale={locale} message={event.message} context="event" />
-                    {event.url && /^https?:\/\//.test(event.url) && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => void chrome.tabs.create({ url: event.url })}
-                      >
-                        {ui.open}
-                      </Button>
+                    <div className="flex flex-wrap justify-between gap-2 text-xs">
+                      <strong>{provider.label}</strong>
+                      <span className="text-muted-foreground">
+                        {provider.connected ? ui.connected : ui.disconnected}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {createFlowCopy(locale).accountLimit}
+                    </p>
+                    {provider.id === "antigravity" && (
+                      <p className="text-xs text-muted-foreground">{ui.antigravityHint}</p>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {provider.methods.map(method => (
+                        <Button
+                          key={method}
+                          variant="outline"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => login(provider.id, method)}
+                        >
+                          {method === "oauth"
+                            ? provider.connected
+                              ? ui.switchAccount
+                              : provider.id === "antigravity"
+                                ? ui.googleLogin
+                                : ui.login
+                            : ui.key}
+                        </Button>
+                      ))}
+                      {provider.connected && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={busy || selectedProvider === provider.id}
+                            onClick={() => onSelect(provider.id)}
+                          >
+                            {selectedProvider === provider.id ? ui.selected : ui.use}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={busy}
+                            onClick={() => {
+                              if (window.confirm(ui.logout + " · " + provider.label + "?"))
+                                void logout(provider.id);
+                            }}
+                          >
+                            {ui.logout}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                    {loginProvider === provider.id && (
+                      <div className="grid gap-2 text-xs" data-ui="piAuth">
+                        {event && (
+                          <div className="grid gap-2">
+                            <PiFeedback locale={locale} message={event.message} context="event" />
+                            {event.url && /^https?:\/\//.test(event.url) && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => void chrome.tabs.create({ url: event.url })}
+                              >
+                                {ui.open}
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                        {browserFallback && (
+                          <>
+                            <p role="status" className="text-muted-foreground">
+                              {ui.waiting}
+                            </p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="justify-start whitespace-normal text-left text-muted-foreground"
+                              aria-expanded={showPrompt}
+                              aria-controls="pi-manual-sign-in"
+                              onClick={() =>
+                                setManualPromptId(showPrompt ? null : prompt!.promptId)
+                              }
+                            >
+                              {ui.manualSignIn}
+                            </Button>
+                          </>
+                        )}
+                        {prompt && showPrompt && (
+                          <form
+                            id={browserFallback ? "pi-manual-sign-in" : undefined}
+                            className="grid gap-2"
+                            onSubmit={e => {
+                              e.preventDefault();
+                              answer();
+                            }}
+                          >
+                            <PiFeedback locale={locale} message={prompt.message} context="prompt" />
+                            <label className="grid gap-2">
+                              <span className="sr-only">
+                                {piFeedback(locale, prompt.message, "prompt").message}
+                              </span>
+                              {prompt.kind === "select" ? (
+                                <SelectField
+                                  ariaLabel={piFeedback(locale, prompt.message, "prompt").message}
+                                  value={value}
+                                  onValueChange={setValue}
+                                  options={
+                                    prompt.options?.map(option => ({
+                                      value: option.id,
+                                      label: piFeedback(locale, option.label, "option").message,
+                                    })) ?? []
+                                  }
+                                />
+                              ) : (
+                                <Input
+                                  type={prompt.kind === "secret" ? "password" : "text"}
+                                  autoComplete="off"
+                                  autoFocus
+                                  value={value}
+                                  onChange={e => setValue(e.target.value)}
+                                />
+                              )}
+                            </label>
+                            <Button
+                              type="submit"
+                              variant="outline"
+                              size="sm"
+                              disabled={!value.trim()}
+                            >
+                              {ui.continue}
+                            </Button>
+                          </form>
+                        )}
+                        {state.kind === "login" && (
+                          <Button variant="ghost" size="sm" onClick={cancelLogin}>
+                            {ui.cancel}
+                          </Button>
+                        )}
+                        {status && <PiFeedback locale={locale} message={status} />}
+                      </div>
                     )}
                   </div>
                 )}
-                {browserFallback && (
-                  <>
-                    <p role="status" className="text-muted-foreground">
-                      {ui.waiting}
-                    </p>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="justify-start whitespace-normal text-left text-muted-foreground"
-                      aria-expanded={showPrompt}
-                      aria-controls="pi-manual-sign-in"
-                      onClick={() => setManualPromptId(showPrompt ? null : prompt!.promptId)}
-                    >
-                      {ui.manualSignIn}
-                    </Button>
-                  </>
-                )}
-                {prompt && showPrompt && (
-                  <form
-                    id={browserFallback ? "pi-manual-sign-in" : undefined}
-                    className="grid gap-2"
-                    onSubmit={e => {
-                      e.preventDefault();
-                      answer();
-                    }}
-                  >
-                    <PiFeedback locale={locale} message={prompt.message} context="prompt" />
-                    <label className="grid gap-2">
-                      <span className="sr-only">
-                        {piFeedback(locale, prompt.message, "prompt").message}
-                      </span>
-                      {prompt.kind === "select" ? (
-                        <SelectField
-                          ariaLabel={piFeedback(locale, prompt.message, "prompt").message}
-                          value={value}
-                          onValueChange={setValue}
-                          options={
-                            prompt.options?.map(option => ({
-                              value: option.id,
-                              label: piFeedback(locale, option.label, "option").message,
-                            })) ?? []
-                          }
-                        />
-                      ) : (
-                        <Input
-                          type={prompt.kind === "secret" ? "password" : "text"}
-                          autoComplete="off"
-                          autoFocus
-                          value={value}
-                          onChange={e => setValue(e.target.value)}
-                        />
-                      )}
-                    </label>
-                    <Button type="submit" variant="outline" size="sm" disabled={!value.trim()}>
-                      {ui.continue}
-                    </Button>
-                  </form>
-                )}
-                {state.kind === "login" && (
-                  <Button variant="ghost" size="sm" onClick={cancelLogin}>
-                    {ui.cancel}
-                  </Button>
-                )}
-                {status && <PiFeedback locale={locale} message={status} />}
               </div>
-            )}
-          </div>
-        ))}
-      {status && !providers.some(provider => provider.id === loginProvider) && (
-        <PiFeedback locale={locale} message={status} />
-      )}
-      {available && <p className="text-xs text-muted-foreground">{ui.safety}</p>}
+            ))}
+        </section>
+      ))}
     </section>
   );
 }
