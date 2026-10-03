@@ -186,6 +186,8 @@ export default function App() {
   localeRef.current = uiLocale;
   const overlay = page === "settings" || page === "activity";
   const basePage = overlay ? returnPage : page;
+  const sheetPage = useRef<"settings" | "activity">("settings");
+  if (overlay) sheetPage.current = page;
   const sheetOrigin = useRef("header-settings");
   if (overlay) sheetOrigin.current = page === "settings" ? "header-settings" : "header-activity";
   const [completedStep, setCompletedStep] = useState(0);
@@ -1682,6 +1684,7 @@ export default function App() {
             if (page === "activity") return;
             if (page === "create" || page === "lessons" || page === "lesson" || page === "custom")
               setReturnPage(page);
+            setExecutionDetails(null);
             setPage("activity");
             loadJobs();
           }}
@@ -2632,20 +2635,21 @@ export default function App() {
           open={overlay}
           onOpenChange={open => {
             if (!open && (!unsavedCredentials || window.confirm(ux.discardCredentials))) {
-              setExecutionDetails(null);
               setPage(returnPage);
             }
           }}
         >
-          {overlay && (
-            <SheetContent
-              closeLabel={ux.close}
-              onCloseAutoFocus={event => {
-                event.preventDefault();
-                window.document.getElementById(sheetOrigin.current)?.focus();
-              }}
-            >
-              {page === "activity" && (
+          <SheetContent
+            closeLabel={ux.close}
+            aria-describedby={undefined}
+            className="w-full max-w-[400px] sm:max-w-[400px] outline-none"
+            onCloseAutoFocus={event => {
+              event.preventDefault();
+              window.document.getElementById(sheetOrigin.current)?.focus();
+            }}
+          >
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6">
+              {sheetPage.current === "activity" && (
                 <main id="page-panel-activity" aria-label={layout.activity}>
                   {executionDetails && (
                     <Button
@@ -2713,7 +2717,7 @@ export default function App() {
                 </main>
               )}
 
-              {page === "settings" && (
+              {sheetPage.current === "settings" && (
                 <main id="page-panel-settings" aria-label={t("settings")}>
                   <div className="py-3 pr-10">
                     {settingsSection && (
@@ -3207,8 +3211,8 @@ export default function App() {
                   )}
                 </main>
               )}
-            </SheetContent>
-          )}
+            </div>
+          </SheetContent>
         </Sheet>
         {basePage === "custom" && customDocument && (
           <main aria-labelledby="page-nav-lessons">

@@ -91,6 +91,7 @@ async function run() {
       );
       await page.getByRole("button", { name: "重新生成", exact: true }).click();
       await page.getByRole("dialog").getByRole("button", { name: "重新生成", exact: true }).click();
+      await page.getByRole("dialog").waitFor({ state: "hidden" });
       await page.waitForFunction(
         () =>
           window.acceptance.commands.filter(command => command.type === "generateCustom").length ===

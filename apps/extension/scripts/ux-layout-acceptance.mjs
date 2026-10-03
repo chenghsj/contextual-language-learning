@@ -12,6 +12,43 @@ const server = await createServer({
   configFile: join(root, "vite.config.ts"),
   server: { host: "127.0.0.1", port: 5178, strictPort: true },
 });
+async function assertSheetMotion(page, state, reduced) {
+  const content = page.locator(`[data-slot="sheet-content"][data-state="${state}"]`);
+  if (reduced && state === "closed") {
+    await page.locator('[data-slot="sheet-content"]').waitFor({ state: "detached" });
+    return;
+  }
+  await content.waitFor({ state: "attached" });
+  const styles = await content.evaluate(el => {
+    const style = getComputedStyle(el);
+    return {
+      name: style.animationName,
+      duration: style.animationDuration,
+      direction: style
+        .getPropertyValue(`--tw-${el.dataset.state === "open" ? "enter" : "exit"}-translate-x`)
+        .trim(),
+      title: el.querySelector('[data-slot="sheet-title"]')?.textContent,
+    };
+  });
+  assert.ok(styles.title, "Sheet content must remain mounted throughout its exit animation");
+  if (reduced) {
+    assert.equal(styles.name, "none");
+  } else {
+    assert.equal(styles.name, state === "open" ? "enter" : "exit");
+    assert.equal(styles.duration, state === "open" ? "0.5s" : "0.3s");
+    assert.equal(styles.direction, "100%");
+    const overlay = await page
+      .locator(`[data-slot="sheet-overlay"][data-state="${state}"]`)
+      .evaluate(el => ({
+        name: getComputedStyle(el).animationName,
+        opacity: getComputedStyle(el)
+          .getPropertyValue(`--tw-${el.dataset.state === "open" ? "enter" : "exit"}-opacity`)
+          .trim(),
+      }));
+    assert.equal(overlay.name, state === "open" ? "enter" : "exit");
+    assert.equal(overlay.opacity, "0");
+  }
+}
 let browser;
 try {
   await server.listen();
@@ -118,6 +155,7 @@ try {
       await page.locator("#header-settings").click();
       const sheet = page.getByRole("dialog");
       await sheet.waitFor();
+      await assertSheetMotion(page, "open", height === 320);
       assert.equal(Math.round((await sheet.boundingBox()).width), Math.min(width, 400));
       await sheet.getByRole("button", { name: /^AI 與模型/ }).click();
       await sheet.getByRole("button", { name: /OpenAI/ }).click();
@@ -127,6 +165,7 @@ try {
         .first();
       assert.match(await row.innerText(), /一組授權/);
       await page.keyboard.press("Escape");
+      await assertSheetMotion(page, "closed", height === 320);
       assert.equal(
         await wizard.locator("[data-ui=create-scroll]").evaluate(el => el.scrollTop),
         scroll,
@@ -144,8 +183,10 @@ try {
       await page.screenshot({ path: join(output, `confirm-${width}-${height}-${theme}.png`) });
       await page.locator("#header-activity").click();
       await sheet.waitFor();
+      await assertSheetMotion(page, "open", height === 320);
       assert.equal(Math.round((await sheet.boundingBox()).width), Math.min(width, 400));
       await sheet.getByRole("button", { name: "關閉", exact: true }).click();
+      await assertSheetMotion(page, "closed", height === 320);
       assert.equal(await wizard.locator("[aria-current=step]").innerText(), "建立");
       assert.deepEqual(errors, []);
       await page.close();
