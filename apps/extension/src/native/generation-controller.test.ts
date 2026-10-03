@@ -1,3 +1,4 @@
+import { HOST_PROTOCOL_VERSION } from "@immersive/core";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
@@ -61,7 +62,7 @@ function setup(
         id: request.id,
         installed: {},
         agents: [],
-        protocolVersion: 5,
+        protocolVersion: HOST_PROTOCOL_VERSION,
         version: "0.1.0",
         agentMode: "pi-sdk",
       });
@@ -109,7 +110,7 @@ test("all Host operations wait for one compatible handshake and retain pending w
     installed: {},
     agents: [],
     version: "0.1.0",
-    protocolVersion: 5,
+    protocolVersion: HOST_PROTOCOL_VERSION,
     agentMode: "pi-sdk",
   });
   assert.deepEqual(app.native.sent.slice(1), [
@@ -140,7 +141,7 @@ test("incompatible Host never receives queued business requests", () => {
       installed: {},
       agents: [],
       version: "0.1.0",
-      protocolVersion: 5,
+      protocolVersion: HOST_PROTOCOL_VERSION,
       agentMode: "pi-sdk",
       ...mismatch,
     });
@@ -175,7 +176,7 @@ test("health reports installed metadata without forwarding business requests to 
       installed: {},
       agents: [],
       version: "0.1.0",
-      protocolVersion: 5,
+      protocolVersion: HOST_PROTOCOL_VERSION,
       agentMode: "pi-sdk",
       ...mismatch,
     };
@@ -542,7 +543,7 @@ test("reconnection waits 1/2/4 seconds, queries only and never replays generatio
       id: health.id,
       installed: { openai: true },
       agents: [{ id: "openai", label: "OpenAI", installed: true }],
-      protocolVersion: 5,
+      protocolVersion: HOST_PROTOCOL_VERSION,
       version: "0.1.0",
       agentMode: "pi-sdk",
     });
@@ -623,4 +624,47 @@ test("custom completion survives panel closure and notifies once with its conten
     app.native.sent.some(value => (value as { type: string }).type === "cancelCustom"),
     false,
   );
+});
+
+test("worker tracks FIFO queue and sends completion once for each job across panel close", () => {
+  const completed: string[] = [],
+    app = setup(jobId => completed.push(jobId));
+  const panel = app.connectPanel(),
+    first = randomUUID(),
+    second = randomUUID();
+  panel.onMessage.fire({ type: "resume", id: first, jobId: first });
+  panel.onMessage.fire({ type: "resumeCustom", id: second, jobId: second });
+  const summary = (id: string, status: "queued" | "running" | "completed") => ({
+    id,
+    status,
+    sourceTitle: id,
+    provider: "openai",
+    total: 1,
+    completed: status === "completed" ? 1 : 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...(status === "completed" ? { documentId: id } : {}),
+  });
+  app.native.onMessage.fire({ type: "job", id: first, job: summary(first, "running") });
+  app.native.onMessage.fire({
+    type: "job",
+    id: second,
+    job: { ...summary(second, "queued"), kind: "custom" },
+  });
+  const state = panel.sent.at(-1) as {
+    active: { requestId: string };
+    queue: { requestId: string }[];
+  };
+  assert.equal(state.active.requestId, first);
+  assert.equal(state.queue[0].requestId, second);
+  panel.disconnect();
+  assert.equal(app.native.disconnected, false);
+  for (const id of [first, second]) {
+    app.native.onMessage.fire({ type: "job", id, job: summary(id, "completed") });
+    app.native.onMessage.fire({ type: "generationSettled", id });
+    app.native.onMessage.fire({ type: "generationSettled", id });
+    if (id === first) assert.equal(app.native.disconnected, false);
+  }
+  assert.deepEqual(completed, [first, second]);
+  assert.equal(app.native.disconnected, true);
 });

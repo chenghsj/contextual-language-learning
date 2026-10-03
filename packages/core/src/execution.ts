@@ -4,6 +4,16 @@ export const ExecutionCallSchema = z.object({
   provider: z.string(),
   modelId: z.string(),
   at: z.string().datetime(),
+  retries: z
+    .array(
+      z.object({
+        attempt: z.number().int().min(1).max(2),
+        delayMs: z.number().nonnegative(),
+        reason: z.string().max(500),
+      }),
+    )
+    .max(2)
+    .optional(),
   usage: z
     .object({
       input: z.number().nonnegative().optional(),

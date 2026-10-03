@@ -32,6 +32,13 @@ export const JobSummarySchema = z.object({
   phase: z.enum(["analyzing", "selecting", "creating", "saving"]).optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  retry: z
+    .object({
+      attempt: z.number().int().min(1).max(2),
+      delayMs: z.number().nonnegative(),
+      reason: z.string().max(500),
+    })
+    .optional(),
   error: z.string().optional(),
   documentId: z.string().uuid().optional(),
   ownerPid: z.number().int().positive().optional(),

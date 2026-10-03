@@ -44,6 +44,20 @@ export function installGenerationController(
   let outbox: HostRequest[] = [];
   let host: chrome.runtime.Port | null = null;
   let active: GenerationControllerState["active"] = null;
+  type Run = NonNullable<GenerationControllerState["active"]> & {
+    delivered: boolean;
+    documentId?: string;
+    cancelling?: boolean;
+  };
+  const runs = new Map<string, Run>();
+  function selectActive() {
+    const values = [...runs.values()].filter(run => run.summary?.status !== "cancelled");
+    active =
+      values.find(run => run.summary?.status === "running") ??
+      values.find(run => run.requestId === active?.requestId) ??
+      values[0] ??
+      null;
+  }
 
   let connection: GenerationControllerState["connection"];
   let reconnectAttempt = 0;
@@ -71,23 +85,30 @@ export function installGenerationController(
       }
     }, delay);
   }
-  let cancellationRequested = false;
-  let delivered = false;
-  let deliveredDocumentId: string | undefined;
-  function notifyAttention(outcome: "interrupted" | "failed"): void {
-    if (!active || delivered) return;
-    delivered = true;
+  function notifyAttention(
+    outcome: "interrupted" | "failed",
+    run: Run | undefined = active ? runs.get(active.requestId) : undefined,
+  ): void {
+    if (!run || run.delivered) return;
+    run.delivered = true;
     try {
-      onAttention(active.jobId, active.summary?.sourceTitle ?? "", outcome);
-    } catch {
-      /* Notification failures must not affect the job. */
-    }
+      onAttention(run.jobId, run.summary?.sourceTitle ?? "", outcome);
+    } catch {}
   }
-
   function state(): GenerationControllerState {
     return {
       type: "generationState",
-      active: active ? { ...active } : null,
+      active: active
+        ? {
+            requestId: active.requestId,
+            jobId: active.jobId,
+            kind: active.kind,
+            summary: active.summary,
+          }
+        : null,
+      queue: [...runs.values()]
+        .filter(run => run.requestId !== active?.requestId && run.summary?.status !== "cancelled")
+        .map(({ requestId, jobId, kind, summary }) => ({ requestId, jobId, kind, summary })),
       ...(connection ? { connection } : {}),
     };
   }
@@ -131,8 +152,9 @@ export function installGenerationController(
         const reason =
           "Native Host returned an invalid response. Update the Host and resume from task history.";
         for (const id of pending.keys()) broadcast({ id, type: "error", message: reason });
-        notifyAttention("interrupted");
+        for (const run of runs.values()) notifyAttention("interrupted", run);
         pending.clear();
+        runs.clear();
         active = null;
         broadcast(state());
         native.disconnect();
@@ -162,10 +184,11 @@ export function installGenerationController(
                   "Native Host is incompatible. Reinstall the current Host and reload the extension.",
               });
           }
-          notifyAttention("interrupted");
+          for (const run of runs.values()) notifyAttention("interrupted", run);
           pending.clear();
           authOwners.clear();
           outbox = [];
+          runs.clear();
           active = null;
           broadcast(state());
           native.disconnect();
@@ -210,8 +233,14 @@ export function installGenerationController(
       }
       const type = pending.get(message.id);
 
-      if (active && message.id === active.requestId && message.type === "job") {
-        active = { ...active, summary: message.job };
+      const run =
+        runs.get(message.id) ??
+        (message.type === "job"
+          ? [...runs.values()].find(run => run.jobId === message.job.id)
+          : undefined);
+      if (run && message.type === "job") {
+        run.summary = message.job;
+        selectActive();
       }
       // Delivery is not the end of a generation request: optional Drive backup
       // continues after the lesson has been returned to the Side Panel.
@@ -232,67 +261,47 @@ export function installGenerationController(
                     ((message.type === "documentChunk" || message.type === "customChunk") &&
                       message.index === message.total - 1)
                   : true));
-      if ((type === "cancel" || type === "cancelCustom") && cancellationRequested) {
-        if (message.type === "cancelled") notifyAttention("interrupted");
-        if (message.type === "error") cancellationRequested = false;
-      }
-      if (
-        active?.requestId === message.id &&
-        (type === "generate" ||
-          type === "resume" ||
-          type === "generateCustom" ||
-          type === "resumeCustom")
-      ) {
-        if (message.type === "result") deliveredDocumentId = message.document.id;
-        if (message.type === "documentChunk") deliveredDocumentId = message.documentId;
+      if (run) {
+        if (message.type === "result") run.documentId = message.document.id;
+        if (message.type === "documentChunk") run.documentId = message.documentId;
         if (message.type === "customChunk" && message.resource === "document")
-          deliveredDocumentId = message.resourceId;
+          run.documentId = message.resourceId;
         if (message.type === "job" && message.job.status === "completed")
-          deliveredDocumentId = message.job.documentId;
-        // Completion follows a saved lesson, never AI output alone or failed backup.
-        if (message.type === "generationSettled" && !delivered) {
-          if (active.summary?.status === "completed" && deliveredDocumentId) {
-            delivered = true;
+          run.documentId = message.job.documentId;
+        if (message.type === "generationSettled" && !run.delivered) {
+          if (run.summary?.status === "completed" && run.documentId) {
+            run.delivered = true;
             try {
               onCompleted(
-                active.jobId,
-                active.summary.sourceTitle,
-                deliveredDocumentId,
-                active.kind ?? active.summary.kind,
+                run.jobId,
+                run.summary.sourceTitle,
+                run.documentId,
+                run.kind ?? run.summary.kind,
               );
-            } catch {
-              /* Notification failures must not interrupt task completion. */
-            }
-          } else notifyAttention("interrupted");
+            } catch {}
+          } else notifyAttention("interrupted", run);
         }
         if (
           message.type === "job" &&
           ["waiting", "cancelled", "failed"].includes(message.job.status)
         )
-          notifyAttention(message.job.status === "failed" ? "failed" : "interrupted");
+          notifyAttention(message.job.status === "failed" ? "failed" : "interrupted", run);
         if (message.type === "error")
           notifyAttention(
-            cancellationRequested ||
-              active.summary?.status === "waiting" ||
-              active.summary?.status === "cancelled"
+            run.cancelling ||
+              run.summary?.status === "waiting" ||
+              run.summary?.status === "cancelled"
               ? "interrupted"
               : "failed",
+            run,
           );
-        if (message.type === "cancelled") notifyAttention("interrupted");
+        if (message.type === "cancelled") notifyAttention("interrupted", run);
       }
       if (terminal) {
         pending.delete(message.id);
         authOwners.delete(message.id);
-        if (
-          active &&
-          message.id === active.requestId &&
-          (type === "generate" ||
-            type === "resume" ||
-            type === "generateCustom" ||
-            type === "resumeCustom")
-        ) {
-          active = null;
-        }
+        runs.delete(message.id);
+        selectActive();
       }
       broadcast(message);
       if (message.type === "job" || terminal) broadcast(state());
@@ -314,8 +323,9 @@ export function installGenerationController(
       if (active && !pending.has(active.requestId)) {
         broadcast({ id: active.requestId, type: "error", message: reason });
       }
-      notifyAttention("interrupted");
+      for (const run of runs.values()) notifyAttention("interrupted", run);
       pending.clear();
+      runs.clear();
       active = null;
       broadcast(state());
       scheduleReconnect();
@@ -383,20 +393,21 @@ export function installGenerationController(
         });
         return;
       }
-      if (
-        (request.type === "generate" ||
-          request.type === "resume" ||
-          request.type === "generateCustom" ||
-          request.type === "resumeCustom") &&
-        active
-      ) {
-        client.postMessage({
-          id: request.id,
-          type: "error",
-          message:
-            "An Agent job is already running. Check the task history before starting another.",
-        });
-        return;
+      if (["generate", "resume", "generateCustom", "resumeCustom"].includes(request.type)) {
+        const jobId =
+          "payload" in request
+            ? request.payload.id
+            : "jobId" in request
+              ? request.jobId
+              : undefined;
+        if ([...runs.values()].some(run => run.jobId === jobId)) {
+          client.postMessage({
+            id: request.id,
+            type: "error",
+            message: "This job is already queued or running.",
+          });
+          return;
+        }
       }
       if (
         (request.type === "generate" || request.type === "generateCustom") &&
@@ -418,10 +429,8 @@ export function installGenerationController(
           request.type === "generateCustom" ||
           request.type === "resumeCustom"
         ) {
-          cancellationRequested = false;
-          delivered = false;
-          deliveredDocumentId = undefined;
-          active = {
+          const run: Run = {
+            delivered: false,
             requestId: request.id,
             ...(request.type === "generateCustom" || request.type === "resumeCustom"
               ? { kind: "custom" as const }
@@ -431,13 +440,15 @@ export function installGenerationController(
                 ? request.payload.id
                 : request.jobId,
           };
+
+          runs.set(request.id, run);
+          selectActive();
           broadcast(state());
         }
-        if (
-          (request.type === "cancel" || request.type === "cancelCustom") &&
-          active?.jobId === request.jobId
-        )
-          cancellationRequested = true;
+        if (request.type === "cancel" || request.type === "cancelCustom") {
+          const run = [...runs.values()].find(run => run.jobId === request.jobId);
+          if (run) run.cancelling = true;
+        }
         if (request.type !== "piAuthAnswer" && request.type !== "piAuthCancel") {
           pending.set(request.id, request.type);
         }
@@ -450,9 +461,11 @@ export function installGenerationController(
         }
       } catch (error) {
         pending.delete(request.id);
-        if (active?.requestId === request.id) {
-          notifyAttention("failed");
-          active = null;
+        const failedRun = runs.get(request.id);
+        if (failedRun) {
+          notifyAttention("failed", failedRun);
+          runs.delete(request.id);
+          selectActive();
           broadcast(state());
         }
         client.postMessage({

@@ -18,9 +18,11 @@ const isCustom = (input: GenerationInput): input is CustomGenerationRequest =>
   "kind" in input && input.kind === "custom";
 export type GenerationState = {
   active: GenerationControllerState["active"];
+  queue?: GenerationControllerState["queue"];
   connection?: GenerationControllerState["connection"];
   lastJobId: string | null;
   checking: boolean;
+  submitting?: boolean;
   duplicate: { payload: GenerationInput; token: string; matches: DuplicateMatch[] } | null;
 };
 export type GenerationEvent =
@@ -47,11 +49,12 @@ export class GenerationSession {
     duplicate: null,
   };
   private listeners = new Set<(event: GenerationEvent) => void>();
+  private awaitingAdmission: string | null = null;
   private preflight: { id: string; payload: GenerationInput; confirmed?: boolean } | null = null;
-  private customChunks = new CustomChunkAssembler();
-  private chunks = new DocumentChunkAssembler();
+  private customChunks = new Map<string, CustomChunkAssembler>();
+  private chunks = new Map<string, DocumentChunkAssembler>();
+  private requests = new Map<string, { kind: "standard" | "custom"; jobId: string }>();
   private delivered = new Set<string>();
-  private deliveryRequestId: string | null = null;
   constructor(private runtime: typeof chrome.runtime = chrome.runtime) {}
   subscribe(listener: (event: GenerationEvent) => void): () => void {
     this.listeners.add(listener);
@@ -74,13 +77,16 @@ export class GenerationSession {
       message => {
         if (message.type === "generationState") {
           const active = message.active;
-          if (active) this.deliveryRequestId = active.requestId;
-          if (active?.requestId !== this.state.active?.requestId) {
-            this.chunks = new DocumentChunkAssembler();
-            this.customChunks = new CustomChunkAssembler();
+          for (const run of [active, ...(message.queue ?? [])]) {
+            if (run)
+              this.requests.set(run.requestId, {
+                kind: run.kind ?? run.summary?.kind ?? "standard",
+                jobId: run.jobId,
+              });
           }
           this.update({
             active,
+            queue: message.queue,
             connection: message.connection,
             ...(active ? { lastJobId: active.jobId } : {}),
           });
@@ -104,23 +110,40 @@ export class GenerationSession {
           this.emit(message);
           return;
         }
-        if (message.id !== this.state.active?.requestId) return;
+        if (
+          message.id === this.awaitingAdmission &&
+          (message.type === "job" || message.type === "error")
+        ) {
+          this.awaitingAdmission = null;
+          this.update({ checking: false, submitting: false });
+        }
+        if (message.type === "job") {
+          this.emit(message);
+          return;
+        }
+        if (!this.requests.has(message.id)) return;
         if (message.type === "result") this.deliver(message.id, message.document);
         else if (message.type === "documentChunk") {
           try {
-            const document = this.chunks.push(message);
+            const assembler = this.chunks.get(message.id) ?? new DocumentChunkAssembler();
+            this.chunks.set(message.id, assembler);
+            const document = assembler.push(message);
             if (document) this.deliver(message.id, document);
-            else if (message.index === message.total - 1) void this.recover(message.documentId);
+            else if (message.index === message.total - 1)
+              void this.recover(message.id, message.documentId);
           } catch {
-            void this.recover(message.documentId);
+            void this.recover(message.id, message.documentId);
           }
         } else if (message.type === "customChunk") {
           try {
-            const document = this.customChunks.push(message);
+            const assembler = this.customChunks.get(message.id) ?? new CustomChunkAssembler();
+            this.customChunks.set(message.id, assembler);
+            const document = assembler.push(message);
             if (document && "markdown" in document) this.deliverCustom(message.id, document);
-            else if (message.index === message.total - 1) void this.recover(message.resourceId);
+            else if (message.index === message.total - 1)
+              void this.recover(message.id, message.resourceId);
           } catch {
-            void this.recover(message.resourceId);
+            void this.recover(message.id, message.resourceId);
           }
         } else this.emit(message);
       },
@@ -129,8 +152,17 @@ export class GenerationSession {
         this.port = null;
         const id = this.state.active?.requestId ?? this.preflight?.id;
         this.preflight = null;
-        this.deliveryRequestId = null;
-        this.update({ active: null, checking: false, duplicate: null });
+        this.awaitingAdmission = null;
+        this.requests.clear();
+        this.chunks.clear();
+        this.customChunks.clear();
+        this.update({
+          active: null,
+          queue: [],
+          checking: false,
+          submitting: false,
+          duplicate: null,
+        });
         if (id)
           this.emit({
             type: "error",
@@ -146,20 +178,20 @@ export class GenerationSession {
     return port;
   }
   private recovering = new Set<string>();
-  private async recover(documentId: string) {
-    const requestId = this.state.active?.requestId;
-    if (!requestId || this.delivered.has(requestId) || this.recovering.has(requestId)) return;
+  private async recover(requestId: string, documentId: string) {
+    const request = this.requests.get(requestId);
+    if (!request || this.delivered.has(requestId) || this.recovering.has(requestId)) return;
     this.recovering.add(requestId);
     try {
-      if (this.state.active?.kind === "custom" || this.state.active?.summary?.kind === "custom") {
+      if (request.kind === "custom") {
         const document = await getCustomResource("document", documentId, this.runtime);
-        if (this.deliveryRequestId === requestId) this.deliverCustom(requestId, document);
+        if (this.requests.has(requestId)) this.deliverCustom(requestId, document);
       } else {
         const document = await getDocument(documentId, this.runtime);
-        if (this.deliveryRequestId === requestId) this.deliver(requestId, document);
+        if (this.requests.has(requestId)) this.deliver(requestId, document);
       }
     } catch (error) {
-      if (this.deliveryRequestId === requestId)
+      if (this.requests.has(requestId))
         this.emit({ id: requestId, type: "error", message: String(error) });
     } finally {
       this.recovering.delete(requestId);
@@ -168,17 +200,20 @@ export class GenerationSession {
   private deliver(id: string, document: LearningDocument) {
     if (this.delivered.has(id)) return;
     this.delivered.add(id);
+    this.chunks.delete(id);
+    this.customChunks.delete(id);
     this.emit({ type: "document", document });
   }
   private deliverCustom(id: string, document: CustomDocument) {
     if (this.delivered.has(id)) return;
     this.delivered.add(id);
+    this.chunks.delete(id);
+    this.customChunks.delete(id);
     this.emit({ type: "customDocument", document });
   }
   start(input: GenerationInput, confirmed = false) {
-    if (this.state.active || this.state.checking) return;
+    if (this.state.checking) return;
     this.connect();
-    this.deliveryRequestId = null;
     this.invalidatePreflight();
     const payload = freezeRequest(
       isCustom(input)
@@ -187,7 +222,7 @@ export class GenerationSession {
     );
     const id = crypto.randomUUID();
     this.preflight = { id, payload, confirmed };
-    this.update({ checking: true, duplicate: null });
+    this.update({ checking: true, submitting: false, duplicate: null });
     this.connect().send(
       isCustom(payload)
         ? { id, type: "checkCustomDuplicates", payload }
@@ -195,7 +230,7 @@ export class GenerationSession {
     );
   }
   confirmRegeneration() {
-    if (!this.state.duplicate || this.state.active) return;
+    if (!this.state.duplicate) return;
     const { payload, token } = this.state.duplicate;
     this.generate(payload, token, true);
   }
@@ -204,15 +239,19 @@ export class GenerationSession {
   }
   invalidatePreflight() {
     this.preflight = null;
-    this.update({ checking: false, duplicate: null });
+    this.update({ checking: !!this.awaitingAdmission, duplicate: null });
   }
   private generate(payload: GenerationInput, token: string, confirm: boolean) {
-    this.deliveryRequestId = payload.id;
-    this.chunks = new DocumentChunkAssembler();
-    this.customChunks = new CustomChunkAssembler();
+    this.awaitingAdmission = payload.id;
+    this.requests.set(payload.id, {
+      kind: isCustom(payload) ? "custom" : "standard",
+      jobId: payload.id,
+    });
     this.update({
       duplicate: null,
-      active: {
+      checking: true,
+      submitting: true,
+      active: this.state.active ?? {
         requestId: payload.id,
         jobId: payload.id,
         ...(isCustom(payload) ? { kind: "custom" as const } : {}),
@@ -238,18 +277,28 @@ export class GenerationSession {
     );
   }
   resume(jobId: string, kind: "standard" | "custom" = "standard") {
-    if (this.state.active) return;
+    if (this.state.checking) return;
+    if (this.state.active?.jobId === jobId || this.state.queue?.some(run => run.jobId === jobId))
+      return;
     this.connect();
     this.invalidatePreflight();
     const id = crypto.randomUUID();
-    this.deliveryRequestId = id;
-    this.chunks = new DocumentChunkAssembler();
-    this.customChunks = new CustomChunkAssembler();
+    this.awaitingAdmission = id;
+    this.requests.set(id, { kind, jobId });
     this.update({
-      active: { requestId: id, jobId, ...(kind === "custom" ? { kind } : {}) },
+      checking: true,
+      submitting: true,
+      active: this.state.active ?? { requestId: id, jobId, ...(kind === "custom" ? { kind } : {}) },
       lastJobId: jobId,
     });
     this.connect().send({ type: kind === "custom" ? "resumeCustom" : "resume", id, jobId });
+  }
+  cancelJob(jobId: string, kind: "standard" | "custom" = "standard") {
+    this.connect().send({
+      type: kind === "custom" ? "cancelCustom" : "cancel",
+      id: crypto.randomUUID(),
+      jobId,
+    });
   }
   cancel() {
     if (this.state.active)
@@ -269,7 +318,10 @@ export class GenerationSession {
     const port = this.port;
     this.port = null;
     this.preflight = null;
-    this.deliveryRequestId = null;
+    this.awaitingAdmission = null;
+    this.requests.clear();
+    this.chunks.clear();
+    this.customChunks.clear();
     this.listeners.clear();
     port?.close();
   }

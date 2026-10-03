@@ -7,6 +7,7 @@ import { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import {
   fauxProvider,
   fauxAssistantMessage,
+  createAssistantMessageEventStream,
   type Credential,
   type CredentialStore,
 } from "@earendil-works/pi-ai";
@@ -126,6 +127,47 @@ test("isolated SDK generates JSON with no tools, global resources or cross-stage
     assert.deepEqual(loader.getExtensions().extensions, []);
     const providers = await piProviders(runtime);
     assert.equal(providers.find(p => p.id === "openai")?.connected, true);
+    fake.setResponses([fauxAssistantMessage("# Recovered")]);
+    let rejected = false;
+    runtime.registerNativeProvider({
+      ...fake.provider,
+      filterModels: models => models.filter(model => model.id === "test-model"),
+      streamSimple(model, context, streamOptions) {
+        if (rejected) return fake.provider.streamSimple(model, context, streamOptions);
+        rejected = true;
+        const stream = createAssistantMessageEventStream();
+        const error = {
+          ...fauxAssistantMessage("", {
+            stopReason: "error",
+            errorMessage: "HTTP 503 temporarily unavailable",
+          }),
+          provider: "openai",
+          model: "test-model",
+          api: fake.api,
+        };
+        queueMicrotask(() => {
+          stream.push({ type: "error", reason: "error", error });
+          stream.end(error);
+        });
+        return stream;
+      },
+    });
+    const retries: number[] = [];
+    const recovered = await generatePiText(
+      settings,
+      "Retry rejected stage",
+      new AbortController().signal,
+      {
+        ...options,
+        format: "markdown",
+        onRetry: notice => {
+          retries.push(notice.attempt);
+        },
+      },
+    );
+    assert.equal(recovered.text, "# Recovered");
+    assert.deepEqual(retries, [1]);
+    assert.equal(recovered.call.retries?.length, 1);
     await runtime.logout("openai");
     await assert.rejects(
       generatePi(settings, "Logged out", new AbortController().signal, options),

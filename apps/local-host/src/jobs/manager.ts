@@ -32,6 +32,7 @@ export class JobManager {
     this.externalBusy = guard;
   }
   private starting = false;
+  private closed = false;
   private readonly running = new Map<string, AbortController>();
   constructor(
     private readonly deps: PipelineDependencies,
@@ -45,9 +46,9 @@ export class JobManager {
   /** Only orphaned running jobs are marked waiting; a separate live Host must be left alone. */
   async recoverInterrupted(): Promise<void> {
     for (const summary of await this.storage.jobs.list(Number.MAX_SAFE_INTEGER)) {
-      if (summary.status !== "running" || isAlive(summary.ownerPid)) continue;
+      if (!["running", "queued"].includes(summary.status) || isAlive(summary.ownerPid)) continue;
       await this.storage.jobs.update(summary.id, current =>
-        current.summary.status === "running" && !isAlive(current.summary.ownerPid)
+        ["running", "queued"].includes(current.summary.status) && !isAlive(current.summary.ownerPid)
           ? {
               ...transitionJob(current, "waiting"),
               summary: {
@@ -77,35 +78,83 @@ export class JobManager {
       throw new Error("Another generation is already running in this Host");
     this.starting = true;
     try {
-      const chunks = chunkCues(request.cues).length;
-      const job = createSceneJob(request, chunks);
-      if (
-        !this.deps.generateSection &&
-        !this.deps.generateCandidates &&
-        !this.deps.generateSelection
-      ) {
-        const resolved = await resolvePiModel(request.agent);
-        job.execution = {
-          workflowVersion: "scene-v5-1",
-          promptVersion: "scene-prompts-1",
-          schemaVersion: "5",
-          inputFingerprint: createHash("sha256").update(JSON.stringify(request)).digest("hex"),
-          provider: resolved.agent.provider,
-          modelId: resolved.agent.modelId,
-          contextWindow: resolved.contextWindow,
-          maxOutputTokens: resolved.maxOutputTokens,
-          chunkPlan: chunkCues(request.cues).map(chunk => chunk.map(cue => cue.id)),
-          calls: [],
-        };
-        job.summary.execution = job.execution;
-      }
-      await this.storage.jobs.create(job);
+      const job = await this.prepare(requestId, request);
       return this.execute(requestId, job.summary.id, signal);
     } finally {
       this.starting = false;
     }
   }
 
+  async prepare(requestId: string, request: GenerationRequest) {
+    assertPiProvider(request.agent.provider);
+    const chunks = chunkCues(request.cues).length;
+    const job = createSceneJob(request, chunks);
+    if (
+      !this.deps.generateSection &&
+      !this.deps.generateCandidates &&
+      !this.deps.generateSelection
+    ) {
+      const resolved = await resolvePiModel(request.agent);
+      job.execution = {
+        workflowVersion: "scene-v5-1",
+        promptVersion: "scene-prompts-1",
+        schemaVersion: "5",
+        inputFingerprint: createHash("sha256").update(JSON.stringify(request)).digest("hex"),
+        provider: resolved.agent.provider,
+        modelId: resolved.agent.modelId,
+        contextWindow: resolved.contextWindow,
+        maxOutputTokens: resolved.maxOutputTokens,
+        chunkPlan: chunkCues(request.cues).map(chunk => chunk.map(cue => cue.id)),
+        calls: [],
+      };
+      job.summary.execution = job.execution;
+    }
+    job.summary.ownerPid = process.pid;
+    await this.storage.jobs.create(job);
+    this.notify(requestId, job.summary);
+    return job;
+  }
+  async queueFailed(requestId: string, jobId: string, error: unknown) {
+    const saved = await this.storage.jobs.get(jobId);
+    if (!saved || saved.summary.status !== "queued") return;
+    const message = error instanceof Error ? error.message : String(error);
+    const changed = await this.storage.jobs.update(jobId, current =>
+      current.summary.status !== "queued"
+        ? current
+        : {
+            ...current,
+            summary: {
+              ...current.summary,
+              status: /connection closed|aborted/i.test(message) ? "waiting" : "failed",
+              ownerPid: undefined,
+              error: message.slice(0, 1200),
+              updatedAt: new Date().toISOString(),
+            },
+          },
+    );
+    this.notify(requestId, changed.summary);
+  }
+  async enqueueResume(requestId: string, jobId: string) {
+    const job = await this.storage.jobs.get(jobId);
+    if (!job || !["waiting", "failed", "cancelled"].includes(job.summary.status))
+      throw new Error("This job cannot be queued for recovery");
+    const queued = await this.storage.jobs.update(jobId, current => {
+      if (!["waiting", "failed", "cancelled"].includes(current.summary.status))
+        throw new Error("Job state changed before recovery");
+      return {
+        ...current,
+        summary: {
+          ...current.summary,
+          status: "queued",
+          ownerPid: process.pid,
+          error: undefined,
+          retry: undefined,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+    });
+    this.notify(requestId, queued.summary);
+  }
   async resume(requestId: string, jobId: string, signal?: AbortSignal): Promise<LearningDocument> {
     if (this.isRunning() || this.externalBusy())
       throw new Error("Another generation is already running in this Host");
@@ -173,6 +222,7 @@ export class JobManager {
     jobId: string,
     signal?: AbortSignal,
   ): Promise<LearningDocument> {
+    if (this.closed) throw new Error("Native Host connection closed");
     const controller = new AbortController();
     const externalAbort = () => controller.abort();
     signal?.addEventListener("abort", externalAbort, { once: true });
@@ -224,6 +274,7 @@ export class JobManager {
 
   /** Called when the native messaging pipe closes; checkpoints survive this process. */
   interruptAll(): void {
+    this.closed = true;
     for (const controller of this.running.values()) controller.abort();
   }
 }

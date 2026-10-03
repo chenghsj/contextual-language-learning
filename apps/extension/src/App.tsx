@@ -1,3 +1,5 @@
+import { NOTIFICATION_ROUTE_KEY } from "./native/notification-navigation";
+import { notificationDestination } from "./native/analysis-notifications";
 import { useCreateDraft } from "./hooks/use-create-draft";
 import { draftRevision, type CreateDraft } from "./lib/create-draft";
 import { readDraft, writeDraft } from "./lib/draft-db";
@@ -155,6 +157,7 @@ const DEFAULT_AGENT: AgentSettings = { provider: "", modelId: "" };
 
 export default function App() {
   const [page, setPage] = useState<Page>("create");
+  const [unsavedCredentials, setUnsavedCredentials] = useState(false);
   const [settingsSection, setSettingsSection] = useState<
     "general" | "ai" | "storage" | "advanced" | null
   >(null);
@@ -179,6 +182,8 @@ export default function App() {
   const layout = settingsLayoutCopy[uiLocale];
   const flow = sidePanelLayoutCopy[uiLocale];
   const ux = createFlowCopy(uiLocale);
+  const localeRef = useRef(uiLocale);
+  localeRef.current = uiLocale;
   const overlay = page === "settings" || page === "activity";
   const basePage = overlay ? returnPage : page;
   const sheetOrigin = useRef("header-settings");
@@ -227,6 +232,7 @@ export default function App() {
   const [notice, setNotice] = useState("");
   const videoRecovery = usePlatformVideoNotice();
   const [generating, setGenerating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [hostBusy, setHostBusy] = useState(false);
@@ -313,7 +319,7 @@ export default function App() {
   } = draftState;
   const subtitleReaderBlocked =
     !!videoRecovery.unavailable || !!videoRecoveryUrl || reloadingVideoTab;
-  subtitleDraft.configure(uiLocale, checking || generating, subtitleReaderBlocked);
+  subtitleDraft.configure(uiLocale, checking, subtitleReaderBlocked);
   useEffect(() => {
     if (draftState.error) setError(draftState.error);
   }, [draftState.error]);
@@ -418,7 +424,7 @@ export default function App() {
         : contentMode === "custom" && !customPrompt.trim()
           ? 1
           : 2;
-  const acceptedDraftRef = useRef<CreateDraft | null>(null);
+  const acceptedDraftRef = useRef<{ requestId: string; draft: CreateDraft } | null>(null);
   const [lastSettings, setLastSettings] = useState<CreateDraft | null>(null);
   const creationSourceKey =
     videoSourceKey(sourceUrl) ??
@@ -485,6 +491,21 @@ export default function App() {
     if (!lastSettings || !captionsReady || !analysisValid) return;
     // A video's own draft is the source of truth; last-run settings seed only new drafts.
     if (!createDraft.hasSaved) {
+      const lastRange = lastSettings.range;
+      if (
+        (lastRange.mode === "first" || lastRange.mode === "second") &&
+        videoDurationMs === undefined
+      ) {
+        setError(analysisRangeCopy(uiLocale).estimated);
+        return;
+      }
+      if (
+        lastRange.mode === "custom" &&
+        (lastRange.endMs > analysisDurationMs || !timedCues(cues))
+      ) {
+        setError(analysisRangeCopy(uiLocale).invalid);
+        return;
+      }
       setContentMode(lastSettings.mode);
       setCustomPrompt(lastSettings.prompt);
       setCustomContext(lastSettings.context);
@@ -628,20 +649,20 @@ export default function App() {
         setConnection(event.state.connection);
         if (event.state.connection?.status === "ready") void loadJobs();
         setChecking(event.state.checking);
+        setSubmitting(!!event.state.submitting);
         setDuplicateWarning(event.state.duplicate);
         setGenerating(!!event.state.active);
         if (event.state.lastJobId) lastJobIdRef.current = event.state.lastJobId;
-        if (event.state.active && acceptedDraftRef.current) {
-          const saved = acceptedDraftRef.current;
-          acceptedDraftRef.current = null;
-          setLastSettings(saved);
-          void writeDraft("last-create-settings", saved).catch(error => setError(String(error)));
-        }
         if (event.state.active?.summary) updateJob(event.state.active.summary);
         return;
       }
       if (event.type === "customDocument") {
-        setCustomDocument(event.document);
+        toast.success(customContentCopy(localeRef.current).created, {
+          action: {
+            label: t("openLesson"),
+            onClick: () => void openCustomDocument(event.document.id),
+          },
+        });
         void loadLessons();
         return;
       }
@@ -652,6 +673,13 @@ export default function App() {
       switch (event.type) {
         case "job":
           updateJob(event.job);
+          if (acceptedDraftRef.current?.requestId === event.job.id) {
+            const saved = acceptedDraftRef.current.draft;
+            acceptedDraftRef.current = null;
+            setLastSettings(saved);
+            void writeDraft("last-create-settings", saved).catch(error => setError(String(error)));
+          }
+
           break;
         case "progress":
           setProgress(t("statusProgress", { completed: event.completed, total: event.total }));
@@ -1129,7 +1157,9 @@ export default function App() {
     const parsed = LearningDocumentSchema.safeParse(raw);
     if (!parsed.success) throw new Error("Host returned an invalid learning document.");
     setProgress(t("statusSaved"));
-
+    toast.success(t("analysisCompleteTitle"), {
+      action: { label: t("openLesson"), onClick: () => openSavedDocument(parsed.data.id) },
+    });
     void loadLessons();
   }
 
@@ -1216,9 +1246,7 @@ export default function App() {
   }
 
   function runGeneration(input: { type: "resume"; jobId: string }): void {
-    if (generating) return;
     setError("");
-    setPage("create");
     setProgress(t("statusResuming"));
     generationSession.resume(
       input.jobId,
@@ -1227,7 +1255,7 @@ export default function App() {
   }
 
   function startGeneration(): void {
-    if (checking || generating) return;
+    if (checking) return;
     if (!analysisValid) {
       setError(analysisRangeCopy(uiLocale).invalid);
       return;
@@ -1287,10 +1315,13 @@ export default function App() {
       });
       setProgress(t("checkingExisting"));
       acceptedDraftRef.current = {
-        ...creationSnapshot,
-        agent: generationAgent,
-        destination: requestDestination ?? destination,
-        backup: requestBackup ?? backup,
+        requestId: payload.id,
+        draft: {
+          ...creationSnapshot,
+          agent: generationAgent,
+          destination: requestDestination ?? destination,
+          backup: requestBackup ?? backup,
+        },
       };
       generationSession.start(
         contentMode === "custom"
@@ -1429,13 +1460,10 @@ export default function App() {
     documentId: string,
     handle: (document: LearningDocument) => void,
   ): void {
-    if (generating) return;
     setError("");
-    setGenerating(true);
     void getDocument(documentId)
       .then(handle)
-      .catch(error => setError(String(error)))
-      .finally(() => setGenerating(false));
+      .catch(error => setError(String(error)));
   }
 
   useEffect(() => {
@@ -1452,6 +1480,45 @@ export default function App() {
     }
   }, [hydrated, hostReady]);
 
+  useEffect(() => {
+    if (!hydrated || !hostReady || new URLSearchParams(window.location.search).has("web")) return;
+    let live = true;
+    const navigate = async (value: unknown) => {
+      if (!live || !value || typeof value !== "object") return;
+      const route = value as { id?: string; windowId?: number };
+      if (typeof route.id !== "string" || typeof route.windowId !== "number") return;
+      const window = await chrome.windows.getCurrent();
+      if (!live || window.id !== route.windowId) return;
+      const path = notificationDestination(route.id);
+      if (!path) return;
+      if (route.id.startsWith("lesson-complete:"))
+        openSavedDocument(route.id.slice("lesson-complete:".length));
+      else {
+        setReturnPage("create");
+        setPage("activity");
+        void loadJobs();
+      }
+      await chrome.storage.local.remove(NOTIFICATION_ROUTE_KEY);
+    };
+    void chrome.storage.local
+      .get(NOTIFICATION_ROUTE_KEY)
+      .then(saved => navigate(saved[NOTIFICATION_ROUTE_KEY]))
+      .catch(() => {});
+    const changed = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
+      if (area === "local" && changes[NOTIFICATION_ROUTE_KEY])
+        void navigate(changes[NOTIFICATION_ROUTE_KEY].newValue).catch(() => {});
+    };
+    chrome.storage.onChanged.addListener(changed);
+    return () => {
+      live = false;
+      chrome.storage.onChanged.removeListener(changed);
+    };
+  }, [hydrated, hostReady]);
+  function openWebReader(id: string) {
+    void chrome.tabs.create({
+      url: chrome.runtime.getURL("sidepanel.html?lesson=" + encodeURIComponent(id) + "&web=1"),
+    });
+  }
   function openSavedDocument(documentId: string): void {
     const kind = jobs.find(job => job.documentId === documentId || job.id === documentId)?.kind;
     if (kind === "custom" || localCustom.some(doc => doc.documentId === documentId)) {
@@ -1541,6 +1608,7 @@ export default function App() {
     }
   }
   const executionFocus = useRef<HTMLElement | null>(null);
+  const executionHeading = useRef<HTMLHeadingElement | null>(null);
   async function showExecution(job: JobSummary) {
     executionFocus.current =
       window.document.activeElement instanceof HTMLElement ? window.document.activeElement : null;
@@ -1557,6 +1625,7 @@ export default function App() {
         markdown = saved.nodes.at(-1)?.output;
       }
       setExecutionDetails({ title: job.sourceTitle, execution: response.execution, markdown });
+      window.requestAnimationFrame(() => executionHeading.current?.focus());
     } catch (error) {
       setError(String(error));
     }
@@ -1573,7 +1642,7 @@ export default function App() {
   const onFile = (file: File | undefined) => subtitleDraft.importFile(file);
   function chooseLearningLanguage(next: string) {
     const language = LEARNING_LANGUAGES.find(value => value === next);
-    if (!language || checking || generating) return;
+    if (!language || checking) return;
     subtitleDraft.setLanguage(language);
     setProfile(current => ({
       ...current,
@@ -1826,7 +1895,7 @@ export default function App() {
                       ariaLabel={t("targetLanguage")}
                       value={profile.targetLanguage}
                       onValueChange={chooseLearningLanguage}
-                      disabled={checking || generating}
+                      disabled={checking}
                       options={learningLanguageOptions(uiLocale)}
                       copy={LEARNING_LANGUAGE_SEARCH_COPY[uiLocale]}
                     />
@@ -1911,11 +1980,7 @@ export default function App() {
                               variant="ghost"
                               size="sm"
                               disabled={
-                                subtitleReaderBlocked ||
-                                subtitleBusy ||
-                                metadataBusy ||
-                                checking ||
-                                generating
+                                subtitleReaderBlocked || subtitleBusy || metadataBusy || checking
                               }
                               onClick={() => void fetchCurrentSubtitles()}
                             >
@@ -1980,13 +2045,7 @@ export default function App() {
                       <Button
                         size="sm"
                         className="min-w-0 text-center leading-[1.4] whitespace-normal wrap-anywhere"
-                        disabled={
-                          subtitleReaderBlocked ||
-                          subtitleBusy ||
-                          metadataBusy ||
-                          checking ||
-                          generating
-                        }
+                        disabled={subtitleReaderBlocked || subtitleBusy || metadataBusy || checking}
                         onClick={() => void fetchCurrentSubtitles()}
                       >
                         {subtitleBusy
@@ -2044,7 +2103,7 @@ export default function App() {
                     onValueChange={text => subtitleDraft.setPasteDraft(text)}
                     onFile={onFile}
                     onPaste={usePastedSubtitles}
-                    disabled={subtitleBusy || checking || generating}
+                    disabled={subtitleBusy || checking}
                     importedFileLabel={fileName ? t("importedFile", { name: fileName }) : undefined}
                     copy={{
                       hint: t("subtitleImportHint"),
@@ -2307,21 +2366,27 @@ export default function App() {
                       : customUi.markdown}
                   </p>
                 </section>
-                {duplicateWarning && (
-                  <Alert
-                    className="my-3 min-w-0 wrap-anywhere"
-                    aria-label={t("duplicateConfirmLabel")}
+                <Dialog
+                  open={!!duplicateWarning}
+                  onOpenChange={open => {
+                    if (!open) cancelDuplicate();
+                  }}
+                >
+                  <DialogContent
+                    closeLabel={t("cancelNoGeneration")}
+                    className="max-h-[calc(100dvh-2rem)] overflow-y-auto"
                   >
-                    <AlertTitle>
-                      {t("duplicateFound", { count: duplicateWarning.matches.length })}
-                    </AlertTitle>
+                    <DialogTitle>
+                      {t("duplicateFound", { count: duplicateWarning?.matches.length ?? 0 })}
+                    </DialogTitle>
+                    <DialogDescription>{t("duplicateNewVersion")}</DialogDescription>
                     <p
                       className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
                       data-ui="hint"
                     >
                       {t("duplicateNewVersion")}
                     </p>
-                    {duplicateWarning.matches.map(match => (
+                    {duplicateWarning?.matches.map(match => (
                       <div
                         className="mb-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border p-3 text-[13px] wrap-anywhere [&_strong]:mr-2 [&_strong]:text-primary [&_p]:mt-[6px] [&_p]:text-xs [&_p]:text-muted-foreground"
                         key={match.documentId}
@@ -2371,8 +2436,8 @@ export default function App() {
                         {t("cancelNoGeneration")}
                       </Button>
                     </div>
-                  </Alert>
-                )}
+                  </DialogContent>
+                </Dialog>
                 {contentMode === "standard" && (
                   <p className="mt-[10px] min-w-0 max-w-full rounded-[var(--radius)] border border-[color-mix(in_oklch,var(--primary)_35%,var(--border))] bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] p-[10px] text-xs text-foreground wrap-anywhere mt-[5px] mb-[14px]">
                     {t("lessonContentSummary", {
@@ -2478,7 +2543,6 @@ export default function App() {
                     !hostReady ||
                     !generationServiceReady ||
                     checking ||
-                    generating ||
                     subtitleBusy ||
                     !isPiProviderId(generationAgent.provider) ||
                     installed?.[generationAgent.provider] !== true ||
@@ -2487,13 +2551,13 @@ export default function App() {
                     !title.trim()
                   }
                 >
-                  {(generating || checking) && (
+                  {checking && (
                     <span
                       className="inline-block size-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
                       aria-hidden="true"
                     />
                   )}
-                  {checking ? t("checkingExistingShort") : t("create")}
+                  {submitting ? ux.queuing : checking ? t("checkingExistingShort") : t("create")}
                 </Button>
               )}
             </footer>
@@ -2567,7 +2631,10 @@ export default function App() {
         <Sheet
           open={overlay}
           onOpenChange={open => {
-            if (!open) setPage(returnPage);
+            if (!open && (!unsavedCredentials || window.confirm(ux.discardCredentials))) {
+              setExecutionDetails(null);
+              setPage(returnPage);
+            }
           }}
         >
           {overlay && (
@@ -2579,32 +2646,70 @@ export default function App() {
               }}
             >
               {page === "activity" && (
-                <main id="page-panel-activity" aria-labelledby="activity-title">
-                  <SheetTitle id="activity-title" className="py-5 pr-10 text-sm font-semibold">
-                    {layout.activity}
+                <main id="page-panel-activity" aria-label={layout.activity}>
+                  {executionDetails && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => {
+                        setExecutionDetails(null);
+                        window.requestAnimationFrame(() => executionFocus.current?.focus());
+                      }}
+                    >
+                      <ArrowLeft className="size-4" />
+                      {layout.activity}
+                    </Button>
+                  )}
+                  <SheetTitle
+                    ref={executionHeading}
+                    tabIndex={-1}
+                    className="py-5 pr-10 text-sm font-semibold outline-none"
+                  >
+                    {executionDetails ? customUi.details : layout.activity}
                   </SheetTitle>
-                  <TaskHistory
-                    onDetails={showExecution}
-                    jobs={jobs}
-                    loadingJobs={loadingJobs}
-                    hostReady={hostReady}
-                    generating={generating}
-                    storageBusy={storageBusy}
-                    agentCatalog={agentCatalog}
-                    locale={uiLocale}
-                    onConfigure={() => {
-                      setSettingsSection("ai");
-                      setPage("settings");
-                    }}
-                    t={t}
-                    onRefresh={loadJobs}
-                    onResume={jobId => runGeneration({ type: "resume", jobId })}
-                    onOpen={openSavedDocument}
-                    onRetryPublication={retryPublication}
-                    onRetryBackup={retryBackup}
-                    onListEnded={listEndedJobs}
-                    onDeleteRecords={deleteJobRecords}
-                  />
+                  {executionDetails && (
+                    <PageSection>
+                      <p className="mb-3 text-xs text-muted-foreground">{executionDetails.title}</p>
+                      <ExecutionDetails execution={executionDetails.execution} locale={uiLocale} />
+                      {executionDetails.markdown && (
+                        <Button
+                          variant="outline"
+                          className="mt-3"
+                          onClick={() =>
+                            exportMarkdown(executionDetails.markdown!, executionDetails.title)
+                          }
+                        >
+                          {customUi.exportMarkdown}
+                        </Button>
+                      )}
+                    </PageSection>
+                  )}
+                  <div hidden={!!executionDetails}>
+                    <TaskHistory
+                      onDetails={showExecution}
+                      jobs={jobs}
+                      loadingJobs={loadingJobs}
+                      hostReady={hostReady}
+                      generating={generating}
+                      storageBusy={storageBusy}
+                      agentCatalog={agentCatalog}
+                      locale={uiLocale}
+                      onConfigure={() => {
+                        setSettingsSection("ai");
+                        setPage("settings");
+                      }}
+                      t={t}
+                      onRefresh={loadJobs}
+                      onResume={jobId => runGeneration({ type: "resume", jobId })}
+                      onCancel={job => generationSession.cancelJob(job.id, job.kind ?? "standard")}
+                      onOpen={openSavedDocument}
+                      onRetryPublication={retryPublication}
+                      onRetryBackup={retryBackup}
+                      onListEnded={listEndedJobs}
+                      onDeleteRecords={deleteJobRecords}
+                    />
+                  </div>
                 </main>
               )}
 
@@ -2612,7 +2717,14 @@ export default function App() {
                 <main id="page-panel-settings" aria-label={t("settings")}>
                   <div className="py-3 pr-10">
                     {settingsSection && (
-                      <Button variant="ghost" size="sm" onClick={() => setSettingsSection(null)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (!unsavedCredentials || window.confirm(ux.discardCredentials))
+                            setSettingsSection(null);
+                        }}
+                      >
                         <ArrowLeft className="size-4" />
                         {t("settings")}
                       </Button>
@@ -2766,6 +2878,7 @@ export default function App() {
                         available={hostReady}
                         selectedProvider={agent.provider}
                         onSelect={selectAgent}
+                        onDirty={setUnsavedCredentials}
                         onChanged={checkHost}
                       />
                     </PageSection>
@@ -3102,7 +3215,17 @@ export default function App() {
             <Button variant="ghost" size="sm" onClick={() => setPage("lessons")}>
               {t("lessonLibrary")}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="my-2"
+              onClick={() => openWebReader(customDocument.id)}
+            >
+              {ux.web}
+              <ExternalLink className="size-3" />
+            </Button>
             <CustomViewer
+              key={customDocument.id}
               document={customDocument}
               locale={uiLocale}
               busy={storageBusy || generating}
@@ -3126,8 +3249,6 @@ export default function App() {
                     modelId: customDocument.execution.modelId,
                   },
                 });
-                setPage("create");
-                setCreateStep(2);
                 generationSession.start(snapshot, true);
               }}
             />
@@ -3155,35 +3276,6 @@ export default function App() {
             </Button>
           </DialogContent>
         </Dialog>
-        <Dialog
-          open={!!executionDetails}
-          onOpenChange={open => {
-            if (!open) setExecutionDetails(null);
-          }}
-        >
-          <DialogContent
-            className="max-h-[85dvh] overflow-y-auto"
-            closeLabel={t("cancel")}
-            onCloseAutoFocus={event => {
-              event.preventDefault();
-              executionFocus.current?.focus();
-            }}
-          >
-            <DialogHeader>
-              <DialogTitle>{customUi.details}</DialogTitle>
-              <DialogDescription>{executionDetails?.title}</DialogDescription>
-            </DialogHeader>
-            <ExecutionDetails execution={executionDetails?.execution ?? null} locale={uiLocale} />
-            {executionDetails?.markdown && (
-              <Button
-                variant="outline"
-                onClick={() => exportMarkdown(executionDetails.markdown!, executionDetails.title)}
-              >
-                {customUi.exportMarkdown}
-              </Button>
-            )}
-          </DialogContent>
-        </Dialog>
         {basePage === "lesson" && (
           <main
             className="flex min-h-0 flex-1 flex-col"
@@ -3193,6 +3285,17 @@ export default function App() {
             <Button variant="ghost" size="sm" className="mb-2" onClick={() => setPage("lessons")}>
               {t("lessonLibrary")}
             </Button>
+            {document && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mb-2 self-start"
+                onClick={() => openWebReader(document.id)}
+              >
+                {ux.web}
+                <ExternalLink className="size-3" />
+              </Button>
+            )}
             {document ? (
               <ContextualSceneReader
                 key={document.id}

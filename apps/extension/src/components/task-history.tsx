@@ -1,3 +1,4 @@
+import { createFlowCopy } from "../i18n/create-flow";
 import { customContentCopy } from "../i18n/custom-content";
 import { layoutText, sidePanelLayoutCopy } from "../i18n/side-panel-layout";
 import { PageSection } from "./page-section";
@@ -9,7 +10,7 @@ import type { UiLocale, MessageKey, MessageParams } from "../i18n/messages";
 import { PiFeedback } from "./pi-feedback";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { SelectField } from "./ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ type Props = {
   t: (key: MessageKey, params?: MessageParams) => string;
   onRefresh: () => void;
   onResume: (id: string) => void;
+  onCancel?: (job: JobSummary) => void;
   onOpen: (id: string) => void;
   onDetails?: (job: JobSummary) => void | Promise<void>;
   onRetryPublication: (id: string) => Promise<void>;
@@ -79,6 +81,7 @@ export function TaskHistory({
   t,
   onRefresh,
   onResume,
+  onCancel,
   onOpen,
   onDetails,
   onRetryPublication,
@@ -86,6 +89,10 @@ export function TaskHistory({
   onListEnded,
   onDeleteRecords,
 }: Props) {
+  const ux = createFlowCopy(locale);
+  const queued = jobs
+    .filter(job => job.status === "queued")
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const customUi = customContentCopy(locale);
   const phaseLabel = (job: JobSummary) =>
     job.kind === "custom" && job.phase === "selecting"
@@ -194,227 +201,258 @@ export function TaskHistory({
   };
   return (
     <PageSection>
-      <div className="flex items-center justify-between gap-2 [&>[data-slot=select-trigger]]:min-w-0 [&>[data-slot=select-trigger]]:flex-1">
-        <SelectField
-          ariaLabel={t("jobFilterLabel")}
-          value={jobFilter}
-          onValueChange={value => {
-            if (
-              value === "all" ||
-              value === "active" ||
-              value === "failed" ||
-              value === "completed" ||
-              value === "cancelled"
-            )
-              setJobFilter(value);
-            setShowAllJobs(false);
-          }}
-          options={[
-            { value: "all", label: t("jobFilterAll") },
-            { value: "active", label: t("jobFilterActive") },
-            { value: "failed", label: t("jobFailed") },
-            { value: "completed", label: t("jobFilterCompleted") },
-            { value: "cancelled", label: t("jobCancelled") },
-          ]}
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={loadingJobs}
-          aria-busy={loadingJobs}
-          onClick={onRefresh}
-        >
-          {loadingJobs && (
-            <span
-              aria-hidden="true"
-              className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
-            />
-          )}
-          {t("refreshJobs")}
-        </Button>
-      </div>
-      <div className="my-[10px] grid gap-[7px]">
-        {!loadingJobs && !visibleJobs.length && (
-          <p className="text-xs text-muted-foreground">{flow.activityEmpty}</p>
-        )}
-        {visibleJobs.map((job, index) => (
-          <React.Fragment key={job.id}>
-            {(index === 0 ||
-              new Date(visibleJobs[index - 1].updatedAt).toLocaleDateString() !==
-                new Date(job.updatedAt).toLocaleDateString()) && (
-              <h3 className="mt-2 text-[11px] font-medium text-muted-foreground">
-                {dayLabel(job.updatedAt)}
-              </h3>
-            )}
-            <div
-              className="min-w-0 border-b border-border px-0 py-2.5 [&_p]:my-[3px] [&_p]:text-xs [&_[data-ui=actions]]:mt-[5px] [&_[data-ui=actions]]:gap-[5px] [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-7"
-              key={job.id}
-            >
-              <div className="flex min-w-0 items-center justify-between gap-2 [&_strong]:min-w-0 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-[13px]">
-                <strong className="min-w-0 flex-1 truncate" title={job.sourceTitle}>
-                  {job.sourceTitle}
-                </strong>
-                <Badge className="shrink-0 whitespace-nowrap text-[11px] leading-4">
-                  {t(jobStatusKeys[job.status])}
-                </Badge>
-              </div>
-              <p
-                className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                data-ui="hint"
-              >
-                {agentDisplayName(
-                  job.provider,
-                  agentCatalog.find(item => item.id === job.provider)?.label,
-                )}{" "}
-                · {layoutText(flow.completedSteps, { completed: job.completed, total: job.total })}
-                {job.backup &&
-                  " · " +
-                    t(
-                      job.backup.status === "backed-up"
-                        ? "backupSaved"
-                        : ["pending", "uploading"].includes(job.backup.status)
-                          ? "backupProcessing"
-                          : "backupFailedMessage",
-                    )}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {job.status === "completed"
-                  ? layoutText(flow.completedAt, {
-                      time: new Date(job.updatedAt).toLocaleTimeString(locale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }),
-                    })
-                  : job.phase
-                    ? job.status === "cancelled"
-                      ? layoutText(flow.cancelledAtPhase, { phase: phaseLabel(job) })
-                      : phaseLabel(job)
-                    : new Date(job.updatedAt).toLocaleTimeString(locale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-              </p>
-              {job.error && <PiFeedback locale={locale} message={job.error} context="generation" />}
-              <div
-                className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
-                data-ui="actions"
-              >
-                {onDetails && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={!hostReady}
-                    onClick={() => void onDetails(job)}
-                  >
-                    {customUi.details}
-                  </Button>
-                )}
-                {["queued", "waiting", "failed", "cancelled"].includes(job.status) &&
-                  (!isPiProviderId(job.provider) ? (
-                    <p className="text-muted-foreground">{ui.legacy}</p>
-                  ) : !agentCatalog.some(item => item.id === job.provider && item.installed) ? (
-                    <div className="grid gap-2">
-                      <p className="text-muted-foreground">{ui.resumeConnect}</p>
-                      {onConfigure && (
-                        <Button variant="outline" size="sm" onClick={onConfigure}>
-                          {ui.connect}
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!hostReady || generating || deleting}
-                      onClick={() => onResume(job.id)}
-                    >
-                      {t("resume")}
-                    </Button>
-                  ))}
-                {job.documentId && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={generating}
-                      onClick={() => onOpen(job.documentId!)}
-                    >
-                      {t("openLesson")}
-                    </Button>
-                    {job.publication && job.publication.status !== "published" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={storageBusy}
-                        onClick={() => void onRetryPublication(job.id)}
-                      >
-                        {t("retryPublish")}
-                      </Button>
-                    )}
-                    {job.backup && ["failed", "conflict"].includes(job.backup.status) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={storageBusy}
-                        onClick={() => void onRetryBackup(job.id)}
-                      >
-                        {t("retryBackup")}
-                      </Button>
-                    )}
-                  </>
-                )}
-                {canDelete && ["completed", "failed", "cancelled"].includes(job.status) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="ml-auto"
-                    disabled={!hostReady || storageBusy || deleting}
-                    onClick={() => openConfirmation([job], false)}
-                  >
-                    {t("deleteJobRecord")}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </React.Fragment>
-        ))}
-      </div>
-      {filteredJobs.length > visibleJobs.length && (
-        <Button variant="ghost" size="sm" onClick={() => setShowAllJobs(true)}>
-          {t("showMoreJobs", { count: filteredJobs.length - visibleJobs.length })}
-        </Button>
-      )}
-      {showAllJobs && filteredJobs.length > 3 && (
-        <Button variant="ghost" size="sm" onClick={() => setShowAllJobs(false)}>
-          {t("showLessJobs")}
-        </Button>
-      )}
-      {canDelete && (
-        <div className="mt-4 border-t border-border pt-3">
-          <Button
-            ref={clearRef}
-            variant="ghost"
-            size="sm"
-            className="max-w-full whitespace-normal text-left"
-            disabled={
-              !hostReady ||
-              storageBusy ||
-              deleting ||
-              loadingEnded ||
-              !endedJobs.length ||
-              !!listError
-            }
-            onClick={() => openConfirmation(endedJobs, true)}
+      <Tabs
+        value={jobFilter}
+        onValueChange={value => {
+          setJobFilter(value as JobFilter);
+          setShowAllJobs(false);
+        }}
+      >
+        <div className="grid gap-2">
+          <TabsList
+            aria-label={t("jobFilterLabel")}
+            className="h-auto w-full flex-wrap justify-start"
           >
-            {t("clearEndedJobRecords")}
+            {(
+              [
+                ["all", t("jobFilterAll")],
+                ["active", t("jobFilterActive")],
+                ["completed", t("jobFilterCompleted")],
+                ["failed", t("jobFailed")],
+                ["cancelled", t("jobCancelled")],
+              ] as const
+            ).map(([value, label]) => (
+              <TabsTrigger key={value} value={value} className="px-2 text-xs">
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={loadingJobs}
+            aria-busy={loadingJobs}
+            onClick={onRefresh}
+          >
+            {loadingJobs && (
+              <span
+                aria-hidden="true"
+                className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
+              />
+            )}
+            {t("refreshJobs")}
           </Button>
-          {listError && (
-            <p role="alert" className="mt-2 break-words text-xs text-destructive">
-              {listError}
-            </p>
-          )}
         </div>
-      )}
+        <TabsContent value={jobFilter}>
+          <div className="my-[10px] grid gap-[7px]">
+            {!loadingJobs && !visibleJobs.length && (
+              <p className="text-xs text-muted-foreground">{flow.activityEmpty}</p>
+            )}
+            {visibleJobs.map((job, index) => (
+              <React.Fragment key={job.id}>
+                {(index === 0 ||
+                  new Date(visibleJobs[index - 1].updatedAt).toLocaleDateString() !==
+                    new Date(job.updatedAt).toLocaleDateString()) && (
+                  <h3 className="mt-2 text-[11px] font-medium text-muted-foreground">
+                    {dayLabel(job.updatedAt)}
+                  </h3>
+                )}
+                <div
+                  className="min-w-0 border-b border-border px-0 py-2.5 [&_p]:my-[3px] [&_p]:text-xs [&_[data-ui=actions]]:mt-[5px] [&_[data-ui=actions]]:gap-[5px] [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-7"
+                  key={job.id}
+                >
+                  <div className="flex min-w-0 items-center justify-between gap-2 [&_strong]:min-w-0 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-[13px]">
+                    <strong className="min-w-0 flex-1 truncate" title={job.sourceTitle}>
+                      {job.sourceTitle}
+                    </strong>
+                    <Badge className="shrink-0 whitespace-nowrap text-[11px] leading-4">
+                      {t(jobStatusKeys[job.status])}
+                    </Badge>
+                  </div>
+                  <p
+                    className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                    data-ui="hint"
+                  >
+                    {agentDisplayName(
+                      job.provider,
+                      agentCatalog.find(item => item.id === job.provider)?.label,
+                    )}{" "}
+                    ·{" "}
+                    {layoutText(flow.completedSteps, {
+                      completed: job.completed,
+                      total: job.total,
+                    })}
+                    {job.backup &&
+                      " · " +
+                        t(
+                          job.backup.status === "backed-up"
+                            ? "backupSaved"
+                            : ["pending", "uploading"].includes(job.backup.status)
+                              ? "backupProcessing"
+                              : "backupFailedMessage",
+                        )}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {job.status === "completed"
+                      ? layoutText(flow.completedAt, {
+                          time: new Date(job.updatedAt).toLocaleTimeString(locale, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }),
+                        })
+                      : job.phase
+                        ? job.status === "cancelled"
+                          ? layoutText(flow.cancelledAtPhase, { phase: phaseLabel(job) })
+                          : phaseLabel(job)
+                        : new Date(job.updatedAt).toLocaleTimeString(locale, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                  </p>
+                  {job.status === "queued" && (
+                    <p>
+                      {ux.queued}: {queued.findIndex(item => item.id === job.id) + 1}
+                    </p>
+                  )}
+                  {job.retry && (
+                    <p role="status">
+                      {ux.retrying} {job.retry.attempt}/2 · {Math.ceil(job.retry.delayMs / 1000)}s ·{" "}
+                      {job.retry.reason}
+                    </p>
+                  )}
+                  {job.status === "running" && (
+                    <p className="text-muted-foreground">{ux.cancelHint}</p>
+                  )}
+                  {job.error && (
+                    <PiFeedback locale={locale} message={job.error} context="generation" />
+                  )}
+                  <div
+                    className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
+                    data-ui="actions"
+                  >
+                    {onDetails && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={!hostReady}
+                        onClick={() => void onDetails(job)}
+                      >
+                        {customUi.details}
+                      </Button>
+                    )}
+                    {["waiting", "failed", "cancelled"].includes(job.status) &&
+                      (!isPiProviderId(job.provider) ? (
+                        <p className="text-muted-foreground">{ui.legacy}</p>
+                      ) : !agentCatalog.some(item => item.id === job.provider && item.installed) ? (
+                        <div className="grid gap-2">
+                          <p className="text-muted-foreground">{ui.resumeConnect}</p>
+                          {onConfigure && (
+                            <Button variant="outline" size="sm" onClick={onConfigure}>
+                              {ui.connect}
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!hostReady || deleting}
+                          onClick={() => onResume(job.id)}
+                        >
+                          {t("resume")}
+                        </Button>
+                      ))}
+                    {onCancel && ["queued", "running", "waiting"].includes(job.status) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!hostReady}
+                        onClick={() => onCancel(job)}
+                      >
+                        {t("cancel")}
+                      </Button>
+                    )}
+                    {job.documentId && (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => onOpen(job.documentId!)}>
+                          {t("openLesson")}
+                        </Button>
+                        {job.publication && job.publication.status !== "published" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={storageBusy}
+                            onClick={() => void onRetryPublication(job.id)}
+                          >
+                            {t("retryPublish")}
+                          </Button>
+                        )}
+                        {job.backup && ["failed", "conflict"].includes(job.backup.status) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={storageBusy}
+                            onClick={() => void onRetryBackup(job.id)}
+                          >
+                            {t("retryBackup")}
+                          </Button>
+                        )}
+                      </>
+                    )}
+                    {canDelete && ["completed", "failed", "cancelled"].includes(job.status) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-auto"
+                        disabled={!hostReady || storageBusy || deleting}
+                        onClick={() => openConfirmation([job], false)}
+                      >
+                        {t("deleteJobRecord")}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+          {filteredJobs.length > visibleJobs.length && (
+            <Button variant="ghost" size="sm" onClick={() => setShowAllJobs(true)}>
+              {t("showMoreJobs", { count: filteredJobs.length - visibleJobs.length })}
+            </Button>
+          )}
+          {showAllJobs && filteredJobs.length > 3 && (
+            <Button variant="ghost" size="sm" onClick={() => setShowAllJobs(false)}>
+              {t("showLessJobs")}
+            </Button>
+          )}
+          {canDelete && (
+            <div className="mt-4 border-t border-border pt-3">
+              <Button
+                ref={clearRef}
+                variant="ghost"
+                size="sm"
+                className="max-w-full whitespace-normal text-left"
+                disabled={
+                  !hostReady ||
+                  storageBusy ||
+                  deleting ||
+                  loadingEnded ||
+                  !endedJobs.length ||
+                  !!listError
+                }
+                onClick={() => openConfirmation(endedJobs, true)}
+              >
+                {t("clearEndedJobRecords")}
+              </Button>
+              {listError && (
+                <p role="alert" className="mt-2 break-words text-xs text-destructive">
+                  {listError}
+                </p>
+              )}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
       <Dialog
         open={confirmation !== null}
         onOpenChange={open => {

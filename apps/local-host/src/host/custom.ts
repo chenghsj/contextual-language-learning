@@ -1,3 +1,5 @@
+import { customDuplicateKey } from "../custom-duplicates";
+import type { GenerationQueue } from "../jobs/queue";
 import { findCustomDriveDuplicates } from "../drive/api";
 import { randomUUID } from "node:crypto";
 import {
@@ -38,12 +40,13 @@ export function createCustomHandler(
   reply: (message: HostMessage) => void,
   afterSave?: (document: CustomDocument, id: string) => Promise<void>,
   findRemote = findCustomDriveDuplicates,
+  queue?: GenerationQueue,
 ) {
   const checks = new Map<string, { fingerprint: string; ids: Set<string>; expires: number }>();
   async function duplicates(request: CustomGenerationRequest) {
-    const fingerprint = customFingerprint(request);
+    const fingerprint = customDuplicateKey(request);
     const local = (await repository.listDocuments())
-      .filter(doc => doc.execution.inputFingerprint === fingerprint)
+      .filter(doc => customDuplicateKey(doc.request) === fingerprint)
       .map(doc => ({
         documentId: doc.id,
         title: doc.title,
@@ -52,9 +55,25 @@ export function createCustomHandler(
         destination: "local",
         exactSettings: true,
       }));
+    for (const job of await repository.listJobs()) {
+      if (
+        job.summary.status === "cancelled" ||
+        local.some(doc => doc.documentId === job.summary.id) ||
+        customDuplicateKey(job.request) !== fingerprint
+      )
+        continue;
+      local.push({
+        documentId: job.summary.id,
+        title: job.request.source.title,
+        createdAt: job.summary.createdAt,
+        local: false,
+        destination: "local",
+        exactSettings: true,
+      });
+    }
     const remote =
       request.backup?.enabled && request.backup.accountId
-        ? await findRemote(request.backup.accountId, fingerprint)
+        ? await findRemote(request.backup.accountId, fingerprint, customFingerprint(request))
         : [];
     return [
       ...local,
@@ -83,31 +102,73 @@ export function createCustomHandler(
         return true;
       }
       case "generateCustom": {
-        if (request.id !== request.payload.id) throw new Error("Custom generation IDs differ");
-        const checked = checks.get(request.checkToken);
-        if (
-          !checked ||
-          checked.expires < Date.now() ||
-          checked.fingerprint !== contentHash(JSON.stringify(request.payload))
-        )
-          throw new Error("Check duplicates again after changing custom generation settings");
-        const matches = await duplicates(request.payload);
-        if (matches.some(doc => !checked.ids.has(doc.documentId)))
-          throw new Error("New duplicate content appeared; check again");
-        if (matches.length && !request.confirmRegeneration)
-          throw new Error("Confirm creation of a new content version");
-        checks.delete(request.checkToken);
+        const admit = async () => {
+          if (request.id !== request.payload.id) throw new Error("Custom generation IDs differ");
+          const checked = checks.get(request.checkToken);
+          if (
+            !checked ||
+            checked.expires < Date.now() ||
+            checked.fingerprint !== contentHash(JSON.stringify(request.payload))
+          )
+            throw new Error("Check duplicates again after changing custom generation settings");
+          const matches = await duplicates(request.payload);
+          if (matches.some(doc => !checked.ids.has(doc.documentId)))
+            throw new Error("New duplicate content appeared; check again");
+          if (matches.length && !request.confirmRegeneration)
+            throw new Error("Confirm creation of a new content version");
+          checks.delete(request.checkToken);
+        };
+        if (queue) {
+          const queued = await queue.submit(
+            request.payload.id,
+            async () => {
+              await admit();
+              await manager.prepare(request.id, request.payload);
+            },
+            async () => {
+              const job = await repository.getJob(request.payload.id);
+              if (job?.summary.status === "cancelled")
+                throw new DOMException("This operation was aborted.", "AbortError");
+              await finish(request.id, await manager.resume(request.id, request.payload.id));
+            },
+          );
+          await queued.completion.catch(async error => {
+            await manager.queueFailed(request.id, request.payload.id, error);
+            throw error;
+          });
+          return true;
+        }
+        await admit();
         await finish(request.id, await manager.start(request.id, request.payload));
         return true;
       }
-      case "resumeCustom":
-        await finish(request.id, await manager.resume(request.id, request.jobId));
+      case "resumeCustom": {
+        if (queue) {
+          const queued = await queue.submit(
+            request.jobId,
+            async () => {
+              await manager.enqueueResume(request.id, request.jobId);
+            },
+            async () => {
+              await finish(request.id, await manager.resume(request.id, request.jobId));
+            },
+          );
+          await queued.completion.catch(async error => {
+            await manager.queueFailed(request.id, request.jobId, error);
+            throw error;
+          });
+        } else await finish(request.id, await manager.resume(request.id, request.jobId));
         return true;
-      case "cancelCustom":
+      }
+      case "cancelCustom": {
+        queue?.cancel(request.jobId);
         if (!(await manager.cancel(request.jobId)))
           throw new Error("Custom job is not cancellable");
+        const job = await repository.getJob(request.jobId);
+        if (job) reply({ id: request.id, type: "job", job: job.summary });
         reply({ id: request.id, type: "cancelled" });
         return true;
+      }
       case "listCustomDocuments": {
         const jobs = await repository.listJobs(),
           byId = new Map(jobs.map(job => [job.summary.id, job.summary]));

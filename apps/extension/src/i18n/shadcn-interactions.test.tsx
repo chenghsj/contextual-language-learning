@@ -1,3 +1,4 @@
+import { HOST_PROTOCOL_VERSION } from "@immersive/core";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { JSDOM } from "jsdom";
@@ -210,7 +211,7 @@ test("Host checks show progress, prevent duplicate clicks and retain the complet
         checked
         sdkMode
         version="0.1.0"
-        protocolVersion={5}
+        protocolVersion={HOST_PROTOCOL_VERSION}
         busy={busy}
         lastCheckedAt={lastCheckedAt}
         error={connected ? "" : ui.connectionFailed}
@@ -296,7 +297,7 @@ for (const connected of [true, false]) {
         checked
         sdkMode
         version="0.1.0"
-        protocolVersion={5}
+        protocolVersion={HOST_PROTOCOL_VERSION}
         busy={false}
         error=""
         onCheck={() => {

@@ -12,7 +12,7 @@ import { PiPromptSchema, PiEventSchema, PiProviderInfoSchema } from "./protocol-
 import { JobSummarySchema } from "./jobs";
 
 /** Increment when the Native Messaging request or response contract changes incompatibly. */
-export const HOST_PROTOCOL_VERSION = 5;
+export const HOST_PROTOCOL_VERSION = 6;
 const id = z.string().min(1).max(100);
 const uuid = z.string().uuid();
 const text = z.string().max(20_000);
@@ -188,6 +188,16 @@ export const BackgroundGenerationStateSchema = z.object({
       status: z.enum(["reconnecting", "ready", "failed", "incompatible"]),
       attempt: z.number().int().min(0).max(3),
     })
+    .optional(),
+  queue: z
+    .array(
+      z.object({
+        requestId: uuid,
+        jobId: uuid,
+        kind: z.enum(["standard", "custom"]).optional(),
+        summary: JobSummarySchema.optional(),
+      }),
+    )
     .optional(),
   active: z
     .object({

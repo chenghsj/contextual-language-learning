@@ -249,6 +249,35 @@ export function createFlowCopy(locale: UiLocale) {
     failed,
   ] = copy[locale];
   return {
+    queuing: {
+      en: "Adding to queue…",
+      "zh-TW": "加入佇列中…",
+      "zh-CN": "加入队列中…",
+      ja: "キューに追加中…",
+      ko: "대기열에 추가 중…",
+    }[locale],
+    retrying: { en: "Retry", "zh-TW": "重試", "zh-CN": "重试", ja: "再試行", ko: "재시도" }[locale],
+    queued: {
+      en: "Queue position",
+      "zh-TW": "等待序號",
+      "zh-CN": "等待序号",
+      ja: "待機順",
+      ko: "대기 순서",
+    }[locale],
+    cancelHint: {
+      en: "Cancellation is best effort. A request already sent may still consume tokens.",
+      "zh-TW": "取消會盡力中止；已送出的請求仍可能消耗 Tokens。",
+      "zh-CN": "取消会尽力中止；已发送的请求仍可能消耗 Tokens。",
+      ja: "可能な限り中止します。送信済みのリクエストは使用量が発生する場合があります。",
+      ko: "취소는 최선을 다해 처리합니다. 전송한 요청은 토큰을 사용할 수 있습니다.",
+    }[locale],
+    discardCredentials: {
+      en: "Discard unsubmitted sign-in input?",
+      "zh-TW": "捨棄尚未送出的登入資料？",
+      "zh-CN": "舍弃尚未提交的登录资料？",
+      ja: "未送信のログイン情報を破棄しますか？",
+      ko: "전송하지 않은 로그인 정보를 삭제할까요?",
+    }[locale],
     done: { en: "Done", "zh-TW": "完成", "zh-CN": "完成", ja: "完了", ko: "완료" }[locale],
     video,
     settings,

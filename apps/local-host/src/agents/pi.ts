@@ -1,3 +1,4 @@
+import { rejectedRequest, retryRejected, type RetryNotice } from "./safe-retry";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -137,11 +138,16 @@ export async function piModels(settings: AgentSettings, inputRuntime?: ModelRunt
 export async function resolvePiModel(settings: AgentSettings, inputRuntime?: ModelRuntime) {
   assertPiProvider(settings.provider);
   const runtime = inputRuntime ?? (await createPiRuntime());
+  const available = await runtime.getAvailable(settings.provider);
   const model = settings.modelId
-    ? runtime.getModel(settings.provider, settings.modelId)
-    : (await runtime.getAvailable(settings.provider))[0];
+    ? available.find(model => model.id === settings.modelId)
+    : available[0];
   if (!model)
     throw new Error("The selected model is unavailable. Refresh the provider and choose a model.");
+  if (settings.thinkingLevel && !getSupportedThinkingLevels(model).includes(settings.thinkingLevel))
+    throw new Error(
+      "The selected reasoning level is unavailable for this model. Choose a supported level.",
+    );
   return {
     agent: { ...settings, modelId: model.id },
     contextWindow: model.contextWindow,
@@ -164,12 +170,26 @@ export async function generatePiText(
   settings: AgentSettings,
   prompt: string,
   signal: AbortSignal,
+  options: Parameters<typeof generatePiTextAttempt>[3] = {},
+): Promise<PiTextResult> {
+  const { value, retries } = await retryRejected(
+    () => generatePiTextAttempt(settings, prompt, signal, options),
+    signal,
+    { onRetry: options.onRetry },
+  );
+  return { ...value, call: { ...value.call, ...(retries.length ? { retries } : {}) } };
+}
+async function generatePiTextAttempt(
+  settings: AgentSettings,
+  prompt: string,
+  signal: AbortSignal,
   options: {
     runtime?: ModelRuntime;
     root?: string;
     format?: "json" | "markdown";
     maxOutputTokens?: number;
     step?: string;
+    onRetry?: (notice: RetryNotice) => Promise<void> | void;
   } = {},
 ): Promise<PiTextResult> {
   assertPiProvider(settings.provider);
@@ -178,11 +198,16 @@ export async function generatePiText(
   if (!(await runtime.listCredentials()).some(c => c.providerId === settings.provider)) {
     throw new Error("Connect this AI provider in settings before generating.");
   }
+  const available = await runtime.getAvailable(settings.provider, { signal });
   const model = settings.modelId
-    ? runtime.getModel(settings.provider, settings.modelId)
-    : (await runtime.getAvailable(settings.provider, { signal }))[0];
+    ? available.find(model => model.id === settings.modelId)
+    : available[0];
   if (!model)
     throw new Error("The selected model is unavailable. Refresh the provider and choose a model.");
+  if (settings.thinkingLevel && !getSupportedThinkingLevels(model).includes(settings.thinkingLevel))
+    throw new Error(
+      "The selected reasoning level is unavailable for this model. Choose a supported level.",
+    );
   const root = options.root ?? piRoot();
   const { session } = await createAgentSession({
     cwd: root,
@@ -221,6 +246,23 @@ export async function generatePiText(
     signal.throwIfAborted();
     const last = session.messages.at(-1);
     if (!last || last.role !== "assistant" || last.stopReason !== "stop") {
+      if (last?.role === "assistant" && last.stopReason === "error") {
+        const rejected = rejectedRequest(
+          last.errorMessage ?? "",
+          last.content.some(block =>
+            block.type === "text"
+              ? !!block.text.trim()
+              : block.type === "thinking"
+                ? !!block.thinking.trim()
+                : true,
+          ),
+          last.usage?.totalTokens ?? 0,
+        );
+        if (rejected) throw rejected;
+        throw new Error(
+          last.errorMessage || "AI request failed; resume from the saved checkpoint.",
+        );
+      }
       throw new Error(
         "AI generation did not finish successfully. Reconnect if authorization expired, then retry this stage.",
       );

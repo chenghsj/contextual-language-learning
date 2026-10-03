@@ -15,6 +15,7 @@ import {
 } from "../generation/custom-pipeline";
 export class CustomJobManager {
   private starting = false;
+  private closed = false;
   private running = new Map<string, AbortController>();
   constructor(
     readonly deps: CustomDependencies,
@@ -26,7 +27,7 @@ export class CustomJobManager {
   }
   async list(): Promise<JobSummary[]> {
     for (const job of await this.deps.repository.listJobs()) {
-      if (job.summary.status !== "running") continue;
+      if (!["running", "queued"].includes(job.summary.status)) continue;
       let alive = false;
       try {
         if (job.summary.ownerPid) {
@@ -56,14 +57,61 @@ export class CustomJobManager {
       throw new Error("Another generation is already running in this Host");
     this.starting = true;
     try {
-      const request = CustomGenerationRequestSchema.parse(input);
-      const model = await (this.deps.resolveModel ?? resolveCustomModel)(request.agent);
-      const job = planCustomJob(request, model);
-      await this.deps.repository.createJob(job);
+      const request = await this.prepare(requestId, input);
       return this.execute(requestId, request.id);
     } finally {
       this.starting = false;
     }
+  }
+  async prepare(requestId: string, input: CustomGenerationRequest) {
+    const request = CustomGenerationRequestSchema.parse(input);
+    const model = await (this.deps.resolveModel ?? resolveCustomModel)(request.agent);
+    const job = planCustomJob(request, model);
+    job.summary.ownerPid = process.pid;
+    await this.deps.repository.createJob(job);
+    this.notify(requestId, job.summary);
+    return request;
+  }
+  async queueFailed(requestId: string, jobId: string, error: unknown) {
+    const saved = await this.deps.repository.getJob(jobId);
+    if (!saved || saved.summary.status !== "queued") return;
+    const message = error instanceof Error ? error.message : String(error);
+    const changed = await this.deps.repository.updateJob(jobId, current =>
+      current.summary.status !== "queued"
+        ? current
+        : {
+            ...current,
+            summary: {
+              ...current.summary,
+              status: /connection closed|aborted/i.test(message) ? "waiting" : "failed",
+              ownerPid: undefined,
+              error: message.slice(0, 1200),
+              updatedAt: new Date().toISOString(),
+            },
+          },
+    );
+    this.notify(requestId, changed.summary);
+  }
+  async enqueueResume(requestId: string, jobId: string) {
+    const job = await this.deps.repository.getJob(jobId);
+    if (!job || !["waiting", "failed", "cancelled"].includes(job.summary.status))
+      throw new Error("This job cannot be queued for recovery");
+    const queued = await this.deps.repository.updateJob(jobId, current => {
+      if (!["waiting", "failed", "cancelled"].includes(current.summary.status))
+        throw new Error("Job state changed before recovery");
+      return {
+        ...current,
+        summary: {
+          ...current.summary,
+          status: "queued",
+          ownerPid: process.pid,
+          error: undefined,
+          retry: undefined,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+    });
+    this.notify(requestId, queued.summary);
   }
   async resume(requestId: string, id: string) {
     if (this.isRunning() || this.otherBusy())
@@ -105,6 +153,7 @@ export class CustomJobManager {
     }
   }
   private async execute(requestId: string, id: string) {
+    if (this.closed) throw new Error("Native Host connection closed");
     const controller = new AbortController();
     this.running.set(id, controller);
     try {
@@ -115,6 +164,7 @@ export class CustomJobManager {
           status: "running",
           ownerPid: process.pid,
           error: undefined,
+          retry: undefined,
           updatedAt: new Date().toISOString(),
         },
       }));
@@ -160,6 +210,7 @@ export class CustomJobManager {
     return true;
   }
   interruptAll() {
+    this.closed = true;
     for (const controller of this.running.values()) controller.abort();
   }
 }

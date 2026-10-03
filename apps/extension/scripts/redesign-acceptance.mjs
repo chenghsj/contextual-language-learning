@@ -26,29 +26,20 @@ async function run() {
       const errors = [];
       page.on("pageerror", e => errors.push(e.message));
       await page.goto("http://127.0.0.1:5176/dev/redesign-preview.html?theme=" + theme);
-      await page.getByRole("button", { name: "取得字幕", exact: true }).click();
-      await page.getByRole("button", { name: "下一步", exact: true }).click();
-      const range = page.locator('section[aria-label="2. 分析範圍"]');
+      await page.locator('[data-ui="subtitleState"][data-state="ready"]').waitFor();
+      const range = page.locator('section[aria-label="分析範圍"]');
       await range.getByRole("combobox").click();
-      await page.getByRole("option", { name: "前半", exact: true }).click();
-      await range.getByRole("button", { name: "字幕 · 30 / 60", exact: true }).click();
-      assert.equal(await range.locator("ol > li").count(), 50);
-      await range.getByRole("button", { name: "下一頁", exact: true }).click();
-      assert.equal(await range.locator("ol > li").count(), 10);
-      await range.getByRole("button", { name: "上一頁", exact: true }).click();
-      await range.getByRole("button", { name: "範圍操作", exact: true }).first().click();
-      assert.equal(await page.locator("[data-radix-popper-content-wrapper]").count(), 1);
-      await page.keyboard.press("Escape");
+      await page.getByRole("option", { name: "自訂", exact: true }).click();
       await range.getByRole("textbox", { name: "開始", exact: true }).fill("00:00:20.000");
-      await range.getByRole("textbox", { name: "開始", exact: true }).press("Tab");
+      await range.getByRole("textbox", { name: "結束", exact: true }).fill("00:00:15.000");
       assert.equal(
         await page.getByRole("button", { name: "下一步", exact: true }).isDisabled(),
         true,
       );
       await range.getByRole("button", { name: "使用目前位置", exact: true }).first().click();
       await page.waitForFunction(
-        () =>
-          document.querySelector('section[aria-label="2. 分析範圍"] input').value === "00:00:05",
+        element => element.value === "00:00:05",
+        await range.getByRole("textbox", { name: "開始", exact: true }).elementHandle(),
       );
       assert.equal(
         await range.getByRole("textbox", { name: "開始", exact: true }).inputValue(),
@@ -58,12 +49,9 @@ async function run() {
         await page.getByRole("button", { name: "下一步", exact: true }).isDisabled(),
         false,
       );
-      await range.getByRole("button", { name: /字幕 ·/ }).click();
       await page.screenshot({ path: `${output}/redesign-range-${width}-${theme}.png` });
       await page.getByRole("button", { name: "下一步", exact: true }).click();
-      await page.getByRole("combobox").click();
-      await page.getByRole("option", { name: "自訂 Markdown", exact: true }).press("Enter");
-      await page.getByRole("button", { name: "下一步", exact: true }).click();
+      await page.getByRole("tab", { name: "自訂 Markdown", exact: true }).click();
       await page
         .getByRole("textbox", { name: "Prompt", exact: true })
         .fill("Create a concise source-grounded summary.");
@@ -71,6 +59,13 @@ async function run() {
       await page
         .locator("#page-panel-create")
         .getByRole("button", { name: "建立內容", exact: true })
+        .click();
+      await page.waitForFunction(() => window.acceptance.docs.size > 0);
+      assert.equal(await page.locator("#page-panel-create").isVisible(), true);
+      await page
+        .locator("[data-sonner-toast]")
+        .getByRole("button", { name: "開啟教材", exact: true })
+        .last()
         .click();
       await page.getByRole("heading", { name: "Acceptance notes" }).waitFor();
       assert.equal(await page.locator("article img").count(), 0);
@@ -101,6 +96,12 @@ async function run() {
           window.acceptance.commands.filter(command => command.type === "generateCustom").length ===
             2 && window.acceptance.docs.size === 2,
       );
+      assert.equal(await page.getByRole("heading", { name: "Acceptance notes" }).isVisible(), true);
+      await page
+        .locator("[data-sonner-toast]")
+        .getByRole("button", { name: "開啟教材", exact: true })
+        .last()
+        .click();
       await page.getByRole("heading", { name: "Acceptance notes" }).waitFor();
       const regenerated = await page.evaluate(
         () =>
@@ -127,11 +128,12 @@ async function run() {
       );
       await page.locator("#header-activity").click();
       await page.getByRole("button", { name: "執行詳情", exact: true }).first().click();
-      await page.getByRole("dialog").waitFor();
-      await page.keyboard.press("Escape");
-      await page.getByRole("button", { name: "返回", exact: true }).click();
+      await page.getByRole("dialog", { name: "執行詳情", exact: true }).waitFor();
+      assert.equal(await page.getByRole("dialog").count(), 1);
+      await page.getByRole("button", { name: "活動", exact: true }).click();
+      await page.getByRole("dialog").getByRole("button", { name: "關閉", exact: true }).click();
       await page.getByRole("button", { name: "使用目前影片重用 Prompt", exact: true }).click();
-      await page.getByRole("button", { name: "4. 設定與 Prompt", exact: true }).click();
+      await page.getByRole("button", { name: "下一步", exact: true }).click();
       assert.equal(
         await page.getByRole("textbox", { name: "Prompt", exact: true }).inputValue(),
         "Create a concise source-grounded summary.",
@@ -167,14 +169,14 @@ async function run() {
         await page.screenshot({
           path: `${output}/redesign-settings-${category}-${width}-${theme}.png`,
         });
-        await page.getByRole("button", { name: "返回", exact: true }).click();
+        await page.getByRole("button", { name: "設定", exact: true }).click();
       }
       assert.deepEqual(errors, []);
       evidence.push({
         width,
         theme,
         checks:
-          "range, invalid bounds, cue ids/times, 50-page, keyboard select, Portal/Escape/focus, generation/new versions, settings categories, safe Markdown, rename, export, prompt reuse, Activity, local deletion/history",
+          "range, invalid bounds, cue ids/times, virtual subtitle editor, keyboard select, Portal/Escape/focus, generation/new versions, settings categories, safe Markdown, rename, export, prompt reuse, Activity, local deletion/history",
       });
       await page.close();
       console.log("PASS", width, theme);

@@ -1,8 +1,5 @@
-import {
-  notifyAnalysisComplete,
-  notifyLessonOutcome,
-  notificationDestination,
-} from "./native/analysis-notifications";
+import { openNotificationDestination } from "./native/notification-navigation";
+import { notifyAnalysisComplete, notifyLessonOutcome } from "./native/analysis-notifications";
 import { fetchNetflixCaptionText } from "./video/netflix-caption-fetch";
 import { validateNetflixCaptionSender } from "./video/netflix-caption-sender";
 import { installGenerationController } from "./native/generation-controller";
@@ -79,14 +76,19 @@ if ("onConnect" in chrome.runtime)
     },
   );
 
-// Open a durable extension page even when the Side Panel is closed.
+// Cache the destination window before the click to keep sidePanel.open inside the user gesture.
+let notificationWindowId: number | undefined;
+void chrome.windows
+  ?.getLastFocused()
+  .then(window => {
+    notificationWindowId = window.id;
+  })
+  .catch(() => {});
+chrome.windows?.onFocusChanged.addListener(id => {
+  if (id !== chrome.windows.WINDOW_ID_NONE) notificationWindowId = id;
+});
 function openNotification(id: string): void {
-  const destination = notificationDestination(id);
-  if (!destination) return;
-  void chrome.tabs
-    .create({ url: chrome.runtime.getURL(destination) })
-    .then(() => chrome.notifications.clear(id))
-    .catch(() => {});
+  void openNotificationDestination(id, notificationWindowId).catch(() => {});
 }
 chrome.notifications.onClicked.addListener(openNotification);
 chrome.notifications.onButtonClicked.addListener(id => openNotification(id));

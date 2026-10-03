@@ -1,3 +1,4 @@
+import { createFlowCopy } from "../i18n/create-flow";
 import React from "react";
 import type { ExecutionMetadata } from "@immersive/core";
 import { customContentCopy } from "../i18n/custom-content";
@@ -42,6 +43,12 @@ export function ExecutionDetails({
               )
               .join(" · ")}
           </p>
+          {call.retries?.map(retry => (
+            <p key={retry.attempt}>
+              {createFlowCopy(locale).retrying} {retry.attempt}/2 ·{" "}
+              {Math.ceil(retry.delayMs / 1000)}s · {retry.reason}
+            </p>
+          ))}
           <p>
             USD:{" "}
             {call.estimatedCostUsd === undefined ? ui.unknown : call.estimatedCostUsd.toFixed(6)}

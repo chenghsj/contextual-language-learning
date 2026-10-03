@@ -89,7 +89,7 @@ export function AiModelSelection({
               ...models.map(item => ({ value: item.id, label: item.label })),
             ]}
           />
-          {onThinking && levels.some(level => level !== "off") && (
+          {onThinking && (levels.some(level => level !== "off") || !!thinkingLevel) && (
             <div className="grid gap-1.5">
               <label htmlFor={`${id}-thinking`} className="text-xs font-semibold">
                 {thinking.title}
@@ -97,11 +97,14 @@ export function AiModelSelection({
               <SelectField
                 id={`${id}-thinking`}
                 ariaLabel={thinking.title}
-                value={thinkingLevel && levels.includes(thinkingLevel) ? thinkingLevel : ""}
+                value={thinkingLevel ?? ""}
                 disabled={!available || busy}
                 onValueChange={value => onThinking(value ? (value as ThinkingLevel) : undefined)}
                 options={[
                   { value: "", label: thinking.automatic },
+                  ...(thinkingLevel && !levels.includes(thinkingLevel)
+                    ? [{ value: thinkingLevel, label: thinking[thinkingLevel], disabled: true }]
+                    : []),
                   ...levels.map(level => ({ value: level, label: thinking[level] })),
                 ]}
               />

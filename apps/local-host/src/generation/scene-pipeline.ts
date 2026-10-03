@@ -300,6 +300,13 @@ export async function runSceneGenerationPipeline(
         prompt,
         abort,
         {
+          onRetry: async retry => {
+            const updated = await storage.jobs.update(jobId, current => ({
+              ...current,
+              summary: { ...current.summary, retry, updatedAt: new Date().toISOString() },
+            }));
+            onProgress(updated.summary);
+          },
           format: "json",
           step: `${saved.summary.phase ?? "generation"}-${saved.summary.completed}`,
         },
@@ -309,6 +316,7 @@ export async function runSceneGenerationPipeline(
       await storage.jobs.update(jobId, current => ({
         ...current,
         execution: { ...current.execution!, calls: [...current.execution!.calls, result.call] },
+        summary: { ...current.summary, retry: undefined },
       }));
       return parseAgentJson(result.text, "Pi");
     });

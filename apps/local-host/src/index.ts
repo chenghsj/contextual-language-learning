@@ -46,6 +46,7 @@ process.stdin.on("data", (chunk: Buffer) => {
   }
 });
 process.stdin.on("end", () => {
+  handle.interrupt();
   manager.interruptAll();
   customManager.interruptAll();
   interruptPiLogins();

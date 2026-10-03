@@ -71,6 +71,29 @@ test("duplicate confirmation uses an immutable checked snapshot; invalidated res
   assert.equal(generate.checkToken, token);
   assert.equal(generate.confirmRegeneration, true);
   assert.equal(generate.id, app.input.id);
+  assert.equal(
+    app.state.checking,
+    true,
+    "submission remains locked until the immutable input is durably acknowledged",
+  );
+  const countBeforeAck = port.sent.length;
+  app.session.start({ ...app.input, id: randomUUID() });
+  assert.equal(port.sent.length, countBeforeAck);
+  port.receive({
+    type: "job",
+    id: app.input.id,
+    job: {
+      id: app.input.id,
+      status: "queued",
+      sourceTitle: document.source.title,
+      provider: "openai",
+      completed: 0,
+      total: 1,
+      createdAt: document.createdAt,
+      updatedAt: document.createdAt,
+    },
+  });
+  assert.equal(app.state.checking, false);
   port.receive({ type: "generationState", active: null });
   app.session.start({ ...app.input, id: randomUUID() });
   const stale = port.sent.at(-1)!;
@@ -101,7 +124,7 @@ test("reopened session follows worker state, delivers once and cancels the retai
   app.session.dispose();
 });
 
-test("late chunk recovery delivers after settlement, but a newer job suppresses its stale result", async () => {
+test("late chunk recovery belongs to its original request even when another job is submitted", async () => {
   for (const superseded of [false, true]) {
     const app = setup();
     const port = app.ports[0],
@@ -121,7 +144,7 @@ test("late chunk recovery delivers after settlement, but a newer job suppresses 
     if (superseded) app.session.resume(document.id);
     recovery.receive({ id: recovery.sent[0].id, type: "result", document });
     await new Promise(resolve => setImmediate(resolve));
-    assert.equal(app.events.filter(event => event.type === "document").length, superseded ? 0 : 1);
+    assert.equal(app.events.filter(event => event.type === "document").length, 1);
     app.session.dispose();
   }
 });
@@ -196,6 +219,46 @@ test("custom generation freezes its prompt and preserves multi-chunk delivery ac
   });
   assert.equal(app.events.filter(event => event.type === "customDocument").length, 1);
   app.session.cancel();
+  assert.equal(port.sent.at(-1)?.type, "cancelCustom");
+  app.session.dispose();
+});
+
+test("enqueueing another job preserves partial document chunks and queued errors", () => {
+  const app = setup(),
+    port = app.ports[0],
+    first = randomUUID();
+  port.receive({ type: "generationState", active: { requestId: first, jobId: document.id } });
+  const bytes = Buffer.from(JSON.stringify(document)),
+    middle = Math.floor(bytes.length / 2);
+  port.receive({
+    type: "documentChunk",
+    id: first,
+    documentId: document.id,
+    index: 0,
+    total: 2,
+    dataBase64: bytes.subarray(0, middle).toString("base64"),
+  });
+  app.session.start(app.input);
+  const check = port.sent.at(-1)!;
+  port.receive({ type: "duplicates", id: check.id, matches: [], token: randomUUID() });
+  assert.equal(app.state.active?.requestId, first);
+  port.receive({
+    type: "generationState",
+    active: { requestId: first, jobId: document.id },
+    queue: [{ requestId: app.input.id, jobId: app.input.id }],
+  });
+  port.receive({
+    type: "documentChunk",
+    id: first,
+    documentId: document.id,
+    index: 1,
+    total: 2,
+    dataBase64: bytes.subarray(middle).toString("base64"),
+  });
+  assert.equal(app.events.filter(e => e.type === "document").length, 1);
+  port.receive({ type: "error", id: app.input.id, message: "Pinned model unavailable" });
+  assert.ok(app.events.some(e => e.type === "error" && e.id === app.input.id));
+  app.session.cancelJob(app.input.id, "custom");
   assert.equal(port.sent.at(-1)?.type, "cancelCustom");
   app.session.dispose();
 });

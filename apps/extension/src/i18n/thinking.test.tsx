@@ -34,8 +34,16 @@ test("reasoning picker uses selected or first available model capabilities", () 
   assert.match(loading, />高</);
   assert.match(picker(["low", "high"]), />高</);
   assert.match(picker(["low", "high"], ""), /推理強度/);
-  assert.doesNotMatch(picker(["off"]), /推理強度/);
-  assert.doesNotMatch(picker(["high"], "missing"), /推理強度/);
+  assert.match(
+    picker(["off"]),
+    />高</,
+    "restored unsupported choice must remain visible until corrected",
+  );
+  assert.match(
+    picker(["high"], "missing"),
+    />高</,
+    "a missing model must not erase the selected reasoning level",
+  );
 });
 test("reasoning survives storage restoration and request parsing; invalid values are rejected", () => {
   const saved = { provider: "openai", modelId: "model", thinkingLevel: "high" };

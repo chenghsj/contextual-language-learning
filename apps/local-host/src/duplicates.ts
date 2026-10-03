@@ -60,7 +60,11 @@ export function settingsKey(request: Pick<GenerationRequest, "profile" | "agent"
   return hash(
     JSON.stringify({
       profile: request.profile,
-      agent: { provider: request.agent.provider, modelId: request.agent.modelId },
+      agent: {
+        provider: request.agent.provider,
+        modelId: request.agent.modelId,
+        ...(request.agent.thinkingLevel ? { thinkingLevel: request.agent.thinkingLevel } : {}),
+      },
     }),
   );
 }
@@ -93,7 +97,15 @@ export async function findLocalDuplicates(
       createdAt: document.createdAt,
       destination: job?.publication?.location ?? "本地教材庫",
       exactSettings:
-        settingsKey({ profile: document.profile, agent: document.generation }) === expectedSettings,
+        settingsKey({ profile: document.profile, agent: document.generation }) ===
+          expectedSettings &&
+        transcriptKey(document.cues) === expectedTranscript &&
+        JSON.stringify(
+          document.analysisRange && [document.analysisRange.startMs, document.analysisRange.endMs],
+        ) ===
+          JSON.stringify(
+            request.analysisRange && [request.analysisRange.startMs, request.analysisRange.endMs],
+          ),
       local: true,
       ...(job?.status ? { jobStatus: job.status } : {}),
     });
@@ -114,7 +126,18 @@ export async function findLocalDuplicates(
       createdAt: summary.createdAt,
       destination:
         job.request.destination?.kind === "drive" ? "Google Drive（待完成）" : "本地任務",
-      exactSettings: settingsKey(job.request) === expectedSettings,
+      exactSettings:
+        settingsKey(job.request) === expectedSettings &&
+        transcriptKey(job.request.cues) === expectedTranscript &&
+        JSON.stringify(
+          job.request.analysisRange && [
+            job.request.analysisRange.startMs,
+            job.request.analysisRange.endMs,
+          ],
+        ) ===
+          JSON.stringify(
+            request.analysisRange && [request.analysisRange.startMs, request.analysisRange.endMs],
+          ),
       local: false,
       jobStatus: summary.status,
     });

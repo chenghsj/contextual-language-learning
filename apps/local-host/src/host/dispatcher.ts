@@ -1,3 +1,4 @@
+import { GenerationQueue } from "../jobs/queue";
 import { accessTokenFor } from "../drive/oauth";
 import { createCustomPublication } from "../storage/custom-backup";
 import { getCustomDriveDocument, listCustomDriveDocuments } from "../drive/api";
@@ -20,6 +21,7 @@ export function createHostDispatcher({
   hostVersion,
   customManager,
 }: HostDispatcherDeps) {
+  const queue = new GenerationQueue();
   const {
     deliverDocument,
     finishDocument,
@@ -39,8 +41,14 @@ export function createHostDispatcher({
     custom,
     reply,
     customPublication.afterSave,
+    undefined,
+    queue,
   );
-  const handleGeneration = createGenerationHandler({ storage, manager, reply }, finishDocument);
+  const handleGeneration = createGenerationHandler(
+    { storage, manager, reply },
+    finishDocument,
+    queue,
+  );
 
   async function handle(input: unknown): Promise<void> {
     const parsed = HostRequestSchema.safeParse(input);
@@ -176,5 +184,5 @@ export function createHostDispatcher({
     }
   }
 
-  return handle;
+  return Object.assign(handle, { interrupt: () => queue.close() });
 }

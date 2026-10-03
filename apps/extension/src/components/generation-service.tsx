@@ -45,8 +45,12 @@ export function GenerationService({
       .then(reply => {
         if (!live) return;
         if (reply.type !== "agentModels") throw new Error("Invalid model catalog");
-        const model = reply.models.find(model => model.id === selected.modelId);
-        const valid = !selected.modelId || !!model;
+        const model = selected.modelId
+          ? reply.models.find(model => model.id === selected.modelId)
+          : reply.models[0];
+        const valid =
+          !!model &&
+          (!selected.thinkingLevel || !!model.thinkingLevels?.includes(selected.thinkingLevel));
         setModelLabel(model?.label || selected.modelId || pi.automatic);
         setStale(!valid);
         onReady(valid);

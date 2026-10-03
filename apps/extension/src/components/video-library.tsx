@@ -195,19 +195,14 @@ export function VideoLibrary({
         )}
         <div className="flex justify-end">
           {lesson.local ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={generating}
-              onClick={() => onOpen(lesson.documentId)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onOpen(lesson.documentId)}>
               {sceneIndex >= 0 ? ui.continueStudy : t("openLesson")}
             </Button>
           ) : (
             lesson.drive && (
               <Button
                 variant="outline"
-                disabled={restoreBusy !== null || generating}
+                disabled={restoreBusy !== null}
                 onClick={() => void onRestore(lesson.drive!)}
               >
                 {restoreBusy === lesson.documentId ? t("restoringLesson") : t("restoreLesson")}

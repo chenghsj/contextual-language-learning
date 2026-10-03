@@ -16,11 +16,20 @@ let browser;
 try {
   await server.listen();
   browser = await chromium.launch({ headless: true, channel: "chrome" });
-  for (const width of [320, 417, 640, 900])
+  for (const [width, height] of [
+    [320, 560],
+    [417, 560],
+    [640, 560],
+    [900, 560],
+    [320, 320],
+    [900, 320],
+  ])
     for (const theme of ["light", "dark"]) {
-      const page = await browser.newPage({ viewport: { width, height: 560 } });
+      const page = await browser.newPage({ viewport: { width, height } });
+      if (height === 320) await page.emulateMedia({ reducedMotion: "reduce" });
       const errors = [];
       page.on("pageerror", error => errors.push(error.message));
+      page.on("dialog", dialog => dialog.accept());
       await page.goto("http://127.0.0.1:5178/dev/redesign-preview.html?theme=" + theme);
       const wizard = page.locator("#page-panel-create");
       assert.equal(await wizard.locator("nav button").count(), 3);
@@ -73,6 +82,12 @@ try {
         await page.getByRole("textbox", { name: "Prompt", exact: true }).inputValue(),
         "Test retained prompt.",
       );
+      await page.getByRole("button", { name: "範本管理", exact: true }).click();
+      await page.getByRole("textbox", { name: "名稱", exact: true }).fill("UX template");
+      await page.getByRole("button", { name: "儲存為新範本", exact: true }).click();
+      await page.getByRole("textbox", { name: "名稱", exact: true }).fill("Renamed UX template");
+      await page.getByRole("button", { name: "完成", exact: true }).click();
+      await page.getByRole("status").filter({ hasText: "已儲存" }).waitFor();
       await page.waitForTimeout(350);
       await page.reload();
       await page.waitForFunction(
@@ -82,11 +97,24 @@ try {
         await page.getByRole("textbox", { name: "Prompt", exact: true }).inputValue(),
         "Test retained prompt.",
       );
+      await page.getByRole("combobox", { name: "範本", exact: true }).click();
+      await page.getByRole("option", { name: "Renamed UX template", exact: true }).click();
+      await page.getByRole("button", { name: "範本管理", exact: true }).click();
+      await page.getByRole("button", { name: "刪除", exact: true }).click();
+      assert.equal(
+        await page.getByRole("textbox", { name: "Prompt", exact: true }).inputValue(),
+        "Test retained prompt.",
+      );
       await page.getByRole("button", { name: "下一步", exact: true }).click();
       await wizard.locator("[data-ui=create-scroll]").evaluate(el => (el.scrollTop = 123));
       const scroll = await wizard.locator("[data-ui=create-scroll]").evaluate(el => el.scrollTop);
       const footer = await wizard.locator("footer").boundingBox();
-      assert.ok(footer.y + footer.height <= 561);
+      const scrollArea = await wizard.locator("[data-ui=create-scroll]").boundingBox();
+      assert.ok(
+        footer && footer.y >= 0 && footer.y + footer.height <= height + 1,
+        "fixed footer must remain within the viewport",
+      );
+      assert.ok(scrollArea && scrollArea.height > 0, "form must retain an independent scroll area");
       await page.locator("#header-settings").click();
       const sheet = page.getByRole("dialog");
       await sheet.waitFor();
@@ -113,14 +141,14 @@ try {
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
         true,
       );
-      await page.screenshot({ path: join(output, `confirm-${width}-${theme}.png`) });
+      await page.screenshot({ path: join(output, `confirm-${width}-${height}-${theme}.png`) });
       await page.locator("#header-activity").click();
       await sheet.waitFor();
       await sheet.getByRole("button", { name: "關閉", exact: true }).click();
       assert.equal(await wizard.locator("[aria-current=step]").innerText(), "建立");
       assert.deepEqual(errors, []);
       await page.close();
-      console.log("PASS layout", width, theme);
+      console.log("PASS layout", width, height, theme);
     }
   console.log("Evidence:", output);
 } finally {

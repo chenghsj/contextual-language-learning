@@ -1,3 +1,4 @@
+import { customDuplicateKey } from "../custom-duplicates";
 import { createHash, randomBytes } from "node:crypto";
 import {
   readLearningDocument,
@@ -358,7 +359,9 @@ export async function findDriveDuplicates(request: GenerationRequest): Promise<D
       title: file.name,
       createdAt: file.createdTime ?? new Date(0).toISOString(),
       destination: "Google Drive · " + account.email,
-      exactSettings: file.appProperties?.immersiveSettingsKey === expected,
+      exactSettings:
+        file.appProperties?.immersiveSettingsKey === expected &&
+        file.appProperties?.immersiveTranscriptKey === transcript,
       local: false,
       url:
         file.webViewLink ??
@@ -778,6 +781,7 @@ export async function publishCustomDriveDocument(
       immersiveDocumentId: parsed.id,
       immersiveDocumentKey: createHash("sha256").update(parsed.id).digest("hex"),
       immersiveInputKey: parsed.execution.inputFingerprint,
+      immersiveDuplicateKey: customDuplicateKey(parsed.request),
       immersiveFormat: format,
       immersiveContentHash: hash,
       immersiveTitle: boundedDriveProperty("immersiveTitle", parsed.title),
@@ -860,12 +864,18 @@ export async function getCustomDriveDocument(
 export async function findCustomDriveDuplicates(
   accountId: string,
   fingerprint: string,
-  ports = customDrivePorts,
+  legacyFingerprintOrPorts?: string | typeof customDrivePorts,
+  ports = typeof legacyFingerprintOrPorts === "object"
+    ? legacyFingerprintOrPorts
+    : customDrivePorts,
 ): Promise<import("@immersive/core").DuplicateMatch[]> {
   const files = (await ports.files(accountId)).filter(
     file =>
       file.appProperties?.immersiveFormat === "json" &&
-      file.appProperties.immersiveInputKey === fingerprint,
+      (file.appProperties.immersiveDuplicateKey === fingerprint ||
+        file.appProperties.immersiveInputKey === fingerprint ||
+        (typeof legacyFingerprintOrPorts === "string" &&
+          file.appProperties.immersiveInputKey === legacyFingerprintOrPorts)),
   );
   return files.map(file => ({
     documentId: file.appProperties!.immersiveDocumentId,

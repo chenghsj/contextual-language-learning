@@ -20,12 +20,14 @@ export function PiSettings({
   selectedProvider,
   onSelect,
   onChanged,
+  onDirty,
 }: {
   locale: UiLocale;
   available: boolean;
   selectedProvider: string;
   onSelect: (provider: string) => void;
   onChanged: () => void;
+  onDirty?: (dirty: boolean) => void;
 }) {
   const ui = piCopy[locale];
   const layout = settingsLayoutCopy[locale];
@@ -54,6 +56,10 @@ export function PiSettings({
   const browserFallback = prompt?.kind === "manual_code" && !!event?.url;
   const showPrompt = !browserFallback || manualPromptId === prompt?.promptId;
   const value = state.kind === "login" ? state.value : "";
+  useEffect(() => {
+    onDirty?.(!!value);
+    return () => onDirty?.(false);
+  }, [value, onDirty]);
   useEffect(() => {
     let active = true;
     if (!available) {

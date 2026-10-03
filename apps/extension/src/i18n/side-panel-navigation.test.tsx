@@ -136,6 +136,10 @@ test("secondary views use one modal Sheet while retaining the base navigation", 
   const app = await readSource(new URL("../App.tsx", import.meta.url));
   assert.match(app, /<Sheet open=\{overlay\}/);
   assert.match(app, /<SidePanelNavigation page=\{basePage\}/);
-  assert.match(app, /if \(!open\) setPage\(returnPage\)/);
+  assert.match(
+    app,
+    /!open && \(!unsavedCredentials \|\| window.confirm\(ux.discardCredentials\)\)/,
+  );
+  assert.match(app, /setPage\(returnPage\)/);
   assert.match(app, /setSettingsSection\(null\)/);
 });

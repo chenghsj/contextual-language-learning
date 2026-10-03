@@ -24,7 +24,11 @@ export type CustomDependencies = {
     agent: AgentSettings,
     prompt: string,
     signal: AbortSignal,
-    options: { maxOutputTokens: number; step: string },
+    options: {
+      maxOutputTokens: number;
+      step: string;
+      onRetry?: NonNullable<Parameters<typeof generatePiText>[3]>["onRetry"];
+    },
   ) => Promise<PiTextResult>;
 };
 export function customFingerprint(request: CustomGenerationRequest): string {
@@ -205,12 +209,23 @@ export async function runCustomPipeline(
       { ...job.request.agent, provider: job.execution.provider, modelId: job.execution.modelId },
       prompt,
       signal,
-      { maxOutputTokens: job.execution.maxOutputTokens, step: node.id },
+      {
+        maxOutputTokens: job.execution.maxOutputTokens,
+        step: node.id,
+        onRetry: async retry => {
+          const updated = await repository.updateJob(id, current => ({
+            ...current,
+            summary: { ...current.summary, retry, updatedAt: new Date().toISOString() },
+          }));
+          notify(updated.summary);
+        },
+      },
     );
     signal.throwIfAborted();
     job = await repository.updateJob(id, current => ({
       ...current,
       execution: { ...current.execution, calls: [...current.execution.calls, result.call] },
+      summary: { ...current.summary, retry: undefined },
     }));
     if (
       result.call.provider !== job.execution.provider ||
