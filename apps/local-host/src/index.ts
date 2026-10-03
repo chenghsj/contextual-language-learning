@@ -1,4 +1,6 @@
 import { type HostMessage } from "@immersive/core";
+import { CustomJobManager } from "./jobs/custom-manager";
+import { FileCustomRepository } from "./storage/custom";
 import { JobManager } from "./jobs/manager";
 import { encodeMessage, NativeFramer } from "./protocol";
 import { localStoragePorts } from "./storage/file";
@@ -22,7 +24,12 @@ const manager = new JobManager({ storage }, (requestId, job) => {
     total: job.total,
   });
 });
-const handle = createHostDispatcher({ storage, manager, reply, hostVersion });
+const customManager = new CustomJobManager(
+  { repository: new FileCustomRepository() },
+  (id, job) => reply({ id, type: "job", job }),
+  () => manager.isRunning(),
+);
+const handle = createHostDispatcher({ storage, manager, customManager, reply, hostVersion });
 
 const framer = new NativeFramer(message => {
   void handle(message).catch(error => {
@@ -40,5 +47,6 @@ process.stdin.on("data", (chunk: Buffer) => {
 });
 process.stdin.on("end", () => {
   manager.interruptAll();
+  customManager.interruptAll();
   interruptPiLogins();
 });

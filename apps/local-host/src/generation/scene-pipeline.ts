@@ -15,6 +15,8 @@ import {
   type SubtitleCue,
 } from "@immersive/core";
 import type { PipelineDependencies } from "./pipeline";
+import { generatePiText } from "../agents/pi";
+import { parseAgentJson } from "../agents/json";
 import { generateWithAgent } from "../agents";
 import { candidatePrompt, contextualScenePrompt, selectionPrompt } from "./scene-prompts";
 import { toMarkdown } from "./markdown";
@@ -287,7 +289,29 @@ export async function runSceneGenerationPipeline(
   onProgress: (summary: JobSummary) => void,
 ) {
   const { storage } = deps;
-  const generate = deps.generateSection ?? generateWithAgent;
+  const generate =
+    deps.generateSection ??
+    (async (agent, prompt, abort) => {
+      const saved = await storage.jobs.get(jobId);
+      if (!saved?.execution) return generateWithAgent(agent, prompt, abort);
+      const execution = saved.execution;
+      const result = await generatePiText(
+        { ...agent, provider: execution.provider, modelId: execution.modelId },
+        prompt,
+        abort,
+        {
+          format: "json",
+          step: `${saved.summary.phase ?? "generation"}-${saved.summary.completed}`,
+        },
+      );
+      if (result.call.provider !== execution.provider || result.call.modelId !== execution.modelId)
+        throw new Error("Actual model differs from the pinned model");
+      await storage.jobs.update(jobId, current => ({
+        ...current,
+        execution: { ...current.execution!, calls: [...current.execution!.calls, result.call] },
+      }));
+      return parseAgentJson(result.text, "Pi");
+    });
   let job = await storage.jobs.get(jobId);
   if (!job || job.summary.status !== "running" || !job.scenePlan) {
     throw new Error("Scene job is not in the running state");
@@ -479,7 +503,11 @@ export async function runSceneGenerationPipeline(
     createdAt: job.summary.createdAt,
     source: job.request.source,
     profile: job.request.profile,
-    generation: job.request.agent,
+    generation: job.execution
+      ? { ...job.request.agent, provider: job.execution.provider, modelId: job.execution.modelId }
+      : job.request.agent,
+    execution: job.execution,
+    analysisRange: job.request.analysisRange,
     cues: job.request.cues,
     sections: job.sections,
   });

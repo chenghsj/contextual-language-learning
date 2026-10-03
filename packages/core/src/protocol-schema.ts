@@ -1,3 +1,4 @@
+import { CustomGenerationRequestSchema } from "./custom";
 import { z } from "zod";
 import { AgentSettingsSchema, GenerationRequestSchema, PlaybackOverrideSchema } from "./schema";
 
@@ -28,6 +29,38 @@ export type PiPrompt = z.infer<typeof PiPromptSchema>;
 export type PiEvent = z.infer<typeof PiEventSchema>;
 
 export const HostRequestSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("checkCustomDuplicates"),
+    id: z.string().uuid(),
+    payload: CustomGenerationRequestSchema,
+  }),
+  z.object({
+    type: z.literal("generateCustom"),
+    id: z.string().uuid(),
+    payload: CustomGenerationRequestSchema,
+    checkToken: z.string().uuid(),
+    confirmRegeneration: z.boolean(),
+  }),
+  z.object({ type: z.literal("resumeCustom"), id: z.string().uuid(), jobId: z.string().uuid() }),
+  z.object({ type: z.literal("cancelCustom"), id: z.string().uuid(), jobId: z.string().uuid() }),
+  z.object({ type: z.literal("listCustomDocuments"), id: z.string().uuid() }),
+  z.object({
+    type: z.literal("getCustomDocument"),
+    id: z.string().uuid(),
+    documentId: z.string().uuid(),
+  }),
+  z.object({ type: z.literal("getCustomJob"), id: z.string().uuid(), jobId: z.string().uuid() }),
+  z.object({
+    type: z.literal("renameCustomDocument"),
+    id: z.string().uuid(),
+    documentId: z.string().uuid(),
+    title: z.string().trim().min(1).max(200),
+  }),
+  z.object({
+    type: z.literal("deleteCustomDocument"),
+    id: z.string().uuid(),
+    documentId: z.string().uuid(),
+  }),
   z.object({ type: z.literal("piProviders"), id: z.string().uuid() }),
   z.object({
     type: z.literal("piLogin"),

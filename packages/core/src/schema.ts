@@ -1,3 +1,4 @@
+import { ExecutionMetadataSchema } from "./execution";
 import { AnalysisRangeSchema } from "./analysis-range";
 import { z } from "zod";
 import { isPiProviderId } from "./pi-providers";
@@ -209,6 +210,8 @@ const DocumentCommonSchema = z.object({
   source: SourceSchema,
   profile: LearningProfileSchema,
   generation: AgentSettingsSchema,
+  execution: ExecutionMetadataSchema.optional(),
+  analysisRange: AnalysisRangeSchema.optional(),
   cues: z.array(SubtitleCueSchema),
 });
 /** Calibrated playback windows never replace the canonical subtitle timestamps. */

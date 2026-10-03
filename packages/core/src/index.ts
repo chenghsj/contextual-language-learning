@@ -14,3 +14,6 @@ export * from "./playback-timing";
 export * from "./preferences";
 
 export * from "./analysis-range";
+
+export * from "./execution";
+export * from "./custom";

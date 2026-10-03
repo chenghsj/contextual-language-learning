@@ -145,23 +145,35 @@ export function installGenerationController(
       const terminal =
         message.type === "error" ||
         (type !== undefined &&
-          (type === "generate" || type === "resume"
+          (type === "generate" ||
+          type === "resume" ||
+          type === "generateCustom" ||
+          type === "resumeCustom"
             ? message.type === "generationSettled" || message.type === "cancelled"
             : type === "resumeBackups"
               ? message.type === "backupsFinished"
               : type === "piLogin"
                 ? message.type === "piAuthDone"
-                : type === "getDocument"
+                : type === "getDocument" || type === "getCustomDocument" || type === "getCustomJob"
                   ? message.type === "result" ||
-                    (message.type === "documentChunk" && message.index === message.total - 1)
+                    ((message.type === "documentChunk" || message.type === "customChunk") &&
+                      message.index === message.total - 1)
                   : true));
-      if (type === "cancel" && cancellationRequested) {
+      if ((type === "cancel" || type === "cancelCustom") && cancellationRequested) {
         if (message.type === "cancelled") notifyAttention("interrupted");
         if (message.type === "error") cancellationRequested = false;
       }
-      if (active?.requestId === message.id && (type === "generate" || type === "resume")) {
+      if (
+        active?.requestId === message.id &&
+        (type === "generate" ||
+          type === "resume" ||
+          type === "generateCustom" ||
+          type === "resumeCustom")
+      ) {
         if (message.type === "result") deliveredDocumentId = message.document.id;
         if (message.type === "documentChunk") deliveredDocumentId = message.documentId;
+        if (message.type === "customChunk" && message.resource === "document")
+          deliveredDocumentId = message.resourceId;
         if (message.type === "job" && message.job.status === "completed")
           deliveredDocumentId = message.job.documentId;
         // Completion follows a saved lesson, never AI output alone or failed backup.
@@ -196,7 +208,10 @@ export function installGenerationController(
         if (
           active &&
           message.id === active.requestId &&
-          (type === "generate" || type === "resume")
+          (type === "generate" ||
+            type === "resume" ||
+            type === "generateCustom" ||
+            type === "resumeCustom")
         ) {
           active = null;
         }
@@ -289,7 +304,13 @@ export function installGenerationController(
         });
         return;
       }
-      if ((request.type === "generate" || request.type === "resume") && active) {
+      if (
+        (request.type === "generate" ||
+          request.type === "resume" ||
+          request.type === "generateCustom" ||
+          request.type === "resumeCustom") &&
+        active
+      ) {
         client.postMessage({
           id: request.id,
           type: "error",
@@ -298,7 +319,10 @@ export function installGenerationController(
         });
         return;
       }
-      if (request.type === "generate" && request.id !== request.payload.id) {
+      if (
+        (request.type === "generate" || request.type === "generateCustom") &&
+        request.id !== request.payload.id
+      ) {
         client.postMessage({
           id: request.id,
           type: "error",
@@ -309,17 +333,28 @@ export function installGenerationController(
 
       try {
         const native = connectHost();
-        if (request.type === "generate" || request.type === "resume") {
+        if (
+          request.type === "generate" ||
+          request.type === "resume" ||
+          request.type === "generateCustom" ||
+          request.type === "resumeCustom"
+        ) {
           cancellationRequested = false;
           delivered = false;
           deliveredDocumentId = undefined;
           active = {
             requestId: request.id,
-            jobId: request.type === "generate" ? request.payload.id : request.jobId,
+            jobId:
+              request.type === "generate" || request.type === "generateCustom"
+                ? request.payload.id
+                : request.jobId,
           };
           broadcast(state());
         }
-        if (request.type === "cancel" && active?.jobId === request.jobId)
+        if (
+          (request.type === "cancel" || request.type === "cancelCustom") &&
+          active?.jobId === request.jobId
+        )
           cancellationRequested = true;
         if (request.type !== "piAuthAnswer" && request.type !== "piAuthCancel") {
           pending.set(request.id, request.type);

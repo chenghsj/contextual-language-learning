@@ -10,7 +10,14 @@ import {
   type Credential,
   type CredentialStore,
 } from "@earendil-works/pi-ai";
-import { generatePi, lessonResources, piProviders, piDeviceId, piModels } from "./pi";
+import {
+  generatePi,
+  generatePiText,
+  lessonResources,
+  piProviders,
+  piDeviceId,
+  piModels,
+} from "./pi";
 
 test("isolated SDK generates JSON with no tools, global resources or cross-stage history", async () => {
   const root = await mkdtemp(join(tmpdir(), "immersive-pi-"));
@@ -57,6 +64,19 @@ test("isolated SDK generates JSON with no tools, global resources or cross-stage
         return fauxAssistantMessage('{"stage":"second"}');
       },
       fauxAssistantMessage('{"partial":', { stopReason: "length" }),
+      (context, options) => {
+        assert.match(
+          JSON.stringify(context.messages.find(message => message.role === "system")),
+          /Markdown document/,
+        );
+        assert.doesNotMatch(
+          JSON.stringify(context.messages.find(message => message.role === "system")),
+          /requested JSON object/,
+        );
+        assert.equal(context.messages.filter(message => message.role === "user").length, 1);
+        assert.equal(options?.maxTokens, 512);
+        return fauxAssistantMessage("# Markdown\n\nContent");
+      },
     ]);
     runtime.registerNativeProvider({
       ...fake.provider,
@@ -85,7 +105,21 @@ test("isolated SDK generates JSON with no tools, global resources or cross-stage
     const aborted = new AbortController();
     aborted.abort();
     await assert.rejects(generatePi(settings, "Stopped", aborted.signal, options));
-    assert.equal(fake.state.callCount, 3);
+    const markdown = await generatePiText(
+      settings,
+      "Custom document",
+      new AbortController().signal,
+      { ...options, format: "markdown", maxOutputTokens: 512 },
+    );
+    assert.equal(markdown.text, "# Markdown\n\nContent");
+    assert.equal(markdown.call.modelId, "test-model");
+    assert.ok(markdown.call.usage?.input && markdown.call.usage.output);
+    assert.equal(
+      markdown.call.usage.cacheRead,
+      undefined,
+      "unreported cache use is not shown as actual zero",
+    );
+    assert.equal(fake.state.callCount, 4);
     const loader = lessonResources();
     assert.deepEqual(loader.getAgentsFiles().agentsFiles, []);
     assert.deepEqual(loader.getSkills().skills, []);

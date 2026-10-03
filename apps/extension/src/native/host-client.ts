@@ -62,6 +62,10 @@ export function openHostStream(
 
 const responseTypes = {
   health: "health",
+  checkCustomDuplicates: "duplicates",
+  listCustomDocuments: "customDocuments",
+  renameCustomDocument: "customDocumentChanged",
+  deleteCustomDocument: "customDocumentChanged",
   agentModels: "agentModels",
   piProviders: "piProviders",
   piLogout: "piProviders",

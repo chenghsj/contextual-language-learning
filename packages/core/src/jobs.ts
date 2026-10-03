@@ -1,3 +1,4 @@
+import { ExecutionIdentitySchema, ExecutionMetadataSchema } from "./execution";
 import { z } from "zod";
 import { chunkCues } from "./subtitles";
 import {
@@ -20,6 +21,8 @@ export const JobStatusSchema = z.enum([
 export type JobStatus = z.infer<typeof JobStatusSchema>;
 
 export const JobSummarySchema = z.object({
+  kind: z.enum(["standard", "custom"]).optional(),
+  execution: ExecutionIdentitySchema.optional(),
   id: z.string().uuid(),
   sourceTitle: z.string(),
   provider: z.string(),
@@ -72,6 +75,7 @@ export type ScenePlan = z.infer<typeof ScenePlanSchema>;
 export const JobSnapshotSchema = z
   .object({
     schemaVersion: z.literal(3),
+    execution: ExecutionMetadataSchema.optional(),
     summary: JobSummarySchema,
     request: GenerationRequestSchema,
     sections: z.array(ContextualSceneSchema).max(6),

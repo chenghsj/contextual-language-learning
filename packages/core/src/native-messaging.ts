@@ -1,3 +1,4 @@
+import { CustomContentSummarySchema } from "./custom";
 import { z } from "zod";
 import {
   DriveAccountSchema,
@@ -55,6 +56,19 @@ const base = z.object({ id });
 
 /** Validate untrusted messages at the Extension boundary before reading their fields. */
 export const HostMessageSchema = z.discriminatedUnion("type", [
+  base.extend({
+    type: z.literal("customDocuments"),
+    documents: z.array(CustomContentSummarySchema).max(500),
+  }),
+  base.extend({ type: z.literal("customDocumentChanged"), documentId: uuid }),
+  base.extend({
+    type: z.literal("customChunk"),
+    resource: z.enum(["document", "job"]),
+    resourceId: uuid,
+    index: z.number().int().nonnegative(),
+    total: z.number().int().min(1).max(100),
+    dataBase64: z.string().max(400000),
+  }),
   base.extend({ type: z.literal("piProviders"), providers: z.array(PiProviderInfoSchema) }),
   base.extend({ type: z.literal("piAuthPrompt"), prompt: PiPromptSchema }),
   base.extend({ type: z.literal("piAuthEvent"), event: PiEventSchema }),
