@@ -116,7 +116,7 @@ try {
   const health = await send({ type: "health", id: randomUUID() });
   assert.equal(health.type, "health");
   assert.equal(health.agentMode, "pi-sdk");
-  assert.equal(health.protocolVersion, 4);
+  assert.equal(health.protocolVersion, 5);
   assert.ok(health.agents.some(entry => entry.id === "openai"));
   assert.ok(
     health.agents.every(entry =>

@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import { SelectField } from "./ui/select";
 
 type OS = "macos" | "windows" | "linux";
-type Browser = "chrome" | "edge" | "chromium";
+type Browser = "chrome" | "edge";
 
 function detectedOS(): OS {
   const ua = navigator.userAgent;
@@ -19,7 +19,7 @@ function detectedBrowser(): Browser {
   return /Edg\//.test(ua)
     ? "edge"
     : /Chromium/.test(ua) && !/Chrome/.test(ua)
-      ? "chromium"
+      ? "chrome"
       : "chrome";
 }
 
@@ -175,7 +175,6 @@ export function HostConnectionSettings({
               options={[
                 { value: "chrome", label: "Chrome" },
                 { value: "edge", label: "Edge" },
-                { value: "chromium", label: "Chromium" },
               ]}
             />
           </label>
@@ -261,7 +260,6 @@ export function HostConnectionSettings({
               options={[
                 { value: "chrome", label: "Chrome" },
                 { value: "edge", label: "Edge" },
-                { value: "chromium", label: "Chromium" },
               ]}
             />
           </label>

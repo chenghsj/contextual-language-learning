@@ -3,32 +3,24 @@ import type { AgentInfo, AgentSettings } from "@immersive/core";
 import type { UiLocale } from "../i18n/messages";
 import { piCopy } from "../i18n/pi";
 import { sidePanelLayoutCopy } from "../i18n/side-panel-layout";
-import { savedAgentModel } from "../i18n/agent-model-preferences";
 import { nativeOnce } from "../native/host-client";
 import { Button } from "./ui/button";
-import { SearchableSelectField } from "./searchable-select-field";
 
-/** A per-generation service choice never writes the saved default or credentials. */
+/** Summarize the saved service; account and model changes belong in Settings. */
 export function GenerationService({
   locale,
   selected,
-  defaultAgent,
   providers,
   available,
-  modelPreferences,
   disabled,
-  onChange,
   onReady,
   onConfigure,
 }: {
   locale: UiLocale;
   selected: AgentSettings;
-  defaultAgent: AgentSettings;
   providers: AgentInfo[];
   available: boolean;
-  modelPreferences: Record<string, string>;
   disabled: boolean;
-  onChange: (agent: AgentSettings | null) => void;
   onReady: (ready: boolean) => void;
   onConfigure: () => void;
 }) {
@@ -76,26 +68,14 @@ export function GenerationService({
     <div className="my-3 grid gap-2" data-ui="generationService">
       {provider ? (
         <>
-          <SearchableSelectField
-            ariaLabel={ui.chooseService}
-            value={selected.provider}
-            disabled={disabled || !available}
-            options={connected.map(item => ({
-              value: item.id,
-              label: `${item.label} · ${item.id === selected.provider ? modelLabel || selected.modelId || pi.automatic : savedAgentModel(item.id, modelPreferences) || pi.automatic}`,
-            }))}
-            copy={{ search: ui.searchService, empty: ui.noMatchingService }}
-            onValueChange={providerId =>
-              onChange(
-                providerId === defaultAgent.provider
-                  ? null
-                  : {
-                      provider: providerId,
-                      modelId: savedAgentModel(providerId, modelPreferences),
-                    },
-              )
-            }
-          />
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <span className="min-w-0 break-words">
+              {provider.label} · {modelLabel}
+            </span>
+            <Button variant="ghost" size="sm" disabled={disabled} onClick={onConfigure}>
+              {ui.setup}
+            </Button>
+          </div>
           <p className="text-xs text-muted-foreground" role="status">
             {busy ? pi.loading : available ? pi.connected : pi.unavailable}
           </p>

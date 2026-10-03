@@ -192,6 +192,19 @@ function propertyMatch(key: string, value: string): string {
   return "appProperties has { key='" + key + "' and value='" + value + "' }";
 }
 
+/** A settings lookup never creates a Drive folder. */
+export async function existingDriveFolder(accountId: string): Promise<string | null> {
+  const folders = await listFiles(
+    accountId,
+    "name = '" + FOLDER_NAME + "' and mimeType = '" + FOLDER_TYPE + "' and trashed = false",
+    "id",
+    10,
+  );
+  return folders[0]
+    ? "https://drive.google.com/drive/folders/" + encodeURIComponent(folders[0].id)
+    : null;
+}
+
 async function appFolder(accountId: string): Promise<string> {
   const folders = await listFiles(
     accountId,

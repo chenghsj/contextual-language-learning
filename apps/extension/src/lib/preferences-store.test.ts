@@ -63,4 +63,20 @@ test("rapid writes keep their order and a failed write does not block later pref
   await failed;
   await second;
   assert.deepEqual(values, ["dark", "light"]);
+  assert.equal(store.current().themePreference, "light");
+});
+
+test("a rejected write restores the last successfully persisted snapshot", async () => {
+  let fail = false;
+  const store = new PreferencesStore({
+    get: async () => ({}),
+    set: async () => {
+      if (fail) throw new Error("storage full");
+    },
+  });
+  const initial = await store.load();
+  await store.save({ ...initial, themePreference: "dark" });
+  fail = true;
+  await assert.rejects(store.save({ ...initial, themePreference: "light" }), /storage full/);
+  assert.equal(store.current().themePreference, "dark");
 });

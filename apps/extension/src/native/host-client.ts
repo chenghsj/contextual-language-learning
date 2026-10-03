@@ -80,6 +80,7 @@ const responseTypes = {
   driveConnect: "driveConnected",
   driveDisconnect: "driveDisconnected",
   driveValidate: "driveValidated",
+  driveFolder: "driveFolder",
   publishJob: "published",
   retryBackup: "backupPublished",
   resumeBackups: "backupsFinished",

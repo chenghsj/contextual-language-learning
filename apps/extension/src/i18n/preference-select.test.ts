@@ -15,7 +15,7 @@ import {
 test("language and appearance settings use Radix Select", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
   const preferences = app.slice(
-    app.indexOf("<h2>{layout.general}</h2>"),
+    app.indexOf('{settingsSection === "general" && <PageSection>'),
     app.indexOf('{settingsSection === "ai" && <PageSection>'),
   );
   assert.match(preferences, /<Select value=\{localePreference\} onValueChange=/);

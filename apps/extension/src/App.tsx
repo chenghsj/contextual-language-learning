@@ -1,6 +1,7 @@
 import { subtitleLayoutCopy } from "./i18n/subtitle-layout";
 import { useSubtitleDraft } from "./hooks/use-subtitle-draft";
 import { usePlatformVideoNotice } from "./hooks/use-platform-video-notice";
+import { IconTooltip } from "./components/icon-tooltip";
 import { HeaderActions } from "./components/header-actions";
 import { PageHeading } from "./components/page-heading";
 import { PageSection } from "./components/page-section";
@@ -9,7 +10,7 @@ import { GenerationStatus } from "./components/generation-status";
 import { sidePanelLayoutCopy } from "./i18n/side-panel-layout";
 import { settingsLayoutCopy } from "./i18n/settings-layout";
 import { NotificationSettings } from "./components/notification-settings";
-import { ArrowLeft, ChevronRight, Check, LoaderCircle } from "lucide-react";
+import { ArrowLeft, ChevronRight, Check, LoaderCircle, ExternalLink } from "lucide-react";
 import { piFeedback } from "./i18n/pi-feedback";
 import { SubtitleImport } from "./components/subtitle-import";
 import { Switch } from "./components/ui/switch";
@@ -121,10 +122,8 @@ export default function App() {
   const [settingsSection, setSettingsSection] = useState<
     "general" | "ai" | "storage" | "advanced" | null
   >(null);
-  const [providerDetail, setProviderDetail] = useState(false);
   const [returnPage, setReturnPage] = useState<"create" | "lessons" | "lesson">("create");
   const [editingVideo, setEditingVideo] = useState(false);
-  const [temporaryAgent, setTemporaryAgent] = useState<AgentSettings | null>(null);
   const [generationServiceReady, setGenerationServiceReady] = useState(false);
   const [attentionNotificationsEnabled, setAttentionNotificationsEnabled] = useState(true);
   const [browserLocale] = useState(getBrowserLocale);
@@ -157,7 +156,7 @@ export default function App() {
   }));
   const [explanationLanguageMode, setExplanationLanguageMode] = useState<"auto" | "custom">("auto");
   const [agent, setAgent] = useState<AgentSettings>(DEFAULT_AGENT);
-  const generationAgent = temporaryAgent ?? agent;
+  const generationAgent = agent;
   const [providerSettings, setProviderSettings] = useState<
     Record<string, Pick<AgentSettings, "modelId" | "thinkingLevel">>
   >({});
@@ -195,6 +194,7 @@ export default function App() {
   });
   const [backup, setBackup] = useState<BackupSettings>({ enabled: false });
   const [backupStatus, setBackupStatus] = useState("");
+  const [driveFolderUrl, setDriveFolderUrl] = useState<string | null>(null);
   const [driveConnectError, setDriveConnectError] = useState("");
   const [driveAccounts, setDriveAccounts] = useState<DriveAccount[]>([]);
   const [driveConfigured, setDriveConfigured] = useState(false);
@@ -279,25 +279,47 @@ export default function App() {
     hostProtocolVersion === HOST_PROTOCOL_VERSION &&
     hostVersion === chrome.runtime.getManifest().version;
   useEffect(() => {
-    void preferencesStore.load().then(saved => {
-      setProfile(saved.profile);
-      setExplanationLanguageMode(saved.explanationLanguageMode);
-      setAgent(saved.agent ?? DEFAULT_AGENT);
-      setProviderSettings(saved.providerSettings);
-      setAgentModelPreferences(saved.agentModelPreferences);
-      setDestination(saved.destination);
-      setBackup(saved.backup);
-      setAttentionNotificationsEnabled(saved.attentionNotificationsEnabled);
-      setAnalysisNotificationsEnabled(saved.analysisNotificationsEnabled);
-      setLocalePreference(saved.uiLocalePreference);
-      setThemePreference(saved.themePreference);
-      setRepeat(saved.repeat);
-      setDelay(saved.delay);
-      setSceneRepeat(saved.sceneRepeat);
-      setSceneDelay(saved.sceneDelay);
-      setPlaybackRate(saved.playbackRate);
-      setHydrated(true);
-    });
+    let live = true;
+    setDriveFolderUrl(null);
+    if (hostReady && selectedDriveId) {
+      void nativeOnce({ id: crypto.randomUUID(), type: "driveFolder", accountId: selectedDriveId })
+        .then(reply => {
+          if (live && reply.type === "driveFolder") setDriveFolderUrl(reply.url);
+        })
+        .catch(() => {});
+    }
+    return () => {
+      live = false;
+    };
+  }, [hostReady, selectedDriveId, backupStatus]);
+  const backupJobs = jobs.filter(job => job.backup?.accountId === selectedDriveId);
+  const backupDone = backupJobs.filter(job => job.backup?.status === "backed-up");
+  const backupFailed = backupJobs.filter(job => job.backup?.status === "failed");
+  const lastBackupAt = backupDone
+    .map(job => job.backup!.updatedAt)
+    .sort()
+    .at(-1);
+  function applyPreferences(saved: ReturnType<typeof preferencesStore.current>) {
+    setProfile(saved.profile);
+    setExplanationLanguageMode(saved.explanationLanguageMode);
+    setAgent(saved.agent ?? DEFAULT_AGENT);
+    setProviderSettings(saved.providerSettings);
+    setAgentModelPreferences(saved.agentModelPreferences);
+    setDestination(saved.destination);
+    setBackup(saved.backup);
+    setAttentionNotificationsEnabled(saved.attentionNotificationsEnabled);
+    setAnalysisNotificationsEnabled(saved.analysisNotificationsEnabled);
+    setLocalePreference(saved.uiLocalePreference);
+    setThemePreference(saved.themePreference);
+    setRepeat(saved.repeat);
+    setDelay(saved.delay);
+    setSceneRepeat(saved.sceneRepeat);
+    setSceneDelay(saved.sceneDelay);
+    setPlaybackRate(saved.playbackRate);
+    setHydrated(true);
+  }
+  useEffect(() => {
+    void preferencesStore.load().then(applyPreferences);
     void refreshDriveAccounts();
     // Resolve the hosting Chrome window on every refresh. Discard stale async results
     // when navigation, activation and Side Panel initialization overlap.
@@ -355,7 +377,6 @@ export default function App() {
         return;
       }
       if (event.type === "document") {
-        setTemporaryAgent(null);
         receiveGeneratedDocument(event.document);
         return;
       }
@@ -410,7 +431,9 @@ export default function App() {
     window.document.documentElement.classList.toggle("dark", activeTheme === "dark");
   }, [uiLocale, themePreference, systemDark]);
 
+  const preferenceRevision = useRef(0);
   useEffect(() => {
+    const revision = ++preferenceRevision.current;
     if (hydrated)
       void preferencesStore
         .save({
@@ -432,7 +455,10 @@ export default function App() {
           themePreference,
           explanationLanguageMode,
         })
-        .catch(error => setError(String(error)));
+        .catch(error => {
+          if (revision === preferenceRevision.current) applyPreferences(preferencesStore.current());
+          setError(String(error));
+        });
   }, [
     hydrated,
     attentionNotificationsEnabled,
@@ -1812,12 +1838,9 @@ export default function App() {
                   <GenerationService
                     locale={uiLocale}
                     selected={generationAgent}
-                    defaultAgent={agent}
                     providers={agentCatalog}
                     available={hostReady}
-                    modelPreferences={agentModelPreferences}
                     disabled={checking}
-                    onChange={setTemporaryAgent}
                     onReady={setGenerationServiceReady}
                     onConfigure={() => {
                       setReturnPage("create");
@@ -2057,7 +2080,7 @@ export default function App() {
             )}
             {settingsSection === "ai" && (
               <PageSection>
-                <div hidden={providerDetail}>
+                <div>
                   <h2 id="agent-settings-heading" tabIndex={-1}>
                     {piCopy[uiLocale].title}
                   </h2>
@@ -2090,7 +2113,6 @@ export default function App() {
                   />
                 </div>
                 <PiSettings
-                  onDetailChange={setProviderDetail}
                   locale={uiLocale}
                   available={hostReady}
                   selectedProvider={agent.provider}
@@ -2142,9 +2164,25 @@ export default function App() {
                 >
                   {t("localAlways")}
                 </p>
-                <h3 className="mt-5 border-t border-border pt-4 text-sm font-semibold">
-                  Google Drive
-                </h3>
+                <div className="mt-5 flex items-center justify-between gap-2 border-t border-border pt-4">
+                  <h3 className="text-sm font-semibold">Google Drive</h3>
+                  <IconTooltip
+                    label={driveFolderUrl ? t("manageDrive") : t("driveAccessNotVerified")}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      aria-label={t("manageDrive")}
+                      disabled={!driveFolderUrl}
+                      onClick={() =>
+                        driveFolderUrl && void chrome.tabs.create({ url: driveFolderUrl })
+                      }
+                    >
+                      <ExternalLink className="size-4" aria-hidden="true" />
+                    </Button>
+                  </IconTooltip>
+                </div>
                 <div className="my-[12px_4px] flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1 text-[13px] [&_[data-ui=hint]]:mt-1 [&_[data-ui=hint]]:mb-0">
                     <strong>{t("autoBackup")}</strong>
@@ -2320,6 +2358,31 @@ export default function App() {
                 {driveAccounts.length > 0 && (
                   <section className="mt-[14px] grid justify-items-start gap-1 border-t border-border pt-3 [&_strong]:text-xs [&_[data-ui=hint]]:mt-0 [&_[data-ui=hint]]:mb-[5px]">
                     <strong>{t("backupExisting")}</strong>
+                    <p role="status" className="text-xs text-muted-foreground">
+                      {layout.backupResults
+                        .replace("{success}", String(backupDone.length))
+                        .replace("{failed}", String(backupFailed.length))
+                        .replace(
+                          "{pending}",
+                          String(
+                            backupJobs.filter(job =>
+                              ["pending", "uploading"].includes(job.backup?.status ?? ""),
+                            ).length,
+                          ),
+                        )}
+                      {lastBackupAt ? ` · ${new Date(lastBackupAt).toLocaleString(uiLocale)}` : ""}
+                    </p>
+                    {backupFailed.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={storageBusy}
+                        onClick={() => void backupExistingLessons()}
+                      >
+                        {t("retryBackup")}
+                      </Button>
+                    )}
+
                     <p
                       className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
                       data-ui="hint"
@@ -2354,7 +2417,6 @@ export default function App() {
             )}
             {settingsSection === "advanced" && (
               <PageSection>
-                <h2>{layout.advanced}</h2>
                 <p className="my-3 text-xs text-muted-foreground">{layout.hostHelp}</p>
                 <HostConnectionSettings
                   locale={uiLocale}

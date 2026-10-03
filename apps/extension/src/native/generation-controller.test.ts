@@ -61,7 +61,7 @@ function setup(
         id: request.id,
         installed: {},
         agents: [],
-        protocolVersion: 4,
+        protocolVersion: 5,
         version: "0.1.0",
         agentMode: "pi-sdk",
       });
@@ -109,7 +109,7 @@ test("all Host operations wait for one compatible handshake and retain pending w
     installed: {},
     agents: [],
     version: "0.1.0",
-    protocolVersion: 4,
+    protocolVersion: 5,
     agentMode: "pi-sdk",
   });
   assert.deepEqual(app.native.sent.slice(1), [
@@ -140,7 +140,7 @@ test("incompatible Host never receives queued business requests", () => {
       installed: {},
       agents: [],
       version: "0.1.0",
-      protocolVersion: 4,
+      protocolVersion: 5,
       agentMode: "pi-sdk",
       ...mismatch,
     });
@@ -175,7 +175,7 @@ test("health reports installed metadata without forwarding business requests to 
       installed: {},
       agents: [],
       version: "0.1.0",
-      protocolVersion: 4,
+      protocolVersion: 5,
       agentMode: "pi-sdk",
       ...mismatch,
     };

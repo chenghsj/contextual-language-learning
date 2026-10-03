@@ -1,5 +1,10 @@
 import type { HostRequest } from "@immersive/core";
-import { listDriveLessons, getDriveDocument, validateDriveAccess } from "../drive/api";
+import {
+  listDriveLessons,
+  getDriveDocument,
+  validateDriveAccess,
+  existingDriveFolder,
+} from "../drive/api";
 import {
   accessTokenFor,
   connectGoogleAccount,
@@ -63,6 +68,14 @@ export async function handleDriveRequest(
       return true;
     case "driveConnect":
       reply({ id: request.id, type: "driveConnected", account: await connectGoogleAccount() });
+      return true;
+    case "driveFolder":
+      reply({
+        id: request.id,
+        type: "driveFolder",
+        accountId: request.accountId,
+        url: await existingDriveFolder(request.accountId),
+      });
       return true;
     case "driveValidate":
       await validateDriveAccess(request.accountId);

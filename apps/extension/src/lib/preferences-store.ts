@@ -37,6 +37,8 @@ export type PreferencesStorage = {
 /** Hydration and writes are ordered. Old storage keys are neither read nor removed. */
 export class PreferencesStore {
   private value: Preferences;
+  private committed: Preferences;
+  private revision = 0;
   private loaded = false;
   private loading?: Promise<Preferences>;
   private writes: Promise<void> = Promise.resolve();
@@ -46,6 +48,7 @@ export class PreferencesStore {
     locale?: Exclude<Preferences["uiLocalePreference"], "auto">,
   ) {
     this.value = defaultPreferences(locale);
+    this.committed = this.value;
   }
   load(): Promise<Preferences> {
     return (this.loading ??= this.storage
@@ -53,6 +56,7 @@ export class PreferencesStore {
       .then(saved => {
         const parsed = PreferencesSchema.safeParse(saved[PREFERENCES_KEY]);
         if (parsed.success) this.value = parsed.data;
+        this.committed = this.value;
         this.loaded = true;
         this.emit();
         return this.value;
@@ -76,13 +80,28 @@ export class PreferencesStore {
       ...value,
       pronunciationModes: value.pronunciationModes ?? this.value.pronunciationModes,
     });
+    const revision = ++this.revision;
     this.value = snapshot;
     this.emit();
     const write = this.writes
       .catch(() => {})
-      .then(() => this.storage.set({ [PREFERENCES_KEY]: snapshot }));
+      .then(async () => {
+        try {
+          await this.storage.set({ [PREFERENCES_KEY]: snapshot });
+          this.committed = snapshot;
+        } catch (error) {
+          if (revision === this.revision) {
+            this.value = this.committed;
+            this.emit();
+          }
+          throw error;
+        }
+      });
     this.writes = write;
     return write;
+  }
+  current(): Preferences {
+    return this.value;
   }
   async savePronunciation(
     language: string,

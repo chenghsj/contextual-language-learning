@@ -115,6 +115,7 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
     accountId: z.string().min(1).max(256),
   }),
   z.object({ type: z.literal("driveConnect"), id: z.string().uuid() }),
+  z.object({ id: z.string().uuid(), type: z.literal("driveFolder"), accountId: z.string().min(1) }),
   z.object({
     type: z.literal("driveValidate"),
     id: z.string().uuid(),

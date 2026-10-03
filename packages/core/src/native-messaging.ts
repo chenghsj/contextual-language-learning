@@ -10,7 +10,7 @@ import { PiPromptSchema, PiEventSchema, PiProviderInfoSchema } from "./protocol-
 import { JobSummarySchema } from "./jobs";
 
 /** Increment when the Native Messaging request or response contract changes incompatibly. */
-export const HOST_PROTOCOL_VERSION = 4;
+export const HOST_PROTOCOL_VERSION = 5;
 const id = z.string().min(1).max(100);
 const uuid = z.string().uuid();
 const text = z.string().max(20_000);
@@ -121,6 +121,11 @@ export const HostMessageSchema = z.discriminatedUnion("type", [
     type: z.literal("duplicates"),
     token: uuid,
     matches: z.array(DuplicateMatchSchema),
+  }),
+  base.extend({
+    type: z.literal("driveFolder"),
+    accountId: z.string(),
+    url: z.string().url().nullable(),
   }),
   base.extend({ type: z.literal("folder"), directory: z.string() }),
   base.extend({

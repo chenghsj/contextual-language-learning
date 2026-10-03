@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { settingsLayoutCopy } from "../i18n/settings-layout";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -19,23 +19,17 @@ export function PiSettings({
   selectedProvider,
   onSelect,
   onChanged,
-  onDetailChange,
 }: {
   locale: UiLocale;
   available: boolean;
   selectedProvider: string;
   onSelect: (provider: string) => void;
   onChanged: () => void;
-  onDetailChange?: (open: boolean) => void;
 }) {
   const ui = piCopy[locale];
   const layout = settingsLayoutCopy[locale];
   const [manualPromptId, setManualPromptId] = useState<string | null>(null);
   const [detail, setDetail] = useState<string | null>(null);
-  useEffect(() => {
-    onDetailChange?.(detail !== null);
-    return () => onDetailChange?.(false);
-  }, [detail, onDetailChange]);
   const [providers, setProviders] = useState<PiProviderInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -113,44 +107,34 @@ export function PiSettings({
           {ui.retry}
         </Button>
       )}
-      {!detail &&
-        [true, false].map(connected => (
-          <section key={String(connected)} className="grid gap-1">
-            <h3 className="mt-3 text-xs font-semibold">
-              {connected ? layout.connected : layout.available}
-            </h3>
-            {providers
-              .filter(provider => provider.connected === connected)
-              .map(provider => (
-                <Button
-                  key={provider.id}
-                  variant="ghost"
-                  className="h-auto min-h-12 justify-between text-left"
-                  onClick={() => setDetail(provider.id)}
-                >
-                  <span>
-                    <strong className="block">{provider.label}</strong>
-                    <span className="block text-xs text-muted-foreground">
-                      {provider.connected ? ui.connected : ui.disconnected}
-                    </span>
+      {[true, false].map(connected => (
+        <section key={String(connected)} className="grid gap-1">
+          <h3 className="mt-3 text-xs font-semibold">
+            {connected ? layout.connected : layout.available}
+          </h3>
+          {providers
+            .filter(provider => provider.connected === connected)
+            .map(provider => (
+              <Button
+                key={provider.id}
+                variant="ghost"
+                className="h-auto min-h-12 justify-between text-left"
+                aria-expanded={detail === provider.id}
+                disabled={busy && detail !== provider.id}
+                onClick={() => setDetail(detail === provider.id ? null : provider.id)}
+              >
+                <span>
+                  <strong className="block">{provider.label}</strong>
+                  <span className="block text-xs text-muted-foreground">
+                    {provider.connected ? ui.connected : ui.disconnected}
+                    {selectedProvider === provider.id ? ` · ${ui.selected}` : ""}
                   </span>
-                  <ChevronRight className="size-4" aria-hidden="true" />
-                </Button>
-              ))}
-          </section>
-        ))}
-      {detail && (
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={busy}
-          className="justify-start rounded-sm px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
-          onClick={() => setDetail(null)}
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          {layout.back}
-        </Button>
-      )}
+                </span>
+                <ChevronRight className="size-4" aria-hidden="true" />
+              </Button>
+            ))}
+        </section>
+      ))}
       {providers
         .filter(provider => provider.id === detail)
         .map(provider => (
