@@ -70,6 +70,9 @@ async function mount(element: React.ReactNode) {
   });
   return {
     container,
+    async render(next: React.ReactNode) {
+      await act(async () => root.render(next));
+    },
     async close() {
       await act(async () => root.unmount());
       container.remove();
@@ -123,6 +126,13 @@ test("single deletion requires confirmation, cancellation preserves records and 
     />,
   );
   try {
+    const row = view.container.querySelector('[data-ui="taskHistoryItem"]')!;
+    const disclosure = row.querySelector<HTMLButtonElement>("button[aria-expanded]")!;
+    const details = row.querySelector<HTMLElement>('[data-ui="taskHistoryDetails"]')!;
+    assert.equal(disclosure.getAttribute("aria-expanded"), "false");
+    assert.equal(details.hidden, true);
+    await click(disclosure);
+    assert.equal(details.hidden, false);
     assert.equal(view.container.querySelectorAll("button").length > 0, true);
     assert.equal(
       [...view.container.querySelectorAll("button")].filter(
@@ -146,6 +156,32 @@ test("single deletion requires confirmation, cancellation preserves records and 
       await new Promise(resolve => setTimeout(resolve, 0));
     });
     assert.equal(document.activeElement === trigger, true, "focus returns to the deletion trigger");
+  } finally {
+    await view.close();
+  }
+});
+
+test("task disclosures open independently and stay expanded across progress refreshes", async () => {
+  const jobs = [job("Running lesson", "running"), job("Failed lesson", "failed")];
+  const view = await mount(<History jobs={jobs} />);
+  try {
+    const rows = [...view.container.querySelectorAll('[data-ui="taskHistoryItem"]')];
+    const triggers = rows.map(row =>
+      row.querySelector<HTMLButtonElement>("button[aria-expanded]")!,
+    );
+    const details = rows.map(row =>
+      row.querySelector<HTMLElement>('[data-ui="taskHistoryDetails"]')!,
+    );
+    assert.ok(details.every(item => item.hidden));
+    await click(triggers[0]);
+    await click(triggers[1]);
+    assert.ok(details.every(item => !item.hidden));
+    await view.render(<History jobs={jobs.map(item => ({ ...item, completed: 2 }))} />);
+    assert.ok(details.every(item => !item.hidden));
+    assert.match(triggers[0].textContent!, /2 \/ 4/);
+    await click(triggers[0]);
+    assert.equal(details[0].hidden, true);
+    assert.equal(details[1].hidden, false);
   } finally {
     await view.close();
   }

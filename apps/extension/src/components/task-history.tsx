@@ -13,6 +13,7 @@ import { Badge } from "./ui/badge";
 import { SelectField } from "./ui/select";
 import { IconTooltip } from "./icon-tooltip";
 import { RefreshCw } from "lucide-react";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./ui/accordion";
 import {
   Dialog,
   DialogContent,
@@ -108,6 +109,7 @@ export function TaskHistory({
   const flow = sidePanelLayoutCopy[locale];
   const [jobFilter, setJobFilter] = useState<JobFilter>("all");
   const [showAllJobs, setShowAllJobs] = useState(false);
+  const [expandedJobs, setExpandedJobs] = useState<string[]>([]);
   const [endedJobs, setEndedJobs] = useState<JobSummary[]>([]);
   const [confirmation, setConfirmation] = useState<{ jobs: JobSummary[]; batch: boolean } | null>(
     null,
@@ -201,6 +203,21 @@ export function TaskHistory({
         ? flow.yesterday
         : date.toLocaleDateString(locale);
   };
+  const jobSummary = (job: JobSummary) => {
+    if (job.status === "completed") {
+      return layoutText(flow.completedAt, {
+        time: new Date(job.updatedAt).toLocaleTimeString(locale, {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      });
+    }
+    if (job.status === "queued") {
+      return `${ux.queued}: ${queued.findIndex(item => item.id === job.id) + 1}`;
+    }
+    const phase = phaseLabel(job);
+    return `${phase ? phase + " · " : ""}${job.completed} / ${job.total}`;
+  };
   return (
     <PageSection>
       <div>
@@ -239,7 +256,12 @@ export function TaskHistory({
           </IconTooltip>
         </div>
         <div className="mt-2">
-          <div className="my-[10px] grid gap-[7px]">
+          <Accordion
+            type="multiple"
+            value={expandedJobs}
+            onValueChange={setExpandedJobs}
+            className="my-[10px] grid gap-1"
+          >
             {!loadingJobs && !visibleJobs.length && (
               <p className="text-xs text-muted-foreground">{flow.activityEmpty}</p>
             )}
@@ -252,164 +274,191 @@ export function TaskHistory({
                     {dayLabel(job.updatedAt)}
                   </h3>
                 )}
-                <div
-                  className="min-w-0 border-b border-border px-0 py-2.5 [&_p]:my-[3px] [&_p]:text-xs [&_[data-ui=actions]]:mt-[5px] [&_[data-ui=actions]]:gap-[5px] [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-7"
-                  key={job.id}
+                <AccordionItem
+                  value={job.id}
+                  data-ui="taskHistoryItem"
+                  className="min-w-0 border-border [&_p]:my-[3px] [&_p]:text-xs [&_[data-ui=actions]]:mt-[5px] [&_[data-ui=actions]]:gap-[5px] [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-7"
                 >
-                  <div className="flex min-w-0 items-center justify-between gap-2 [&_strong]:min-w-0 [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:whitespace-nowrap [&_strong]:text-[13px]">
-                    <strong className="min-w-0 flex-1 truncate" title={job.sourceTitle}>
-                      {job.sourceTitle}
-                    </strong>
-                    <Badge className="shrink-0 whitespace-nowrap text-[11px] leading-4">
-                      {t(jobStatusKeys[job.status])}
-                    </Badge>
-                  </div>
-                  <p
-                    className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                    data-ui="hint"
+                  <AccordionTrigger className="min-w-0 gap-2 py-3 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25">
+                    <span className="grid min-w-0 flex-1 gap-1">
+                      <span className="flex min-w-0 items-start justify-between gap-2">
+                        <span
+                          className={
+                            "min-w-0 flex-1 text-[13px] font-semibold " +
+                            (expandedJobs.includes(job.id) ? "break-words" : "truncate")
+                          }
+                          title={job.sourceTitle}
+                        >
+                          {job.sourceTitle}
+                        </span>
+                        <Badge className="shrink-0 whitespace-nowrap text-[11px] leading-4">
+                          {t(jobStatusKeys[job.status])}
+                        </Badge>
+                      </span>
+                      <span className="text-xs font-normal text-muted-foreground">
+                        {jobSummary(job)}
+                      </span>
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent
+                    forceMount
+                    hidden={!expandedJobs.includes(job.id)}
+                    data-ui="taskHistoryDetails"
+                    className="min-w-0 pl-3 pb-3"
                   >
-                    {agentDisplayName(
-                      job.provider,
-                      agentCatalog.find(item => item.id === job.provider)?.label,
-                    )}{" "}
-                    ·{" "}
-                    {layoutText(flow.completedSteps, {
-                      completed: job.completed,
-                      total: job.total,
-                    })}
-                    {job.backup &&
-                      " · " +
-                        t(
-                          job.backup.status === "backed-up"
-                            ? "backupSaved"
-                            : ["pending", "uploading"].includes(job.backup.status)
-                              ? "backupProcessing"
-                              : "backupFailedMessage",
-                        )}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {job.status === "completed"
-                      ? layoutText(flow.completedAt, {
-                          time: new Date(job.updatedAt).toLocaleTimeString(locale, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }),
-                        })
-                      : job.phase
-                        ? job.status === "cancelled"
-                          ? layoutText(flow.cancelledAtPhase, { phase: phaseLabel(job) })
-                          : phaseLabel(job)
-                        : new Date(job.updatedAt).toLocaleTimeString(locale, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                  </p>
-                  {job.status === "queued" && (
-                    <p>
-                      {ux.queued}: {queued.findIndex(item => item.id === job.id) + 1}
-                    </p>
-                  )}
-                  {job.retry && (
-                    <p role="status">
-                      {ux.retrying} {job.retry.attempt}/2 · {Math.ceil(job.retry.delayMs / 1000)}s ·{" "}
-                      {job.retry.reason}
-                    </p>
-                  )}
-                  {job.status === "running" && (
-                    <p className="text-muted-foreground">{ux.cancelHint}</p>
-                  )}
-                  {job.error && (
-                    <PiFeedback locale={locale} message={job.error} context="generation" />
-                  )}
-                  <div
-                    className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
-                    data-ui="actions"
-                  >
-                    {onDetails && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={!hostReady}
-                        onClick={() => void onDetails(job)}
-                      >
-                        {customUi.details}
-                      </Button>
-                    )}
-                    {["waiting", "failed", "cancelled"].includes(job.status) &&
-                      (!isPiProviderId(job.provider) ? (
-                        <p className="text-muted-foreground">{ui.legacy}</p>
-                      ) : !agentCatalog.some(item => item.id === job.provider && item.installed) ? (
-                        <div className="grid gap-2">
-                          <p className="text-muted-foreground">{ui.resumeConnect}</p>
-                          {onConfigure && (
-                            <Button variant="outline" size="sm" onClick={onConfigure}>
-                              {ui.connect}
-                            </Button>
+                    <p
+                      className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                      data-ui="hint"
+                    >
+                      {agentDisplayName(
+                        job.provider,
+                        agentCatalog.find(item => item.id === job.provider)?.label,
+                      )}{" "}
+                      ·{" "}
+                      {layoutText(flow.completedSteps, {
+                        completed: job.completed,
+                        total: job.total,
+                      })}
+                      {job.backup &&
+                        " · " +
+                          t(
+                            job.backup.status === "backed-up"
+                              ? "backupSaved"
+                              : ["pending", "uploading"].includes(job.backup.status)
+                                ? "backupProcessing"
+                                : "backupFailedMessage",
                           )}
-                        </div>
-                      ) : (
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {job.status === "completed"
+                        ? layoutText(flow.completedAt, {
+                            time: new Date(job.updatedAt).toLocaleTimeString(locale, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }),
+                          })
+                        : job.phase
+                          ? job.status === "cancelled"
+                            ? layoutText(flow.cancelledAtPhase, { phase: phaseLabel(job) })
+                            : phaseLabel(job)
+                          : new Date(job.updatedAt).toLocaleTimeString(locale, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                    </p>
+                    {job.status === "queued" && (
+                      <p>
+                        {ux.queued}: {queued.findIndex(item => item.id === job.id) + 1}
+                      </p>
+                    )}
+                    {job.retry && (
+                      <p role="status">
+                        {ux.retrying} {job.retry.attempt}/2 · {Math.ceil(job.retry.delayMs / 1000)}s
+                        · {job.retry.reason}
+                      </p>
+                    )}
+                    {job.status === "running" && (
+                      <p className="text-muted-foreground">{ux.cancelHint}</p>
+                    )}
+                    {job.error && (
+                      <PiFeedback locale={locale} message={job.error} context="generation" />
+                    )}
+                    <div
+                      className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
+                      data-ui="actions"
+                    >
+                      {onDetails && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={!hostReady}
+                          onClick={() => void onDetails(job)}
+                        >
+                          {customUi.details}
+                        </Button>
+                      )}
+                      {["waiting", "failed", "cancelled"].includes(job.status) &&
+                        (!isPiProviderId(job.provider) ? (
+                          <p className="text-muted-foreground">{ui.legacy}</p>
+                        ) : !agentCatalog.some(
+                            item => item.id === job.provider && item.installed,
+                          ) ? (
+                          <div className="grid gap-2">
+                            <p className="text-muted-foreground">{ui.resumeConnect}</p>
+                            {onConfigure && (
+                              <Button variant="outline" size="sm" onClick={onConfigure}>
+                                {ui.connect}
+                              </Button>
+                            )}
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={!hostReady || deleting}
+                            onClick={() => onResume(job.id)}
+                          >
+                            {t("resume")}
+                          </Button>
+                        ))}
+                      {onCancel && ["queued", "running", "waiting"].includes(job.status) && (
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled={!hostReady || deleting}
-                          onClick={() => onResume(job.id)}
+                          disabled={!hostReady}
+                          onClick={() => onCancel(job)}
                         >
-                          {t("resume")}
+                          {t("cancel")}
                         </Button>
-                      ))}
-                    {onCancel && ["queued", "running", "waiting"].includes(job.status) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={!hostReady}
-                        onClick={() => onCancel(job)}
-                      >
-                        {t("cancel")}
-                      </Button>
-                    )}
-                    {job.documentId && (
-                      <>
-                        <Button variant="outline" size="sm" onClick={() => onOpen(job.documentId!)}>
-                          {t("openLesson")}
-                        </Button>
-                        {job.publication && job.publication.status !== "published" && (
+                      )}
+                      {job.documentId && (
+                        <>
                           <Button
                             variant="outline"
                             size="sm"
-                            disabled={storageBusy}
-                            onClick={() => void onRetryPublication(job.id)}
+                            onClick={() => onOpen(job.documentId!)}
                           >
-                            {t("retryPublish")}
+                            {t("openLesson")}
                           </Button>
-                        )}
-                        {job.backup && ["failed", "conflict"].includes(job.backup.status) && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={storageBusy}
-                            onClick={() => void onRetryBackup(job.id)}
-                          >
-                            {t("retryBackup")}
-                          </Button>
-                        )}
-                      </>
-                    )}
-                    {canDelete && ["completed", "failed", "cancelled"].includes(job.status) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="ml-auto"
-                        disabled={!hostReady || storageBusy || deleting}
-                        onClick={() => openConfirmation([job], false)}
-                      >
-                        {t("deleteJobRecord")}
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                          {job.publication && job.publication.status !== "published" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={storageBusy}
+                              onClick={() => void onRetryPublication(job.id)}
+                            >
+                              {t("retryPublish")}
+                            </Button>
+                          )}
+                          {job.backup && ["failed", "conflict"].includes(job.backup.status) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={storageBusy}
+                              onClick={() => void onRetryBackup(job.id)}
+                            >
+                              {t("retryBackup")}
+                            </Button>
+                          )}
+                        </>
+                      )}
+                      {canDelete && ["completed", "failed", "cancelled"].includes(job.status) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="ml-auto"
+                          disabled={!hostReady || storageBusy || deleting}
+                          onClick={() => openConfirmation([job], false)}
+                        >
+                          {t("deleteJobRecord")}
+                        </Button>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               </React.Fragment>
             ))}
-          </div>
+          </Accordion>
           {filteredJobs.length > visibleJobs.length && (
             <Button variant="ghost" size="sm" onClick={() => setShowAllJobs(true)}>
               {t("showMoreJobs", { count: filteredJobs.length - visibleJobs.length })}
