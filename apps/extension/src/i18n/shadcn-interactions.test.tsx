@@ -281,7 +281,7 @@ test("Host checks show progress, prevent duplicate clicks and retain the complet
 });
 
 for (const connected of [true, false]) {
-  test(`Host uninstall guidance remains available when ${connected ? "connected" : "disconnected"} and copies the selected browser's package or project command`, async () => {
+  test(`Host uninstall guidance remains available when ${connected ? "connected" : "disconnected"} and copies one command for the selected browser`, async () => {
     const originalChrome = globalThis.chrome;
     const originalClipboard = Object.getOwnPropertyDescriptor(navigator, "clipboard");
     const copied: string[] = [];
@@ -329,12 +329,7 @@ for (const connected of [true, false]) {
       assert.equal(trigger.getAttribute("aria-expanded"), "false");
       assert.equal(section.querySelector("code"), null);
       await click(trigger);
-      for (const copy of [
-        ui.uninstallSteps,
-        ui.uninstallEffects,
-        ui.uninstallUnavailable,
-        ui.uninstallPackageSteps,
-      ]) {
+      for (const copy of [ui.uninstallSteps, ui.uninstallEffects]) {
         assert.ok(section.textContent?.includes(copy));
       }
       assert.equal(section.querySelector("code")?.textContent, "node scripts/uninstall-host.mjs");
@@ -360,25 +355,21 @@ for (const connected of [true, false]) {
       );
       await click(copyButton);
       assert.equal(copied.at(-1), "node scripts/uninstall-host.mjs --browser edge");
-      await click(
-        [...section.querySelectorAll("button")].find(button => button.textContent === ui.releases)!,
+      assert.equal(section.querySelectorAll('[role="combobox"]').length, 1);
+      assert.equal(section.querySelector(`[aria-label="${ui.commandLocation}"]`), null);
+      assert.ok(
+        ![...section.querySelectorAll("button")].some(button =>
+          button.textContent?.includes(ui.releases),
+        ),
       );
-      assert.deepEqual(opened, [
-        "https://github.com/chenghsj/immersive-language-learning/releases",
-      ]);
-      await key(section.querySelector(`[aria-label="${ui.commandLocation}"]`)!, "Enter");
-      const project = [...document.querySelectorAll('[role="option"]')].find(
-        option => option.textContent === ui.projectFolder,
+      assert.deepEqual(opened, []);
+      await key(section.querySelector(`[aria-label="${ui.uninstallBrowser}"]`)!, "Enter");
+      const chromium = [...document.querySelectorAll('[role="option"]')].find(
+        option => option.textContent === "Chromium",
       )!;
-      await key(project, "Enter");
-      assert.equal(
-        section.querySelector("code")?.textContent,
-        "pnpm host:uninstall --browser edge",
-      );
-      assert.ok(section.textContent?.includes(ui.uninstallSourceSteps));
-      assert.equal(section.querySelector('[role="status"]'), null);
+      await key(chromium, "Enter");
       await click(copyButton);
-      assert.equal(copied.at(-1), "pnpm host:uninstall --browser edge");
+      assert.equal(copied.at(-1), "node scripts/uninstall-host.mjs --browser chromium");
       assert.equal(checks, 0, "copying instructions must not run a Host operation");
     } finally {
       await view.close();

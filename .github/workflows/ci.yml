@@ -41,6 +41,9 @@ jobs:
           node scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser chromium
           test -f "$HOME/.config/chromium/NativeMessagingHosts/dev.immersive.language_learning.json"
           node apps/local-host/scripts/smoke-host.mjs "$HOME/.local/share/immersive-language-learning/native-host/launch.sh"
+          node scripts/uninstall-host.mjs --browser chromium
+          test ! -e "$HOME/.config/chromium/NativeMessagingHosts/dev.immersive.language_learning.json"
+          test ! -e "$HOME/.local/share/immersive-language-learning/native-host"
       - name: Package and verify release archives
         run: |
           pnpm package:release
@@ -81,8 +84,12 @@ jobs:
             if (!(Test-Path -LiteralPath $launcher)) { throw 'Native Host .exe not created' }
             node apps/local-host/scripts/smoke-host.mjs "$launcher"
             if ($LASTEXITCODE -ne 0) { throw 'Windows Native Host stdio smoke failed' }
+            node scripts/uninstall-host.mjs --browser chrome
+            if ($LASTEXITCODE -ne 0) { throw 'Windows Host uninstall failed' }
+            if (Test-Path -LiteralPath $launcher) { throw 'Windows Host launcher remains after uninstall' }
           } finally {
-            reg.exe delete 'HKCU\Software\Google\Chrome\NativeMessagingHosts\dev.immersive.language_learning' /f | Out-Null
+            node scripts/uninstall-host.mjs --browser chrome
+            if ($LASTEXITCODE -ne 0) { throw 'Windows Host cleanup failed' }
           }
 
   macos-host:
@@ -103,3 +110,6 @@ jobs:
           node scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser edge
           test -f "$HOME/Library/Application Support/Microsoft Edge/NativeMessagingHosts/dev.immersive.language_learning.json"
           node apps/local-host/scripts/smoke-host.mjs "$HOME/Library/Application Support/Immersive Learning/native-host/launch.sh"
+          node scripts/uninstall-host.mjs --browser edge
+          test ! -e "$HOME/Library/Application Support/Microsoft Edge/NativeMessagingHosts/dev.immersive.language_learning.json"
+          test ! -e "$HOME/Library/Application Support/Immersive Learning/native-host"

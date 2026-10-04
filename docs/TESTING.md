@@ -35,6 +35,8 @@ Run `node --test scripts/host-entrypoints.test.mjs apps/local-host/scripts/nativ
 
 CI installs via `node scripts/install-host.mjs` on Linux, Windows and macOS runners, then exercises the production Native Messaging launcher. Windows uses its real compiled `.exe`, while macOS/Linux use the shell launcher. A local macOS pass does not mean these remote jobs have run; inspect their results after pushing.
 
+Run `pnpm --filter @immersive/extension test:host-uninstall-ui` after building the Host to verify the compact uninstall UI at 320/400/900px in Light/Dark. It clicks Copy, executes the copied Chrome/Edge/Chromium commands against production Hosts in temporary macOS/Linux homes, and checks removal, preserved lesson/sign-in fixtures and repeat execution. Windows registration cannot be isolated by HOME, so command execution there is left to the Windows CI job. Browser APIs use the development fixture.
+
 The source UI defaults to project instructions and labels the command directory explicitly. Test Chrome/Edge/Chromium command flags, Windows PowerShell/.NET guidance and Linux folder-picker requirements. Package commands run from the extracted Host ZIP; the same root install/uninstall entry points are also available in the project after building.
 
 ## Side Panel and V5 lifecycle

@@ -48,7 +48,6 @@ export function HostConnectionSettings({
   const [browser, setBrowser] = useState<Browser>(detectedBrowser);
   const [copied, setCopied] = useState("");
   const [installMethod, setInstallMethod] = useState<"package" | "source">("source");
-  const [uninstallMethod, setUninstallMethod] = useState<"package" | "source">("package");
   const [uninstallCopied, setUninstallCopied] = useState("");
   const extensionId = chrome.runtime.id;
   const versionMatches = version === chrome.runtime.getManifest().version;
@@ -61,8 +60,7 @@ export function HostConnectionSettings({
     extensionId +
     (browser === "chrome" ? "" : " --browser " + browser);
   const uninstallCommand =
-    (uninstallMethod === "package" ? "node scripts/uninstall-host.mjs" : "pnpm host:uninstall") +
-    (browser === "chrome" ? "" : " --browser " + browser);
+    "node scripts/uninstall-host.mjs" + (browser === "chrome" ? "" : " --browser " + browser);
   async function copy(value: string, setFeedback = setCopied): Promise<void> {
     try {
       await navigator.clipboard.writeText(value);
@@ -252,10 +250,9 @@ export function HostConnectionSettings({
         title={ui.uninstall}
         data-ui="hostUninstall"
       >
-        <div className="grid min-w-0 gap-3 pt-2">
-          <p className="text-sm leading-relaxed">{ui.uninstallSteps}</p>
+        <div className="grid min-w-0 gap-2 pt-2">
+          <p className="text-xs leading-relaxed">{ui.uninstallSteps}</p>
           <p className="text-xs leading-relaxed text-muted-foreground">{ui.uninstallEffects}</p>
-          <p className="text-xs leading-relaxed text-muted-foreground">{ui.uninstallUnavailable}</p>
           <label className="grid gap-1 text-xs">
             {ui.uninstallBrowser}
             <SelectField
@@ -273,26 +270,6 @@ export function HostConnectionSettings({
               ]}
             />
           </label>
-          <label className="grid gap-1 text-xs">
-            {ui.commandLocation}
-            <SelectField
-              ariaLabel={ui.commandLocation}
-              value={uninstallMethod}
-              onValueChange={value => {
-                if (value === "package" || value === "source") {
-                  setUninstallMethod(value);
-                  setUninstallCopied("");
-                }
-              }}
-              options={[
-                { value: "package", label: ui.packageFolder },
-                { value: "source", label: ui.projectFolder },
-              ]}
-            />
-          </label>
-          <p className="text-sm leading-relaxed">
-            {uninstallMethod === "package" ? ui.uninstallPackageSteps : ui.uninstallSourceSteps}
-          </p>
           <code className="min-w-0 select-all whitespace-pre-wrap break-all border border-border p-2 text-xs">
             {uninstallCommand}
           </code>
@@ -307,19 +284,6 @@ export function HostConnectionSettings({
             <p className="text-xs text-muted-foreground" role="status">
               {uninstallCopied}
             </p>
-          )}
-          {uninstallMethod === "package" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                void chrome.tabs.create({
-                  url: "https://github.com/chenghsj/immersive-language-learning/releases",
-                })
-              }
-            >
-              {ui.releases}
-            </Button>
           )}
         </div>
       </Disclosure>

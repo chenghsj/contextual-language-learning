@@ -99,7 +99,7 @@ For Edge append `--browser edge`; for Chromium append `--browser chromium`. The 
 
 ### Uninstalling the Native Host
 
-In **Settings → Advanced**, expand **Uninstall Host** to select the browser and choose the extracted Host ZIP folder or project root. Copy the displayed command before closing the browser. The instructions also explain which functions require reinstalling the Host and which data is preserved.
+In **Settings → Local service**, expand **Uninstall Host**, choose the browser and copy the command. Wait for tasks to finish and fully quit that browser, then run the command from the project root or extracted Host folder. Lessons and sign-ins are kept.
 
 Fully quit the browser you are unregistering so its running Host can exit. From the extracted Host ZIP folder, run:
 

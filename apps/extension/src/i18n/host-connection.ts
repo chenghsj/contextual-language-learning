@@ -7,9 +7,9 @@ export const hostConnectionCopy = {
       "Linux folder selection requires zenity or kdialog. Host installation and AI generation do not require these tools.",
     uninstall: "Uninstall Host",
     uninstallSteps:
-      "Copy the command below. Wait for generation and backups to finish, fully quit the selected browser, then run the command in a terminal.",
+      "Wait for tasks to finish and close the browser. Run this in the project or extracted Host folder.",
     uninstallEffects:
-      "Only the selected browser is unregistered. The shared Host program is removed after the last browser is unregistered. Lessons, task history, credentials, settings and the extension are preserved.",
+      "Local features require reinstalling the Host. Lessons and sign-ins are kept.",
     uninstallUnavailable:
       "AI generation, local lesson access and backups in this browser require reinstalling the Host afterward.",
     uninstallBrowser: "Browser to unregister",
@@ -67,9 +67,8 @@ export const hostConnectionCopy = {
     linuxRequirements:
       "Linux 的圖形化資料夾選擇需要 zenity 或 kdialog；安裝 Host 與 AI 生成不需要這兩項工具。",
     uninstall: "解除安裝 Host",
-    uninstallSteps: "先複製下方指令；等生成與備份完成後，完全關閉所選瀏覽器，再於終端機執行。",
-    uninstallEffects:
-      "僅移除所選瀏覽器的註冊；最後一個瀏覽器解除註冊後，才移除共用 Host 程式。教材、任務紀錄、登入設定及擴充功能均會保留。",
+    uninstallSteps: "等任務完成並關閉瀏覽器，再於專案或 Host 解壓縮資料夾執行。",
+    uninstallEffects: "解除安裝後，本機功能需重新安裝 Host 才能使用；教材與登入資料保留。",
     uninstallUnavailable:
       "解除安裝後，該瀏覽器的 AI 生成、本機教材存取與備份功能，需要重新安裝 Host 才能使用。",
     uninstallBrowser: "要解除安裝的瀏覽器",
@@ -121,9 +120,8 @@ export const hostConnectionCopy = {
     linuxRequirements:
       "Linux 的图形化文件夹选择需要 zenity 或 kdialog；安装 Host 与 AI 生成不需要这两项工具。",
     uninstall: "卸载 Host",
-    uninstallSteps: "先复制下方命令；等待生成与备份完成后，完全关闭所选浏览器，再在终端中执行。",
-    uninstallEffects:
-      "仅移除所选浏览器的注册；最后一个浏览器注销后，才移除共享 Host 程序。教材、任务记录、登录设置及扩展均会保留。",
+    uninstallSteps: "等待任务完成并关闭浏览器，再在项目或 Host 解压文件夹执行。",
+    uninstallEffects: "卸载后，本地功能需重新安装 Host 才能使用；教材与登录数据保留。",
     uninstallUnavailable:
       "卸载后，该浏览器的 AI 生成、本地教材访问与备份功能，需要重新安装 Host 才能使用。",
     uninstallBrowser: "要卸载的浏览器",
@@ -176,9 +174,9 @@ export const hostConnectionCopy = {
       "Linux のグラフィカルなフォルダー選択には zenity または kdialog が必要です。Host のインストールや AI 生成には不要です。",
     uninstall: "Host をアンインストール",
     uninstallSteps:
-      "下のコマンドをコピーしてください。生成とバックアップが完了するまで待ち、選択したブラウザーを完全に終了してから、ターミナルで実行してください。",
+      "タスク完了後にブラウザーを閉じ、プロジェクトまたは Host の展開フォルダーで実行してください。",
     uninstallEffects:
-      "選択したブラウザーの登録のみを解除します。最後のブラウザーの登録を解除すると、共有 Host プログラムも削除されます。教材、タスク履歴、認証情報、設定、拡張機能は保持されます。",
+      "ローカル機能の利用には Host の再インストールが必要です。教材とログイン情報は保持されます。",
     uninstallUnavailable:
       "このブラウザーで AI 生成、ローカル教材へのアクセス、バックアップを再び利用するには、Host の再インストールが必要です。",
     uninstallBrowser: "登録を解除するブラウザー",
@@ -237,9 +235,9 @@ export const hostConnectionCopy = {
       "Linux의 그래픽 폴더 선택에는 zenity 또는 kdialog가 필요합니다. Host 설치와 AI 생성에는 필요하지 않습니다.",
     uninstall: "Host 제거",
     uninstallSteps:
-      "아래 명령을 복사하세요. 생성과 백업이 완료될 때까지 기다린 후 선택한 브라우저를 완전히 종료하고 터미널에서 실행하세요.",
+      "작업 완료 후 브라우저를 닫고 프로젝트 또는 Host 압축 해제 폴더에서 실행하세요.",
     uninstallEffects:
-      "선택한 브라우저의 등록만 제거합니다. 마지막 브라우저의 등록을 제거하면 공유 Host 프로그램도 제거됩니다.학습 자료, 작업 기록, 인증 정보, 설정 및 확장 프로그램은 보존됩니다.",
+      "로컬 기능을 다시 사용하려면 Host를 재설치해야 합니다. 학습 자료와 로그인 정보는 유지됩니다.",
     uninstallUnavailable:
       "이 브라우저에서 AI 생성, 로컬 학습 자료 접근 및 백업을 다시 사용하려면 Host를 다시 설치해야 합니다.",
     uninstallBrowser: "등록을 제거할 브라우저",
