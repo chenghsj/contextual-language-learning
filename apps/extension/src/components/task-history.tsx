@@ -212,7 +212,7 @@ export function TaskHistory({
               setJobFilter(value as JobFilter);
               setShowAllJobs(false);
             }}
-            className="h-11 flex-1 text-xs"
+            className="h-8 flex-1 text-xs"
             options={[
               { value: "all", label: t("jobFilterAll") },
               { value: "active", label: t("jobFilterActive") },
@@ -223,9 +223,9 @@ export function TaskHistory({
           />
           <IconTooltip label={t("refreshJobs")}>
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="size-11"
+              className="size-8"
               disabled={loadingJobs}
               aria-busy={loadingJobs}
               onClick={onRefresh}
