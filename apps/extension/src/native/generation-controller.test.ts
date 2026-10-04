@@ -68,21 +68,49 @@ function setup(
       });
   };
   let connections = 0;
+  let registered = true;
+  const probes: { request: { id: string; type: string }; reply: (value: unknown) => void }[] = [];
   const runtime = {
     id,
     getManifest: () => ({ version: "0.1.0" }),
     onConnect,
+    sendNativeMessage: (
+      name: string,
+      request: { id: string; type: string },
+      reply: (value: unknown) => void,
+    ) => {
+      assert.equal(name, "dev.immersive.language_learning");
+      connections++;
+      if (!registered) throw new Error("Specified native messaging host not found.");
+      probes.push({ request, reply });
+      if (automaticHandshake)
+        reply({
+          type: "health",
+          id: request.id,
+          installed: {},
+          agents: [],
+          protocolVersion: HOST_PROTOCOL_VERSION,
+          version: "0.1.0",
+          agentMode: "pi-sdk",
+        });
+    },
     connectNative: (name: string) => {
       assert.equal(name, "dev.immersive.language_learning");
       connections++;
+      if (!registered) throw new Error("Specified native messaging host not found.");
       return native;
     },
   } as unknown as typeof chrome.runtime;
   installGenerationController(runtime, onCompleted, onAttention);
   return {
     native,
+    probes,
+    runtime,
     onConnect,
     id,
+    uninstall: () => {
+      registered = false;
+    },
     get connections() {
       return connections;
     },
@@ -93,6 +121,30 @@ function setup(
     },
   };
 }
+
+test("health detects uninstall despite a still-responsive existing Host connection", () => {
+  const app = setup();
+  const observer = app.connectPanel();
+  observer.onMessage.fire({ type: "watch" });
+  const panel = app.connectPanel();
+  panel.onMessage.fire({ id: randomUUID(), type: "listJobs" });
+  // The browser registration is gone, but the process behind the existing port
+  // remains alive and continues answering health requests.
+  app.uninstall();
+  const id = randomUUID();
+  panel.onMessage.fire({ id, type: "health" });
+  const reply = panel.sent.find(value => (value as { id?: string }).id === id);
+  assert.equal((reply as { type: string }).type, "error");
+  assert.equal(app.connections, 2);
+  assert.equal(app.native.disconnected, false);
+  app.native.onMessage.fire({
+    id: (app.native.sent.at(-1) as { id: string }).id,
+    type: "jobs",
+    jobs: [],
+  });
+  panel.disconnect();
+  observer.disconnect();
+});
 
 test("all Host operations wait for one compatible handshake and retain pending work after panel close", () => {
   const app = setup(undefined, undefined, false);
@@ -180,6 +232,7 @@ test("health reports installed metadata without forwarding business requests to 
       agentMode: "pi-sdk",
       ...mismatch,
     };
+    app.probes[0].reply({ ...health, id: healthId });
     app.native.onMessage.fire(health);
     assert.deepEqual(
       panel.sent.find(value => (value as { id?: string }).id === healthId),
@@ -194,29 +247,33 @@ test("health reports installed metadata without forwarding business requests to 
   }
 });
 
-test("a compatible health check uses the handshake response without a second Native request", () => {
+test("a compatible health check uses one short Native connection", () => {
   const app = setup();
   const panel = app.connectPanel(),
     id = randomUUID();
   panel.onMessage.fire({ id, type: "health" });
-  assert.equal(app.native.sent.length, 1);
+  assert.equal(app.probes.length, 1);
+  assert.equal(app.native.sent.length, 0);
   assert.equal(
     (panel.sent.find(value => (value as { id?: string }).id === id) as { type: string }).type,
     "health",
   );
   panel.disconnect();
-  assert.equal(app.native.disconnected, true);
 });
 
-test("checking an already connected Host sends a fresh health request each time", () => {
+test("checking an already connected Host starts a separate short connection each time", () => {
   const app = setup();
   const panel = app.connectPanel();
-  panel.onMessage.fire({ id: randomUUID(), type: "health" });
+  const jobId = randomUUID();
+  panel.onMessage.fire({ id: jobId, type: "resume", jobId });
+  const requests = app.native.sent.length;
   for (let attempt = 0; attempt < 2; attempt++) {
     const id = randomUUID();
     panel.onMessage.fire({ id, type: "health" });
-    assert.deepEqual(app.native.sent.at(-1), { id, type: "health" });
-    assert.equal(app.native.sent.length, attempt + 2);
+    assert.deepEqual(app.probes.at(-1)?.request, { id, type: "health" });
+    assert.equal(app.connections, attempt + 2);
+    assert.equal(app.native.sent.length, requests);
+    assert.equal(app.native.disconnected, false);
     assert.ok(
       panel.sent.some(
         value =>
@@ -225,6 +282,54 @@ test("checking an already connected Host sends a fresh health request each time"
       ),
     );
   }
+  app.native.onMessage.fire({ id: jobId, type: "generationSettled" });
+  panel.disconnect();
+});
+
+test("health probes report browser disconnects and reject invalid responses", () => {
+  for (const response of [
+    { invalid: true },
+    { type: "jobs", id: randomUUID(), jobs: [] },
+    { type: "health", id: randomUUID(), installed: {}, agents: [] },
+    undefined,
+  ]) {
+    const app = setup(undefined, undefined, false);
+    const panel = app.connectPanel();
+    const id = randomUUID();
+    panel.onMessage.fire({ id, type: "health" });
+    if (!response)
+      Object.assign(app.runtime, {
+        lastError: { message: "Specified native messaging host not found." },
+      });
+    app.probes[0].reply(response);
+    Object.assign(app.runtime, { lastError: undefined });
+    assert.equal(
+      (panel.sent.find(value => (value as { id?: string }).id === id) as { type: string }).type,
+      "error",
+    );
+    panel.disconnect();
+  }
+});
+
+test("health timeout fails once and panel close suppresses late replies", context => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const app = setup(undefined, undefined, false);
+  const panel = app.connectPanel();
+  const id = randomUUID();
+  panel.onMessage.fire({ id, type: "health" });
+  context.mock.timers.tick(10_000);
+  assert.equal(
+    (panel.sent.find(value => (value as { id?: string }).id === id) as { type: string }).type,
+    "error",
+  );
+  const count = panel.sent.length;
+  app.probes[0].reply({ type: "error", id, message: "late" });
+  assert.equal(panel.sent.length, count);
+  panel.onMessage.fire({ id: randomUUID(), type: "health" });
+  panel.disconnect();
+  app.probes[1].reply({ type: "error", id: app.probes[1].request.id, message: "late" });
+  context.mock.timers.tick(10_000);
+  assert.equal(panel.sent.length, count);
 });
 
 test("login answers belong to their panel and closing its owner cancels only that login", () => {

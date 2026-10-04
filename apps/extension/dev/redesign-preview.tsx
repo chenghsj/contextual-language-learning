@@ -55,7 +55,15 @@ const docs = new Map<string, CustomDocument>();
 const jobs = new Map<string, JobSummary>();
 const commands: HostRequest[] = [];
 const notifications: { id: string; title: string }[] = [];
-Object.assign(window, { acceptance: { commands, docs, jobs, notifications } });
+const acceptance = {
+  commands,
+  docs,
+  jobs,
+  notifications,
+  hostRegistered: true,
+  nativeConnections: 0,
+};
+Object.assign(window, { acceptance });
 const tab = {
   id: 1,
   windowId: 1,
@@ -76,6 +84,8 @@ const execution = {
   calls: [],
 };
 function nativePort() {
+  if (!acceptance.hostRegistered) throw new Error("Specified native messaging host not found.");
+  acceptance.nativeConnections++;
   const [worker, host] = portPair("native");
   host.onMessage.addListener(raw => {
     const request = raw as HostRequest;
@@ -234,6 +244,21 @@ const runtime = {
   getManifest: () => ({ version: "0.1.0" }),
   getURL: (path: string) => "/" + path,
   connectNative: nativePort,
+  lastError: undefined as { message: string } | undefined,
+  sendNativeMessage: (_name: string, request: HostRequest, callback: (value: unknown) => void) => {
+    try {
+      const port = nativePort();
+      port.onMessage.addListener(value => {
+        callback(value);
+        port.disconnect();
+      });
+      port.postMessage(request);
+    } catch (error) {
+      runtime.lastError = { message: String(error) };
+      callback(undefined);
+      runtime.lastError = undefined;
+    }
+  },
   connect: ({ name }: { name: string }) => {
     const [panel, worker] = portPair(name);
     onConnect.fire(worker);

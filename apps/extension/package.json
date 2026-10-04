@@ -7,6 +7,7 @@
     "build": "vite build && node scripts/build-content.mjs",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
+    "test:host-health": "node --import tsx scripts/host-health-acceptance.mjs",
     "test:host-uninstall-ui": "node scripts/host-uninstall-acceptance.mjs",
     "test:ux-layout-ui": "node scripts/ux-layout-acceptance.mjs",
     "test:redesign-ui": "node scripts/redesign-acceptance.mjs",

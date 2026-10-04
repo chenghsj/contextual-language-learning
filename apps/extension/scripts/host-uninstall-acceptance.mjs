@@ -106,13 +106,31 @@ try {
           await executeCopiedCommand(command, name.toLowerCase());
       }
       await section.screenshot({ path: join(output, `uninstall-${width}-${theme}.png`) });
+      const connection = page.locator("[data-ui=hostConnection]");
+      await connection.getByRole("status").first().getByText("已連線", { exact: true }).waitFor();
+      await page.evaluate(() => {
+        // New connections fail after uninstall; existing fixture ports keep replying.
+        window.acceptance.hostRegistered = false;
+      });
+      await connection.getByRole("button", { name: "檢查連線", exact: true }).click();
+      await connection.getByRole("status").first().getByText("尚未連線", { exact: true }).waitFor();
+      assert.equal(await connection.getByText("Host 版本: 0.1.0", { exact: true }).count(), 0);
+      assert.equal(await page.getByText("檢查完成，Host 已連線。", { exact: true }).count(), 0);
+      await connection.screenshot({
+        path: join(output, `uninstalled-status-${width}-${theme}.png`),
+      });
+      await page.evaluate(() => {
+        window.acceptance.hostRegistered = true;
+      });
+      await connection.getByRole("button", { name: "檢查連線", exact: true }).click();
+      await connection.getByRole("status").first().getByText("已連線", { exact: true }).waitFor();
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
         true,
       );
       assert.deepEqual(errors, []);
       await page.close();
-      console.log("PASS compact UI", width, theme);
+      console.log("PASS compact UI, uninstall status and reinstall recovery", width, theme);
     }
   console.log("Evidence:", output);
 } finally {

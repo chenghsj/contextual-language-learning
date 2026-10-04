@@ -14,7 +14,7 @@ import {
 import { DocumentChunkAssembler } from "./document-chunks";
 
 export type HostStream = { send(input: HostRequest | { type: "watch" }): void; close(): void };
-/** All panel transports use one worker-owned Native connection, with validation and cleanup here. */
+/** Panel requests go through the worker; health probes use a fresh Native connection. */
 export function openHostStream(
   onMessage: (message: GenerationControllerMessage) => void,
   onError: (error: Error) => void,

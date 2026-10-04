@@ -38,6 +38,50 @@ export function installGenerationController(
   const clients = new Set<chrome.runtime.Port>();
   const pending = new Map<string, ForwardedRequest["type"]>();
   const authOwners = new Map<string, chrome.runtime.Port>();
+  const healthChecks = new Map<
+    string,
+    { client: chrome.runtime.Port; timer: ReturnType<typeof setTimeout> }
+  >();
+
+  function checkHealth(
+    request: Extract<HostRequest, { type: "health" }>,
+    client: chrome.runtime.Port,
+  ) {
+    const finish = (message: HostMessage) => {
+      if (healthChecks.get(request.id) !== check) return;
+      clearTimeout(check.timer);
+      healthChecks.delete(request.id);
+      if (clients.has(client)) client.postMessage(message);
+    };
+    const fail = (message: string) => finish({ id: request.id, type: "error", message });
+    const check = {
+      client,
+      timer: setTimeout(() => fail("Native Host health check timed out."), 10_000),
+    };
+    healthChecks.set(request.id, check);
+    try {
+      // A persistent generation port can still answer after uninstall. A one-shot
+      // connection makes the browser look up its current registration and launcher
+      // without disconnecting any running Agent request.
+      runtime.sendNativeMessage(HOST_NAME, request, (raw: unknown) => {
+        const error = runtime.lastError?.message;
+        if (error) return fail(error);
+        const parsed = HostMessageSchema.safeParse(raw);
+        if (
+          !parsed.success ||
+          parsed.data.id !== request.id ||
+          (parsed.data.type !== "health" && parsed.data.type !== "error")
+        ) {
+          fail("Native Host returned an invalid health response. Update the Host and try again.");
+          return;
+        }
+        // Return mismatched version/protocol metadata so Settings can explain it.
+        finish(parsed.data);
+      });
+    } catch (error) {
+      fail(error instanceof Error ? error.message : "Failed to start Native Host.");
+    }
+  }
   let ready = false;
   let handshakeId = "";
   let handshakeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -374,12 +418,16 @@ export function installGenerationController(
         return;
       }
       const request = checked.data;
-      if (pending.has(request.id)) {
+      if (pending.has(request.id) || healthChecks.has(request.id)) {
         client.postMessage({
           id: request.id,
           type: "error",
           message: "Host request ID is already in use.",
         });
+        return;
+      }
+      if (request.type === "health") {
+        checkHealth(request, client);
         return;
       }
       if (
@@ -479,6 +527,11 @@ export function installGenerationController(
 
     client.onDisconnect.addListener(() => {
       clients.delete(client);
+      for (const [id, check] of healthChecks) {
+        if (check.client !== client) continue;
+        clearTimeout(check.timer);
+        healthChecks.delete(id);
+      }
       if (!clients.size && reconnectTimer) {
         reconnectTimers.clear(reconnectTimer);
         reconnectTimer = undefined;
