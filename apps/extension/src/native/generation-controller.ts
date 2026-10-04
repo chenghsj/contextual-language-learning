@@ -51,6 +51,21 @@ export function installGenerationController(
       if (healthChecks.get(request.id) !== check) return;
       clearTimeout(check.timer);
       healthChecks.delete(request.id);
+      if (message.type === "health" && connection) {
+        const version = runtime.getManifest?.().version;
+        const compatible =
+          message.protocolVersion === HOST_PROTOCOL_VERSION &&
+          message.agentMode === "pi-sdk" &&
+          (!version || message.version === version);
+        if (reconnectTimer) reconnectTimers.clear(reconnectTimer);
+        reconnectTimer = undefined;
+        reconnectAttempt = 0;
+        reconnectBlocked = !compatible;
+        // Settings checks and the retry banner share this worker state. Publish
+        // recovery before returning health, so success cannot leave a stale failure.
+        connection = { status: compatible ? "ready" : "incompatible", attempt: 0 };
+        broadcast(state());
+      }
       if (clients.has(client)) client.postMessage(message);
     };
     const fail = (message: string) => finish({ id: request.id, type: "error", message });

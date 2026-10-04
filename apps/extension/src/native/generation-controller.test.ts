@@ -111,6 +111,9 @@ function setup(
     uninstall: () => {
       registered = false;
     },
+    reinstall: () => {
+      registered = true;
+    },
     get connections() {
       return connections;
     },
@@ -144,6 +147,73 @@ test("health detects uninstall despite a still-responsive existing Host connecti
   });
   panel.disconnect();
   observer.disconnect();
+});
+
+test("successful health retry clears the worker failure status for every panel", context => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const app = setup();
+  const panel = app.connectPanel(),
+    observer = app.connectPanel();
+  panel.onMessage.fire({ id: randomUUID(), type: "listJobs" });
+  app.uninstall();
+  app.native.disconnect();
+  for (const delay of [1000, 2000, 4000]) context.mock.timers.tick(delay);
+  const latestState = (client: typeof panel) =>
+    client.sent.filter(value => (value as { type?: string }).type === "generationState").at(-1) as {
+      connection: { status: string; attempt: number };
+    };
+  assert.equal(latestState(panel).connection.status, "failed");
+  app.reinstall();
+  panel.onMessage.fire({ id: randomUUID(), type: "health" });
+  for (const client of [panel, observer])
+    assert.deepEqual(latestState(client).connection, { status: "ready", attempt: 0 });
+  panel.disconnect();
+  observer.disconnect();
+});
+
+test("health recovery cancels scheduled reconnects so they cannot restore stale failure", context => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const app = setup();
+  const panel = app.connectPanel();
+  panel.onMessage.fire({ id: randomUUID(), type: "listJobs" });
+  app.native.disconnect();
+  panel.onMessage.fire({ id: randomUUID(), type: "health" });
+  const count = app.connections;
+  context.mock.timers.tick(10_000);
+  assert.equal(app.connections, count);
+  const state = panel.sent
+    .filter(value => (value as { type?: string }).type === "generationState")
+    .at(-1) as { connection: { status: string; attempt: number } };
+  assert.deepEqual(state.connection, { status: "ready", attempt: 0 });
+  panel.disconnect();
+});
+
+test("health retry preserves incompatible status until a compatible Host replies", () => {
+  const app = setup(undefined, undefined, false);
+  const panel = app.connectPanel();
+  panel.onMessage.fire({ id: randomUUID(), type: "listJobs" });
+  app.native.onMessage.fire({ invalid: true });
+  for (const protocolVersion of [HOST_PROTOCOL_VERSION - 1, HOST_PROTOCOL_VERSION]) {
+    const id = randomUUID();
+    panel.onMessage.fire({ id, type: "health" });
+    app.probes.at(-1)!.reply({
+      id,
+      type: "health",
+      installed: {},
+      agents: [],
+      version: "0.1.0",
+      agentMode: "pi-sdk",
+      protocolVersion,
+    });
+    const state = panel.sent
+      .filter(value => (value as { type?: string }).type === "generationState")
+      .at(-1) as { connection: { status: string } };
+    assert.equal(
+      state.connection.status,
+      protocolVersion === HOST_PROTOCOL_VERSION ? "ready" : "incompatible",
+    );
+  }
+  panel.disconnect();
 });
 
 test("all Host operations wait for one compatible handshake and retain pending work after panel close", () => {

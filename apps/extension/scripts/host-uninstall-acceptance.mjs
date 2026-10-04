@@ -124,13 +124,32 @@ try {
       });
       await connection.getByRole("button", { name: "檢查連線", exact: true }).click();
       await connection.getByRole("status").first().getByText("已連線", { exact: true }).waitFor();
+      await page.getByRole("dialog").getByRole("button", { name: "關閉", exact: true }).click();
+      await page.evaluate(() => {
+        window.acceptance.hostRegistered = false;
+        window.acceptance.disconnectHost();
+      });
+      const failure = page.getByRole("status").filter({ hasText: "連線失敗，請重新連線。" });
+      await failure.waitFor();
+      await page.evaluate(() => {
+        window.acceptance.hostRegistered = true;
+      });
+      await failure.getByRole("button", { name: "重試", exact: true }).click();
+      await page.getByText("檢查完成，Host 已連線。", { exact: true }).waitFor();
+      await failure.waitFor({ state: "detached" });
+      assert.equal(await page.getByText("連線失敗，請重新連線。", { exact: true }).count(), 0);
+      await page.screenshot({ path: join(output, `retry-success-${width}-${theme}.png`) });
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
         true,
       );
       assert.deepEqual(errors, []);
       await page.close();
-      console.log("PASS compact UI, uninstall status and reinstall recovery", width, theme);
+      console.log(
+        "PASS compact UI, uninstall/reinstall and retry clears failure status",
+        width,
+        theme,
+      );
     }
   console.log("Evidence:", output);
 } finally {

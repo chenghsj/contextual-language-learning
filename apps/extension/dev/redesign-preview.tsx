@@ -55,6 +55,7 @@ const docs = new Map<string, CustomDocument>();
 const jobs = new Map<string, JobSummary>();
 const commands: HostRequest[] = [];
 const notifications: { id: string; title: string }[] = [];
+const generationPorts = new Set<{ disconnect(): void }>();
 const acceptance = {
   commands,
   docs,
@@ -62,6 +63,10 @@ const acceptance = {
   notifications,
   hostRegistered: true,
   nativeConnections: 0,
+  disconnectHost: () => {
+    for (const port of generationPorts) port.disconnect();
+    generationPorts.clear();
+  },
 };
 Object.assign(window, { acceptance });
 const tab = {
@@ -243,7 +248,12 @@ const runtime = {
   onConnect,
   getManifest: () => ({ version: "0.1.0" }),
   getURL: (path: string) => "/" + path,
-  connectNative: nativePort,
+  connectNative: () => {
+    const port = nativePort();
+    generationPorts.add(port);
+    port.onDisconnect.addListener(() => generationPorts.delete(port));
+    return port;
+  },
   lastError: undefined as { message: string } | undefined,
   sendNativeMessage: (_name: string, request: HostRequest, callback: (value: unknown) => void) => {
     try {
