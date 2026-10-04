@@ -82,7 +82,7 @@ export function SubtitleEditor({
     }
   }
   return (
-    <section data-ui="subtitle-editor" className="flex min-h-0 flex-1 flex-col gap-3">
+    <section data-ui="subtitle-editor" className="flex min-h-0 flex-1 flex-col gap-3 pt-2">
       <header className="flex shrink-0 items-center justify-between gap-2">
         <Button variant="ghost" size="sm" onClick={onBack}>
           ← {ux.video}
