@@ -10,7 +10,9 @@ import type { UiLocale, MessageKey, MessageParams } from "../i18n/messages";
 import { PiFeedback } from "./pi-feedback";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
+import { SelectField } from "./ui/select";
+import { IconTooltip } from "./icon-tooltip";
+import { RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -201,49 +203,42 @@ export function TaskHistory({
   };
   return (
     <PageSection>
-      <Tabs
-        value={jobFilter}
-        onValueChange={value => {
-          setJobFilter(value as JobFilter);
-          setShowAllJobs(false);
-        }}
-      >
-        <div className="grid gap-2">
-          <TabsList
-            aria-label={t("jobFilterLabel")}
-            className="h-auto w-full flex-wrap justify-start"
-          >
-            {(
-              [
-                ["all", t("jobFilterAll")],
-                ["active", t("jobFilterActive")],
-                ["completed", t("jobFilterCompleted")],
-                ["failed", t("jobFailed")],
-                ["cancelled", t("jobCancelled")],
-              ] as const
-            ).map(([value, label]) => (
-              <TabsTrigger key={value} value={value} className="px-2 text-xs">
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={loadingJobs}
-            aria-busy={loadingJobs}
-            onClick={onRefresh}
-          >
-            {loadingJobs && (
-              <span
+      <div>
+        <div className="flex min-w-0 items-center gap-2" data-ui="taskHistoryControls">
+          <SelectField
+            ariaLabel={t("jobFilterLabel")}
+            value={jobFilter}
+            onValueChange={value => {
+              setJobFilter(value as JobFilter);
+              setShowAllJobs(false);
+            }}
+            className="h-11 flex-1 text-xs"
+            options={[
+              { value: "all", label: t("jobFilterAll") },
+              { value: "active", label: t("jobFilterActive") },
+              { value: "completed", label: t("jobFilterCompleted") },
+              { value: "failed", label: t("jobFailed") },
+              { value: "cancelled", label: t("jobCancelled") },
+            ]}
+          />
+          <IconTooltip label={t("refreshJobs")}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-11"
+              disabled={loadingJobs}
+              aria-busy={loadingJobs}
+              onClick={onRefresh}
+            >
+              <RefreshCw
                 aria-hidden="true"
-                className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
+                className={loadingJobs ? "animate-spin motion-reduce:animate-none" : undefined}
               />
-            )}
-            {t("refreshJobs")}
-          </Button>
+              <span className="sr-only">{t("refreshJobs")}</span>
+            </Button>
+          </IconTooltip>
         </div>
-        <TabsContent value={jobFilter}>
+        <div className="mt-2">
           <div className="my-[10px] grid gap-[7px]">
             {!loadingJobs && !visibleJobs.length && (
               <p className="text-xs text-muted-foreground">{flow.activityEmpty}</p>
@@ -451,8 +446,8 @@ export function TaskHistory({
               )}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
       <Dialog
         open={confirmation !== null}
         onOpenChange={open => {
