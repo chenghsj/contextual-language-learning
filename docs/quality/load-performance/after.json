@@ -1,0 +1,2311 @@
+{
+  "environment": {
+    "browser": "155.0.8059.80",
+    "cpuThrottle": 4,
+    "viewport": [400, 800],
+    "runs": 5,
+    "network": "local, unthrottled",
+    "cache": "fresh context each run",
+    "fixture": "exact release sidepanel.html/JS with injected simulated browser/Host adapter; reduced motion",
+    "order": ["create", "library", "reader", "settings", "general"]
+  },
+  "summary": {
+    "create": {
+      "ms": 507.90000009536743,
+      "jsBytes": 1122442,
+      "longTaskMs": 237,
+      "scriptMs": 272.409,
+      "fcpMs": 336
+    },
+    "library": {
+      "ms": 46.60000014305115,
+      "jsBytes": 1122442,
+      "longTaskMs": 237,
+      "scriptMs": 289.153,
+      "fcpMs": 336
+    },
+    "reader": {
+      "ms": 90.10000014305115,
+      "jsBytes": 1122442,
+      "longTaskMs": 237,
+      "scriptMs": 337.941,
+      "fcpMs": 336
+    },
+    "settings": {
+      "ms": 51.09999990463257,
+      "jsBytes": 1122442,
+      "longTaskMs": 237,
+      "scriptMs": 387.795,
+      "fcpMs": 336
+    },
+    "general": {
+      "ms": 76.09999990463257,
+      "jsBytes": 1141580,
+      "longTaskMs": 237,
+      "scriptMs": 425.148,
+      "fcpMs": 336
+    }
+  },
+  "samples": [
+    {
+      "create": {
+        "ms": 533.5999999046326,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/notification-navigation-CmEJpd3E.js", "/assets/sidepanel-BZ70XUCP.js"],
+        "longTaskMs": 240,
+        "fcpMs": 348,
+        "scriptMs": 274.35900000000004
+      },
+      "library": {
+        "ms": 45.799999952316284,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/notification-navigation-CmEJpd3E.js", "/assets/sidepanel-BZ70XUCP.js"],
+        "longTaskMs": 240,
+        "fcpMs": 348,
+        "scriptMs": 291.794
+      },
+      "reader": {
+        "ms": 89.20000004768372,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/notification-navigation-CmEJpd3E.js", "/assets/sidepanel-BZ70XUCP.js"],
+        "longTaskMs": 240,
+        "fcpMs": 348,
+        "scriptMs": 338.60200000000003
+      },
+      "settings": {
+        "ms": 53,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/notification-navigation-CmEJpd3E.js", "/assets/sidepanel-BZ70XUCP.js"],
+        "longTaskMs": 240,
+        "fcpMs": 348,
+        "scriptMs": 387.795
+      },
+      "general": {
+        "ms": 75.40000009536743,
+        "jsBytes": 1141580,
+        "jsFiles": [
+          "/assets/notification-navigation-CmEJpd3E.js",
+          "/assets/sidepanel-BZ70XUCP.js",
+          "/assets/speech-settings-C9TmFDj9.js",
+          "/assets/siri-voice-downloads-B93Iq-zp.js",
+          "/assets/alert-dialog-C_OFkzo2.js"
+        ],
+        "longTaskMs": 240,
+        "fcpMs": 348,
+        "scriptMs": 425.148
+      }
+    },
+    {
+      "create": {
+        "ms": 489.40000009536743,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 233,
+        "fcpMs": 332,
+        "scriptMs": 267.40000000000003
+      },
+      "library": {
+        "ms": 48.40000009536743,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 233,
+        "fcpMs": 332,
+        "scriptMs": 282.116
+      },
+      "reader": {
+        "ms": 90.10000014305115,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 233,
+        "fcpMs": 332,
+        "scriptMs": 328.892
+      },
+      "settings": {
+        "ms": 48.39999985694885,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 233,
+        "fcpMs": 332,
+        "scriptMs": 380.82300000000004
+      },
+      "general": {
+        "ms": 59.799999952316284,
+        "jsBytes": 1141580,
+        "jsFiles": [
+          "/assets/sidepanel-BZ70XUCP.js",
+          "/assets/notification-navigation-CmEJpd3E.js",
+          "/assets/speech-settings-C9TmFDj9.js",
+          "/assets/siri-voice-downloads-B93Iq-zp.js",
+          "/assets/alert-dialog-C_OFkzo2.js"
+        ],
+        "longTaskMs": 233,
+        "fcpMs": 332,
+        "scriptMs": 409.116
+      }
+    },
+    {
+      "create": {
+        "ms": 510.5,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 237,
+        "fcpMs": 332,
+        "scriptMs": 267.192
+      },
+      "library": {
+        "ms": 46.09999990463257,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 237,
+        "fcpMs": 332,
+        "scriptMs": 283.428
+      },
+      "reader": {
+        "ms": 90.20000004768372,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 237,
+        "fcpMs": 332,
+        "scriptMs": 330.07
+      },
+      "settings": {
+        "ms": 51.09999990463257,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 237,
+        "fcpMs": 332,
+        "scriptMs": 380.882
+      },
+      "general": {
+        "ms": 76.09999990463257,
+        "jsBytes": 1141580,
+        "jsFiles": [
+          "/assets/sidepanel-BZ70XUCP.js",
+          "/assets/notification-navigation-CmEJpd3E.js",
+          "/assets/speech-settings-C9TmFDj9.js",
+          "/assets/siri-voice-downloads-B93Iq-zp.js",
+          "/assets/alert-dialog-C_OFkzo2.js"
+        ],
+        "longTaskMs": 237,
+        "fcpMs": 332,
+        "scriptMs": 416.80699999999996
+      }
+    },
+    {
+      "create": {
+        "ms": 492.10000014305115,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 238,
+        "fcpMs": 336,
+        "scriptMs": 272.409
+      },
+      "library": {
+        "ms": 46.60000014305115,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 238,
+        "fcpMs": 336,
+        "scriptMs": 289.153
+      },
+      "reader": {
+        "ms": 91.29999995231628,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 238,
+        "fcpMs": 336,
+        "scriptMs": 337.941
+      },
+      "settings": {
+        "ms": 52.60000014305115,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 238,
+        "fcpMs": 336,
+        "scriptMs": 397.72400000000005
+      },
+      "general": {
+        "ms": 77.09999990463257,
+        "jsBytes": 1141580,
+        "jsFiles": [
+          "/assets/sidepanel-BZ70XUCP.js",
+          "/assets/notification-navigation-CmEJpd3E.js",
+          "/assets/speech-settings-C9TmFDj9.js",
+          "/assets/alert-dialog-C_OFkzo2.js",
+          "/assets/siri-voice-downloads-B93Iq-zp.js"
+        ],
+        "longTaskMs": 238,
+        "fcpMs": 336,
+        "scriptMs": 433.172
+      }
+    },
+    {
+      "create": {
+        "ms": 507.90000009536743,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 236,
+        "fcpMs": 336,
+        "scriptMs": 274.113
+      },
+      "library": {
+        "ms": 47.59999990463257,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 236,
+        "fcpMs": 336,
+        "scriptMs": 291.50399999999996
+      },
+      "reader": {
+        "ms": 89.60000014305115,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 236,
+        "fcpMs": 336,
+        "scriptMs": 339.711
+      },
+      "settings": {
+        "ms": 49.200000047683716,
+        "jsBytes": 1122442,
+        "jsFiles": ["/assets/sidepanel-BZ70XUCP.js", "/assets/notification-navigation-CmEJpd3E.js"],
+        "longTaskMs": 236,
+        "fcpMs": 336,
+        "scriptMs": 392.099
+      },
+      "general": {
+        "ms": 76.20000004768372,
+        "jsBytes": 1141580,
+        "jsFiles": [
+          "/assets/sidepanel-BZ70XUCP.js",
+          "/assets/notification-navigation-CmEJpd3E.js",
+          "/assets/speech-settings-C9TmFDj9.js",
+          "/assets/siri-voice-downloads-B93Iq-zp.js",
+          "/assets/alert-dialog-C_OFkzo2.js"
+        ],
+        "longTaskMs": 236,
+        "fcpMs": 336,
+        "scriptMs": 429.73499999999996
+      }
+    }
+  ],
+  "graphs": {
+    "release": [
+      {
+        "file": "background.js",
+        "bytes": 4361,
+        "gzipBytes": 1933,
+        "isEntry": true,
+        "imports": ["assets/notification-navigation-CmEJpd3E.js"],
+        "dynamicImports": [],
+        "modules": [
+          {
+            "id": "<extension>/src/video/netflix-caption-fetch.ts",
+            "bytes": 3084
+          },
+          {
+            "id": "<extension>/src/background.ts",
+            "bytes": 2175
+          },
+          {
+            "id": "<extension>/src/video/netflix-caption-sender.ts",
+            "bytes": 1529
+          }
+        ]
+      },
+      {
+        "file": "assets/sidepanel-BZ70XUCP.js",
+        "bytes": 907553,
+        "gzipBytes": 292921,
+        "isEntry": true,
+        "imports": ["assets/notification-navigation-CmEJpd3E.js"],
+        "dynamicImports": [
+          "assets/subtitle-editor-YjPA4C5K.js",
+          "assets/drive-backup-settings-BYfvmUp1.js",
+          "assets/speech-settings-C9TmFDj9.js",
+          "assets/siri-voice-downloads-B93Iq-zp.js",
+          "assets/pi-settings-DXYmv2tk.js",
+          "assets/custom-viewer-BbfqICwU.js"
+        ],
+        "modules": [
+          {
+            "id": "<repo>/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/cjs/react-dom-client.production.js",
+            "bytes": 644593
+          },
+          {
+            "id": "<extension>/src/App.tsx",
+            "bytes": 143607
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/tailwind-merge@3.7.0/node_modules/tailwind-merge/dist/bundle-mjs.mjs",
+            "bytes": 102783
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/sonner@2.0.8_@types+react@19.3.0_react-dom@19.3.0_react@19.3.0__react@19.3.0/node_modules/sonner/dist/index.mjs",
+            "bytes": 68153
+          },
+          {
+            "id": "<extension>/src/components/contextual-scene-reader.tsx",
+            "bytes": 57173
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-select@2.3.7_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19.3.0_gh4y2zyyp4qdves5tf7kosvs7i/node_modules/@radix-ui/react-select/dist/index.mjs",
+            "bytes": 50674
+          },
+          {
+            "id": "<extension>/src/components/sentence-dialogue.tsx",
+            "bytes": 38239
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@floating-ui+core@1.8.0/node_modules/@floating-ui/core/dist/floating-ui.core.mjs",
+            "bytes": 27062
+          },
+          {
+            "id": "<extension>/src/lib/subtitle-draft.ts",
+            "bytes": 26243
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@floating-ui+dom@1.8.0/node_modules/@floating-ui/dom/dist/floating-ui.dom.mjs",
+            "bytes": 26088
+          },
+          {
+            "id": "<extension>/src/components/task-history.tsx",
+            "bytes": 25090
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react@19.3.0/node_modules/react/cjs/react.production.js",
+            "bytes": 19185
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-collection@1.1.15_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@1_f3ap4vliqleip4r4cx5rrf2sqy/node_modules/@radix-ui/react-collection/dist/index.mjs",
+            "bytes": 17678
+          },
+          {
+            "id": "<extension>/src/i18n/learning-settings.ts",
+            "bytes": 16373
+          },
+          {
+            "id": "<extension>/src/components/custom-prompt.tsx",
+            "bytes": 14632
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.19_@types+react-dom@19.3.0_@types+react@19.3.0__@types+_tnxy3uok6ztholiu3mnfmvjzpe/node_modules/@radix-ui/react-dismissable-layer/dist/index.mjs",
+            "bytes": 13860
+          },
+          {
+            "id": "<extension>/src/i18n/host-connection.ts",
+            "bytes": 13638
+          },
+          {
+            "id": "<extension>/src/components/video-library.tsx",
+            "bytes": 13494
+          },
+          {
+            "id": "<extension>/src/components/selection-speech.tsx",
+            "bytes": 12673
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-dialog@1.1.23_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19.3._pqvqd5bo2d752xdbycwbtq7vcq/node_modules/@radix-ui/react-dialog/dist/index.mjs",
+            "bytes": 11974
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-accordion@1.2.20_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19_cr6exzobi6pk75d6wx6xpssxgq/node_modules/@radix-ui/react-accordion/dist/index.mjs",
+            "bytes": 11813
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/cmdk@1.1.1_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19.3.0_react-dom@19.3.0_react@19.3.0__react@19.3.0/node_modules/cmdk/dist/index.mjs",
+            "bytes": 11699
+          },
+          {
+            "id": "<extension>/src/i18n/pi.ts",
+            "bytes": 11286
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/scheduler@0.28.0/node_modules/scheduler/cjs/scheduler.production.js",
+            "bytes": 11134
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-popper@1.3.7_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19.3.0_ho3t54afj3is4mpeeaggot5eei/node_modules/@radix-ui/react-popper/dist/index.mjs",
+            "bytes": 11085
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-popover@1.1.23_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19.3_s25yfztiraxytn7osjhm3itvpe/node_modules/@radix-ui/react-popover/dist/index.mjs",
+            "bytes": 10926
+          },
+          {
+            "id": "<extension>/src/hooks/use-create-flow.ts",
+            "bytes": 10757
+          },
+          {
+            "id": "<extension>/src/i18n/subtitle-acquisition.ts",
+            "bytes": 10694
+          },
+          {
+            "id": "<extension>/src/i18n/speech-downloads.ts",
+            "bytes": 10639
+          },
+          {
+            "id": "<extension>/src/i18n/pi-feedback.ts",
+            "bytes": 10422
+          },
+          {
+            "id": "<extension>/src/i18n/contextual-reader.ts",
+            "bytes": 10250
+          },
+          {
+            "id": "<extension>/src/native/generation-session.ts",
+            "bytes": 10104
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@floating-ui+react-dom@2.1.9_react-dom@19.3.0_react@19.3.0__react@19.3.0/node_modules/@floating-ui/react-dom/dist/floating-ui.react-dom.mjs",
+            "bytes": 9953
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-roving-focus@1.1.19_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react_cblr5whrchqnhubvjhmwgxky2m/node_modules/@radix-ui/react-roving-focus/dist/index.mjs",
+            "bytes": 9655
+          },
+          {
+            "id": "<extension>/src/native/speech-controller.ts",
+            "bytes": 9047
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-focus-scope@1.1.16_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@_o6qtbyfrzoj4d2uame34ov5cay/node_modules/@radix-ui/react-focus-scope/dist/index.mjs",
+            "bytes": 8976
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-switch@1.3.7_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19.3.0_lw7tkfnuqlpnesbt5rp32q355m/node_modules/@radix-ui/react-switch/dist/index.mjs",
+            "bytes": 8638
+          },
+          {
+            "id": "<extension>/src/i18n/pi-auth.ts",
+            "bytes": 8532
+          },
+          {
+            "id": "<extension>/src/i18n/side-panel-layout.ts",
+            "bytes": 8082
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/cjs/react-dom.production.js",
+            "bytes": 7918
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-remove-scroll@2.7.2_@types+react@19.3.0_react@19.3.0/node_modules/react-remove-scroll/dist/es2015/SideEffect.js",
+            "bytes": 7798
+          },
+          {
+            "id": "<extension>/src/components/ai-model-selection.tsx",
+            "bytes": 7529
+          },
+          {
+            "id": "<extension>/src/i18n/create-flow.ts",
+            "bytes": 6839
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-toggle-group@1.1.19_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react_ujgx7faf6bx6yjk3lca3i65zie/node_modules/@radix-ui/react-toggle-group/dist/index.mjs",
+            "bytes": 6689
+          },
+          {
+            "id": "<extension>/src/components/analysis-range.tsx",
+            "bytes": 6556
+          },
+          {
+            "id": "<extension>/src/components/pronunciation.ts",
+            "bytes": 6523
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-presence@1.1.10_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19._le2queyd54w4los2cqbhdgwup4/node_modules/@radix-ui/react-presence/dist/index.mjs",
+            "bytes": 6436
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-tabs@1.1.21_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19.3.0__hbpebfugsgda23sxowbkiaxgey/node_modules/@radix-ui/react-tabs/dist/index.mjs",
+            "bytes": 6327
+          },
+          {
+            "id": "<extension>/src/components/create-frame.tsx",
+            "bytes": 6046
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-slot@1.3.3_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-slot/dist/index.mjs",
+            "bytes": 5979
+          },
+          {
+            "id": "<extension>/src/native/host-client.ts",
+            "bytes": 5696
+          },
+          {
+            "id": "<extension>/src/components/system-speech.tsx",
+            "bytes": 5607
+          },
+          {
+            "id": "<extension>/src/i18n/sentence-analysis.ts",
+            "bytes": 5563
+          },
+          {
+            "id": "<repo>/packages/core/src/reader-model.ts",
+            "bytes": 5555
+          },
+          {
+            "id": "<extension>/src/i18n/speech.ts",
+            "bytes": 5543
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@floating-ui+utils@0.2.12/node_modules/@floating-ui/utils/dist/floating-ui.utils.dom.mjs",
+            "bytes": 5485
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-collapsible@1.1.20_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@_nngmx7inaoypyavrj3hqtmzi2q/node_modules/@radix-ui/react-collapsible/dist/index.mjs",
+            "bytes": 5434
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/aria-hidden@1.2.6/node_modules/aria-hidden/dist/es2015/index.js",
+            "bytes": 5359
+          },
+          {
+            "id": "<extension>/src/i18n/subtitle-layout.ts",
+            "bytes": 5250
+          },
+          {
+            "id": "<extension>/src/components/host-connection-settings.tsx",
+            "bytes": 5235
+          },
+          {
+            "id": "<extension>/src/components/library-error-notice.tsx",
+            "bytes": 4874
+          },
+          {
+            "id": "<extension>/src/components/ui/select.tsx",
+            "bytes": 4711
+          },
+          {
+            "id": "<extension>/src/components/notification-settings.tsx",
+            "bytes": 4630
+          },
+          {
+            "id": "<extension>/src/components/playback-timeline.tsx",
+            "bytes": 4606
+          },
+          {
+            "id": "<extension>/src/components/searchable-select-field.tsx",
+            "bytes": 4591
+          },
+          {
+            "id": "<repo>/packages/core/src/subtitle-ruby.ts",
+            "bytes": 4446
+          },
+          {
+            "id": "<extension>/src/i18n/backup-settings.ts",
+            "bytes": 4440
+          },
+          {
+            "id": "<extension>/src/video/tab.ts",
+            "bytes": 4426
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-remove-scroll@2.7.2_@types+react@19.3.0_react@19.3.0/node_modules/react-remove-scroll/dist/es2015/handleScroll.js",
+            "bytes": 4398
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-context@1.2.2_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-context/dist/index.mjs",
+            "bytes": 4220
+          },
+          {
+            "id": "<extension>/src/hooks/use-platform-video-notice.ts",
+            "bytes": 4067
+          },
+          {
+            "id": "<extension>/src/components/ui/dialog.tsx",
+            "bytes": 4044
+          },
+          {
+            "id": "<extension>/src/i18n/usage-estimate.ts",
+            "bytes": 4043
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-progress@1.1.16_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19._zvfz7ttq4gjbsxzzhp3frvvbla/node_modules/@radix-ui/react-progress/dist/index.mjs",
+            "bytes": 3957
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@floating-ui+utils@0.2.12/node_modules/@floating-ui/utils/dist/floating-ui.utils.mjs",
+            "bytes": 3897
+          },
+          {
+            "id": "<extension>/src/components/request-model-selection.tsx",
+            "bytes": 3779
+          },
+          {
+            "id": "<extension>/src/components/appearance-preferences.tsx",
+            "bytes": 3755
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-use-controllable-state@1.2.6_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-use-controllable-state/dist/index.mjs",
+            "bytes": 3512
+          },
+          {
+            "id": "<extension>/src/components/ui/sheet.tsx",
+            "bytes": 3471
+          },
+          {
+            "id": "<extension>/src/i18n/video-metadata.ts",
+            "bytes": 3235
+          },
+          {
+            "id": "<extension>/src/components/subtitle-import.tsx",
+            "bytes": 3169
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-remove-scroll-bar@2.3.8_@types+react@19.3.0_react@19.3.0/node_modules/react-remove-scroll-bar/dist/es2015/component.js",
+            "bytes": 3150
+          },
+          {
+            "id": "<extension>/src/components/execution-details.tsx",
+            "bytes": 3117
+          },
+          {
+            "id": "<extension>/src/components/generation-estimate.tsx",
+            "bytes": 3109
+          },
+          {
+            "id": "<extension>/src/components/job-progress.tsx",
+            "bytes": 3046
+          },
+          {
+            "id": "<extension>/src/i18n/unified-player.ts",
+            "bytes": 2979
+          },
+          {
+            "id": "<extension>/src/i18n/library-notice.ts",
+            "bytes": 2923
+          },
+          {
+            "id": "<extension>/src/components/deferred-view.tsx",
+            "bytes": 2904
+          },
+          {
+            "id": "<extension>/src/components/ui/command.tsx",
+            "bytes": 2859
+          },
+          {
+            "id": "<extension>/src/components/notice-viewport.tsx",
+            "bytes": 2729
+          },
+          {
+            "id": "<extension>/src/hooks/use-video-connection.ts",
+            "bytes": 2706
+          },
+          {
+            "id": "<extension>/src/components/header-actions.tsx",
+            "bytes": 2647
+          },
+          {
+            "id": "<repo>/packages/core/src/expression-occurrences.ts",
+            "bytes": 2630
+          },
+          {
+            "id": "<extension>/src/i18n/windows-narrator.ts",
+            "bytes": 2604
+          },
+          {
+            "id": "<extension>/src/hooks/use-video-reader-health.ts",
+            "bytes": 2518
+          },
+          {
+            "id": "<extension>/src/video/reader-playback.ts",
+            "bytes": 2457
+          },
+          {
+            "id": "<repo>/packages/core/src/subtitles.ts",
+            "bytes": 2421
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/use-sidecar@1.1.3_@types+react@19.3.0_react@19.3.0/node_modules/use-sidecar/dist/es2015/medium.js",
+            "bytes": 2376
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/class-variance-authority@0.7.1/node_modules/class-variance-authority/dist/index.mjs",
+            "bytes": 2365
+          },
+          {
+            "id": "<extension>/src/components/action-feedback-button.tsx",
+            "bytes": 2340
+          },
+          {
+            "id": "<extension>/src/lib/library-catalog.ts",
+            "bytes": 2227
+          },
+          {
+            "id": "\u0000vite/preload-helper.js",
+            "bytes": 2206
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/tslib@2.8.1/node_modules/tslib/tslib.es6.mjs",
+            "bytes": 2189
+          },
+          {
+            "id": "<extension>/src/lib/selection-language.ts",
+            "bytes": 2178
+          },
+          {
+            "id": "<extension>/src/native/cancellation-tracker.ts",
+            "bytes": 2158
+          },
+          {
+            "id": "<extension>/src/i18n/analysis-range.ts",
+            "bytes": 2088
+          },
+          {
+            "id": "<extension>/src/video/metadata-resolver.ts",
+            "bytes": 2055
+          },
+          {
+            "id": "<extension>/src/i18n/builtin-prompts.ts",
+            "bytes": 2034
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-remove-scroll@2.7.2_@types+react@19.3.0_react@19.3.0/node_modules/react-remove-scroll/dist/es2015/UI.js",
+            "bytes": 2024
+          },
+          {
+            "id": "<extension>/src/video/youtube.ts",
+            "bytes": 1974
+          },
+          {
+            "id": "<extension>/src/i18n/pronunciation-diagnostics.ts",
+            "bytes": 1969
+          },
+          {
+            "id": "<extension>/src/hooks/use-subtitle-draft.ts",
+            "bytes": 1965
+          },
+          {
+            "id": "<extension>/src/components/request-backup-switch.tsx",
+            "bytes": 1934
+          },
+          {
+            "id": "<extension>/src/hooks/use-create-draft.ts",
+            "bytes": 1916
+          },
+          {
+            "id": "<extension>/src/i18n/prompt-templates.ts",
+            "bytes": 1888
+          },
+          {
+            "id": "<extension>/src/lib/motion.ts",
+            "bytes": 1882
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+primitive@1.1.7/node_modules/@radix-ui/primitive/dist/index.mjs",
+            "bytes": 1862
+          },
+          {
+            "id": "<extension>/src/i18n/pronunciation.ts",
+            "bytes": 1807
+          },
+          {
+            "id": "<extension>/src/i18n/selection-speech.ts",
+            "bytes": 1734
+          },
+          {
+            "id": "<extension>/src/hooks/use-content-motion.ts",
+            "bytes": 1722
+          },
+          {
+            "id": "<extension>/src/components/icon-tooltip.tsx",
+            "bytes": 1722
+          },
+          {
+            "id": "<extension>/src/i18n/generation-progress.ts",
+            "bytes": 1688
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/use-callback-ref@1.3.3_@types+react@19.3.0_react@19.3.0/node_modules/use-callback-ref/dist/es2015/useMergeRef.js",
+            "bytes": 1654
+          },
+          {
+            "id": "<extension>/src/native/document-chunks.ts",
+            "bytes": 1576
+          },
+          {
+            "id": "<extension>/src/native/custom-chunks.ts",
+            "bytes": 1542
+          },
+          {
+            "id": "<extension>/src/components/setting-info.tsx",
+            "bytes": 1527
+          },
+          {
+            "id": "<extension>/src/video/netflix.ts",
+            "bytes": 1523
+          },
+          {
+            "id": "<extension>/src/components/request-folder-selection.tsx",
+            "bytes": 1500
+          },
+          {
+            "id": "<extension>/src/lib/create-draft.ts",
+            "bytes": 1476
+          },
+          {
+            "id": "<extension>/src/components/side-panel-navigation.tsx",
+            "bytes": 1473
+          },
+          {
+            "id": "<extension>/src/components/ui/accordion.tsx",
+            "bytes": 1465
+          },
+          {
+            "id": "<extension>/src/i18n/playback-timing.ts",
+            "bytes": 1448
+          },
+          {
+            "id": "<extension>/src/components/ui/button.tsx",
+            "bytes": 1400
+          },
+          {
+            "id": "<extension>/src/components/ui/tabs.tsx",
+            "bytes": 1394
+          },
+          {
+            "id": "<extension>/src/lib/draft-db.ts",
+            "bytes": 1334
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-focus-guards@1.1.6_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-focus-guards/dist/index.mjs",
+            "bytes": 1333
+          },
+          {
+            "id": "<repo>/packages/core/src/playback-timing.ts",
+            "bytes": 1308
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react@19.3.0/node_modules/react/cjs/react-jsx-runtime.production.js",
+            "bytes": 1294
+          },
+          {
+            "id": "\u0000vite/modulepreload-polyfill.js",
+            "bytes": 1280
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-use-size@1.1.4_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-use-size/dist/index.mjs",
+            "bytes": 1265
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-style-singleton@2.2.3_@types+react@19.3.0_react@19.3.0/node_modules/react-style-singleton/dist/es2015/singleton.js",
+            "bytes": 1240
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/use-callback-ref@1.3.3_@types+react@19.3.0_react@19.3.0/node_modules/use-callback-ref/dist/es2015/useRef.js",
+            "bytes": 1182
+          },
+          {
+            "id": "<extension>/src/components/cancellation-notice.tsx",
+            "bytes": 1153
+          },
+          {
+            "id": "<extension>/src/components/pi-feedback.tsx",
+            "bytes": 1109
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-compose-refs@1.1.5_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-compose-refs/dist/index.mjs",
+            "bytes": 1107
+          },
+          {
+            "id": "<extension>/src/components/ui/toggle.tsx",
+            "bytes": 1104
+          },
+          {
+            "id": "<extension>/src/i18n/activity.ts",
+            "bytes": 1096
+          },
+          {
+            "id": "<extension>/src/components/video-connection-notice.tsx",
+            "bytes": 1092
+          },
+          {
+            "id": "<extension>/src/i18n/cancellation.ts",
+            "bytes": 1082
+          },
+          {
+            "id": "<extension>/src/components/ui/toggle-group.tsx",
+            "bytes": 1079
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-toggle@1.1.18_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19.3._a6mnapxqv4aklzsgkwezkxltju/node_modules/@radix-ui/react-toggle/dist/index.mjs",
+            "bytes": 1055
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-primitive@2.1.10_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19_4pcn6dtz2xvv4jrzxznobkkrze/node_modules/@radix-ui/react-primitive/dist/index.mjs",
+            "bytes": 1051
+          },
+          {
+            "id": "<extension>/src/components/ui/popover.tsx",
+            "bytes": 1016
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-remove-scroll-bar@2.3.8_@types+react@19.3.0_react@19.3.0/node_modules/react-remove-scroll-bar/dist/es2015/utils.js",
+            "bytes": 983
+          },
+          {
+            "id": "<extension>/src/lib/study-progress.ts",
+            "bytes": 973
+          },
+          {
+            "id": "<extension>/src/i18n/thinking.ts",
+            "bytes": 953
+          },
+          {
+            "id": "<extension>/src/components/ui/switch.tsx",
+            "bytes": 946
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-use-is-hydrated@0.1.3_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-use-is-hydrated/dist/index.mjs",
+            "bytes": 929
+          },
+          {
+            "id": "<extension>/src/video/loop-window.ts",
+            "bytes": 921
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/cmdk@1.1.1_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19.3.0_react-dom@19.3.0_react@19.3.0__react@19.3.0/node_modules/cmdk/dist/chunk-NZJY6EH4.mjs",
+            "bytes": 920
+          },
+          {
+            "id": "<extension>/src/hooks/use-job-history-refresh.ts",
+            "bytes": 919
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/Icon.js",
+            "bytes": 899
+          },
+          {
+            "id": "<extension>/src/lib/generation-request.ts",
+            "bytes": 893
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-use-effect-event@0.0.5_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-use-effect-event/dist/index.mjs",
+            "bytes": 874
+          },
+          {
+            "id": "<extension>/src/video/metadata.ts",
+            "bytes": 845
+          },
+          {
+            "id": "<extension>/src/i18n/model-availability.ts",
+            "bytes": 841
+          },
+          {
+            "id": "<extension>/src/components/dialog-title-bar.tsx",
+            "bytes": 812
+          },
+          {
+            "id": "<extension>/src/lib/lesson-catalog.ts",
+            "bytes": 803
+          },
+          {
+            "id": "<extension>/src/video/caption-provenance.ts",
+            "bytes": 784
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/wand-sparkles.js",
+            "bytes": 758
+          },
+          {
+            "id": "<extension>/src/lib/time-display.ts",
+            "bytes": 735
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-portal@1.1.17_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react@19.3._k2mrxhjbwbr5vl3gwk4zbzzley/node_modules/@radix-ui/react-portal/dist/index.mjs",
+            "bytes": 695
+          },
+          {
+            "id": "<extension>/src/lib/drive-connection.ts",
+            "bytes": 678
+          },
+          {
+            "id": "<extension>/src/components/ui/sonner.tsx",
+            "bytes": 670
+          },
+          {
+            "id": "<extension>/src/video/cue-follow.ts",
+            "bytes": 656
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/volume-2.js",
+            "bytes": 585
+          },
+          {
+            "id": "<repo>/packages/core/src/sentence-analysis.ts",
+            "bytes": 579
+          },
+          {
+            "id": "<extension>/src/lib/backup-feedback.ts",
+            "bytes": 575
+          },
+          {
+            "id": "<extension>/src/components/app-panel.tsx",
+            "bytes": 573
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-remove-scroll@2.7.2_@types+react@19.3.0_react@19.3.0/node_modules/react-remove-scroll/dist/es2015/aggresiveCapture.js",
+            "bytes": 560
+          },
+          {
+            "id": "<extension>/src/components/disclosure.tsx",
+            "bytes": 557
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-style-singleton@2.2.3_@types+react@19.3.0_react@19.3.0/node_modules/react-style-singleton/dist/es2015/component.js",
+            "bytes": 549
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/use-callback-ref@1.3.3_@types+react@19.3.0_react@19.3.0/node_modules/use-callback-ref/dist/es2015/assignRef.js",
+            "bytes": 548
+          },
+          {
+            "id": "<repo>/packages/core/src/source-uncertainty.ts",
+            "bytes": 546
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-style-singleton@2.2.3_@types+react@19.3.0_react@19.3.0/node_modules/react-style-singleton/dist/es2015/hook.js",
+            "bytes": 546
+          },
+          {
+            "id": "<extension>/src/components/ui/progress.tsx",
+            "bytes": 542
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/createLucideIcon.js",
+            "bytes": 538
+          },
+          {
+            "id": "<extension>/src/components/ui/input.tsx",
+            "bytes": 533
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/use-sidecar@1.1.3_@types+react@19.3.0_react@19.3.0/node_modules/use-sidecar/dist/es2015/exports.js",
+            "bytes": 528
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-id@1.1.4_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-id/dist/index.mjs",
+            "bytes": 527
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/index.js",
+            "bytes": 520
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/whole-word.js",
+            "bytes": 518
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/client.js",
+            "bytes": 512
+          },
+          {
+            "id": "<extension>/src/components/ui/textarea.tsx",
+            "bytes": 503
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/refresh-cw.js",
+            "bytes": 499
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-use-previous@1.1.4_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-use-previous/dist/index.mjs",
+            "bytes": 479
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/folder-open.js",
+            "bytes": 472
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/triangle-alert.js",
+            "bytes": 466
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/shared/src/utils.js",
+            "bytes": 464
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/repeat-2.js",
+            "bytes": 449
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/settings-2.js",
+            "bytes": 439
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/circle-alert.js",
+            "bytes": 437
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-use-callback-ref@1.1.4_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-use-callback-ref/dist/index.mjs",
+            "bytes": 436
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/upload.js",
+            "bytes": 430
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/external-link.js",
+            "bytes": 423
+          },
+          {
+            "id": "<extension>/src/components/page-section.tsx",
+            "bytes": 419
+          },
+          {
+            "id": "<extension>/src/lib/searchable-options.ts",
+            "bytes": 414
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/ellipsis.js",
+            "bytes": 407
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/library.js",
+            "bytes": 407
+          },
+          {
+            "id": "<extension>/src/i18n/motion.ts",
+            "bytes": 406
+          },
+          {
+            "id": "<extension>/src/main.tsx",
+            "bytes": 406
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/history.js",
+            "bytes": 405
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/defaultAttributes.js",
+            "bytes": 404
+          },
+          {
+            "id": "<extension>/src/video/reader-health.ts",
+            "bytes": 402
+          },
+          {
+            "id": "<extension>/src/video/draft-navigation.ts",
+            "bytes": 388
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/pause.js",
+            "bytes": 384
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/info.js",
+            "bytes": 373
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-direction@1.1.4_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-direction/dist/index.mjs",
+            "bytes": 373
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/skip-forward.js",
+            "bytes": 365
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/clsx@2.1.1/node_modules/clsx/dist/clsx.mjs",
+            "bytes": 362
+          },
+          {
+            "id": "<repo>/packages/core/src/netflix.ts",
+            "bytes": 360
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/skip-back.js",
+            "bytes": 359
+          },
+          {
+            "id": "<extension>/src/video/command-errors.ts",
+            "bytes": 352
+          },
+          {
+            "id": "<extension>/src/components/ui/badge.tsx",
+            "bytes": 350
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-remove-scroll-bar@2.3.8_@types+react@19.3.0_react@19.3.0/node_modules/react-remove-scroll-bar/dist/es2015/constants.js",
+            "bytes": 346
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/chevrons-up-down.js",
+            "bytes": 338
+          },
+          {
+            "id": "<extension>/src/lib/export-markdown.ts",
+            "bytes": 335
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/search.js",
+            "bytes": 334
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/arrow-left.js",
+            "bytes": 325
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-visually-hidden@1.2.11_@types+react-dom@19.3.0_@types+react@19.3.0__@types+re_n6jx6dzvh44dfkh6bwen4iojya/node_modules/@radix-ui/react-visually-hidden/dist/index.mjs",
+            "bytes": 321
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/x.js",
+            "bytes": 309
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/square.js",
+            "bytes": 304
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/loader-circle.js",
+            "bytes": 298
+          },
+          {
+            "id": "<extension>/src/components/ui/card.tsx",
+            "bytes": 296
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/chevron-right.js",
+            "bytes": 284
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/chevron-left.js",
+            "bytes": 283
+          },
+          {
+            "id": "<extension>/src/lib/drive-reconnection.ts",
+            "bytes": 283
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/chevron-down.js",
+            "bytes": 281
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/play.js",
+            "bytes": 281
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/chevron-up.js",
+            "bytes": 275
+          },
+          {
+            "id": "<extension>/src/video/index.ts",
+            "bytes": 275
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/check.js",
+            "bytes": 268
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+number@1.1.3/node_modules/@radix-ui/number/dist/index.mjs",
+            "bytes": 262
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react@19.3.0/node_modules/react/jsx-runtime.js",
+            "bytes": 239
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-remove-scroll@2.7.2_@types+react@19.3.0_react@19.3.0/node_modules/react-remove-scroll/dist/es2015/Combination.js",
+            "bytes": 235
+          },
+          {
+            "id": "<extension>/src/lib/operation-cancellation.ts",
+            "bytes": 228
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/scheduler@0.28.0/node_modules/scheduler/index.js",
+            "bytes": 226
+          },
+          {
+            "id": "<extension>/src/i18n/agent-model-preferences.ts",
+            "bytes": 208
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react@19.3.0/node_modules/react/index.js",
+            "bytes": 194
+          },
+          {
+            "id": "<extension>/src/components/video-metadata-button.tsx",
+            "bytes": 159
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/get-nonce@1.0.1/node_modules/get-nonce/dist/es2015/index.js",
+            "bytes": 145
+          },
+          {
+            "id": "\u0000commonjsHelpers.js",
+            "bytes": 140
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-use-layout-effect@1.1.4_@types+react@19.3.0_react@19.3.0/node_modules/@radix-ui/react-use-layout-effect/dist/index.mjs",
+            "bytes": 116
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/index.js?commonjs-es-import",
+            "bytes": 112
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react@19.3.0/node_modules/react/index.js?commonjs-es-import",
+            "bytes": 100
+          },
+          {
+            "id": "<extension>/src/i18n/agent-display.ts",
+            "bytes": 98
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-remove-scroll@2.7.2_@types+react@19.3.0_react@19.3.0/node_modules/react-remove-scroll/dist/es2015/sidecar.js",
+            "bytes": 62
+          },
+          {
+            "id": "<extension>/src/lib/utils.ts",
+            "bytes": 60
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react@19.3.0/node_modules/react/jsx-runtime.js?commonjs-es-import",
+            "bytes": 44
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-remove-scroll@2.7.2_@types+react@19.3.0_react@19.3.0/node_modules/react-remove-scroll/dist/es2015/medium.js",
+            "bytes": 38
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react@19.3.0/node_modules/react/cjs/react-jsx-runtime.production.js?commonjs-exports",
+            "bytes": 36
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/client.js?commonjs-es-import",
+            "bytes": 36
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/cjs/react-dom-client.production.js?commonjs-exports",
+            "bytes": 35
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react@19.3.0/node_modules/react/jsx-runtime.js?commonjs-module",
+            "bytes": 31
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/scheduler@0.28.0/node_modules/scheduler/index.js?commonjs-module",
+            "bytes": 30
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/scheduler@0.28.0/node_modules/scheduler/cjs/scheduler.production.js?commonjs-exports",
+            "bytes": 30
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/index.js?commonjs-module",
+            "bytes": 29
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/cjs/react-dom.production.js?commonjs-exports",
+            "bytes": 29
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/client.js?commonjs-module",
+            "bytes": 27
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react@19.3.0/node_modules/react/index.js?commonjs-module",
+            "bytes": 26
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/react@19.3.0/node_modules/react/cjs/react.production.js?commonjs-exports",
+            "bytes": 26
+          },
+          {
+            "id": "<extension>/src/styles.css",
+            "bytes": 0
+          },
+          {
+            "id": "<extension>sidepanel.html",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "file": "assets/notification-navigation-CmEJpd3E.js",
+        "bytes": 214889,
+        "gzipBytes": 61005,
+        "isEntry": false,
+        "imports": [],
+        "dynamicImports": [],
+        "modules": [
+          {
+            "id": "<repo>/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js",
+            "bytes": 121959
+          },
+          {
+            "id": "<extension>/src/i18n/messages.ts",
+            "bytes": 60791
+          },
+          {
+            "id": "<repo>/packages/core/src/learning-points.ts",
+            "bytes": 22211
+          },
+          {
+            "id": "<extension>/src/native/generation-controller.ts",
+            "bytes": 17846
+          },
+          {
+            "id": "<repo>/packages/core/src/jobs.ts",
+            "bytes": 9920
+          },
+          {
+            "id": "<repo>/packages/core/src/schema.ts",
+            "bytes": 9279
+          },
+          {
+            "id": "<repo>/packages/core/src/native-messaging.ts",
+            "bytes": 8024
+          },
+          {
+            "id": "<extension>/src/i18n/settings-layout.ts",
+            "bytes": 7490
+          },
+          {
+            "id": "<repo>/packages/core/src/protocol-schema.ts",
+            "bytes": 7379
+          },
+          {
+            "id": "<extension>/src/i18n/custom-content.ts",
+            "bytes": 6276
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/locales/en.js",
+            "bytes": 5471
+          },
+          {
+            "id": "<repo>/packages/core/src/speech.ts",
+            "bytes": 5035
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/ZodError.js",
+            "bytes": 4155
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/helpers/util.js",
+            "bytes": 4026
+          },
+          {
+            "id": "<extension>/src/i18n/preferences.ts",
+            "bytes": 3964
+          },
+          {
+            "id": "<repo>/packages/core/src/custom.ts",
+            "bytes": 3697
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/helpers/parseUtil.js",
+            "bytes": 3394
+          },
+          {
+            "id": "<repo>/packages/core/src/pi-providers.ts",
+            "bytes": 3275
+          },
+          {
+            "id": "<extension>/src/lib/preferences-store.ts",
+            "bytes": 3199
+          },
+          {
+            "id": "<repo>/packages/core/src/execution.ts",
+            "bytes": 2687
+          },
+          {
+            "id": "<repo>/packages/core/src/quality.ts",
+            "bytes": 2549
+          },
+          {
+            "id": "<repo>/packages/core/src/source-units.ts",
+            "bytes": 2541
+          },
+          {
+            "id": "<extension>/src/native/analysis-notifications.ts",
+            "bytes": 2055
+          },
+          {
+            "id": "<repo>/packages/core/src/analysis-range.ts",
+            "bytes": 1705
+          },
+          {
+            "id": "<repo>/packages/core/src/preferences.ts",
+            "bytes": 1430
+          },
+          {
+            "id": "<repo>/packages/core/src/languages.ts",
+            "bytes": 1125
+          },
+          {
+            "id": "<repo>/packages/core/src/explanations.ts",
+            "bytes": 889
+          },
+          {
+            "id": "<extension>/src/native/notification-navigation.ts",
+            "bytes": 853
+          },
+          {
+            "id": "<extension>/src/lib/contextual-profile.ts",
+            "bytes": 538
+          },
+          {
+            "id": "<repo>/packages/core/src/pronunciation-reading.ts",
+            "bytes": 518
+          },
+          {
+            "id": "<repo>/packages/core/src/usage-estimate.ts",
+            "bytes": 503
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/helpers/errorUtil.js",
+            "bytes": 292
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/errors.js",
+            "bytes": 88
+          }
+        ]
+      },
+      {
+        "file": "assets/subtitle-editor-YjPA4C5K.js",
+        "bytes": 15112,
+        "gzipBytes": 5865,
+        "isEntry": false,
+        "imports": [
+          "assets/sidepanel-BZ70XUCP.js",
+          "assets/alert-dialog-C_OFkzo2.js",
+          "assets/notification-navigation-CmEJpd3E.js"
+        ],
+        "dynamicImports": [],
+        "modules": [
+          {
+            "id": "<extension>/src/components/subtitle-editor.tsx",
+            "bytes": 28837
+          },
+          {
+            "id": "<extension>/src/i18n/subtitle-editor.ts",
+            "bytes": 1911
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/book-open.js",
+            "bytes": 466
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/plus.js",
+            "bytes": 309
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/minus.js",
+            "bytes": 261
+          }
+        ]
+      },
+      {
+        "file": "assets/drive-backup-settings-BYfvmUp1.js",
+        "bytes": 6381,
+        "gzipBytes": 2035,
+        "isEntry": false,
+        "imports": ["assets/sidepanel-BZ70XUCP.js", "assets/notification-navigation-CmEJpd3E.js"],
+        "dynamicImports": [],
+        "modules": [
+          {
+            "id": "<extension>/src/components/drive-backup-settings.tsx",
+            "bytes": 11824
+          }
+        ]
+      },
+      {
+        "file": "assets/speech-settings-C9TmFDj9.js",
+        "bytes": 5132,
+        "gzipBytes": 2041,
+        "isEntry": false,
+        "imports": [
+          "assets/sidepanel-BZ70XUCP.js",
+          "assets/notification-navigation-CmEJpd3E.js",
+          "assets/siri-voice-downloads-B93Iq-zp.js",
+          "assets/alert-dialog-C_OFkzo2.js"
+        ],
+        "dynamicImports": [],
+        "modules": [
+          {
+            "id": "<extension>/src/components/speech-settings.tsx",
+            "bytes": 8708
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/flask-conical.js",
+            "bytes": 502
+          }
+        ]
+      },
+      {
+        "file": "assets/siri-voice-downloads-B93Iq-zp.js",
+        "bytes": 10749,
+        "gzipBytes": 3851,
+        "isEntry": false,
+        "imports": [
+          "assets/sidepanel-BZ70XUCP.js",
+          "assets/notification-navigation-CmEJpd3E.js",
+          "assets/alert-dialog-C_OFkzo2.js"
+        ],
+        "dynamicImports": [],
+        "modules": [
+          {
+            "id": "<extension>/src/components/siri-voice-downloads.tsx",
+            "bytes": 21572
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/trash-2.js",
+            "bytes": 554
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/download.js",
+            "bytes": 437
+          }
+        ]
+      },
+      {
+        "file": "assets/pi-settings-DXYmv2tk.js",
+        "bytes": 14340,
+        "gzipBytes": 5103,
+        "isEntry": false,
+        "imports": [
+          "assets/sidepanel-BZ70XUCP.js",
+          "assets/alert-dialog-C_OFkzo2.js",
+          "assets/notification-navigation-CmEJpd3E.js"
+        ],
+        "dynamicImports": [],
+        "modules": [
+          {
+            "id": "<extension>/src/components/pi-settings.tsx",
+            "bytes": 21050
+          },
+          {
+            "id": "<extension>/src/hooks/use-pi-auth.ts",
+            "bytes": 3979
+          },
+          {
+            "id": "<extension>/src/components/copy-button.tsx",
+            "bytes": 1962
+          },
+          {
+            "id": "<extension>/src/lib/pi-auth-state.ts",
+            "bytes": 1087
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/eye-off.js",
+            "bytes": 661
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/lucide-react@0.468.0_react@19.3.0/node_modules/lucide-react/dist/esm/icons/eye.js",
+            "bytes": 443
+          }
+        ]
+      },
+      {
+        "file": "assets/alert-dialog-C_OFkzo2.js",
+        "bytes": 3257,
+        "gzipBytes": 1157,
+        "isEntry": false,
+        "imports": ["assets/sidepanel-BZ70XUCP.js"],
+        "dynamicImports": [],
+        "modules": [
+          {
+            "id": "<repo>/node_modules/.pnpm/@radix-ui+react-alert-dialog@1.1.23_@types+react-dom@19.3.0_@types+react@19.3.0__@types+react_ydntzbhbisfeo5rmuynxcrv45a/node_modules/@radix-ui/react-alert-dialog/dist/index.mjs",
+            "bytes": 5039
+          },
+          {
+            "id": "<extension>/src/components/ui/alert-dialog.tsx",
+            "bytes": 2316
+          }
+        ]
+      },
+      {
+        "file": "assets/custom-viewer-BbfqICwU.js",
+        "bytes": 133956,
+        "gzipBytes": 42099,
+        "isEntry": false,
+        "imports": ["assets/sidepanel-BZ70XUCP.js", "assets/notification-navigation-CmEJpd3E.js"],
+        "dynamicImports": [],
+        "modules": [
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-from-markdown@2.0.3/node_modules/mdast-util-from-markdown/lib/index.js",
+            "bytes": 28483
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/unified@11.0.5/node_modules/unified/lib/index.js",
+            "bytes": 28478
+          },
+          {
+            "id": "<extension>/src/components/custom-viewer.tsx",
+            "bytes": 20577
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/hast-util-to-jsx-runtime@2.3.6/node_modules/hast-util-to-jsx-runtime/lib/index.js",
+            "bytes": 19383
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/html-flow.js",
+            "bytes": 17496
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/vfile@6.0.3/node_modules/vfile/lib/index.js",
+            "bytes": 16722
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark@4.0.3/node_modules/micromark/lib/create-tokenizer.js",
+            "bytes": 14325
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/svg.js",
+            "bytes": 14162
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/html-text.js",
+            "bytes": 13153
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/hast-util-sanitize@5.0.2/node_modules/hast-util-sanitize/lib/index.js",
+            "bytes": 12721
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/label-end.js",
+            "bytes": 12231
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/vfile@6.0.3/node_modules/vfile/lib/minpath.browser.js",
+            "bytes": 11469
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark@4.0.3/node_modules/micromark/lib/initialize/document.js",
+            "bytes": 10806
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/html.js",
+            "bytes": 8676
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/code-fenced.js",
+            "bytes": 8474
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/state.js",
+            "bytes": 8251
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-subtokenize@2.1.0/node_modules/micromark-util-subtokenize/lib/splice-buffer.js",
+            "bytes": 7610
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/vfile-message@4.0.3/node_modules/vfile-message/lib/index.js",
+            "bytes": 7482
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/react-markdown@10.1.0_@types+react@19.3.0_react@19.3.0/node_modules/react-markdown/lib/index.js",
+            "bytes": 7216
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/attention.js",
+            "bytes": 7030
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-character@2.1.1/node_modules/micromark-util-character/index.js",
+            "bytes": 6984
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-subtokenize@2.1.0/node_modules/micromark-util-subtokenize/index.js",
+            "bytes": 6607
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/list.js",
+            "bytes": 6020
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-edit-map@1.0.0/node_modules/micromark-util-edit-map/index.js",
+            "bytes": 5861
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark@4.0.3/node_modules/micromark/lib/initialize/text.js",
+            "bytes": 5575
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/inline-style-parser@0.2.7/node_modules/inline-style-parser/cjs/index.js",
+            "bytes": 5403
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/footer.js",
+            "bytes": 5245
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/definition.js",
+            "bytes": 5152
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/trough@2.2.0/node_modules/trough/lib/index.js",
+            "bytes": 5005
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/remark-rehype@11.1.2/node_modules/remark-rehype/lib/index.js",
+            "bytes": 4786
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/code-text.js",
+            "bytes": 4741
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/hast-util-sanitize@5.0.2/node_modules/hast-util-sanitize/lib/schema.js",
+            "bytes": 4741
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/unist-util-visit-parents@6.0.2/node_modules/unist-util-visit-parents/lib/index.js",
+            "bytes": 4727
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/autolink.js",
+            "bytes": 4710
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/unist-util-is@6.0.1/node_modules/unist-util-is/lib/index.js",
+            "bytes": 4524
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@ungap+structured-clone@1.4.0/node_modules/@ungap/structured-clone/esm/serialize.js",
+            "bytes": 4469
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-factory-destination@2.0.1/node_modules/micromark-factory-destination/index.js",
+            "bytes": 4285
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/setext-underline.js",
+            "bytes": 4173
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/heading-atx.js",
+            "bytes": 4104
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/extend@3.0.2/node_modules/extend/index.js",
+            "bytes": 3550
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/index.js",
+            "bytes": 3344
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/code-indented.js",
+            "bytes": 3280
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/character-reference.js",
+            "bytes": 3122
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-factory-label@2.0.1/node_modules/micromark-factory-label/index.js",
+            "bytes": 3119
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/content.js",
+            "bytes": 3104
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-factory-title@2.0.1/node_modules/micromark-factory-title/index.js",
+            "bytes": 2935
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark@4.0.3/node_modules/micromark/lib/preprocess.js",
+            "bytes": 2923
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/list-item.js",
+            "bytes": 2906
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@ungap+structured-clone@1.4.0/node_modules/@ungap/structured-clone/esm/deserialize.js",
+            "bytes": 2735
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/unist-util-visit@5.1.0/node_modules/unist-util-visit/lib/index.js",
+            "bytes": 2699
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-factory-space@2.1.0/node_modules/micromark-factory-space/index.js",
+            "bytes": 2640
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-string@4.0.0/node_modules/mdast-util-to-string/lib/index.js",
+            "bytes": 2618
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/block-quote.js",
+            "bytes": 2610
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-chunked@2.0.1/node_modules/micromark-util-chunked/index.js",
+            "bytes": 2314
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/find.js",
+            "bytes": 2227
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/unist-util-stringify-position@4.0.0/node_modules/unist-util-stringify-position/lib/index.js",
+            "bytes": 2123
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/label-start-image.js",
+            "bytes": 2075
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-combine-extensions@2.0.1/node_modules/micromark-util-combine-extensions/index.js",
+            "bytes": 2070
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/unist-util-position@5.0.0/node_modules/unist-util-position/lib/index.js",
+            "bytes": 1915
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/vfile@6.0.3/node_modules/vfile/lib/minurl.browser.js",
+            "bytes": 1783
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/thematic-break.js",
+            "bytes": 1734
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/table-row.js",
+            "bytes": 1690
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/style-to-js@1.1.21/node_modules/style-to-js/cjs/utilities.js",
+            "bytes": 1663
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-html-tag-name@2.0.1/node_modules/micromark-util-html-tag-name/index.js",
+            "bytes": 1653
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/footnote-reference.js",
+            "bytes": 1622
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark@4.0.3/node_modules/micromark/lib/initialize/content.js",
+            "bytes": 1597
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark@4.0.3/node_modules/micromark/lib/constructs.js",
+            "bytes": 1566
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/trim-lines@3.0.1/node_modules/trim-lines/index.js",
+            "bytes": 1541
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/aria.js",
+            "bytes": 1531
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-sanitize-uri@2.0.1/node_modules/micromark-util-sanitize-uri/index.js",
+            "bytes": 1528
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/style-to-object@1.0.14/node_modules/style-to-object/cjs/index.js",
+            "bytes": 1468
+          },
+          {
+            "id": "<extension>/src/components/custom-pronunciation.tsx",
+            "bytes": 1422
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/unified@11.0.5/node_modules/unified/lib/callable-instance.js",
+            "bytes": 1400
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/table.js",
+            "bytes": 1321
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark@4.0.3/node_modules/micromark/lib/initialize/flow.js",
+            "bytes": 1319
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/label-start-link.js",
+            "bytes": 1243
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-normalize-identifier@2.0.1/node_modules/micromark-util-normalize-identifier/index.js",
+            "bytes": 1230
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/list.js",
+            "bytes": 1190
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/revert.js",
+            "bytes": 1141
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/util/defined-info.js",
+            "bytes": 1131
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/code.js",
+            "bytes": 1131
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/character-escape.js",
+            "bytes": 1105
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/vfile@6.0.3/node_modules/vfile/lib/minurl.shared.js",
+            "bytes": 1077
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-factory-whitespace@2.0.1/node_modules/micromark-factory-whitespace/index.js",
+            "bytes": 1062
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-decode-string@2.0.1/node_modules/micromark-util-decode-string/index.js",
+            "bytes": 1056
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-decode-numeric-character-reference@2.0.2/node_modules/micromark-util-decode-numeric-character-reference/index.js",
+            "bytes": 1054
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark@4.0.3/node_modules/micromark/lib/parse.js",
+            "bytes": 1054
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/remark-parse@11.0.0/node_modules/remark-parse/lib/index.js",
+            "bytes": 1041
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/decode-named-character-reference@1.3.0/node_modules/decode-named-character-reference/index.dom.js",
+            "bytes": 1038
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/blank-line.js",
+            "bytes": 1000
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/link-reference.js",
+            "bytes": 986
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/image-reference.js",
+            "bytes": 973
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/partial-non-lazy-continuation.js",
+            "bytes": 969
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/hard-break-escape.js",
+            "bytes": 914
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/util/create.js",
+            "bytes": 894
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/hast-util-whitespace@3.0.0/node_modules/hast-util-whitespace/lib/index.js",
+            "bytes": 884
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/style-to-js@1.1.21/node_modules/style-to-js/cjs/index.js",
+            "bytes": 878
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/hast-to-react.js",
+            "bytes": 852
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/comma-separated-tokens@2.0.3/node_modules/comma-separated-tokens/index.js",
+            "bytes": 831
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-resolve-all@2.0.1/node_modules/micromark-util-resolve-all/index.js",
+            "bytes": 781
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/util/info.js",
+            "bytes": 775
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/image.js",
+            "bytes": 773
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/estree-util-is-identifier-name@3.0.0/node_modules/estree-util-is-identifier-name/lib/index.js",
+            "bytes": 756
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/link.js",
+            "bytes": 712
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@ungap+structured-clone@1.4.0/node_modules/@ungap/structured-clone/esm/index.js",
+            "bytes": 693
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-util-classify-character@2.0.1/node_modules/micromark-util-classify-character/index.js",
+            "bytes": 685
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/index.js",
+            "bytes": 681
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/table-cell.js",
+            "bytes": 679
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/inline-code.js",
+            "bytes": 674
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/html.js",
+            "bytes": 642
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/html-url-attributes@3.0.1/node_modules/html-url-attributes/lib/index.js",
+            "bytes": 630
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/util/schema.js",
+            "bytes": 585
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/blockquote.js",
+            "bytes": 575
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/util/merge.js",
+            "bytes": 568
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/break.js",
+            "bytes": 562
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/text.js",
+            "bytes": 552
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark-core-commonmark@2.0.4/node_modules/micromark-core-commonmark/lib/line-ending.js",
+            "bytes": 550
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/heading.js",
+            "bytes": 549
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/thematic-break.js",
+            "bytes": 548
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/paragraph.js",
+            "bytes": 544
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/delete.js",
+            "bytes": 541
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/emphasis.js",
+            "bytes": 541
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/root.js",
+            "bytes": 541
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/mdast-util-to-hast@13.2.1/node_modules/mdast-util-to-hast/lib/handlers/strong.js",
+            "bytes": 537
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/rehype-sanitize@6.0.0/node_modules/rehype-sanitize/lib/index.js",
+            "bytes": 515
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/space-separated-tokens@2.0.2/node_modules/space-separated-tokens/index.js",
+            "bytes": 416
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/is-plain-obj@4.1.0/node_modules/is-plain-obj/index.js",
+            "bytes": 328
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/normalize.js",
+            "bytes": 320
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/util/types.js",
+            "bytes": 308
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/xlink.js",
+            "bytes": 303
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/util/case-sensitive-transform.js",
+            "bytes": 292
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/util/case-insensitive-transform.js",
+            "bytes": 289
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/micromark@4.0.3/node_modules/micromark/lib/postprocess.js",
+            "bytes": 249
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/@ungap+structured-clone@1.4.0/node_modules/@ungap/structured-clone/esm/types.js",
+            "bytes": 248
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/vfile@6.0.3/node_modules/vfile/lib/minproc.browser.js",
+            "bytes": 218
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/bail@2.0.2/node_modules/bail/index.js",
+            "bytes": 199
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/xml.js",
+            "bytes": 185
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/lib/xmlns.js",
+            "bytes": 172
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/property-information@7.2.0/node_modules/property-information/index.js",
+            "bytes": 172
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/extend@3.0.2/node_modules/extend/index.js?commonjs-es-import",
+            "bytes": 104
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/style-to-js@1.1.21/node_modules/style-to-js/cjs/index.js?commonjs-es-import",
+            "bytes": 98
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/unist-util-visit-parents@6.0.2/node_modules/unist-util-visit-parents/lib/color.js",
+            "bytes": 82
+          },
+          {
+            "id": "<repo>/node_modules/.pnpm/devlop@1.1.0/node_modules/devlop/lib/default.js",
+            "bytes": 45
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/style-to-js@1.1.21/node_modules/style-to-js/cjs/utilities.js?commonjs-exports",
+            "bytes": 19
+          },
+          {
+            "id": "\u0000<repo>/node_modules/.pnpm/style-to-object@1.0.14/node_modules/style-to-object/cjs/index.js?commonjs-exports",
+            "bytes": 15
+          }
+        ]
+      }
+    ]
+  }
+}

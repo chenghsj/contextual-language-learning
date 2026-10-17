@@ -1,3 +1,5 @@
+import { ContextualSceneReader } from "./components/contextual-scene-reader";
+import { VideoLibrary } from "./components/video-library";
 import { NOTIFICATION_ROUTE_KEY } from "./native/notification-navigation";
 import { wasOperationCancelled } from "./lib/operation-cancellation";
 import { DriveAccountMismatchError } from "./lib/drive-reconnection";
@@ -7,14 +9,10 @@ import { CreateFrame } from "./components/create-frame";
 import { AppearancePreferences } from "./components/appearance-preferences";
 import { connectDriveAndVerify } from "./lib/drive-connection";
 import { useJobHistoryRefresh } from "./hooks/use-job-history-refresh";
-import { SubtitleEditor } from "./components/subtitle-editor";
 import { VideoMetadataButton } from "./components/video-metadata-button";
 import { ActionFeedbackButton } from "./components/action-feedback-button";
 import { backupFeedbackResult } from "./lib/backup-feedback";
-import { DriveBackupSettings } from "./components/drive-backup-settings";
 import { SystemSpeechProvider } from "./components/system-speech";
-import { SpeechSettingsPanel } from "./components/speech-settings";
-import { SiriVoiceManagerPage } from "./components/siri-voice-downloads";
 import { speechDownloadCopy } from "./i18n/speech-downloads";
 import { RequestBackupSwitch } from "./components/request-backup-switch";
 import { RequestFolderSelection } from "./components/request-folder-selection";
@@ -38,7 +36,8 @@ import { IconTooltip, restoreFocusWithoutTooltip } from "./components/icon-toolt
 import { AnalysisRangePicker } from "./components/analysis-range";
 import { analysisRangeCopy } from "./i18n/analysis-range";
 import { CustomPrompt } from "./components/custom-prompt";
-import { CustomViewer, exportMarkdown } from "./components/custom-viewer";
+import { exportMarkdown } from "./lib/export-markdown";
+import { DeferredView, deferView } from "./components/deferred-view";
 import { ExecutionDetails } from "./components/execution-details";
 import { customContentCopy } from "./i18n/custom-content";
 import { Dialog, DialogContent, DialogHeader, DialogDescription } from "./components/ui/dialog";
@@ -116,7 +115,6 @@ import {
   type OnceRequest,
 } from "./native/host-client";
 import { AiModelSelection } from "./components/ai-model-selection";
-import { PiSettings } from "./components/pi-settings";
 import { agentDisplayName } from "./i18n/agent-display";
 import { piCopy } from "./i18n/pi";
 import { HostConnectionSettings } from "./components/host-connection-settings";
@@ -128,7 +126,6 @@ import { SidePanelNavigation, type SidePanelPage } from "./components/side-panel
 import { Button } from "./components/ui/button";
 import { AppPanel } from "./components/app-panel";
 import { TaskHistory, jobStatusKeys } from "./components/task-history";
-import { VideoLibrary } from "./components/video-library";
 import { Input } from "./components/ui/input";
 import {
   Select,
@@ -140,7 +137,6 @@ import {
 } from "./components/ui/select";
 import { SearchableSelectField } from "./components/searchable-select-field";
 import { Badge } from "./components/ui/badge";
-import { ContextualSceneReader } from "./components/contextual-scene-reader";
 import { NoticeViewport } from "./components/notice-viewport";
 import { toast } from "sonner";
 import { SettingInfo } from "./components/setting-info";
@@ -159,6 +155,29 @@ import {
 } from "./i18n/preferences";
 
 import { getPreferencesStore } from "./lib/preferences-store";
+
+const SubtitleEditor = deferView(() =>
+  import("./components/subtitle-editor").then(module => ({ default: module.SubtitleEditor })),
+);
+const DriveBackupSettings = deferView(() =>
+  import("./components/drive-backup-settings").then(module => ({
+    default: module.DriveBackupSettings,
+  })),
+);
+const SpeechSettingsPanel = deferView(() =>
+  import("./components/speech-settings").then(module => ({ default: module.SpeechSettingsPanel })),
+);
+const SiriVoiceManagerPage = deferView(() =>
+  import("./components/siri-voice-downloads").then(module => ({
+    default: module.SiriVoiceManagerPage,
+  })),
+);
+const PiSettings = deferView(() =>
+  import("./components/pi-settings").then(module => ({ default: module.PiSettings })),
+);
+const CustomViewer = deferView(() =>
+  import("./components/custom-viewer").then(module => ({ default: module.CustomViewer })),
+);
 
 type Page = SidePanelPage;
 type Installed = Record<string, boolean>;
@@ -1757,6 +1776,13 @@ function AppContent() {
     if (page === "lessons") void loadLessons();
   }, [page, backup.accountId, driveAccounts.length]);
 
+  const backToLibrary = () => {
+    setPage("lessons");
+    window.requestAnimationFrame(() =>
+      restoreFocusWithoutTooltip(window.document.getElementById("page-nav-lessons")),
+    );
+  };
+
   return (
     <div
       className={
@@ -1868,23 +1894,29 @@ function AppContent() {
           })}
           preview={
             subtitlePreview && (
-              <SubtitleEditor
-                draft={subtitleDraft}
-                cues={cues}
+              <DeferredView
                 locale={uiLocale}
-                duration={videoDurationMs}
-                connected={videoConnection.connected && !subtitleReaderBlocked}
-                adapter={analysisAdapter}
-                sourceUrl={sourceUrl}
-                onPlaybackError={setError}
-                onSeek={ms => {
-                  void analysisAdapter
-                    .seek?.(sourceUrl, ms)
-                    .catch(error => setError(String(error)));
-                }}
                 onBack={() => createFlow.edit({ subtitlePreview: false })}
-                saveStatus={subtitleSaveStatus}
-              />
+                backLabel={subtitleLayout.close}
+              >
+                <SubtitleEditor
+                  draft={subtitleDraft}
+                  cues={cues}
+                  locale={uiLocale}
+                  duration={videoDurationMs}
+                  connected={videoConnection.connected && !subtitleReaderBlocked}
+                  adapter={analysisAdapter}
+                  sourceUrl={sourceUrl}
+                  onPlaybackError={setError}
+                  onSeek={ms => {
+                    void analysisAdapter
+                      .seek?.(sourceUrl, ms)
+                      .catch(error => setError(String(error)));
+                  }}
+                  onBack={() => createFlow.edit({ subtitlePreview: false })}
+                  saveStatus={subtitleSaveStatus}
+                />
+              </DeferredView>
             )
           }
         >
@@ -2810,10 +2842,12 @@ function AppContent() {
 
                   {settingsSection === "speech-resources" && (
                     <PageSection className="first:pt-2">
-                      <SiriVoiceManagerPage
-                        locale={uiLocale}
-                        defaultLanguage={speechSettingsLanguage ?? profile.targetLanguage}
-                      />
+                      <DeferredView locale={uiLocale}>
+                        <SiriVoiceManagerPage
+                          locale={uiLocale}
+                          defaultLanguage={speechSettingsLanguage ?? profile.targetLanguage}
+                        />
+                      </DeferredView>
                     </PageSection>
                   )}
                   {settingsSection === "general" && (
@@ -2863,28 +2897,30 @@ function AppContent() {
                         onCompleted={setAnalysisNotificationsEnabled}
                         onAttention={setAttentionNotificationsEnabled}
                       />
-                      <SpeechSettingsPanel
-                        locale={uiLocale}
-                        defaultLanguage={speechSettingsLanguage ?? profile.targetLanguage}
-                        onManageVoices={language => {
-                          setSpeechManageFocus(false);
-                          setSpeechSettingsLanguage(language);
-                          speechSettingsScroll.current =
-                            window.document.querySelector('[data-ui="sheet-scroll"]')?.scrollTop ??
-                            0;
-                          setSettingsSection("speech-resources");
-                          window.requestAnimationFrame(() => {
-                            const scroll = window.document.querySelector(
-                              '[data-ui="sheet-scroll"]',
-                            );
-                            if (scroll) scroll.scrollTop = 0;
-                            speechManagerHeading.current?.focus({ preventScroll: true });
-                          });
-                        }}
-                        restoreManageFocus={
-                          speechManageFocus ? () => setSpeechManageFocus(false) : undefined
-                        }
-                      />
+                      <DeferredView locale={uiLocale}>
+                        <SpeechSettingsPanel
+                          locale={uiLocale}
+                          defaultLanguage={speechSettingsLanguage ?? profile.targetLanguage}
+                          onManageVoices={language => {
+                            setSpeechManageFocus(false);
+                            setSpeechSettingsLanguage(language);
+                            speechSettingsScroll.current =
+                              window.document.querySelector('[data-ui="sheet-scroll"]')
+                                ?.scrollTop ?? 0;
+                            setSettingsSection("speech-resources");
+                            window.requestAnimationFrame(() => {
+                              const scroll = window.document.querySelector(
+                                '[data-ui="sheet-scroll"]',
+                              );
+                              if (scroll) scroll.scrollTop = 0;
+                              speechManagerHeading.current?.focus({ preventScroll: true });
+                            });
+                          }}
+                          restoreManageFocus={
+                            speechManageFocus ? () => setSpeechManageFocus(false) : undefined
+                          }
+                        />
+                      </DeferredView>
                     </PageSection>
                   )}
                   {settingsSection === "ai" && (
@@ -2919,14 +2955,16 @@ function AppContent() {
                           }}
                         />
                       </div>
-                      <PiSettings
-                        locale={uiLocale}
-                        available={hostReady}
-                        selectedProvider={agent.provider}
-                        onSelect={selectAgent}
-                        onDirty={setUnsavedCredentials}
-                        onChanged={checkHost}
-                      />
+                      <DeferredView locale={uiLocale}>
+                        <PiSettings
+                          locale={uiLocale}
+                          available={hostReady}
+                          selectedProvider={agent.provider}
+                          onSelect={selectAgent}
+                          onDirty={setUnsavedCredentials}
+                          onChanged={checkHost}
+                        />
+                      </DeferredView>
                     </PageSection>
                   )}
                   {settingsSection === "storage" && (
@@ -2970,37 +3008,39 @@ function AppContent() {
                           </p>
                         </div>
                       </section>
-                      <DriveBackupSettings
-                        locale={uiLocale}
-                        backup={backup}
-                        accounts={driveAccounts}
-                        configured={driveConfigured}
-                        verified={driveAccessVerified}
-                        accessChecking={
-                          driveAccess?.accountId === selectedDriveId &&
-                          driveAccess?.status === "checking"
-                        }
-                        busy={storageBusy}
-                        error={driveConnectError}
-                        folderUrl={driveFolderUrl}
-                        jobs={jobs}
-                        phase={backupPhase}
-                        feedback={backupFeedback}
-                        onEnabled={enabled =>
-                          enabled
-                            ? void enableBackup()
-                            : setBackup(current => ({ ...current, enabled: false }))
-                        }
-                        onAccount={accountId => setBackup(current => ({ ...current, accountId }))}
-                        onConnect={() => void connectDrive()}
-                        onDisconnect={accountId => void disconnectDrive(accountId)}
-                        onRetryAccess={() => void enableBackup()}
-                        onOpenFolder={() =>
-                          driveFolderUrl && void chrome.tabs.create({ url: driveFolderUrl })
-                        }
-                        onBackup={() => void backupExistingLessons()}
-                        onRetryFailed={() => void retryFailedBackups()}
-                      />
+                      <DeferredView locale={uiLocale}>
+                        <DriveBackupSettings
+                          locale={uiLocale}
+                          backup={backup}
+                          accounts={driveAccounts}
+                          configured={driveConfigured}
+                          verified={driveAccessVerified}
+                          accessChecking={
+                            driveAccess?.accountId === selectedDriveId &&
+                            driveAccess?.status === "checking"
+                          }
+                          busy={storageBusy}
+                          error={driveConnectError}
+                          folderUrl={driveFolderUrl}
+                          jobs={jobs}
+                          phase={backupPhase}
+                          feedback={backupFeedback}
+                          onEnabled={enabled =>
+                            enabled
+                              ? void enableBackup()
+                              : setBackup(current => ({ ...current, enabled: false }))
+                          }
+                          onAccount={accountId => setBackup(current => ({ ...current, accountId }))}
+                          onConnect={() => void connectDrive()}
+                          onDisconnect={accountId => void disconnectDrive(accountId)}
+                          onRetryAccess={() => void enableBackup()}
+                          onOpenFolder={() =>
+                            driveFolderUrl && void chrome.tabs.create({ url: driveFolderUrl })
+                          }
+                          onBackup={() => void backupExistingLessons()}
+                          onRetryFailed={() => void retryFailedBackups()}
+                        />
+                      </DeferredView>
                     </PageSection>
                   )}
                   {settingsSection === "advanced" && (
@@ -3028,55 +3068,52 @@ function AppContent() {
         </Sheet>
         {basePage === "custom" && customDocument && (
           <main className="flex min-h-0 flex-1 flex-col" aria-label={customDocument.title}>
-            <CustomViewer
-              key={customDocument.id}
-              document={customDocument}
-              locale={uiLocale}
-              busy={storageBusy || generating}
-              backLabel={flow.backLibrary}
-              onBack={() => {
-                setPage("lessons");
-                window.requestAnimationFrame(() =>
-                  restoreFocusWithoutTooltip(window.document.getElementById("page-nav-lessons")),
-                );
-              }}
-              menuActions={[
-                { label: layout.activity, onSelect: openActivity },
-                {
-                  label: t("settings"),
-                  onSelect: () => {
-                    setReturnPage("custom");
-                    setSettingsSection(null);
-                    setPage("settings");
+            <DeferredView locale={uiLocale} onBack={backToLibrary} backLabel={flow.backLibrary}>
+              <CustomViewer
+                key={customDocument.id}
+                document={customDocument}
+                locale={uiLocale}
+                busy={storageBusy || generating}
+                backLabel={flow.backLibrary}
+                onBack={backToLibrary}
+                menuActions={[
+                  { label: layout.activity, onSelect: openActivity },
+                  {
+                    label: t("settings"),
+                    onSelect: () => {
+                      setReturnPage("custom");
+                      setSettingsSection(null);
+                      setPage("settings");
+                    },
                   },
-                },
-                { label: ux.web, onSelect: () => openWebReader(customDocument.id) },
-              ]}
-              onRename={title => customMutation("renameCustomDocument", title)}
-              onDelete={() => customMutation("deleteCustomDocument")}
-              onReuse={() => {
-                createFlow.edit({
-                  contentMode: "custom",
-                  customPrompt: customDocument.request.prompt,
-                  customContext: customDocument.request.context,
-                  createStep: 0,
-                });
-                setPage("create");
-              }}
-              onRegenerate={() => {
-                const snapshot = CustomGenerationRequestSchema.parse({
-                  ...customDocument.request,
-                  id: crypto.randomUUID(),
-                  previousDocumentId: customDocument.id,
-                  agent: {
-                    ...customDocument.request.agent,
-                    provider: customDocument.execution.provider,
-                    modelId: customDocument.execution.modelId,
-                  },
-                });
-                generationSession.start(snapshot, true);
-              }}
-            />
+                  { label: ux.web, onSelect: () => openWebReader(customDocument.id) },
+                ]}
+                onRename={title => customMutation("renameCustomDocument", title)}
+                onDelete={() => customMutation("deleteCustomDocument")}
+                onReuse={() => {
+                  createFlow.edit({
+                    contentMode: "custom",
+                    customPrompt: customDocument.request.prompt,
+                    customContext: customDocument.request.context,
+                    createStep: 0,
+                  });
+                  setPage("create");
+                }}
+                onRegenerate={() => {
+                  const snapshot = CustomGenerationRequestSchema.parse({
+                    ...customDocument.request,
+                    id: crypto.randomUUID(),
+                    previousDocumentId: customDocument.id,
+                    agent: {
+                      ...customDocument.request.agent,
+                      provider: customDocument.execution.provider,
+                      modelId: customDocument.execution.modelId,
+                    },
+                  });
+                  generationSession.start(snapshot, true);
+                }}
+              />
+            </DeferredView>
           </main>
         )}
         <Dialog
@@ -3112,12 +3149,7 @@ function AppContent() {
                 key={document.id}
                 fullscreen
                 backLabel={flow.backLibrary}
-                onBack={() => {
-                  setPage("lessons");
-                  window.requestAnimationFrame(() =>
-                    restoreFocusWithoutTooltip(window.document.getElementById("page-nav-lessons")),
-                  );
-                }}
+                onBack={backToLibrary}
                 menuActions={[
                   { label: layout.activity, onSelect: openActivity },
                   {

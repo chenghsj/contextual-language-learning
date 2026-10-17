@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "benchmark:load": "node scripts/benchmark-load.mjs",
+    "test:deferred-ui": "node scripts/deferred-views-acceptance.mjs",
     "build": "vite build && node scripts/build-content.mjs",
     "dev": "vite --config vite.dev.config.ts",
     "dev:preview": "vite --host 127.0.0.1 --port 5175 --strictPort --open /dev/redesign-preview.html",
