@@ -1,97 +1,42 @@
-import { randomUUID } from "node:crypto";
-import {
-  GenerationRequestSchema,
-  JobSnapshotSchema,
-  LearningDocumentSchema,
-} from "@immersive/core";
+import { randomUUID, createHash } from "node:crypto";
+import { pointsFixture } from "../../../../packages/core/test/learning-points-fixture";
+import { createSceneJob, learningDocumentToMarkdown } from "@contextual/core";
 import { localStoragePorts } from "./file";
-import { toMarkdown } from "../generation/markdown";
+/** Current standard lesson; disk fixtures never require live model access. */
 export async function completedLesson(root: string) {
-  const storage = localStoragePorts(root);
+  const f = pointsFixture();
   const id = randomUUID();
-  const createdAt = new Date().toISOString();
-  const request = GenerationRequestSchema.parse({
-    id,
-    source: { platform: "import", title: "Dinner" },
-    profile: {
-      targetLanguage: "en",
-      instructionLanguage: "zh-TW",
-      level: "B1",
-      sceneCount: 2,
-      contextualExampleCount: 1,
-    },
-    agent: { provider: "openai", modelId: "" },
-    backup: { enabled: true, accountId: "fake-account" },
-    cues: [
-      { id: "q", startMs: 1000, endMs: 1900, originalText: "What about dinner?" },
-      { id: "a", startMs: 2000, endMs: 3200, originalText: "I haven't decided yet." },
-    ],
-  });
-  const candidate = {
-    id: "candidate-1-1",
-    cueIds: ["q", "a"],
-    focusExpressions: ["I haven't decided yet."],
-    learningGoal: "Understand an undecided plan",
+  f.request.id = id;
+  f.document.id = id;
+  f.request.backup = { enabled: true, accountId: "fake-account" };
+  f.document.execution!.inputFingerprint = createHash("sha256")
+    .update(JSON.stringify(f.request))
+    .digest("hex");
+  const job = createSceneJob(f.request, 1);
+  job.execution = f.document.execution;
+  job.summary = {
+    ...job.summary,
+    execution: job.execution,
+    status: "completed",
+    completed: 3,
+    total: 3,
+    documentId: id,
   };
-  const scene = {
-    id: randomUUID(),
-    title: "Dinner",
-    context: "A real dinner-planning exchange.",
-    cueIds: ["q", "a"],
-    startMs: 1000,
-    endMs: 3200,
-    translations: [
-      { cueId: "q", text: "晚餐呢？" },
-      { cueId: "a", text: "我還沒決定。" },
-    ],
-    focusItems: [
-      {
-        expression: "I haven't decided yet.",
-        sourceCueIds: ["a"],
-        meaning: "我還沒決定。",
-        contextExplanation: "The prior question supplies the context.",
-        contextCueIds: ["q"],
-        wordNotes: [],
-        examples: [
-          {
-            situation: "A trip decision",
-            dialogue: [
-              { text: "Have you decided?", translation: "你決定了嗎？" },
-              { text: "I haven't decided yet.", translation: "我還沒決定。" },
-            ],
-          },
-        ],
-      },
-    ],
-  };
-  const document = LearningDocumentSchema.parse({
-    id,
-    schemaVersion: 5,
-    createdAt,
-    source: request.source,
-    profile: request.profile,
-    generation: request.agent,
-    cues: request.cues,
-    sections: [scene],
-  });
-  const job = JobSnapshotSchema.parse({
-    schemaVersion: 3,
-    request,
-    sections: [scene],
-    scenePlan: { candidateChunks: [[candidate]], selected: [candidate] },
-    summary: {
-      id,
-      sourceTitle: request.source.title,
-      provider: request.agent.provider,
-      status: "completed",
-      completed: 3,
-      total: 3,
-      createdAt,
-      updatedAt: createdAt,
-      documentId: id,
+  const scene = { ...f.input.scene, id: f.document.sections[0].id };
+  job.learningPlan.candidateWindows[0].candidates = [scene];
+  job.learningPlan.selected = [scene];
+  job.learningPlan.batches = [
+    {
+      id: "s0",
+      sceneId: scene.id,
+      utteranceIds: scene.utterances.map(u => u.id),
+      repairAttempted: false,
+      result: f.result,
     },
-  });
+  ];
+  job.sections = f.document.sections;
+  const storage = localStoragePorts(root);
   await storage.jobs.create(job);
-  await storage.documents.save(document, toMarkdown(document));
-  return { storage, document };
+  await storage.documents.save(f.document, learningDocumentToMarkdown(f.document));
+  return { storage, document: f.document };
 }

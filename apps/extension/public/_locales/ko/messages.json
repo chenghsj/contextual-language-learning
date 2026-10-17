@@ -3,7 +3,7 @@
     "message": "Contextual Language Learning"
   },
   "extensionDescription": {
-    "message": "AI가 동영상 자막을 수준별 학습 자료로 구성하고, 대화 맥락 이해와 문장 반복 재생을 지원합니다."
+    "message": "AI로 동영상 자막에서 학습 콘텐츠를 만드세요. 교재, 요약, 어휘, 맞춤 프롬프트를 활용하고 원본 영상으로 연습하세요."
   },
   "actionTitle": {
     "message": "Contextual Language Learning 열기"

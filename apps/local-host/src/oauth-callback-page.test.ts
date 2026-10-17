@@ -19,19 +19,23 @@ test("the standalone shadcn-style callback renders a centered accessible pending
   assert.match(html, /prefers-reduced-motion/);
   assert.match(html, /prefers-color-scheme: dark/);
   assert.match(html, /history\.replaceState\(null, "", location\.pathname\)/);
-  assert.match(html, /⌘W 關閉分頁/);
+  assert.match(html, /可關閉此分頁，返回側邊欄。/);
+  assert.doesNotMatch(html, /⌘W|oauth-shortcut/);
   assert.doesNotMatch(html, /window\.close\(\)|id="oauth-close"/);
   assert.match(html, /class="brand-mark" src="data:image\/png;base64,/);
 });
 
 test("callback marks successful authorization only in the final streamed chunk", () => {
   const first = oauthCallbackPageStart(nonce);
-  assert.doesNotMatch(first, /window\.__immersiveOAuthComplete\("success"\)/);
+  assert.doesNotMatch(first, /window\.__contextualOAuthComplete\("success"\)/);
   assert.match(
     oauthCallbackPageEnd(nonce, "success"),
-    /window\.__immersiveOAuthComplete\("success"\)/,
+    /window\.__contextualOAuthComplete\("success"\)/,
   );
-  assert.match(oauthCallbackPageEnd(nonce, "error"), /window\.__immersiveOAuthComplete\("error"\)/);
+  assert.match(
+    oauthCallbackPageEnd(nonce, "error"),
+    /window\.__contextualOAuthComplete\("error"\)/,
+  );
   assert.doesNotMatch(oauthCallbackPageEnd(nonce, "success"), /access_token|refresh_token/);
 });
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { normalizeLearningCues } from "./subtitles";
-import { CandidateBatchSchema, LearningDocumentSchema, GenerationRequestSchema } from "./schema";
+import { LearningDocumentV7Schema, GenerationRequestSchema } from "./schema";
 import { createSceneJob, JobSnapshotSchema } from "./jobs";
 
 test("overlapping duplicate caption updates do not become separate learning lines", () => {
@@ -22,6 +22,7 @@ test("overlapping duplicate caption updates do not become separate learning line
 
 test("a scene job tracks curation checkpoints separately from sections", () => {
   const request = GenerationRequestSchema.parse({
+    outputSchemaVersion: 7,
     id: "11111111-1111-4111-8111-111111111111",
     source: { platform: "youtube", title: "Example" },
     profile: {
@@ -36,20 +37,10 @@ test("a scene job tracks curation checkpoints separately from sections", () => {
   });
   const job = createSceneJob(request, 1);
   assert.equal(job.summary.total, 4, "one discovery + one selection + two possible scenes");
-  assert.ok(job.scenePlan);
+  assert.ok(job.learningPlan);
   assert.equal(
     JobSnapshotSchema.safeParse({ ...job, summary: { ...job.summary, completed: 1 } }).success,
     false,
   );
-  assert.equal(
-    CandidateBatchSchema.safeParse({
-      candidates: Array(3).fill({
-        cueIds: ["cue-1"],
-        focusExpressions: ["Hello."],
-        learningGoal: "greeting",
-      }),
-    }).success,
-    false,
-  );
-  assert.equal(LearningDocumentSchema.safeParse({ schemaVersion: 3 }).success, false);
+  assert.equal(LearningDocumentV7Schema.safeParse({ schemaVersion: 3 }).success, false);
 });

@@ -8,7 +8,7 @@ import {
   type JobSummary,
   type LearningDocument,
   type PlaybackOverride,
-} from "@immersive/core";
+} from "@contextual/core";
 
 export const LessonJobRecordSchema = z.object({
   schemaVersion: z.literal(1),

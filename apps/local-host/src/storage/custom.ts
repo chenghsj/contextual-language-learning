@@ -1,16 +1,15 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, readFile, readdir, rename, rm } from "node:fs/promises";
-import { homedir } from "node:os";
+import { defaultDocumentsFolder } from "../platform/paths";
 import { join } from "node:path";
 import {
   CustomDocumentSchema,
   CustomJobSnapshotSchema,
   type CustomDocument,
   type CustomJobSnapshot,
-} from "@immersive/core";
+} from "@contextual/core";
 
-export const customStorageRoot = () =>
-  join(homedir(), "Documents", "Immersive Learning", "custom-v1");
+export const customStorageRoot = () => join(defaultDocumentsFolder(), "custom-v1");
 const safeId = (id: string) => {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id))
     throw new Error("Invalid custom repository ID");

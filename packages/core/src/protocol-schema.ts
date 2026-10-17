@@ -1,11 +1,14 @@
 import { CustomGenerationRequestSchema } from "./custom";
 import { z } from "zod";
+import { SpeechInputSchema } from "./speech";
 import { AgentSettingsSchema, GenerationRequestSchema, PlaybackOverrideSchema } from "./schema";
 
 export interface AgentModel {
   id: string;
   label: string;
   thinkingLevels?: import("./schema").ThinkingLevel[];
+  disabled?: boolean;
+  availability?: "listed" | "unknown";
 }
 export type AgentModelSource = "sdk" | "unavailable";
 
@@ -24,11 +27,48 @@ export const PiProviderInfoSchema = z.object({
   label: z.string(),
   connected: z.boolean(),
   methods: z.array(z.enum(["api_key", "oauth"])),
+  methodLabels: z
+    .object({ api_key: z.string().optional(), oauth: z.string().optional() })
+    .optional(),
 });
 export type PiPrompt = z.infer<typeof PiPromptSchema>;
 export type PiEvent = z.infer<typeof PiEventSchema>;
 
 export const HostRequestSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("listSpeechVoices"), id: z.string().uuid() }),
+  z.object({ type: z.literal("listSpeechVoiceCatalog"), id: z.string().uuid() }),
+  z.object({
+    type: z.literal("getSpeechVoiceFolder"),
+    id: z.string().uuid(),
+    voiceId: z.string().min(1).max(256),
+  }),
+  z.object({
+    type: z.literal("openSpeechVoiceFolder"),
+    id: z.string().uuid(),
+    voiceId: z.string().min(1).max(256),
+  }),
+  z.object({
+    type: z.literal("removeSpeechVoice"),
+    id: z.string().uuid(),
+    voiceId: z.string().min(1).max(256),
+  }),
+  z.object({
+    type: z.literal("installSpeechVoice"),
+    id: z.string().uuid(),
+    voiceId: z.string().min(1).max(256),
+  }),
+  z.object({
+    type: z.literal("getSpeechVoiceInstallation"),
+    id: z.string().uuid(),
+    voiceId: z.string().min(1).max(256),
+  }),
+  z.object({ type: z.literal("speak"), id: z.string().uuid(), input: SpeechInputSchema }),
+  z.object({ type: z.literal("stopSpeech"), id: z.string().uuid(), speechId: z.string().uuid() }),
+  z.object({
+    type: z.literal("estimateGeneration"),
+    id: z.string().uuid(),
+    payload: z.union([GenerationRequestSchema, CustomGenerationRequestSchema]),
+  }),
   z.object({ type: z.literal("getJobExecution"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({
     type: z.literal("checkCustomDuplicates"),
@@ -153,6 +193,11 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
     payload: GenerationRequestSchema,
   }),
   z.object({ type: z.literal("chooseFolder"), id: z.string().uuid() }),
+  z.object({
+    type: z.literal("openFolder"),
+    id: z.string().uuid(),
+    directory: z.string().min(1).max(2048).optional(),
+  }),
   z.object({ type: z.literal("driveAccounts"), id: z.string().uuid() }),
   z.object({
     type: z.literal("driveDisconnect"),

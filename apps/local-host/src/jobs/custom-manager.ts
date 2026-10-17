@@ -3,7 +3,7 @@ import {
   type CustomGenerationRequest,
   type CustomDocument,
   type JobSummary,
-} from "@immersive/core";
+} from "@contextual/core";
 import {
   CUSTOM_WORKFLOW_VERSION,
   customFingerprint,
@@ -13,10 +13,11 @@ import {
   resolveCustomModel,
   type CustomDependencies,
 } from "../generation/custom-pipeline";
+import { RunningOperation, assertCancellationOwner } from "./running-operation";
 export class CustomJobManager {
   private starting = false;
   private closed = false;
-  private running = new Map<string, AbortController>();
+  private running = new Map<string, RunningOperation>();
   constructor(
     readonly deps: CustomDependencies,
     private notify: (requestId: string, summary: JobSummary) => void,
@@ -154,8 +155,9 @@ export class CustomJobManager {
   }
   private async execute(requestId: string, id: string) {
     if (this.closed) throw new Error("Native Host connection closed");
-    const controller = new AbortController();
-    this.running.set(id, controller);
+    const operation = new RunningOperation();
+    const controller = operation.controller;
+    this.running.set(id, operation);
     try {
       const started = await this.deps.repository.updateJob(id, job => ({
         ...job,
@@ -180,7 +182,11 @@ export class CustomJobManager {
               ...job,
               summary: {
                 ...job.summary,
-                status: controller.signal.aborted ? "waiting" : "failed",
+                status: controller.signal.aborted
+                  ? operation.cancelRequested
+                    ? "cancelled"
+                    : "waiting"
+                  : "failed",
                 ownerPid: undefined,
                 error: controller.signal.aborted ? undefined : String(error).slice(0, 1200),
                 updatedAt: new Date().toISOString(),
@@ -191,26 +197,36 @@ export class CustomJobManager {
       throw error;
     } finally {
       this.running.delete(id);
+      operation.finish();
     }
   }
   async cancel(id: string) {
     const job = await this.deps.repository.getJob(id);
-    if (!job || !["queued", "running", "waiting", "failed"].includes(job.summary.status))
+    if (!job) return false;
+    const operation = this.running.get(id);
+    if (!operation) assertCancellationOwner(job.summary.ownerPid);
+    if (operation) await operation.cancel();
+    const settled = await this.deps.repository.getJob(id);
+    if (settled?.summary.status === "cancelled") return true;
+    if (!settled || !["queued", "running", "waiting", "failed"].includes(settled.summary.status))
       return false;
-    await this.deps.repository.updateJob(id, current => ({
-      ...current,
-      summary: {
-        ...current.summary,
-        status: "cancelled",
-        ownerPid: undefined,
-        updatedAt: new Date().toISOString(),
-      },
-    }));
-    this.running.get(id)?.abort();
-    return true;
+    const updated = await this.deps.repository.updateJob(id, current =>
+      !["queued", "running", "waiting", "failed"].includes(current.summary.status)
+        ? current
+        : {
+            ...current,
+            summary: {
+              ...current.summary,
+              status: "cancelled",
+              ownerPid: undefined,
+              updatedAt: new Date().toISOString(),
+            },
+          },
+    );
+    return updated.summary.status === "cancelled";
   }
   interruptAll() {
     this.closed = true;
-    for (const controller of this.running.values()) controller.abort();
+    for (const operation of this.running.values()) operation.controller.abort();
   }
 }

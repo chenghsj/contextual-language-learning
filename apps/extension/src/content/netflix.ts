@@ -1,4 +1,4 @@
-import { LEARNING_LANGUAGES, type LearningLanguage } from "@immersive/core";
+import { LEARNING_LANGUAGES, type LearningLanguage } from "@contextual/core";
 import { netflixPlayerTitle } from "../video/metadata";
 import {
   VIDEO_READER_STATUS,
@@ -15,10 +15,10 @@ import {
 
 // ISOLATED world: only handles user-initiated control requests from our Side Panel.
 (() => {
-  const REQUEST_EVENT = "immersive-learning:netflix:request";
-  const RESPONSE_EVENT = "immersive-learning:netflix:response";
-  const CAPTION_FETCH_REQUEST_EVENT = "immersive-learning:netflix:caption-fetch-request";
-  const CAPTION_FETCH_RESPONSE_EVENT = "immersive-learning:netflix:caption-fetch-response";
+  const REQUEST_EVENT = "contextual-learning:netflix:request";
+  const RESPONSE_EVENT = "contextual-learning:netflix:response";
+  const CAPTION_FETCH_REQUEST_EVENT = "contextual-learning:netflix:caption-fetch-request";
+  const CAPTION_FETCH_RESPONSE_EVENT = "contextual-learning:netflix:caption-fetch-response";
   const pendingCaptionRequests = new Set<string>();
   const captionRequestsInFlight = new Set<string>();
   type Action =
@@ -31,7 +31,7 @@ import {
     | "setPlaybackRate"
     | "subtitlesGet";
   type PageResponse = {
-    source: "immersive-learning";
+    source: "contextual-learning";
     id: string;
     ok: boolean;
     available: boolean;
@@ -90,7 +90,7 @@ import {
           pendingCaptionRequests.delete(id);
           window.removeEventListener(RESPONSE_EVENT, onResponse);
           resolve({
-            source: "immersive-learning",
+            source: "contextual-learning",
             id,
             ok: false,
             available: false,
@@ -110,7 +110,7 @@ import {
       );
       function onResponse(event: Event): void {
         const detail = (event as CustomEvent<PageResponse>).detail;
-        if (detail?.source !== "immersive-learning" || detail.id !== id) return;
+        if (detail?.source !== "contextual-learning" || detail.id !== id) return;
         clearTimeout(timer);
         pendingCaptionRequests.delete(id);
         window.removeEventListener(RESPONSE_EVENT, onResponse);
@@ -119,7 +119,7 @@ import {
       window.addEventListener(RESPONSE_EVENT, onResponse);
       window.dispatchEvent(
         new CustomEvent(REQUEST_EVENT, {
-          detail: { source: "immersive-learning", id, action, value, language },
+          detail: { source: "contextual-learning", id, action, value, language },
         }),
       );
     });
@@ -132,7 +132,7 @@ import {
     if (!detail || typeof detail !== "object") return;
     const request = detail as { source?: string; id?: string; url?: string };
     if (
-      request.source !== "immersive-learning" ||
+      request.source !== "contextual-learning" ||
       typeof request.id !== "string" ||
       !pendingCaptionRequests.has(request.id) ||
       captionRequestsInFlight.has(request.id) ||
@@ -145,7 +145,7 @@ import {
       window.dispatchEvent(
         new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
           detail: {
-            source: "immersive-learning",
+            source: "contextual-learning",
             id,
             ok: false,
             error:
@@ -167,7 +167,7 @@ import {
         window.dispatchEvent(
           new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
             detail: {
-              source: "immersive-learning",
+              source: "contextual-learning",
               id,
               ok: response?.ok === true,
               text: response?.text,
@@ -181,7 +181,7 @@ import {
         window.dispatchEvent(
           new CustomEvent(CAPTION_FETCH_RESPONSE_EVENT, {
             detail: {
-              source: "immersive-learning",
+              source: "contextual-learning",
               id,
               ok: false,
               error: error instanceof Error ? error.message : "Netflix caption request failed.",
@@ -307,8 +307,9 @@ import {
 
       state.count += 1;
       if (state.repeats !== "infinite" && state.count >= state.repeats) {
-        // Finite repetition ends without forcing Netflix to pause.
-        clearLoop();
+        state.managedPause = true;
+        await requestPage("pause");
+        if (current === state) clearLoop();
         return;
       }
 

@@ -1,5 +1,5 @@
 import { setTimeout as delay } from "node:timers/promises";
-import type { LearningDocument } from "@immersive/core";
+import type { LearningDocument } from "@contextual/core";
 import { publishDriveDocument, DriveContentConflict } from "../drive/api";
 import { toMarkdown } from "../generation/markdown";
 import type { StoragePorts } from "./ports";

@@ -1,4 +1,4 @@
-import { PI_PROVIDER_REGISTRY, type PiProviderAdapter } from "@immersive/core";
+import { PI_PROVIDER_REGISTRY, type PiProviderAdapter } from "@contextual/core";
 import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { registerAntigravity } from "./antigravity";
 

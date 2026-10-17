@@ -1,4 +1,4 @@
-import { isPiProviderId } from "@immersive/core";
+import { isPiProviderId } from "@contextual/core";
 export function agentModelPreferenceKey(provider: string): string {
   return provider;
 }

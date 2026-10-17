@@ -1,4 +1,4 @@
-import type { HostMessage, HostRequest, LearningDocument } from "@immersive/core";
+import type { HostMessage, HostRequest, LearningDocument } from "@contextual/core";
 import { publishSavedJob } from "../storage/publish";
 import { backupSavedJob } from "../storage/backup";
 import type { StoragePorts } from "../storage/ports";

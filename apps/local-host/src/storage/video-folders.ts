@@ -1,6 +1,6 @@
 import { access, mkdir, readdir } from "node:fs/promises";
 import { join } from "node:path";
-import type { LearningDocument } from "@immersive/core";
+import type { LearningDocument } from "@contextual/core";
 import { videoFolderName } from "../duplicates";
 
 /** Keep one readable folder per source even if a later generation changes its title. */
@@ -45,7 +45,8 @@ export async function findVideoDocument(root: string, id: string): Promise<strin
   return match;
 }
 
-export async function listVideoDocumentIds(root: string): Promise<string[]> {
+/** Retain discovered paths so listing never searches every folder again for each ID. */
+export async function listVideoDocuments(root: string): Promise<{ id: string; path: string }[]> {
   const parent = join(root, "videos");
   let folders;
   try {
@@ -54,7 +55,8 @@ export async function listVideoDocumentIds(root: string): Promise<string[]> {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
     throw error;
   }
-  const ids: string[] = [];
+  const documents: { id: string; path: string }[] = [];
+  const seen = new Set<string>();
   for (const folder of folders) {
     if (!folder.isDirectory()) continue;
     for (const file of await readdir(join(parent, folder.name))) {
@@ -62,9 +64,13 @@ export async function listVideoDocumentIds(root: string): Promise<string[]> {
         /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.json$/i.test(
           file,
         )
-      )
-        ids.push(file.slice(0, -5));
+      ) {
+        const id = file.slice(0, -5);
+        if (seen.has(id)) throw new Error("Document exists in multiple video folders: " + id);
+        seen.add(id);
+        documents.push({ id, path: join(parent, folder.name, file) });
+      }
     }
   }
-  return ids;
+  return documents;
 }

@@ -17,6 +17,8 @@ test("retry only explicit temporary rejections with no output or usage", () => {
     "ECONNRESET",
     "timeout",
     "HTTP 401",
+    "HTTP 503 model_not_supported",
+    "HTTP 503 model_access_denied",
     "HTTP 429 retry-after: 2000",
   ])
     assert.equal(rejectedRequest(message, false, 0), null);

@@ -1,3 +1,4 @@
+import { contextualGenerationProfile } from "./contextual-profile";
 import {
   AgentSettingsSchema,
   LearningProfileSchema,
@@ -8,7 +9,7 @@ import {
   type Destination,
   type BackupSettings,
   type RangeSelection,
-} from "@immersive/core";
+} from "@contextual/core";
 export type CreateDraft = {
   version: 1;
   sourceKey: string;
@@ -69,6 +70,7 @@ export function parseCreateDraft(value: unknown, sourceKey: string): CreateDraft
     return;
   return {
     ...d,
+    profile: contextualGenerationProfile(d.profile),
     range: { ...d.range, startMs: d.range.startMs ?? NaN, endMs: d.range.endMs ?? NaN },
   };
 }

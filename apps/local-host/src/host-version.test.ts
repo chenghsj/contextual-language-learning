@@ -10,7 +10,7 @@ test("build injects the package version into the Native Host health response", a
     await readFile(new URL("../../../package.json", import.meta.url), "utf8"),
   ).version;
   assert.match(version, /^\d+\.\d+\.\d+/);
-  assert.match(build, /__IMMERSIVE_HOST_VERSION__: JSON\.stringify\(hostVersion\)/);
+  assert.match(build, /__CONTEXTUAL_HOST_VERSION__: JSON\.stringify\(hostVersion\)/);
   assert.match(
     index.replace(/\s+/g, " "),
     /createHostDispatcher\(\{ storage, manager, customManager, reply, hostVersion,? \}\)/,

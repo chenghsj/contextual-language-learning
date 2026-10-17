@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Contextual Language Learning · 本機服務</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, sans-serif;
+      color: #2b2923;
+      background: #faf9f5;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 32px 20px;
+    }
+    main {
+      max-width: 440px;
+      margin: 40px auto;
+    }
+    .brand {
+      font-size: 13px;
+      color: #766e63;
+    }
+    h1 {
+      font-size: 25px;
+      font-weight: 650;
+      line-height: 1.3;
+      margin: 16px 0;
+    }
+    p {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #766e63;
+    }
+    section {
+      border: 1px solid #d9d5cb;
+      border-radius: 16px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      margin: 16px 0 6px;
+    }
+    select,
+    input,
+    button {
+      font: inherit;
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid #c9c4b8;
+      border-radius: 9px;
+      padding: 10px 12px;
+      background: transparent;
+      color: inherit;
+    }
+    button {
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+    .primary {
+      background: #a45132;
+      border-color: #a45132;
+      color: white;
+      font-weight: 600;
+    }
+    details {
+      margin-top: 20px;
+      font-size: 13px;
+    }
+    summary {
+      cursor: pointer;
+      color: #766e63;
+    }
+    input {
+      font-family: monospace;
+      font-size: 12px;
+    }
+    #status {
+      color: inherit;
+    }
+    #status[data-error="true"] {
+      color: #b1392e;
+    }
+    .secondary {
+      font-size: 13px;
+      border: 0;
+      color: #766e63;
+    }
+    small {
+      display: block;
+      color: #766e63;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color: #eeebe4;
+        background: #23221f;
+      }
+      section {
+        border-color: #47443d;
+      }
+      select,
+      input,
+      button {
+        border-color: #666056;
+      }
+      p,
+      .brand,
+      summary,
+      small,
+      .secondary {
+        color: #b7afa2;
+      }
+      .primary {
+        border-color: #a45132;
+      }
+    }
+  </style>
+  <main>
+    <div class="brand">Contextual Language Learning</div>
+    <h1>設定本機服務</h1>
+    <p>讓擴充功能在這台電腦產生 AI 教材、讀取本機教材及備份。</p>
+    <section>
+      <label for="browser">使用的瀏覽器</label>
+      <select id="browser">
+        <option value="chrome">Chrome</option>
+        <option value="edge">Edge</option>
+        <option value="chromium">Chromium</option>
+      </select>
+      <p id="installation">正在準備…</p>
+      <button id="install" class="primary" disabled>安裝本機服務</button>
+      <button id="uninstall" disabled>解除安裝</button>
+      <small>解除安裝只移除此瀏覽器的連接服務，教材、設定與登入資料會保留。</small>
+      <details id="testing" hidden>
+        <summary>本機測試設定</summary>
+        <label for="extension-id">擴充功能 ID</label
+        ><input id="extension-id" maxlength="32" spellcheck="false" /><small
+          >僅供手動載入的測試版使用。正式版不需要填寫。</small
+        >
+      </details>
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+    <small id="version"></small>
+    <button id="close" class="secondary">完成並關閉設定</button>
+  </main>
+  <script nonce="__NONCE__">
+    const token = location.hash.slice(1) || sessionStorage.getItem("cllSetupToken");
+    if (token) sessionStorage.setItem("cllSetupToken", token);
+    history.replaceState(null, "", "/");
+    const el = id => document.getElementById(id);
+    let config,
+      busy = false;
+    async function api(path, body) {
+      const response = await fetch("/api/" + path, {
+        method: body === undefined ? "GET" : "POST",
+        headers: { "X-Setup-Token": token, "Content-Type": "application/json" },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      });
+      const value = await response.json();
+      if (!response.ok) throw new Error(value.error || "操作失敗，請重新開啟安裝程式。");
+      return value;
+    }
+    function showState() {
+      const browser = el("browser").value;
+      el("installation").textContent =
+        config.installed[browser] === true
+          ? "此瀏覽器已安裝本機服務。"
+          : "安裝完成後，請回到擴充功能檢查連線。";
+      el("install").textContent =
+        config.installed[browser] === true ? "重新安裝／更新" : "安裝本機服務";
+      el("extension-id").value = config.extensionIds[browser] || "";
+    }
+    function lock(value) {
+      busy = value;
+      for (const id of ["browser", "install", "uninstall", "extension-id", "close"])
+        el(id).disabled = value;
+      el("install").setAttribute("aria-busy", String(value));
+    }
+    function status(text, error = false) {
+      el("status").textContent = text;
+      el("status").dataset.error = String(error);
+    }
+    async function run(action) {
+      if (busy) return;
+      if (
+        action === "uninstall" &&
+        !confirm("請先等待任務完成。確定解除安裝這個瀏覽器的本機服務？教材與登入資料會保留。")
+      )
+        return;
+      lock(true);
+      status(action === "install" ? "正在安裝…" : "正在解除安裝…");
+      try {
+        const result = await api(action, {
+          browser: el("browser").value,
+          ...(config.mode === "local" ? { extensionId: el("extension-id").value.trim() } : {}),
+        });
+        config.installed = result.installed;
+        showState();
+        status(
+          action === "install"
+            ? "安裝完成。回到擴充功能，按「檢查連線」。"
+            : result.cleanupPending
+              ? "已解除瀏覽器註冊。請關閉瀏覽器，再開啟設定程式按解除安裝，完成程式清除。教材與登入資料會保留。"
+              : "解除安裝完成。教材、設定與登入資料已保留。",
+        );
+      } catch (error) {
+        status(error.message, true);
+      } finally {
+        lock(false);
+      }
+    }
+    el("install").onclick = () => run("install");
+    el("uninstall").onclick = () => run("uninstall");
+    el("browser").onchange = () => {
+      showState();
+      status("");
+    };
+    el("close").onclick = async () => {
+      try {
+        await api("close", {});
+        sessionStorage.removeItem("cllSetupToken");
+        lock(true);
+        status("設定已結束，可以關閉這個分頁。");
+      } catch (error) {
+        status(error.message, true);
+      }
+    };
+    api("state")
+      .then(value => {
+        config = value;
+        if (config.mode !== "local") {
+          for (const option of [...el("browser").options])
+            if (!config.extensionIds[option.value]) option.remove();
+        }
+        const detected = /Edg\//.test(navigator.userAgent)
+          ? "edge"
+          : /Chromium/.test(navigator.userAgent)
+            ? "chromium"
+            : "chrome";
+        if (config.extensionIds[detected]) el("browser").value = detected;
+        el("testing").hidden = config.mode !== "local";
+        el("version").textContent =
+          "本機服務 " + config.version + (config.mode === "local" ? " · 本機測試版" : "");
+        showState();
+        lock(false);
+      })
+      .catch(error => status(error.message, true));
+  </script>
+</html>

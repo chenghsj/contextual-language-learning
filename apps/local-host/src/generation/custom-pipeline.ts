@@ -7,7 +7,7 @@ import {
   type CustomNode,
   type CustomDocument,
   type JobSummary,
-} from "@immersive/core";
+} from "@contextual/core";
 import { generatePiText, resolvePiModel, type PiTextResult } from "../agents/pi";
 import { contentHash, type CustomRepository } from "../storage/custom";
 export const CUSTOM_WORKFLOW_VERSION = "custom-markdown-1";
@@ -55,6 +55,25 @@ function cueText(request: CustomGenerationRequest, ids: string[]): string {
   if (!request.context.subtitles) return "";
   const wanted = new Set(ids);
   return JSON.stringify(request.cues.filter(cue => wanted.has(cue.id)));
+}
+
+/** Shared by execution and the initial-input estimate so their prompts stay aligned. */
+export function customNodePrompt(job: CustomJobSnapshot, node: CustomNode): string {
+  const inputs =
+    node.kind === "segment"
+      ? cueText(job.request, node.cueIds)
+      : JSON.stringify(
+          node.inputs.map(input => {
+            const output = job.nodes.find(item => item.id === input)?.output;
+            if (!output) throw new Error("Missing integration checkpoint");
+            return output;
+          }),
+        );
+  return (
+    customBasePrompt(job.request) +
+    `\nSTAGE: ${node.kind}, level ${node.level}. ${node.kind === "segment" && job.nodes.length > 1 ? "Create a source-grounded partial document for later integration." : "Produce a coherent complete document following the user task; integrate all supplied material without adding unsupported source facts."}\nReturn Markdown only, at most ${job.outputByteLimit} UTF-8 bytes.\nSOURCE DATA:\n` +
+    inputs
+  );
 }
 /** UTF-8 bytes conservatively bound tokens; output and framing both reserve context. */
 export function planCustomJob(
@@ -178,20 +197,7 @@ export async function runCustomPipeline(
       continue;
     }
     signal.throwIfAborted();
-    const inputs =
-      node.kind === "segment"
-        ? cueText(job.request, node.cueIds)
-        : JSON.stringify(
-            node.inputs.map(input => {
-              const output = job!.nodes.find(item => item.id === input)?.output;
-              if (!output) throw new Error("Missing integration checkpoint");
-              return output;
-            }),
-          );
-    const prompt =
-      customBasePrompt(job.request) +
-      `\nSTAGE: ${node.kind}, level ${node.level}. ${node.kind === "segment" && job.nodes.length > 1 ? "Create a source-grounded partial document for later integration." : "Produce a coherent complete document following the user task; integrate all supplied material without adding unsupported source facts."}\nReturn Markdown only, at most ${job.outputByteLimit} UTF-8 bytes.\nSOURCE DATA:\n` +
-      inputs;
+    const prompt = customNodePrompt(job, node);
     if (Buffer.byteLength(prompt, "utf8") > job.inputBudget)
       throw new Error(
         "Checkpoint inputs exceed the pinned model budget; create a new job with shorter input.",

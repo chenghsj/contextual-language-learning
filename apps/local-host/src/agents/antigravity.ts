@@ -7,10 +7,8 @@ import {
 } from "pi-antigravity/src/auth/oauth.js";
 import { withAntigravityAccountDirectory } from "pi-antigravity/src/auth/accounts.js";
 import { DEFAULT_ENDPOINT } from "pi-antigravity/src/client/client.js";
-import {
-  getCurrentAntigravityCatalog,
-  refreshAntigravityModels,
-} from "pi-antigravity/src/models/index.js";
+import { getCurrentAntigravityCatalog } from "pi-antigravity/src/models/index.js";
+import { refreshAccountAntigravityModels } from "./antigravity-catalog";
 import { ANTIGRAVITY_API, streamAntigravity } from "pi-antigravity/src/stream/index.js";
 
 /** Fail early if an upstream release changes the catalog contract. */
@@ -48,7 +46,8 @@ export function registerAntigravity(runtime: ModelRuntime, root: string): void {
     baseUrl: DEFAULT_ENDPOINT,
     api: ANTIGRAVITY_API,
     models: antigravityChatModels(getCurrentAntigravityCatalog().models),
-    refreshModels: async context => antigravityChatModels(await refreshAntigravityModels(context)),
+    refreshModels: async context =>
+      antigravityChatModels(await refreshAccountAntigravityModels(context)),
     oauth: {
       name: "Google Antigravity",
       login: loginAntigravity,

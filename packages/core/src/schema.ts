@@ -1,8 +1,17 @@
-import { ExecutionMetadataSchema } from "./execution";
+import { ExecutionMetadataSchema, ExecutionIdentitySchema } from "./execution";
 import { AnalysisRangeSchema } from "./analysis-range";
 import { z } from "zod";
 import { isPiProviderId } from "./pi-providers";
 import { LEARNING_LANGUAGES, EXPLANATION_LANGUAGES } from "./languages";
+import { ExplanationTypeSchema, SourceSpanSchema, SentenceChunkSchema } from "./explanations";
+
+export const SubtitleRubySchema = z.object({
+  start: z.number().int().nonnegative(),
+  end: z.number().int().positive(),
+  reading: z.string().min(1).max(200),
+  position: z.enum(["over", "under"]),
+});
+export type SubtitleRuby = z.infer<typeof SubtitleRubySchema>;
 
 export const SubtitleCueSchema = z
   .object({
@@ -10,7 +19,21 @@ export const SubtitleCueSchema = z
     startMs: z.number().int().nonnegative().nullable(),
     endMs: z.number().int().nonnegative().nullable(),
     originalText: z.string().min(1).max(1500),
+    ruby: z.array(SubtitleRubySchema).min(1).max(100).optional(),
   })
+  .refine(
+    cue =>
+      !cue.ruby ||
+      cue.ruby.every(
+        (item, index, items) =>
+          item.start < item.end &&
+          item.end <= cue.originalText.length &&
+          (index === 0 || item.start >= items[index - 1].end),
+      ),
+    {
+      message: "Subtitle ruby ranges must be ordered, nonoverlapping source ranges",
+    },
+  )
   .refine(cue => cue.startMs === null || cue.endMs === null || cue.endMs >= cue.startMs, {
     message: "Subtitle end must not precede start",
   });
@@ -29,6 +52,8 @@ export const LearningProfileSchema = z.object({
   level: z.string().min(1).max(12),
   sceneCount: z.union([z.literal(2), z.literal(4), z.literal(6)]),
   contextualExampleCount: z.number().int().min(1).max(3),
+  enabledExplanations: z.array(ExplanationTypeSchema).max(6).optional(),
+  emphasizedExplanations: z.array(ExplanationTypeSchema).max(6).optional(),
 });
 export type LearningProfile = z.infer<typeof LearningProfileSchema>;
 
@@ -78,6 +103,9 @@ export const DriveAccountSchema = z.object({
 export type DriveAccount = z.infer<typeof DriveAccountSchema>;
 
 export interface LessonSummary {
+  schemaVersion?: 7;
+  pointCount?: number;
+  reusableItemCount?: number;
   documentId: string;
   title: string;
   createdAt: string;
@@ -90,6 +118,9 @@ export interface LessonSummary {
   backup?: { status: string; accountId: string; location?: string; error?: string };
 }
 export interface DriveLessonSummary {
+  schemaVersion?: 7;
+  pointCount?: number;
+  reusableItemCount?: number;
   documentId: string;
   title: string;
   createdAt: string;
@@ -117,6 +148,7 @@ export type DuplicateMatch = z.infer<typeof DuplicateMatchSchema>;
 export const GenerationRequestSchema = z
   .object({
     id: z.string().uuid(),
+    outputSchemaVersion: z.literal(7).optional(),
     source: SourceSchema,
     profile: LearningProfileSchema,
     agent: AgentSettingsSchema,
@@ -133,31 +165,9 @@ export const GenerationRequestSchema = z
   );
 export type GenerationRequest = z.infer<typeof GenerationRequestSchema>;
 
-/** Selection IDs and timestamps are resolved against the real transcript, never invented by the model. */
-export const CandidateContentSchema = z.object({
-  cueIds: z.array(z.string().min(1)).min(1).max(10),
-  focusExpressions: z.array(z.string().min(1).max(160)).min(1).max(2),
-  learningGoal: z.string().min(1).max(250),
-});
-export const CandidateSceneSchema = CandidateContentSchema.extend({
-  id: z.string().min(1).max(100),
-});
-export type CandidateScene = z.infer<typeof CandidateSceneSchema>;
-export const CandidateBatchSchema = z.object({
-  candidates: z.array(CandidateContentSchema).max(2),
-});
-export const FinalSelectionSchema = z.object({
-  selectedCandidateIds: z.array(z.string().min(1)).min(1).max(6),
-});
-
 export const StudyTranslationSchema = z.object({
   cueId: z.string().min(1),
   text: z.string().min(1).max(700),
-});
-export const ContextualWordNoteSchema = z.object({
-  surface: z.string().min(1).max(160),
-  meaning: z.string().min(1).max(400),
-  explanation: z.string().min(1).max(700),
 });
 /** Segments concatenate to the unchanged source text; reading is omitted when uncertain. */
 export const PronunciationSegmentSchema = z.object({
@@ -169,41 +179,6 @@ export const CuePronunciationSchema = z.object({
   cueId: z.string().min(1).max(80),
   segments: z.array(PronunciationSegmentSchema).min(1).max(100),
 });
-export const ContextualDialogueLineSchema = z.object({
-  text: z.string().min(1).max(500),
-  translation: z.string().min(1).max(700),
-  pronunciation: z.array(PronunciationSegmentSchema).min(1).max(100).optional().catch(undefined),
-});
-export const ContextualExampleSchema = z.object({
-  situation: z.string().min(1).max(450),
-  dialogue: z.array(ContextualDialogueLineSchema).min(2).max(3),
-});
-export const ContextualFocusSchema = z.object({
-  expression: z.string().min(1).max(160),
-  sourceCueIds: z.array(z.string().min(1)).min(1).max(10),
-  meaning: z.string().min(1).max(400),
-  contextExplanation: z.string().min(1).max(1400),
-  contextCueIds: z.array(z.string().min(1)).min(1).max(10),
-  wordNotes: z.array(ContextualWordNoteSchema).max(3),
-  examples: z.array(ContextualExampleSchema).min(1).max(3),
-});
-/** Model output has semantic content only; original IDs and timestamps come from the Host. */
-export const ContextualSceneContentSchema = z.object({
-  title: z.string().min(1).max(180),
-  context: z.string().min(1).max(2400),
-  translations: z.array(StudyTranslationSchema).min(1).max(10),
-  pronunciations: z.array(CuePronunciationSchema).max(10).optional().catch(undefined),
-  focusItems: z.array(ContextualFocusSchema).min(1).max(2),
-});
-export const ContextualSceneSchema = ContextualSceneContentSchema.extend({
-  id: z.string().uuid(),
-  cueIds: z.array(z.string().min(1)).min(1).max(10),
-  startMs: z.number().int().nonnegative().nullable(),
-  endMs: z.number().int().nonnegative().nullable(),
-  focusItems: z.array(ContextualFocusSchema).min(1).max(2),
-});
-export type ContextualScene = z.infer<typeof ContextualSceneSchema>;
-
 const DocumentCommonSchema = z.object({
   id: z.string().uuid(),
   createdAt: z.string().datetime(),
@@ -224,10 +199,154 @@ export const PlaybackOverrideSchema = z
     message: "Playback duration must be between 0.25s and 10min",
   });
 export type PlaybackOverride = z.infer<typeof PlaybackOverrideSchema>;
-export const LearningDocumentSchema = DocumentCommonSchema.extend({
-  schemaVersion: z.literal(5),
-  sections: z.array(ContextualSceneSchema).min(1).max(6),
+const Ref = z.string().min(1).max(240);
+const Refs = z.array(Ref);
+export const LearningPointSchema = z
+  .object({
+    id: Ref,
+    utteranceIds: Refs.min(1),
+    category: ExplanationTypeSchema,
+    presentation: z.enum(["core", "extended"]).optional(),
+    title: z.string().min(1).max(200),
+    sourceCueIds: Refs.min(1),
+    contextCueIds: Refs,
+    explanation: z.string().min(1).max(6000),
+    sourceSpans: z.array(SourceSpanSchema).min(1),
+  })
+  .strict();
+export const ReusableItemSchema = z
+  .object({
+    id: Ref,
+    pointIds: Refs.min(1),
+    kind: z.enum(["expression", "frame"]),
+    sourceForms: z
+      .array(
+        z
+          .object({
+            cueIds: Refs.min(1),
+            sourceSpans: z.array(SourceSpanSchema).min(1),
+            text: z.string().min(1).max(1500),
+          })
+          .strict(),
+      )
+      .min(1),
+    pattern: z.string().min(1).max(500).optional(),
+    examples: z
+      .array(
+        z
+          .object({
+            origin: z.literal("ai"),
+            situation: z.string().min(1).max(600),
+            dialogue: z
+              .array(
+                z
+                  .object({
+                    text: z.string().min(1).max(500),
+                    translation: z.string().min(1).max(700),
+                    pronunciation: z.array(PronunciationSegmentSchema).min(1).max(100).optional(),
+                  })
+                  .strict(),
+              )
+              .min(2)
+              .max(3),
+            targetLineIndex: z.number().int().min(0).max(2),
+            targetText: z.string().min(1).max(500),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(3),
+  })
+  .strict()
+  .superRefine((item, ctx) => {
+    if ((item.kind === "frame") !== (item.pattern !== undefined))
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Only a frame requires a separate pattern",
+      });
+  });
+export const UtteranceTeachingSchema = z
+  .object({
+    id: Ref,
+    meaning: z.string().max(2000),
+    contextExplanation: z.string().max(3000),
+    contextCueIds: Refs,
+    decision: z.enum(["explained", "basic_only"]),
+    pointIds: Refs,
+    chunks: z
+      .array(SentenceChunkSchema.omit({ reusablePattern: true }).extend({ id: Ref }).strict())
+      .optional(),
+  })
+  .strict();
+export const SourceUtteranceSchema = z
+  .object({ id: Ref, cueIds: Refs.min(1), sourceSpans: z.array(SourceSpanSchema).min(1) })
+  .strict();
+export const LearningUtteranceSchema = UtteranceTeachingSchema.extend({
+  cueIds: Refs.min(1),
+  sourceSpans: z.array(SourceSpanSchema).min(1),
+});
+export const LearningSceneV7Schema = z
+  .object({
+    id: z.string().uuid(),
+    cueIds: Refs.min(1),
+    contextCueIds: Refs,
+    startMs: z.number().int().nonnegative().nullable(),
+    endMs: z.number().int().nonnegative().nullable(),
+    title: z.string().min(1).max(180),
+    context: z.object({ text: z.string().min(1).max(3000), evidenceCueIds: Refs }).strict(),
+    translations: z.array(StudyTranslationSchema).min(1),
+    pronunciations: z.array(CuePronunciationSchema).optional(),
+    utterances: z.array(LearningUtteranceSchema).min(1),
+  })
+  .strict();
+export const LearningDocumentV7Schema = DocumentCommonSchema.extend({
+  schemaVersion: z.literal(7),
+  sections: z.array(LearningSceneV7Schema).min(1).max(6),
+  points: z.array(LearningPointSchema),
+  reusableItems: z.array(ReusableItemSchema),
   playbackOverrides: z.record(z.string().min(1).max(80), PlaybackOverrideSchema).optional(),
   scenePlaybackOverrides: z.record(z.string().uuid(), PlaybackOverrideSchema).optional(),
-});
+}).strict();
+export const LearningDocumentSchema = LearningDocumentV7Schema;
+export type LearningDocumentV7 = z.infer<typeof LearningDocumentV7Schema>;
 export type LearningDocument = z.infer<typeof LearningDocumentSchema>;
+export type LearningPoint = z.infer<typeof LearningPointSchema>;
+export type ReusableItem = z.infer<typeof ReusableItemSchema>;
+export type LearningSceneV7 = z.infer<typeof LearningSceneV7Schema>;
+export type SourceUtterance = z.infer<typeof SourceUtteranceSchema>;
+export const LEARNING_POINTS_WORKFLOW_VERSION = "learning-points-v7-1";
+export const LEARNING_POINTS_PROMPT_VERSION = "learning-points-prompts-14";
+export const LANGUAGE_STRATEGY_VERSION = "learning-language-strategies-4";
+export const QUALITY_STRATEGY_VERSION = "program-validation-1";
+export const LEVEL_STRATEGY_VERSION = "learning-level-strategies-1";
+
+export const RETIRED_LESSON_MESSAGE = "此教材版本已停止支援，請重新生成";
+export function currentLearningExecution(value: unknown): boolean {
+  const parsed = ExecutionIdentitySchema.safeParse(value);
+  if (!parsed.success || !parsed.data.provider || !parsed.data.modelId) return false;
+  const e = parsed.data;
+  return (
+    e.workflowVersion === LEARNING_POINTS_WORKFLOW_VERSION &&
+    e.promptVersion === LEARNING_POINTS_PROMPT_VERSION &&
+    e.schemaVersion === "7" &&
+    e.languageStrategyVersion === LANGUAGE_STRATEGY_VERSION &&
+    e.levelStrategyVersion === LEVEL_STRATEGY_VERSION &&
+    e.qualityStrategyVersion === QUALITY_STRATEGY_VERSION
+  );
+}
+
+/** Compatible V7 files remain readable; new generation always uses the current identity. */
+export function readableLearningExecution(value: unknown): boolean {
+  if (currentLearningExecution(value)) return true;
+  const parsed = ExecutionIdentitySchema.safeParse(value);
+  if (!parsed.success || !parsed.data.provider || !parsed.data.modelId) return false;
+  const e = parsed.data;
+  return (
+    e.workflowVersion === LEARNING_POINTS_WORKFLOW_VERSION &&
+    e.schemaVersion === "7" &&
+    e.languageStrategyVersion === LANGUAGE_STRATEGY_VERSION &&
+    e.levelStrategyVersion === LEVEL_STRATEGY_VERSION &&
+    e.qualityStrategyVersion === "learning-quality-1" &&
+    ["learning-points-prompts-12", "learning-points-prompts-13"].includes(e.promptVersion)
+  );
+}

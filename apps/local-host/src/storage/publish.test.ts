@@ -1,3 +1,4 @@
+import { LearningDocumentV7Schema } from "@contextual/core";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -9,8 +10,8 @@ import { backupSavedJob } from "./backup";
 
 import { completedLesson } from "./test-fixtures";
 
-test("publication and Drive failures retain canonical V5 material; retries do not generate again", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-publication-"));
+test("publication and Drive failures retain canonical current material; retries do not generate again", async () => {
+  const root = await mkdtemp(join(tmpdir(), "contextual-publication-"));
   try {
     const { storage, document } = await completedLesson(root);
     await assert.rejects(
@@ -38,7 +39,7 @@ test("publication and Drive failures retain canonical V5 material; retries do no
       storage,
       document.id,
       async (_accountId, uploaded, markdown) => {
-        assert.equal(uploaded.schemaVersion, 5);
+        assert.ok(uploaded.schemaVersion === 7);
         assert.match(markdown, /AI-created contextual examples/);
         return "https://drive.google.com/file/d/example/view";
       },
@@ -46,8 +47,8 @@ test("publication and Drive failures retain canonical V5 material; retries do no
     assert.equal(uri, "https://drive.google.com/file/d/example/view");
     assert.equal((await storage.jobs.get(document.id))?.summary.backup?.status, "backed-up");
     assert.equal(
-      (await storage.documents.get(document.id))?.sections[0].focusItems[0].expression,
-      "I haven't decided yet.",
+      LearningDocumentV7Schema.parse(await storage.documents.get(document.id)).points[0].title,
+      document.points[0].title,
     );
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -55,7 +56,7 @@ test("publication and Drive failures retain canonical V5 material; retries do no
 });
 
 test("deleting completed history preserves lessons and operational metadata without transcripts or checkpoints", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-delete-completed-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-delete-completed-"));
   try {
     const { storage, document } = await completedLesson(root);
     const before = await storage.documents.get(document.id);

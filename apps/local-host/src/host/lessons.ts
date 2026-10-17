@@ -1,9 +1,9 @@
-import type { HostRequest, LearningDocument } from "@immersive/core";
+import type { HostRequest, LearningDocument } from "@contextual/core";
 import { sourceKey } from "../duplicates";
 import { createDocumentSync } from "../storage/document-sync";
 import type { HostDispatcherDeps } from "./context";
 
-/** Library reads and calibrated playback updates operate on V5 canonical documents. */
+/** Library reads and calibrated playback updates operate on current canonical documents. */
 export async function handleLessonRequest(
   request: HostRequest,
   { storage, manager, reply }: Pick<HostDispatcherDeps, "storage" | "manager" | "reply">,
@@ -53,10 +53,9 @@ export async function handleLessonRequest(
           targetLanguage: doc.profile.targetLanguage,
           level: doc.profile.level,
           sceneCount: doc.sections.length,
-          expressionCount: doc.sections.reduce(
-            (count, scene) => count + scene.focusItems.length,
-            0,
-          ),
+          schemaVersion: doc.schemaVersion,
+          pointCount: doc.schemaVersion === 7 ? doc.points.length : undefined,
+          reusableItemCount: doc.schemaVersion === 7 ? doc.reusableItems.length : undefined,
           sceneIds: doc.sections.map(scene => scene.id),
           ...(byId.get(doc.id)?.backup ? { backup: byId.get(doc.id)!.backup } : {}),
         })),

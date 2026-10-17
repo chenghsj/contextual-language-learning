@@ -1,36 +1,133 @@
 import { readSource } from "../lib/source-contract";
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { after } from "node:test";
 import { readFile } from "node:fs/promises";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+import { JSDOM } from "jsdom";
 
-test("language and appearance settings use Radix Select", async () => {
-  const app = await readSource(new URL("../App.tsx", import.meta.url));
-  const preferences = app.slice(
-    app.indexOf('{settingsSection === "general" && <PageSection>'),
-    app.indexOf('{settingsSection === "ai" && <PageSection>'),
-  );
-  assert.match(preferences, /<Select value=\{localePreference\} onValueChange=/);
-  assert.match(preferences, /<Select value=\{themePreference\} onValueChange=/);
-  assert.match(preferences, /<SelectTrigger id="ui-language-select"/);
-  assert.match(preferences, /<SelectTrigger id="appearance-select"/);
-  assert.match(preferences, /<SelectItem value="auto">/);
-  assert.match(preferences, /<SelectItem value="zh-TW">/);
-  for (const value of ["system", "light", "dark"]) {
-    assert.ok(preferences.includes('<SelectItem value="' + value + '">'));
+const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+  pretendToBeVisual: true,
+  url: "https://extension.test",
+});
+for (const key of [
+  "window",
+  "document",
+  "navigator",
+  "HTMLElement",
+  "HTMLInputElement",
+  "HTMLTextAreaElement",
+  "HTMLButtonElement",
+  "HTMLFormElement",
+  "Element",
+  "Node",
+  "NodeFilter",
+  "DocumentFragment",
+  "MutationObserver",
+  "Event",
+  "CustomEvent",
+  "MouseEvent",
+  "KeyboardEvent",
+  "FocusEvent",
+] as const) {
+  Object.defineProperty(globalThis, key, { value: dom.window[key], configurable: true });
+}
+Object.assign(globalThis, {
+  getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
+  requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
+  cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+  IS_REACT_ACT_ENVIRONMENT: true,
+  ResizeObserver: class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+});
+dom.window.HTMLElement.prototype.scrollIntoView = () => undefined;
+after(() => dom.window.close());
+const React = await import("react");
+const { createElement, act, useState, useEffect } = React;
+const { createRoot } = await import("react-dom/client");
+const { renderToStaticMarkup } = await import("react-dom/server");
+const { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } =
+  await import("../components/ui/select");
+const { AppearancePreferences } = await import("../components/appearance-preferences");
+const { PreferencesStore } = await import("../lib/preferences-store");
+const { translate } = await import("./messages");
+
+test("language and appearance choices retain stable values through persistence and reload", async () => {
+  let saved: Record<string, unknown> = {};
+  const storage = {
+    get: async () => saved,
+    set: async (next: Record<string, unknown>) => {
+      saved = next;
+    },
+  };
+  const store = new PreferencesStore(storage, "en");
+  await store.load();
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  function Harness() {
+    const [preferences, setPreferences] = useState(store.current());
+    useEffect(() => store.subscribe(setPreferences), []);
+    const locale =
+      preferences.uiLocalePreference === "auto" ? "en" : preferences.uiLocalePreference;
+    return createElement(AppearancePreferences, {
+      locale,
+      browserLocale: "en",
+      localePreference: preferences.uiLocalePreference,
+      themePreference: preferences.themePreference,
+      onLocale: value => {
+        void store.save({ ...store.current(), uiLocalePreference: value });
+      },
+      onTheme: value => {
+        void store.save({ ...store.current(), themePreference: value });
+      },
+    });
   }
-  assert.doesNotMatch(preferences, /<NativeSelect|<option\b|<select\b/);
-  assert.doesNotMatch(app, /<NativeSelect\b|<option\b|<select\b/);
-  assert.match(preferences, /isLocalePreference\(next\)/);
-  assert.match(preferences, /isThemePreference\(next\)/);
+  async function choose(id: string, label: string) {
+    await act(async () => {
+      const trigger = container.querySelector<HTMLElement>("#" + id)!;
+      trigger.focus();
+      trigger.dispatchEvent(
+        new dom.window.KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }),
+      );
+    });
+    const option = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+      element => element.textContent?.trim() === label,
+    );
+    assert.ok(option, "Missing option: " + label);
+    await act(async () =>
+      option.dispatchEvent(
+        new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+      ),
+    );
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+  }
+  try {
+    await act(async () => root.render(createElement(Harness)));
+    assert.equal(container.querySelectorAll('[role="combobox"]').length, 2);
+    assert.equal(container.querySelector("select"), null);
+    for (const id of ["ui-language-select", "appearance-select"])
+      assert.ok(container.querySelector(`label[for="${id}"]`));
+    const hint = container.querySelector("#ui-language-select")?.getAttribute("aria-describedby");
+    assert.equal(hint, "ui-language-hint");
+    assert.equal(
+      container.querySelector("#" + hint)?.textContent,
+      translate("en", "uiLanguageHint"),
+    );
+    await choose("ui-language-select", "繁體中文");
+    await choose("appearance-select", translate("zh-TW", "themeDark"));
+    const restored = await new PreferencesStore(storage).load();
+    assert.equal(restored.uiLocalePreference, "zh-TW");
+    assert.equal(restored.themePreference, "dark");
+    await choose("ui-language-select", translate("zh-TW", "browserLanguage") + " · English");
+    assert.equal((await new PreferencesStore(storage).load()).uiLocalePreference, "auto");
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+  }
 });
 
 test("shadcn Select renders an accessible, keyboard-controlled combobox", () => {

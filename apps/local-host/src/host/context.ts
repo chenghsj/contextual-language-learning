@@ -1,4 +1,4 @@
-import type { HostMessage } from "@immersive/core";
+import type { HostMessage } from "@contextual/core";
 import type { JobManager } from "../jobs/manager";
 import type { StoragePorts } from "../storage/ports";
 

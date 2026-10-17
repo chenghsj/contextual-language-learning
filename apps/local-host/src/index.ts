@@ -1,4 +1,5 @@
-import { type HostMessage } from "@immersive/core";
+import "./platform/migrate-startup";
+import { type HostMessage } from "@contextual/core";
 import { CustomJobManager } from "./jobs/custom-manager";
 import { FileCustomRepository } from "./storage/custom";
 import { JobManager } from "./jobs/manager";
@@ -7,9 +8,9 @@ import { localStoragePorts } from "./storage/file";
 import { interruptPiLogins } from "./host/agents";
 import { createHostDispatcher } from "./host/dispatcher";
 
-declare const __IMMERSIVE_HOST_VERSION__: string;
+declare const __CONTEXTUAL_HOST_VERSION__: string;
 const hostVersion =
-  typeof __IMMERSIVE_HOST_VERSION__ === "string" ? __IMMERSIVE_HOST_VERSION__ : "dev";
+  typeof __CONTEXTUAL_HOST_VERSION__ === "string" ? __CONTEXTUAL_HOST_VERSION__ : "dev";
 const storage = localStoragePorts();
 function reply(message: HostMessage): void {
   process.stdout.write(encodeMessage(message));

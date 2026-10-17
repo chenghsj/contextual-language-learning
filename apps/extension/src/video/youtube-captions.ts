@@ -1,8 +1,13 @@
+import { languageTagMatches, LEARNING_LANGUAGES } from "@contextual/core";
+
 /** Only captions already offered by the active YouTube player are eligible. */
 export type YouTubeCaptionTrack = {
   baseUrl: string;
   languageCode: string;
   kind?: string;
+  isTranslatable?: boolean;
+  /** Present only for YouTube auto-translation; languageCode is the output language. */
+  sourceLanguageCode?: string;
 };
 
 const MAX_CAPTION_CUES = 3_000;
@@ -17,7 +22,7 @@ export function readYouTubeCaptionTracks(value: unknown, videoId: string): YouTu
   const renderer = captions?.playerCaptionsTracklistRenderer as Record<string, unknown> | undefined;
   const tracks = renderer?.captionTracks;
   if (!Array.isArray(tracks)) return [];
-  return tracks
+  const originalTracks: YouTubeCaptionTrack[] = tracks
     .flatMap(item => {
       if (!item || typeof item !== "object") return [];
       const entry = item as Record<string, unknown>;
@@ -27,27 +32,59 @@ export function readYouTubeCaptionTracks(value: unknown, videoId: string): YouTu
               baseUrl: entry.baseUrl,
               languageCode: entry.languageCode,
               kind: typeof entry.kind === "string" ? entry.kind : undefined,
+              isTranslatable: entry.isTranslatable === true,
             },
           ]
         : [];
     })
     .slice(0, 100);
+  const translationLanguages = renderer?.translationLanguages;
+  if (!Array.isArray(translationLanguages)) return originalTracks;
+  const source = originalTracks
+    .filter(track => track.isTranslatable)
+    .sort((a, b) => Number(a.kind === "asr") - Number(b.kind === "asr"))[0];
+  if (!source) return originalTracks;
+  // Offer only supported targets explicitly advertised by this player. Native
+  // captions remain preferable to an automatic translation into that language.
+  const translatedTracks: YouTubeCaptionTrack[] = [];
+  for (const language of LEARNING_LANGUAGES) {
+    if (chooseYouTubeCaptionTrack(originalTracks, language)) continue;
+    const target = translationLanguages
+      .slice(0, 200)
+      .find(
+        item =>
+          item &&
+          typeof item.languageCode === "string" &&
+          languageTagMatches(language, item.languageCode),
+      );
+    if (!target) continue;
+    try {
+      const url = allowedYouTubeCaptionUrl(source.baseUrl, videoId);
+      url.searchParams.set("tlang", target.languageCode);
+      translatedTracks.push({
+        baseUrl: url.toString(),
+        languageCode: target.languageCode,
+        sourceLanguageCode: source.languageCode,
+        kind: source.kind,
+      });
+    } catch {
+      // An invalid player address must not become a translation request.
+    }
+  }
+  return [...originalTracks, ...translatedTracks];
 }
 
-/** Prefer human-made captions, then auto-generated captions, in the requested language only. */
+/** Prefer native captions, then player-offered translations, in the requested language only. */
 export function chooseYouTubeCaptionTrack(
   tracks: YouTubeCaptionTrack[],
   language: string,
 ): YouTubeCaptionTrack | null {
-  const candidates = tracks.filter(
-    track =>
-      track.languageCode.toLowerCase() === language ||
-      track.languageCode.toLowerCase().startsWith(language + "-"),
-  );
+  const candidates = tracks.filter(track => languageTagMatches(language, track.languageCode));
   candidates.sort(
     (a, b) =>
-      Number(a.languageCode.toLowerCase() !== language) -
-        Number(b.languageCode.toLowerCase() !== language) ||
+      Number(!!a.sourceLanguageCode) - Number(!!b.sourceLanguageCode) ||
+      Number(a.languageCode.toLowerCase() !== language.toLowerCase()) -
+        Number(b.languageCode.toLowerCase() !== language.toLowerCase()) ||
       Number(a.kind === "asr") - Number(b.kind === "asr"),
   );
   return candidates[0] ?? null;
@@ -322,6 +359,7 @@ export function observedYouTubeCaptionUrls(
   resources: readonly string[],
   videoId: string,
   language: string,
+  sourceLanguageCode?: string,
 ): string[] {
   const matches: { url: string; session: boolean }[] = [];
   const seen = new Set<string>();
@@ -334,6 +372,11 @@ export function observedYouTubeCaptionUrls(
       continue;
     }
     if (url.searchParams.get("v") !== videoId) continue;
+    if (sourceLanguageCode) {
+      if (!url.searchParams.has("tlang")) continue;
+      if (url.searchParams.get("lang")?.toLowerCase() !== sourceLanguageCode.toLowerCase())
+        continue;
+    } else if (url.searchParams.has("tlang")) continue;
     const actualLanguage = (
       url.searchParams.get("tlang") ??
       url.searchParams.get("lang") ??
@@ -357,7 +400,13 @@ export function parsePlayerYouTubeCaptionResponse(
   rawUrl: string,
   body: string,
   videoId: string,
-): { videoId: string; language: string; kind: "asr" | "manual"; text: string } | null {
+): {
+  videoId: string;
+  language: string;
+  sourceLanguageCode?: string;
+  kind: "asr" | "manual";
+  text: string;
+} | null {
   if (!body.trim() || body.length > 3_000_000) return null;
   let url: URL;
   try {
@@ -365,8 +414,10 @@ export function parsePlayerYouTubeCaptionResponse(
   } catch {
     return null;
   }
-  if (url.searchParams.get("v") !== videoId || url.searchParams.has("tlang")) return null;
-  const language = (url.searchParams.get("lang") ?? "").toLowerCase();
+  if (url.searchParams.get("v") !== videoId) return null;
+  const sourceLanguage = (url.searchParams.get("lang") ?? "").toLowerCase();
+  if (!/^[a-z]{2,3}(?:-[a-z0-9]+)*$/.test(sourceLanguage)) return null;
+  const language = (url.searchParams.get("tlang") ?? sourceLanguage).toLowerCase();
   if (!/^[a-z]{2,3}(?:-[a-z0-9]+)*$/.test(language)) return null;
   try {
     const text = youtubeTimedTextToVtt(body);
@@ -374,7 +425,11 @@ export function parsePlayerYouTubeCaptionResponse(
     return {
       videoId,
       language,
-      kind: url.searchParams.get("caps") === "asr" ? "asr" : "manual",
+      ...(url.searchParams.has("tlang") ? { sourceLanguageCode: sourceLanguage } : {}),
+      kind:
+        url.searchParams.get("caps") === "asr" || url.searchParams.get("kind") === "asr"
+          ? "asr"
+          : "manual",
       text,
     };
   } catch {

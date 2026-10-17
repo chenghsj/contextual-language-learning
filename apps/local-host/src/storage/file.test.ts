@@ -1,295 +1,218 @@
-import assert from "node:assert/strict";
 import test from "node:test";
-import { randomUUID } from "node:crypto";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import assert from "node:assert/strict";
+import { mkdtemp, readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
-import {
-  GenerationRequestSchema,
-  LearningDocumentSchema,
-  createSceneJob,
-  learningDocumentToMarkdown,
-} from "@immersive/core";
-import { FileDocumentRepository, FileJobRepository, localStoragePorts } from "./file";
-import { videoFolder } from "./video-folders";
+import { tmpdir } from "node:os";
+import { randomUUID, createHash } from "node:crypto";
+import { completedLesson } from "./test-fixtures";
+import { localStoragePorts } from "./file";
+import { findLocalDuplicates } from "../duplicates";
+import { JobManager } from "../jobs/manager";
+import { findVideoDocument } from "./video-folders";
 
-test("job records survive repository restarts and invalid IDs cannot traverse directories", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-store-"));
+test("current storage skips retired envelopes, preserves files and rejects direct access", async () => {
+  const root = await mkdtemp(join(tmpdir(), "cll-current-storage-"));
   try {
+    const { storage, document } = await completedLesson(root);
     const id = randomUUID();
-    const job = createSceneJob(
-      GenerationRequestSchema.parse({
-        id,
-        source: { platform: "import", title: "Save test" },
-        profile: {
-          targetLanguage: "en",
-          instructionLanguage: "en",
-          level: "B1",
-          sceneCount: 2,
-          contextualExampleCount: 1,
-        },
-        agent: { provider: "openai", modelId: "" },
-        cues: [{ id: "cue-1", startMs: null, endMs: null, originalText: "Hello" }],
-      }),
-      1,
-    );
-    await new FileJobRepository(root).create(job);
-    assert.equal((await new FileJobRepository(root).get(id))?.summary.sourceTitle, "Save test");
-    await assert.rejects(new FileJobRepository(root).get("../../secrets"), /Invalid repository ID/);
-    await assert.rejects(new FileJobRepository(root).create(job), /already exists/);
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-test("corrupt checkpoint files fail visibly instead of silently resetting job progress", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-store-"));
-  try {
-    const id = randomUUID();
-    const folder = join(root, "jobs");
-    await import("node:fs/promises").then(fs => fs.mkdir(folder));
-    await writeFile(join(folder, id + ".json"), "{corrupt");
-    await assert.rejects(new FileJobRepository(root).get(id), /Cannot load saved job/);
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-test("V5 library ignores older flat files without deleting them and groups new lessons by video", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-v4-"));
-  try {
-    const oldId = randomUUID();
-    await writeFile(join(root, oldId + ".json"), JSON.stringify({ schemaVersion: 3 }));
-    const storage = localStoragePorts(join(root, "data-v5"));
-    assert.deepEqual(await storage.documents.list(), []);
-    const document = LearningDocumentSchema.parse({
-      id: randomUUID(),
-      schemaVersion: 5,
-      createdAt: new Date().toISOString(),
-      source: {
-        platform: "youtube",
-        title: "Episode / One",
-        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      },
-      profile: {
-        targetLanguage: "en",
-        instructionLanguage: "en",
-        level: "B1",
-        sceneCount: 2,
-        contextualExampleCount: 1,
-      },
-      generation: { provider: "openai", modelId: "" },
-      cues: [
-        { id: "q", startMs: 0, endMs: 1000, originalText: "Hello" },
-        { id: "a", startMs: 1100, endMs: 2000, originalText: "Hi" },
-      ],
-      sections: [
-        {
-          id: randomUUID(),
-          title: "Hello",
-          context: "Greeting",
-          cueIds: ["q", "a"],
-          startMs: 0,
-          endMs: 2000,
-          translations: [
-            { cueId: "q", text: "Hello" },
-            { cueId: "a", text: "Hi" },
-          ],
-          focusItems: [
-            {
-              expression: "Hello",
-              sourceCueIds: ["q"],
-              meaning: "Hello",
-              contextExplanation: "The reply shows a greeting.",
-              contextCueIds: ["a"],
-              wordNotes: [],
-              examples: [
-                {
-                  situation: "Meeting",
-                  dialogue: [
-                    { text: "Hello", translation: "Hello" },
-                    { text: "Hi", translation: "Hi" },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    });
-    await storage.documents.save(document, learningDocumentToMarkdown(document));
-    const folder = await videoFolder(join(root, "data-v5"), document);
-    assert.equal((await storage.documents.list())[0]?.id, document.id);
-    assert.equal(await readFile(join(root, oldId + ".json"), "utf8"), '{"schemaVersion":3}');
-    assert.match(await readFile(join(folder, document.id + ".md"), "utf8"), /Focus expressions/);
-    const renamed = {
+    const folder = join(root, "videos", "retired");
+    await mkdir(folder, { recursive: true });
+    const old = {
       ...document,
-      id: randomUUID(),
-      source: { ...document.source, title: "New title" },
-    };
-    await storage.documents.save(renamed, learningDocumentToMarkdown(renamed));
-    assert.equal(await videoFolder(join(root, "data-v5"), renamed), folder);
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-test("a completed V5 cue calibration persists atomically and cannot alter source timestamps", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-calibration-"));
-  try {
-    const id = randomUUID();
-    const repo = new FileDocumentRepository(root);
-    const doc = LearningDocumentSchema.parse({
       id,
-      schemaVersion: 5,
-      createdAt: new Date().toISOString(),
-      source: { platform: "import", title: "Calibration" },
-      profile: {
-        targetLanguage: "en",
-        instructionLanguage: "en",
-        level: "B1",
-        sceneCount: 2,
-        contextualExampleCount: 1,
-      },
-      generation: { provider: "anthropic", modelId: "" },
-      cues: [
-        { id: "q", startMs: 1000, endMs: 2000, originalText: "What about dinner?" },
-        { id: "a", startMs: 2100, endMs: 3300, originalText: "Not decided yet." },
-      ],
-      sections: [
-        {
-          id: randomUUID(),
-          title: "Dinner",
-          context: "A dinner conversation",
-          learningGoal: "Learn an undecided plan",
-          cueIds: ["q", "a"],
-          focusCueIds: ["a"],
-          startMs: 1000,
-          endMs: 3300,
-          translations: [
-            { cueId: "q", text: "What about dinner?" },
-            { cueId: "a", text: "Not decided yet." },
-          ],
-          vocabulary: [],
-          insights: [],
-          exercises: [],
-          focusItems: [
-            {
-              expression: "Not decided yet.",
-              sourceCueIds: ["a"],
-              meaning: "Undecided",
-              contextExplanation: "The question provides the context.",
-              contextCueIds: ["q"],
-              wordNotes: [],
-              examples: [
-                {
-                  situation: "Plans",
-                  dialogue: [
-                    { text: "Dinner?", translation: "Dinner?" },
-                    { text: "Not decided yet.", translation: "Not decided yet." },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    });
-    assert.equal(doc.schemaVersion, 5);
-    await repo.save(doc, learningDocumentToMarkdown(doc));
-    const folder = await videoFolder(root, doc);
-    const saved = await repo.updatePlaybackRange(id, "a", { startMs: 2300, endMs: 3700 });
-    assert.equal(saved.schemaVersion, 5);
-    if (saved.schemaVersion !== 5) throw new Error("Unexpected version");
-    assert.deepEqual(saved.playbackOverrides?.a, { startMs: 2300, endMs: 3700 });
-    assert.deepEqual(saved.scenePlaybackOverrides?.[doc.sections[0].id], {
-      startMs: 1000,
-      endMs: 3700,
-    });
-    assert.equal(saved.cues.find(cue => cue.id === "a")?.startMs, 2100);
-    const fresh = await new FileDocumentRepository(root).get(id);
-    assert.equal(fresh?.schemaVersion, 5);
-    if (fresh?.schemaVersion !== 5) throw new Error("Unexpected disk document");
-    assert.deepEqual(fresh.playbackOverrides?.a, { startMs: 2300, endMs: 3700 });
-    assert.deepEqual(fresh.scenePlaybackOverrides?.[doc.sections[0].id], {
-      startMs: 1000,
-      endMs: 3700,
-    });
-    assert.match(await readFile(join(folder, id + ".md"), "utf8"), /User-calibrated playback/);
-    const sceneId = doc.sections[0].id;
-    const sceneSaved = await repo.updateScenePlaybackRange(id, sceneId, {
-      startMs: 800,
-      endMs: 3800,
-    });
-    if (sceneSaved.schemaVersion !== 5) throw new Error("Unexpected version");
-    assert.deepEqual(sceneSaved.scenePlaybackOverrides?.[sceneId], { startMs: 800, endMs: 3800 });
-    assert.equal(sceneSaved.sections[0].startMs, 1000);
-    assert.equal(sceneSaved.cues[0].startMs, 1000);
-    const sceneFresh = await new FileDocumentRepository(root).get(id);
-    if (sceneFresh?.schemaVersion !== 5) throw new Error("Unexpected persisted scene document");
-    assert.deepEqual(sceneFresh.scenePlaybackOverrides?.[sceneId], { startMs: 800, endMs: 3800 });
-    assert.match(
-      await readFile(join(folder, id + ".md"), "utf8"),
-      /User-calibrated scene playback/,
+      execution: { ...document.execution!, promptVersion: "learning-points-prompts-11" },
+    };
+    await assert.rejects(storage.documents.save(old, "retired"), /停止支援/);
+    const text = JSON.stringify(old);
+    await writeFile(join(folder, id + ".json"), text);
+    const oldJob = { schemaVersion: 5, execution: old.execution, summary: { id } };
+    await writeFile(join(root, "jobs", id + ".json"), JSON.stringify(oldJob));
+    assert.deepEqual(
+      (await storage.documents.list()).map(d => d.id),
+      [document.id],
     );
-    await assert.rejects(
-      repo.updateScenePlaybackRange(id, randomUUID(), null),
-      /not part of this lesson/,
+    assert.deepEqual(
+      (await storage.jobs.list()).map(j => j.id),
+      [document.id],
     );
-    const sceneRestored = await repo.updateScenePlaybackRange(id, sceneId, null);
-    if (sceneRestored.schemaVersion !== 5) throw new Error("Unexpected version");
-    assert.deepEqual(sceneRestored.scenePlaybackOverrides, {});
-    await assert.rejects(repo.updatePlaybackRange(id, "missing", null), /not part of this lesson/);
-    const restored = await repo.updatePlaybackRange(id, "a", null);
-    assert.equal(restored.schemaVersion, 5);
-    if (restored.schemaVersion !== 5) throw new Error("Unexpected version");
-    assert.deepEqual(restored.playbackOverrides, {});
-    assert.equal(restored.cues.find(cue => cue.id === "a")?.startMs, 2100);
-    await assert.rejects(
-      repo.updatePlaybackRange(id, "a", { startMs: 4000, endMs: 1000 }),
-      /Playback duration|Invalid|validation/i,
+    await assert.rejects(storage.documents.get(id), /停止支援/);
+    await assert.rejects(storage.jobs.get(id), /停止支援/);
+    assert.equal(await readFile(join(folder, id + ".json"), "utf8"), text);
+    assert.equal(await readFile(join(root, "jobs", id + ".json"), "utf8"), JSON.stringify(oldJob));
+    const request = (await storage.jobs.get(document.id))!.request;
+    assert.equal((await findLocalDuplicates(request, storage)).length, 1);
+    const restarted = localStoragePorts(root);
+    assert.deepEqual(
+      await restarted.documents.get(document.id),
+      JSON.parse(JSON.stringify(document)),
     );
+    await assert.rejects(restarted.documents.get("../bad"), /Invalid/);
+    await storage.documents.updatePlaybackRange(document.id, "cue-1", {
+      startMs: 100,
+      endMs: 2100,
+    });
+    assert.equal(
+      (await storage.documents.get(document.id))!.cues[0].startMs,
+      document.cues[0].startMs,
+    );
+    await storage.jobs.deleteHistory(document.id);
+    assert.deepEqual(await restarted.jobs.list(), []);
+    assert.equal((await restarted.jobs.getRecord(document.id))!.summary.documentId, document.id);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+test("corrupt current checkpoints fail visibly instead of resetting", async () => {
+  const root = await mkdtemp(join(tmpdir(), "cll-current-corrupt-"));
+  try {
+    const { storage, document } = await completedLesson(root);
+    await writeFile(join(root, "jobs", document.id + ".json"), "{");
+    await assert.rejects(storage.jobs.list(), /Cannot load/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test("deleting history removes ended checkpoints and rejects active jobs", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-history-"));
+test("retired V5 IDs are identified without parsing or modifying their files", async () => {
+  const root = await mkdtemp(join(tmpdir(), "cll-retired-id-"));
   try {
-    const repo = new FileJobRepository(root);
-    for (const status of ["queued", "running", "waiting", "failed", "cancelled"] as const) {
-      const id = randomUUID();
-      const job = createSceneJob(
-        GenerationRequestSchema.parse({
-          id,
-          source: { platform: "import", title: "History" },
-          profile: {
-            targetLanguage: "en",
-            instructionLanguage: "en",
-            level: "B1",
-            sceneCount: 2,
-            contextualExampleCount: 1,
-          },
-          agent: { provider: "openai", modelId: "" },
-          cues: [{ id: "cue", startMs: null, endMs: null, originalText: "Hello" }],
-        }),
-        1,
-      );
-      job.summary.status = status;
-      await repo.create(job);
-      if (status === "failed" || status === "cancelled") {
-        await repo.deleteHistory(id);
-        await repo.deleteHistory(id);
-        assert.equal(await repo.get(id), null);
-        assert.equal(await repo.getRecord(id), null);
-      } else {
-        await assert.rejects(repo.deleteHistory(id), /Only ended/);
-        assert.equal((await repo.get(id))?.summary.status, status);
-      }
+    const id = randomUUID(),
+      retired = join(root, "data-v5");
+    await mkdir(join(retired, "jobs"), { recursive: true });
+    await mkdir(join(retired, "videos", "old"), { recursive: true });
+    const paths = [
+      join(retired, "jobs", id + ".json"),
+      join(retired, "videos", "old", id + ".json"),
+    ];
+    for (const path of paths) await writeFile(path, "unparseable retired file");
+    const storage = localStoragePorts(join(root, "data-v7"));
+    assert.deepEqual(await storage.documents.list(), []);
+    assert.deepEqual(await storage.jobs.list(), []);
+    await assert.rejects(storage.documents.get(id), /停止支援/);
+    await assert.rejects(storage.jobs.get(id), /停止支援/);
+    for (const path of paths)
+      assert.equal(await readFile(path, "utf8"), "unparseable retired file");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("compatible completed V7 lessons remain readable across prompt changes without rewriting files", async () => {
+  const root = await mkdtemp(join(tmpdir(), "cll-readable-v7-"));
+  try {
+    const { storage, document } = await completedLesson(root);
+    for (const promptVersion of ["learning-points-prompts-12", "learning-points-prompts-13"]) {
+      const id = randomUUID(),
+        folder = join(root, "videos", promptVersion);
+      const old = {
+        ...document,
+        id,
+        execution: {
+          ...document.execution!,
+          promptVersion,
+          qualityStrategyVersion: "learning-quality-1",
+        },
+      };
+      const text = JSON.stringify(old);
+      await mkdir(folder, { recursive: true });
+      const path = join(folder, id + ".json");
+      await writeFile(path, text);
+      assert.deepEqual(await storage.documents.get(id), JSON.parse(text));
+      assert.ok((await storage.documents.list()).some(d => d.id === id));
+      assert.equal(await readFile(path, "utf8"), text);
     }
-    await assert.rejects(repo.deleteHistory("../../other"), /Invalid repository ID/);
-    assert.equal((await repo.list()).length, 3);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("legacy resume after canonical save finalizes the existing lesson without relabelling or overwriting it", async () => {
+  const root = await mkdtemp(join(tmpdir(), "cll-saved-resume-"));
+  try {
+    const { storage, document } = await completedLesson(root);
+    const savedJob = (await storage.jobs.get(document.id))!;
+    const old = {
+      ...document,
+      execution: {
+        ...document.execution!,
+        inputFingerprint: createHash("sha256")
+          .update(JSON.stringify(savedJob.request))
+          .digest("hex"),
+        promptVersion: "learning-points-prompts-13",
+        qualityStrategyVersion: "learning-quality-1",
+      },
+    };
+    const path = (await findVideoDocument(root, document.id))!;
+    const text = JSON.stringify(old);
+    await writeFile(path, text);
+    await storage.jobs.update(document.id, j => ({
+      ...j,
+      execution: old.execution,
+      summary: { ...j.summary, status: "failed", documentId: undefined, execution: old.execution },
+    }));
+    let calls = 0;
+    const manager = new JobManager(
+      {
+        storage,
+        generateSection: async () => {
+          calls++;
+          throw new Error("must reuse saved document");
+        },
+      },
+      () => {},
+    );
+    const resumed = await manager.resume(document.id, document.id);
+    assert.deepEqual(resumed, JSON.parse(text));
+    assert.equal(calls, 0);
+    assert.equal((await storage.jobs.get(document.id))!.summary.status, "completed");
+    assert.equal(await readFile(path, "utf8"), text);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("listing discovered document paths preserves ordering, limits and corrupt-file errors", async () => {
+  const root = await mkdtemp(join(tmpdir(), "cll-list-paths-"));
+  try {
+    const { storage, document } = await completedLesson(root);
+    const newer = { ...document, id: randomUUID(), createdAt: "2026-10-17T00:00:00.000Z" };
+    const folder = join(root, "videos", "another-source");
+    await mkdir(folder, { recursive: true });
+    await writeFile(join(folder, newer.id + ".json"), JSON.stringify(newer));
+    assert.deepEqual(
+      (await storage.documents.list(1)).map(doc => doc.id),
+      [newer.id],
+    );
+    assert.deepEqual(
+      (await storage.documents.list()).map(doc => doc.id),
+      [newer.id, document.id],
+    );
+    assert.deepEqual(await storage.documents.get(newer.id), JSON.parse(JSON.stringify(newer)));
+    const brokenId = randomUUID();
+    await writeFile(join(folder, brokenId + ".json"), "{");
+    await assert.rejects(storage.documents.list(), /Cannot load document/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("listing and direct reads both reject duplicate IDs across video folders", async () => {
+  const root = await mkdtemp(join(tmpdir(), "cll-list-duplicates-"));
+  try {
+    const { storage, document } = await completedLesson(root);
+    const original = (await findVideoDocument(root, document.id))!;
+    const bytes = await readFile(original, "utf8");
+    const duplicateFolder = join(root, "videos", "duplicate");
+    await mkdir(duplicateFolder, { recursive: true });
+    const duplicate = join(duplicateFolder, document.id + ".json");
+    await writeFile(duplicate, bytes);
+    await assert.rejects(storage.documents.list(), /Document exists in multiple video folders/);
+    await assert.rejects(
+      storage.documents.get(document.id),
+      /Document exists in multiple video folders/,
+    );
+    assert.equal(await readFile(original, "utf8"), bytes);
+    assert.equal(await readFile(duplicate, "utf8"), bytes);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

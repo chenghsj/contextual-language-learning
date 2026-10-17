@@ -27,12 +27,12 @@ test("missing tracks carry a structured code through the YouTube bridge", async 
   assert.match(app, /data-state=\{subtitleState\}/);
   assert.match(app, /<Button variant="ghost" size="sm"/);
   assert.doesNotMatch(app, /subtitleLayout\.hint|subtitleUi\.tracksUnknown|subtitleLayout\.ready/);
-  assert.match(app, /!subtitleReaderBlocked && subtitleState !== "ready" && <Button/);
+  assert.match(app, /!subtitleReaderBlocked && !captionsReady && <ActionFeedbackButton/);
   assert.match(
     app,
     /videoRecovery=\{page === "create" && !generating \? undefined : videoRecovery\}/,
   );
-  assert.match(app, /subtitleReaderBlocked \? subtitleLayout\.reloadNeeded/);
+  assert.match(app, /subtitleReaderBlocked \? subtitleLayout\.empty/);
   assert.match(app, /role=\{subtitleState === "error" \? "alert" : "status"\}/);
   assert.doesNotMatch(app, /cause\.message\.includes\("no available"/);
   assert.equal(new VideoCommandError("No track", "TRACK_UNAVAILABLE").code, "TRACK_UNAVAILABLE");

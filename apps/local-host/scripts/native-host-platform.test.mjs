@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { mkdtemp, mkdir, writeFile, readFile, access, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { execFile } from "node:child_process";
@@ -46,11 +46,11 @@ test("Native Host installer selects per-browser and per-OS registration location
   );
   assert.equal(
     installationDir("linux", home, {}),
-    join(home, ".local/share/immersive-language-learning/native-host"),
+    join(home, ".local/share/contextual-language-learning/native-host"),
   );
   assert.equal(
     installationDir("win32", home, {}),
-    join(home, "AppData/Local/Immersive Learning/native-host"),
+    join(home, "AppData/Local/Contextual Language Learning/native-host"),
   );
   assert.throws(() => browserManifestLocation("linux", "firefox", home), /Browser must/);
   assert.throws(() => installationDir("freebsd", home), /Unsupported/);
@@ -61,13 +61,19 @@ for (const platform of ["darwin", "linux"]) {
     platform +
       " uninstall preserves other browsers and user data, removes the last shared program, and is repeatable",
     async () => {
-      const home = await mkdtemp(join(tmpdir(), "immersive-uninstall-"));
+      const home = await mkdtemp(join(tmpdir(), "contextual-uninstall-"));
       const env = { XDG_CONFIG_HOME: join(home, "config"), XDG_DATA_HOME: join(home, "data") };
       const root = installationDir(platform, home, env);
       const chrome = browserManifestLocation(platform, "chrome", home, env).path;
       const edge = browserManifestLocation(platform, "edge", home, env).path;
       const credentials = join(root, "..", "pi", "auth.json");
-      const lesson = join(home, "Documents", "Immersive Learning", "data-v5", "lesson.json");
+      const lesson = join(
+        home,
+        "Documents",
+        "Contextual Language Learning",
+        "data-v5",
+        "lesson.json",
+      );
       try {
         for (const path of [
           root,
@@ -108,7 +114,7 @@ for (const platform of ["darwin", "linux"]) {
 }
 
 test("Windows uninstall queries registrations before deleting only the selected key and last shared program", async () => {
-  const home = await mkdtemp(join(tmpdir(), "immersive-uninstall-windows-"));
+  const home = await mkdtemp(join(tmpdir(), "contextual-uninstall-windows-"));
   const env = { LOCALAPPDATA: join(home, "local") };
   const root = installationDir("win32", home, env);
   const registrations = new Set(["chrome", "edge"]);
@@ -173,7 +179,7 @@ test("Windows uninstall queries registrations before deleting only the selected 
 });
 
 test("uninstall CLI rejects invalid browser arguments without changing registrations", async () => {
-  const home = await mkdtemp(join(tmpdir(), "immersive-uninstall-cli-"));
+  const home = await mkdtemp(join(tmpdir(), "contextual-uninstall-cli-"));
   const execute = promisify(execFile);
   const script = fileURLToPath(new URL("./uninstall-host.mjs", import.meta.url));
   const env = {
@@ -211,7 +217,7 @@ test(
   "uninstall CLI supports a selected browser and defaults to Chrome in an isolated home",
   { skip: process.platform === "win32" },
   async () => {
-    const home = await mkdtemp(join(tmpdir(), "immersive-uninstall-cli-success-"));
+    const home = await mkdtemp(join(tmpdir(), "contextual-uninstall-cli-success-"));
     const execute = promisify(execFile);
     const script = fileURLToPath(new URL("./uninstall-host.mjs", import.meta.url));
     const env = {
@@ -243,6 +249,36 @@ test(
   },
 );
 
+test("a missing macOS speech resource fails before modifying the existing registration", async () => {
+  const home = await mkdtemp(join(tmpdir(), "cll-speech-install-"));
+  try {
+    const sourceRoot = join(home, "source");
+    await mkdir(sourceRoot);
+    const sourceEntry = join(sourceRoot, "native-host.mjs");
+    await writeFile(sourceEntry, "host");
+    const location = browserManifestLocation("darwin", "chrome", home, {});
+    await mkdir(dirname(location.path), { recursive: true });
+    await writeFile(location.path, "keep registration");
+    const options = {
+      platform: "darwin",
+      extensionId: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      sourceRoot,
+      sourceEntry,
+      home,
+      env: {},
+    };
+    await assert.rejects(installNativeHost(options), /speech helper not found/);
+    await writeFile(join(sourceRoot, "macos-speech"), "helper");
+    await assert.rejects(installNativeHost(options), /speech helper not found/);
+    await writeFile(join(sourceRoot, "macos-speech.swift"), "source");
+    await writeFile(join(sourceRoot, "macos-speech-siri"), "Siri helper");
+    await assert.rejects(installNativeHost(options), { code: "ENOENT" });
+    assert.equal(await readFile(location.path, "utf8"), "keep registration");
+  } finally {
+    await rm(home, { recursive: true, force: true });
+  }
+});
+
 for (const platform of ["darwin", "linux", "win32"]) {
   for (const browser of ["chrome", "edge", "chromium"]) {
     test(`${platform} installs the selected ${browser} registration and launcher in isolated paths`, async () => {
@@ -261,6 +297,10 @@ for (const platform of ["darwin", "linux", "win32"]) {
         await mkdir(join(sourceRoot, "dist"), { recursive: true });
         await mkdir(join(sourceRoot, "scripts"), { recursive: true });
         await writeFile(sourceEntry, 'process.stdout.write("launcher-ok");\n');
+        await writeFile(join(sourceRoot, "dist/macos-speech"), "speech helper fixture");
+        await writeFile(join(sourceRoot, "dist/macos-speech.swift"), "speech helper fixture");
+        await writeFile(join(sourceRoot, "dist/macos-speech-siri"), "Siri helper fixture");
+        await writeFile(join(sourceRoot, "dist/macos-speech-siri.LICENSE"), "Siri license fixture");
         await writeFile(join(sourceRoot, "scripts/windows-launcher.cs"), "Windows launcher source");
         await writeFile(
           join(sourceRoot, "scripts/compile-launcher.ps1"),
@@ -298,6 +338,17 @@ for (const platform of ["darwin", "linux", "win32"]) {
           await readFile(join(root, "native-host.mjs"), "utf8"),
           await readFile(sourceEntry, "utf8"),
         );
+        if (platform === "darwin") {
+          assert.equal(await readFile(join(root, "macos-speech"), "utf8"), "speech helper fixture");
+          assert.equal(
+            await readFile(join(root, "macos-speech-siri"), "utf8"),
+            "Siri helper fixture",
+          );
+          assert.equal(
+            await readFile(join(root, "macos-speech-siri.LICENSE"), "utf8"),
+            "Siri license fixture",
+          );
+        }
         if (platform === "win32") {
           assert.equal(result.launcher, join(root, "native-host.exe"));
           assert.equal(

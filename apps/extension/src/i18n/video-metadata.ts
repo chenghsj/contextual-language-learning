@@ -7,6 +7,8 @@ export const videoMetadataMessages: Record<
     get: string;
     refresh: string;
     busy: string;
+    buttonBusy: string;
+    buttonSuccess: string;
     success: string;
     partial: string;
     unavailable: string;
@@ -20,6 +22,8 @@ export const videoMetadataMessages: Record<
     get: "Get current video information",
     refresh: "Refresh video information",
     busy: "Detecting video information…",
+    buttonBusy: "Updating…",
+    buttonSuccess: "Updated",
     success: "Video information updated. Existing subtitles were not changed.",
     partial:
       "Video URL found, but the title is not available yet. Play the video and retry, or enter a title manually.",
@@ -36,6 +40,8 @@ export const videoMetadataMessages: Record<
     get: "取得目前影片資訊",
     refresh: "重新偵測影片資訊",
     busy: "正在偵測影片資訊…",
+    buttonBusy: "更新中…",
+    buttonSuccess: "已更新",
     success: "已更新影片資訊，原有字幕不受影響。",
     partial: "已取得影片網址，但尚未取得標題。請播放影片後重試，或手動填寫標題。",
     unavailable: "找不到支援的影片分頁。請先開啟 YouTube 或 Netflix 影片再重試。",
@@ -48,6 +54,8 @@ export const videoMetadataMessages: Record<
     get: "获取当前视频信息",
     refresh: "重新检测视频信息",
     busy: "正在检测视频信息…",
+    buttonBusy: "更新中…",
+    buttonSuccess: "已更新",
     success: "视频信息已更新，原有字幕不受影响。",
     partial: "已获取视频网址，但暂时无法获取标题。请播放视频后重试，或手动填写标题。",
     unavailable: "找不到支持的视频标签页。请先打开 YouTube 或 Netflix 视频后重试。",
@@ -60,6 +68,8 @@ export const videoMetadataMessages: Record<
     get: "現在の動画情報を取得",
     refresh: "動画情報を再取得",
     busy: "動画情報を取得中…",
+    buttonBusy: "更新中…",
+    buttonSuccess: "更新済み",
     success: "動画情報を更新しました。字幕は変更していません。",
     partial:
       "動画 URL は取得しましたが、タイトルがまだありません。再生後に再試行するか、手入力してください。",
@@ -76,6 +86,8 @@ export const videoMetadataMessages: Record<
     get: "현재 동영상 정보 가져오기",
     refresh: "동영상 정보 다시 감지",
     busy: "동영상 정보 확인 중…",
+    buttonBusy: "업데이트 중…",
+    buttonSuccess: "업데이트됨",
     success: "동영상 정보를 업데이트했습니다. 기존 자막은 변경하지 않았습니다.",
     partial:
       "동영상 URL을 가져왔지만 제목은 아직 없습니다. 재생 후 다시 시도하거나 제목을 직접 입력하세요.",

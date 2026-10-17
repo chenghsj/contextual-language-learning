@@ -1,4 +1,6 @@
 import { build } from "esbuild";
+import { buildMacSpeech } from "./build-macos-speech.mjs";
+import { buildMacSiri } from "./build-macos-siri.mjs";
 import { piBundlePlugin, piRequireBanner } from "./pi-bundle.mjs";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -31,7 +33,9 @@ await build({
   define: {
     __GOOGLE_OAUTH_CLIENT_ID__: JSON.stringify(clientId),
     __GOOGLE_OAUTH_CLIENT_SECRET__: JSON.stringify(clientSecret),
-    __IMMERSIVE_HOST_VERSION__: JSON.stringify(hostVersion),
+    __CONTEXTUAL_HOST_VERSION__: JSON.stringify(hostVersion),
   },
   logLevel: "info",
 });
+await buildMacSpeech();
+await buildMacSiri();

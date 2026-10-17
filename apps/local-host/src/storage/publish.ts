@@ -1,7 +1,7 @@
 import { readFile, rename, rm, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
-import type { Destination, LearningDocument } from "@immersive/core";
+import type { Destination, LearningDocument } from "@contextual/core";
 import { toMarkdown } from "../generation/markdown";
 import { validateFolder } from "./folders";
 import type { DocumentPublisher, StoragePorts, PublicationJournal } from "./ports";

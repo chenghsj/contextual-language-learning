@@ -5,11 +5,11 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
 // Netflix playerApp.getAPI() is an undocumented internal interface and may disappear.
 
 (() => {
-  const REQUEST_EVENT = "immersive-learning:netflix:request";
-  const RESPONSE_EVENT = "immersive-learning:netflix:response";
+  const REQUEST_EVENT = "contextual-learning:netflix:request";
+  const RESPONSE_EVENT = "contextual-learning:netflix:response";
   const BRIDGE_VERSION = "netflix-worker-url-check-v3";
-  const CAPTION_FETCH_REQUEST_EVENT = "immersive-learning:netflix:caption-fetch-request";
-  const CAPTION_FETCH_RESPONSE_EVENT = "immersive-learning:netflix:caption-fetch-response";
+  const CAPTION_FETCH_REQUEST_EVENT = "contextual-learning:netflix:caption-fetch-request";
+  const CAPTION_FETCH_RESPONSE_EVENT = "contextual-learning:netflix:caption-fetch-response";
   type Action =
     | "bridgeHealth"
     | "diagnose"
@@ -20,7 +20,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
     | "setPlaybackRate"
     | "subtitlesGet";
   type Request = {
-    source: "immersive-learning";
+    source: "contextual-learning";
     id: string;
     action: Action;
     value?: number;
@@ -41,11 +41,11 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
       player?: { MediaSession?: unknown };
       appContext?: { state?: { playerApp?: { getAPI(): { videoPlayer: PlayerApi } } } };
     };
-    __immersiveLearningNetflixBridge?: boolean;
+    __contextualLearningNetflixBridge?: boolean;
   };
   const page = window as Page;
-  if (page.__immersiveLearningNetflixBridge) return;
-  page.__immersiveLearningNetflixBridge = true;
+  if (page.__contextualLearningNetflixBridge) return;
+  page.__contextualLearningNetflixBridge = true;
 
   function requestCaptionDocument(url: string, id: string): Promise<Response> {
     return new Promise((resolve, reject) => {
@@ -63,7 +63,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
             error?: string;
           }>
         ).detail;
-        if (detail?.source !== "immersive-learning" || detail.id !== id) return;
+        if (detail?.source !== "contextual-learning" || detail.id !== id) return;
         clearTimeout(timer);
         window.removeEventListener(CAPTION_FETCH_RESPONSE_EVENT, onResponse);
         if (!detail.ok || typeof detail.text !== "string") {
@@ -75,7 +75,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
       window.addEventListener(CAPTION_FETCH_RESPONSE_EVENT, onResponse);
       window.dispatchEvent(
         new CustomEvent(CAPTION_FETCH_REQUEST_EVENT, {
-          detail: { source: "immersive-learning", id, url },
+          detail: { source: "contextual-learning", id, url },
         }),
       );
     });
@@ -144,7 +144,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
     if (!value || typeof value !== "object") return false;
     const candidate = value as Partial<Request>;
     return (
-      candidate.source === "immersive-learning" &&
+      candidate.source === "contextual-learning" &&
       typeof candidate.id === "string" &&
       candidate.id.length < 100 &&
       [
@@ -167,7 +167,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
       window.dispatchEvent(
         new CustomEvent(RESPONSE_EVENT, {
           detail: {
-            source: "immersive-learning",
+            source: "contextual-learning",
             id: request.id,
             bridgeVersion: BRIDGE_VERSION,
             ok: true,
@@ -202,7 +202,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
         window.dispatchEvent(
           new CustomEvent(RESPONSE_EVENT, {
             detail: {
-              source: "immersive-learning",
+              source: "contextual-learning",
               id: request.id,
               bridgeVersion: BRIDGE_VERSION,
               ok: true,
@@ -216,7 +216,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
         window.dispatchEvent(
           new CustomEvent(RESPONSE_EVENT, {
             detail: {
-              source: "immersive-learning",
+              source: "contextual-learning",
               id: request.id,
               bridgeVersion: BRIDGE_VERSION,
               ok: false,
@@ -229,7 +229,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
       return;
     }
     const result: {
-      source: "immersive-learning";
+      source: "contextual-learning";
       id: string;
       ok: boolean;
       available: boolean;
@@ -240,7 +240,7 @@ import { readNetflixSubtitles, type NetflixCaptionPlayer } from "../video/netfli
       seekCalled?: boolean;
       playbackRate?: number;
       error?: string;
-    } = { source: "immersive-learning", id: request.id, ok: false, available: false };
+    } = { source: "contextual-learning", id: request.id, ok: false, available: false };
     try {
       const chosen = selectPlayer();
       result.available = !!chosen;

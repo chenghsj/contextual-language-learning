@@ -8,10 +8,11 @@ import {
   CustomGenerationRequestSchema,
   type HostMessage,
   type DuplicateMatch,
-} from "@immersive/core";
+} from "@contextual/core";
 import { createCustomHandler } from "./host/custom";
 import { CustomJobManager } from "./jobs/custom-manager";
 import { FileCustomRepository } from "./storage/custom";
+import { sourceKey } from "./duplicates";
 
 test("custom duplicate authorization freezes storage settings, rejects new remote matches and fails closed on cloud errors", async () => {
   const root = await mkdtemp(join(tmpdir(), "custom-ticket-"));
@@ -129,6 +130,11 @@ test("custom duplicate authorization freezes storage settings, rejects new remot
     assert.equal(calls, 1);
     assert.equal((await repository.getDocument(payload.id))?.request.prompt, payload.prompt);
     assert.equal(messages.at(-1)?.type, "generationSettled");
+    await handle({ type: "listCustomDocuments", id: randomUUID() });
+    const listing = messages.at(-1)!;
+    assert.equal(listing.type, "customDocuments");
+    if (listing.type === "customDocuments")
+      assert.equal(listing.documents[0].sourceKey, sourceKey(payload.source, payload.cues));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

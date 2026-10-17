@@ -13,6 +13,7 @@ import {
 function request() {
   return GenerationRequestSchema.parse({
     id: randomUUID(),
+    outputSchemaVersion: 7,
     source: { platform: "import", title: "A lesson" },
     profile: {
       targetLanguage: "en",
@@ -47,5 +48,21 @@ test("checkpoints must agree with completed count and document versions are expl
     JobSnapshotSchema.safeParse({ ...job, summary: { ...job.summary, completed: 1 } }).success,
     false,
   );
-  assert.throws(() => readLearningDocument({ schemaVersion: 99 }), /Unsupported/);
+  assert.throws(() => readLearningDocument({ schemaVersion: 99 }), /停止支援/);
+});
+
+test("standard reader rejects missing or stale execution identity before parsing content", async () => {
+  const { pointsFixture } = await import("../test/learning-points-fixture");
+  const valid = pointsFixture().document;
+  assert.equal(readLearningDocument(valid).id, valid.id);
+  for (const execution of [
+    undefined,
+    { ...valid.execution, inputFingerprint: undefined },
+    { ...valid.execution, modelId: "" },
+    { ...valid.execution, qualityStrategyVersion: "old" },
+    { ...valid.execution, promptVersion: "old" },
+    { ...valid.execution, workflowVersion: "old" },
+  ]) {
+    assert.throws(() => readLearningDocument({ schemaVersion: 7, execution }), /停止支援/);
+  }
 });

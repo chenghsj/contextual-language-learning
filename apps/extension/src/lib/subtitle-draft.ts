@@ -1,11 +1,12 @@
 import {
   parseSubtitles,
+  serializeSubtitleMarkup,
   parsePlainText,
   formatRangeTime,
   LEARNING_LANGUAGES,
   type LearningLanguage,
   type SubtitleCue,
-} from "@immersive/core";
+} from "@contextual/core";
 import { getVideoAdapter } from "../video";
 import { shouldFollowSelectedVideo } from "../video/draft-navigation";
 import {
@@ -33,6 +34,25 @@ import {
 import { videoMetadataMessages } from "../i18n/video-metadata";
 import { learningLanguageName } from "../i18n/preferences";
 import { translate, type UiLocale } from "../i18n/messages";
+import { playbackCueMap as derivePlaybackCues } from "../video/reader-playback";
+import type { LoopWindow } from "../video/loop-window";
+function sourceCues(raw: string) {
+  return raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw);
+}
+function inferredTimingOverrides(cues: SubtitleCue[], original: SubtitleCue[]) {
+  const byId = new Map(original.map(cue => [cue.id, cue]));
+  return Object.fromEntries(
+    cues.flatMap(cue => {
+      const source = byId.get(cue.id);
+      return source &&
+        cue.startMs !== null &&
+        cue.endMs !== null &&
+        (cue.startMs !== source.startMs || cue.endMs !== source.endMs)
+        ? [[cue.id, { startMs: cue.startMs, endMs: cue.endMs }]]
+        : [];
+    }),
+  ) as Record<string, LoopWindow>;
+}
 export type SelectedVideo = { tabId: number; windowId: number; url: string; title: string };
 export type SubtitleDraftState = {
   raw: string;
@@ -61,12 +81,13 @@ export type SubtitleDraftState = {
   trackInfo: {
     sourceKey: string;
     status: "available" | "unknown";
-    tracks: { language: string; kind: "manual" | "auto" }[];
+    tracks: { language: string; kind: "manual" | "auto" | "translated" }[];
   } | null;
   error: string;
   pasteDrafts: Record<string, string>;
   ready: boolean;
   cues: SubtitleCue[];
+  timingOverrides: Record<string, LoopWindow>;
 };
 export const browserSubtitleAdapters = {
   getAdapter: getVideoAdapter,
@@ -104,6 +125,7 @@ export class SubtitleDraft {
     pasteDrafts: {},
     ready: false,
     cues: [],
+    timingOverrides: {},
   };
   private listeners = new Set<(state: SubtitleDraftState) => void>();
   private cache = new Map<
@@ -112,11 +134,18 @@ export class SubtitleDraft {
       raw: string;
       originalRaw?: string;
       cues?: SubtitleCue[];
+      timingOverrides?: Record<string, LoopWindow>;
       fileName: string;
       source: CaptionProvenance;
     }
   >();
-  private revisions: { key: string; raw: string; originalRaw: string; cues: SubtitleCue[] }[] = [];
+  private revisions: {
+    key: string;
+    raw: string;
+    originalRaw: string;
+    cues: SubtitleCue[];
+    timingOverrides?: Record<string, LoopWindow>;
+  }[] = [];
   private metadataVersion = 0;
   private captionVersion = 0;
   private trackVersion = 0;
@@ -136,6 +165,17 @@ export class SubtitleDraft {
   }
   get snapshot() {
     return this.state;
+  }
+  /** Effective UI/preview times use source starts and independent saved manual ranges. */
+  playbackCueMap(resetCueId?: string) {
+    const originals = new Map(sourceCues(this.state.originalRaw).map(cue => [cue.id, cue]));
+    const cues = this.state.cues.map(cue => {
+      const source = originals.get(cue.id);
+      return source ? { ...cue, startMs: source.startMs, endMs: source.endMs } : cue;
+    });
+    const overrides = { ...this.state.timingOverrides };
+    if (resetCueId) delete overrides[resetCueId];
+    return derivePlaybackCues(cues, this.adapters.getAdapter(this.state.sourceUrl).id, overrides);
   }
   subscribe(listener: (state: SubtitleDraftState) => void) {
     this.listeners.add(listener);
@@ -163,10 +203,11 @@ export class SubtitleDraft {
         next.cues ??
         (state.raw.includes("-->") ? parseSubtitles(state.raw) : parsePlainText(state.raw));
       state.originalRaw = next.originalRaw ?? (next.cues ? state.originalRaw : state.raw);
-      const original = state.originalRaw.includes("-->")
-        ? parseSubtitles(state.originalRaw)
-        : parsePlainText(state.originalRaw);
-      state.edited = JSON.stringify(state.cues) !== JSON.stringify(original);
+      const original = sourceCues(state.originalRaw);
+      state.timingOverrides = next.timingOverrides ?? inferredTimingOverrides(state.cues, original);
+      state.edited =
+        JSON.stringify(state.cues) !== JSON.stringify(original) ||
+        Object.keys(state.timingOverrides).length > 0;
     }
     state.ready =
       state.cues.length > 0 &&
@@ -180,6 +221,7 @@ export class SubtitleDraft {
         raw: state.raw,
         originalRaw: state.originalRaw,
         cues: state.cues,
+        timingOverrides: state.timingOverrides,
         fileName: state.fileName,
         source: state.captionSource,
       });
@@ -189,10 +231,19 @@ export class SubtitleDraft {
     id: string,
     changes: Pick<SubtitleCue, "originalText" | "startMs" | "endMs">,
     duration?: number,
+    timingMode: "preserve" | "manual" | "reset" = "manual",
   ) {
     if (!this.state.ready || !this.state.cues.some(cue => cue.id === id))
       throw new Error(this.subtitleUi.unavailable);
-    const { startMs, endMs, originalText } = changes;
+    const current = this.state.cues.find(cue => cue.id === id)!;
+    const original = sourceCues(this.state.originalRaw).find(cue => cue.id === id) ?? current;
+    const { startMs, endMs } =
+      timingMode === "reset" ? original : timingMode === "preserve" ? current : changes;
+    const { originalText } = changes;
+    const timingOverrides = { ...this.state.timingOverrides };
+    if (timingMode === "reset") delete timingOverrides[id];
+    else if (timingMode === "manual" && startMs !== null && endMs !== null)
+      timingOverrides[id] = { startMs, endMs };
     if (
       !originalText.trim() ||
       originalText.length > 1500 ||
@@ -206,7 +257,13 @@ export class SubtitleDraft {
           (duration !== undefined && endMs > duration)))
     )
       throw new Error("Invalid subtitle text or timing");
-    const cues = this.state.cues.map(cue => (cue.id === id ? { ...cue, ...changes } : cue));
+    const cues = this.state.cues.map(cue => {
+      if (cue.id !== id) return cue;
+      const updated = { ...cue, originalText, startMs, endMs };
+      // A user rewrite invalidates source offsets and the associated source reading.
+      if (cue.originalText !== changes.originalText) delete updated.ruby;
+      return updated;
+    });
     if (cues.reduce((sum, cue) => sum + cue.originalText.length, 0) > 220000)
       throw new Error("Subtitle size limit exceeded");
     const clock = (ms: number) => {
@@ -217,11 +274,17 @@ export class SubtitleDraft {
       .map((cue, index) =>
         cue.startMs === null
           ? cue.originalText
-          : `${index + 1}\n${clock(cue.startMs)} --> ${clock(cue.endMs!)}\n${cue.originalText}`,
+          : `${index + 1}\n${clock(cue.startMs)} --> ${clock(cue.endMs!)}\n${serializeSubtitleMarkup(cue)}`,
       )
       .join("\n\n");
     ++this.captionVersion;
-    this.update({ raw, cues, originalRaw: this.state.originalRaw, subtitleBusy: false });
+    this.update({
+      raw,
+      cues,
+      timingOverrides,
+      originalRaw: this.state.originalRaw,
+      subtitleBusy: false,
+    });
   }
   restoreOriginal() {
     this.update({ raw: this.state.originalRaw, pendingCaption: null });
@@ -236,6 +299,7 @@ export class SubtitleDraft {
         raw: this.state.raw,
         originalRaw: this.state.originalRaw,
         cues: this.state.cues,
+        timingOverrides: this.state.timingOverrides,
       });
       this.revisions = this.revisions.slice(-10);
     }
@@ -278,6 +342,7 @@ export class SubtitleDraft {
         raw: cached.raw,
         originalRaw: cached.originalRaw ?? cached.raw,
         cues: cached.cues,
+        timingOverrides: cached.timingOverrides,
         captionSource: cached.source,
         fileName: cached.fileName,
         sourceUrl,
@@ -348,6 +413,7 @@ export class SubtitleDraft {
         raw: cached?.raw ?? "",
         originalRaw: cached?.originalRaw ?? cached?.raw ?? "",
         cues: cached?.cues,
+        timingOverrides: cached?.timingOverrides,
         pendingCaption: null,
         fileName: cached?.fileName ?? "",
         captionSource: cached?.source ?? null,
@@ -499,6 +565,7 @@ export class SubtitleDraft {
         raw: cached.raw,
         originalRaw: cached.originalRaw ?? cached.raw,
         cues: cached.cues,
+        timingOverrides: cached.timingOverrides,
         pendingCaption: null,
         fileName: cached.fileName,
         captionSource: cached.source,
@@ -561,7 +628,7 @@ export class SubtitleDraft {
     const request = ++this.captionVersion;
     let attemptedUrl = "";
     const previousCaption = this.state.captionSource;
-    if (!this.state.edited) this.set("captionSource", null);
+    // Keep the current transcript usable if a refresh fails before replacement.
     this.set("subtitleBusy", true);
     this.set("subtitleTone", "loading");
     this.set(

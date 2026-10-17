@@ -53,7 +53,7 @@ Connecting or disconnecting an AI service does not change browser registration.
 ### V5 data policy
 
 V5 lessons use one contextual document format. The canonical local repository is
-`~/Documents/Immersive Learning/data-v5/`; jobs and lessons are stored separately
+`~/Documents/Contextual Language Learning/data-v5/`; jobs and lessons are stored separately
 under that directory. An optional selected folder receives a JSON/Markdown copy.
 Earlier V1/V2/V3/V4 development lessons and jobs stay at their original paths for
 manual recovery, but the V5 app does not load, resume, migrate or delete them.
@@ -75,12 +75,12 @@ Only the new `preferencesV2` key is read; older settings are not restored. There
 
 ## Install from GitHub Release (Chromium + macOS / Windows / Linux)
 
-After a version tag is published, go to [GitHub Releases](https://github.com/chenghsj/immersive-language-learning/releases) and download these matching assets:
+After a version tag is published, go to [GitHub Releases](https://github.com/chenghsj/contextual-language-learning/releases) and download these matching assets:
 
-- immersive-language-learning-chromium-VERSION.zip — Chrome / Edge Chromium Manifest V3 extension.
-- immersive-language-learning-macos-host-VERSION.zip — macOS Native Host.
-- immersive-language-learning-windows-host-VERSION.zip — Windows Native Host.
-- immersive-language-learning-linux-host-VERSION.zip — Linux Native Host.
+- contextual-language-learning-chromium-VERSION.zip — Chrome / Edge Chromium Manifest V3 extension.
+- contextual-language-learning-macos-host-VERSION.zip — macOS Native Host.
+- contextual-language-learning-windows-host-VERSION.zip — Windows Native Host.
+- contextual-language-learning-linux-host-VERSION.zip — Linux Native Host.
 - SHA256SUMS — SHA-256 checksums for all four ZIP files.
 
 Extract the **Chromium** ZIP, open chrome://extensions, enable Developer mode, select **Load unpacked**, and choose the extracted folder with manifest.json at its root. The ZIP is not a signed CRX and is not installed by dragging it into Chrome.
@@ -137,8 +137,8 @@ A tag push runs the Release workflow and uploads the Chromium ZIP, three OS Host
 Prerequisites: Node.js 22+, pnpm 9, Chrome / Edge / Chromium, and an account or API key for a supported AI service. Windows additionally needs Windows PowerShell 5.1 and .NET Framework for the Host installer.
 
 ```sh
-git clone https://github.com/chenghsj/immersive-language-learning.git
-cd immersive-language-learning
+git clone https://github.com/chenghsj/contextual-language-learning.git
+cd contextual-language-learning
 corepack enable
 pnpm install
 pnpm build
@@ -154,7 +154,7 @@ pnpm host:install YOUR_EXTENSION_ID
 
 4. Open the Side Panel and check the **local connection service / Native Host** in Settings.
 5. In **AI services**, sign in or enter an API key, then choose a provider and model.
-6. In **建立教材**, fetch/import subtitles, set the lesson profile and generate. Canonical lessons are saved under `~/Documents/Immersive Learning/data-v5/videos/<video title>--<source ID>/`. Repeat generations of the same source share a folder even when its title changes.
+6. In **建立教材**, fetch/import subtitles, set the lesson profile and generate. Canonical lessons are saved under `~/Documents/Contextual Language Learning/data-v5/videos/<video title>--<source ID>/`. Repeat generations of the same source share a folder even when its title changes.
 7. In **我的教材**, recover an interrupted V5 task or search by video title and expand a video to open a lesson. The reader is a Library detail page.
 
 If your browser reports a missing Native Host, confirm you installed it for the same browser and its **current extension ID**. The macOS/Linux installer writes a browser-specific NativeMessagingHosts manifest; Windows writes its path to the browser's per-user HKCU NativeMessagingHosts registry key. Re-run `pnpm build` and `pnpm host:install YOUR_EXTENSION_ID` after changing the Node installation or extension ID.
@@ -202,7 +202,7 @@ A real-browser test with your Netflix account is required: confirm successful ca
 
 ### Resumable job workflow
 
-The Host saves V5 snapshots under `~/Documents/Immersive Learning/data-v5/jobs/`
+The Host saves V5 snapshots under `~/Documents/Contextual Language Learning/data-v5/jobs/`
 after candidate selection and each validated scene. Library lists V5 tasks. Closing
 the Side Panel leaves the background worker's active Host connection running;
 closing the browser stops it. Reopen Library to resume a waiting or failed V5

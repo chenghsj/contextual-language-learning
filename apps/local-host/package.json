@@ -1,5 +1,5 @@
 {
-  "name": "@immersive/local-host",
+  "name": "@contextual/local-host",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,10 +8,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@earendil-works/pi-ai": "0.99.1",
-    "@earendil-works/pi-coding-agent": "0.99.1",
-    "@immersive/core": "workspace:*",
-    "pi-antigravity": "0.8.1",
+    "@contextual/core": "workspace:*",
+    "@earendil-works/pi-ai": "1.0.4",
+    "@earendil-works/pi-coding-agent": "1.0.4",
+    "pi-antigravity": "0.10.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

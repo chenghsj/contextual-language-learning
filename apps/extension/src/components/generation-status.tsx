@@ -1,13 +1,15 @@
 import { customContentCopy } from "../i18n/custom-content";
+import { cancellationCopy } from "../i18n/cancellation";
 import React from "react";
 import { AlertCircle, Check, Circle, LoaderCircle } from "lucide-react";
-import type { JobSummary } from "@immersive/core";
+import type { JobSummary } from "@contextual/core";
 import type { UiLocale } from "../i18n/messages";
 import { translate } from "../i18n/messages";
 import { settingsLayoutCopy } from "../i18n/settings-layout";
 import { sidePanelLayoutCopy } from "../i18n/side-panel-layout";
 import { Button } from "./ui/button";
 import { Progress } from "./ui/progress";
+import { JobProgress } from "./job-progress";
 
 export function GenerationStatus({
   locale,
@@ -21,6 +23,7 @@ export function GenerationStatus({
   onActivity,
   onCancel,
   onResume,
+  cancellation,
 }: {
   locale: UiLocale;
   job?: JobSummary;
@@ -33,6 +36,7 @@ export function GenerationStatus({
   onActivity?: () => void;
   onCancel?: () => void;
   onResume?: () => void;
+  cancellation?: "pending" | "unconfirmed";
 }) {
   const ui = sidePanelLayoutCopy[locale],
     layout = settingsLayoutCopy[locale];
@@ -44,7 +48,6 @@ export function GenerationStatus({
     ? ["creating", "selecting", "saving"]
     : ["analyzing", "selecting", "creating", "saving"];
   const phase = phases.findIndex(phase => phase === job?.phase);
-  const percent = job?.total ? Math.min(100, (100 * job.completed) / job.total) : 0;
   return (
     <section
       className={
@@ -86,12 +89,21 @@ export function GenerationStatus({
           })}
         </ol>
       )}
-      <Progress value={percent} aria-label={translate(locale, "generationProgressLabel")} />
-      <p className="text-xs text-muted-foreground">
-        {job
-          ? translate(locale, "statusProgress", { completed: job.completed, total: job.total })
-          : progress}
-      </p>
+      {job ? (
+        <JobProgress
+          job={job}
+          locale={locale}
+          legacyText={translate(locale, "statusProgress", {
+            completed: job.completed,
+            total: job.total,
+          })}
+        />
+      ) : (
+        <>
+          <Progress value={0} aria-label={translate(locale, "generationProgressLabel")} />
+          <p className="text-xs text-muted-foreground">{progress}</p>
+        </>
+      )}
       {!compact && (
         <p className="text-xs text-muted-foreground">
           {notificationsEnabled ? layout.runningNotify : layout.runningQuiet}
@@ -114,8 +126,10 @@ export function GenerationStatus({
           </Button>
         )}
         {!compact && onCancel && (
-          <Button variant="ghost" onClick={onCancel}>
-            {translate(locale, "cancelGeneration")}
+          <Button variant="ghost" onClick={onCancel} disabled={cancellation === "pending"}>
+            {cancellation
+              ? cancellationCopy[locale][cancellation === "pending" ? "pendingLabel" : "retry"]
+              : translate(locale, "cancelGeneration")}
           </Button>
         )}
       </div>

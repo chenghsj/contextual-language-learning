@@ -1,4 +1,5 @@
 import type { SubtitleCue } from "./schema";
+import { parseSubtitleMarkup } from "./subtitle-ruby";
 
 function timestampToMs(raw: string): number | null {
   const match = raw.trim().match(/^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[.,](\d{1,3})$/);
@@ -23,14 +24,9 @@ export function parseSubtitles(input: string): SubtitleCue[] {
     const startMs = timestampToMs(left);
     const endMs = timestampToMs(right.trim().split(/\s+/)[0]);
     if (startMs === null || endMs === null || endMs < startMs) continue;
-    const originalText = lines
-      .slice(timeIndex + 1)
-      .join(" ")
-      .replace(/<[^>]+>/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (!originalText) continue;
-    cues.push({ id: "cue-" + (cues.length + 1), startMs, endMs, originalText });
+    const content = parseSubtitleMarkup(lines.slice(timeIndex + 1).join(" "));
+    if (!content.originalText) continue;
+    cues.push({ id: "cue-" + (cues.length + 1), startMs, endMs, ...content });
   }
   return cues;
 }

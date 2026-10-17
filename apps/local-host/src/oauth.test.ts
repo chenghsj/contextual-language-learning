@@ -1,7 +1,29 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { googleTokenError } from "./drive/oauth";
+import { googleAuthorizationError, googleTokenError } from "./drive/oauth";
+
+test("only Google's explicit access_denied callback is user cancellation", () => {
+  assert.equal(
+    googleAuthorizationError(new URLSearchParams("error=access_denied")).message,
+    "Google authorization was declined",
+  );
+  for (const error of [
+    "server_error",
+    "temporarily_unavailable",
+    "invalid_request",
+    "private-value",
+  ]) {
+    assert.equal(
+      googleAuthorizationError(new URLSearchParams({ error })).message,
+      "Google authorization failed",
+    );
+  }
+  assert.equal(
+    googleAuthorizationError(new URLSearchParams()).message,
+    "Google did not provide an authorization code",
+  );
+});
 
 test("Google OAuth token errors show a safe code and missing Desktop secret guidance", () => {
   const error = googleTokenError(400, {

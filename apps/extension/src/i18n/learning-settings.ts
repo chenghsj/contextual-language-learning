@@ -1,5 +1,5 @@
 import type { UiLocale } from "./messages";
-import type { LearningProfile, LearningLanguage } from "@immersive/core";
+import type { LearningProfile, LearningLanguage } from "@contextual/core";
 import { learningLanguageName } from "./preferences";
 
 export type LearningSettingKey = "targetLanguage" | "level" | "instructionLanguage" | "sceneCount";
@@ -32,7 +32,8 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
     fieldHints: {
       targetLanguage:
         "Choose the language you want to learn. The subtitle phrases and example sentences stay in that language.",
-      level: "This sets your lesson difficulty; it is not a proficiency test.",
+      level:
+        "Guides material selection, explanation support, terminology and example difficulty. It does not assign an official exam level to each point.",
       instructionLanguage:
         "Choose the language used to explain meanings, grammar and answers. Original subtitle lines stay in the learning language.",
       sceneCount:
@@ -136,7 +137,7 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
     infoLabel: "設定說明：",
     fieldHints: {
       targetLanguage: "選擇你要學的語言。字幕原句和學習例句會保留該語言。",
-      level: "這是教材難度設定，不是能力測驗結果。",
+      level: "影響選材、解說支援、術語及例句難度；不代表每個學習重點都有正式檢定級別。",
       instructionLanguage: "選擇單字意思、文法與答案解說使用的語言；字幕原句仍保留學習語言。",
       sceneCount:
         "整部影片最多挑選 1～6 個有上下文的對話場景。若沒有足夠合適的內容，AI 會挑得更少。",
@@ -239,7 +240,7 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
     infoLabel: "设置说明：",
     fieldHints: {
       targetLanguage: "选择你要学习的语言。字幕原句和学习例句会保留该语言。",
-      level: "这是教材难度设置，不是能力测试结果。",
+      level: "影响选材、解说支持、术语及例句难度；不代表每个学习重点都有正式考试级别。",
       instructionLanguage: "选择词义、语法和答案讲解使用的语言；字幕原句仍保留学习语言。",
       sceneCount:
         "整部影片最多挑选 1～6 个有上下文的对话场景。没有足够合适的内容时，AI 会选得更少。",
@@ -342,7 +343,8 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
     infoLabel: "設定の説明：",
     fieldHints: {
       targetLanguage: "学習したい言語を選びます。字幕の原文や例文はその言語のままです。",
-      level: "教材の難易度を設定します。実際の語学力を判定する試験ではありません。",
+      level:
+        "素材選び、理解の支援、用語、例文の難易度に使います。各ポイントの公式試験級を示すものではありません。",
       instructionLanguage:
         "語彙の意味、文法、解答の説明に使う言語を選びます。字幕の原文は学習言語のままです。",
       sceneCount:
@@ -446,7 +448,8 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
     infoLabel: "설정 설명:",
     fieldHints: {
       targetLanguage: "학습할 언어를 선택합니다. 자막 원문과 예문은 해당 언어로 유지됩니다.",
-      level: "교재의 난이도를 설정하는 것이며 실제 언어 능력을 평가하는 시험은 아닙니다.",
+      level:
+        "소재 선택, 이해 지원, 용어와 예문 난이도에 영향을 줍니다. 각 학습 포인트의 공식 시험 등급을 뜻하지 않습니다.",
       instructionLanguage:
         "어휘 의미, 문법 및 정답 설명에 사용할 언어를 선택합니다. 자막 원문은 학습 언어 그대로 유지됩니다.",
       sceneCount:
@@ -559,6 +562,8 @@ const ADDED_LANGUAGES: readonly AddedLanguage[] = [
   "th",
   "ms",
   "vi",
+  "zh-TW",
+  "zh-CN",
 ];
 
 const localizedCEFRHint: Record<UiLocale, (name: string) => string> = {

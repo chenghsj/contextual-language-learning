@@ -1,0 +1,73 @@
+import type { UiLocale } from "./messages";
+
+const copy = {
+  en: {
+    custom: "Custom Prompt",
+    add: "New template",
+    undo: "Undo",
+    save: "Save template",
+    update: "Save changes",
+    createHelp: "Start with the current Prompt. Saving also selects the new template.",
+    editHelp: "Edit this template’s name and Prompt.",
+    empty: "No custom templates yet.",
+    loadFailed: "Could not load templates.",
+    retry: "Retry",
+    deleteHelp: "Delete this template? The current Prompt will be kept.",
+  },
+  "zh-TW": {
+    custom: "自訂 Prompt",
+    add: "新增範本",
+    undo: "復原",
+    save: "儲存範本",
+    update: "儲存變更",
+    createHelp: "以目前的 Prompt 為起點，儲存後自動選用新範本。",
+    editHelp: "修改此範本的名稱與 Prompt。",
+    empty: "尚無自訂範本。",
+    loadFailed: "無法載入範本。",
+    retry: "重試",
+    deleteHelp: "刪除此範本？目前的 Prompt 會保留。",
+  },
+  "zh-CN": {
+    custom: "自定义 Prompt",
+    add: "新增模板",
+    undo: "撤销",
+    save: "保存模板",
+    update: "保存更改",
+    createHelp: "以当前的 Prompt 为起点，保存后自动选用新模板。",
+    editHelp: "修改此模板的名称与 Prompt。",
+    empty: "暂无自定义模板。",
+    loadFailed: "无法加载模板。",
+    retry: "重试",
+    deleteHelp: "删除此模板？当前的 Prompt 会保留。",
+  },
+  ja: {
+    custom: "カスタム Prompt",
+    add: "テンプレートを追加",
+    undo: "元に戻す",
+    save: "テンプレートを保存",
+    update: "変更を保存",
+    createHelp: "現在の Prompt を元に作成します。保存すると新しいテンプレートが選択されます。",
+    editHelp: "このテンプレートの名前と Prompt を編集します。",
+    empty: "カスタムテンプレートはありません。",
+    loadFailed: "テンプレートを読み込めませんでした。",
+    retry: "再試行",
+    deleteHelp: "このテンプレートを削除しますか？現在の Prompt は保持されます。",
+  },
+  ko: {
+    custom: "사용자 지정 Prompt",
+    add: "템플릿 추가",
+    undo: "실행 취소",
+    save: "템플릿 저장",
+    update: "변경 사항 저장",
+    createHelp: "현재 Prompt를 바탕으로 작성합니다. 저장하면 새 템플릿이 선택됩니다.",
+    editHelp: "이 템플릿의 이름과 Prompt를 편집합니다.",
+    empty: "사용자 지정 템플릿이 없습니다.",
+    loadFailed: "템플릿을 불러올 수 없습니다.",
+    retry: "다시 시도",
+    deleteHelp: "이 템플릿을 삭제할까요? 현재 Prompt는 유지됩니다.",
+  },
+} satisfies Record<UiLocale, Record<string, string>>;
+
+export function promptTemplateCopy(locale: UiLocale) {
+  return copy[locale];
+}

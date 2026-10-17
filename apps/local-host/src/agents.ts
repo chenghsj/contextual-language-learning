@@ -1,4 +1,4 @@
-import type { AgentSettings } from "@immersive/core";
+import type { AgentSettings } from "@contextual/core";
 import { generatePi, piProviders } from "./agents/pi";
 export { assertPiProvider } from "./agents/pi";
 export async function getAgentCatalog() {

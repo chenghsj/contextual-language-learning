@@ -1,9 +1,12 @@
+import { pronunciationDiagnosticCopy } from "../i18n/pronunciation-diagnostics";
 import { createFlowCopy } from "../i18n/create-flow";
 import { customContentCopy } from "../i18n/custom-content";
+import { cancellationCopy } from "../i18n/cancellation";
+import type { CancellationState } from "../native/cancellation-tracker";
 import { layoutText, sidePanelLayoutCopy } from "../i18n/side-panel-layout";
 import { PageSection } from "./page-section";
 import React, { useEffect, useRef, useState } from "react";
-import { isPiProviderId, type AgentInfo, type JobSummary } from "@immersive/core";
+import { isPiProviderId, type AgentInfo, type JobSummary } from "@contextual/core";
 import { agentDisplayName } from "../i18n/agent-display";
 import { piCopy } from "../i18n/pi";
 import type { UiLocale, MessageKey, MessageParams } from "../i18n/messages";
@@ -14,19 +17,17 @@ import { SelectField } from "./ui/select";
 import { IconTooltip } from "./icon-tooltip";
 import { RefreshCw } from "lucide-react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./ui/accordion";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader } from "./ui/dialog";
+import { DialogTitleBar } from "./dialog-title-bar";
+import { JobProgress, JobStage, hasDynamicGenerationPlan } from "./job-progress";
+import { generationProgressCopy } from "../i18n/generation-progress";
+import { activityCopy } from "../i18n/activity";
 
 type Props = {
   locale?: UiLocale;
   onConfigure?: () => void;
   jobs: JobSummary[];
+  cancellations?: CancellationState;
   loadingJobs: boolean;
   hostReady: boolean;
   generating: boolean;
@@ -73,6 +74,7 @@ export function taskHistoryError(error: unknown, t: Props["t"], fallback: Messag
 
 /** Activity owns task filtering, paging and recovery actions. */
 export function TaskHistory({
+  cancellations = {},
   jobs,
   loadingJobs,
   hostReady,
@@ -107,6 +109,7 @@ export function TaskHistory({
           : "";
   const ui = piCopy[locale];
   const flow = sidePanelLayoutCopy[locale];
+  const activity = activityCopy[locale];
   const [jobFilter, setJobFilter] = useState<JobFilter>("all");
   const [showAllJobs, setShowAllJobs] = useState(false);
   const [expandedJobs, setExpandedJobs] = useState<string[]>([]);
@@ -115,7 +118,6 @@ export function TaskHistory({
     null,
   );
   const [deleting, setDeleting] = useState(false);
-  const [loadingEnded, setLoadingEnded] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [listError, setListError] = useState("");
   const [refreshEnded, setRefreshEnded] = useState(0);
@@ -124,10 +126,15 @@ export function TaskHistory({
   const clearRef = useRef<HTMLButtonElement>(null);
   const focusReturnRef = useRef<HTMLElement | null>(null);
   const canDelete = !!onListEnded && !!onDeleteRecords;
+  // Progress and timestamps do not change which records can be cleared.
+  const endedJobsRevision = jobs
+    .filter(job => ["completed", "failed", "cancelled"].includes(job.status))
+    .map(job => `${job.id}:${job.status}`)
+    .sort()
+    .join("|");
   useEffect(() => {
     if (!hostReady || !onListEnded) return;
     let live = true;
-    setLoadingEnded(true);
     setListError("");
     void onListEnded()
       .then(items => {
@@ -135,14 +142,11 @@ export function TaskHistory({
       })
       .catch(error => {
         if (live) setListError(taskHistoryError(error, t, "loadJobRecordsError"));
-      })
-      .finally(() => {
-        if (live) setLoadingEnded(false);
       });
     return () => {
       live = false;
     };
-  }, [hostReady, onListEnded, jobs, refreshEnded, t]);
+  }, [hostReady, onListEnded, endedJobsRevision, refreshEnded, t]);
   const openConfirmation = (items: JobSummary[], batch: boolean) => {
     focusReturnRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -181,17 +185,22 @@ export function TaskHistory({
     }
   };
   const filteredJobs = jobs.filter(job => matchesJobFilter(job.status, jobFilter));
-  const selectedJobs = showAllJobs
-    ? filteredJobs
-    : jobFilter === "all"
-      ? [
-          ...filteredJobs.filter(job => job.status !== "completed"),
-          ...filteredJobs.filter(job => job.status === "completed").slice(0, 3),
-        ]
-      : filteredJobs.slice(0, 3);
-  const visibleJobs = [...selectedJobs].sort(
-    (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt),
-  );
+  const activeJobs = filteredJobs
+    .filter(job => matchesJobFilter(job.status, "active"))
+    .sort((a, b) => {
+      const rank = { running: 0, queued: 1, waiting: 2 };
+      const statusOrder = rank[a.status as keyof typeof rank] - rank[b.status as keyof typeof rank];
+      return (
+        statusOrder ||
+        (a.status === "queued"
+          ? a.createdAt.localeCompare(b.createdAt)
+          : b.updatedAt.localeCompare(a.updatedAt))
+      );
+    });
+  const endedRecords = filteredJobs
+    .filter(job => !matchesJobFilter(job.status, "active"))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const visibleJobs = [...activeJobs, ...(showAllJobs ? endedRecords : endedRecords.slice(0, 3))];
   const dayLabel = (timestamp: string) => {
     const date = new Date(timestamp);
     const today = new Date();
@@ -205,18 +214,22 @@ export function TaskHistory({
   };
   const jobSummary = (job: JobSummary) => {
     if (job.status === "completed") {
-      return layoutText(flow.completedAt, {
+      const completedAt = layoutText(flow.completedAt, {
         time: new Date(job.updatedAt).toLocaleTimeString(locale, {
           hour: "2-digit",
           minute: "2-digit",
         }),
       });
+      return `${hasDynamicGenerationPlan(job) ? generationProgressCopy[locale].completed(job.completed) : `${job.completed} / ${job.total}`} · ${completedAt}`;
     }
     if (job.status === "queued") {
       return `${ux.queued}: ${queued.findIndex(item => item.id === job.id) + 1}`;
     }
+    if (hasDynamicGenerationPlan(job) && job.status === "running") {
+      return <JobStage job={job} locale={locale} />;
+    }
     const phase = phaseLabel(job);
-    return `${phase ? phase + " · " : ""}${job.completed} / ${job.total}`;
+    return phase;
   };
   return (
     <PageSection>
@@ -245,7 +258,10 @@ export function TaskHistory({
               className="size-8"
               disabled={loadingJobs}
               aria-busy={loadingJobs}
-              onClick={onRefresh}
+              onClick={() => {
+                onRefresh();
+                setRefreshEnded(value => value + 1);
+              }}
             >
               <RefreshCw
                 aria-hidden="true"
@@ -260,43 +276,60 @@ export function TaskHistory({
             type="multiple"
             value={expandedJobs}
             onValueChange={setExpandedJobs}
-            className="my-[10px] grid gap-1"
+            className="my-3 grid gap-1"
           >
             {!loadingJobs && !visibleJobs.length && (
               <p className="text-xs text-muted-foreground">{flow.activityEmpty}</p>
             )}
             {visibleJobs.map((job, index) => (
               <React.Fragment key={job.id}>
-                {(index === 0 ||
-                  new Date(visibleJobs[index - 1].updatedAt).toLocaleDateString() !==
-                    new Date(job.updatedAt).toLocaleDateString()) && (
-                  <h3 className="mt-2 text-[11px] font-medium text-muted-foreground">
-                    {dayLabel(job.updatedAt)}
+                {matchesJobFilter(job.status, "active") && index === 0 && (
+                  <h3 className="mt-3 text-xs font-medium text-muted-foreground">
+                    {activity.inProgress}
                   </h3>
                 )}
+                {jobFilter === "all" &&
+                  !matchesJobFilter(job.status, "active") &&
+                  (index === 0 || matchesJobFilter(visibleJobs[index - 1].status, "active")) && (
+                    <h3 className="mt-3 text-xs font-medium text-muted-foreground">
+                      {activity.history}
+                    </h3>
+                  )}
+                {!matchesJobFilter(job.status, "active") &&
+                  (index === 0 ||
+                    matchesJobFilter(visibleJobs[index - 1].status, "active") ||
+                    new Date(visibleJobs[index - 1].updatedAt).toLocaleDateString() !==
+                      new Date(job.updatedAt).toLocaleDateString()) && (
+                    <h3 className="mt-3 text-[11px] font-medium text-muted-foreground">
+                      {dayLabel(job.updatedAt)}
+                    </h3>
+                  )}
                 <AccordionItem
                   value={job.id}
                   data-ui="taskHistoryItem"
-                  className="min-w-0 border-border [&_p]:my-[3px] [&_p]:text-xs [&_[data-ui=actions]]:mt-[5px] [&_[data-ui=actions]]:gap-[5px] [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-7"
+                  className="min-w-0 border-border [&_p]:my-1 [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-8 [&_[data-ui=actions]_button]:whitespace-normal"
                 >
-                  <AccordionTrigger className="min-w-0 gap-2 py-3 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25">
-                    <span className="grid min-w-0 flex-1 gap-1">
-                      <span className="flex min-w-0 items-start justify-between gap-2">
-                        <span
-                          className={
-                            "min-w-0 flex-1 text-[13px] font-semibold " +
-                            (expandedJobs.includes(job.id) ? "break-words" : "truncate")
-                          }
-                          title={job.sourceTitle}
-                        >
-                          {job.sourceTitle}
-                        </span>
-                        <Badge className="shrink-0 whitespace-nowrap text-[11px] leading-4">
-                          {t(jobStatusKeys[job.status])}
-                        </Badge>
+                  <AccordionTrigger className="min-w-0 items-start gap-2 py-3 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25 [&>svg]:mt-0.5">
+                    <span className="grid min-w-0 flex-1 gap-2">
+                      <span
+                        className="line-clamp-2 min-w-0 break-words text-ui-heading font-semibold"
+                        title={job.sourceTitle}
+                      >
+                        {job.sourceTitle}
                       </span>
-                      <span className="text-xs font-normal text-muted-foreground">
-                        {jobSummary(job)}
+                      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                        <Badge className="shrink-0 whitespace-nowrap text-[11px] leading-4">
+                          {cancellations[job.id]
+                            ? cancellationCopy[locale][
+                                cancellations[job.id].status === "pending"
+                                  ? "pendingLabel"
+                                  : "unconfirmedLabel"
+                              ]
+                            : t(jobStatusKeys[job.status])}
+                        </Badge>
+                        <span className="min-w-0 break-words text-xs font-normal leading-4 text-muted-foreground">
+                          {jobSummary(job)}
+                        </span>
                       </span>
                     </span>
                   </AccordionTrigger>
@@ -304,21 +337,29 @@ export function TaskHistory({
                     forceMount
                     hidden={!expandedJobs.includes(job.id)}
                     data-ui="taskHistoryDetails"
-                    className="min-w-0 pl-3 pb-3"
+                    className="min-w-0 pb-3 text-ui-body"
                   >
+                    {job.status !== "queued" && (
+                      <div data-ui="taskHistoryProgress" className="mb-3 grid gap-2">
+                        <JobProgress
+                          job={job}
+                          locale={locale}
+                          showStage={false}
+                          legacyText={layoutText(flow.completedSteps, {
+                            completed: job.completed,
+                            total: job.total,
+                          })}
+                        />
+                      </div>
+                    )}
                     <p
-                      className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
+                      className="mb-3 text-ui-label leading-relaxed text-muted-foreground"
                       data-ui="hint"
                     >
                       {agentDisplayName(
                         job.provider,
                         agentCatalog.find(item => item.id === job.provider)?.label,
-                      )}{" "}
-                      ·{" "}
-                      {layoutText(flow.completedSteps, {
-                        completed: job.completed,
-                        total: job.total,
-                      })}
+                      )}
                       {job.backup &&
                         " · " +
                           t(
@@ -329,28 +370,6 @@ export function TaskHistory({
                                 : "backupFailedMessage",
                           )}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {job.status === "completed"
-                        ? layoutText(flow.completedAt, {
-                            time: new Date(job.updatedAt).toLocaleTimeString(locale, {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }),
-                          })
-                        : job.phase
-                          ? job.status === "cancelled"
-                            ? layoutText(flow.cancelledAtPhase, { phase: phaseLabel(job) })
-                            : phaseLabel(job)
-                          : new Date(job.updatedAt).toLocaleTimeString(locale, {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                    </p>
-                    {job.status === "queued" && (
-                      <p>
-                        {ux.queued}: {queued.findIndex(item => item.id === job.id) + 1}
-                      </p>
-                    )}
                     {job.retry && (
                       <p role="status">
                         {ux.retrying} {job.retry.attempt}/2 · {Math.ceil(job.retry.delayMs / 1000)}s
@@ -359,6 +378,11 @@ export function TaskHistory({
                     )}
                     {job.status === "running" && (
                       <p className="text-muted-foreground">{ux.cancelHint}</p>
+                    )}
+                    {!!job.pronunciationMissingCount && (
+                      <p className="text-muted-foreground" data-ui="pronunciationMissingCount">
+                        {pronunciationDiagnosticCopy(locale).count(job.pronunciationMissingCount)}
+                      </p>
                     )}
                     {job.error && (
                       <PiFeedback locale={locale} message={job.error} context="generation" />
@@ -405,10 +429,16 @@ export function TaskHistory({
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled={!hostReady}
+                          disabled={!hostReady || cancellations[job.id]?.status === "pending"}
                           onClick={() => onCancel(job)}
                         >
-                          {t("cancel")}
+                          {cancellations[job.id]
+                            ? cancellationCopy[locale][
+                                cancellations[job.id].status === "pending"
+                                  ? "pendingLabel"
+                                  : "retry"
+                              ]
+                            : t("cancel")}
                         </Button>
                       )}
                       {job.documentId && (
@@ -464,7 +494,7 @@ export function TaskHistory({
               {t("showMoreJobs", { count: filteredJobs.length - visibleJobs.length })}
             </Button>
           )}
-          {showAllJobs && filteredJobs.length > 3 && (
+          {showAllJobs && endedRecords.length > 3 && (
             <Button variant="ghost" size="sm" onClick={() => setShowAllJobs(false)}>
               {t("showLessJobs")}
             </Button>
@@ -476,14 +506,7 @@ export function TaskHistory({
                 variant="ghost"
                 size="sm"
                 className="max-w-full whitespace-normal text-left"
-                disabled={
-                  !hostReady ||
-                  storageBusy ||
-                  deleting ||
-                  loadingEnded ||
-                  !endedJobs.length ||
-                  !!listError
-                }
+                disabled={!hostReady || storageBusy || deleting || !endedJobs.length || !!listError}
                 onClick={() => openConfirmation(endedJobs, true)}
               >
                 {t("clearEndedJobRecords")}
@@ -504,10 +527,9 @@ export function TaskHistory({
         }}
       >
         <DialogContent
-          closeLabel={t("cancel")}
-          closeDisabled={deleting}
+          showCloseButton={false}
           aria-modal="true"
-          className="w-[calc(100%-2rem)] max-w-[360px] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg"
+          className="max-h-[calc(100dvh-2rem)] max-w-[min(360px,calc(100%-2rem))] overflow-y-auto sm:max-w-[360px]"
           onOpenAutoFocus={event => {
             event.preventDefault();
             cancelRef.current?.focus();
@@ -521,12 +543,12 @@ export function TaskHistory({
           }}
         >
           <DialogHeader className="text-left">
-            <DialogTitle>
+            <DialogTitleBar closeLabel={t("cancel")} closeDisabled={deleting}>
               {confirmation?.batch
                 ? t("clearEndedJobRecordsTitle", { count: confirmation.jobs.length })
                 : t("deleteJobRecordTitle")}
-            </DialogTitle>
-            <DialogDescription className="whitespace-pre-line">
+            </DialogTitleBar>
+            <DialogDescription className="text-xs whitespace-pre-line">
               {t("deleteJobRecordHint")}
             </DialogDescription>
           </DialogHeader>

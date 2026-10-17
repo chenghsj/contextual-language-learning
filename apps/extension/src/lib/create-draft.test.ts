@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { parseCreateDraft, draftRevision, type CreateDraft } from "./create-draft";
+import { contextualGenerationProfile } from "./contextual-profile";
 const saved: CreateDraft = {
   version: 1,
   sourceKey: "youtube:abcdefghijk",
@@ -30,7 +31,10 @@ test("drafts cannot be restored to a different video or with invalid provider/mo
     parseCreateDraft({ ...saved, agent: { provider: "", modelId: "" } }, saved.sourceKey),
     undefined,
   );
-  assert.deepEqual(parseCreateDraft(JSON.parse(JSON.stringify(saved)), saved.sourceKey), saved);
+  assert.deepEqual(parseCreateDraft(JSON.parse(JSON.stringify(saved)), saved.sourceKey), {
+    ...saved,
+    profile: contextualGenerationProfile(saved.profile),
+  });
 });
 test("invalid in-progress timing is restored without losing the Prompt or content-mode state", () => {
   const parsed = parseCreateDraft(

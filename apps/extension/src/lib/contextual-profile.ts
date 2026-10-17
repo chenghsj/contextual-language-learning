@@ -1,4 +1,5 @@
-import type { LearningProfile } from "@immersive/core";
+import type { LearningProfile } from "@contextual/core";
+import { EXPLANATION_TYPES } from "@contextual/core";
 
 export type LessonLength = LearningProfile["sceneCount"];
 export function normalizeLessonLength(count: number | undefined): LessonLength {
@@ -15,8 +16,8 @@ export function contextualGenerationProfile(profile: LearningProfile): LearningP
     instructionLanguage: profile.instructionLanguage,
     level: profile.level,
     sceneCount: normalizeLessonLength(profile.sceneCount),
-    contextualExampleCount: [1, 2, 3].includes(profile.contextualExampleCount)
-      ? profile.contextualExampleCount
-      : 2,
+    contextualExampleCount: 1,
+    enabledExplanations: [...EXPLANATION_TYPES],
+    emphasizedExplanations: [],
   };
 }

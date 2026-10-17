@@ -3,10 +3,11 @@ import {
   BackgroundGenerationStateSchema,
   HostMessageSchema,
   HostRequestSchema,
+  readLearningDocument,
   type HostRequest,
   type HostMessage,
   type LearningDocument,
-} from "@immersive/core";
+} from "@contextual/core";
 import {
   GENERATION_CONTROLLER_PORT,
   type GenerationControllerMessage,
@@ -62,6 +63,7 @@ export function openHostStream(
 }
 
 const responseTypes = {
+  estimateGeneration: "generationEstimate",
   health: "health",
   checkCustomDuplicates: "duplicates",
   getJobExecution: "jobExecution",
@@ -84,6 +86,7 @@ const responseTypes = {
   saveScenePlaybackRange: "scenePlaybackRangeSaved",
   checkDuplicates: "duplicates",
   chooseFolder: "folder",
+  openFolder: "folderOpened",
   driveAccounts: "driveAccounts",
   driveConnect: "driveConnected",
   driveDisconnect: "driveDisconnected",
@@ -163,7 +166,7 @@ export function getDocument(
           if (message.type === "error") throw new Error(message.message);
           if (message.type === "result") {
             stream.close();
-            resolve(message.document);
+            resolve(readLearningDocument(message.document));
           } else if (message.type === "documentChunk") {
             const document = chunks.push(message);
             if (document) {
@@ -193,19 +196,19 @@ export async function getCustomResource(
   resource: "document",
   resourceId: string,
   runtime?: typeof chrome.runtime,
-): Promise<import("@immersive/core").CustomDocument>;
+): Promise<import("@contextual/core").CustomDocument>;
 export async function getCustomResource(
   resource: "job",
   resourceId: string,
   runtime?: typeof chrome.runtime,
-): Promise<import("@immersive/core").CustomJobSnapshot>;
+): Promise<import("@contextual/core").CustomJobSnapshot>;
 export async function getCustomResource(
   resource: "document" | "job",
   resourceId: string,
   runtime: typeof chrome.runtime = chrome.runtime,
 ) {
   return new Promise<
-    import("@immersive/core").CustomDocument | import("@immersive/core").CustomJobSnapshot
+    import("@contextual/core").CustomDocument | import("@contextual/core").CustomJobSnapshot
   >((resolve, reject) => {
     const id = crypto.randomUUID(),
       chunks = new CustomChunkAssembler();

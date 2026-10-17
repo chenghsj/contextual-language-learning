@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CustomGenerationRequestSchema, type HostMessage } from "@immersive/core";
+import { CustomGenerationRequestSchema, type HostMessage } from "@contextual/core";
 import { FileCustomRepository } from "./custom";
 import { createCustomPublication } from "./custom-backup";
 import { CustomJobManager } from "../jobs/custom-manager";
@@ -12,8 +12,8 @@ import { DriveContentConflict, propertyMatch } from "../drive/api";
 
 test("Drive filters accept both document versions and reject query injection", () => {
   for (const value of ["5", "custom-v1", "a".repeat(64)])
-    assert.ok(propertyMatch("immersiveSchemaVersion", value).includes(value));
-  assert.throws(() => propertyMatch("immersiveSchemaVersion", "5' or trashed = true"));
+    assert.ok(propertyMatch("contextualSchemaVersion", value).includes(value));
+  assert.throws(() => propertyMatch("contextualSchemaVersion", "5' or trashed = true"));
 });
 
 test("custom publication retries durable content, preserves conflicting copies and resumes backups after restart", async () => {

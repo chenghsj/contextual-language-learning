@@ -20,7 +20,7 @@ function deferred<T>() {
 }
 
 test("failed partial publication repairs both files to latest calibration and rejects external edits", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-sync-publication-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-sync-publication-"));
   try {
     const { storage, document } = await completedLesson(join(root, "canonical"));
     const exports = join(root, "exports");
@@ -40,7 +40,7 @@ test("failed partial publication repairs both files to latest calibration and re
     const sync = createDocumentSync(storage, { publisher, backup: async () => "drive://saved" });
     const { document: updated, warning } = await sync.saveCalibration(
       document.id,
-      { kind: "cue", id: "a" },
+      { kind: "cue", id: "cue-1" },
       { startMs: 2100, endMs: 3300 },
     );
     assert.equal(warning, undefined);
@@ -52,12 +52,15 @@ test("failed partial publication repairs both files to latest calibration and re
     await writeFile(mdPath, "User-edited Markdown");
     const next = await sync.saveCalibration(
       document.id,
-      { kind: "cue", id: "a" },
+      { kind: "cue", id: "cue-1" },
       { startMs: 2200, endMs: 3400 },
     );
     assert.match(next.warning!, /發布資料夾同步失敗/);
     assert.equal(await readFile(mdPath, "utf8"), "User-edited Markdown");
-    assert.equal((await storage.documents.get(document.id))?.playbackOverrides?.a.startMs, 2200);
+    assert.equal(
+      (await storage.documents.get(document.id))?.playbackOverrides?.["cue-1"].startMs,
+      2200,
+    );
     assert.equal(
       (await storage.jobs.getRecord(document.id))?.summary.publication?.status,
       "failed",
@@ -74,7 +77,7 @@ test("failed partial publication repairs both files to latest calibration and re
 });
 
 test("restore loads inside the lesson queue and preserves a differing local revision", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-sync-restore-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-sync-restore-"));
   try {
     const { storage, document } = await completedLesson(root);
     const sync = createDocumentSync(storage);
@@ -111,15 +114,15 @@ test("restore loads inside the lesson queue and preserves a differing local revi
 });
 
 test("an in-flight old backup finishes before calibration uploads a new revision, while other lessons proceed", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-sync-backup-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-sync-backup-"));
   try {
     const { storage, document } = await completedLesson(root);
     const publisher = { publish: async () => "/verified/export.json" };
     await publishSavedJob(storage, document.id, publisher);
     const started = deferred<void>(),
       release = deferred<void>();
-    const uploaded: (typeof document)[] = [];
-    const backup = async (_account: string, doc: typeof document) => {
+    const uploaded: import("@contextual/core").LearningDocument[] = [];
+    const backup = async (_account: string, doc: import("@contextual/core").LearningDocument) => {
       uploaded.push(doc);
       if (uploaded.length === 1) {
         started.resolve();
@@ -166,7 +169,7 @@ test("an in-flight old backup finishes before calibration uploads a new revision
 
 test("revision is based on canonical content and rejected queue work releases the next operation", async () => {
   assert.equal(documentRevision({ b: 2, a: 1 }), documentRevision({ a: 1, b: 2 }));
-  const root = await mkdtemp(join(tmpdir(), "immersive-sync-release-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-sync-release-"));
   try {
     const { storage, document } = await completedLesson(root);
     await assert.rejects(

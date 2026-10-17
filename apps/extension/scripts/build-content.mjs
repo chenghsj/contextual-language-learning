@@ -26,7 +26,7 @@ for (const [name, filename] of entries) {
       lib: {
         entry: resolve(root, "src/content", filename),
         name:
-          "Immersive" +
+          "Contextual" +
           name.replace(/(^|-)([a-z])/g, (_all, _dash, letter) => letter.toUpperCase()),
         formats: ["iife"],
         fileName: () => name + ".js",

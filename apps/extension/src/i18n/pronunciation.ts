@@ -1,4 +1,4 @@
-import type { LearningLanguage } from "@immersive/core";
+import type { LearningLanguage } from "@contextual/core";
 import type { UiLocale } from "./messages";
 import type { PronunciationMode } from "../components/pronunciation";
 
@@ -6,6 +6,8 @@ const labels = {
   "zh-TW": {
     title: "發音標註",
     kana: "假名",
+    zhuyin: "注音",
+    pinyin: "漢語拼音",
     actual: "實際讀音",
     roman: "羅馬字",
     ipa: "IPA",
@@ -16,6 +18,8 @@ const labels = {
   "zh-CN": {
     title: "发音标注",
     kana: "假名",
+    zhuyin: "注音",
+    pinyin: "汉语拼音",
     actual: "实际读音",
     roman: "罗马字",
     ipa: "IPA",
@@ -26,6 +30,8 @@ const labels = {
   en: {
     title: "Pronunciation",
     kana: "Kana",
+    zhuyin: "Zhuyin",
+    pinyin: "Hanyu Pinyin",
     actual: "Actual reading",
     roman: "Romanization",
     ipa: "IPA",
@@ -37,6 +43,8 @@ const labels = {
   ja: {
     title: "発音表示",
     kana: "仮名",
+    zhuyin: "注音符号",
+    pinyin: "ピンイン",
     actual: "実際の読み",
     roman: "ローマ字",
     ipa: "IPA",
@@ -48,6 +56,8 @@ const labels = {
   ko: {
     title: "발음 표기",
     kana: "가나",
+    zhuyin: "주음부호",
+    pinyin: "한어 병음",
     actual: "실제 발음",
     roman: "로마자",
     ipa: "IPA",
@@ -63,6 +73,8 @@ export function pronunciationCopy(locale: UiLocale, language: LearningLanguage) 
   return {
     ...copy,
     option(mode: PronunciationMode): string {
+      if (mode === "native" && language === "zh-TW") return copy.zhuyin;
+      if (mode === "roman" && language === "zh-CN") return copy.pinyin;
       return mode === "native" ? (language === "ja" ? copy.kana : copy.actual) : copy[mode];
     },
   };

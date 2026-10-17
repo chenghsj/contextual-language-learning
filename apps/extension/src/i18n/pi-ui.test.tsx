@@ -8,6 +8,7 @@ import { PiSettings } from "../components/pi-settings";
 import { TaskHistory } from "../components/task-history";
 import { piCopy } from "./pi";
 import { translate } from "./messages";
+import { modelAvailabilityCopy } from "./model-availability";
 
 const noop = () => undefined;
 function picker(provider: string, available = true, busy = false) {
@@ -36,6 +37,7 @@ function picker(provider: string, available = true, busy = false) {
 test("model picker keeps stored selection visible and disables it while loading or host unavailable", () => {
   const doc = picker("openai");
   assert.match(doc.querySelector("#create-model")!.textContent!, /saved-model/);
+  assert.equal(doc.querySelector("#create-model")!.hasAttribute("disabled"), true);
   assert.equal(
     picker("openai", true, true).querySelector("#create-model")!.hasAttribute("disabled"),
     true,
@@ -57,6 +59,30 @@ test("disconnected service cannot choose a model and directs users to settings",
     ),
     false,
   );
+});
+
+test("connected services without text models explain why generation cannot proceed", () => {
+  const doc = new JSDOM(
+    renderToStaticMarkup(
+      <AiModelSelection
+        locale="zh-TW"
+        id="classifier"
+        provider="typesafe"
+        modelId=""
+        providers={[{ id: "typesafe", label: "TypeSafe", installed: true }]}
+        models={[]}
+        available
+        busy={false}
+        notice=""
+        onProvider={noop}
+        onModel={noop}
+        onRefresh={noop}
+      />,
+    ),
+  ).window.document;
+  assert.match(doc.body.textContent!, /沒有可用的文字生成模型/);
+  assert.equal(doc.querySelector("#classifier-model")!.hasAttribute("disabled"), true);
+  assert.equal(doc.querySelector("#classifier-service")!.hasAttribute("disabled"), false);
 });
 test("unavailable host explains missing service rows", () => {
   const html = renderToStaticMarkup(
@@ -147,4 +173,69 @@ test("model refresh shows progress and returns to its action without a success n
     .window.document;
   assert.equal(complete.querySelector('button[aria-live="polite"]')!.textContent, "重新整理模型");
   assert.doesNotMatch(complete.body.textContent!, /模型已更新/);
+});
+
+test("Antigravity selection distinguishes a checked catalog, unknown cache, and retired selection in every locale", () => {
+  for (const locale of Object.keys(
+    modelAvailabilityCopy,
+  ) as (keyof typeof modelAvailabilityCopy)[]) {
+    const props = {
+      locale,
+      id: "availability",
+      provider: "antigravity",
+      modelId: "gemini-3.8-flash",
+      providers: [{ id: "antigravity", label: "Google Antigravity", installed: true }],
+      available: true,
+      busy: false,
+      notice: "",
+      onProvider: noop,
+      onModel: noop,
+      onRefresh: noop,
+    };
+    const model = { id: props.modelId, label: "Gemini 3.8 Flash" };
+    const render = (models: Parameters<typeof AiModelSelection>[0]["models"], extra = {}) =>
+      new JSDOM(renderToStaticMarkup(<AiModelSelection {...props} models={models} {...extra} />))
+        .window.document;
+    assert.equal(
+      render([{ ...model, availability: "listed" }]).querySelector('[data-ui="modelAvailability"]')!
+        .textContent,
+      modelAvailabilityCopy[locale].listed,
+    );
+    for (const models of [[model], [{ ...model, availability: "unknown" as const }]])
+      assert.equal(
+        render(models).querySelector('[data-ui="modelAvailability"]')!.textContent,
+        modelAvailabilityCopy[locale].unknown,
+      );
+    assert.equal(
+      render([{ ...model, availability: "listed" }], { warning: "HTTP 503" }).querySelector(
+        '[data-ui="modelAvailability"]',
+      )!.textContent,
+      modelAvailabilityCopy[locale].unknown,
+    );
+    const stale = render([{ id: "replacement", label: "Replacement" }]);
+    assert.ok(
+      stale
+        .querySelector("#availability-model")!
+        .textContent!.includes(modelAvailabilityCopy[locale].unavailable),
+    );
+    assert.ok(stale.body.textContent!.includes(piCopy[locale].stale));
+    assert.equal(stale.querySelector('[data-ui="modelAvailability"]'), null);
+    const failedRefresh = render([{ id: "replacement", label: "Replacement" }], {
+      warning: "HTTP 503",
+    });
+    assert.equal(
+      failedRefresh.querySelector('[data-ui="modelAvailability"]')!.textContent,
+      modelAvailabilityCopy[locale].unknown,
+    );
+    assert.ok(!failedRefresh.body.textContent!.includes(piCopy[locale].stale));
+    assert.ok(
+      !failedRefresh
+        .querySelector("#availability-model")!
+        .textContent!.includes(modelAvailabilityCopy[locale].unavailable),
+    );
+    assert.equal(
+      render([model], { busy: true }).querySelector('[data-ui="modelAvailability"]'),
+      null,
+    );
+  }
 });

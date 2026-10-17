@@ -1,16 +1,25 @@
 import { createHash } from "node:crypto";
 import { resolvePiModel } from "../agents/pi";
 import {
+  GenerationRequestSchema,
+  ExecutionIdentitySchema,
+  readableLearningExecution,
   chunkCues,
+  LEARNING_POINTS_WORKFLOW_VERSION,
+  LEARNING_POINTS_PROMPT_VERSION,
+  LANGUAGE_STRATEGY_VERSION,
+  LEVEL_STRATEGY_VERSION,
+  QUALITY_STRATEGY_VERSION,
   createSceneJob,
   transitionJob,
   type GenerationRequest,
   type JobSummary,
   type LearningDocument,
-} from "@immersive/core";
+} from "@contextual/core";
 import { runGenerationPipeline, type PipelineDependencies } from "../generation";
 import { assertPiProvider } from "../agents";
 import type { StoragePorts } from "../storage/ports";
+import { RunningOperation, assertCancellationOwner } from "./running-operation";
 
 function isAlive(pid: number | undefined): boolean {
   if (pid === undefined) return false;
@@ -31,9 +40,25 @@ export class JobManager {
   setExternalBusyGuard(guard: () => boolean) {
     this.externalBusy = guard;
   }
+  private readonly activities = new Map<
+    string,
+    Map<string, import("@contextual/core").GenerationActivity>
+  >();
+  private readonly summaries = new Map<string, JobSummary>();
+  withActivity(summary: JobSummary): JobSummary {
+    const active = this.activities.get(summary.id);
+    return {
+      ...summary,
+      activity: summary.status === "running" && active?.size ? [...active.values()] : undefined,
+    };
+  }
+  async getSummary(id: string) {
+    const job = await this.storage.jobs.get(id);
+    return job ? this.withActivity(job.summary) : null;
+  }
   private starting = false;
   private closed = false;
-  private readonly running = new Map<string, AbortController>();
+  private readonly running = new Map<string, RunningOperation>();
   constructor(
     private readonly deps: PipelineDependencies,
     private readonly notify: (requestId: string, summary: JobSummary) => void,
@@ -65,7 +90,7 @@ export class JobManager {
 
   async list(): Promise<JobSummary[]> {
     await this.recoverInterrupted();
-    return this.storage.jobs.list(50);
+    return (await this.storage.jobs.list(50)).map(summary => this.withActivity(summary));
   }
 
   async start(
@@ -86,19 +111,27 @@ export class JobManager {
   }
 
   async prepare(requestId: string, request: GenerationRequest) {
+    request = GenerationRequestSchema.parse(request);
     assertPiProvider(request.agent.provider);
     const chunks = chunkCues(request.cues).length;
     const job = createSceneJob(request, chunks);
-    if (
-      !this.deps.generateSection &&
-      !this.deps.generateCandidates &&
-      !this.deps.generateSelection
-    ) {
-      const resolved = await resolvePiModel(request.agent);
+    {
+      const injected =
+        this.deps.generateSection || this.deps.generateCandidates || this.deps.generateSelection;
+      const resolved = injected
+        ? { agent: request.agent, contextWindow: 128000, maxOutputTokens: 8192 }
+        : await resolvePiModel(request.agent);
       job.execution = {
-        workflowVersion: "scene-v5-1",
-        promptVersion: "scene-prompts-1",
-        schemaVersion: "5",
+        workflowVersion: LEARNING_POINTS_WORKFLOW_VERSION,
+        promptVersion: LEARNING_POINTS_PROMPT_VERSION,
+        schemaVersion: "7",
+        ...(request.outputSchemaVersion === 7
+          ? {
+              languageStrategyVersion: LANGUAGE_STRATEGY_VERSION,
+              levelStrategyVersion: LEVEL_STRATEGY_VERSION,
+              qualityStrategyVersion: QUALITY_STRATEGY_VERSION,
+            }
+          : {}),
         inputFingerprint: createHash("sha256").update(JSON.stringify(request)).digest("hex"),
         provider: resolved.agent.provider,
         modelId: resolved.agent.modelId,
@@ -164,26 +197,36 @@ export class JobManager {
       const job = await this.storage.jobs.get(jobId);
       if (!job) throw new Error("Saved job not found");
       assertPiProvider(job.request.agent.provider);
+      // Injected generators are used by offline tests; production resumptions must
+      // have a frozen identity, including jobs written before execution metadata.
       if (
-        job.execution &&
-        (job.execution.workflowVersion !== "scene-v5-1" ||
-          job.execution.promptVersion !== "scene-prompts-1" ||
-          job.execution.schemaVersion !== "5")
+        !job.execution &&
+        !this.deps.generateSection &&
+        !this.deps.generateCandidates &&
+        !this.deps.generateSelection
       )
         throw new Error(
           "Unsupported saved execution version; regenerate as a new lesson. The checkpoint is preserved.",
         );
+      if (job.execution && !readableLearningExecution(job.execution))
+        throw new Error("Unsupported saved execution version; checkpoint is preserved.");
       if (job.execution) {
         if (
           createHash("sha256").update(JSON.stringify(job.request)).digest("hex") !==
           job.execution.inputFingerprint
         )
           throw new Error("Saved input differs from frozen execution snapshot");
-        const pinned = await resolvePiModel({
-          ...job.request.agent,
-          provider: job.execution.provider,
-          modelId: job.execution.modelId,
-        });
+        const pinned =
+          this.deps.generateSection || this.deps.generateCandidates || this.deps.generateSelection
+            ? {
+                contextWindow: job.execution.contextWindow,
+                maxOutputTokens: job.execution.maxOutputTokens,
+              }
+            : await resolvePiModel({
+                ...job.request.agent,
+                provider: job.execution.provider,
+                modelId: job.execution.modelId,
+              });
         if (
           pinned.contextWindow !== job.execution.contextWindow ||
           pinned.maxOutputTokens !== job.execution.maxOutputTokens ||
@@ -197,6 +240,69 @@ export class JobManager {
       if (!["queued", "waiting", "failed", "cancelled"].includes(job.summary.status)) {
         throw new Error("This job cannot be resumed from status: " + job.summary.status);
       }
+      // An explicit resume upgrades only unfinished work. Keep completed results and
+      // paid call history, and record the previous identity instead of relabelling it.
+      if (
+        job.schemaVersion === 5 &&
+        job.execution &&
+        job.execution.promptVersion !== LEARNING_POINTS_PROMPT_VERSION
+      ) {
+        // A crash may leave the canonical lesson saved before the completed status.
+        // Finish that commit under its original identity instead of changing the saved lesson.
+        if (job.learningPlan.batches.length && job.learningPlan.batches.every(b => b.result)) {
+          const saved = await this.storage.documents.get(jobId);
+          if (saved) {
+            if (
+              saved.execution?.inputFingerprint !== job.execution.inputFingerprint ||
+              JSON.stringify(saved.cues) !== JSON.stringify(job.request.cues)
+            )
+              throw new Error("Saved document conflicts with frozen execution");
+            const completed = await this.storage.jobs.update(jobId, current => ({
+              ...current,
+              summary: {
+                ...current.summary,
+                status: "completed",
+                documentId: jobId,
+                ownerPid: undefined,
+                error: undefined,
+                updatedAt: new Date().toISOString(),
+              },
+            }));
+            this.notify(requestId, completed.summary);
+            return saved;
+          }
+        }
+        await this.storage.jobs.update(jobId, current => {
+          if (current.schemaVersion !== 5 || !current.execution)
+            throw new Error("Missing saved execution");
+          const execution = {
+            ...current.execution,
+            previousExecution: ExecutionIdentitySchema.parse(current.execution),
+            promptVersion: LEARNING_POINTS_PROMPT_VERSION,
+            qualityStrategyVersion: QUALITY_STRATEGY_VERSION,
+          };
+          return {
+            ...current,
+            execution,
+            summary: { ...current.summary, execution },
+            learningPlan: {
+              ...current.learningPlan,
+              batches: current.learningPlan.batches.map(batch =>
+                batch.result
+                  ? batch
+                  : {
+                      ...batch,
+                      quality: undefined,
+                      repairAttempted: undefined,
+                      lastIssue: undefined,
+                      pendingPronunciation: undefined,
+                      draftPronunciationDiagnostics: undefined,
+                    },
+              ),
+            },
+          };
+        });
+      }
       return this.execute(requestId, jobId, signal);
     } finally {
       this.starting = false;
@@ -204,17 +310,22 @@ export class JobManager {
   }
 
   async cancel(jobId: string): Promise<boolean> {
-    this.running.get(jobId)?.abort();
     const job = await this.storage.jobs.get(jobId);
-    if (!job || !["queued", "running", "waiting", "failed"].includes(job.summary.status))
+    if (!job) return false;
+    const operation = this.running.get(jobId);
+    if (!operation) assertCancellationOwner(job.summary.ownerPid);
+    if (operation) await operation.cancel();
+    const settled = await this.storage.jobs.get(jobId);
+    if (settled?.summary.status === "cancelled") return true;
+    if (!settled || !["queued", "running", "waiting", "failed"].includes(settled.summary.status))
       return false;
-    await this.storage.jobs.update(jobId, current => {
+    const updated = await this.storage.jobs.update(jobId, current => {
       if (!["queued", "running", "waiting", "failed"].includes(current.summary.status))
         return current;
       const next = transitionJob(current, "cancelled");
       return { ...next, summary: { ...next.summary, ownerPid: undefined } };
     });
-    return true;
+    return updated.summary.status === "cancelled";
   }
 
   private async execute(
@@ -223,11 +334,12 @@ export class JobManager {
     signal?: AbortSignal,
   ): Promise<LearningDocument> {
     if (this.closed) throw new Error("Native Host connection closed");
-    const controller = new AbortController();
+    const operation = new RunningOperation();
+    const controller = operation.controller;
     const externalAbort = () => controller.abort();
     signal?.addEventListener("abort", externalAbort, { once: true });
     if (signal?.aborted) controller.abort();
-    this.running.set(jobId, controller);
+    this.running.set(jobId, operation);
     try {
       const started = await this.storage.jobs.update(jobId, current => {
         if (
@@ -241,14 +353,42 @@ export class JobManager {
         return { ...next, summary: { ...next.summary, ownerPid: process.pid, error: undefined } };
       });
       this.notify(requestId, started.summary);
-      const document = await runGenerationPipeline(jobId, this.deps, controller.signal, summary =>
-        this.notify(requestId, summary),
+      this.summaries.set(jobId, started.summary);
+      const document = await runGenerationPipeline(
+        jobId,
+        {
+          ...this.deps,
+          onActivity: (id, step, activity) => {
+            let active = this.activities.get(id);
+            if (!active) {
+              active = new Map();
+              this.activities.set(id, active);
+            }
+            if (activity) active.set(step, activity);
+            else active.delete(step);
+            const summary = this.summaries.get(id);
+            if (summary) this.notify(requestId, this.withActivity(summary));
+            this.deps.onActivity?.(id, step, activity);
+          },
+        },
+        controller.signal,
+        summary => {
+          this.summaries.set(jobId, summary);
+          this.notify(requestId, this.withActivity(summary));
+        },
       );
       return document;
     } catch (error) {
       const updated = await this.storage.jobs.update(jobId, current => {
         if (current.summary.status !== "running") return current;
-        const next = transitionJob(current, controller.signal.aborted ? "waiting" : "failed");
+        const next = transitionJob(
+          current,
+          controller.signal.aborted
+            ? operation.cancelRequested
+              ? "cancelled"
+              : "waiting"
+            : "failed",
+        );
         return {
           ...next,
           summary: {
@@ -262,19 +402,22 @@ export class JobManager {
       });
       // Persist the terminal checkpoint first, then send the real status to
       // any open Side Panel. The error message alone cannot update a progress bar.
-      if (updated.summary.status === "failed" || updated.summary.status === "waiting") {
+      if (["failed", "waiting", "cancelled"].includes(updated.summary.status)) {
         this.notify(requestId, updated.summary);
       }
       throw error;
     } finally {
       signal?.removeEventListener("abort", externalAbort);
+      this.activities.delete(jobId);
+      this.summaries.delete(jobId);
       this.running.delete(jobId);
+      operation.finish();
     }
   }
 
   /** Called when the native messaging pipe closes; checkpoints survive this process. */
   interruptAll(): void {
     this.closed = true;
-    for (const controller of this.running.values()) controller.abort();
+    for (const operation of this.running.values()) operation.controller.abort();
   }
 }

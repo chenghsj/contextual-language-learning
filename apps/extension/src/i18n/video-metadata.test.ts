@@ -8,6 +8,8 @@ test("every UI locale has actionable metadata recovery and conflict messages", (
     "get",
     "refresh",
     "busy",
+    "buttonBusy",
+    "buttonSuccess",
     "success",
     "partial",
     "unavailable",

@@ -3,7 +3,7 @@
     "message": "Contextual Language Learning"
   },
   "extensionDescription": {
-    "message": "使用 AI 將影片字幕轉換成符合程度的情境式教材，搭配上下文理解與句子重播練習。"
+    "message": "使用 AI 從影片字幕建立學習內容：情境教材、摘要、詞彙與自訂 Prompt，並回到影片練習。"
   },
   "actionTitle": {
     "message": "開啟 Contextual Language Learning"

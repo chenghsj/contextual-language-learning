@@ -1,21 +1,30 @@
 {
-  "name": "@immersive/extension",
+  "name": "@contextual/extension",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "build": "vite build && node scripts/build-content.mjs",
-    "dev": "vite",
+    "dev": "vite --config vite.dev.config.ts",
+    "dev:preview": "vite --host 127.0.0.1 --port 5175 --strictPort --open /dev/redesign-preview.html",
     "typecheck": "tsc --noEmit",
     "test:host-health": "node --import tsx scripts/host-health-acceptance.mjs",
     "test:host-uninstall-ui": "node scripts/host-uninstall-acceptance.mjs",
+    "test:host-setup-ui": "node scripts/host-setup-acceptance.mjs",
     "test:ux-layout-ui": "node scripts/ux-layout-acceptance.mjs",
+    "test:motion-ui": "node scripts/motion-acceptance.mjs",
+    "test:provider-layout-ui": "node scripts/provider-layout-acceptance.mjs",
+    "test:provider-catalog-ui": "node --import tsx scripts/provider-catalog-acceptance.mjs",
+    "test:dialog-ui": "node scripts/dialog-acceptance.mjs",
     "test:redesign-ui": "node scripts/redesign-acceptance.mjs",
-    "test:subtitle-recovery-ui": "node scripts/subtitle-recovery-acceptance.mjs"
+    "test:subtitle-recovery-ui": "node scripts/subtitle-recovery-acceptance.mjs",
+    "test:subtitle-connection-ui": "node scripts/subtitle-connection-acceptance.mjs",
+    "test:subtitle-layout-ui": "node scripts/subtitle-layout-acceptance.mjs"
   },
   "dependencies": {
-    "@immersive/core": "workspace:*",
+    "@contextual/core": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.20",
+    "@radix-ui/react-alert-dialog": "^1.1.23",
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-popover": "^1.1.23",
     "@radix-ui/react-progress": "^1.1.16",
@@ -36,6 +45,7 @@
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
+    "@crxjs/vite-plugin": "3.0.0",
     "@tailwindcss/vite": "^4.1.0",
     "@types/chrome": "^0.3.0",
     "@types/jsdom": "^30.0.0",

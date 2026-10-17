@@ -7,7 +7,7 @@ import { Toaster as Sonner, type ToasterProps } from "sonner";
 const Toaster = ({ theme = "system", toastOptions, ...props }: ToasterProps) => (
   <Sonner
     theme={theme}
-    className="toaster group"
+    className="toaster group pointer-events-auto"
     toastOptions={{
       classNames: {
         toast:

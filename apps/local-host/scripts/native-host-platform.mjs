@@ -6,7 +6,7 @@ import { homedir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 
 const exec = promisify(execFile);
-export const HOST_NAME = "dev.immersive.language_learning";
+export const HOST_NAME = "dev.contextual.language_learning";
 const browsers = new Set(["chrome", "edge", "chromium"]);
 
 export function browserManifestLocation(platform, browser, home = homedir(), env = process.env) {
@@ -58,18 +58,18 @@ export function browserManifestLocation(platform, browser, home = homedir(), env
 /** Installer Strategy: macOS/Linux use executable shell scripts, Windows needs an actual .exe. */
 export function installationDir(platform, home = homedir(), env = process.env) {
   if (platform === "darwin")
-    return join(home, "Library/Application Support/Immersive Learning/native-host");
+    return join(home, "Library/Application Support/Contextual Language Learning/native-host");
   if (platform === "linux") {
     const data =
       env.XDG_DATA_HOME && isAbsolute(env.XDG_DATA_HOME)
         ? env.XDG_DATA_HOME
         : join(home, ".local/share");
-    return join(data, "immersive-language-learning/native-host");
+    return join(data, "contextual-language-learning/native-host");
   }
   if (platform === "win32")
     return join(
       env.LOCALAPPDATA || join(home, "AppData", "Local"),
-      "Immersive Learning",
+      "Contextual Language Learning",
       "native-host",
     );
   throw new Error("Unsupported Native Host platform: " + platform);
@@ -100,7 +100,26 @@ async function atomicWrite(target, content, mode = 0o600) {
 
 const shQuote = value => "'" + value.replaceAll("'", "'\\''") + "'";
 
-async function installLauncher(platform, installDir, sourceRoot, entry, nodePath, home, run) {
+async function copyImmutable(source, target, mode = 0o700) {
+  try {
+    await access(target);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    await atomicCopy(source, target, mode);
+  }
+}
+
+async function installLauncher(
+  platform,
+  installDir,
+  sourceRoot,
+  entry,
+  nodePath,
+  home,
+  run,
+  prebuiltLauncher,
+  immutable = false,
+) {
   if (platform !== "win32") {
     const searchPath = [
       dirname(nodePath),
@@ -122,6 +141,12 @@ async function installLauncher(platform, installDir, sourceRoot, entry, nodePath
         "\n",
       0o700,
     );
+    return launcher;
+  }
+  if (prebuiltLauncher) {
+    await atomicWrite(join(installDir, "node-path.txt"), nodePath + "\n");
+    const launcher = join(installDir, "native-host.exe");
+    await (immutable ? copyImmutable : atomicCopy)(prebuiltLauncher, launcher, 0o700);
     return launcher;
   }
   // Chrome's Windows manifest requires a native executable, not a .cmd/.bat shim.
@@ -172,27 +197,86 @@ export async function installNativeHost({
   sourceRoot,
   sourceEntry,
   nodePath = process.execPath,
+  bundledRuntime,
+  prebuiltLauncher,
+  bundleKey,
   home = homedir(),
   env = process.env,
   run = exec,
 }) {
   if (!/^[a-p]{32}$/.test(extensionId))
     throw new Error("Invalid 32-character Chromium extension ID.");
+  if (bundleKey && !/^[a-f0-9]{64}$/.test(bundleKey)) throw new Error("Invalid Host bundle key.");
   const location = browserManifestLocation(platform, browser, home, env);
   await access(sourceEntry);
-  const root = installationDir(platform, home, env);
+  const speechHelper = join(dirname(sourceEntry), "macos-speech");
+  let hasSiri = false;
+  if (platform === "darwin") {
+    try {
+      await access(speechHelper);
+      await access(speechHelper + ".swift");
+    } catch {
+      throw new Error(
+        "macOS speech helper not found. Rebuild with pnpm build on macOS, or extract the complete matching Host ZIP.",
+      );
+    }
+    try {
+      await access(speechHelper + "-siri");
+      hasSiri = true;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    if (hasSiri) await access(speechHelper + "-siri.LICENSE");
+  }
+  const base = installationDir(platform, home, env);
+  // Immutable versions avoid replacing running Windows executables during updates.
+  const root = bundleKey ? join(base, "versions", bundleKey) : base;
   await mkdir(root, { recursive: true, mode: 0o700 });
+  if (bundledRuntime) {
+    nodePath = join(root, platform === "win32" ? "node.exe" : "node");
+    await (bundleKey ? copyImmutable : atomicCopy)(bundledRuntime, nodePath, 0o700);
+  }
   const entry = join(root, "native-host.mjs");
-  await atomicCopy(sourceEntry, entry);
-  const launcher = await installLauncher(platform, root, sourceRoot, entry, nodePath, home, run);
+  await (bundleKey ? copyImmutable : atomicCopy)(sourceEntry, entry, 0o600);
+  if (platform === "darwin") {
+    await (bundleKey ? copyImmutable : atomicCopy)(speechHelper, join(root, "macos-speech"), 0o700);
+    await (bundleKey ? copyImmutable : atomicCopy)(
+      speechHelper + ".swift",
+      join(root, "macos-speech.swift"),
+      0o600,
+    );
+    // Older SDK builds may omit the optional Siri backend. Never retain an old
+    // helper when updating an unversioned development installation.
+    for (const suffix of ["-siri", "-siri.LICENSE"]) {
+      if (hasSiri) {
+        await (bundleKey ? copyImmutable : atomicCopy)(
+          speechHelper + suffix,
+          join(root, "macos-speech" + suffix),
+          suffix === "-siri" ? 0o700 : 0o600,
+        );
+      } else if (!bundleKey) await rm(join(root, "macos-speech" + suffix), { force: true });
+    }
+  }
+  const launcher = await installLauncher(
+    platform,
+    root,
+    sourceRoot,
+    entry,
+    nodePath,
+    home,
+    run,
+    prebuiltLauncher,
+    Boolean(bundleKey),
+  );
   const manifest = {
     name: HOST_NAME,
-    description: "Local agent host for Immersive Language Learning",
+    description: "Local agent host for Contextual Language Learning",
     path: launcher,
     type: "stdio",
     allowed_origins: ["chrome-extension://" + extensionId + "/"],
   };
-  const manifestPath = location.type === "file" ? location.path : join(root, HOST_NAME + ".json");
+  const manifestPath =
+    location.type === "file" ? location.path : join(base, browser + "-" + HOST_NAME + ".json");
   await atomicWrite(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
   if (location.type === "registry") {
     // HKCU is per-user; no admin privileges and no global browser setting changes.
@@ -257,6 +341,13 @@ export async function uninstallNativeHost({
     });
   }
   const programRemoved = remainingBrowsers.length === 0;
-  if (programRemoved) await rm(root, { recursive: true, force: true });
+  if (programRemoved) {
+    try {
+      await rm(root, { recursive: true, force: true });
+    } catch (error) {
+      if (platform !== "win32" || !["EPERM", "EBUSY", "EACCES"].includes(error.code)) throw error;
+      return { location, programRemoved: false, remainingBrowsers, cleanupPending: true };
+    }
+  }
   return { location, programRemoved, remainingBrowsers };
 }

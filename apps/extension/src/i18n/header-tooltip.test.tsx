@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { createRoot } from "react-dom/client";
 import { HeaderActions } from "../components/header-actions";
+import { restoreFocusWithoutTooltip } from "../components/icon-tooltip";
 
 test("both header icons show localized tooltips on keyboard focus and dismiss with Escape", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "https://extension.test" });
@@ -26,7 +27,6 @@ test("both header icons show localized tooltips on keyboard focus and dismiss wi
         <HeaderActions
           locale="zh-TW"
           page="create"
-          attentionCount={1}
           onActivity={() => clicked.push("activity")}
           onSettings={() => clicked.push("settings")}
         />,
@@ -34,7 +34,24 @@ test("both header icons show localized tooltips on keyboard focus and dismiss wi
     );
     const icons = container.querySelectorAll<HTMLButtonElement>("button");
     for (const [index, label] of ["活動", "設定"].entries()) {
-      await act(async () => icons[index].focus());
+      await act(async () => restoreFocusWithoutTooltip(icons[index]));
+      assert.equal(dom.window.document.activeElement, icons[index]);
+      assert.equal(container.querySelector('[role="tooltip"]'), null);
+      await act(async () =>
+        icons[index].dispatchEvent(new dom.window.MouseEvent("mouseover", { bubbles: true })),
+      );
+      assert.match(container.querySelector('[role="tooltip"]')!.textContent!, new RegExp(label));
+      await act(async () =>
+        icons[index].dispatchEvent(new dom.window.MouseEvent("mouseout", { bubbles: true })),
+      );
+      assert.equal(container.querySelector('[role="tooltip"]'), null);
+      await act(async () => icons[index].blur());
+      await act(async () => {
+        dom.window.document.dispatchEvent(
+          new dom.window.KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
+        );
+        icons[index].focus();
+      });
       const tooltip = container.querySelector('[role="tooltip"]')!;
       assert.match(tooltip.textContent!, new RegExp(label));
       assert.equal(icons[index].getAttribute("aria-describedby"), tooltip.id);
@@ -49,16 +66,15 @@ test("both header icons show localized tooltips on keyboard focus and dismiss wi
     assert.deepEqual(clicked, ["activity", "settings"]);
     await act(async () =>
       root.render(
-        <HeaderActions
-          locale="ja"
-          page="settings"
-          attentionCount={0}
-          onActivity={() => {}}
-          onSettings={() => {}}
-        />,
+        <HeaderActions locale="ja" page="settings" onActivity={() => {}} onSettings={() => {}} />,
       ),
     );
-    await act(async () => icons[0].focus());
+    await act(async () => {
+      dom.window.document.dispatchEvent(
+        new dom.window.KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
+      );
+      icons[0].focus();
+    });
     assert.match(container.querySelector('[role="tooltip"]')!.textContent!, /アクティビティ/);
   } finally {
     await act(async () => root.unmount());

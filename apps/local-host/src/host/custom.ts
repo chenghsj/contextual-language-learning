@@ -1,4 +1,5 @@
 import { customDuplicateKey } from "../custom-duplicates";
+import { sourceKey } from "../duplicates";
 import type { GenerationQueue } from "../jobs/queue";
 import { findCustomDriveDuplicates } from "../drive/api";
 import { randomUUID } from "node:crypto";
@@ -7,7 +8,7 @@ import {
   type HostMessage,
   type CustomDocument,
   type CustomGenerationRequest,
-} from "@immersive/core";
+} from "@contextual/core";
 import { CustomJobManager } from "../jobs/custom-manager";
 import { customFingerprint } from "../generation/custom-pipeline";
 import { contentHash, type CustomRepository } from "../storage/custom";
@@ -181,6 +182,7 @@ export function createCustomHandler(
             title: doc.title,
             createdAt: doc.createdAt,
             sourceTitle: doc.request.source.title,
+            sourceKey: sourceKey(doc.request.source, doc.request.cues),
             backup: byId.get(doc.id)?.backup,
           })),
         });

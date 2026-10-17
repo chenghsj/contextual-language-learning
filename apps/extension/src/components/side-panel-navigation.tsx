@@ -29,10 +29,10 @@ export function SidePanelNavigation({
         ? page
         : "";
   return (
-    <nav className="shrink-0 border-b border-border pb-2" aria-label={t("navLabel")}>
-      <ul className="flex flex-wrap items-center gap-1">
+    <nav className="@container shrink-0 border-b border-border pb-2" aria-label={t("navLabel")}>
+      <ul className="grid grid-cols-2 items-stretch gap-1 @sm:flex">
         {tabs.map(({ id, label, icon: Icon }) => (
-          <li key={id}>
+          <li key={id} className="flex min-w-0">
             <Button
               variant="ghost"
               size="sm"
@@ -41,12 +41,12 @@ export function SidePanelNavigation({
               aria-controls={"page-panel-" + id}
               onClick={() => onNavigate(id)}
               className={cn(
-                "h-12 gap-1.5",
+                "h-auto min-h-9 w-full min-w-0 gap-1.5 px-2 py-1 whitespace-normal",
                 active === id ? "bg-muted text-foreground" : "text-muted-foreground",
               )}
             >
               <Icon aria-hidden="true" />
-              <span>{t(label)}</span>
+              <span className="min-w-0 wrap-anywhere">{t(label)}</span>
             </Button>
           </li>
         ))}

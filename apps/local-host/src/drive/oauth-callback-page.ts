@@ -120,13 +120,13 @@ export function oauthCallbackPageStart(nonce: string): string {
   return `<!doctype html>
 <html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>正在連結 Google Drive · Immersive Learning</title>
+<title>正在連結 Google Drive · Contextual Language Learning</title>
 <style nonce="${safeNonce}">${styles}</style></head>
 <body data-state="pending">
 <main>
   <header class="brand">
     <img class="brand-mark" src="${BRAND_ICON}" alt="" aria-hidden="true">
-    <span class="brand-name">Immersive Learning<span class="brand-sub">Google Drive 帳號連結</span></span>
+    <span class="brand-name">Contextual Language Learning<span class="brand-sub">Google Drive 帳號連結</span></span>
   </header>
   <section data-slot="card" aria-labelledby="oauth-title">
     <div class="card-body">
@@ -146,13 +146,12 @@ export function oauthCallbackPageStart(nonce: string): string {
       <aside data-slot="alert" aria-labelledby="oauth-alert-title">
         <svg class="alert-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7h.01"/></svg>
         <div><div class="alert-heading" id="oauth-alert-title">下一步</div>
-          <p class="alert-copy" id="oauth-next-step">請稍候。完成後可以回到 Immersive Learning 側邊欄。</p>
+          <p class="alert-copy" id="oauth-next-step">請稍候。完成後可以回到 Contextual Language Learning 側邊欄。</p>
         </div>
       </aside>
       <div class="separator"></div>
       <footer class="footer">
         <p class="footnote" id="oauth-footnote">此頁面不會顯示或儲存你的 Google 憑證。</p>
-        <span class="footnote" id="oauth-shortcut">完成後按 ⌘W 關閉分頁</span>
       </footer>
     </div>
   </section>
@@ -160,22 +159,22 @@ export function oauthCallbackPageStart(nonce: string): string {
 <script nonce="${safeNonce}">
   "use strict";
   try { history.replaceState(null, "", location.pathname); } catch (_) {}
-  window.__immersiveOAuthComplete = function (state) {
+  window.__contextualOAuthComplete = function (state) {
     if (state !== "success" && state !== "error") return;
     var copy = state === "success" ? {
       badge: "連結成功",
       title: "Google Drive 已連結",
       description: "帳號已驗證，授權已安全儲存在本機。你現在可以使用 Google Drive 自動備份。",
-      next: "回到 Immersive Learning 側邊欄，即可看到已連結的 Google 帳號。",
-      footnote: "連結完成後，可以回到 Immersive Learning 側邊欄。",
-      pageTitle: "Google Drive 已連結 · Immersive Learning"
+      next: "回到 Contextual Language Learning 側邊欄，即可看到已連結的 Google 帳號。",
+      footnote: "可關閉此分頁，返回側邊欄。",
+      pageTitle: "Google Drive 已連結 · Contextual Language Learning"
     } : {
       badge: "連結未完成",
       title: "無法完成 Google 帳號連結",
       description: "授權過程未能完成。你的本地教材不受影響。",
-      next: "請返回 Immersive Learning 側邊欄查看具體錯誤，再重新連結。",
+      next: "請返回 Contextual Language Learning 側邊欄查看具體錯誤，再重新連結。",
       footnote: "返回側邊欄查看錯誤與重新連結方式。",
-      pageTitle: "Google Drive 連結失敗 · Immersive Learning"
+      pageTitle: "Google Drive 連結失敗 · Contextual Language Learning"
     };
     document.body.dataset.state = state;
     document.getElementById("oauth-badge").textContent = copy.badge;
@@ -192,7 +191,7 @@ export function oauthCallbackPageStart(nonce: string): string {
 /** Append after token exchange and Keychain storage, then end the response. */
 export function oauthCallbackPageEnd(nonce: string, outcome: OAuthCallbackOutcome): string {
   const safeNonce = checkedNonce(nonce);
-  return `<script nonce="${safeNonce}">window.__immersiveOAuthComplete("${outcome}");</script></body></html>`;
+  return `<script nonce="${safeNonce}">window.__contextualOAuthComplete("${outcome}");</script></body></html>`;
 }
 
 export function oauthCallbackHeaders(nonce: string): Record<string, string> {

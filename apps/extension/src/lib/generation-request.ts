@@ -1,5 +1,6 @@
 import {
   GenerationRequestSchema,
+  CustomGenerationRequestSchema,
   AnalysisRangeSchema,
   selectAnalysisCues,
   type AnalysisRange,
@@ -10,10 +11,10 @@ import {
   type LearningProfile,
   type SubtitleCue,
   type VideoSource,
-} from "@immersive/core";
+} from "@contextual/core";
 import { contextualGenerationProfile } from "./contextual-profile";
 
-/** One immutable V5 request is reused for duplicate preflight and generation. */
+/** One immutable V7 request is reused for duplicate preflight and generation. */
 export function buildGenerationRequest(
   input: {
     source: VideoSource;
@@ -28,6 +29,7 @@ export function buildGenerationRequest(
 ): GenerationRequest {
   return GenerationRequestSchema.parse({
     id,
+    outputSchemaVersion: 7,
     source: input.source,
     profile: contextualGenerationProfile(input.profile),
     agent: input.agent,
@@ -38,4 +40,25 @@ export function buildGenerationRequest(
       ? { analysisRange: AnalysisRangeSchema.parse(input.analysisRange) }
       : {}),
   });
+}
+
+/** Preview and submission use the same source range, prompt and context switches. */
+export function buildCreationRequest(
+  input: Parameters<typeof buildGenerationRequest>[0],
+  custom?: { prompt: string; context: { subtitles: boolean; title: boolean } },
+) {
+  const request = buildGenerationRequest(input);
+  return custom
+    ? CustomGenerationRequestSchema.parse({
+        id: request.id,
+        kind: "custom",
+        source: request.source,
+        agent: request.agent,
+        cues: request.cues,
+        analysisRange: request.analysisRange,
+        destination: request.destination,
+        backup: request.backup,
+        ...custom,
+      })
+    : request;
 }

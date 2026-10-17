@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { LearningLanguage } from "@immersive/core";
+import type { LearningLanguage } from "@contextual/core";
 import type { UiLocale } from "../i18n/messages";
 import { readDraft, writeDraft } from "../lib/draft-db";
 import { SubtitleDraft } from "../lib/subtitle-draft";
@@ -39,7 +39,15 @@ export function useSubtitleDraft(language: LearningLanguage, locale: UiLocale) {
     return () => {
       clearTimeout(timer);
     };
-  }, [loaded, state.raw, state.originalRaw, state.captionSource, state.title, state.sourceUrl]);
+  }, [
+    loaded,
+    state.raw,
+    state.originalRaw,
+    state.timingOverrides,
+    state.captionSource,
+    state.title,
+    state.sourceUrl,
+  ]);
   useEffect(() => {
     const unsubscribe = draft.subscribe(setState);
     return () => {

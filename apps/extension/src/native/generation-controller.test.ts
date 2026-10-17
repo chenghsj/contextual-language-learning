@@ -1,8 +1,68 @@
-import { HOST_PROTOCOL_VERSION } from "@immersive/core";
+import { HOST_PROTOCOL_VERSION } from "@contextual/core";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
 import { GENERATION_CONTROLLER_PORT, installGenerationController } from "./generation-controller";
+
+test("speech has a panel owner, stops on panel closure, and does not interrupt generation", () => {
+  const app = setup();
+  const first = app.connectPanel();
+  const second = app.connectPanel();
+  const jobId = randomUUID(),
+    speechId = randomUUID(),
+    stopId = randomUUID();
+  first.onMessage.fire({ id: jobId, type: "resume", jobId });
+  first.onMessage.fire({
+    id: speechId,
+    type: "speak",
+    input: { text: "Hello", language: "en", voiceId: "Alex", rate: 1 },
+  });
+  second.onMessage.fire({ id: stopId, type: "stopSpeech", speechId });
+  assert.ok(
+    second.sent.some(
+      message =>
+        (message as { id: string; type: string }).id === stopId &&
+        (message as { type: string }).type === "error",
+    ),
+  );
+  assert.equal(
+    app.native.sent.some(message => (message as { id: string }).id === stopId),
+    false,
+  );
+  first.disconnect();
+  assert.ok(
+    app.native.sent.some(
+      message =>
+        (message as { type: string; speechId?: string }).type === "stopSpeech" &&
+        (message as { speechId: string }).speechId === speechId,
+    ),
+  );
+  app.native.onMessage.fire({ id: speechId, type: "speechFinished", status: "stopped" });
+  second.disconnect();
+  assert.equal(app.native.disconnected, false, "the generation request survives speech cleanup");
+  app.native.onMessage.fire({ id: jobId, type: "generationSettled" });
+  assert.equal(app.native.disconnected, true);
+});
+
+test("speech queued before the handshake is removed when its panel closes", () => {
+  const app = setup(
+    () => {},
+    () => {},
+    false,
+  );
+  const panel = app.connectPanel();
+  panel.onMessage.fire({
+    id: randomUUID(),
+    type: "speak",
+    input: { text: "Hello", language: "en", voiceId: "Alex", rate: 1 },
+  });
+  panel.disconnect();
+  assert.equal(
+    app.native.sent.some(message => (message as { type: string }).type === "speak"),
+    false,
+  );
+  assert.equal(app.native.disconnected, true);
+});
 
 type Listener<T> = (value: T) => void;
 function emitter<T>() {
@@ -17,7 +77,7 @@ function emitter<T>() {
   };
 }
 
-function fakePort(name: string, senderId = "immersive-extension-test") {
+function fakePort(name: string, senderId = "contextual-extension-test") {
   const onMessage = emitter<unknown>();
   const onDisconnect = emitter<void>();
   const sent: unknown[] = [];
@@ -49,7 +109,7 @@ function setup(
   onAttention: (jobId: string, title: string, outcome: "interrupted" | "failed") => void = () => {},
   automaticHandshake = true,
 ) {
-  const id = "immersive-extension-test";
+  const id = "contextual-extension-test";
   const onConnect = emitter<ReturnType<typeof fakePort>>();
   const native = fakePort("native", id);
   const send = native.postMessage;
@@ -79,7 +139,7 @@ function setup(
       request: { id: string; type: string },
       reply: (value: unknown) => void,
     ) => {
-      assert.equal(name, "dev.immersive.language_learning");
+      assert.equal(name, "dev.contextual.language_learning");
       connections++;
       if (!registered) throw new Error("Specified native messaging host not found.");
       probes.push({ request, reply });
@@ -95,7 +155,7 @@ function setup(
         });
     },
     connectNative: (name: string) => {
-      assert.equal(name, "dev.immersive.language_learning");
+      assert.equal(name, "dev.contextual.language_learning");
       connections++;
       if (!registered) throw new Error("Specified native messaging host not found.");
       return native;
@@ -682,7 +742,7 @@ test("reconnection waits 1/2/4 seconds, queries only and never replays generatio
   const delays: number[] = [];
   let retry: (() => void) | undefined;
   const runtime = {
-    id: "immersive-extension-test",
+    id: "contextual-extension-test",
     onConnect,
     getManifest: () => ({ version: "0.1.0" }),
     connectNative: () => {
@@ -842,4 +902,38 @@ test("worker tracks FIFO queue and sends completion once for each job across pan
   }
   assert.deepEqual(completed, [first, second]);
   assert.equal(app.native.disconnected, true);
+});
+
+test("the login owner can submit its prompt using the active login ID without bypassing duplicate checks", () => {
+  const app = setup();
+  const owner = app.connectPanel();
+  const observer = app.connectPanel();
+  const loginId = randomUUID();
+  const login = { id: loginId, type: "piLogin", provider: "openai", method: "api_key" };
+  owner.onMessage.fire(login);
+  const answer = {
+    id: loginId,
+    type: "piAuthAnswer",
+    loginId,
+    promptId: randomUUID(),
+    value: "test-only-key",
+  };
+  owner.onMessage.fire(answer);
+  assert.deepEqual(app.native.sent.at(-1), answer);
+  const count = app.native.sent.length;
+  observer.onMessage.fire(answer);
+  owner.onMessage.fire(login);
+  owner.onMessage.fire({ id: loginId, type: "listJobs" });
+  assert.equal(app.native.sent.length, count);
+  assert.match((observer.sent.at(-1) as { message: string }).message, /already in use/);
+  app.native.onMessage.fire({ id: loginId, type: "piAuthDone" });
+  assert.ok(
+    owner.sent.some(
+      message =>
+        (message as { id: string; type: string }).id === loginId &&
+        (message as { type: string }).type === "piAuthDone",
+    ),
+  );
+  owner.disconnect();
+  observer.disconnect();
 });

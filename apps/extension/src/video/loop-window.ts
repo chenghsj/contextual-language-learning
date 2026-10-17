@@ -1,3 +1,5 @@
+import { formatDisplayTime } from "../lib/time-display";
+
 /** User-calibrated A/B playback boundaries, independent of the subtitle timestamps. */
 export type LoopWindow = { startMs: number; endMs: number };
 export type LoopBoundary = "start" | "end";
@@ -45,10 +47,5 @@ export function adjustLoopBoundary(
 }
 
 export function formatLoopTimestamp(milliseconds: number): string {
-  const rounded = Math.round(milliseconds / 100) * 100;
-  const minutes = Math.floor(rounded / 60_000);
-  const seconds = String(Math.floor(rounded / 1_000) % 60).padStart(2, "0");
-  return (
-    minutes.toString().padStart(2, "0") + ":" + seconds + "." + Math.floor((rounded % 1_000) / 100)
-  );
+  return formatDisplayTime(milliseconds);
 }

@@ -1,5 +1,6 @@
-import { PreferencesSchema, type Preferences } from "@immersive/core";
-export { PreferencesSchema, type Preferences } from "@immersive/core";
+import { contextualGenerationProfile } from "./contextual-profile";
+import { PreferencesSchema, type Preferences } from "@contextual/core";
+export { PreferencesSchema, type Preferences } from "@contextual/core";
 export const PREFERENCES_KEY = "preferencesV2";
 export function defaultPreferences(
   locale: Exclude<Preferences["uiLocalePreference"], "auto"> = "en",
@@ -9,13 +10,13 @@ export function defaultPreferences(
     agent: null,
     providerSettings: {},
     agentModelPreferences: {},
-    profile: {
+    profile: contextualGenerationProfile({
       targetLanguage: "en",
       instructionLanguage: locale,
       level: "B1",
       sceneCount: 4,
-      contextualExampleCount: 2,
-    },
+      contextualExampleCount: 1,
+    }),
     explanationLanguageMode: "auto",
     destination: { kind: "local" },
     backup: { enabled: false },
@@ -23,6 +24,7 @@ export function defaultPreferences(
     analysisNotificationsEnabled: true,
     uiLocalePreference: "auto",
     themePreference: "system",
+    motionPreference: "full",
     repeat: "3",
     delay: 1,
     sceneRepeat: "3",
@@ -55,7 +57,11 @@ export class PreferencesStore {
       .get([PREFERENCES_KEY])
       .then(saved => {
         const parsed = PreferencesSchema.safeParse(saved[PREFERENCES_KEY]);
-        if (parsed.success) this.value = parsed.data;
+        if (parsed.success)
+          this.value = {
+            ...parsed.data,
+            profile: contextualGenerationProfile(parsed.data.profile),
+          };
         this.committed = this.value;
         this.loaded = true;
         this.emit();
@@ -78,6 +84,7 @@ export class PreferencesStore {
     const snapshot = PreferencesSchema.parse({
       ...this.value,
       ...value,
+      profile: contextualGenerationProfile(value.profile),
       pronunciationModes: value.pronunciationModes ?? this.value.pronunciationModes,
     });
     const revision = ++this.revision;
@@ -112,6 +119,10 @@ export class PreferencesStore {
       ...this.value,
       pronunciationModes: { ...this.value.pronunciationModes, [language]: mode },
     });
+  }
+  async saveSpeech(speech: NonNullable<Preferences["speech"]>): Promise<void> {
+    await this.load();
+    return this.save({ ...this.value, speech });
   }
   private emit() {
     for (const listener of this.listeners) listener(this.value);

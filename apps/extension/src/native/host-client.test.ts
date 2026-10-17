@@ -71,3 +71,21 @@ test("document request assembles UTF-8 chunks, rejects missing chunks and cleans
   app.ports[2].disconnect();
   await assert.rejects(interrupted, /connection ended/);
 });
+
+test("opening a folder sends the current destination, waits for acknowledgement and reports Host failures", async () => {
+  const app = testRuntime();
+  for (const directory of [undefined, "/selected lessons"]) {
+    const opened = request({ type: "openFolder", directory }, app.runtime);
+    const port = app.ports.at(-1)!;
+    assert.equal(port.sent[0].type, "openFolder");
+    assert.equal(port.sent[0].directory, directory);
+    port.receive({ id: port.sent[0].id, type: "folderOpened", directory: directory ?? "/default" });
+    assert.equal((await opened).directory, directory ?? "/default");
+    assert.equal(port.closed, true);
+  }
+  const failed = request({ type: "openFolder", directory: "/missing" }, app.runtime);
+  const port = app.ports.at(-1)!;
+  port.receive({ id: port.sent[0].id, type: "error", message: "Folder no longer exists" });
+  await assert.rejects(failed, /Folder no longer exists/);
+  assert.equal(port.closed, true);
+});

@@ -56,5 +56,10 @@ test("Chrome uses a fixed English extension name while panel and Host retain the
   assert.ok(app.includes("<strong>Contextual Language Learning</strong>"));
   assert.ok(html.includes("<title>AI-powered Contextual Language Learning</title>"));
   assert.ok(readme.startsWith("# AI-powered Contextual Language Learning"));
-  assert.ok(packaging.includes("# AI-powered Contextual Language Learning — "));
+  assert.ok(packaging.includes("contextual-language-learning-chromium-"));
+  const workflow = await readFile(
+    new URL("../../../../.github/workflows/release.yml", import.meta.url),
+    "utf8",
+  );
+  assert.ok(workflow.includes("Contextual Language Learning $RELEASE_TAG"));
 });

@@ -22,6 +22,37 @@ test("custom Markdown blocks raw HTML, executable links and remote image request
   assert.doesNotMatch(html, /<script|<iframe|<img|javascript:|data:image|src=/);
 });
 
+test("custom pronunciation uses supplied readings and preserves unannotated text and code", () => {
+  const markdown =
+    "## 漫研（まんけん）\n\n学校（がっこう）で話す。読みがない漢字。\n\n`学校（がっこう）`\n\n不明（guess）";
+  const render = (pronunciationMode: "native" | "roman" | "off") =>
+    renderToStaticMarkup(
+      <SafeMarkdown
+        markdown={markdown}
+        locale="zh-TW"
+        language="ja"
+        pronunciationMode={pronunciationMode}
+      />,
+    );
+  assert.match(render("native"), /<rt>まんけん<\/rt>/);
+  assert.match(render("roman"), /<rt>gakkou<\/rt>/);
+  for (const mode of ["native", "roman", "off"] as const) {
+    assert.match(render(mode), /読みがない漢字。/);
+    assert.match(render(mode), /<code>学校（がっこう）<\/code>/);
+    assert.match(render(mode), /不明（guess）/);
+  }
+  assert.doesNotMatch(render("off"), /<ruby/);
+  const pinyin = renderToStaticMarkup(
+    <SafeMarkdown
+      markdown="学习（xué xí）"
+      locale="zh-TW"
+      language="zh-CN"
+      pronunciationMode="roman"
+    />,
+  );
+  assert.match(pinyin, /<rt>xué xí<\/rt>/);
+});
+
 test("custom library cards have honest type/language labels and no fabricated lesson progress", () => {
   const html = renderToStaticMarkup(
     <VideoLibrary

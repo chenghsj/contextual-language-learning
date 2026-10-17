@@ -15,7 +15,7 @@ export function rejectedRequest(message: string, hasOutput: boolean, usedTokens:
   if (
     hasOutput ||
     usedTokens > 0 ||
-    /auth|unauthorized|forbidden|quota|billing|credit|insufficient|invalid|context|token limit/i.test(
+    /auth|unauthorized|forbidden|denied|quota|billing|credit|insufficient|invalid|context|token limit|model[_ -](?:not[_ -](?:supported|found)|unsupported)|unsupported model/i.test(
       message,
     )
   )

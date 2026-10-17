@@ -45,7 +45,7 @@ const { act } = React;
 const { createRoot } = await import("react-dom/client");
 const { TaskHistory } = await import("../components/task-history");
 const { translate } = await import("./messages");
-import type { JobSummary } from "@immersive/core";
+import type { JobSummary } from "@contextual/core";
 const t = (key: Parameters<typeof translate>[1], params?: Parameters<typeof translate>[2]) =>
   translate("zh-TW", key, params);
 const now = "2026-10-01T00:00:00.000Z";
@@ -178,10 +178,115 @@ test("task disclosures open independently and stay expanded across progress refr
     assert.ok(details.every(item => !item.hidden));
     await view.render(<History jobs={jobs.map(item => ({ ...item, completed: 2 }))} />);
     assert.ok(details.every(item => !item.hidden));
-    assert.match(triggers[0].textContent!, /2 \/ 4/);
+    assert.match(details[0].textContent!, /已完成 2／4 個生成步驟/);
+    assert.equal(
+      details[0].querySelector('[role="progressbar"]')?.getAttribute("aria-valuenow"),
+      "50",
+    );
     await click(triggers[0]);
     assert.equal(details[0].hidden, true);
     assert.equal(details[1].hidden, false);
+  } finally {
+    await view.close();
+  }
+});
+
+test("generation progress keeps bulk clear enabled without refetching ended records", async () => {
+  const ended = job("Saved lesson", "completed");
+  const active = job("Running lesson", "running");
+  let calls = 0;
+  let complete!: (jobs: JobSummary[]) => void;
+  const onListEnded = () => {
+    calls++;
+    return new Promise<JobSummary[]>(resolve => {
+      complete = resolve;
+    });
+  };
+  const onDeleteRecords = async (ids: string[]) => ({ deleted: ids, failed: [] });
+  const view = await mount(
+    <History jobs={[active, ended]} onListEnded={onListEnded} onDeleteRecords={onDeleteRecords} />,
+  );
+  try {
+    assert.equal(button(t("clearEndedJobRecords"), view.container).disabled, true);
+    await act(async () => complete([ended]));
+    assert.equal(button(t("clearEndedJobRecords"), view.container).disabled, false);
+    for (let progress = 1; progress <= 3; progress++) {
+      await view.render(
+        <History
+          jobs={[
+            { ...active, completed: progress, updatedAt: `2026-10-01T00:00:0${progress}.000Z` },
+            { ...ended },
+          ]}
+          onListEnded={onListEnded}
+          onDeleteRecords={onDeleteRecords}
+        />,
+      );
+      assert.equal(
+        button(t("clearEndedJobRecords"), view.container).disabled,
+        false,
+        "progress must not flash the clear button",
+      );
+      assert.equal(calls, 1, "progress does not change the ended-record set");
+    }
+    await view.render(
+      <History
+        jobs={[{ ...active, status: "completed" }, ended]}
+        onListEnded={onListEnded}
+        onDeleteRecords={onDeleteRecords}
+      />,
+    );
+    assert.equal(calls, 2, "a newly ended task still refreshes the full record list");
+    assert.equal(
+      button(t("clearEndedJobRecords"), view.container).disabled,
+      false,
+      "background refresh keeps cached records usable",
+    );
+    await act(async () => complete([ended, { ...active, status: "completed" }]));
+    await click(button(t("clearEndedJobRecords"), view.container));
+    assert.match(document.querySelector('[role="dialog"]')!.textContent!, /清除 2 筆/);
+    await click(button(t("cancel"), document.querySelector('[role="dialog"]')!));
+  } finally {
+    await view.close();
+  }
+});
+
+test("manual refresh updates hidden ended records and resuming a task removes it from bulk clear", async () => {
+  const ended = job("Saved lesson", "completed");
+  const hidden = job("Older lesson", "failed");
+  let records = [ended];
+  let calls = 0;
+  const onListEnded = async () => {
+    calls++;
+    return records;
+  };
+  let submitted: string[] = [];
+  const onDeleteRecords = async (ids: string[]) => {
+    submitted = ids;
+    return { deleted: ids, failed: [] };
+  };
+  const view = await mount(
+    <History jobs={[ended]} onListEnded={onListEnded} onDeleteRecords={onDeleteRecords} />,
+  );
+  try {
+    records = [ended, hidden];
+    await click(button(t("refreshJobs"), view.container));
+    assert.equal(calls, 2);
+    await click(button(t("clearEndedJobRecords"), view.container));
+    assert.match(document.querySelector('[role="dialog"]')!.textContent!, /清除 2 筆/);
+    await click(button(t("cancel"), document.querySelector('[role="dialog"]')!));
+    records = [hidden];
+    await view.render(
+      <History
+        jobs={[{ ...ended, status: "running" }]}
+        onListEnded={onListEnded}
+        onDeleteRecords={onDeleteRecords}
+      />,
+    );
+    assert.equal(calls, 3);
+    await click(button(t("clearEndedJobRecords"), view.container));
+    assert.match(document.querySelector('[role="dialog"]')!.textContent!, /清除 1 筆/);
+    await click(button(t("clearJobRecords"), document.querySelector('[role="dialog"]')!));
+    assert.deepEqual(submitted, [hidden.id], "the resumed task must not be included in deletion");
   } finally {
     await view.close();
   }

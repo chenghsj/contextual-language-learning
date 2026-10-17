@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { assertPiProvider, generateWithAgent, getAgentCatalog } from "./agents";
-import { PI_PROVIDER_IDS } from "@immersive/core";
+import { PI_PROVIDER_IDS } from "@contextual/core";
 test("Host advertises SDK providers without CLI executable discovery", async () => {
   const agents = await getAgentCatalog();
   assert.deepEqual(

@@ -1,19 +1,28 @@
 import { createHash } from "node:crypto";
 import {
   netflixWatchId,
+  LEARNING_POINTS_WORKFLOW_VERSION,
+  LEARNING_POINTS_PROMPT_VERSION,
+  LANGUAGE_STRATEGY_VERSION,
+  LEVEL_STRATEGY_VERSION,
+  QUALITY_STRATEGY_VERSION,
   youtubeTimeLink,
   type DuplicateMatch,
   type GenerationRequest,
   type LearningDocument,
   type SubtitleCue,
   type VideoSource,
-} from "@immersive/core";
+} from "@contextual/core";
 import type { StoragePorts } from "./storage/ports";
 
 const hash = (value: string): string => createHash("sha256").update(value).digest("hex");
 
 export function transcriptKey(cues: SubtitleCue[]): string {
-  return hash(JSON.stringify(cues.map(cue => [cue.startMs, cue.endMs, cue.originalText])));
+  return hash(
+    JSON.stringify(
+      cues.map(cue => [cue.startMs, cue.endMs, cue.originalText, ...(cue.ruby ? [cue.ruby] : [])]),
+    ),
+  );
 }
 
 export function sourceKey(source: VideoSource, cues: SubtitleCue[]): string {
@@ -56,9 +65,28 @@ export function videoFolderNameFromKey(sourceTitle: string, key: string): string
   return safeTitle + "--" + key.slice(0, 16);
 }
 
-export function settingsKey(request: Pick<GenerationRequest, "profile" | "agent">): string {
+export function settingsKey(
+  request: Pick<GenerationRequest, "profile" | "agent"> & {
+    outputSchemaVersion?: 7;
+    workflowVersion?: string;
+    promptVersion?: string;
+    languageStrategyVersion?: string;
+    levelStrategyVersion?: string;
+    qualityStrategyVersion?: string;
+  },
+): string {
   return hash(
     JSON.stringify({
+      ...(request.outputSchemaVersion === 7
+        ? {
+            schemaVersion: 7,
+            workflowVersion: request.workflowVersion ?? LEARNING_POINTS_WORKFLOW_VERSION,
+            promptVersion: request.promptVersion ?? LEARNING_POINTS_PROMPT_VERSION,
+            languageStrategyVersion: request.languageStrategyVersion ?? LANGUAGE_STRATEGY_VERSION,
+            levelStrategyVersion: request.levelStrategyVersion ?? LEVEL_STRATEGY_VERSION,
+            qualityStrategyVersion: request.qualityStrategyVersion ?? QUALITY_STRATEGY_VERSION,
+          }
+        : {}),
       profile: request.profile,
       agent: {
         provider: request.agent.provider,
@@ -97,8 +125,20 @@ export async function findLocalDuplicates(
       createdAt: document.createdAt,
       destination: job?.publication?.location ?? "本地教材庫",
       exactSettings:
-        settingsKey({ profile: document.profile, agent: document.generation }) ===
-          expectedSettings &&
+        settingsKey({
+          profile: document.profile,
+          agent: document.generation,
+          ...(document.schemaVersion === 7
+            ? {
+                outputSchemaVersion: 7,
+                workflowVersion: document.execution?.workflowVersion,
+                promptVersion: document.execution?.promptVersion,
+                languageStrategyVersion: document.execution?.languageStrategyVersion,
+                levelStrategyVersion: document.execution?.levelStrategyVersion,
+                qualityStrategyVersion: document.execution?.qualityStrategyVersion,
+              }
+            : {}),
+        }) === expectedSettings &&
         transcriptKey(document.cues) === expectedTranscript &&
         JSON.stringify(
           document.analysisRange && [document.analysisRange.startMs, document.analysisRange.endMs],
@@ -127,7 +167,18 @@ export async function findLocalDuplicates(
       destination:
         job.request.destination?.kind === "drive" ? "Google Drive（待完成）" : "本地任務",
       exactSettings:
-        settingsKey(job.request) === expectedSettings &&
+        settingsKey({
+          ...job.request,
+          ...(job.schemaVersion === 5
+            ? {
+                workflowVersion: job.execution?.workflowVersion,
+                promptVersion: job.execution?.promptVersion,
+                languageStrategyVersion: job.execution?.languageStrategyVersion,
+                levelStrategyVersion: job.execution?.levelStrategyVersion,
+                qualityStrategyVersion: job.execution?.qualityStrategyVersion,
+              }
+            : {}),
+        }) === expectedSettings &&
         transcriptKey(job.request.cues) === expectedTranscript &&
         JSON.stringify(
           job.request.analysisRange && [

@@ -5,10 +5,10 @@ import {
   type HostMessage,
   type HostRequest,
   type BackgroundGenerationState,
-} from "@immersive/core";
+} from "@contextual/core";
 
-export const GENERATION_CONTROLLER_PORT = "immersive:background-generation";
-const HOST_NAME = "dev.immersive.language_learning";
+export const GENERATION_CONTROLLER_PORT = "contextual:background-generation";
+const HOST_NAME = "dev.contextual.language_learning";
 
 type ForwardedRequest = HostRequest;
 
@@ -109,6 +109,7 @@ export function installGenerationController(
     cancelling?: boolean;
   };
   const runs = new Map<string, Run>();
+  const speechOwners = new Map<string, chrome.runtime.Port>();
   function selectActive() {
     const values = [...runs.values()].filter(run => run.summary?.status !== "cancelled");
     active =
@@ -358,6 +359,7 @@ export function installGenerationController(
       }
       if (terminal) {
         pending.delete(message.id);
+        speechOwners.delete(message.id);
         authOwners.delete(message.id);
         runs.delete(message.id);
         selectActive();
@@ -373,6 +375,7 @@ export function installGenerationController(
       clearTimeout(handshakeTimer);
       outbox = [];
       authOwners.clear();
+      speechOwners.clear();
       const reason =
         runtime.lastError?.message ??
         "The background Agent connection ended. Saved checkpoints can be resumed from task history.";
@@ -433,7 +436,25 @@ export function installGenerationController(
         return;
       }
       const request = checked.data;
-      if (pending.has(request.id) || healthChecks.has(request.id)) {
+      if (
+        request.type === "stopSpeech" &&
+        speechOwners.has(request.speechId) &&
+        speechOwners.get(request.speechId) !== client
+      ) {
+        client.postMessage({
+          id: request.id,
+          type: "error",
+          message: "This speech belongs to another panel.",
+        });
+        return;
+      }
+      // Answers continue the owner's active login request rather than starting another one.
+      const ownedLoginAnswer =
+        request.type === "piAuthAnswer" &&
+        request.id === request.loginId &&
+        pending.get(request.id) === "piLogin" &&
+        authOwners.get(request.loginId) === client;
+      if ((pending.has(request.id) && !ownedLoginAnswer) || healthChecks.has(request.id)) {
         client.postMessage({
           id: request.id,
           type: "error",
@@ -516,6 +537,7 @@ export function installGenerationController(
           pending.set(request.id, request.type);
         }
         if (request.type === "piLogin") authOwners.set(request.id, client);
+        if (request.type === "speak") speechOwners.set(request.id, client);
         if (ready) native.postMessage(request);
         else {
           const startHandshake = outbox.length === 0;
@@ -524,6 +546,7 @@ export function installGenerationController(
         }
       } catch (error) {
         pending.delete(request.id);
+        speechOwners.delete(request.id);
         const failedRun = runs.get(request.id);
         if (failedRun) {
           notifyAttention("failed", failedRun);
@@ -542,6 +565,15 @@ export function installGenerationController(
 
     client.onDisconnect.addListener(() => {
       clients.delete(client);
+      for (const [id, owner] of speechOwners) {
+        if (owner !== client) continue;
+        speechOwners.delete(id);
+        if (ready) host?.postMessage({ id: crypto.randomUUID(), type: "stopSpeech", speechId: id });
+        else {
+          outbox = outbox.filter(request => request.id !== id);
+          pending.delete(id);
+        }
+      }
       for (const [id, check] of healthChecks) {
         if (check.client !== client) continue;
         clearTimeout(check.timer);

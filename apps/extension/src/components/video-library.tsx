@@ -1,13 +1,20 @@
 import { customContentCopy } from "../i18n/custom-content";
-import type { CustomContentSummary, CustomDriveSummary } from "@immersive/core";
+import type { CustomContentSummary, CustomDriveSummary } from "@contextual/core";
 import React, { useEffect, useMemo, useState } from "react";
 import type {
   DriveAccount,
   DriveLessonSummary,
   LessonSummary,
   LearningLanguage,
-} from "@immersive/core";
-import { groupLessons, mergeLessons, type LessonEntry } from "../lib/lesson-catalog";
+} from "@contextual/core";
+import type { LessonEntry } from "../lib/lesson-catalog";
+import {
+  mergeLibrary,
+  groupLibrary,
+  type ContentType,
+  type CustomEntry,
+  type LibraryEntry,
+} from "../lib/library-catalog";
 import { readStudyProgress, studyProgressKey, type StudyProgress } from "../lib/study-progress";
 import type { MessageKey, MessageParams, UiLocale } from "../i18n/messages";
 import { sidePanelLayoutCopy, layoutText } from "../i18n/side-panel-layout";
@@ -15,8 +22,8 @@ import { learningLanguageName, LEARNING_LANGUAGE_LABELS } from "../i18n/preferen
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Progress } from "./ui/progress";
-import { Disclosure } from "./disclosure";
-import { Alert, AlertDescription } from "./ui/alert";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { LibraryErrorNotice } from "./library-error-notice";
 
 type Props = {
   localCustom?: CustomContentSummary[];
@@ -30,13 +37,14 @@ type Props = {
   driveConfigured: boolean;
   lessonsBusy: boolean;
   catalogError: string;
+  catalogErrorAccountId?: string;
   restoreBusy: string | null;
   generating: boolean;
   storageBusy: boolean;
   uiLocale: UiLocale;
   t: (key: MessageKey, params?: MessageParams) => string;
   onRefresh: () => void | Promise<void>;
-  onConnectDrive: () => Promise<void>;
+  onConnectDrive: (accountId?: string) => Promise<void>;
   onOpen: (id: string) => void;
   onRestore: (lesson: DriveLessonSummary) => Promise<void>;
 };
@@ -50,44 +58,29 @@ export function VideoLibrary({
   onCreate,
   localLessons,
   cloudLessons,
+  driveAccounts,
   lessonsBusy,
   catalogError,
+  catalogErrorAccountId,
+  storageBusy,
   restoreBusy,
   generating,
   uiLocale,
   t,
   onRefresh,
+  onConnectDrive,
   onOpen,
   onRestore,
 }: Props) {
   const customUi = customContentCopy(uiLocale);
-  const [contentType, setContentType] = useState("all");
+  const [contentType, setContentType] = useState<ContentType>("all");
   const ui = sidePanelLayoutCopy[uiLocale];
   const [language, setLanguage] = useState("all");
   const [search, setSearch] = useState("");
-  const customCatalog = useMemo(() => {
-    const entries = new Map<string, { local?: CustomContentSummary; drive?: CustomDriveSummary }>();
-    for (const item of cloudCustom) entries.set(item.documentId, { drive: item });
-    for (const item of localCustom)
-      entries.set(item.documentId, { ...entries.get(item.documentId), local: item });
-    return [...entries.values()]
-      .filter(item => {
-        const content = item.local ?? item.drive!;
-        return (
-          (language === "all" || language === "unspecified") &&
-          (content.title + " " + content.sourceTitle)
-            .toLocaleLowerCase()
-            .includes(search.trim().toLocaleLowerCase())
-        );
-      })
-      .sort((a, b) =>
-        (b.local ?? b.drive!).createdAt.localeCompare((a.local ?? a.drive!).createdAt),
-      );
-  }, [localCustom, cloudCustom, language, search]);
   const [refreshing, setRefreshing] = useState(false);
   const busy = lessonsBusy || refreshing;
   async function refresh() {
-    if (busy) return;
+    if (busy || storageBusy) return;
     setRefreshing(true);
     try {
       await Promise.all([onRefresh(), new Promise(resolve => window.setTimeout(resolve, 500))]);
@@ -98,28 +91,21 @@ export function VideoLibrary({
   const refreshLabel = busy ? t("refreshingLibrary") : t("refreshLibrary");
   const [progress, setProgress] = useState<Record<string, StudyProgress>>({});
   const catalog = useMemo(
-    () => mergeLessons(localLessons, cloudLessons),
-    [localLessons, cloudLessons],
+    () => mergeLibrary(localLessons, cloudLessons, localCustom, cloudCustom),
+    [localLessons, cloudLessons, localCustom, cloudCustom],
   );
   const languages = [
     ...new Set(
-      catalog
-        .map(lesson => lesson.local?.targetLanguage ?? lesson.drive?.targetLanguage)
-        .filter(Boolean),
+      catalog.flatMap(entry =>
+        entry.kind === "standard"
+          ? [entry.local?.targetLanguage ?? entry.drive?.targetLanguage].filter(Boolean)
+          : [],
+      ),
     ),
   ] as string[];
   const groups = useMemo(
-    () =>
-      groupLessons(
-        catalog.filter(
-          lesson =>
-            language === "all" ||
-            (lesson.local?.targetLanguage ?? lesson.drive?.targetLanguage) === language,
-        ),
-        "all",
-        search,
-      ),
-    [catalog, language, search],
+    () => groupLibrary(catalog, { language, contentType, search }),
+    [catalog, language, contentType, search],
   );
   useEffect(() => {
     let live = true;
@@ -152,7 +138,7 @@ export function VideoLibrary({
       chrome.storage.onChanged?.removeListener(changed);
     };
   }, [localLessons]);
-  function lessonCard(lesson: LessonEntry) {
+  function lessonCard(lesson: LessonEntry, grouped = false) {
     const content = lesson.local ?? lesson.drive;
     const code = content?.targetLanguage;
     const languageName =
@@ -167,7 +153,12 @@ export function VideoLibrary({
     return (
       <article
         key={lesson.documentId}
-        className="grid gap-2 rounded-[var(--radius)] border border-border p-3"
+        data-ui="library-entry"
+        className={
+          grouped
+            ? "grid min-w-0 gap-2 p-3"
+            : "grid min-w-0 gap-2 rounded-[var(--radius)] border border-border p-3"
+        }
       >
         <h3 className="text-sm font-semibold leading-snug wrap-anywhere">{lesson.title}</h3>
         <p className="text-xs text-muted-foreground">
@@ -176,32 +167,37 @@ export function VideoLibrary({
         {content?.sceneCount !== undefined && (
           <p className="text-xs text-muted-foreground">
             {layoutText(ui.sceneCount, { count: content.sceneCount })}
+            {content.pointCount !== undefined &&
+              " · " + layoutText(ui.pointCount, { count: content.pointCount })}
+            {content.reusableItemCount !== undefined &&
+              " · " + layoutText(ui.reusableItemCount, { count: content.reusableItemCount })}
             {content.expressionCount !== undefined &&
               " · " + layoutText(ui.expressionCount, { count: content.expressionCount })}
           </p>
         )}
-        {sceneIndex >= 0 ? (
-          <>
-            <p className="text-xs">{layoutText(ui.lastScene, { scene: sceneIndex + 1 })}</p>
-            <Progress value={percent} aria-label={layoutText(ui.studyProgress, { percent })} />
-            <p className="text-xs text-muted-foreground">
-              {layoutText(ui.studyProgress, { percent })}
-            </p>
-          </>
-        ) : (
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <p className="text-xs text-muted-foreground">
-            {lesson.local ? ui.notStarted : ui.missingContent}
+            {sceneIndex >= 0
+              ? `${layoutText(ui.lastScene, { scene: sceneIndex + 1 })} · ${layoutText(ui.studyProgress, { percent })}`
+              : lesson.local
+                ? ui.notStarted
+                : ui.missingContent}
           </p>
-        )}
-        <div className="flex justify-end">
           {lesson.local ? (
-            <Button variant="ghost" size="sm" onClick={() => onOpen(lesson.documentId)}>
+            <Button
+              className="ml-auto"
+              variant="ghost"
+              size="sm"
+              onClick={() => onOpen(lesson.documentId)}
+            >
               {sceneIndex >= 0 ? ui.continueStudy : t("openLesson")}
             </Button>
           ) : (
             lesson.drive && (
               <Button
                 variant="outline"
+                size="sm"
+                className="ml-auto"
                 disabled={restoreBusy !== null}
                 onClick={() => void onRestore(lesson.drive!)}
               >
@@ -210,8 +206,60 @@ export function VideoLibrary({
             )
           )}
         </div>
+        {sceneIndex >= 0 && (
+          <Progress value={percent} aria-label={layoutText(ui.studyProgress, { percent })} />
+        )}
       </article>
     );
+  }
+  function customCard(item: CustomEntry, grouped = false) {
+    const content = item.local ?? item.drive!;
+    const sameTitle =
+      content.title.normalize("NFKC").trim() === content.sourceTitle.normalize("NFKC").trim();
+    return (
+      <article
+        key={content.documentId}
+        data-ui="library-entry"
+        className={
+          grouped
+            ? "grid min-w-0 gap-2 p-3"
+            : "grid min-w-0 gap-2 rounded-[var(--radius)] border border-border p-3"
+        }
+      >
+        <h3 className="text-sm font-semibold leading-snug wrap-anywhere">{content.title}</h3>
+        {!grouped && !sameTitle && content.sourceTitle && (
+          <p className="text-xs text-muted-foreground wrap-anywhere">{content.sourceTitle}</p>
+        )}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <p className="text-xs text-muted-foreground">
+            {customUi.markdown} · {customUi.unspecified}
+          </p>
+          {item.local ? (
+            <Button
+              className="ml-auto"
+              size="sm"
+              variant="ghost"
+              onClick={() => onOpenCustom?.(content.documentId)}
+            >
+              {t("openLesson")}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto"
+              disabled={restoreBusy !== null}
+              onClick={() => void (item.drive && onRestoreCustom?.(item.drive))}
+            >
+              {restoreBusy === content.documentId ? t("restoringLesson") : t("restoreLesson")}
+            </Button>
+          )}
+        </div>
+      </article>
+    );
+  }
+  function contentCard(entry: LibraryEntry, grouped = false) {
+    return entry.kind === "custom" ? customCard(entry, grouped) : lessonCard(entry, grouped);
   }
   return (
     <section className="grid min-w-0 gap-3" aria-labelledby="library-heading">
@@ -222,7 +270,7 @@ export function VideoLibrary({
         <Button
           variant="ghost"
           size="sm"
-          disabled={busy}
+          disabled={busy || storageBusy}
           aria-busy={busy}
           onClick={() => void refresh()}
         >
@@ -235,6 +283,24 @@ export function VideoLibrary({
           {refreshLabel}
         </Button>
       </div>
+      {catalogError && (
+        <LibraryErrorNotice
+          key={catalogErrorAccountId + ":" + catalogError}
+          error={catalogError}
+          account={
+            catalogErrorAccountId
+              ? (driveAccounts.find(account => account.id === catalogErrorAccountId) ?? {
+                  id: catalogErrorAccountId,
+                })
+              : undefined
+          }
+          locale={uiLocale}
+          busy={busy || storageBusy}
+          hasLocalContent={localLessons.length > 0 || localCustom.length > 0}
+          onRetry={refresh}
+          onReconnect={() => onConnectDrive(catalogErrorAccountId)}
+        />
+      )}
       <label className="sr-only" htmlFor="lesson-search">
         {t("lessonSearchLabel")}
       </label>
@@ -269,11 +335,13 @@ export function VideoLibrary({
         ))}
       </div>
       <div role="group" aria-label={customUi.type} className="flex flex-wrap gap-1">
-        {[
-          ["all", customUi.all],
-          ["standard", customUi.standard],
-          ["custom", customUi.custom],
-        ].map(([value, label]) => (
+        {(
+          [
+            ["all", customUi.all],
+            ["standard", customUi.standard],
+            ["custom", customUi.custom],
+          ] as const
+        ).map(([value, label]) => (
           <Button
             key={value}
             size="sm"
@@ -285,79 +353,53 @@ export function VideoLibrary({
           </Button>
         ))}
       </div>
-      {catalogError && (
-        <Alert variant="destructive">
-          <AlertDescription>{catalogError}</AlertDescription>
-          <Button variant="ghost" size="sm" disabled={busy} onClick={() => void refresh()}>
-            {refreshLabel}
-          </Button>
-        </Alert>
+      {!lessonsBusy && !catalogError && !groups.length && (
+        <p className="text-xs text-muted-foreground">
+          {t(
+            search.trim() || language !== "all" || contentType !== "all"
+              ? "lessonSearchEmpty"
+              : "lessonLibraryEmpty",
+          )}
+        </p>
       )}
-      {!lessonsBusy &&
-        !catalogError &&
-        !(contentType !== "custom" && groups.length) &&
-        !(contentType !== "standard" && customCatalog.length) && (
-          <p className="text-xs text-muted-foreground">
-            {t(search.trim() || language !== "all" ? "lessonSearchEmpty" : "lessonLibraryEmpty")}
-          </p>
-        )}
       {onCreate && !catalog.length && !localCustom.length && !cloudCustom.length && !busy && (
         <Button onClick={onCreate}>{customUi.createAction}</Button>
       )}
-      {contentType !== "standard" &&
-        customCatalog.map(item => {
-          const content = item.local ?? item.drive!;
-          return (
-            <article
-              key={content.documentId}
-              className="grid gap-2 rounded-[var(--radius)] border border-border p-3"
-            >
-              <h3 className="text-sm font-semibold wrap-anywhere">{content.title}</h3>
-              <p className="text-xs text-muted-foreground">
-                {customUi.markdown} · {customUi.unspecified}
-              </p>
-              <p className="text-xs text-muted-foreground wrap-anywhere">{content.sourceTitle}</p>
-              <div className="flex justify-end">
-                {item.local ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onOpenCustom?.(content.documentId)}
-                  >
-                    {t("openLesson")}
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={restoreBusy !== null}
-                    onClick={() => void (item.drive && onRestoreCustom?.(item.drive))}
-                  >
-                    {restoreBusy === content.documentId ? t("restoringLesson") : t("restoreLesson")}
-                  </Button>
-                )}
-              </div>
-            </article>
-          );
-        })}
-      {contentType !== "custom" &&
-        groups.map(group =>
-          group.lessons.length === 1 ? (
-            lessonCard(group.lessons[0])
-          ) : (
-            <Disclosure
-              key={group.key}
-              title={
-                <>
-                  {group.title} · {t("lessonGroupCount", { count: group.lessons.length })}
-                </>
-              }
-              defaultOpen={!!search.trim()}
-            >
-              <div className="grid gap-3 pt-2">{group.lessons.map(lessonCard)}</div>
-            </Disclosure>
-          ),
-        )}
+      {groups.map(group =>
+        group.entries.length === 1 ? (
+          contentCard(group.entries[0])
+        ) : (
+          <Accordion
+            key={`${group.key}:${search.trim() ? "search" : "browse"}`}
+            type="single"
+            collapsible
+            defaultValue={search.trim() ? "content" : undefined}
+            data-ui="library-group"
+            className="min-w-0 overflow-hidden rounded-[var(--radius)] border border-border"
+          >
+            <AccordionItem value="content" className="border-b-0">
+              <AccordionTrigger
+                title={group.title}
+                className="gap-3 p-3 transition-colors hover:bg-secondary/50 hover:no-underline"
+              >
+                <span className="flex min-w-0 flex-1 items-start justify-between gap-3 text-left">
+                  <span className="line-clamp-2 min-w-0 text-sm font-semibold leading-snug wrap-anywhere">
+                    {group.title}
+                  </span>
+                  <span className="shrink-0 whitespace-nowrap text-xs font-normal leading-snug text-muted-foreground">
+                    {t("lessonGroupCount", { count: group.entries.length })}
+                  </span>
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-0">
+                <div className="divide-y divide-border border-t border-border">
+                  {group.entries.map(entry => contentCard(entry, true))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        ),
+      )}
     </section>
   );
 }

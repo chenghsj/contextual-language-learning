@@ -3,7 +3,7 @@ import {
   LEARNING_LANGUAGES,
   type LearningLanguage,
   type ExplanationLanguage,
-} from "@immersive/core";
+} from "@contextual/core";
 
 export type LocalePreference = UiLocale | "auto";
 
@@ -24,6 +24,8 @@ export const LEARNING_LANGUAGE_LABELS: Readonly<
   Record<UiLocale, Readonly<Record<LearningLanguage, string>>>
 > = {
   en: {
+    "zh-TW": "Chinese (Traditional)",
+    "zh-CN": "Chinese (Simplified)",
     en: "English",
     ja: "Japanese",
     ko: "Korean",
@@ -38,6 +40,8 @@ export const LEARNING_LANGUAGE_LABELS: Readonly<
     vi: "Vietnamese",
   },
   "zh-TW": {
+    "zh-TW": "中文（繁體）",
+    "zh-CN": "中文（簡體）",
     en: "英語",
     ja: "日語",
     ko: "韓語",
@@ -52,6 +56,8 @@ export const LEARNING_LANGUAGE_LABELS: Readonly<
     vi: "越南語",
   },
   "zh-CN": {
+    "zh-TW": "中文（繁体）",
+    "zh-CN": "中文（简体）",
     en: "英语",
     ja: "日语",
     ko: "韩语",
@@ -66,6 +72,8 @@ export const LEARNING_LANGUAGE_LABELS: Readonly<
     vi: "越南语",
   },
   ja: {
+    "zh-TW": "中国語（繁体字）",
+    "zh-CN": "中国語（簡体字）",
     en: "英語",
     ja: "日本語",
     ko: "韓国語",
@@ -80,6 +88,8 @@ export const LEARNING_LANGUAGE_LABELS: Readonly<
     vi: "ベトナム語",
   },
   ko: {
+    "zh-TW": "중국어 (번체)",
+    "zh-CN": "중국어 (간체)",
     en: "영어",
     ja: "일본어",
     ko: "한국어",

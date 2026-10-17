@@ -1,5 +1,5 @@
 import { CaptionRetrievalError } from "../video/command-errors";
-import { LEARNING_LANGUAGES } from "@immersive/core";
+import { LEARNING_LANGUAGES } from "@contextual/core";
 import {
   allowedYouTubeCaptionUrl,
   chooseYouTubeCaptionTrack,
@@ -15,20 +15,20 @@ import {
 // MAIN world: access only the active watch player's public caption-track metadata.
 // Runs a caption request only when the Side Panel explicitly asks for it.
 (() => {
-  const REQUEST = "immersive-learning:youtube:caption-request";
-  const RESPONSE = "immersive-learning:youtube:caption-response";
-  const TRACK_REQUEST = "immersive-learning:youtube:track-request";
-  const TRACK_RESPONSE = "immersive-learning:youtube:track-response";
-  const BRIDGE_VERSION = "native-caption-capture-v2";
-  const HEALTH_REQUEST = "immersive-learning:youtube:bridge-health-request";
-  const HEALTH_RESPONSE = "immersive-learning:youtube:bridge-health-response";
+  const REQUEST = "contextual-learning:youtube:caption-request";
+  const RESPONSE = "contextual-learning:youtube:caption-response";
+  const TRACK_REQUEST = "contextual-learning:youtube:track-request";
+  const TRACK_RESPONSE = "contextual-learning:youtube:track-response";
+  const BRIDGE_VERSION = "native-caption-capture-v4";
+  const HEALTH_REQUEST = "contextual-learning:youtube:bridge-health-request";
+  const HEALTH_RESPONSE = "contextual-learning:youtube:bridge-health-response";
   class MissingYouTubeCaptionTrackError extends CaptionRetrievalError {
     constructor(message: string) {
       super(message, "TRACK_UNAVAILABLE");
     }
   }
   type CaptionRequest = {
-    source: "immersive-learning";
+    source: "contextual-learning";
     id: string;
     videoId: string;
     language: string;
@@ -36,24 +36,24 @@ import {
   type PlayerElement = HTMLElement & { getPlayerResponse?: () => unknown };
   type Page = typeof window & {
     ytInitialPlayerResponse?: unknown;
-    __immersiveYouTubeCaptions?: boolean;
+    __contextualYouTubeCaptions?: boolean;
   };
   const page = window as Page;
-  if (page.__immersiveYouTubeCaptions) return;
-  page.__immersiveYouTubeCaptions = true;
+  if (page.__contextualYouTubeCaptions) return;
+  page.__contextualYouTubeCaptions = true;
 
   // Return immediately before any transcript fetch, even while the player loads.
   window.addEventListener(HEALTH_REQUEST, event => {
     const request = (event as CustomEvent<{ source?: string; id?: string }>).detail;
     if (
-      request?.source !== "immersive-learning" ||
+      request?.source !== "contextual-learning" ||
       typeof request.id !== "string" ||
       request.id.length > 100
     )
       return;
     window.dispatchEvent(
       new CustomEvent(HEALTH_RESPONSE, {
-        detail: { source: "immersive-learning", id: request.id, bridgeVersion: BRIDGE_VERSION },
+        detail: { source: "contextual-learning", id: request.id, bridgeVersion: BRIDGE_VERSION },
       }),
     );
   });
@@ -71,9 +71,30 @@ import {
   // A signed track baseUrl can return HTTP 200 with an empty body. Install
   // before the player starts, then retain only the readable body of an actual
   // YouTube caption request. No token, URL or transcript is sent anywhere.
-  type Captured = { videoId: string; language: string; kind: "asr" | "manual"; text: string };
+  type Captured = NonNullable<ReturnType<typeof parsePlayerYouTubeCaptionResponse>>;
   const captured = new Map<string, Captured>();
   const MAX_CAPTURE = 3_000_000;
+  let captionRetryAfter = 0;
+
+  function pauseCaptionRequests(retryAfter: string | null): void {
+    const seconds = Number(retryAfter);
+    const requestedUntil =
+      Number.isFinite(seconds) && seconds > 0
+        ? Date.now() + seconds * 1000
+        : Date.parse(retryAfter ?? "");
+    captionRetryAfter = Math.max(
+      captionRetryAfter,
+      Date.now() + 60_000,
+      Number.isFinite(requestedUntil) ? requestedUntil : 0,
+    );
+  }
+
+  function rateLimitedError(): CaptionRetrievalError {
+    return new CaptionRetrievalError(
+      "YouTube is rate limiting subtitle requests (HTTP 429). Wait before retrying.",
+      "CAPTION_RATE_LIMITED",
+    );
+  }
 
   function requestVideoId(raw: string): string | null {
     const videoId = currentVideoId();
@@ -90,10 +111,16 @@ import {
     if (currentVideoId() !== requestVideo || !body.trim() || body.length > MAX_CAPTURE) return;
     const entry = parsePlayerYouTubeCaptionResponse(raw, body, requestVideo);
     if (!entry) return;
-    const { language, kind, text } = entry;
-    const key = requestVideo + ":" + language + ":" + kind;
+    const key =
+      requestVideo +
+      ":" +
+      entry.language +
+      ":" +
+      entry.kind +
+      ":" +
+      (entry.sourceLanguageCode ?? "");
     captured.delete(key);
-    captured.set(key, { videoId: requestVideo, language, kind, text });
+    captured.set(key, entry);
     while (captured.size > 8) {
       const oldest = captured.keys().next().value;
       if (!oldest) break;
@@ -105,14 +132,17 @@ import {
     videoId: string,
     language: string,
     kind: string | undefined,
+    sourceLanguageCode?: string,
   ): Captured | null {
     const wanted = language.toLowerCase();
     const preferred = kind === "asr" ? "asr" : "manual";
-    const exact = captured.get(videoId + ":" + wanted + ":" + preferred);
+    const source = sourceLanguageCode?.toLowerCase();
+    const exact = captured.get(videoId + ":" + wanted + ":" + preferred + ":" + (source ?? ""));
     if (exact) return exact;
     const matching = Array.from(captured.values()).filter(
       entry =>
         entry.videoId === videoId &&
+        entry.sourceLanguageCode === source &&
         (entry.language === wanted || entry.language.startsWith(wanted + "-")),
     );
     return (
@@ -132,6 +162,9 @@ import {
     }
     const videoId = address ? requestVideoId(address) : null;
     return nativeFetch.apply(window, args).then(response => {
+      if (videoId && response.status === 429) {
+        pauseCaptionRequests(response.headers.get("retry-after"));
+      }
       if (
         videoId &&
         response.ok &&
@@ -164,6 +197,10 @@ import {
       this.addEventListener(
         "load",
         () => {
+          if (this.status === 429) {
+            pauseCaptionRequests(this.getResponseHeader("retry-after"));
+            return;
+          }
           if (this.status !== 200) return;
           try {
             const body =
@@ -226,8 +263,14 @@ import {
           " subtitle track. Choose a language provided by the video.",
       );
     }
-    const playerCaptions = fromPlayer(request.videoId, track.languageCode, track.kind);
+    const playerCaptions = fromPlayer(
+      request.videoId,
+      track.languageCode,
+      track.kind,
+      track.sourceLanguageCode,
+    );
     if (playerCaptions) return { text: playerCaptions.text, language: playerCaptions.language };
+    if (Date.now() < captionRetryAfter) throw rateLimitedError();
     const originalUrl = allowedYouTubeCaptionUrl(track.baseUrl, request.videoId);
     const json3Url = new URL(originalUrl);
     json3Url.searchParams.set("fmt", "json3");
@@ -239,6 +282,7 @@ import {
       performance.getEntriesByType("resource").map(entry => entry.name),
       request.videoId,
       track.languageCode,
+      track.sourceLanguageCode,
     );
     const candidates = youtubeCaptionCandidates(
       observed,
@@ -252,6 +296,7 @@ import {
     for (const candidate of candidates) {
       if (currentVideoId() !== request.videoId)
         throw new CaptionRetrievalError("The YouTube video changed. Try again.", "VIDEO_CHANGED");
+      if (Date.now() < captionRetryAfter) throw rateLimitedError();
       const remainingMs = deadline - Date.now();
       if (remainingMs < 250) {
         deadlineExpired = true;
@@ -262,6 +307,7 @@ import {
           credentials: "include",
           signal: AbortSignal.timeout(Math.min(YOUTUBE_CAPTION_FETCH_ATTEMPT_MS, remainingMs)),
         });
+        if (response.status === 429) throw rateLimitedError();
         if (!response.ok)
           throw new Error("YouTube subtitle request failed (HTTP " + response.status + ").");
         if (response.url) allowedYouTubeCaptionUrl(response.url, request.videoId);
@@ -302,8 +348,16 @@ import {
           throw new CaptionRetrievalError("The YouTube video changed. Try again.", "VIDEO_CHANGED");
         // A real caption response may arrive through the player's fetch/XHR
         // while one of our fallback URLs fails or returns an empty body.
-        const playerCaptions = fromPlayer(request.videoId, track.languageCode, track.kind);
+        const playerCaptions = fromPlayer(
+          request.videoId,
+          track.languageCode,
+          track.kind,
+          track.sourceLanguageCode,
+        );
         if (playerCaptions) return { text: playerCaptions.text, language: playerCaptions.language };
+        if (error instanceof CaptionRetrievalError && error.code === "CAPTION_RATE_LIMITED") {
+          throw error;
+        }
         lastError =
           error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")
             ? new CaptionRetrievalError(
@@ -317,7 +371,12 @@ import {
     }
     // The player's cloned response may finish after our fallback requests.
     for (let attempt = 0; attempt < 4; attempt++) {
-      const playerCaptions = fromPlayer(request.videoId, track.languageCode, track.kind);
+      const playerCaptions = fromPlayer(
+        request.videoId,
+        track.languageCode,
+        track.kind,
+        track.sourceLanguageCode,
+      );
       if (playerCaptions) return { text: playerCaptions.text, language: playerCaptions.language };
       await new Promise<void>(resolve => setTimeout(resolve, 200));
       if (currentVideoId() !== request.videoId)
@@ -347,7 +406,7 @@ import {
     const request = (event as CustomEvent<{ source?: string; id?: string; videoId?: string }>)
       .detail;
     if (
-      request?.source !== "immersive-learning" ||
+      request?.source !== "contextual-learning" ||
       typeof request.id !== "string" ||
       request.id.length > 100 ||
       typeof request.videoId !== "string"
@@ -365,7 +424,7 @@ import {
         status: tracks.length ? "available" : "unknown",
         tracks: tracks.map(track => ({
           language: track.languageCode,
-          kind: track.kind === "asr" ? "auto" : "manual",
+          kind: track.sourceLanguageCode ? "translated" : track.kind === "asr" ? "auto" : "manual",
         })),
       };
     })()
@@ -373,7 +432,7 @@ import {
         window.dispatchEvent(
           new CustomEvent(TRACK_RESPONSE, {
             detail: {
-              source: "immersive-learning",
+              source: "contextual-learning",
               id: request.id,
               bridgeVersion: BRIDGE_VERSION,
               ok: true,
@@ -386,7 +445,7 @@ import {
         window.dispatchEvent(
           new CustomEvent(TRACK_RESPONSE, {
             detail: {
-              source: "immersive-learning",
+              source: "contextual-learning",
               id: request.id,
               bridgeVersion: BRIDGE_VERSION,
               ok: false,
@@ -400,7 +459,7 @@ import {
   window.addEventListener(REQUEST, event => {
     const request = (event as CustomEvent<CaptionRequest>).detail;
     if (
-      request?.source !== "immersive-learning" ||
+      request?.source !== "contextual-learning" ||
       typeof request.id !== "string" ||
       request.id.length > 100 ||
       typeof request.videoId !== "string" ||
@@ -412,7 +471,7 @@ import {
         window.dispatchEvent(
           new CustomEvent(RESPONSE, {
             detail: {
-              source: "immersive-learning",
+              source: "contextual-learning",
               id: request.id,
               bridgeVersion: BRIDGE_VERSION,
               ok: true,
@@ -425,7 +484,7 @@ import {
         window.dispatchEvent(
           new CustomEvent(RESPONSE, {
             detail: {
-              source: "immersive-learning",
+              source: "contextual-learning",
               id: request.id,
               bridgeVersion: BRIDGE_VERSION,
               ok: false,

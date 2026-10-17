@@ -142,8 +142,8 @@ test("Netflix subtitle bridge has room for track discovery, worker fetch and a f
   assert.match(page, /chosen\?\.player \?\? \{\}, video/);
   assert.match(isolated, /netflix-worker-url-check-v3/);
   assert.match(page, /netflix-worker-url-check-v3/);
-  assert.match(youTube, /native-caption-capture-v2/);
-  assert.match(youTubePage, /native-caption-capture-v2/);
+  assert.match(youTube, /native-caption-capture-v4/);
+  assert.match(youTubePage, /native-caption-capture-v4/);
   assert.equal(VIDEO_READER_VERSION, "reader-health-v2");
   assert.ok(1_200 + 3_000 + 12_500 < 22_000);
 });

@@ -5,7 +5,12 @@ import test from "node:test";
 import { messages } from "./messages";
 
 test("the reader UI uses localized messages instead of hardcoded Chinese JSX labels", async () => {
-  const source = await readSource(new URL("../App.tsx", import.meta.url));
+  const source = (
+    await Promise.all([
+      readSource(new URL("../App.tsx", import.meta.url)),
+      readSource(new URL("../components/appearance-preferences.tsx", import.meta.url)),
+    ])
+  ).join(" ");
   assert.doesNotMatch(source, /[\u4e00-\u9fff]/u);
   for (const key of ["uiLanguage", "appearance"]) {
     assert.ok(source.includes(`t("${key}")`), `${key} should be localized`);
@@ -63,8 +68,9 @@ test("failed generation updates the progress status and refreshing tasks preserv
     /const current = message\.jobs\.find\(job => job\.id === lastJobIdRef\.current\);/,
   );
   const load = app.slice(
-    app.indexOf("function loadJobs(): void"),
+    app.indexOf("} = useJobHistoryRefresh("),
     app.indexOf("function fetchSavedDocument("),
   );
+  assert.match(load, /Unexpected job history response/);
   assert.doesNotMatch(load, /setError\(" "\)|setError\(""\)/);
 });

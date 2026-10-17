@@ -98,6 +98,7 @@ export const CustomContentSummarySchema = z.object({
   title: z.string(),
   createdAt: z.string().datetime(),
   sourceTitle: z.string(),
+  sourceKey: z.string().optional(),
   backup: JobSummarySchema.shape.backup.optional(),
 });
 export type CustomGenerationRequest = z.infer<typeof CustomGenerationRequestSchema>;

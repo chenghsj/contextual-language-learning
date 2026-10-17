@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { GenerationRequestSchema } from "@immersive/core";
+import { GenerationRequestSchema, EXPLANATION_TYPES } from "@contextual/core";
 import { contextualGenerationProfile, normalizeLessonLength } from "./contextual-profile";
 
 const base = {
@@ -18,10 +18,13 @@ test("lesson length and contextual example settings have one canonical represent
   assert.deepEqual(contextualGenerationProfile({ ...base, sceneCount: 6 }), {
     ...base,
     sceneCount: 6,
+    contextualExampleCount: 1,
+    enabledExplanations: [...EXPLANATION_TYPES],
+    emphasizedExplanations: [],
   });
   assert.equal(
     contextualGenerationProfile({ ...base, contextualExampleCount: 7 }).contextualExampleCount,
-    2,
+    1,
   );
 });
 
@@ -35,4 +38,18 @@ test("V5 generation requests contain only current profile fields", () => {
   });
   assert.equal(request.profile.contextualExampleCount, 2);
   assert.equal("lessonFormat" in request, false);
+});
+
+test("new standard requests normalize legacy disabled and detailed preferences", () => {
+  const profile = contextualGenerationProfile({
+    ...base,
+    enabledExplanations: ["grammar", "usage"],
+    emphasizedExplanations: ["grammar", "chunks", "usage"],
+  });
+  assert.deepEqual(profile.enabledExplanations, [...EXPLANATION_TYPES]);
+  assert.deepEqual(profile.emphasizedExplanations, []);
+  assert.deepEqual(
+    contextualGenerationProfile({ ...base, enabledExplanations: [] }).enabledExplanations,
+    [...EXPLANATION_TYPES],
+  );
 });

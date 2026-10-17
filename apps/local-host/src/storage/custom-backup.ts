@@ -1,4 +1,4 @@
-import type { CustomDocument, HostMessage } from "@immersive/core";
+import type { CustomDocument, HostMessage } from "@contextual/core";
 import { mkdir, readFile, open, link, rm } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";

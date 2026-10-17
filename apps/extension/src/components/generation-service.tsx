@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import type { AgentInfo, AgentSettings } from "@immersive/core";
+import type { AgentInfo, AgentSettings } from "@contextual/core";
 import type { UiLocale } from "../i18n/messages";
 import { piCopy } from "../i18n/pi";
 import { sidePanelLayoutCopy } from "../i18n/side-panel-layout";
 import { nativeOnce } from "../native/host-client";
 import { Button } from "./ui/button";
+import { PiFeedback } from "./pi-feedback";
 
 /** Summarize the saved service; account and model changes belong in Settings. */
 export function GenerationService({
@@ -29,12 +30,14 @@ export function GenerationService({
   const [busy, setBusy] = useState(false);
   const [modelLabel, setModelLabel] = useState("");
   const [stale, setStale] = useState(false);
+  const [warning, setWarning] = useState("");
   const connected = providers.filter(provider => provider.installed);
   const provider = connected.find(provider => provider.id === selected.provider);
   useEffect(() => {
     let live = true;
     onReady(false);
     setStale(false);
+    setWarning("");
     setModelLabel(selected.modelId || pi.automatic);
     if (!available || !provider) {
       setBusy(false);
@@ -47,11 +50,14 @@ export function GenerationService({
         if (reply.type !== "agentModels") throw new Error("Invalid model catalog");
         const model = selected.modelId
           ? reply.models.find(model => model.id === selected.modelId)
-          : reply.models[0];
+          : reply.models.find(model => !model.disabled);
         const valid =
+          !reply.notice &&
           !!model &&
+          !model.disabled &&
           (!selected.thinkingLevel || !!model.thinkingLevels?.includes(selected.thinkingLevel));
         setModelLabel(model?.label || selected.modelId || pi.automatic);
+        setWarning(reply.warning ?? "");
         setStale(!valid);
         onReady(valid);
       })
@@ -92,6 +98,9 @@ export function GenerationService({
                 {ui.setup}
               </Button>
             </div>
+          )}
+          {!stale && warning && (
+            <PiFeedback locale={locale} message={warning} context="modelRefresh" />
           )}
         </>
       ) : (

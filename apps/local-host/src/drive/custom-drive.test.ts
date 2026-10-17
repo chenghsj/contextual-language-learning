@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID, createHash } from "node:crypto";
-import { CustomGenerationRequestSchema, CustomDocumentSchema } from "@immersive/core";
+import { CustomGenerationRequestSchema, CustomDocumentSchema } from "@contextual/core";
 import { planCustomJob } from "../generation/custom-pipeline";
+import { sourceKey } from "../duplicates";
 import {
   publishCustomDriveDocument,
   getCustomDriveDocument,
@@ -42,12 +43,12 @@ test("custom Drive upload commits metadata last, retries partial upload without 
     uploads = 0;
   const ports: CustomDrivePorts = {
     files: async (_account, id) =>
-      files.filter(file => !id || file.appProperties?.immersiveDocumentId === id),
+      files.filter(file => !id || file.appProperties?.contextualDocumentId === id),
     fetch: async (_account, url) =>
       new Response(new Uint8Array(contents.get(url.match(/\/files\/([^?]+)/)![1])!)),
     folder: async () => "folder",
     upload: async (_account, _folder, name, _mime, bytes, properties) => {
-      if (properties.immersiveFormat === "json" && failMetadata) {
+      if (properties.contextualFormat === "json" && failMetadata) {
         failMetadata = false;
         throw new Error("HTTP 503");
       }
@@ -65,7 +66,7 @@ test("custom Drive upload commits metadata last, retries partial upload without 
   };
   await assert.rejects(publishCustomDriveDocument("account", document, ports), /503/);
   assert.equal(files.length, 1);
-  assert.equal(files[0].appProperties?.immersiveFormat, "md");
+  assert.equal(files[0].appProperties?.contextualFormat, "md");
   assert.deepEqual(await listCustomDriveDocuments("account", ports), []);
   await assert.rejects(getCustomDriveDocument("account", document.id, ports), /incomplete/);
   await publishCustomDriveDocument("account", document, ports);
@@ -75,16 +76,54 @@ test("custom Drive upload commits metadata last, retries partial upload without 
   assert.deepEqual(await getCustomDriveDocument("account", document.id, ports), document);
   assert.equal((await listCustomDriveDocuments("account", ports))[0].title, "自訂筆記");
   assert.equal(
+    (await listCustomDriveDocuments("account", ports))[0].sourceKey,
+    sourceKey(request.source, request.cues),
+  );
+  const legacyListing = {
+    ...ports,
+    files: async () =>
+      files.map(file => {
+        const properties = { ...file.appProperties };
+        delete properties.contextualSourceKey;
+        return { ...file, appProperties: properties };
+      }),
+  };
+  assert.equal((await listCustomDriveDocuments("account", legacyListing))[0].sourceKey, undefined);
+  assert.equal(
     (await findCustomDriveDuplicates("account", job.execution.inputFingerprint, ports))[0]
       .documentId,
     document.id,
   );
-  const markdownFile = files.find(file => file.appProperties?.immersiveFormat === "md")!;
+  // Existing backups from the previous branding remain readable and idempotent.
+  const legacyFiles = files.map(file => ({
+    ...file,
+    appProperties: Object.fromEntries(
+      Object.entries(file.appProperties ?? {}).map(([key, value]) => [
+        key.replace(/^contextual/, "immersive"),
+        value,
+      ]),
+    ),
+  }));
+  const legacyPorts: CustomDrivePorts = {
+    ...ports,
+    files: async (_account, id) =>
+      legacyFiles.filter(file => !id || file.appProperties.immersiveDocumentId === id),
+  };
+  assert.deepEqual(await getCustomDriveDocument("account", document.id, legacyPorts), document);
+  assert.equal((await listCustomDriveDocuments("account", legacyPorts))[0].title, document.title);
+  assert.equal(
+    (await findCustomDriveDuplicates("account", job.execution.inputFingerprint, legacyPorts))[0]
+      .documentId,
+    document.id,
+  );
+  await publishCustomDriveDocument("account", document, legacyPorts);
+  assert.equal(uploads, 2, "branding upgrade reuses legacy backups without duplicates");
+  const markdownFile = files.find(file => file.appProperties?.contextualFormat === "md")!;
   contents.set(markdownFile.id, Buffer.from("Edited elsewhere"));
   await assert.rejects(getCustomDriveDocument("account", document.id, ports), /changed outside/);
   await assert.rejects(publishCustomDriveDocument("account", document, ports), /changed outside/);
   assert.equal(uploads, 2, "conflicting remote content is never overwritten");
-  markdownFile.appProperties!.immersiveContentHash = createHash("sha256")
+  markdownFile.appProperties!.contextualContentHash = createHash("sha256")
     .update(contents.get(markdownFile.id)!)
     .digest("hex");
   await assert.rejects(

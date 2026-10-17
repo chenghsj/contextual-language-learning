@@ -1,6 +1,5 @@
 import { useEffect, useReducer, useRef } from "react";
 import type { UiLocale } from "../i18n/messages";
-import { piCopy } from "../i18n/pi";
 import { initialPiAuthState, piAuthReducer } from "../lib/pi-auth-state";
 import { openHostStream, nativeOnce, type HostStream } from "../native/host-client";
 
@@ -17,7 +16,6 @@ export function usePiAuth(options: Options) {
   const operation = useRef<string | null>(null);
   const connection = useRef<{ id: string; port: HostStream } | null>(null);
   const mounted = useRef(true);
-  const ui = () => piCopy[latest.current.locale];
 
   function closeConnection(): void {
     const current = connection.current;
@@ -100,7 +98,7 @@ export function usePiAuth(options: Options) {
     } catch {
       /* A closed transport must still release the local UI. */
     } finally {
-      finish(current.id, ui().cancelled);
+      finish(current.id, "");
     }
   }
   function answer(): void {

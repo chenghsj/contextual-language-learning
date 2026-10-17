@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseSubtitles } from "@immersive/core";
+import { parseSubtitles } from "@contextual/core";
 import {
   readNetflixSubtitles,
   type NetflixCaptionPlayer,
@@ -13,6 +13,28 @@ const en: NetflixCaptionTrack = { trackId: "english-1", bcp47: "en-US" };
 const ja: NetflixCaptionTrack = { trackId: "japanese-1", bcp47: "ja-JP" };
 const none: NetflixCaptionTrack = { trackId: "none", isNoneTrack: true };
 const fakeFetch: typeof fetch = async () => new Response(vtt, { status: 200 });
+
+test("Chinese subtitle extraction selects matching script tracks and preserves text", async () => {
+  const tracks = ["zh-Hans", "zh-Hant"].map(bcp47 => ({
+    trackId: bcp47,
+    bcp47,
+    ttDownloadables: { "webvtt-lssdh-ios8": { downloadUrls: { one: url + "&language=" + bcp47 } } },
+  }));
+  const player: NetflixCaptionPlayer = { getTimedTextTrackList: () => tracks };
+  for (const [language, tag, text] of [
+    ["zh-TW", "zh-Hant", "我們一起學習。"],
+    ["zh-CN", "zh-Hans", "我们一起学习。"],
+  ]) {
+    const result = await readNetflixSubtitles(player, null, () => null, language, {
+      fetchDocument: async source => {
+        assert.ok(String(source).includes(tag));
+        return new Response(vtt.replace("Hello from Netflix.", text));
+      },
+    });
+    assert.equal(result.language, tag);
+    assert.equal(parseSubtitles(result.text)[0].originalText, text);
+  }
+});
 
 test("fetches the requested caption document and preserves cue timestamps", async () => {
   const player: NetflixCaptionPlayer = {

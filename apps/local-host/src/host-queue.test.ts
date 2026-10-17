@@ -8,7 +8,7 @@ import {
   CustomGenerationRequestSchema,
   GenerationRequestSchema,
   type HostMessage,
-} from "@immersive/core";
+} from "@contextual/core";
 import { createHostDispatcher } from "./host/dispatcher";
 import { JobManager } from "./jobs/manager";
 import { CustomJobManager } from "./jobs/custom-manager";
@@ -75,6 +75,7 @@ test("dispatcher durably queues both content kinds, rejects duplicate resume wit
       hostVersion: "0.1.0",
     });
     const standard = GenerationRequestSchema.parse({
+      outputSchemaVersion: 7,
       id: randomUUID(),
       source: { platform: "import", title: "Standard" },
       profile: {
@@ -84,7 +85,7 @@ test("dispatcher durably queues both content kinds, rejects duplicate resume wit
         sceneCount: 2,
         contextualExampleCount: 1,
       },
-      agent: { provider: "openai", modelId: "" },
+      agent: { provider: "openai", modelId: "offline" },
       cues: [{ id: "a", startMs: 0, endMs: 1000, originalText: "Hello" }],
     });
     const payload = CustomGenerationRequestSchema.parse({
@@ -113,7 +114,17 @@ test("dispatcher durably queues both content kinds, rejects duplicate resume wit
       checkToken: await check(standard),
       confirmRegeneration: false,
     });
-    await running;
+    const outcome = await Promise.race([
+      running.then(() => "running"),
+      first.then(() => "finished"),
+    ]);
+    assert.equal(
+      outcome,
+      "running",
+      messages.find(message => message.type === "error")?.type === "error"
+        ? JSON.stringify(messages.filter(message => message.type === "error"))
+        : "Standard generation must start before admitting the next job",
+    );
     const second = handle({
       type: "generateCustom",
       id: payload.id,

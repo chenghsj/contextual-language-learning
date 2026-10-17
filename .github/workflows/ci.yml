@@ -39,11 +39,11 @@ jobs:
       - name: Install and smoke real Linux Native Host launcher
         run: |
           node scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser chromium
-          test -f "$HOME/.config/chromium/NativeMessagingHosts/dev.immersive.language_learning.json"
-          node apps/local-host/scripts/smoke-host.mjs "$HOME/.local/share/immersive-language-learning/native-host/launch.sh"
+          test -f "$HOME/.config/chromium/NativeMessagingHosts/dev.contextual.language_learning.json"
+          node apps/local-host/scripts/smoke-host.mjs "$HOME/.local/share/contextual-language-learning/native-host/launch.sh"
           node scripts/uninstall-host.mjs --browser chromium
-          test ! -e "$HOME/.config/chromium/NativeMessagingHosts/dev.immersive.language_learning.json"
-          test ! -e "$HOME/.local/share/immersive-language-learning/native-host"
+          test ! -e "$HOME/.config/chromium/NativeMessagingHosts/dev.contextual.language_learning.json"
+          test ! -e "$HOME/.local/share/contextual-language-learning/native-host"
       - name: Package and verify release archives
         run: |
           pnpm package:release
@@ -80,7 +80,7 @@ jobs:
           try {
             node scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser chrome
             if ($LASTEXITCODE -ne 0) { throw 'Windows Host installer failed' }
-            $launcher = Join-Path $env:LOCALAPPDATA 'Immersive Learning\native-host\native-host.exe'
+            $launcher = Join-Path $env:LOCALAPPDATA 'Contextual Language Learning\native-host\native-host.exe'
             if (!(Test-Path -LiteralPath $launcher)) { throw 'Native Host .exe not created' }
             node apps/local-host/scripts/smoke-host.mjs "$launcher"
             if ($LASTEXITCODE -ne 0) { throw 'Windows Native Host stdio smoke failed' }
@@ -108,8 +108,8 @@ jobs:
       - name: Register and exercise macOS Native Host launcher
         run: |
           node scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser edge
-          test -f "$HOME/Library/Application Support/Microsoft Edge/NativeMessagingHosts/dev.immersive.language_learning.json"
-          node apps/local-host/scripts/smoke-host.mjs "$HOME/Library/Application Support/Immersive Learning/native-host/launch.sh"
+          test -f "$HOME/Library/Application Support/Microsoft Edge/NativeMessagingHosts/dev.contextual.language_learning.json"
+          node apps/local-host/scripts/smoke-host.mjs "$HOME/Library/Application Support/Contextual Language Learning/native-host/launch.sh"
           node scripts/uninstall-host.mjs --browser edge
-          test ! -e "$HOME/Library/Application Support/Microsoft Edge/NativeMessagingHosts/dev.immersive.language_learning.json"
-          test ! -e "$HOME/Library/Application Support/Immersive Learning/native-host"
+          test ! -e "$HOME/Library/Application Support/Microsoft Edge/NativeMessagingHosts/dev.contextual.language_learning.json"
+          test ! -e "$HOME/Library/Application Support/Contextual Language Learning/native-host"

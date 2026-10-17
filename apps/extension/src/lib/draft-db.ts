@@ -36,3 +36,10 @@ export async function writeDraft<T>(key: string, value: T): Promise<void> {
     transaction.onabort = () => reject(transaction.error);
   });
 }
+
+export interface DraftStorage {
+  read<T>(key: string): Promise<T | undefined>;
+  write<T>(key: string, value: T): Promise<void>;
+}
+
+export const draftStorage: DraftStorage = { read: readDraft, write: writeDraft };

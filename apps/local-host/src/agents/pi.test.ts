@@ -21,7 +21,7 @@ import {
 } from "./pi";
 
 test("isolated SDK generates JSON with no tools, global resources or cross-stage history", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-pi-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-pi-"));
   try {
     const data = new Map<string, Credential>([
       ["openai", { type: "api_key", key: "test-not-a-real-key" }],
@@ -90,7 +90,13 @@ test("isolated SDK generates JSON with no tools, global resources or cross-stage
       ["test-model"],
     );
     const settings = { provider: "openai", modelId: "test-model", thinkingLevel: "high" as const };
-    const options = { root, runtime };
+    const activity: (import("@contextual/core").GenerationActivity | null)[] = [];
+    const options = {
+      root,
+      runtime,
+      onActivity: (value: import("@contextual/core").GenerationActivity | null) =>
+        activity.push(value),
+    };
     assert.deepEqual(
       await generatePi(settings, "First stage", new AbortController().signal, options),
       { stage: "first" },
@@ -99,6 +105,9 @@ test("isolated SDK generates JSON with no tools, global resources or cross-stage
       await generatePi(settings, "Second stage", new AbortController().signal, options),
       { stage: "second" },
     );
+    assert.ok(activity.some(value => value?.state === "waiting"));
+    assert.ok(activity.some(value => value?.state === "writing"));
+    assert.equal(activity.at(-1), null);
     await assert.rejects(
       generatePi(settings, "Truncated", new AbortController().signal, options),
       /did not finish/,
@@ -114,6 +123,9 @@ test("isolated SDK generates JSON with no tools, global resources or cross-stage
     );
     assert.equal(markdown.text, "# Markdown\n\nContent");
     assert.equal(markdown.call.modelId, "test-model");
+    assert.equal(markdown.call.outputTokenBudget, 512);
+    assert.equal(markdown.call.stopReason, "stop");
+    assert.ok(markdown.call.durationMs! >= 0);
     assert.ok(markdown.call.usage?.input && markdown.call.usage.output);
     assert.equal(
       markdown.call.usage.cacheRead,
@@ -121,6 +133,41 @@ test("isolated SDK generates JSON with no tools, global resources or cross-stage
       "unreported cache use is not shown as actual zero",
     );
     assert.equal(fake.state.callCount, 4);
+    fake.setResponses([
+      fauxAssistantMessage('{"partial":', { stopReason: "length" }),
+      fauxAssistantMessage(""),
+      fauxAssistantMessage("", { stopReason: "error", errorMessage: "Injected paid failure" }),
+    ]);
+    const calls: unknown[] = [];
+    const v6Options = {
+      ...options,
+      allowIncomplete: true,
+      onCall: (call: unknown) => {
+        calls.push(call);
+      },
+    };
+    const truncated = await generatePiText(
+      settings,
+      "V6 truncated",
+      new AbortController().signal,
+      v6Options,
+    );
+    assert.equal(truncated.incomplete, true);
+    assert.equal(truncated.call.stopReason, "length");
+    assert.equal(calls.length, 1);
+    const empty = await generatePiText(
+      settings,
+      "V6 empty",
+      new AbortController().signal,
+      v6Options,
+    );
+    assert.equal(empty.text, "");
+    assert.equal(calls.length, 2);
+    await assert.rejects(
+      generatePiText(settings, "V6 failed", new AbortController().signal, v6Options),
+      /Injected paid failure/,
+    );
+    assert.equal(calls.length, 3, "usage callbacks run before incomplete/empty/error validation");
     const loader = lessonResources();
     assert.deepEqual(loader.getAgentsFiles().agentsFiles, []);
     assert.deepEqual(loader.getSkills().skills, []);
@@ -179,7 +226,7 @@ test("isolated SDK generates JSON with no tools, global resources or cross-stage
 });
 
 test("SDK OAuth loads and can be cancelled before exchanging any credential", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-pi-oauth-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-pi-oauth-"));
   try {
     const runtime = await ModelRuntime.create({
       authPath: join(root, "auth.json"),
@@ -220,7 +267,7 @@ test("SDK OAuth loads and can be cancelled before exchanging any credential", as
 test("Antigravity is registered offline with OAuth, models and product-owned credentials", async () => {
   const { createPiRuntime } = await import("./pi");
   const { readFile, readdir } = await import("node:fs/promises");
-  const root = await mkdtemp(join(tmpdir(), "immersive-antigravity-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-antigravity-"));
   const previousDirectory = process.env.PI_CODING_AGENT_DIR;
   try {
     const runtime = await createPiRuntime(root);
@@ -285,7 +332,7 @@ test("Antigravity is registered offline with OAuth, models and product-owned cre
 test("Antigravity streams a lesson through the real SDK provider without tools or external requests", async () => {
   const { createPiRuntime } = await import("./pi");
   const { writeFile } = await import("node:fs/promises");
-  const root = await mkdtemp(join(tmpdir(), "immersive-antigravity-stream-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-antigravity-stream-"));
   const previousFetch = globalThis.fetch;
   const previousDirectory = process.env.PI_CODING_AGENT_DIR;
   const requests: Record<string, any>[] = [];
@@ -353,10 +400,10 @@ test("Antigravity streams a lesson through the real SDK provider without tools o
   }
 });
 
-test("Antigravity model refresh reports network errors and retains the offline catalog", async () => {
+test("Antigravity model refresh warns and retains authenticated SDK candidates on network failure", async () => {
   const { createPiRuntime, piModels } = await import("./pi");
   const { writeFile } = await import("node:fs/promises");
-  const root = await mkdtemp(join(tmpdir(), "immersive-antigravity-models-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-antigravity-models-"));
   const previousFetch = globalThis.fetch;
   const previousDirectory = process.env.PI_CODING_AGENT_DIR;
   try {
@@ -381,10 +428,13 @@ test("Antigravity model refresh reports network errors and retains the offline c
       requests++;
       return new Response("Synthetic catalog unavailable", { status: 503 });
     };
-    await assert.rejects(
-      piModels({ provider: "antigravity", modelId: "" }, runtime),
-      /fetchAvailableModels|503/,
+    const listed = await piModels({ provider: "antigravity", modelId: "" }, runtime);
+    assert.match(listed.warning!, /fetchAvailableModels|503/);
+    assert.deepEqual(
+      listed.models.map(model => model.id),
+      before,
     );
+    assert.ok(listed.models.every(model => !("disabled" in model)));
     assert.ok(requests > 0);
     assert.deepEqual(
       runtime.getModels("antigravity").map(model => model.id),
@@ -396,4 +446,24 @@ test("Antigravity model refresh reports network errors and retains the offline c
     else process.env.PI_CODING_AGENT_DIR = previousDirectory;
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("runtime cache coalesces initialization, isolates roots and evicts rejected initialization", async () => {
+  const { runtimeCache } = await import("./pi");
+  let creates = 0;
+  let fail = true;
+  const get = runtimeCache(async root => {
+    creates++;
+    await new Promise(resolve => setTimeout(resolve, 5));
+    if (fail && root.endsWith("/failed")) throw new Error("init failed");
+    return { root };
+  });
+  const [a, b] = await Promise.all([get("/tmp/shared"), get("/tmp/shared/../shared")]);
+  assert.equal(a, b);
+  assert.equal(creates, 1);
+  assert.notEqual(a, await get("/tmp/other"));
+  await assert.rejects(get("/tmp/failed"), /init failed/);
+  fail = false;
+  assert.equal((await get("/tmp/failed")).root, "/tmp/failed");
+  assert.equal(creates, 4);
 });

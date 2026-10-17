@@ -108,6 +108,24 @@ test("Korean conversion uses saved actual Hangul reading and omits missing data"
   assert.equal(displayReading("ko", "roman", "Hangugeo"), null);
 });
 
+test("Chinese reads saved tone annotations without inventing conversions", () => {
+  assert.deepEqual(pronunciationModes("zh-TW"), ["native", "off"]);
+  assert.deepEqual(pronunciationModes("zh-CN"), ["roman", "off"]);
+  assert.equal(defaultPronunciationMode("zh-TW"), "native");
+  assert.equal(defaultPronunciationMode("zh-CN"), "roman");
+  assert.equal(displayReading("zh-TW", "native", "ㄒㄩㄝˊ ㄒㄧˊ"), "ㄒㄩㄝˊ ㄒㄧˊ");
+  assert.equal(displayReading("zh-TW", "native", "˙ㄉㄜ"), "˙ㄉㄜ");
+  assert.equal(displayReading("zh-CN", "roman", "xué xí"), "xué xí");
+  assert.equal(displayReading("zh-CN", "roman", "nǚ ér"), "nǚ ér");
+  assert.equal(displayReading("zh-CN", "roman", "xue2 xi2"), null);
+  assert.equal(displayReading("zh-TW", "native", "xué xí"), null);
+  assert.equal(displayReading("zh-CN", "roman", "ㄒㄩㄝˊ"), null);
+  assert.equal(displayReading("zh-CN", "ipa", "/a/"), null);
+  assert.equal(displayReading("zh-TW", "native", undefined), null);
+  assert.equal(pronunciationCopy("zh-TW", "zh-TW").option("native"), "注音");
+  assert.equal(pronunciationCopy("zh-TW", "zh-CN").option("roman"), "漢語拼音");
+});
+
 test("other ten learning languages use saved IPA only", () => {
   for (const language of ["en", "es", "fr", "de", "it", "pt", "id", "th", "ms", "vi"] as const) {
     assert.deepEqual(pronunciationModes(language), ["ipa", "off"]);

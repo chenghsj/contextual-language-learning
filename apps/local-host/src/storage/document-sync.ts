@@ -1,8 +1,8 @@
 import {
-  LearningDocumentSchema,
+  readLearningDocument,
   type LearningDocument,
   type PlaybackOverride,
-} from "@immersive/core";
+} from "@contextual/core";
 import { toMarkdown } from "../generation/markdown";
 import type { StoragePorts, DocumentPublisher } from "./ports";
 import { publishSavedJob, publishRevision } from "./publish";
@@ -78,7 +78,7 @@ export function createDocumentSync(
       serializeDocument(storage, id, () => storage.jobs.deleteHistory(id)),
     restore: (id: string, load: () => Promise<LearningDocument>) =>
       serializeDocument(storage, id, async () => {
-        const document = LearningDocumentSchema.parse(await load());
+        const document = readLearningDocument(await load());
         if (document.id !== id) throw new Error("Restored lesson identity mismatch");
         const existing = await storage.documents.get(document.id);
         if (existing && documentRevision(existing) !== documentRevision(document))

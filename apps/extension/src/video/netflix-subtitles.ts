@@ -143,11 +143,82 @@ export function normalizedVttCues(
   return lines.join("\n");
 }
 
-function xmlText(node: Node): string {
-  if (node.nodeType === 3 || node.nodeType === 4) return node.nodeValue ?? "";
-  if (node.nodeType !== 1) return "";
-  if ((node as Element).localName === "br") return "\n";
-  return Array.from(node.childNodes).map(xmlText).join("");
+function xmlCueSerializer(xml: Document): (node: Node) => string {
+  const namespace = "http://www.w3.org/ns/ttml#styling";
+  const styles = new Map<string, Element>();
+  for (const style of Array.from(xml.getElementsByTagNameNS("*", "style"))) {
+    if (style.localName !== "style") continue;
+    const id = style.getAttribute("xml:id") ?? style.getAttribute("id");
+    if (id) styles.set(id, style);
+  }
+  function property(element: Element, name: string, seen = new Set<Element>()): string | null {
+    if (seen.has(element)) return null;
+    seen.add(element);
+    const own = element.getAttributeNS?.(namespace, name) ?? element.getAttribute?.("tts:" + name);
+    if (own !== null && own !== undefined) return own;
+    // Later style references override earlier ones. Ruby roles themselves do not inherit.
+    const refs = (element.getAttribute?.("style") ?? "").trim().split(/\s+/).reverse();
+    for (const ref of refs) {
+      const style = styles.get(ref);
+      if (!style) continue;
+      const value = property(style, name, seen);
+      if (value !== null) return value;
+    }
+    return null;
+  }
+  const role = (element: Element) => property(element, "ruby");
+  function position(element: Element): "over" | "under" {
+    for (let current: Element | null = element; current; current = current.parentElement) {
+      const value = property(current, "rubyPosition");
+      if (value) return value === "after" ? "under" : "over";
+      if (/ruby-position\s*:\s*under\b/i.test(current.getAttribute?.("style") ?? ""))
+        return "under";
+    }
+    return "over";
+  }
+  const escape = (text: string) =>
+    text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  function content(node: Node): string {
+    return Array.from(node.childNodes).map(serialize).join("");
+  }
+  function serialize(node: Node): string {
+    if (node.nodeType === 3 || node.nodeType === 4) return escape(node.nodeValue ?? "");
+    if (node.nodeType !== 1) return "";
+    const element = node as Element;
+    if (element.localName === "br") return "\n";
+    if (element.localName === "ruby")
+      return `<ruby.${position(element)}>${content(element)}</ruby>`;
+    if (element.localName === "rt" || element.localName === "rp")
+      return `<${element.localName}>${content(element)}</${element.localName}>`;
+    const rubyRole = role(element);
+    if (rubyRole === "container") {
+      const bases: Element[] = [],
+        readings: Element[] = [];
+      function collect(parent: Node) {
+        for (const child of Array.from(parent.childNodes)) {
+          if (child.nodeType !== 1) continue;
+          const item = child as Element,
+            itemRole = role(item);
+          if (itemRole === "base") bases.push(item);
+          else if (itemRole === "text") readings.push(item);
+          else if (itemRole !== "delimiter" && itemRole !== "container") collect(item);
+        }
+      }
+      collect(element);
+      // Grouped bases/readings must pair exactly; never guess an ambiguous association.
+      if (bases.length && bases.length === readings.length)
+        return bases
+          .map(
+            (base, index) =>
+              `<ruby.${position(readings[index])}>${content(base)}<rt>${content(readings[index])}</rt></ruby>`,
+          )
+          .join("");
+      return bases.length ? bases.map(content).join("") : content(element);
+    }
+    if (["text", "textContainer", "delimiter"].includes(rubyRole ?? "")) return "";
+    return content(element);
+  }
+  return serialize;
 }
 
 export function normalizeNetflixTimedText(
@@ -203,6 +274,7 @@ export function normalizeNetflixTimedText(
     subtitleClockMs(expression ?? "", frameRate, tickRate, subFrameRate);
 
   const cues: { startMs: number; endMs: number; text: string }[] = [];
+  const xmlText = xmlCueSerializer(xml);
   const paragraphs = Array.from(xml.getElementsByTagNameNS("*", "p"));
   if (!paragraphs.length)
     throw new Error("Netflix subtitle XML contains no timed-text paragraphs.");

@@ -75,11 +75,11 @@ test("Netflix replay survives its own seeking/pause events before currentTime ch
       intervalsCleared++;
     }) as typeof clearInterval;
 
-    windowEvents.addEventListener("immersive-learning:netflix:request", event => {
+    windowEvents.addEventListener("contextual-learning:netflix:request", event => {
       const req = (event as TestCustomEvent<{ id: string; action: string; value?: number }>).detail;
       calls.push(req.action);
       const result: Record<string, unknown> = {
-        source: "immersive-learning",
+        source: "contextual-learning",
         id: req.id,
         ok: true,
         available: true,
@@ -100,9 +100,13 @@ test("Netflix replay survives its own seeking/pause events before currentTime ch
         result.seekCalled = true;
       }
       if (req.action === "play") Object.assign(video, { paused: false });
+      if (req.action === "pause") {
+        Object.assign(video, { paused: true });
+        video.dispatchEvent(new Event("pause"));
+      }
       if (req.action === "diagnose") result.currentMs = video.currentTime * 1000;
       windowEvents.dispatchEvent(
-        new TestCustomEvent("immersive-learning:netflix:response", {
+        new TestCustomEvent("contextual-learning:netflix:response", {
           detail: result,
         }),
       );
@@ -150,6 +154,56 @@ test("Netflix replay survives its own seeking/pause events before currentTime ch
       ["seekTo", "seekTo"],
     );
     assert.ok(intervalsCleared >= 1, "finite loop did not stop after two playthroughs");
+    assert.equal(video.paused, true, "finite playback must pause at the final boundary");
+    assert.equal(calls.filter(action => action === "pause").length, 1);
+
+    assert.equal(
+      (
+        await run({
+          type: "NETFLIX_LOOP_SET",
+          startMs: 60_000,
+          endMs: 61_000,
+          repeats: 1,
+          delaySeconds: 0,
+        })
+      ).ok,
+      true,
+    );
+    video.currentTime = 60.8;
+    tick!();
+    await new Promise<void>(resolve => setImmediate(resolve));
+    assert.equal(video.paused, false, "single-sentence playback must not pause before its end");
+    video.currentTime = 61;
+    tick!();
+    await new Promise<void>(resolve => setImmediate(resolve));
+    assert.equal(video.paused, true, "a single sentence must pause at its end");
+    assert.equal(calls.filter(action => action === "pause").length, 2);
+    tick!();
+    await new Promise<void>(resolve => setImmediate(resolve));
+    assert.equal(
+      calls.filter(action => action === "pause").length,
+      2,
+      "finished playback must release its timer",
+    );
+
+    assert.equal(
+      (
+        await run({
+          type: "NETFLIX_LOOP_SET",
+          startMs: 60_000,
+          endMs: 61_000,
+          repeats: "infinite",
+          delaySeconds: 0,
+        })
+      ).ok,
+      true,
+    );
+    video.currentTime = 61;
+    tick!();
+    await new Promise<void>(resolve => setImmediate(resolve));
+    assert.equal(video.currentTime, 60);
+    assert.equal(video.paused, false, "infinite looping must continue playing");
+    assert.equal(calls.filter(action => action === "pause").length, 2);
   } finally {
     windowEvents.dispatchEvent(new Event("pagehide"));
     globals.setInterval = old.setInterval;

@@ -2,55 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
 import { DocumentChunkAssembler } from "./document-chunks";
-import type { LearningDocument } from "@immersive/core";
+import { v7Fixture } from "../../dev/reader-v7-fixture";
 
 test("reassembles UTF-8 characters split between native messages", () => {
   const id = randomUUID();
-  const doc: LearningDocument = {
-    id,
-    schemaVersion: 5,
-    createdAt: new Date().toISOString(),
-    source: { platform: "import", title: "日本語 🎬" },
-    profile: {
-      targetLanguage: "ja",
-      instructionLanguage: "zh-TW",
-      level: "N4",
-      sceneCount: 4,
-      contextualExampleCount: 1,
-    },
-    generation: { provider: "anthropic", modelId: "" },
-    cues: [{ id: "cue-1", startMs: null, endMs: null, originalText: "こんにちは" }],
-    sections: [
-      {
-        id: randomUUID(),
-        title: "場景",
-        context: "日常對話",
-        cueIds: ["cue-1"],
-        startMs: null,
-        endMs: null,
-        translations: [{ cueId: "cue-1", text: "你好" }],
-        focusItems: [
-          {
-            expression: "こんにちは",
-            sourceCueIds: ["cue-1"],
-            meaning: "你好",
-            contextExplanation: "A greeting.",
-            contextCueIds: ["cue-1"],
-            wordNotes: [],
-            examples: [
-              {
-                situation: "Meeting",
-                dialogue: [
-                  { text: "こんにちは", translation: "你好" },
-                  { text: "こんにちは", translation: "你好" },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
+  const doc = structuredClone(v7Fixture);
+  doc.id = id;
+  doc.source.title = "日本語 🎬";
   const buffer = Buffer.from(JSON.stringify(doc), "utf8");
   const mid = Math.floor(buffer.length / 2);
   const assembler = new DocumentChunkAssembler();

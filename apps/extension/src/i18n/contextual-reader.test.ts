@@ -4,78 +4,37 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { LearningDocument } from "@immersive/core";
+import { document } from "../../dev/reader-fixture";
 import { ContextualSceneReader } from "../components/contextual-scene-reader";
+import { JSDOM } from "jsdom";
+import { parseSubtitles } from "@contextual/core";
 import { getVideoAdapter } from "../video";
 import { unifiedPlayerMessages } from "./unified-player";
 import { contextualReaderMessages } from "./contextual-reader";
 import { messages, type UiLocale } from "./messages";
 
-const document: LearningDocument = {
-  schemaVersion: 5,
-  id: "00000000-0000-4000-8000-000000000001",
-  createdAt: "2026-09-26T00:00:00.000Z",
-  source: {
-    platform: "youtube",
-    title: "An original video",
-    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-  },
-  profile: {
-    targetLanguage: "en",
-    instructionLanguage: "zh-TW",
-    level: "B1",
-    sceneCount: 2,
-    contextualExampleCount: 2,
-  },
-  generation: { provider: "anthropic", modelId: "" },
-  cues: [
-    { id: "cue-1", startMs: 1000, endMs: 2900, originalText: "What about dinner?" },
-    { id: "cue-2", startMs: 3100, endMs: 5500, originalText: "I haven't decided yet." },
-    { id: "cue-3", startMs: 5600, endMs: 7500, originalText: "Let's decide tomorrow." },
-  ],
-  sections: [
-    {
-      id: "00000000-0000-4000-8000-000000000002",
-      title: "Dinner plans",
-      context: "Someone is asked about dinner and has not decided.",
-      cueIds: ["cue-1", "cue-2", "cue-3"],
-      startMs: 1000,
-      endMs: 7500,
-      translations: [
-        { cueId: "cue-1", text: "晚餐怎麼辦？" },
-        { cueId: "cue-2", text: "還沒決定。" },
-        { cueId: "cue-3", text: "明天再決定。" },
-      ],
-      focusItems: [
-        {
-          expression: "I haven't decided yet.",
-          sourceCueIds: ["cue-2"],
-          meaning: "我還沒決定。",
-          contextExplanation:
-            "The question about dinner and the tomorrow reply indicate no decision has been made.",
-          contextCueIds: ["cue-1", "cue-3"],
-          wordNotes: [{ surface: "yet", meaning: "尚未", explanation: "Not decided so far." }],
-          examples: [
-            {
-              situation: "A friend asks about a trip.",
-              dialogue: [
-                { text: "Have you decided on a trip?", translation: "決定旅行了嗎？" },
-                { text: "I haven't decided yet.", translation: "我還沒決定。" },
-              ],
-            },
-            {
-              situation: "A colleague asks about lunch.",
-              dialogue: [
-                { text: "What about lunch?", translation: "午餐呢？" },
-                { text: "I haven't decided yet.", translation: "我還沒決定。" },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ],
-};
+test("reader renders original Netflix ruby below its base without model readings", () => {
+  const doc = structuredClone(document);
+  doc.profile.targetLanguage = "ja";
+  doc.profile.level = "N3";
+  doc.cues[0] = parseSubtitles(
+    "WEBVTT\n\n00:00:01.000 --> 00:00:02.900\nヒカルの漫画 <ruby.under>面白え<rt>おもしれ</rt></ruby>～",
+  )[0];
+  doc.sections[0].pronunciations = [
+    { cueId: "cue-1", segments: [{ text: doc.cues[0].originalText, reading: "おもしろい" }] },
+  ];
+  const html = render("zh-TW", doc);
+  const dom = new JSDOM(html);
+  const utterance = dom.window.document.querySelector('[data-ui="sourceUtterance"]')!;
+  const ruby = utterance.querySelector("ruby")!;
+  assert.ok(ruby);
+  assert.equal(ruby.style.rubyPosition, "under");
+  assert.equal(ruby.querySelector("rt")?.textContent, "おもしれ");
+  assert.equal(ruby.firstChild?.textContent, "面白え");
+  utterance.querySelectorAll("rt, rp").forEach(node => node.remove());
+  assert.ok(utterance.textContent?.includes("ヒカルの漫画 面白え～"));
+  assert.ok(!utterance.textContent?.includes("面白おもしれ"));
+});
 
 function render(locale: UiLocale, doc: typeof document = document): string {
   return renderToStaticMarkup(
@@ -101,35 +60,30 @@ function render(locale: UiLocale, doc: typeof document = document): string {
   );
 }
 
-test("V5 reader presents original dialogue first, then focus, word notes and one contextual example", () => {
+test("current reader keeps source and whole-sentence reading visible without interpretation modes", () => {
   const html = render("zh-TW");
   const copy = contextualReaderMessages["zh-TW"];
-  assert.ok(html.indexOf(copy.dialogue) < html.indexOf(copy.focus));
-  assert.ok(html.includes(copy.context));
+  assert.ok(html.includes(copy.dialogue));
   assert.ok(html.includes("I haven&#x27;t decided yet."));
-  assert.ok(html.includes(copy.aiExamples));
-  assert.ok(html.includes("A friend asks about a trip."));
-  assert.ok(
-    !html.includes("A colleague asks about lunch."),
-    "only one contextual example visible by default",
-  );
-  assert.ok(html.includes(copy.anotherExamples.replace("{count}", "1")));
-  assert.ok(html.includes(copy.words), "essential word notes are available on demand");
-  assert.match(html, /data-state="closed"/, "word notes use collapsible sections");
+  assert.ok(html.includes("整句意思"));
+  assert.ok(html.includes('data-ui="inlineAnalysis"'));
+  assert.ok(!html.includes('data-ui="analysis-toggle"'));
+  assert.ok(!html.includes('data-ui="analysis-toggle-all"'));
+  assert.ok(!html.includes("A friend asks about a trip."));
   assert.ok(html.includes(copy.previousScene) && html.includes(copy.nextScene));
   assert.ok(html.includes('data-ui="unifiedPlayer"'));
-  assert.ok(!html.includes("sceneSteps"), "V5 has no mandatory learning steps");
-  assert.ok(!html.includes("<textarea"), "V5 has no sentence-building answer form");
+  assert.ok(!html.includes("sceneSteps"));
+  assert.ok(!html.includes("<textarea"));
 });
 
-test("V5 reader stays localized in five UI languages and retains source-only dialogue", () => {
+test("current reader stays localized in five UI languages and retains source-only dialogue", () => {
   for (const locale of Object.keys(messages) as UiLocale[]) {
     const html = render(locale);
     const copy = contextualReaderMessages[locale];
     assert.ok(html.includes(copy.dialogue), locale);
     assert.ok(html.includes(copy.playScene), locale);
     assert.ok(html.includes('aria-label="' + unifiedPlayerMessages[locale].loop + '"'), locale);
-    assert.ok(html.includes(copy.aiExamples), locale);
+    assert.ok(html.includes(copy.playCue + " 1"), locale);
     assert.ok(html.includes(copy.previousScene), locale);
     assert.ok(html.includes("What about dinner?"), locale);
     assert.ok(html.includes('role="combobox"'), locale);
@@ -141,7 +95,7 @@ test("V5 reader stays localized in five UI languages and retains source-only dia
   assert.ok(!importOnly.includes("z-[5]"), "import-only lessons have no sticky contextual player");
 });
 
-test("V5 reader puts pronunciation settings in its header and renders only aligned saved readings", () => {
+test("current reader puts pronunciation settings in its header and renders only aligned saved readings", () => {
   const japanese = {
     ...document,
     profile: { ...document.profile, targetLanguage: "ja" as const, level: "N4" },
@@ -167,7 +121,7 @@ test("V5 reader puts pronunciation settings in its header and renders only align
   assert.ok(!older.includes("<ruby"));
 });
 
-test("V5 reader keeps existing Japanese kana outside ruby annotations", () => {
+test("current reader keeps existing Japanese kana outside ruby annotations", () => {
   const japanese = {
     ...document,
     profile: { ...document.profile, targetLanguage: "ja" as const, level: "N4" },
@@ -191,7 +145,7 @@ test("V5 reader keeps existing Japanese kana outside ruby annotations", () => {
   assert.doesNotMatch(html, /<ruby[^>]*>ですね/);
 });
 
-test("V5 reader explains when the selected pronunciation has no saved readings", () => {
+test("current reader explains when the selected pronunciation has no saved readings", () => {
   const withoutReadings = render("zh-TW");
   assert.ok(withoutReadings.includes("發音標註"));
   const withReadings = render("zh-TW", {
@@ -211,7 +165,7 @@ test("V5 reader explains when the selected pronunciation has no saved readings",
   assert.ok(!withReadings.includes("本場景沒有已儲存的發音標註"));
 });
 
-test("V5 reader preserves cue references and requires no manual export", async () => {
+test("current reader preserves cue references and requires no manual export", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
   assert.match(app, /<ContextualSceneReader/);
   assert.doesNotMatch(app, /<SceneReader/);
@@ -219,9 +173,9 @@ test("V5 reader preserves cue references and requires no manual export", async (
     new URL("../components/contextual-scene-reader.tsx", import.meta.url),
   );
   assert.ok(source.includes("min-h-0 flex-1 overflow-y-auto"));
-  assert.ok(/<Button key=\{cue.id\}/.test(source));
+  assert.ok(source.includes("<SentenceDialogue"));
   assert.match(source, /scene\.cueIds\.map\(id => cues\.get\(id\)\)/);
-  assert.ok(source.includes("<SceneFocusItems"));
+  assert.ok(!source.includes("<SceneFocusItems"));
   const manifest = await readFile(new URL("../../public/manifest.json", import.meta.url), "utf8");
   assert.ok(!source.includes("onDownload"));
   assert.ok(!app.includes("downloadSavedDocument"));

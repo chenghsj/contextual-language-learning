@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { SubtitleCue } from "@immersive/core";
+import type { SubtitleCue } from "@contextual/core";
 import { playingCueAt } from "./cue-follow";
 
 const cues = new Map<string, SubtitleCue>([

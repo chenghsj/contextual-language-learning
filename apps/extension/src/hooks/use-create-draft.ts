@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { readDraft, writeDraft } from "../lib/draft-db";
+import { draftStorage, type DraftStorage } from "../lib/draft-db";
 import { parseCreateDraft, type CreateDraft } from "../lib/create-draft";
 export function useCreateDraft(
   snapshot: CreateDraft,
   enabled: boolean,
   onRestore: (saved: CreateDraft | undefined) => void,
   onError: (message: string) => void,
+  storage: DraftStorage = draftStorage,
 ) {
   const [loadedKey, setLoadedKey] = useState(""),
     [hasSaved, setHasSaved] = useState(false);
@@ -21,7 +22,8 @@ export function useCreateDraft(
     if (!enabled || !key) return;
     let live = true;
     setLoadedKey("");
-    void readDraft<unknown>("create:" + key)
+    void storage
+      .read<unknown>("create:" + key)
       .then(raw => {
         if (!live) return;
         const saved = parseCreateDraft(raw, key);
@@ -38,27 +40,27 @@ export function useCreateDraft(
     return () => {
       live = false;
     };
-  }, [enabled, key]);
+  }, [enabled, key, storage]);
   const serialized = JSON.stringify(snapshot);
   useEffect(() => {
     if (!enabled || loadedKey !== key) return;
     const value = structuredClone(snapshot);
     committed.current = { key, snapshot: value };
     const timer = setTimeout(() => {
-      void writeDraft("create:" + key, value).catch(error => report.current(String(error)));
+      void storage.write("create:" + key, value).catch(error => report.current(String(error)));
     }, 250);
     return () => clearTimeout(timer);
-  }, [enabled, key, loadedKey, serialized]);
+  }, [enabled, key, loadedKey, serialized, storage]);
   useEffect(() => {
     const flush = () => {
       const value = committed.current;
-      if (value) void writeDraft("create:" + value.key, value.snapshot).catch(() => {});
+      if (value) void storage.write("create:" + value.key, value.snapshot).catch(() => {});
     };
     window.addEventListener("pagehide", flush);
     return () => {
       window.removeEventListener("pagehide", flush);
       flush();
     };
-  }, []);
+  }, [storage]);
   return { ready: enabled && loadedKey === key, hasSaved };
 }

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AiModelSelection } from "../components/ai-model-selection";
 import { restorePiAgentSelection } from "../agent-selection";
-import { AgentSettingsSchema, type ThinkingLevel } from "@immersive/core";
+import { AgentSettingsSchema, type ThinkingLevel } from "@contextual/core";
 
 const noop = () => undefined;
 function picker(levels: ThinkingLevel[], modelId = "model", busy = false) {

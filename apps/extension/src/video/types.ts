@@ -1,4 +1,4 @@
-import type { LearningLanguage } from "@immersive/core";
+import type { LearningLanguage } from "@contextual/core";
 
 export type PlaybackCapability = "timestampLink" | "diagnose" | "seek" | "loop" | "playbackRate";
 
@@ -15,7 +15,7 @@ export type PlaybackStatus = { currentMs?: number; message: string };
 /** Track metadata contains no caption URLs, tokens or transcript payload. */
 export type SubtitleTrackAvailability = {
   status: "available" | "unknown";
-  tracks: { language: string; kind: "manual" | "auto" }[];
+  tracks: { language: string; kind: "manual" | "auto" | "translated" }[];
 };
 
 export interface VideoAdapter {

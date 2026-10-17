@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { HOST_PROTOCOL_VERSION, type HostRequest, type HostMessage } from "@immersive/core";
+import { HOST_PROTOCOL_VERSION, type HostRequest, type HostMessage } from "@contextual/core";
 import { getAgentCatalog } from "../agents";
 import { loginPi, logoutPi, piModels, piProviders } from "../agents/pi";
 import type { HostDispatcherDeps } from "./context";
+import { estimateGenerationInput } from "../generation/input-estimate";
 
 const logins = new Map<
   string,
@@ -21,6 +22,13 @@ export async function handleAgentRequest(
   { reply, hostVersion }: HostDispatcherDeps,
 ): Promise<boolean> {
   switch (request.type) {
+    case "estimateGeneration":
+      reply({
+        id: request.id,
+        type: "generationEstimate",
+        estimate: await estimateGenerationInput(request.payload),
+      });
+      return true;
     case "health": {
       const agents = await getAgentCatalog();
       reply({

@@ -6,6 +6,7 @@ import {
   LEARNING_LANGUAGES,
   defaultLevelForTargetLanguage,
   levelsForTargetLanguage,
+  languageTagMatches,
 } from "./languages";
 import { LearningProfileSchema } from "./schema";
 
@@ -42,9 +43,10 @@ test("language choices are valid in saved learning profiles independently of int
   );
 });
 
-test("ten languages share CEFR without overwriting Japanese or Korean levels", () => {
-  assert.equal(LEARNING_LANGUAGES.length, 12);
+test("twelve languages share CEFR without overwriting Japanese or Korean levels", () => {
+  assert.equal(LEARNING_LANGUAGES.length, 14);
   assert.equal(EXPLANATION_LANGUAGES.length, 14);
+  assert.equal(new Set(EXPLANATION_LANGUAGES).size, 14);
   for (const language of CEFR_LANGUAGES) {
     assert.deepEqual(levelsForTargetLanguage(language), ["A1", "A2", "B1", "B2", "C1", "C2"]);
   }
@@ -52,4 +54,18 @@ test("ten languages share CEFR without overwriting Japanese or Korean levels", (
   assert.deepEqual(levelsForTargetLanguage("ko"), ["1", "2", "3", "4", "5", "6"]);
   assert.equal(defaultLevelForTargetLanguage("ja"), "N4");
   assert.equal(defaultLevelForTargetLanguage("ko"), "2");
+});
+
+test("Chinese track matching recognizes script aliases without guessing bare zh or mixing scripts", () => {
+  for (const tag of ["zh-TW", "zh_Hant", "zh-Hant-TW"])
+    assert.equal(languageTagMatches("zh-TW", tag), true, tag);
+  for (const tag of ["zh-CN", "zh_Hans", "zh-Hans-CN"])
+    assert.equal(languageTagMatches("zh-CN", tag), true, tag);
+  for (const language of ["zh-TW", "zh-CN"]) {
+    assert.equal(languageTagMatches(language, "zh"), false);
+    assert.equal(languageTagMatches(language, "yue-Hant"), false);
+  }
+  assert.equal(languageTagMatches("zh-TW", "zh-Hans"), false);
+  assert.equal(languageTagMatches("zh-CN", "zh-Hant"), false);
+  assert.equal(languageTagMatches("en", "en-US"), true);
 });

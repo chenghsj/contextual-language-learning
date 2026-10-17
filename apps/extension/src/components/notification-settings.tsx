@@ -68,7 +68,7 @@ export function NotificationSettings({
   }
   return (
     <section
-      className="mt-5 grid gap-3 border-t border-border pt-4"
+      className="grid min-w-0 gap-3 border-t border-border pt-4"
       aria-labelledby="notification-heading"
     >
       <h3 id="notification-heading" className="text-sm font-semibold">
@@ -114,16 +114,25 @@ export function NotificationSettings({
       )}
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" disabled={busy} aria-busy={busy} onClick={() => void test()}>
-          {ui.test}
+          <span className="inline-grid">
+            <span className="invisible col-start-1 row-start-1" aria-hidden="true">
+              {ui.test}
+            </span>
+            <span className="col-start-1 row-start-1" aria-live="polite" aria-atomic="true">
+              {busy ? ui.testSending : status?.success ? ui.testSent : ui.test}
+            </span>
+          </span>
         </Button>
         <Button variant="ghost" onClick={() => setHelp(value => !value)} aria-expanded={help}>
           {ui.help}
         </Button>
       </div>
       {help && <p className="text-xs leading-relaxed text-muted-foreground">{ui.permissionHelp}</p>}
-      <p role="status" className="min-h-4 text-xs text-muted-foreground">
-        {status?.message}
-      </p>
+      {status && !status.success && (
+        <p role="status" className="text-xs text-destructive">
+          {status.message}
+        </p>
+      )}
     </section>
   );
 }

@@ -4,7 +4,7 @@ import {
   type CustomDocument,
   type CustomJobSnapshot,
   type HostMessage,
-} from "@immersive/core";
+} from "@contextual/core";
 export class CustomChunkAssembler {
   private identity: string | undefined;
   private resource: "document" | "job" | undefined;

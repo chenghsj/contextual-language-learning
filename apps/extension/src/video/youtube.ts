@@ -1,4 +1,4 @@
-import { youtubeTimeLink } from "@immersive/core";
+import { youtubeTimeLink } from "@contextual/core";
 import { sendToVideo } from "./tab";
 import type { VideoAdapter } from "./types";
 
@@ -30,7 +30,7 @@ export const youtubeAdapter: VideoAdapter = {
       ok: boolean;
       error?: string;
       status?: "available" | "unknown";
-      tracks?: { language: string; kind: "manual" | "auto" }[];
+      tracks?: { language: string; kind: "manual" | "auto" | "translated" }[];
     }>(youtubeAdapter, url, { type: "YOUTUBE_CAPTION_TRACKS_GET", videoId });
     return {
       status: result.status === "available" ? ("available" as const) : ("unknown" as const),

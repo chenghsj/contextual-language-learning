@@ -1,4 +1,4 @@
-import { LEARNING_LANGUAGES, parseSubtitles } from "@immersive/core";
+import { LEARNING_LANGUAGES, languageTagMatches, parseSubtitles } from "@contextual/core";
 import {
   MAX_SUBTITLE_BYTES,
   normalizeNetflixTimedText,
@@ -40,9 +40,7 @@ function trackId(track: NetflixCaptionTrack | null): string | null {
 }
 
 function languageMatches(trackLanguage: string | undefined, requested: string): boolean {
-  const language = (trackLanguage ?? "").toLowerCase();
-  const preferred = requested.toLowerCase();
-  return language === preferred || language.startsWith(preferred + "-");
+  return languageTagMatches(requested, trackLanguage ?? "");
 }
 
 function findInternalTrackUrl(root: unknown, wantedId: string): string | null {

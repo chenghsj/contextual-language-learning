@@ -1,5 +1,5 @@
 import type { VideoCommandErrorCode } from "../video/command-errors";
-import type { LearningLanguage } from "@immersive/core";
+import type { LearningLanguage } from "@contextual/core";
 import { learningLanguageName } from "./preferences";
 import type { UiLocale } from "./messages";
 
@@ -204,6 +204,8 @@ const subtitleFailures: Record<
       "Subtitles could not be retrieved from this video. Turn on captions in YouTube, play for a few seconds, then try again. If it still fails, import your own subtitles.",
     CAPTION_TIMEOUT:
       "Getting subtitles took too long. Turn on captions in YouTube, play for a few seconds, then try again. You can also import your own subtitles.",
+    CAPTION_RATE_LIMITED:
+      "YouTube has temporarily limited subtitle requests. Wait a while before trying again.",
     CAPTION_FAILED:
       "Subtitles could not be retrieved. Make sure the video is playing and captions are available, then try again. You can also import your own subtitles.",
     VIDEO_CHANGED:
@@ -218,6 +220,7 @@ const subtitleFailures: Record<
       "目前無法取得這部影片的字幕。請先在 YouTube 開啟字幕，播放幾秒後再試；若仍失敗，可自行匯入字幕。",
     CAPTION_TIMEOUT:
       "取得字幕等候太久。請先在 YouTube 開啟字幕，播放幾秒後再試；也可以自行匯入字幕。",
+    CAPTION_RATE_LIMITED: "YouTube 暫時限制字幕請求，請稍後再試。",
     CAPTION_FAILED:
       "目前無法取得字幕。請確認影片正在播放且有提供字幕，再試一次；也可以自行匯入字幕。",
     VIDEO_CHANGED: "取得字幕時影片已切換。請切回要製作教材的影片，再試一次。",
@@ -230,6 +233,7 @@ const subtitleFailures: Record<
       "暂时无法获取此视频的字幕。请先在 YouTube 开启字幕，播放几秒后重试；若仍失败，可以自行导入字幕。",
     CAPTION_TIMEOUT:
       "获取字幕等待太久。请先在 YouTube 开启字幕，播放几秒后重试；也可以自行导入字幕。",
+    CAPTION_RATE_LIMITED: "YouTube 暂时限制字幕请求，请稍后重试。",
     CAPTION_FAILED:
       "暂时无法获取字幕。请确认视频正在播放且提供字幕，然后重试；也可以自行导入字幕。",
     VIDEO_CHANGED: "获取字幕时视频已切换。请切回要制作教材的视频后重试。",
@@ -242,6 +246,8 @@ const subtitleFailures: Record<
       "この動画の字幕を取得できませんでした。YouTube で字幕をオンにし、数秒再生してから再試行してください。取得できない場合は字幕ファイルを読み込めます。",
     CAPTION_TIMEOUT:
       "字幕の取得に時間がかかりすぎました。YouTube で字幕をオンにし、数秒再生してから再試行してください。字幕ファイルの読み込みも可能です。",
+    CAPTION_RATE_LIMITED:
+      "YouTube が字幕のリクエストを一時的に制限しています。しばらく待ってから再試行してください。",
     CAPTION_FAILED:
       "字幕を取得できませんでした。動画が再生中で、字幕があることを確認して再試行してください。字幕ファイルの読み込みも可能です。",
     VIDEO_CHANGED:
@@ -256,6 +262,7 @@ const subtitleFailures: Record<
       "이 동영상의 자막을 가져올 수 없습니다. YouTube에서 자막을 켜고 몇 초 동안 재생한 후 다시 시도하세요. 계속 실패하면 자막 파일을 가져올 수 있습니다.",
     CAPTION_TIMEOUT:
       "자막을 가져오는 데 너무 오래 걸렸습니다. YouTube에서 자막을 켜고 몇 초 동안 재생한 후 다시 시도하세요. 자막 파일을 가져올 수도 있습니다.",
+    CAPTION_RATE_LIMITED: "YouTube가 자막 요청을 일시적으로 제한했습니다. 잠시 후 다시 시도하세요.",
     CAPTION_FAILED:
       "자막을 가져올 수 없습니다. 동영상이 재생 중이고 자막이 있는지 확인한 후 다시 시도하세요. 자막 파일을 가져올 수도 있습니다.",
     VIDEO_CHANGED:

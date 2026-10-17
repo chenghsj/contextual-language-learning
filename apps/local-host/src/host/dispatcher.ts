@@ -10,7 +10,8 @@ import { handleLessonRequest } from "./lessons";
 import { handleDriveRequest } from "./drive";
 import { createPublicationFlow } from "./publication";
 import { handleAgentRequest } from "./agents";
-import { HostRequestSchema } from "@immersive/core";
+import { HostRequestSchema } from "@contextual/core";
+import { createSpeechHandler } from "./speech";
 import type { HostDispatcherDeps } from "./context";
 
 /** Dispatch validated requests with caller-owned storage, job lifecycle and transport. */
@@ -22,6 +23,7 @@ export function createHostDispatcher({
   customManager,
 }: HostDispatcherDeps) {
   const queue = new GenerationQueue();
+  const speech = createSpeechHandler(reply);
   const {
     deliverDocument,
     finishDocument,
@@ -67,6 +69,7 @@ export function createHostDispatcher({
     const request = parsed.data;
     let customBackupCount = 0;
     try {
+      if (await speech.handle(request)) return;
       if (request.type === "getJobExecution") {
         const job = await custom.deps.repository.getJob(request.jobId);
         const standard = job ? null : await storage.jobs.get(request.jobId);
@@ -184,5 +187,10 @@ export function createHostDispatcher({
     }
   }
 
-  return Object.assign(handle, { interrupt: () => queue.close() });
+  return Object.assign(handle, {
+    interrupt: () => {
+      queue.close();
+      speech.close();
+    },
+  });
 }

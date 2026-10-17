@@ -31,7 +31,11 @@ async function fixture(withBundle = true) {
     join(root, "apps/local-host/scripts/native-host-platform.mjs"),
     join(host, "scripts/native-host-platform.mjs"),
   );
-  if (withBundle) await writeFile(join(host, "dist/native-host.mjs"), bundle);
+  if (withBundle) {
+    await writeFile(join(host, "dist/native-host.mjs"), bundle);
+    await writeFile(join(host, "dist/macos-speech"), "speech helper fixture");
+    await writeFile(join(host, "dist/macos-speech.swift"), "speech helper fixture");
+  }
   const env = {
     ...process.env,
     HOME: home,
@@ -56,7 +60,7 @@ for (const browser of ["chrome", "edge"]) {
         f.home,
         f.env,
       ).path;
-      const lesson = join(f.home, "Documents/Immersive Learning/data-v5/keep.json");
+      const lesson = join(f.home, "Documents/Contextual Language Learning/data-v5/keep.json");
       try {
         await mkdir(join(other, ".."), { recursive: true });
         await writeFile(other, "keep other browser");

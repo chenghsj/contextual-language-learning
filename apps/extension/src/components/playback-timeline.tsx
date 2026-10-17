@@ -11,6 +11,9 @@ type Props = {
   onSeek: (position: number) => void;
 };
 
+const MAX_EXTRAPOLATION_MS = 1000;
+const MAX_SPEED_CORRECTION = 0.1;
+
 /** Animate only the timeline; video status remains the authoritative clock. */
 export function PlaybackTimeline({
   range,
@@ -22,19 +25,59 @@ export function PlaybackTimeline({
   onSeek,
 }: Props) {
   const [displayMs, setDisplayMs] = useState(position);
+  const display = useRef(position);
   const scrubbing = useRef(false);
   const draft = useRef(position);
+  const previousSample = useRef({ position, at: performance.now() });
+  const lastFrameAt = useRef<number | null>(null);
+  const wasAnimating = useRef(false);
   const clamp = (value: number) => Math.max(range.startMs, Math.min(range.endMs, value));
+
+  function updateDisplay(value: number): void {
+    display.current = value;
+    setDisplayMs(value);
+  }
 
   useEffect(() => {
     const sampledAt = performance.now();
+    const elapsed = Math.max(0, sampledAt - previousSample.current.at);
+    const movedBackwards = position < previousSample.current.position;
+    const jumpedForward = position - previousSample.current.position > (elapsed + 300) * rate;
+    const reset = movedBackwards || jumpedForward;
+    previousSample.current = { position, at: sampledAt };
+    const animating = playing && !disabled;
     let frame = 0;
-    if (!scrubbing.current) setDisplayMs(clamp(position));
-    if (playing && !disabled) {
+    if (!scrubbing.current)
+      updateDisplay(
+        reset
+          ? clamp(position)
+          : animating
+            ? clamp(display.current)
+            : Math.max(clamp(display.current), clamp(position)),
+      );
+    if (!wasAnimating.current || reset || lastFrameAt.current === null)
+      lastFrameAt.current = sampledAt;
+    wasAnimating.current = animating;
+    if (animating) {
       const animate = (now: number) => {
-        // Stop extrapolating if the video stalls or status replies stop arriving.
-        if (!scrubbing.current)
-          setDisplayMs(clamp(position + Math.min(300, Math.max(0, now - sampledAt)) * rate));
+        const delta = Math.max(0, now - lastFrameAt.current!);
+        lastFrameAt.current = now;
+        if (!scrubbing.current) {
+          const nominal = display.current + delta * rate;
+          const predicted =
+            position + Math.min(MAX_EXTRAPOLATION_MS, Math.max(0, now - sampledAt)) * rate;
+          // Slew small clock errors instead of stopping or jumping at each poll.
+          const limit = delta * rate * MAX_SPEED_CORRECTION;
+          const correction = Math.max(
+            -limit,
+            Math.min(limit, (predicted - nominal) * Math.min(1, delta / 1000)),
+          );
+          // A missing or stalled source may lead by at most one second.
+          const ceiling = clamp(position + MAX_EXTRAPOLATION_MS * rate);
+          updateDisplay(
+            Math.max(clamp(display.current), Math.min(clamp(nominal + correction), ceiling)),
+          );
+        }
         frame = window.requestAnimationFrame(animate);
       };
       frame = window.requestAnimationFrame(animate);
@@ -68,7 +111,7 @@ export function PlaybackTimeline({
         onChange={event => {
           const next = Number(event.currentTarget.value);
           draft.current = next;
-          setDisplayMs(next);
+          updateDisplay(next);
           if (!scrubbing.current) onSeek(next);
         }}
         onKeyDown={event => {
@@ -77,14 +120,14 @@ export function PlaybackTimeline({
           const direction = event.key === "ArrowLeft" || event.key === "ArrowDown" ? -1 : 1;
           const next = clamp(Number(event.currentTarget.value) + direction * 100);
           draft.current = next;
-          setDisplayMs(next);
+          updateDisplay(next);
           if (!scrubbing.current) onSeek(next);
         }}
         onPointerUp={commit}
         onLostPointerCapture={commit}
         onPointerCancel={() => {
           scrubbing.current = false;
-          setDisplayMs(clamp(position));
+          updateDisplay(clamp(position));
         }}
         onBlur={commit}
       />

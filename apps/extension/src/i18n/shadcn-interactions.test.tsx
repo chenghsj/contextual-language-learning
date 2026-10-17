@@ -1,4 +1,4 @@
-import { HOST_PROTOCOL_VERSION } from "@immersive/core";
+import { HOST_PROTOCOL_VERSION } from "@contextual/core";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { JSDOM } from "jsdom";
@@ -103,22 +103,11 @@ async function search(input: HTMLInputElement, value: string) {
   });
 }
 
-test("Host diagnostics show localized update guidance and distinguish package installs from project updates", async () => {
+test("Host diagnostics offer packaged setup without developer commands", async () => {
   const originalChrome = globalThis.chrome;
-  const copied: string[] = [];
-  const extensionId = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-  const originalClipboard = Object.getOwnPropertyDescriptor(navigator, "clipboard");
   globalThis.chrome = {
-    runtime: { id: extensionId, getManifest: () => ({ version: "0.1.0" }) },
+    runtime: { id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", getManifest: () => ({ version: "0.1.0" }) },
   } as typeof chrome;
-  Object.defineProperty(navigator, "clipboard", {
-    configurable: true,
-    value: {
-      writeText: async (value: string) => {
-        copied.push(value);
-      },
-    },
-  });
   const ui = hostConnectionCopy["zh-TW"];
   const view = await mount(
     <HostConnectionSettings
@@ -134,77 +123,22 @@ test("Host diagnostics show localized update guidance and distinguish package in
     />,
   );
   try {
-    assert.ok(view.container.textContent?.includes("Host 需要更新"));
-    assert.ok(!view.container.textContent?.includes("尚未連線"));
+    assert.ok(view.container.textContent?.includes(ui.updateNeeded));
     assert.ok(view.container.textContent?.includes(ui.protocolMismatch));
-    assert.ok(view.container.textContent?.includes(ui.afterInstall));
-    assert.equal(
-      view.container.querySelector("code")?.textContent,
-      "pnpm build\npnpm host:install " + extensionId,
+    assert.ok(view.container.textContent?.includes(ui.localInstallerSteps));
+    assert.equal(view.container.querySelector("code"), null);
+    assert.equal(view.container.querySelector('[role="combobox"]'), null);
+    assert.doesNotMatch(
+      view.container.textContent ?? "",
+      /pnpm|Node\.js|scripts\/|專案根目錄|擴充功能 ID/,
     );
-    assert.ok(view.container.textContent?.includes(ui.projectFolder));
     assert.ok(
-      ![...view.container.querySelectorAll("button")].some(button =>
-        button.textContent?.includes(ui.releases),
-      ),
+      !view.container.textContent?.includes(ui.downloadInstaller),
+      "unpublished local builds do not link to old online installers",
     );
-    const initialMethod = view.container.querySelector('[aria-label="安裝方式"]')!;
-    await key(initialMethod, "Enter");
-    const packageOption = [...document.querySelectorAll('[role="option"]')].find(
-      option => option.textContent === ui.packageInstall,
-    )!;
-    await key(packageOption, "Enter");
-    assert.equal(
-      view.container.querySelector("code")?.textContent,
-      "node scripts/install-host.mjs " + extensionId,
-    );
-    assert.ok(view.container.textContent?.includes(ui.packageFolder));
-    assert.ok(
-      [...view.container.querySelectorAll("button")].some(button =>
-        button.textContent?.includes(ui.releases),
-      ),
-    );
-    const method = view.container.querySelector('[aria-label="安裝方式"]')!;
-    await key(method, "Enter");
-    const source = [...document.querySelectorAll('[role="option"]')].find(
-      option => option.textContent === ui.sourceInstall,
-    )!;
-    assert.ok(source);
-    await key(source, "Enter");
-    assert.equal(
-      view.container.querySelector("code")?.textContent,
-      "pnpm build\npnpm host:install " + extensionId,
-    );
-    assert.ok(view.container.textContent?.includes(ui.sourceSteps));
-    assert.ok(
-      ![...view.container.querySelectorAll("button")].some(button =>
-        button.textContent?.includes(ui.releases),
-      ),
-    );
-    await key(view.container.querySelector('[aria-label="瀏覽器"]')!, "Enter");
-    const edge = [...document.querySelectorAll('[role="option"]')].find(
-      option => option.textContent === "Edge",
-    )!;
-    await key(edge, "Enter");
-    const expected = "pnpm build\npnpm host:install " + extensionId + " --browser edge";
-    assert.equal(view.container.querySelector("code")?.textContent, expected);
-    await click(
-      [...view.container.querySelectorAll("button")].find(
-        button => button.textContent === ui.copyCommand,
-      )!,
-    );
-    assert.deepEqual(copied, [expected]);
-    await click(
-      [...view.container.querySelectorAll("button")].find(
-        button => button.textContent === ui.copyID,
-      )!,
-    );
-    assert.deepEqual(copied, [expected, extensionId]);
   } finally {
     await view.close();
     globalThis.chrome = originalChrome;
-    if (originalClipboard) Object.defineProperty(navigator, "clipboard", originalClipboard);
-    else Reflect.deleteProperty(navigator, "clipboard");
   }
 });
 
@@ -247,20 +181,22 @@ test("Host checks show progress, prevent duplicate clicks and retain the complet
   const view = await mount(<HostSettings />);
   try {
     const button = [...view.container.querySelectorAll("button")].find(
-      button => button.textContent === ui.check,
+      button => button.getAttribute("aria-label") === ui.check,
     )!;
+    assert.ok(button, "Host check stays available by its accessible name");
+    const buttonFeedback = () => button.querySelector('[aria-live="polite"]')?.textContent;
     await click(button);
     assert.equal(calls, 1);
     assert.equal(button.disabled, true);
     assert.equal(button.getAttribute("aria-busy"), "true");
-    assert.equal(button.textContent, ui.checking);
+    assert.equal(buttonFeedback(), ui.checking);
     assert.ok(button.querySelector('svg[aria-hidden="true"]'));
     assert.equal(view.container.querySelector('[role="status"]')?.textContent, ui.checking);
     await click(button);
     assert.equal(calls, 1, "a pending check must not accept another click");
     await act(async () => complete(true));
     assert.equal(button.disabled, false);
-    assert.equal(button.textContent, ui.check);
+    assert.equal(buttonFeedback(), ui.check);
     assert.equal(view.container.querySelector('[role="status"]')?.textContent, ui.connected);
     assert.ok(view.container.textContent?.includes(ui.lastChecked));
     assert.equal(
@@ -281,31 +217,14 @@ test("Host checks show progress, prevent duplicate clicks and retain the complet
 });
 
 for (const connected of [true, false]) {
-  test(`Host uninstall guidance remains available when ${connected ? "connected" : "disconnected"} and copies one command for the selected browser`, async () => {
+  test(`Host uninstall uses Setup when connected=${connected}`, async () => {
     const originalChrome = globalThis.chrome;
-    const originalClipboard = Object.getOwnPropertyDescriptor(navigator, "clipboard");
-    const copied: string[] = [];
-    const opened: string[] = [];
-    let checks = 0;
     globalThis.chrome = {
       runtime: {
         id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         getManifest: () => ({ version: "0.1.0" }),
       },
-      tabs: {
-        create: async ({ url }: { url: string }) => {
-          opened.push(url);
-        },
-      },
-    } as unknown as typeof chrome;
-    Object.defineProperty(navigator, "clipboard", {
-      configurable: true,
-      value: {
-        writeText: async (value: string) => {
-          copied.push(value);
-        },
-      },
-    });
+    } as typeof chrome;
     const ui = hostConnectionCopy["zh-TW"];
     const view = await mount(
       <HostConnectionSettings
@@ -317,65 +236,19 @@ for (const connected of [true, false]) {
         protocolVersion={HOST_PROTOCOL_VERSION}
         busy={false}
         error=""
-        onCheck={() => {
-          checks++;
-        }}
+        onCheck={() => {}}
       />,
     );
     try {
       const section = view.container.querySelector('[data-ui="hostUninstall"]')!;
-      const trigger = section.querySelector("button")!;
-      assert.ok(trigger.textContent?.includes(ui.uninstall));
-      assert.equal(trigger.getAttribute("aria-expanded"), "false");
+      await click(section.querySelector("button")!);
+      assert.ok(section.textContent?.includes(ui.installerUninstall));
+      assert.ok(section.textContent?.includes(ui.uninstallEffects));
       assert.equal(section.querySelector("code"), null);
-      await click(trigger);
-      for (const copy of [ui.uninstallSteps, ui.uninstallEffects]) {
-        assert.ok(section.textContent?.includes(copy));
-      }
-      assert.equal(section.querySelector("code")?.textContent, "node scripts/uninstall-host.mjs");
-      const copyButton = [...section.querySelectorAll("button")].find(
-        button => button.textContent === ui.copyUninstallCommand,
-      )!;
-      await click(copyButton);
-      assert.deepEqual(copied, ["node scripts/uninstall-host.mjs"]);
-      assert.equal(section.querySelector('[role="status"]')?.textContent, ui.copied);
-      await key(section.querySelector(`[aria-label="${ui.uninstallBrowser}"]`)!, "Enter");
-      const edge = [...document.querySelectorAll('[role="option"]')].find(
-        option => option.textContent === "Edge",
-      )!;
-      await key(edge, "Enter");
-      assert.equal(
-        section.querySelector("code")?.textContent,
-        "node scripts/uninstall-host.mjs --browser edge",
-      );
-      assert.equal(
-        section.querySelector('[role="status"]'),
-        null,
-        "changing commands clears stale copy feedback",
-      );
-      await click(copyButton);
-      assert.equal(copied.at(-1), "node scripts/uninstall-host.mjs --browser edge");
-      assert.equal(section.querySelectorAll('[role="combobox"]').length, 1);
-      assert.equal(section.querySelector(`[aria-label="${ui.commandLocation}"]`), null);
-      assert.ok(
-        ![...section.querySelectorAll("button")].some(button =>
-          button.textContent?.includes(ui.releases),
-        ),
-      );
-      assert.deepEqual(opened, []);
-      await key(section.querySelector(`[aria-label="${ui.uninstallBrowser}"]`)!, "Enter");
-      const chromium = [...document.querySelectorAll('[role="option"]')].find(
-        option => option.textContent === "Chromium",
-      )!;
-      await key(chromium, "Enter");
-      await click(copyButton);
-      assert.equal(copied.at(-1), "node scripts/uninstall-host.mjs --browser chromium");
-      assert.equal(checks, 0, "copying instructions must not run a Host operation");
+      assert.equal(section.querySelector('[role="combobox"]'), null);
     } finally {
       await view.close();
       globalThis.chrome = originalChrome;
-      if (originalClipboard) Object.defineProperty(navigator, "clipboard", originalClipboard);
-      else Reflect.deleteProperty(navigator, "clipboard");
     }
   });
 }
@@ -732,50 +605,3 @@ test("video recovery toast persists, contains reload, shows busy state and suppo
     await mounted.close();
   }
 });
-
-for (const [os, userAgent, prerequisite] of [
-  ["Windows", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0", "windowsRequirements"],
-  ["Linux", "Mozilla/5.0 (X11; Linux x86_64) Chromium/130.0", "linuxRequirements"],
-] as const) {
-  test(`Host setup shows the ${os} prerequisites and retains commands for that browser`, async () => {
-    const originalChrome = globalThis.chrome;
-    const originalUA = Object.getOwnPropertyDescriptor(navigator, "userAgent");
-    globalThis.chrome = {
-      runtime: {
-        id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        getManifest: () => ({ version: "0.1.0" }),
-      },
-    } as typeof chrome;
-    Object.defineProperty(navigator, "userAgent", { configurable: true, value: userAgent });
-    const view = await mount(
-      <HostConnectionSettings
-        locale="zh-TW"
-        connected={false}
-        checked
-        sdkMode={false}
-        version={null}
-        protocolVersion={null}
-        busy={false}
-        error=""
-        onCheck={() => {}}
-      />,
-    );
-    try {
-      const ui = hostConnectionCopy["zh-TW"];
-      assert.equal(
-        view.container.querySelector('[data-ui="host-os-requirements"]')?.textContent,
-        ui[prerequisite],
-      );
-      assert.equal(
-        view.container.querySelector("code")?.textContent,
-        "pnpm build\npnpm host:install aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
-          (os === "Linux" ? " --browser chromium" : ""),
-      );
-    } finally {
-      await view.close();
-      globalThis.chrome = originalChrome;
-      if (originalUA) Object.defineProperty(navigator, "userAgent", originalUA);
-      else Reflect.deleteProperty(navigator, "userAgent");
-    }
-  });
-}

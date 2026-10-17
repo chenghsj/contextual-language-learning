@@ -2,6 +2,10 @@ import { readSource } from "../lib/source-contract";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { JSDOM } from "jsdom";
+import { ActionFeedbackButton } from "../components/action-feedback-button";
 
 const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
 const button = await readSource(new URL("../components/ui/button.tsx", import.meta.url));
@@ -110,7 +114,6 @@ test("button variants and utility feedback use theme tokens instead of the old f
     assert.ok(button.includes(value), "button variant missing " + value);
   assert.doesNotMatch(button, /bg-red-600|bg-red-700/);
   assert.doesNotMatch(css, /#(?:f8faf9|17231f|e7f4ec|f3c0b5|fff0ec|e9f4fb|79b18d)/i);
-  assert.ok(app.includes("var(--primary)_35%"));
   assert.ok(sonner.includes("group-[.toaster]:bg-background"));
   assert.doesNotMatch(sonner, /color-mix|--border-radius|--width|--error-bg/);
   assert.match(css, /@layer base \{/);
@@ -122,16 +125,28 @@ test("button variants and utility feedback use theme tokens instead of the old f
 });
 
 test("primary Side Panel action utilities keep readable labels and the warm palette", () => {
-  const generation = app.match(/<Button className="([^"]+)" onClick=\{startGeneration\}/)?.[1];
-  const subtitles = app.match(
-    /<Button size="sm" className="([^"]+)"[\s\S]*?onClick=\{\(\) => void fetchCurrentSubtitles\(\)\}/,
-  )?.[1];
-  assert.ok(generation && subtitles, "generation and subtitle actions remain present");
-  assert.match(generation, /text-xs font-semibold/);
-  for (const classes of [generation, subtitles]) {
-    assert.match(classes, /whitespace-normal/);
-    assert.match(classes, /wrap-anywhere/);
-    assert.doesNotMatch(classes, /\bbg-(?:red|green)/);
+  const dom = new JSDOM(
+    renderToStaticMarkup(
+      createElement(ActionFeedbackButton, {
+        label: "Fetch subtitles",
+        busyLabel: "Fetching subtitles",
+        busy: true,
+        success: false,
+        disabled: false,
+        onClick: () => {},
+      }),
+    ),
+  );
+  try {
+    const action = dom.window.document.querySelector("button")!;
+    assert.equal(action.getAttribute("aria-label"), "Fetch subtitles");
+    assert.equal(action.getAttribute("aria-busy"), "true");
+    assert.equal(action.disabled, true);
+    assert.ok(action.classList.contains("whitespace-normal"));
+    assert.ok(action.classList.contains("text-xs"));
+    assert.doesNotMatch(action.className, /\bbg-(?:red|green)/);
+  } finally {
+    dom.window.close();
   }
   assert.match(button, /sm: "h-8[^"\n]*text-xs/);
   assert.equal(light.primary, "oklch(0.6171 0.1375 39.0427)");

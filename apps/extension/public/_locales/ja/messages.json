@@ -3,7 +3,7 @@
     "message": "Contextual Language Learning"
   },
   "extensionDescription": {
-    "message": "動画の字幕をAIでレベルに合った教材にし、会話の文脈理解と文ごとの繰り返し再生で学べます。"
+    "message": "動画の字幕からAIで学習コンテンツを作成。教材、要約、語彙、独自のプロンプトに対応し、元の動画で練習できます。"
   },
   "actionTitle": {
     "message": "Contextual Language Learningを開く"

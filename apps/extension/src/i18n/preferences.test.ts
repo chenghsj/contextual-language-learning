@@ -11,7 +11,7 @@ import {
   learningLanguageOptions,
   explanationLanguageName,
 } from "./preferences";
-import { LEARNING_LANGUAGES } from "@immersive/core";
+import { LEARNING_LANGUAGES } from "@contextual/core";
 
 test("browser language resolves Chinese script and supported locales", () => {
   assert.equal(localeFromBrowser("zh-TW"), "zh-TW");

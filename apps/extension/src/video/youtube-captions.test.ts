@@ -1,7 +1,7 @@
 import { readSource } from "../lib/source-contract";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseSubtitles } from "@immersive/core";
+import { parseSubtitles } from "@contextual/core";
 import {
   allowedYouTubeCaptionUrl,
   chooseYouTubeCaptionTrack,
@@ -220,7 +220,10 @@ test("a captured player response succeeds even when the unsigned base URL is emp
     { language: "en", kind: "asr", cues: 1 },
   );
   assert.equal(parsePlayerYouTubeCaptionResponse(signedUrl, body, "AAAAAAAAAAA"), null);
-  assert.equal(parsePlayerYouTubeCaptionResponse(signedUrl + "&tlang=ja", body, videoId), null);
+  const translated = parsePlayerYouTubeCaptionResponse(signedUrl + "&tlang=ja", body, videoId);
+  assert.equal(translated?.language, "ja");
+  assert.equal(translated?.sourceLanguageCode, "en");
+  assert.equal(parsePlayerYouTubeCaptionResponse(signedUrl + "&tlang=", body, videoId), null);
   assert.equal(
     parsePlayerYouTubeCaptionResponse(
       signedUrl.replace("youtube.com", "youtube.com.evil.test"),
@@ -388,4 +391,68 @@ test("subtitle language availability uses exact/regional track matching without 
     )?.[0] ?? "",
     /baseUrl:\s*track\.baseUrl/,
   );
+});
+test("Chinese caption selection recognizes script labels and never crosses scripts", () => {
+  const tracks = [
+    { baseUrl: "https://www.youtube.com/api/timedtext", languageCode: "zh-Hans" },
+    { baseUrl: "https://www.youtube.com/api/timedtext", languageCode: "zh-Hant" },
+  ];
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "zh-TW")?.languageCode, "zh-Hant");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "zh-CN")?.languageCode, "zh-Hans");
+  assert.equal(chooseYouTubeCaptionTrack(tracks.slice(0, 1), "zh-TW"), null);
+});
+
+test("offer only player-advertised translations from a translatable source, preserving its signed URL", () => {
+  const baseUrl =
+    "https://www.youtube.com/api/timedtext?v=" + videoId + "&lang=ja&kind=asr&signature=private";
+  const renderer = {
+    captionTracks: [{ baseUrl, languageCode: "ja", kind: "asr", isTranslatable: true }],
+    translationLanguages: [
+      { languageCode: "en" },
+      { languageCode: "ko" },
+      { languageCode: "zh-Hant" },
+      { languageCode: "zh-Hans" },
+    ],
+  };
+  const response = {
+    videoDetails: { videoId },
+    captions: { playerCaptionsTracklistRenderer: renderer },
+  };
+  const tracks = readYouTubeCaptionTracks(response, videoId);
+  const english = chooseYouTubeCaptionTrack(tracks, "en");
+  assert.equal(english?.languageCode, "en");
+  assert.equal(english?.sourceLanguageCode, "ja");
+  const url = new URL(english!.baseUrl);
+  assert.equal(url.searchParams.get("lang"), "ja");
+  assert.equal(url.searchParams.get("tlang"), "en");
+  assert.equal(url.searchParams.get("signature"), "private");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "ja")?.sourceLanguageCode, undefined);
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "zh-TW")?.languageCode, "zh-Hant");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "zh-CN")?.languageCode, "zh-Hans");
+  assert.equal(chooseYouTubeCaptionTrack(tracks, "fr"), null);
+  renderer.captionTracks[0].isTranslatable = false;
+  assert.equal(chooseYouTubeCaptionTrack(readYouTubeCaptionTracks(response, videoId), "en"), null);
+});
+
+test("native regional captions take precedence over exact-language auto-translations", () => {
+  const baseUrl = "https://www.youtube.com/api/timedtext?v=" + videoId;
+  const native = { baseUrl, languageCode: "en-GB", kind: "asr" };
+  assert.equal(
+    chooseYouTubeCaptionTrack(
+      [{ baseUrl: baseUrl + "&tlang=en", languageCode: "en", sourceLanguageCode: "ja" }, native],
+      "en",
+    ),
+    native,
+  );
+});
+
+test("observed translation URLs match both output and source language and never replace native captions", () => {
+  const base = "https://www.youtube.com/api/timedtext?v=" + videoId;
+  const english = base + "&lang=en&pot=native";
+  const translation = base + "&lang=ja&tlang=en&pot=translated";
+  const otherSource = base + "&lang=ko&tlang=en&pot=other";
+  const wrongTarget = base + "&lang=ja&tlang=ko&pot=other";
+  const urls = [english, translation, otherSource, wrongTarget];
+  assert.deepEqual(observedYouTubeCaptionUrls(urls, videoId, "en"), [english]);
+  assert.deepEqual(observedYouTubeCaptionUrls(urls, videoId, "en", "ja"), [translation]);
 });

@@ -1,25 +1,12 @@
 import { Disclosure } from "./disclosure";
-import React, { useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import React from "react";
+import { ActionFeedbackButton } from "./action-feedback-button";
 import type { UiLocale } from "../i18n/messages";
-import { HOST_PROTOCOL_VERSION } from "@immersive/core";
+import { HOST_PROTOCOL_VERSION } from "@contextual/core";
 import { hostConnectionCopy } from "../i18n/host-connection";
 import { Button } from "./ui/button";
-import { SelectField } from "./ui/select";
 
-type OS = "macos" | "windows" | "linux";
-type Browser = "chrome" | "edge" | "chromium";
-
-function detectedOS(): OS {
-  const ua = navigator.userAgent;
-  return /Windows/i.test(ua) ? "windows" : /Macintosh|Mac OS/i.test(ua) ? "macos" : "linux";
-}
-function detectedBrowser(): Browser {
-  const ua = navigator.userAgent;
-  return /Edg\//.test(ua) ? "edge" : /Chromium/.test(ua) ? "chromium" : "chrome";
-}
-
-/** Browser registration and install commands use the current extension ID. */
+/** Public setup uses a packaged installer; developer commands live in documentation. */
 export function HostConnectionSettings({
   locale,
   connected,
@@ -29,6 +16,7 @@ export function HostConnectionSettings({
   protocolVersion,
   busy,
   lastCheckedAt = null,
+  checkSuccess = false,
   error,
   onCheck,
 }: {
@@ -40,35 +28,15 @@ export function HostConnectionSettings({
   protocolVersion: number | null;
   busy: boolean;
   lastCheckedAt?: number | null;
+  checkSuccess?: boolean;
   error: string;
   onCheck: () => void;
 }) {
   const ui = hostConnectionCopy[locale];
-  const [os, setOS] = useState<OS>(detectedOS);
-  const [browser, setBrowser] = useState<Browser>(detectedBrowser);
-  const [copied, setCopied] = useState("");
-  const [installMethod, setInstallMethod] = useState<"package" | "source">("source");
-  const [uninstallCopied, setUninstallCopied] = useState("");
-  const extensionId = chrome.runtime.id;
+  const downloadUrl = import.meta.env?.VITE_HOST_SETUP_DOWNLOAD_URL ?? "";
   const versionMatches = version === chrome.runtime.getManifest().version;
   const protocolMatches = protocolVersion === HOST_PROTOCOL_VERSION;
   const compatible = versionMatches && protocolMatches && sdkMode;
-  const command =
-    (installMethod === "package"
-      ? "node scripts/install-host.mjs "
-      : "pnpm build\npnpm host:install ") +
-    extensionId +
-    (browser === "chrome" ? "" : " --browser " + browser);
-  const uninstallCommand =
-    "node scripts/uninstall-host.mjs" + (browser === "chrome" ? "" : " --browser " + browser);
-  async function copy(value: string, setFeedback = setCopied): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(value);
-      setFeedback(ui.copied);
-    } catch {
-      setFeedback(ui.error);
-    }
-  }
   return (
     <section
       className="grid min-w-0 gap-2 rounded-[var(--radius)] border border-border px-[11px] py-[10px]"
@@ -124,98 +92,17 @@ export function HostConnectionSettings({
       {checked && (!connected || !compatible) && (
         <div className="grid min-w-0 gap-3">
           <strong className="text-xs">{ui.install}</strong>
-          <label className="grid gap-1 text-xs">
-            {ui.installMethod}
-            <SelectField
-              ariaLabel={ui.installMethod}
-              value={installMethod}
-              onValueChange={value => {
-                if (value === "package" || value === "source") {
-                  setInstallMethod(value);
-                  setCopied("");
-                }
-              }}
-              options={[
-                { value: "package", label: ui.packageInstall },
-                { value: "source", label: ui.sourceInstall },
-              ]}
-            />
-          </label>
-          {installMethod === "package" && (
-            <label className="grid gap-1 text-xs">
-              {ui.chooseOS}
-              <SelectField
-                ariaLabel={ui.chooseOS}
-                value={os}
-                onValueChange={value => setOS(value as OS)}
-                options={[
-                  { value: "macos", label: "macOS" },
-                  { value: "windows", label: "Windows" },
-                  { value: "linux", label: "Linux" },
-                ]}
-              />
-            </label>
-          )}
-          <label className="grid gap-1 text-xs">
-            {ui.chooseBrowser}
-            <SelectField
-              ariaLabel={ui.chooseBrowser}
-              value={browser}
-              onValueChange={value => {
-                setBrowser(value as Browser);
-                setCopied("");
-                setUninstallCopied("");
-              }}
-              options={[
-                { value: "chrome", label: "Chrome" },
-                { value: "edge", label: "Edge" },
-                { value: "chromium", label: "Chromium" },
-              ]}
-            />
-          </label>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            {installMethod === "package" ? ui.steps : ui.sourceSteps}
+            {downloadUrl ? ui.installerSteps : ui.localInstallerSteps}
           </p>
-          {os !== "macos" && (
-            <p
-              className="text-xs leading-relaxed text-muted-foreground"
-              data-ui="host-os-requirements"
-            >
-              {os === "windows" ? ui.windowsRequirements : ui.linuxRequirements}
-            </p>
-          )}
-          {installMethod === "package" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                void chrome.tabs.create({
-                  url: "https://github.com/chenghsj/immersive-language-learning/releases",
-                })
-              }
-            >
-              {ui.releases} · {os}
+          {downloadUrl && (
+            <Button size="sm" onClick={() => void chrome.tabs.create({ url: downloadUrl })}>
+              {connected ? ui.downloadUpdate : ui.downloadInstaller}
             </Button>
           )}
-          <div className="grid min-w-0 gap-1">
-            <p className="text-xs font-semibold">
-              {ui.commandLocation}:{" "}
-              {installMethod === "package" ? ui.packageFolder : ui.projectFolder}
-            </p>
-            <code className="min-w-0 select-all whitespace-pre-wrap break-all border border-border p-2 text-xs">
-              {command}
-            </code>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => void copy(extensionId)}>
-                {ui.copyID}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => void copy(command)}>
-                {ui.copyCommand}
-              </Button>
-            </div>
-          </div>
-          <p className="text-xs leading-relaxed text-muted-foreground">{ui.afterInstall}</p>
-          <p className="text-xs text-muted-foreground">{ui.manual}</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {ui.installerAfterInstall}
+          </p>
         </div>
       )}
       {error && (
@@ -223,20 +110,17 @@ export function HostConnectionSettings({
           {error}
         </p>
       )}
-      {copied && (
-        <p className="text-xs text-muted-foreground" role="status">
-          {copied}
-        </p>
-      )}
-      <Button variant="outline" size="sm" disabled={busy} aria-busy={busy} onClick={onCheck}>
-        {busy && (
-          <LoaderCircle
-            className="size-3.5 animate-spin motion-reduce:animate-none"
-            aria-hidden="true"
-          />
-        )}
-        {busy ? ui.checking : ui.check}
-      </Button>
+      <ActionFeedbackButton
+        label={ui.check}
+        busyLabel={ui.checking}
+        successLabel={ui.connected}
+        busy={busy}
+        success={checkSuccess && connected && compatible}
+        disabled={busy}
+        feedbackKey={lastCheckedAt ?? undefined}
+        onClick={onCheck}
+        data-ui="host-check-button"
+      />
       {lastCheckedAt !== null && !busy && (
         <p className="text-xs text-muted-foreground" role="status">
           {ui.lastChecked}:{" "}
@@ -251,40 +135,8 @@ export function HostConnectionSettings({
         data-ui="hostUninstall"
       >
         <div className="grid min-w-0 gap-2 pt-2">
-          <p className="text-xs leading-relaxed">{ui.uninstallSteps}</p>
+          <p className="text-xs leading-relaxed">{ui.installerUninstall}</p>
           <p className="text-xs leading-relaxed text-muted-foreground">{ui.uninstallEffects}</p>
-          <label className="grid gap-1 text-xs">
-            {ui.uninstallBrowser}
-            <SelectField
-              ariaLabel={ui.uninstallBrowser}
-              value={browser}
-              onValueChange={value => {
-                setBrowser(value as Browser);
-                setCopied("");
-                setUninstallCopied("");
-              }}
-              options={[
-                { value: "chrome", label: "Chrome" },
-                { value: "edge", label: "Edge" },
-                { value: "chromium", label: "Chromium" },
-              ]}
-            />
-          </label>
-          <code className="min-w-0 select-all whitespace-pre-wrap break-all border border-border p-2 text-xs">
-            {uninstallCommand}
-          </code>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void copy(uninstallCommand, setUninstallCopied)}
-          >
-            {ui.copyUninstallCommand}
-          </Button>
-          {uninstallCopied && (
-            <p className="text-xs text-muted-foreground" role="status">
-              {uninstallCopied}
-            </p>
-          )}
         </div>
       </Disclosure>
     </section>

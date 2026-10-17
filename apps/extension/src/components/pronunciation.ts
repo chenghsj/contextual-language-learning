@@ -1,12 +1,20 @@
-import type { LearningLanguage, PronunciationSegment } from "@immersive/core";
+import {
+  validPronunciationReading,
+  type LearningLanguage,
+  type PronunciationSegment,
+} from "@contextual/core";
 
 export type PronunciationMode = "off" | "native" | "roman" | "ipa";
 
 export function pronunciationModes(language: LearningLanguage): readonly PronunciationMode[] {
+  if (language === "zh-TW") return ["native", "off"];
+  if (language === "zh-CN") return ["roman", "off"];
   return language === "ja" || language === "ko" ? ["native", "roman", "off"] : ["ipa", "off"];
 }
 
 export function defaultPronunciationMode(language: LearningLanguage): PronunciationMode {
+  if (language === "zh-TW") return "native";
+  if (language === "zh-CN") return "roman";
   return language === "ja" || language === "ko" ? "native" : "ipa";
 }
 
@@ -177,6 +185,11 @@ export function displayReading(
   reading: string | undefined,
 ): string | null {
   if (!reading || mode === "off") return null;
+  if (language === "zh-TW" || language === "zh-CN")
+    return mode === defaultPronunciationMode(language) &&
+      validPronunciationReading(reading, language)
+      ? reading
+      : null;
   if (mode === "native" && (language === "ja" || language === "ko")) return reading;
   if (mode === "roman")
     return language === "ja"

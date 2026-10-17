@@ -7,11 +7,13 @@ import {
   type HostMessage,
   type LearningDocument,
   type DuplicateMatch,
-} from "@immersive/core";
+  type JobSummary,
+} from "@contextual/core";
 import { getDocument, getCustomResource, openHostStream, type HostStream } from "./host-client";
 import { CustomChunkAssembler } from "./custom-chunks";
 import { DocumentChunkAssembler } from "./document-chunks";
 import type { GenerationControllerState } from "./generation-controller";
+import { CancellationTracker, type CancellationState } from "./cancellation-tracker";
 
 export type GenerationInput = GenerationRequest | CustomGenerationRequest;
 const isCustom = (input: GenerationInput): input is CustomGenerationRequest =>
@@ -20,6 +22,7 @@ export type GenerationState = {
   active: GenerationControllerState["active"];
   queue?: GenerationControllerState["queue"];
   connection?: GenerationControllerState["connection"];
+  cancellations?: CancellationState;
   lastJobId: string | null;
   checking: boolean;
   submitting?: boolean;
@@ -29,6 +32,7 @@ export type GenerationEvent =
   | { type: "state"; state: GenerationState }
   | { type: "document"; document: LearningDocument }
   | { type: "customDocument"; document: CustomDocument }
+  | { type: "admitted"; job: JobSummary }
   | HostMessage;
 
 function freezeRequest<T>(value: T): T {
@@ -55,6 +59,7 @@ export class GenerationSession {
   private chunks = new Map<string, DocumentChunkAssembler>();
   private requests = new Map<string, { kind: "standard" | "custom"; jobId: string }>();
   private delivered = new Set<string>();
+  private cancellations = new CancellationTracker(state => this.update({ cancellations: state }));
   constructor(private runtime: typeof chrome.runtime = chrome.runtime) {}
   subscribe(listener: (event: GenerationEvent) => void): () => void {
     this.listeners.add(listener);
@@ -75,6 +80,7 @@ export class GenerationSession {
     if (this.port) return this.port;
     const port = openHostStream(
       message => {
+        if (message.type !== "generationState" && this.cancellations.receive(message)) return;
         if (message.type === "generationState") {
           const active = message.active;
           for (const run of [active, ...(message.queue ?? [])]) {
@@ -116,12 +122,24 @@ export class GenerationSession {
         ) {
           this.awaitingAdmission = null;
           this.update({ checking: false, submitting: false });
+          if (
+            message.type === "job" &&
+            message.job.id === message.id &&
+            (message.job.status === "queued" || message.job.status === "running")
+          ) {
+            this.emit({ type: "admitted", job: message.job });
+          }
         }
         if (message.type === "job") {
           this.emit(message);
           return;
         }
         if (!this.requests.has(message.id)) return;
+        if (
+          message.type === "error" &&
+          this.cancellations.wasCancelled(this.requests.get(message.id)!.jobId)
+        )
+          return;
         if (message.type === "result") this.deliver(message.id, message.document);
         else if (message.type === "documentChunk") {
           try {
@@ -150,6 +168,7 @@ export class GenerationSession {
       error => {
         if (this.port !== port) return;
         this.port = null;
+        this.cancellations.disconnect();
         const id = this.state.active?.requestId ?? this.preflight?.id;
         this.preflight = null;
         this.awaitingAdmission = null;
@@ -294,27 +313,26 @@ export class GenerationSession {
     this.connect().send({ type: kind === "custom" ? "resumeCustom" : "resume", id, jobId });
   }
   cancelJob(jobId: string, kind: "standard" | "custom" = "standard") {
-    this.connect().send({
-      type: kind === "custom" ? "cancelCustom" : "cancel",
-      id: crypto.randomUUID(),
-      jobId,
-    });
+    const request = this.cancellations.request(jobId, kind);
+    if (!request) return;
+    try {
+      this.connect().send(request);
+    } catch {
+      this.cancellations.unconfirmed(jobId);
+    }
   }
   cancel() {
     if (this.state.active)
-      this.connect().send({
-        type:
-          this.state.active.kind === "custom" || this.state.active.summary?.kind === "custom"
-            ? "cancelCustom"
-            : "cancel",
-        id: crypto.randomUUID(),
-        jobId: this.state.active.jobId,
-      });
+      this.cancelJob(
+        this.state.active.jobId,
+        this.state.active.kind ?? this.state.active.summary?.kind ?? "standard",
+      );
   }
   resumeBackups() {
     this.connect().send({ type: "resumeBackups", id: crypto.randomUUID() });
   }
   dispose() {
+    this.cancellations.dispose();
     const port = this.port;
     this.port = null;
     this.preflight = null;

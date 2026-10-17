@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseSubtitles } from "@immersive/core";
+import { JSDOM } from "jsdom";
+import { parseSubtitles } from "@contextual/core";
 import {
   allowedNetflixSubtitleUrl,
   formatVttClock,
@@ -9,6 +10,43 @@ import {
   subtitleClockMs,
   subtitleUrlFromTrack,
 } from "./netflix-subtitles";
+
+test("Netflix TTML ruby styles survive XML to VTT to source cues", () => {
+  const dom = new JSDOM();
+  const xml = `<tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+    <head><styling>
+      <style xml:id="ruby" tts:ruby="container"/>
+      <style xml:id="base" tts:ruby="base"/>
+      <style xml:id="reading" tts:ruby="text"/>
+      <style xml:id="below" style="reading" tts:rubyPosition="after"/>
+    </styling></head>
+    <body><div><p begin="10s" end="12s">ヒカルの漫画 <span style="ruby"><span style="base">面白</span><span style="below">おもしれ</span></span>え～</p></div></body>
+  </tt>`;
+  const [cue] = parseSubtitles(
+    normalizeNetflixTimedText(xml, value =>
+      new dom.window.DOMParser().parseFromString(value, "application/xml"),
+    ),
+  );
+  assert.equal(cue.originalText, "ヒカルの漫画 面白え～");
+  assert.deepEqual(cue.ruby, [{ start: 7, end: 9, reading: "おもしれ", position: "under" }]);
+  assert.equal(cue.startMs, 10_000);
+  assert.equal(cue.endMs, 12_000);
+});
+
+test("Netflix TTML grouped ruby pairs and XML literal text stay aligned", () => {
+  const dom = new JSDOM();
+  const xml = `<tt xmlns:tts="http://www.w3.org/ns/ttml#styling"><body><div><p begin="1s" end="2s">&lt;例&gt; <span tts:ruby="container"><span tts:ruby="baseContainer"><span tts:ruby="base">赤</span><span tts:ruby="base">福</span></span><span tts:ruby="textContainer"><span tts:ruby="text">あか</span><span tts:ruby="text">ふく</span></span></span> &amp; welcome</p></div></body></tt>`;
+  const [cue] = parseSubtitles(
+    normalizeNetflixTimedText(xml, value =>
+      new dom.window.DOMParser().parseFromString(value, "application/xml"),
+    ),
+  );
+  assert.equal(cue.originalText, "<例> 赤福 & welcome");
+  assert.deepEqual(cue.ruby, [
+    { start: 4, end: 5, reading: "あか", position: "over" },
+    { start: 5, end: 6, reading: "ふく", position: "over" },
+  ]);
+});
 
 test("only existing HTTPS Netflix caption endpoints are used", () => {
   assert.equal(allowedNetflixSubtitleUrl("https://a.nflxvideo.net/timedtext.vtt?token=abc"), true);

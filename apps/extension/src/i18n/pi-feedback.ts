@@ -5,6 +5,13 @@ import { contextualReaderMessages } from "./contextual-reader";
 import { needsVideoReaderReload } from "../video/reader-health";
 
 const copy = {
+  retired: [
+    "This lesson version is no longer supported. Generate a new lesson.",
+    "此教材版本已停止支援，請重新生成",
+    "此教材版本已停止支持，请重新生成",
+    "この教材のバージョンはサポートされていません。教材を再生成してください。",
+    "이 학습 자료 버전은 더 이상 지원되지 않습니다. 새로 생성하세요.",
+  ],
   details: ["Technical details", "查看詳細資訊", "查看详细信息", "詳細情報", "상세 정보 보기"],
   videoReload: [
     "Unable to connect to the video tab. Refresh that video tab, then try again.",
@@ -42,12 +49,33 @@ const copy = {
     "AI モデルを読み込めません。サービス接続を確認して更新してください。",
     "AI 모델을 불러올 수 없습니다. 서비스 연결을 확인하고 새로고침하세요.",
   ],
+  modelRefresh: [
+    "Unable to refresh the model list. Existing models remain selectable; refresh again later.",
+    "模型清單更新失敗，仍可選擇現有模型。請稍後重新整理。",
+    "模型列表更新失败，仍可选择现有模型。请稍后刷新。",
+    "モデル一覧を更新できませんでした。既存のモデルは選択できます。後でもう一度更新してください。",
+    "모델 목록을 새로고침하지 못했습니다. 기존 모델은 계속 선택할 수 있습니다. 나중에 다시 새로고침하세요.",
+  ],
+  modelAccess: [
+    "The AI service denied access to this model. Check your account permissions or choose another model.",
+    "AI 服務拒絕使用此模型。請檢查帳號權限或選擇其他模型。",
+    "AI 服务拒绝使用此模型。请检查账号权限或选择其他模型。",
+    "AI サービスがこのモデルへのアクセスを拒否しました。アカウントの権限を確認するか、別のモデルを選択してください。",
+    "AI 서비스가 이 모델에 대한 접근을 거부했습니다. 계정 권한을 확인하거나 다른 모델을 선택하세요.",
+  ],
+  modelUnsupported: [
+    "The AI service could not use this model for the request. Refresh the model list or choose another model.",
+    "AI 服務無法使用此模型處理請求。請重新整理模型清單或選擇其他模型。",
+    "AI 服务无法使用此模型处理请求。请刷新模型列表或选择其他模型。",
+    "AI サービスはこのモデルでリクエストを処理できませんでした。モデル一覧を更新するか、別のモデルを選択してください。",
+    "AI 서비스가 이 모델로 요청을 처리하지 못했습니다. 모델 목록을 새로고침하거나 다른 모델을 선택하세요.",
+  ],
   generation: [
-    "Lesson generation failed. Retry from the saved checkpoint in task history.",
-    "教材生成失敗。請從任務歷史的已存進度重試。",
-    "教材生成失败。请从任务历史的已存进度重试。",
-    "教材生成が失敗しました。タスク履歴の保存済みチェックポイントから再試行してください。",
-    "교재 생성에 실패했습니다. 작업 기록의 저장된 체크포인트에서 다시 시도하세요.",
+    "Generation failed. Completed progress has been saved.",
+    "生成失敗，已保留完成的進度。",
+    "生成失败，已保留完成的进度。",
+    "生成に失敗しました。完了した分の進捗は保存されています。",
+    "생성에 실패했습니다. 완료된 진행 상황은 저장되었습니다.",
   ],
   auth: [
     "Authorization failed or expired. Reconnect the AI service and retry.",
@@ -128,7 +156,8 @@ const copy = {
   ],
 } as const;
 const indexes: Record<UiLocale, number> = { en: 0, "zh-TW": 1, "zh-CN": 2, ja: 3, ko: 4 };
-export type PiFeedbackContext = "event" | "prompt" | "option" | "error" | "models" | "generation";
+export type PiFeedbackContext =
+  "event" | "prompt" | "option" | "error" | "models" | "modelRefresh" | "generation";
 export function piFeedbackCopy(locale: UiLocale, key: keyof typeof copy): string {
   return copy[key][indexes[locale]];
 }
@@ -194,6 +223,8 @@ export function piFeedback(
       message: messages[locale][context === "generation" ? "generationCancelled" : "jobCancelled"],
     };
   }
+  if (context === "modelRefresh")
+    return { message: piFeedbackCopy(locale, "modelRefresh"), detail: raw };
   if (Object.values(contextualReaderMessages).some(value => value.reloadRequired === raw)) {
     return { message: contextualReaderMessages[locale].reloadRequired };
   }
@@ -212,7 +243,8 @@ export function piFeedback(
   let key: keyof typeof copy = context;
   if (context === "error" || context === "models" || context === "generation") {
     const text = raw.replace(/^Error: /, "");
-    if (text === "Connect this AI provider in settings before generating.") key = "connect";
+    if (/此教材版本已停止支援/.test(text)) key = "retired";
+    else if (text === "Connect this AI provider in settings before generating.") key = "connect";
     else if (text === "The selected model is unavailable. Refresh the provider and choose a model.")
       key = "modelUnavailable";
     else if (/invalid lesson JSON|empty or oversized lesson output/.test(text)) key = "output";
@@ -220,6 +252,18 @@ export function piFeedback(
       return { message: piCopy[locale].legacy, detail: raw };
     else if (/quota|insufficient_quota|billing|credit balance/i.test(text)) key = "quota";
     else if (/\b429\b|rate.?limit|too many requests/i.test(text)) key = "rate";
+    else if (
+      /model[_ -](?:access[_ -])?denied|(?:access[_ -]denied|permission[_ -]denied|forbidden).*model|model.*(?:access[_ -]denied|permission[_ -]denied|forbidden|not (?:enabled|allowed)|no access)|do not have access to (?:this|the|that) model/i.test(
+        text,
+      )
+    )
+      key = "modelAccess";
+    else if (
+      /model[_ -](?:not[_ -](?:supported|found)|unsupported)|unsupported model|model.*(?:does not exist|not (?:found|supported)|is unavailable)/i.test(
+        text,
+      )
+    )
+      key = "modelUnsupported";
     else if (/device.*expired/i.test(text)) key = "expired";
     else if (/denied|access_denied/i.test(text)) key = "denied";
     else if (

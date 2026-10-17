@@ -1,4 +1,4 @@
-import { netflixWatchId } from "@immersive/core";
+import { netflixWatchId } from "@contextual/core";
 import { sendToVideo } from "./tab";
 import type { VideoAdapter } from "./types";
 

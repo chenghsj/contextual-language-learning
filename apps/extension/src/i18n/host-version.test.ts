@@ -16,11 +16,10 @@ test("Native Host version mismatch is actionable without presenting install befo
   assert.match(component, /version === chrome\.runtime\.getManifest\(\)\.version/);
   assert.match(component, /checked && \(!connected \|\| !compatible\)/);
   assert.match(component, /!sdkMode && <p/);
-  assert.match(component, /immersive-language-learning\/releases/);
+  assert.match(component, /VITE_HOST_SETUP_DOWNLOAD_URL/);
   assert.match(component, /protocolVersion === HOST_PROTOCOL_VERSION/);
   assert.match(component, /ui.protocolMismatch/);
-  assert.match(component, /SelectField ariaLabel=\{ui\.chooseOS\}/);
-  assert.match(component, /SelectField ariaLabel=\{ui\.chooseBrowser\}/);
+  assert.doesNotMatch(component, /pnpm build|scripts\/install-host|SelectField/);
   const keys = Object.keys(hostConnectionCopy.en).sort();
   for (const locale of Object.keys(messages) as UiLocale[]) {
     assert.deepEqual(Object.keys(hostConnectionCopy[locale]).sort(), keys);

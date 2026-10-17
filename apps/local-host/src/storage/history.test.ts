@@ -4,13 +4,14 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createSceneJob, GenerationRequestSchema, type HostMessage } from "@immersive/core";
+import { createSceneJob, GenerationRequestSchema, type HostMessage } from "@contextual/core";
 import { localStoragePorts } from "./file";
 import { handleLessonRequest } from "../host/lessons";
+import { pointsFixture } from "../../../../packages/core/test/learning-points-fixture";
 import { JobManager } from "../jobs/manager";
 
 test("batch history clearing includes records beyond the latest 50, reports failures, and rechecks status", async () => {
-  const root = await mkdtemp(join(tmpdir(), "immersive-clear-history-"));
+  const root = await mkdtemp(join(tmpdir(), "contextual-clear-history-"));
   try {
     const storage = localStoragePorts(root);
     const ids: string[] = [];
@@ -20,6 +21,7 @@ test("batch history clearing includes records beyond the latest 50, reports fail
       const job = createSceneJob(
         GenerationRequestSchema.parse({
           id,
+          outputSchemaVersion: 7,
           source: { platform: "import", title: "History " + i },
           profile: {
             targetLanguage: "en",
@@ -33,6 +35,8 @@ test("batch history clearing includes records beyond the latest 50, reports fail
         }),
         1,
       );
+      job.execution = pointsFixture().document.execution;
+      job.summary.execution = job.execution;
       job.summary.status = i === 60 ? "running" : "failed";
       await storage.jobs.create(job);
     }

@@ -112,6 +112,38 @@ test("runtime and API failures are localized at every feedback boundary", () => 
   assert.match(piFeedback("zh-TW", "insufficient_quota").message, /額度/);
   assert.equal(piFeedback("ko", "HTTP 401 unauthorized").detail, "HTTP 401 unauthorized");
 });
+
+test("model denial and unsupported requests have distinct feedback without guessing from generic HTTP status", () => {
+  for (const locale of locales) {
+    const denied = piFeedback(locale, "HTTP 403 model_access_denied", "generation");
+    const unsupported = piFeedback(locale, "model_not_supported", "generation");
+    assert.equal(denied.detail, "HTTP 403 model_access_denied");
+    assert.equal(unsupported.detail, "model_not_supported");
+    assert.notEqual(denied.message, unsupported.message);
+    assert.notEqual(denied.message, piFeedback(locale, "HTTP 403", "generation").message);
+    const warning = piFeedback(locale, "Synthetic refresh HTTP 503", "modelRefresh");
+    assert.equal(warning.detail, "Synthetic refresh HTTP 503");
+    assert.notEqual(
+      warning.message,
+      piFeedback(locale, "Synthetic refresh HTTP 503", "models").message,
+    );
+  }
+  assert.match(piFeedback("zh-TW", "model_access_denied", "generation").message, /帳號權限/);
+  assert.match(
+    piFeedback("zh-TW", "model_not_supported", "generation").message,
+    /重新整理模型清單/,
+  );
+  assert.match(
+    piFeedback("zh-TW", "HTTP 429 model_access_denied", "generation").message,
+    /過於頻繁/,
+  );
+  assert.match(
+    piFeedback("zh-TW", "insufficient_quota model_access_denied", "generation").message,
+    /額度/,
+  );
+  assert.match(piFeedback("zh-TW", "HTTP 401 unauthorized", "generation").message, /重新連接/);
+  assert.match(piFeedback("zh-TW", "Device authorization was denied.").message, /登入|授權/);
+});
 test("existing application feedback follows locale changes without replacing dynamic identifiers", () => {
   assert.equal(piFeedback("ja", piCopy["zh-TW"].cancelled).message, piCopy.ja.cancelled);
   assert.equal(

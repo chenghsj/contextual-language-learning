@@ -1,4 +1,4 @@
-import type { LearningLanguage } from "@immersive/core";
+import { languageTagMatches, type LearningLanguage } from "@contextual/core";
 import { getVideoAdapter } from "./index";
 
 /** A parsed transcript is usable only for its explicit source and requested language. */
@@ -16,8 +16,7 @@ export function videoSourceKey(url: string | undefined): string | null {
 }
 
 export function subtitleLanguageMatches(requested: LearningLanguage, returned: string): boolean {
-  const actual = returned.trim().toLowerCase().replace(/_/g, "-");
-  return actual === requested || actual.startsWith(requested + "-");
+  return languageTagMatches(requested, returned);
 }
 
 export function captionCacheKey(url: string | undefined, language: LearningLanguage): string {

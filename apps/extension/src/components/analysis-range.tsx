@@ -1,12 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  formatRangeTime,
-  parseRangeTime,
   selectAnalysisCues,
   timedCues,
   type SubtitleCue,
   type RangeSelection,
-} from "@immersive/core";
+} from "@contextual/core";
 import { analysisRangeCopy } from "../i18n/analysis-range";
 import { createFlowCopy } from "../i18n/create-flow";
 import type { UiLocale } from "../i18n/messages";
@@ -14,6 +12,7 @@ import type { VideoAdapter } from "../video/types";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { SelectField } from "./ui/select";
+import { formatDisplayTime, parseDisplayTime } from "../lib/time-display";
 export function AnalysisRangePicker({
   cues,
   value,
@@ -131,7 +130,7 @@ export function AnalysisRangePicker({
                     type="range"
                     className="dual-range absolute inset-0 h-11 w-full"
                     aria-label={key === "startMs" ? ui.start : ui.end}
-                    aria-valuetext={formatRangeTime(value[key])}
+                    aria-valuetext={formatDisplayTime(value[key])}
                     min={0}
                     max={durationMs}
                     step={1}
@@ -162,8 +161,8 @@ export function AnalysisRangePicker({
           )}
           {value.mode !== "full" && (
             <p className="text-xs tabular-nums">
-              {formatRangeTime(value.startMs)} — {formatRangeTime(value.endMs)} · {selected.length}{" "}
-              / {cues.length}
+              {formatDisplayTime(value.startMs)} — {formatDisplayTime(value.endMs)} ·{" "}
+              {selected.length} / {cues.length}
             </p>
           )}
           {!valid && (
@@ -185,18 +184,26 @@ function TimeField({
   onChange: (ms: number) => void;
   invalid: boolean;
 }) {
-  const [text, setText] = useState(formatRangeTime(value));
+  const [text, setText] = useState(formatDisplayTime(value));
+  const editing = useRef(false);
   useEffect(() => {
-    if (Number.isFinite(value)) setText(formatRangeTime(value));
+    if (Number.isFinite(value) && !editing.current) setText(formatDisplayTime(value));
   }, [value]);
   return (
     <Input
       value={text}
-      placeholder="HH:MM:SS.mmm"
+      placeholder="MM:SS.s"
       aria-invalid={invalid}
+      onFocus={() => {
+        editing.current = true;
+      }}
+      onBlur={() => {
+        editing.current = false;
+        if (Number.isFinite(value)) setText(formatDisplayTime(value));
+      }}
       onChange={event => {
         setText(event.target.value);
-        onChange(parseRangeTime(event.target.value));
+        onChange(parseDisplayTime(event.target.value));
       }}
     />
   );

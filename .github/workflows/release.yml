@@ -105,11 +105,11 @@ jobs:
           set -euo pipefail
           cd release-assets
           sha256sum -c SHA256SUMS
-          chromium="immersive-language-learning-chromium-$RELEASE_VERSION.zip"
+          chromium="contextual-language-learning-chromium-$RELEASE_VERSION.zip"
           unzip -tq "$chromium"
           unzip -Z -1 "$chromium" | grep -Eq '^(\./)?manifest\.json$'
           for platform in macos windows linux; do
-            host="immersive-language-learning-$platform-host-$RELEASE_VERSION.zip"
+            host="contextual-language-learning-$platform-host-$RELEASE_VERSION.zip"
             unzip -tq "$host"
             unzip -Z -1 "$host" | grep -Eq '^(\./)?dist/native-host\.mjs$'
             unzip -Z -1 "$host" | grep -Eq '^(\./)?scripts/install-host\.mjs$'
@@ -155,7 +155,7 @@ jobs:
             gh release upload "$RELEASE_TAG" release-assets/* --clobber
           else
             gh release create "$RELEASE_TAG" release-assets/* \
-              --title "Immersive Language Learning $RELEASE_TAG" \
+              --title "Contextual Language Learning $RELEASE_TAG" \
               --notes-file release-notes.md \
               --verify-tag
           fi

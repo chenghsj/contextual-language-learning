@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CustomGenerationRequestSchema } from "@immersive/core";
+import { CustomGenerationRequestSchema } from "@contextual/core";
 import { randomUUID } from "node:crypto";
 import { customDuplicateKey } from "./custom-duplicates";
 const request = CustomGenerationRequestSchema.parse({

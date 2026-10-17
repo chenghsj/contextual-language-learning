@@ -5,13 +5,18 @@ import { readFile } from "node:fs/promises";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { learningSettingsCopy, levelHint, type LearningSettingKey } from "./learning-settings";
-import { nativeLanguageName, learningLanguageName, explanationLanguageName } from "./preferences";
+import {
+  nativeLanguageName,
+  learningLanguageName,
+  explanationLanguageName,
+  learningLanguageOptions,
+} from "./preferences";
 import {
   LEARNING_LANGUAGES,
   EXPLANATION_LANGUAGES,
   levelsForTargetLanguage,
   defaultLevelForTargetLanguage,
-} from "@immersive/core";
+} from "@contextual/core";
 import { messages, type UiLocale } from "./messages";
 import { SettingInfo } from "../components/setting-info";
 
@@ -74,27 +79,37 @@ test("setting help shows only the concise field explanation, without repeating a
 test("settings keep stable saved option values rather than persisting translated labels", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
   assert.doesNotMatch(app, /lessonFormat:/);
-  assert.match(app, /buildGenerationRequest\(\{/);
   assert.doesNotMatch(app, /id="learning-mode"/);
   assert.doesNotMatch(app, /id="learning-exercises"/);
   assert.doesNotMatch(app, /id="learning-vocabulary"/);
-  assert.match(app, /options=\{learningLanguageOptions\(uiLocale\)\}/);
+  // Subtitle availability adds descriptions without replacing stable language IDs or labels.
+  assert.match(app, /options=\{learningLanguageOptions\(uiLocale\)\.map\(option => \(\{/);
+  assert.match(
+    app,
+    /\.\.\.option, description: subtitleReaderBlocked \? undefined : subtitleTrackLabel\(option\.value\)/,
+  );
+  for (const locale of locales) {
+    const options = learningLanguageOptions(locale);
+    assert.deepEqual(options.map(option => option.value).sort(), [...LEARNING_LANGUAGES].sort());
+    for (const option of options) {
+      assert.equal(option.label, learningLanguageName(option.value, locale));
+    }
+  }
   assert.match(app, /EXPLANATION_LANGUAGES\.map\(value/);
-  assert.match(app, /learningLanguageName\(language, uiLocale\)/);
   assert.match(app, /explanationLanguageName\(value, uiLocale\)/);
   assert.match(app, /levelHint\(settingsCopy, profile\.targetLanguage\)/);
   assert.match(app, /settingsCopy.fieldHints.targetLanguage/);
   assert.match(app, /settingsCopy.fieldHints.instructionLanguage/);
   assert.match(app, /t\("lessonLength"\)/);
-  assert.match(app, /t\("contextualExamples"\)/);
+  assert.doesNotMatch(app, /id="contextual-examples"|<ExplanationSettings/);
 });
 
 test("task cards use one Tailwind layout below the refresh control", async () => {
   const history = await readSource(new URL("../components/task-history.tsx", import.meta.url));
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   assert.ok(
-    history.includes('className="my-[10px] grid gap-[7px]"'),
-    "task layout uses direct Tailwind classes",
+    history.includes('className="my-3 grid gap-1"'),
+    "task layout uses the product's 4px spacing step rather than a separate 7px gap",
   );
   assert.doesNotMatch(css, /\.jobHistoryList\s*\{/);
 });
@@ -195,8 +210,8 @@ test("level tooltip displays the complete scale for the selected language in eve
   }
 });
 
-test("all twelve learning languages have localized names, levels and help without changing interface language", () => {
-  const added = ["es", "fr", "de", "it", "pt", "id", "th", "ms", "vi"] as const;
+test("all fourteen learning languages have localized names, levels and help without changing interface language", () => {
+  const added = ["es", "fr", "de", "it", "pt", "id", "th", "ms", "vi", "zh-TW", "zh-CN"] as const;
   assert.deepEqual(LEARNING_LANGUAGES, ["en", "ja", "ko", ...added]);
   for (const locale of locales) {
     const copy = learningSettingsCopy[locale];
@@ -228,21 +243,18 @@ test("all twelve learning languages have localized names, levels and help withou
   }
 });
 
-test("learning help is label-aligned and general settings describe the language inline", async () => {
+test("learning help is label-aligned without duplicating explanations below each control", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
   const help = await readSource(new URL("../components/setting-info.tsx", import.meta.url));
   for (const id of [
     "learning-target",
     "learning-level",
     "learning-length",
-    "contextual-examples",
     "learning-explanation-language",
-    "ui-language-select",
-    "appearance-select",
   ]) {
     assert.ok(app.includes('htmlFor="' + id + '"'), id + " must have a real label");
   }
-  for (const key of ["lessonLengthHint", "contextualExamplesHint"]) {
+  for (const key of ["lessonLengthHint"]) {
     assert.ok(app.includes('explanation={t("' + key + '")}'), key + " belongs in info help");
     assert.ok(
       !app.includes('>{t("' + key + '")}</p>'),
@@ -250,8 +262,6 @@ test("learning help is label-aligned and general settings describe the language 
     );
   }
   assert.ok(app.includes("relative mb-[6px] flex min-w-0 items-center gap-2"));
-  assert.match(app, /aria-describedby="ui-language-hint"/);
-  assert.match(app, /<p id="ui-language-hint"[^>]*>\{t\("uiLanguageHint"\)\}<\/p>/);
   assert.ok(help.includes('<Button variant="ghost" size="icon"'));
   assert.ok(help.includes("<PopoverContent collisionPadding={8}"));
   assert.ok(help.includes("max-w-[calc(100vw-16px)]"));

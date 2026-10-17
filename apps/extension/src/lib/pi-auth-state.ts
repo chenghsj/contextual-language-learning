@@ -1,4 +1,4 @@
-import type { PiEvent, PiPrompt } from "@immersive/core";
+import type { PiEvent, PiPrompt } from "@contextual/core";
 
 type Base = { id: string | null; provider: string; status: string };
 export type PiAuthState =

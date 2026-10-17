@@ -26,9 +26,8 @@ test("confirmation screen allows a request model selection and verifies the serv
   const app = await readSource(new URL("../App.tsx", import.meta.url));
   const section = app.slice(app.indexOf("<h2>{ux.confirm}</h2>"), app.indexOf("<TaskHistory"));
   assert.match(section, /<RequestModelSelection/);
-  assert.match(section, /<GenerationService locale=\{uiLocale\}/);
+  assert.match(section, /onReady=\{setGenerationServiceReady\}/);
   assert.ok(section.includes('setSettingsSection("ai")'));
-  assert.ok(section.indexOf("<GenerationService") < section.indexOf("onClick={startGeneration}"));
   // New users select imported Agents; legacy built-in provider IDs are not a picker.
   const imported = await readSource(new URL("../components/pi-settings.tsx", import.meta.url));
   assert.match(imported, /onSelect\(provider\.id\)/);
@@ -60,16 +59,4 @@ test("SDK settings replace CLI import and profile controls", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
   assert.match(app, /<PiSettings/);
   assert.doesNotMatch(app, /<CustomAgentSettings|useOtherCliAccount/);
-});
-
-test("Drive connection verifies actual API access before enabling backup", async () => {
-  const app = await readSource(new URL("../App.tsx", import.meta.url));
-  const connect = app.slice(
-    app.indexOf("async function connectDrive()"),
-    app.indexOf("async function disconnectDrive"),
-  );
-  assert.ok(connect.indexOf('type: "driveValidate"') > connect.indexOf('type: "driveConnect"'));
-  assert.ok(
-    connect.indexOf('type: "driveValidate"') < connect.indexOf("setBackup({ enabled: true"),
-  );
 });

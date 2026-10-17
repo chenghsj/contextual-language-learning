@@ -57,10 +57,10 @@ const installerFiles = [
 ];
 for (const name of installerFiles) await access(join(hostRoot, "scripts", name));
 
-const chromiumName = "immersive-language-learning-chromium-" + version + ".zip";
+const chromiumName = "contextual-language-learning-chromium-" + version + ".zip";
 const platforms = ["macos", "windows", "linux"];
 const hostNames = platforms.map(
-  platform => "immersive-language-learning-" + platform + "-host-" + version + ".zip",
+  platform => "contextual-language-learning-" + platform + "-host-" + version + ".zip",
 );
 await rm(assetDir, { recursive: true, force: true });
 await mkdir(assetDir, { recursive: true });

@@ -1,5 +1,5 @@
 import { isVideoCommandErrorCode, type VideoCommandErrorCode } from "../video/command-errors";
-import type { LearningLanguage } from "@immersive/core";
+import type { LearningLanguage } from "@contextual/core";
 import {
   VIDEO_READER_STATUS,
   VIDEO_READER_VERSION,
@@ -92,7 +92,7 @@ function onTimeUpdate(): void {
 }
 
 type CaptionResponse = {
-  source: "immersive-learning";
+  source: "contextual-learning";
   id: string;
   ok: boolean;
   bridgeVersion?: string;
@@ -105,11 +105,11 @@ type CaptionResponse = {
 function requestYouTubeCaptions(videoId: string, language: string): Promise<CaptionResponse> {
   return new Promise(resolve => {
     const id = crypto.randomUUID();
-    const RESPONSE = "immersive-learning:youtube:caption-response";
+    const RESPONSE = "contextual-learning:youtube:caption-response";
     const timer = setTimeout(() => {
       window.removeEventListener(RESPONSE, receive);
       resolve({
-        source: "immersive-learning",
+        source: "contextual-learning",
         id,
         ok: false,
         error: "YouTube subtitle reader did not respond. Reload this video tab and retry.",
@@ -117,15 +117,15 @@ function requestYouTubeCaptions(videoId: string, language: string): Promise<Capt
     }, 32_000);
     function receive(event: Event): void {
       const reply = (event as CustomEvent<CaptionResponse>).detail;
-      if (reply?.source !== "immersive-learning" || reply.id !== id) return;
+      if (reply?.source !== "contextual-learning" || reply.id !== id) return;
       clearTimeout(timer);
       window.removeEventListener(RESPONSE, receive);
       resolve(reply);
     }
     window.addEventListener(RESPONSE, receive);
     window.dispatchEvent(
-      new CustomEvent("immersive-learning:youtube:caption-request", {
-        detail: { source: "immersive-learning", id, videoId, language },
+      new CustomEvent("contextual-learning:youtube:caption-request", {
+        detail: { source: "contextual-learning", id, videoId, language },
       }),
     );
   });
@@ -137,16 +137,16 @@ function requestYouTubeTrackList(videoId: string): Promise<{
   ok: boolean;
   bridgeVersion?: string;
   status?: string;
-  tracks?: { language: string; kind: "manual" | "auto" }[];
+  tracks?: { language: string; kind: "manual" | "auto" | "translated" }[];
   error?: string;
 }> {
   return new Promise(resolve => {
     const id = crypto.randomUUID();
-    const eventName = "immersive-learning:youtube:track-response";
+    const eventName = "contextual-learning:youtube:track-response";
     const timer = setTimeout(() => {
       window.removeEventListener(eventName, receive);
       resolve({
-        source: "immersive-learning",
+        source: "contextual-learning",
         id,
         ok: false,
         error: "Caption metadata timed out.",
@@ -160,19 +160,19 @@ function requestYouTubeTrackList(videoId: string): Promise<{
           ok: boolean;
           bridgeVersion?: string;
           status?: string;
-          tracks?: { language: string; kind: "manual" | "auto" }[];
+          tracks?: { language: string; kind: "manual" | "auto" | "translated" }[];
           error?: string;
         }>
       ).detail;
-      if (result?.source !== "immersive-learning" || result.id !== id) return;
+      if (result?.source !== "contextual-learning" || result.id !== id) return;
       clearTimeout(timer);
       window.removeEventListener(eventName, receive);
       resolve(result);
     }
     window.addEventListener(eventName, receive);
     window.dispatchEvent(
-      new CustomEvent("immersive-learning:youtube:track-request", {
-        detail: { source: "immersive-learning", id, videoId },
+      new CustomEvent("contextual-learning:youtube:track-request", {
+        detail: { source: "contextual-learning", id, videoId },
       }),
     );
   });
@@ -181,7 +181,7 @@ function requestYouTubeTrackList(videoId: string): Promise<{
 function youtubePageReaderReady(): Promise<boolean> {
   return new Promise(resolve => {
     const id = crypto.randomUUID();
-    const responseEvent = "immersive-learning:youtube:bridge-health-response";
+    const responseEvent = "contextual-learning:youtube:bridge-health-response";
     const timer = setTimeout(() => {
       window.removeEventListener(responseEvent, receive);
       resolve(false);
@@ -194,15 +194,15 @@ function youtubePageReaderReady(): Promise<boolean> {
           bridgeVersion?: string;
         }>
       ).detail;
-      if (reply?.source !== "immersive-learning" || reply.id !== id) return;
+      if (reply?.source !== "contextual-learning" || reply.id !== id) return;
       clearTimeout(timer);
       window.removeEventListener(responseEvent, receive);
-      resolve(reply.bridgeVersion === "native-caption-capture-v2");
+      resolve(reply.bridgeVersion === "native-caption-capture-v4");
     }
     window.addEventListener(responseEvent, receive);
     window.dispatchEvent(
-      new CustomEvent("immersive-learning:youtube:bridge-health-request", {
-        detail: { source: "immersive-learning", id },
+      new CustomEvent("contextual-learning:youtube:bridge-health-request", {
+        detail: { source: "contextual-learning", id },
       }),
     );
   });
@@ -235,7 +235,7 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
     }
     void requestYouTubeTrackList(message.videoId)
       .then(result => {
-        if (!result.ok || result.bridgeVersion !== "native-caption-capture-v2") {
+        if (!result.ok || result.bridgeVersion !== "native-caption-capture-v4") {
           respond({ ok: false, error: result.error ?? RELOAD_READER_MESSAGE });
           return;
         }
@@ -245,7 +245,7 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
                 track =>
                   typeof track?.language === "string" &&
                   /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(track.language) &&
-                  (track.kind === "manual" || track.kind === "auto"),
+                  (track.kind === "manual" || track.kind === "auto" || track.kind === "translated"),
               )
               .slice(0, 100)
           : [];
@@ -269,7 +269,7 @@ chrome.runtime.onMessage.addListener((message: LoopMessage, _sender, respond) =>
     }
     void requestYouTubeCaptions(message.videoId, message.language)
       .then(result => {
-        if (result.bridgeVersion !== "native-caption-capture-v2") {
+        if (result.bridgeVersion !== "native-caption-capture-v4") {
           respond({
             ok: false,
             error:

@@ -1,4 +1,4 @@
-import type { HostRequest } from "@immersive/core";
+import type { HostRequest } from "@contextual/core";
 import {
   listDriveLessons,
   getDriveDocument,
@@ -13,6 +13,7 @@ import {
   listGoogleAccounts,
 } from "../drive/oauth";
 import { chooseLocalFolder } from "../storage/folders";
+import { openLocalFolder } from "../platform/folder-opener";
 import { resumePendingBackups } from "../storage/backup";
 import { createDocumentSync } from "../storage/document-sync";
 import type { HostDispatcherDeps } from "./context";
@@ -53,6 +54,13 @@ export async function handleDriveRequest(
       return true;
     case "chooseFolder":
       reply({ id: request.id, type: "folder", directory: await chooseLocalFolder() });
+      return true;
+    case "openFolder":
+      reply({
+        id: request.id,
+        type: "folderOpened",
+        directory: await openLocalFolder(request.directory),
+      });
       return true;
     case "driveAccounts":
       reply({

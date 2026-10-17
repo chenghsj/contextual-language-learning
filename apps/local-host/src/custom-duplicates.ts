@@ -1,4 +1,4 @@
-import type { CustomGenerationRequest } from "@immersive/core";
+import type { CustomGenerationRequest } from "@contextual/core";
 import { createHash } from "node:crypto";
 import { sourceKey, transcriptKey } from "./duplicates";
 /** Separate duplicate identity from the legacy immutable checkpoint fingerprint. */

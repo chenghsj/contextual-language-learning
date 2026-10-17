@@ -84,8 +84,9 @@ test("notification preferences remain separate from permission; testing reports 
     await act(async () => switches[0].click());
     assert.deepEqual(changes, [false]);
     const testButton = Array.from(container.querySelectorAll("button")).find(
-      button => button.textContent === "傳送測試通知",
+      button => button.querySelector('[aria-live="polite"]')?.textContent === "傳送測試通知",
     )!;
+    const buttonLabel = testButton.querySelector('[aria-live="polite"]')!;
     await act(async () => testButton.click());
     assert.equal(sent, 0);
     assert.match(container.textContent!, /無法傳送測試通知/);
@@ -94,19 +95,18 @@ test("notification preferences remain separate from permission; testing reports 
     permission = "granted";
     await act(async () => testButton.click());
     assert.equal(sent, 1);
-    assert.match(container.textContent!, /測試通知已傳送/);
+    assert.equal(buttonLabel.textContent, "已傳送");
+    assert.equal(container.querySelector('[role="status"]'), null);
     assert.doesNotMatch(container.textContent!, /系統目前不允許通知/);
     await advance(4_000);
-    assert.match(container.textContent!, /測試通知已傳送/);
+    assert.equal(buttonLabel.textContent, "已傳送");
     await act(async () => testButton.click());
     assert.equal(sent, 2);
     await advance(1_000);
-    assert.match(container.textContent!, /測試通知已傳送/);
+    assert.equal(buttonLabel.textContent, "已傳送");
     await advance(4_000);
-    assert.doesNotMatch(container.textContent!, /測試通知已傳送/);
-    const statusRegion = container.querySelector('[role="status"]')!;
-    assert.equal(statusRegion.textContent, "");
-    assert.ok(statusRegion.classList.contains("min-h-4"));
+    assert.equal(buttonLabel.textContent, "傳送測試通知");
+    assert.equal(container.querySelector('[role="status"]'), null);
     await act(async () => testButton.click());
     failure = true;
     await act(async () => testButton.click());

@@ -1,9 +1,11 @@
 import { getPreferencesStore } from "../lib/preferences-store";
+import { useContentMotion } from "../hooks/use-content-motion";
 import { IconTooltipContent } from "./icon-tooltip";
 import { PlaybackTimeline } from "./playback-timeline";
 import { readStudyProgress, recordSceneVisit, studyProgressKey } from "../lib/study-progress";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -17,22 +19,37 @@ import {
   X,
 } from "lucide-react";
 import {
+  subtitlePronunciationSegments,
+  type SubtitlePronunciationSegment,
+  readerScene,
   type LearningDocument,
-  type PronunciationSegment,
   type SubtitleCue,
-} from "@immersive/core";
+  type ExpressionOccurrence,
+} from "@contextual/core";
 import type { UiLocale } from "../i18n/messages";
 import { contextualReaderMessages } from "../i18n/contextual-reader";
 import { unifiedPlayerMessages } from "../i18n/unified-player";
 import { pronunciationCopy } from "../i18n/pronunciation";
 import { playbackTimingMessages } from "../i18n/playback-timing";
 import { playingCueAt } from "../video/cue-follow";
-import { formatLoopTimestamp, isLoopWindow, type LoopWindow } from "../video/loop-window";
-import { effectiveCueWindow, scenePlaybackWindow } from "../video/reader-playback";
+import {
+  adjustLoopBoundary,
+  formatLoopTimestamp,
+  isLoopWindow,
+  type LoopWindow,
+} from "../video/loop-window";
+import {
+  cuePlaybackWindow,
+  effectiveCueWindow,
+  playbackCueMap,
+  scenePlaybackWindow,
+} from "../video/reader-playback";
 import { openOrFocusVideoTab } from "../video/tab";
 import { useVideoReaderHealth } from "../hooks/use-video-reader-health";
 import type { VideoAdapter } from "../video/types";
-import { SceneFocusItems } from "./scene-focus-items";
+import { SentenceDialogue } from "./sentence-dialogue";
+import { SelectionSpeech } from "./selection-speech";
+import { SpeechStatus, useSystemSpeech } from "./system-speech";
 import { Button } from "./ui/button";
 import { Toggle } from "./ui/toggle";
 import { SelectField } from "./ui/select";
@@ -50,6 +67,10 @@ import {
 type ContextualDocument = LearningDocument;
 type Repeat = "2" | "3" | "5" | "infinite";
 type Props = {
+  fullscreen?: boolean;
+  onBack?: () => void;
+  backLabel?: string;
+  menuActions?: { label: string; onSelect: () => void }[];
   document: ContextualDocument;
   adapter: VideoAdapter;
   locale: UiLocale;
@@ -70,10 +91,21 @@ type Props = {
 };
 
 type PlaybackTarget =
-  { type: "scene"; sceneId: string } | { type: "sentence"; sceneId: string; sentenceId: string };
+  | { type: "scene"; sceneId: string }
+  | {
+      type: "sentence";
+      sceneId: string;
+      sentenceId: string;
+      sentenceCueIds?: string[];
+      occurrenceCueIds?: string[];
+    };
 
 /** Scene navigation and one player frame the independently scrolling lesson. */
 export function ContextualSceneReader({
+  fullscreen = false,
+  onBack,
+  backLabel,
+  menuActions = [],
   document,
   adapter,
   locale,
@@ -88,26 +120,41 @@ export function ContextualSceneReader({
   const ui = unifiedPlayerMessages[locale];
   const timing = playbackTimingMessages[locale];
   const targetLanguage = document.profile.targetLanguage;
+  const speech = useSystemSpeech();
   const phonetics = pronunciationCopy(locale, targetLanguage);
   const preferencesStore = () => getPreferencesStore(chrome.storage.local, locale);
   const [pronunciationMode, setPronunciationMode] = useState<PronunciationMode>(() =>
     defaultPronunciationMode(targetLanguage),
   );
   const cues = useMemo(() => new Map(document.cues.map(cue => [cue.id, cue])), [document.cues]);
+  const defaultPlaybackCues = useMemo(
+    () => playbackCueMap(document.cues, document.source.platform, {}),
+    [document.cues, document.source.platform],
+  );
   const playbackCues = useMemo(
     () =>
       new Map(
-        document.cues.map(cue => [cue.id, { ...cue, ...document.playbackOverrides?.[cue.id] }]),
+        [...defaultPlaybackCues.values()].map(cue => [
+          cue.id,
+          { ...cue, ...document.playbackOverrides?.[cue.id] },
+        ]),
       ),
-    [document.cues, document.playbackOverrides],
+    [defaultPlaybackCues, document.playbackOverrides],
   );
   const [sceneIndex, setSceneIndex] = useState(0);
   const scene = document.sections[sceneIndex] ?? document.sections[0];
+  useEffect(() => {
+    const scope = document.id + ":" + scene.id;
+    return () => {
+      void speech?.controller.stop(scope).catch(() => {});
+    };
+  }, [speech?.controller, document.id, scene.id]);
   const lines = scene.cueIds.map(id => cues.get(id)).filter((cue): cue is SubtitleCue => !!cue);
   const [target, setTarget] = useState<PlaybackTarget>({ type: "scene", sceneId: scene.id });
   const [translationVisible, setTranslationVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
+  const speechPreparation = useRef(Promise.resolve());
   const [loop, setLoop] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [targetStarted, setTargetStarted] = useState(false);
@@ -124,41 +171,88 @@ export function ContextualSceneReader({
   const [videoTooltipVisible, setVideoTooltipVisible] = useState(false);
   const videoTooltipId = React.useId();
   const contentRef = useRef<HTMLDivElement>(null);
+  const sceneMotionRef = useRef<HTMLDivElement>(null);
+  useContentMotion(sceneMotionRef, scene?.id ?? "empty", {
+    duration: 160,
+    entryDuration: 180,
+    enter: true,
+  });
   const managedRef = useRef(false);
   const mountedRef = useRef(true);
   const sourceUrl = document.source.url;
   const { needsReload, recheck } = useVideoReaderHealth(adapter, sourceUrl, false);
   const selectedCue = target.type === "sentence" ? cues.get(target.sentenceId) : undefined;
   const selectedIndex = selectedCue ? scene.cueIds.indexOf(selectedCue.id) : -1;
+  const selectedEndIndex =
+    target.type === "sentence" && target.sentenceCueIds
+      ? scene.cueIds.indexOf(target.sentenceCueIds.at(-1)!)
+      : selectedIndex;
+  const resetSentenceRange =
+    target.type === "sentence"
+      ? target.sentenceCueIds
+        ? cuePlaybackWindow(
+            target.sentenceCueIds,
+            new Map(
+              [...playbackCues].map(([id, cue]) => [
+                id,
+                id === target.sentenceId ? defaultPlaybackCues.get(id)! : cue,
+              ]),
+            ),
+          )
+        : effectiveCueWindow(defaultPlaybackCues.get(target.sentenceId), {})
+      : null;
+  const occurrenceRange =
+    target.type === "sentence" && target.occurrenceCueIds
+      ? cuePlaybackWindow(target.occurrenceCueIds, playbackCues)
+      : null;
+  const defaultSceneRange =
+    (document.source.platform === "youtube"
+      ? cuePlaybackWindow(scene.cueIds, playbackCues)
+      : null) ?? scenePlaybackWindow(scene.startMs, scene.endMs);
+  const sceneRange = document.scenePlaybackOverrides?.[scene.id] ?? defaultSceneRange;
   const range =
     target.type === "sentence"
-      ? effectiveCueWindow(selectedCue, document.playbackOverrides ?? {})
-      : (document.scenePlaybackOverrides?.[scene.id] ??
-        scenePlaybackWindow(scene.startMs, scene.endMs));
-  const sceneRange =
-    document.scenePlaybackOverrides?.[scene.id] ?? scenePlaybackWindow(scene.startMs, scene.endMs);
-  const targetTitle = selectedCue?.originalText ?? scene.title;
+      ? (occurrenceRange ??
+        document.playbackOverrides?.[target.sentenceId] ??
+        (target.sentenceCueIds
+          ? cuePlaybackWindow(target.sentenceCueIds, playbackCues)
+          : effectiveCueWindow(playbackCues.get(target.sentenceId), {})))
+      : sceneRange;
+  const targetTitle =
+    target.type === "sentence" && (target.occurrenceCueIds || target.sentenceCueIds)
+      ? (target.occurrenceCueIds ?? target.sentenceCueIds)!
+          .map(id => cues.get(id)?.originalText)
+          .join(" ")
+      : (selectedCue?.originalText ?? scene.title);
   const canPlay = !needsReload && !!sourceUrl && !!adapter.loop && !!range;
   const progressKey = studyProgressKey(document.id);
   const studyProgressRef = useRef<unknown>(null);
-  const hasDisplayableReading = (text: string, segments?: PronunciationSegment[]): boolean =>
+  const hasDisplayableReading = (
+    text: string,
+    segments?: SubtitlePronunciationSegment[],
+  ): boolean =>
     !!segments?.length &&
     segments.map(item => item.text).join("") === text &&
     (pronunciationMode === "native" && targetLanguage === "ja"
       ? segments.some(
           item =>
             !!item.reading &&
-            japaneseKanjiAnnotations(item.text, item.reading).some(piece => !!piece.reading),
+            (item.rubyPosition !== undefined ||
+              japaneseKanjiAnnotations(item.text, item.reading).some(piece => !!piece.reading)),
         )
       : pronunciationMode === "roman"
         ? !!romanAnnotations(targetLanguage, text, segments)
         : segments.some(item => !!displayReading(targetLanguage, pronunciationMode, item.reading)));
+  const sceneView = useMemo(() => readerScene(document, scene), [document, scene]);
   const hasSceneReading =
-    scene.pronunciations?.some(item => {
-      const cue = lines.find(line => line.id === item.cueId);
-      return !!cue && hasDisplayableReading(cue.originalText, item.segments);
+    lines.some(cue => {
+      const segments = subtitlePronunciationSegments(
+        cue,
+        scene.pronunciations?.find(item => item.cueId === cue.id)?.segments,
+      );
+      return hasDisplayableReading(cue.originalText, segments);
     }) ||
-    scene.focusItems.some(item =>
+    sceneView.focusItems.some(item =>
       item.examples.some(example =>
         example.dialogue.some(line => hasDisplayableReading(line.text, line.pronunciation)),
       ),
@@ -187,7 +281,7 @@ export function ContextualSceneReader({
       .catch(() => undefined);
   }
 
-  function annotatedText(text: string, segments?: PronunciationSegment[]): React.ReactNode {
+  function annotatedText(text: string, segments?: SubtitlePronunciationSegment[]): React.ReactNode {
     if (
       pronunciationMode === "off" ||
       !segments?.length ||
@@ -202,7 +296,13 @@ export function ContextualSceneReader({
               <span key={index}>
                 {part.text}
                 <span
-                  lang={targetLanguage === "ja" ? "ja-Latn" : "ko-Latn"}
+                  lang={
+                    targetLanguage === "ja"
+                      ? "ja-Latn"
+                      : targetLanguage === "ko"
+                        ? "ko-Latn"
+                        : "zh-Latn"
+                  }
                   className="text-[11px] text-muted-foreground [overflow-wrap:anywhere]"
                 >
                   （{part.reading}）
@@ -216,32 +316,45 @@ export function ContextualSceneReader({
     }
     if (pronunciationMode === "native" && targetLanguage === "ja")
       return segments.flatMap((item, index) =>
-        item.reading
-          ? japaneseKanjiAnnotations(item.text, item.reading).map((piece, pieceIndex) =>
-              piece.reading ? (
-                Array.from(piece.reading).length > Array.from(piece.text).length * 2 + 1 ? (
-                  <span key={`${index}-${pieceIndex}`}>
-                    {piece.text}
-                    <span className="text-[11px] text-muted-foreground">（{piece.reading}）</span>
-                  </span>
+        item.reading && item.rubyPosition !== undefined
+          ? [
+              <ruby
+                key={index}
+                style={{ rubyPosition: item.rubyPosition }}
+                className="leading-[2.2]"
+              >
+                {item.text}
+                <rp>(</rp>
+                <rt className="text-[8px] font-normal text-muted-foreground">{item.reading}</rt>
+                <rp>)</rp>
+              </ruby>,
+            ]
+          : item.reading
+            ? japaneseKanjiAnnotations(item.text, item.reading).map((piece, pieceIndex) =>
+                piece.reading ? (
+                  Array.from(piece.reading).length > Array.from(piece.text).length * 2 + 1 ? (
+                    <span key={`${index}-${pieceIndex}`}>
+                      {piece.text}
+                      <span className="text-[11px] text-muted-foreground">（{piece.reading}）</span>
+                    </span>
+                  ) : (
+                    <ruby
+                      key={`${index}-${pieceIndex}`}
+                      className="ruby-[position:over] leading-[2.2]"
+                    >
+                      {piece.text}
+                      <rp>(</rp>
+                      <rt className="text-[8px] font-normal text-muted-foreground">
+                        {piece.reading}
+                      </rt>
+                      <rp>)</rp>
+                    </ruby>
+                  )
                 ) : (
-                  <ruby
-                    key={`${index}-${pieceIndex}`}
-                    className="ruby-[position:over] leading-[2.2]"
-                  >
-                    {piece.text}
-                    <rp>(</rp>
-                    <rt className="text-[8px] font-normal text-muted-foreground">
-                      {piece.reading}
-                    </rt>
-                    <rp>)</rp>
-                  </ruby>
-                )
-              ) : (
-                <React.Fragment key={`${index}-${pieceIndex}`}>{piece.text}</React.Fragment>
-              ),
-            )
-          : [<React.Fragment key={index}>{item.text}</React.Fragment>],
+                  <React.Fragment key={`${index}-${pieceIndex}`}>{piece.text}</React.Fragment>
+                ),
+              )
+            : [<React.Fragment key={index}>{item.text}</React.Fragment>],
       );
     return segments.map((item, index) => {
       const reading = displayReading(targetLanguage, pronunciationMode, item.reading);
@@ -313,29 +426,56 @@ export function ContextualSceneReader({
     if (!sourceUrl || !adapter.status) return;
     let live = true;
     let inFlight = false;
+    let lastCueId: string | null = null;
+    let previousMs: number | null = null;
+    let previouslyPlaying = false;
     const poll = async () => {
       if (inFlight || busyRef.current) return;
       inFlight = true;
       try {
+        const speechAtStart = speech?.controller.snapshot().active;
         const state = await adapter.status!(sourceUrl);
         if (!live || busyRef.current) return;
-        setCurrentMs(
+        if (
+          state.playing === true &&
+          speechAtStart?.phase === "speaking" &&
+          speech?.controller.snapshot().active?.id === speechAtStart.id
+        )
+          void speech.controller.stop().catch(() => {});
+        const position =
           typeof state.currentMs === "number" && Number.isFinite(state.currentMs)
             ? state.currentMs
-            : null,
-        );
+            : null;
+        setCurrentMs(position);
         setPlaying((editing || targetStarted) && state.playing === true);
         const active =
-          target.type === "sentence" && selectedCue && range
+          target.type === "sentence" &&
+          (!target.occurrenceCueIds || document.source.platform !== "youtube") &&
+          !target.sentenceCueIds &&
+          selectedCue &&
+          range
             ? { cueId: selectedCue.id, ...range }
             : null;
-        setPlayingCueId(
-          targetStarted && typeof state.currentMs === "number"
-            ? playingCueAt(scene.cueIds, playbackCues, state.currentMs, active)
-            : null,
-        );
+        const cueId = targetStarted
+          ? playingCueAt(scene.cueIds, playbackCues, position, active)
+          : null;
+        if (cueId) lastCueId = cueId;
+        else if (
+          !targetStarted ||
+          position === null ||
+          (state.playing !== true && !previouslyPlaying && position !== previousMs)
+        )
+          lastCueId = null;
+        // A range can pause just after its final cue. Keep that line until playback
+        // resumes or the paused video is moved to a different position.
+        setPlayingCueId(cueId ?? (state.playing === false ? lastCueId : null));
+        previousMs = position;
+        previouslyPlaying = state.playing === true;
       } catch {
         if (live) {
+          lastCueId = null;
+          previousMs = null;
+          previouslyPlaying = false;
           setCurrentMs(null);
           setPlaying(false);
           setPlayingCueId(null);
@@ -359,22 +499,25 @@ export function ContextualSceneReader({
     range?.startMs,
     range?.endMs,
     playbackCues,
+    document.source.platform,
     editing,
     targetStarted,
   ]);
 
-  async function command(action: () => Promise<void>): Promise<void> {
+  async function command(action: () => Promise<void>, showBusy = true): Promise<void> {
     if (busyRef.current) return;
     busyRef.current = true;
-    setBusy(true);
+    if (showBusy) setBusy(true);
     setStatus("");
     try {
+      await speech?.controller.stop();
+      await speechPreparation.current.catch(() => {});
       await action();
     } catch (error) {
       onError(error instanceof Error ? error.message : copy.unavailable);
     } finally {
       busyRef.current = false;
-      if (mountedRef.current) setBusy(false);
+      if (showBusy && mountedRef.current) setBusy(false);
     }
   }
 
@@ -382,6 +525,38 @@ export function ContextualSceneReader({
     if (sourceUrl && adapter.stopLoop) await adapter.stopLoop(sourceUrl);
     managedRef.current = false;
   }
+  function pauseForSpeech(isCurrent: () => boolean): Promise<void> {
+    const preparation = speechPreparation.current
+      .catch(() => {})
+      .then(async () => {
+        if (!isCurrent()) return;
+        if (busyRef.current) throw new Error("A video command is still running.");
+        if (managedRef.current) await stopManaged();
+        if (!isCurrent()) return;
+        if (sourceUrl && adapter.pause && !needsReload) {
+          let videoPlaying = playing;
+          if (adapter.status) {
+            try {
+              videoPlaying = (await adapter.status(sourceUrl)).playing === true;
+            } catch {
+              videoPlaying = playing;
+            }
+          }
+          if (!isCurrent()) return;
+          if (videoPlaying) await adapter.pause(sourceUrl);
+        }
+        if (!isCurrent()) return;
+        setPlaying(false);
+        setTargetStarted(false);
+        setPlayingCueId(null);
+      });
+    speechPreparation.current = preparation;
+    return preparation;
+  }
+  useEffect(
+    () => speech?.controller.setBeforeSpeak(pauseForSpeech),
+    [speech?.controller, sourceUrl, adapter, needsReload, playing],
+  );
 
   async function startRange(
     next: LoopWindow,
@@ -442,12 +617,25 @@ export function ContextualSceneReader({
   }
 
   function selectCue(id: string): void {
-    const cue = cues.get(id);
-    const next = effectiveCueWindow(cue, document.playbackOverrides ?? {});
+    const analysis =
+      document.source.platform === "youtube"
+        ? sceneView.analyses.find(analysis => analysis.sourceCueIds.includes(id))
+        : undefined;
+    const group = analysis?.sourceCueIds;
+    const sentenceCueIds =
+      group && group.length > 1 && !(document.playbackOverrides?.[id] && id !== group[0])
+        ? group
+        : undefined;
+    const sentenceId = sentenceCueIds?.[0] ?? id;
+    const next =
+      document.playbackOverrides?.[sentenceId] ??
+      (sentenceCueIds
+        ? cuePlaybackWindow(sentenceCueIds, playbackCues)
+        : effectiveCueWindow(playbackCues.get(id), {}));
     void command(async () => {
       setEditing(false);
       setTargetStarted(false);
-      setTarget({ type: "sentence", sceneId: scene.id, sentenceId: id });
+      setTarget({ type: "sentence", sceneId: scene.id, sentenceId, sentenceCueIds });
       if (next && sourceUrl && adapter.loop) await startRange(next);
       else {
         await stopManaged();
@@ -456,13 +644,36 @@ export function ContextualSceneReader({
     });
   }
 
+  function playOccurrence(occurrence: ExpressionOccurrence): void {
+    const next = cuePlaybackWindow(occurrence.cueIds, playbackCues);
+    if (!next || !sourceUrl || needsReload) return;
+    void command(async () => {
+      setEditing(false);
+      setTargetStarted(false);
+      setTarget({
+        type: "sentence",
+        sceneId: scene.id,
+        sentenceId: occurrence.cueIds[0],
+        occurrenceCueIds: occurrence.cueIds,
+      });
+      await startRange(next);
+    });
+  }
+
   function togglePlayback(): void {
     if (!sourceUrl) return;
+    // The command lock prevents overlapping requests without dimming the reader.
     void command(async () => {
       if (playing && adapter.pause) {
         await stopManaged();
         await adapter.pause(sourceUrl);
         setPlaying(false);
+        // Resume from the stopped video position rather than the last 300ms poll.
+        if (adapter.status) {
+          const paused = await adapter.status(sourceUrl).catch(() => null);
+          if (typeof paused?.currentMs === "number" && Number.isFinite(paused.currentMs))
+            setCurrentMs(paused.currentMs);
+        }
       } else if (editing && adapter.play) {
         await stopManaged();
         await adapter.play(sourceUrl);
@@ -477,7 +688,7 @@ export function ContextualSceneReader({
             ? currentMs
             : undefined,
         );
-    });
+    }, false);
   }
 
   function jump(position: number): void {
@@ -495,9 +706,19 @@ export function ContextualSceneReader({
   }
 
   function openTiming(): void {
-    if (!range) return;
+    if (!range || (target.type === "sentence" && target.occurrenceCueIds)) return;
     void command(async () => {
       await stopManaged();
+      if (sourceUrl && adapter.pause) await adapter.pause(sourceUrl);
+      if (sourceUrl && adapter.status) {
+        const state = await adapter.status(sourceUrl);
+        setCurrentMs(
+          typeof state.currentMs === "number" && Number.isFinite(state.currentMs)
+            ? state.currentMs
+            : null,
+        );
+      }
+      setPlaying(false);
       setLoop(false);
       setDraft({ ...range });
       setDraftReset(false);
@@ -506,11 +727,40 @@ export function ContextualSceneReader({
     });
   }
 
-  function adjustBoundary(boundary: "startMs" | "endMs", delta: number): void {
-    if (!draft || busy) return;
+  function markBoundary(boundary: "start" | "end"): void {
+    if (!draft || !sourceUrl || !adapter.pause || !adapter.status) return;
+    void command(async () => {
+      await stopManaged();
+      await adapter.pause!(sourceUrl);
+      setPlaying(false);
+      // Capture the stopped video clock, not the last polling sample.
+      const state = await adapter.status!(sourceUrl);
+      if (typeof state.currentMs !== "number" || !Number.isFinite(state.currentMs)) {
+        setCurrentMs(null);
+        setStatus(timing.positionUnavailable);
+        return;
+      }
+      setCurrentMs(state.currentMs);
+      const next = adjustLoopBoundary(draft, boundary, state.currentMs);
+      if (!next) {
+        setStatus(ui.invalidRange);
+        return;
+      }
+      setDraft(next);
+      setDraftReset(false);
+    });
+  }
+
+  function previewTiming(): void {
+    if (!draft) return;
+    void command(() => startRange(draft, undefined, false, false));
+  }
+
+  function nudgeTiming(boundary: "startMs" | "endMs", delta: number): void {
+    if (!draft || busyRef.current) return;
     const next = { ...draft, [boundary]: Math.max(0, draft[boundary] + delta) };
     if (!isLoopWindow(next)) {
-      setStatus(timing.invalidLoopRange);
+      setStatus(ui.invalidRange);
       return;
     }
     setDraft(next);
@@ -518,17 +768,17 @@ export function ContextualSceneReader({
     setStatus("");
   }
 
-  function testBoundary(boundary: "startMs" | "endMs"): void {
+  function previewBoundary(boundary: "startMs" | "endMs"): void {
     if (!draft) return;
     const point = draft[boundary];
-    void command(async () => {
-      await startRange(
+    void command(() =>
+      startRange(
         { startMs: Math.max(0, point - 1000), endMs: point + 1000 },
         undefined,
         false,
         false,
-      );
-    });
+      ),
+    );
   }
 
   function closeTiming(): void {
@@ -559,7 +809,7 @@ export function ContextualSceneReader({
   const nextDisabled =
     target.type === "scene"
       ? sceneIndex === document.sections.length - 1
-      : selectedIndex >= scene.cueIds.length - 1;
+      : selectedEndIndex < 0 || selectedEndIndex >= scene.cueIds.length - 1;
   const previousLabel = target.type === "scene" ? copy.previousScene : copy.previousCue;
   const nextLabel = target.type === "scene" ? copy.nextScene : copy.nextCue;
   const hasOverride =
@@ -567,13 +817,97 @@ export function ContextualSceneReader({
       ? !!document.scenePlaybackOverrides?.[scene.id]
       : !!document.playbackOverrides?.[target.sentenceId];
 
+  function playerOptions(timingControls = true): React.ReactNode {
+    return (
+      <Popover open={optionsOpen} onOpenChange={setOptionsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="[&_svg]:size-3.5 size-8"
+            id="reader-options"
+            aria-label={ui.options}
+            disabled={busy || editing}
+          >
+            <MoreHorizontal aria-hidden="true" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" side="top" className="w-56 p-1">
+          {timingControls && (
+            <>
+              <Button
+                variant="ghost"
+                className="h-8 min-h-8 w-full justify-start px-2 text-xs"
+                disabled={
+                  !range ||
+                  busy ||
+                  needsReload ||
+                  !adapter.status ||
+                  !adapter.pause ||
+                  (target.type === "sentence" && !!target.occurrenceCueIds)
+                }
+                onClick={openTiming}
+              >
+                {ui.adjust}
+              </Button>
+              <Button
+                variant="ghost"
+                className="h-8 min-h-8 w-full justify-start px-2 text-xs"
+                disabled={
+                  !hasOverride ||
+                  busy ||
+                  needsReload ||
+                  (target.type === "sentence" && !!target.occurrenceCueIds)
+                }
+                onClick={() => saveTiming(null)}
+              >
+                {ui.reset}
+              </Button>
+            </>
+          )}
+          {timingControls && menuActions.length > 0 && (
+            <div className="my-1 border-t border-border" />
+          )}
+          {menuActions.map(action => (
+            <Button
+              key={action.label}
+              variant="ghost"
+              className="h-8 min-h-8 w-full justify-start px-2 text-xs"
+              onClick={() => {
+                setOptionsOpen(false);
+                action.onSelect();
+              }}
+            >
+              {action.label}
+            </Button>
+          ))}
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
   return (
     <div
-      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-t-xl border border-border bg-card"
+      className={
+        "@container/reader flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card " +
+        (fullscreen ? "" : "rounded-t-xl border border-border")
+      }
       data-ui="unifiedReader"
     >
-      <header className="shrink-0 border-b border-border px-3 py-2">
-        <div className="flex min-w-0 items-center gap-2">
+      <header data-ui="reader-header" className="shrink-0 border-b border-border px-3 py-2">
+        <div className="mx-auto flex w-full min-w-0 max-w-[720px] items-center gap-2">
+          {onBack && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-8 shrink-0 [&_svg]:size-3.5"
+              aria-label={backLabel}
+              title={backLabel}
+              onClick={onBack}
+            >
+              <ArrowLeft aria-hidden="true" />
+            </Button>
+          )}
           <div className="min-w-0 flex-1">
             <p className="m-0 text-[11px] text-muted-foreground">
               {targetLanguage.toUpperCase()} · {document.profile.level}
@@ -687,7 +1021,7 @@ export function ContextualSceneReader({
           )}
         </div>
         <nav
-          className="mt-2 grid grid-cols-[32px_minmax(0,1fr)_32px] items-center gap-2"
+          className="mx-auto mt-2 grid w-full max-w-[720px] grid-cols-[32px_minmax(0,1fr)_32px] items-center gap-2"
           aria-label={copy.chooseScene}
         >
           <Button
@@ -695,7 +1029,7 @@ export function ContextualSceneReader({
             variant="ghost"
             className="[&_svg]:size-3.5 size-8"
             aria-label={copy.previousScene}
-            disabled={busy || sceneIndex === 0}
+            disabled={busy || editing || sceneIndex === 0}
             onClick={() => chooseScene(sceneIndex - 1)}
           >
             <ChevronLeft aria-hidden="true" />
@@ -705,7 +1039,7 @@ export function ContextualSceneReader({
             id="contextual-scene-picker"
             ariaLabel={copy.chooseScene}
             value={String(sceneIndex)}
-            disabled={busy}
+            disabled={busy || editing}
             onValueChange={value => chooseScene(Number(value))}
             options={document.sections.map((item, index) => ({
               value: String(index),
@@ -717,400 +1051,392 @@ export function ContextualSceneReader({
             variant="ghost"
             className="[&_svg]:size-3.5 size-8"
             aria-label={copy.nextScene}
-            disabled={busy || sceneIndex === document.sections.length - 1}
+            disabled={busy || editing || sceneIndex === document.sections.length - 1}
             onClick={() => chooseScene(sceneIndex + 1)}
           >
             <ChevronRight aria-hidden="true" />
           </Button>
         </nav>
-        <div className="mt-1.5 flex min-w-0 items-center gap-2">
-          <div className="min-w-0 flex-1">
-            <h2 className="m-0 text-sm font-semibold wrap-anywhere">{scene.title}</h2>
-            <p className="mt-1 text-[11px] tabular-nums text-muted-foreground">
-              {sceneRange
-                ? formatLoopTimestamp(sceneRange.startMs) +
-                  " – " +
-                  formatLoopTimestamp(sceneRange.endMs)
-                : copy.noTime}
-            </p>
-          </div>
-          <Button
-            size="icon"
-            className="[&_svg]:size-3.5 size-8 shrink-0"
-            variant="outline"
-            aria-label={copy.playScene}
-            disabled={busy || needsReload || !sourceUrl || !adapter.loop || !sceneRange}
-            onClick={playScene}
-          >
-            <Play aria-hidden="true" />
-          </Button>
-        </div>
       </header>
 
       <div
         ref={contentRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 @min-[774px]/reader:[scrollbar-gutter:stable_both-edges]"
         data-ui="lessonContent"
       >
-        {editing && draft ? (
-          <section aria-label={ui.adjust} className="grid gap-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">{ui.adjust}</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="[&_svg]:size-3.5 size-8"
-                aria-label={copy.cancelTiming}
-                disabled={busy}
-                onClick={closeTiming}
-              >
-                <X aria-hidden="true" />
-              </Button>
-            </div>
-            <div>
-              <span className="text-[11px] text-muted-foreground">
-                {target.type === "scene" ? copy.scene : copy.selected}
-              </span>
-              <p className="mt-1 text-sm wrap-anywhere">{targetTitle}</p>
-            </div>
-            <p className="text-xs text-muted-foreground">{ui.help}</p>
-            <div className="rounded-lg bg-muted/50 p-3 text-center">
-              <span className="text-[11px] text-muted-foreground">{ui.current}</span>
-              <p className="mt-1 font-mono text-base tabular-nums">
-                {currentMs === null ? "—" : formatLoopTimestamp(currentMs)}
-              </p>
-              <div className="mt-2 flex justify-center gap-3">
+        <div ref={sceneMotionRef} className="mx-auto w-full min-w-0 max-w-[720px]">
+          {editing && draft ? (
+            <section aria-label={ui.adjust} className="grid gap-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">{ui.adjust}</h3>
                 <Button
-                  variant="outline"
-                  className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-                  disabled={busy || needsReload || currentMs === null || !adapter.seek}
-                  onClick={() => jump(currentMs! - 1000)}
-                  aria-label={ui.back}
-                >
-                  −1s
-                </Button>
-                <Button
+                  variant="ghost"
                   size="icon"
                   className="[&_svg]:size-3.5 size-8"
-                  aria-label={playing ? ui.pause : ui.play}
-                  disabled={busy || needsReload || !adapter.play || !adapter.pause}
-                  onClick={togglePlayback}
+                  aria-label={copy.cancelTiming}
+                  disabled={busy}
+                  onClick={closeTiming}
                 >
-                  {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-                  disabled={busy || needsReload || currentMs === null || !adapter.seek}
-                  onClick={() => jump(currentMs! + 1000)}
-                  aria-label={ui.forward}
-                >
-                  +1s
+                  <X aria-hidden="true" />
                 </Button>
               </div>
-            </div>
-            {(["startMs", "endMs"] as const).map(boundary => (
-              <fieldset key={boundary} className="grid min-w-0 gap-2">
-                <legend className="mb-2 flex w-full items-center justify-between text-xs font-semibold">
-                  {boundary === "startMs" ? ui.start : ui.end}
-                  <span className="font-mono tabular-nums">
-                    {formatLoopTimestamp(draft[boundary])}
-                  </span>
-                </legend>
-                <div className="grid grid-cols-4 gap-1">
-                  {[-500, -100, 100, 500].map(delta => (
-                    <Button
-                      key={delta}
-                      variant="outline"
-                      className="h-8 min-h-8 px-1 text-xs"
-                      disabled={busy}
-                      aria-label={`${boundary === "startMs" ? ui.start : ui.end} ${delta > 0 ? "+" : ""}${delta / 1000}s`}
-                      onClick={() => adjustBoundary(boundary, delta)}
-                    >
-                      {delta > 0 ? "+" : "−"}
-                      {Math.abs(delta) / 1000}s
-                    </Button>
-                  ))}
-                </div>
-                <Button
-                  variant="secondary"
-                  className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-                  disabled={busy || needsReload || !adapter.loop}
-                  onClick={() => testBoundary(boundary)}
-                >
-                  <Play aria-hidden="true" />
-                  {boundary === "startMs" ? ui.testStart : ui.testEnd}
-                </Button>
-              </fieldset>
-            ))}
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              {target.type === "sentence" ? ui.saveHint : ui.sceneHint}
-            </p>
-            {status && (
-              <p role="status" className="text-xs text-destructive">
-                {status}
-              </p>
-            )}
-            <div className="flex justify-between gap-2">
-              <Button
-                variant="ghost"
-                className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-                disabled={busy}
-                onClick={() => {
-                  const original =
-                    target.type === "sentence"
-                      ? effectiveCueWindow(selectedCue, {})
-                      : scenePlaybackWindow(scene.startMs, scene.endMs);
-                  if (original) {
-                    setDraft(original);
-                    setDraftReset(true);
-                    setStatus("");
-                  }
-                }}
-              >
-                {ui.reset}
-              </Button>
-              <Button
-                className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-                disabled={busy}
-                onClick={() => saveTiming(draftReset ? null : draft)}
-              >
-                {copy.saveTiming}
-              </Button>
-            </div>
-          </section>
-        ) : (
-          <>
-            <p className="mb-3 text-xs leading-[1.6] text-muted-foreground">{scene.context}</p>
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <h3 className="text-xs font-semibold">{copy.dialogue}</h3>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-                aria-pressed={translationVisible}
-                onClick={() => setTranslationVisible(value => !value)}
-              >
-                {translationVisible ? copy.hideTranslation : copy.translation}
-              </Button>
-            </div>
-            <div role="group" aria-label={copy.dialogue}>
-              {lines.map((cue, index) => {
-                const selected = selectedCue?.id === cue.id;
-                const active = playing && playingCueId === cue.id;
-                const translation = scene.translations.find(item => item.cueId === cue.id);
-                return (
+              <p className="text-sm wrap-anywhere">{targetTitle}</p>
+              <p className="text-xs text-muted-foreground">{ui.help}</p>
+              <div className="rounded-lg bg-muted/50 p-2 text-center">
+                <span className="text-[11px] text-muted-foreground">{ui.current}</span>
+                <p className="mt-1 font-mono text-base tabular-nums">
+                  {currentMs === null ? "—" : formatLoopTimestamp(currentMs)}
+                </p>
+                <div className="mt-2 flex justify-center gap-3">
                   <Button
-                    key={cue.id}
-                    variant="ghost"
-                    className="grid h-auto min-h-8 w-full grid-cols-[24px_minmax(0,1fr)] items-start text-left whitespace-normal leading-relaxed"
-                    aria-pressed={selected}
-                    aria-current={active ? "true" : undefined}
-                    disabled={busy || needsReload}
-                    onClick={() => selectCue(cue.id)}
+                    variant="outline"
+                    className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
+                    disabled={busy || needsReload || currentMs === null || !adapter.seek}
+                    onClick={() => jump(currentMs! - 1000)}
+                    aria-label={ui.back}
                   >
-                    <span className="pt-0.5 text-[11px] tabular-nums text-muted-foreground">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="grid min-w-0 gap-2 wrap-anywhere">
-                      <span lang={targetLanguage}>
-                        {annotatedText(
-                          cue.originalText,
-                          scene.pronunciations?.find(item => item.cueId === cue.id)?.segments,
-                        )}
-                      </span>
-                      {translationVisible && translation && (
-                        <span className="text-xs font-normal text-muted-foreground">
-                          {translation.text}
-                        </span>
-                      )}
-                    </span>
+                    −1s
                   </Button>
-                );
-              })}
-            </div>
-            <SceneFocusItems
-              key={scene.id}
-              scene={scene}
-              targetLanguage={targetLanguage}
-              copy={copy}
-              annotatedText={annotatedText}
-            />
-          </>
-        )}
+                  <Button
+                    size="icon"
+                    className="[&_svg]:size-3.5 size-8"
+                    aria-label={playing ? ui.pause : ui.play}
+                    disabled={busy || needsReload || !adapter.play || !adapter.pause}
+                    onClick={togglePlayback}
+                  >
+                    {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
+                    disabled={busy || needsReload || currentMs === null || !adapter.seek}
+                    onClick={() => jump(currentMs! + 1000)}
+                    aria-label={ui.forward}
+                  >
+                    +1s
+                  </Button>
+                </div>
+              </div>
+              {(["startMs", "endMs"] as const).map(boundary => (
+                <div
+                  key={boundary}
+                  role="group"
+                  aria-label={boundary === "startMs" ? ui.start : ui.end}
+                  className="grid min-w-0"
+                >
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <p className="flex items-center gap-2">
+                      <span className="font-semibold">
+                        {boundary === "startMs" ? ui.start : ui.end}
+                      </span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {formatLoopTimestamp(draft[boundary])}
+                      </span>
+                    </p>
+                    <Button
+                      variant="ghost"
+                      className="[&_svg]:size-3.5 h-8 min-h-8 shrink-0 px-2 text-xs"
+                      disabled={busy || needsReload || !adapter.loop}
+                      onClick={() => previewBoundary(boundary)}
+                    >
+                      <Play aria-hidden="true" />
+                      {boundary === "startMs" ? ui.previewStart : ui.previewEnd}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-[1fr_1fr_auto] gap-1">
+                    {[-100, 100].map(delta => (
+                      <Button
+                        key={delta}
+                        variant="outline"
+                        className="h-8 min-h-8 px-2 text-xs"
+                        aria-label={`${boundary === "startMs" ? ui.start : ui.end} ${delta > 0 ? "+" : "-"}0.1s`}
+                        disabled={busy}
+                        onClick={() => nudgeTiming(boundary, delta)}
+                      >
+                        {delta > 0 ? "+" : "−"}0.1s
+                      </Button>
+                    ))}
+                    <Button
+                      variant="outline"
+                      className="h-8 min-h-8 shrink-0 px-3 text-xs"
+                      disabled={
+                        busy ||
+                        needsReload ||
+                        currentMs === null ||
+                        !adapter.pause ||
+                        !adapter.status
+                      }
+                      onClick={() => markBoundary(boundary === "startMs" ? "start" : "end")}
+                    >
+                      {boundary === "startMs" ? ui.setStart : ui.setEnd}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button
+                variant="secondary"
+                className="[&_svg]:size-3.5 h-9 min-h-9 px-3 text-xs"
+                disabled={busy || needsReload || !adapter.loop}
+                onClick={previewTiming}
+              >
+                <Play aria-hidden="true" />
+                {ui.preview}
+              </Button>
+              {status && (
+                <p role="status" className="text-xs text-destructive">
+                  {status}
+                </p>
+              )}
+              <div className="flex justify-between gap-2">
+                <Button
+                  variant="ghost"
+                  className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
+                  disabled={busy}
+                  onClick={() => {
+                    const original =
+                      target.type === "sentence" ? resetSentenceRange : defaultSceneRange;
+                    if (original) {
+                      setDraft(original);
+                      setDraftReset(true);
+                      setStatus("");
+                    }
+                  }}
+                >
+                  {ui.reset}
+                </Button>
+                <Button
+                  className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
+                  disabled={busy}
+                  onClick={() => saveTiming(draftReset ? null : draft)}
+                >
+                  {copy.saveTiming}
+                </Button>
+              </div>
+            </section>
+          ) : (
+            <>
+              <p className="mb-3 text-ui-body text-muted-foreground">{sceneView.context}</p>
+              <SpeechStatus locale={locale} language={document.profile.targetLanguage} />
+              <SelectionSpeech
+                key={document.id + ":" + scene.id}
+                locale={locale}
+                scope={document.id + ":" + scene.id + ":selection"}
+                disabled={busy}
+                beforeSpeak={pauseForSpeech}
+              >
+                <SentenceDialogue
+                  key={document.id + ":" + scene.id}
+                  toolbarPlaybackAction={
+                    sourceUrl &&
+                    adapter.id !== "import" &&
+                    adapter.loop && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="[&_svg]:size-3.5 h-8 min-h-8 shrink-0 px-2 text-xs"
+                        disabled={busy || needsReload || !sceneRange}
+                        onClick={playScene}
+                      >
+                        <Play aria-hidden="true" />
+                        {copy.playScene}
+                      </Button>
+                    )
+                  }
+                  toolbarActions={
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs text-muted-foreground"
+                      aria-pressed={translationVisible}
+                      onClick={() => setTranslationVisible(value => !value)}
+                    >
+                      {translationVisible ? copy.hideTranslation : copy.translation}
+                    </Button>
+                  }
+                  document={document}
+                  scene={scene}
+                  locale={locale}
+                  playingCueId={playingCueId}
+                  selectedCueId={selectedCue?.id}
+                  disabled={busy}
+                  playbackDisabled={busy || needsReload || !sourceUrl || !adapter.loop}
+                  translationVisible={translationVisible}
+                  onPlayCue={selectCue}
+                  onPlayOccurrence={playOccurrence}
+                  beforeSpeak={pauseForSpeech}
+                  annotatedText={annotatedText}
+                />
+              </SelectionSpeech>
+            </>
+          )}
+        </div>
       </div>
 
-      {sourceUrl && adapter.id !== "import" && adapter.loop ? (
+      {editing ? null : sourceUrl && adapter.id !== "import" && adapter.loop ? (
         <footer
           className="shrink-0 border-t border-border bg-card px-3 py-2"
           role="region"
           aria-label={copy.playback}
           data-ui="unifiedPlayer"
         >
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="text-[11px] text-muted-foreground">
-              {playing ? ui.playing : ui.ready}
-            </span>
+          <div
+            className="@container mx-auto grid w-full min-w-0 max-w-[720px] gap-1"
+            data-ui="player-body"
+          >
             {loop && (
-              <span
-                role="status"
-                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-primary"
-              >
-                <Repeat2 aria-hidden="true" className="size-3" />
+              <span role="status" className="sr-only">
                 {ui.loopEnabled}
               </span>
             )}
-            <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
-              {target.type === "scene"
-                ? sceneIndex + 1 + " / " + document.sections.length
-                : selectedIndex + 1 + " / " + lines.length}
-            </span>
-          </div>
-          <strong
-            className="mt-1 block truncate text-xs"
-            title={targetTitle}
-            lang={target.type === "sentence" ? targetLanguage : undefined}
-          >
-            {targetTitle}
-          </strong>
-          <div className="my-1 flex items-center justify-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="[&_svg]:size-3.5 size-8"
-              aria-label={previousLabel}
-              disabled={
-                busy || editing || (needsReload && target.type === "sentence") || previousDisabled
-              }
-              onClick={() =>
-                target.type === "scene"
-                  ? chooseScene(sceneIndex - 1)
-                  : selectCue(scene.cueIds[selectedIndex - 1])
-              }
+            <div className="flex min-w-0 items-center gap-2" data-ui="player-target">
+              <span className="shrink-0 text-xs font-medium" data-ui="player-scope">
+                {target.type === "scene" ? copy.scene : copy.selected}
+                {(target.type === "scene" || selectedIndex >= 0) && (
+                  <>
+                    {" "}
+                    {target.type === "scene" ? sceneIndex + 1 : selectedIndex + 1}
+                    {" / "}
+                    {target.type === "scene" ? document.sections.length : lines.length}
+                  </>
+                )}
+              </span>
+              <span
+                className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground"
+                title={targetTitle}
+              >
+                {target.type === "sentence" ? targetTitle : playing ? ui.playing : ui.ready}
+              </span>
+              {target.type === "sentence" && playing && (
+                <span className="shrink-0 text-[11px] text-muted-foreground">{ui.playing}</span>
+              )}
+            </div>
+
+            <div
+              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1"
+              data-ui="player-controls"
             >
-              <SkipBack aria-hidden="true" />
-            </Button>
-            <Button
-              size="icon"
-              className="[&_svg]:size-3.5 size-9 rounded-full"
-              aria-label={playing ? ui.pause : ui.play}
-              disabled={busy || !canPlay || !adapter.pause || (editing && !adapter.play)}
-              onClick={togglePlayback}
-            >
-              {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="[&_svg]:size-3.5 size-8"
-              aria-label={nextLabel}
-              disabled={
-                busy || editing || (needsReload && target.type === "sentence") || nextDisabled
-              }
-              onClick={() =>
-                target.type === "scene"
-                  ? chooseScene(sceneIndex + 1)
-                  : selectCue(scene.cueIds[selectedIndex + 1])
-              }
-            >
-              <SkipForward aria-hidden="true" />
-            </Button>
-          </div>
-          {range && (
-            <PlaybackTimeline
-              key={target.type === "sentence" ? target.sentenceId : target.sceneId}
-              range={range}
-              position={targetStarted ? (currentMs ?? range.startMs) : range.startMs}
-              playing={playing && targetStarted}
-              rate={playbackRate}
-              label={ui.seek}
-              disabled={busy || needsReload || editing || !adapter.seek}
-              onSeek={jump}
-            />
-          )}
-          <div className="mt-0.5 flex items-center justify-center gap-3">
-            <Toggle
-              size="sm"
-              pressed={loop}
-              className="size-8 rounded-lg p-0 [&_svg]:size-3.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:hover:text-primary-foreground"
-              title={loop ? ui.loopEnabled : ui.loop}
-              aria-label={ui.loop}
-              disabled={busy || editing || !canPlay}
-              onPressedChange={next =>
-                void command(async () => {
-                  if (range && playing)
-                    await startRange(
-                      range,
-                      targetStarted &&
-                        currentMs !== null &&
-                        currentMs >= range.startMs &&
-                        currentMs < range.endMs
-                        ? currentMs
-                        : undefined,
-                      next,
-                    );
-                  setLoop(next);
-                })
-              }
-            >
-              <Repeat2 aria-hidden="true" />
-            </Toggle>
-            <SelectField
-              className="h-8 min-h-8 w-20 px-2 text-xs"
-              ariaLabel={copy.speed}
-              value={String(playbackRate)}
-              disabled={busy || needsReload || !adapter.setPlaybackRate}
-              onValueChange={value =>
-                void command(async () => {
-                  if (sourceUrl && adapter.setPlaybackRate) {
-                    const rate = Number(value);
-                    await adapter.setPlaybackRate(sourceUrl, rate);
-                    setPlaybackRate(rate);
+              <div className="flex min-w-0 items-center justify-end">
+                <Toggle
+                  size="sm"
+                  pressed={loop}
+                  className="size-8 rounded-lg p-0 [&_svg]:size-3.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:hover:text-primary-foreground"
+                  title={loop ? ui.loopEnabled : ui.loop}
+                  aria-label={ui.loop}
+                  disabled={busy || editing || !canPlay}
+                  onPressedChange={next =>
+                    void command(async () => {
+                      if (range && playing)
+                        await startRange(
+                          range,
+                          targetStarted &&
+                            currentMs !== null &&
+                            currentMs >= range.startMs &&
+                            currentMs < range.endMs
+                            ? currentMs
+                            : undefined,
+                          next,
+                        );
+                      setLoop(next);
+                    })
                   }
-                })
-              }
-              options={[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(rate => ({
-                value: String(rate),
-                label: rate + "×",
-              }))}
-            />
-            <Popover open={optionsOpen} onOpenChange={setOptionsOpen}>
-              <PopoverTrigger asChild>
+                >
+                  <Repeat2 aria-hidden="true" />
+                </Toggle>
+              </div>
+              <div className="flex items-center @min-[360px]:gap-2" data-ui="player-transport">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="[&_svg]:size-3.5 size-8"
+                  aria-label={previousLabel}
+                  disabled={
+                    busy ||
+                    editing ||
+                    (needsReload && target.type === "sentence") ||
+                    previousDisabled
+                  }
+                  onClick={() =>
+                    target.type === "scene"
+                      ? chooseScene(sceneIndex - 1)
+                      : selectCue(scene.cueIds[selectedIndex - 1])
+                  }
+                >
+                  <SkipBack aria-hidden="true" />
+                </Button>
                 <Button
                   size="icon"
+                  className="[&_svg]:size-3.5 size-9 rounded-full"
+                  title={target.type === "scene" ? copy.playScene : copy.playCue}
+                  aria-label={playing ? ui.pause : ui.play}
+                  disabled={busy || !canPlay || !adapter.pause || (editing && !adapter.play)}
+                  onClick={togglePlayback}
+                >
+                  {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+                </Button>
+                <Button
                   variant="ghost"
+                  size="icon"
                   className="[&_svg]:size-3.5 size-8"
-                  aria-label={ui.options}
-                  disabled={busy || needsReload || editing}
+                  aria-label={nextLabel}
+                  disabled={
+                    busy || editing || (needsReload && target.type === "sentence") || nextDisabled
+                  }
+                  onClick={() =>
+                    target.type === "scene"
+                      ? chooseScene(sceneIndex + 1)
+                      : selectCue(scene.cueIds[selectedEndIndex + 1])
+                  }
                 >
-                  <MoreHorizontal aria-hidden="true" />
+                  <SkipForward aria-hidden="true" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" side="top" className="w-56 p-1">
-                <Button
-                  variant="ghost"
-                  className="h-8 min-h-8 w-full justify-start px-2 text-xs"
-                  disabled={!range || busy}
-                  onClick={openTiming}
-                >
-                  {ui.adjust}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="h-8 min-h-8 w-full justify-start px-2 text-xs"
-                  disabled={!hasOverride || busy}
-                  onClick={() => saveTiming(null)}
-                >
-                  {ui.reset}
-                </Button>
-              </PopoverContent>
-            </Popover>
+              </div>
+              <div
+                className="flex min-w-0 items-center justify-end gap-1"
+                data-ui="player-utilities"
+              >
+                <SelectField
+                  className="h-8 min-h-8 w-14 gap-1 px-1 text-[11px] [&_svg]:size-2.5 @min-[360px]:w-20 @min-[360px]:px-2 @min-[360px]:text-xs @min-[360px]:[&_svg]:size-3.5"
+                  ariaLabel={copy.speed}
+                  value={String(playbackRate)}
+                  disabled={busy || needsReload || !adapter.setPlaybackRate}
+                  onValueChange={value =>
+                    void command(async () => {
+                      if (sourceUrl && adapter.setPlaybackRate) {
+                        const rate = Number(value);
+                        await adapter.setPlaybackRate(sourceUrl, rate);
+                        setPlaybackRate(rate);
+                      }
+                    })
+                  }
+                  options={[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(rate => ({
+                    value: String(rate),
+                    label: rate + "×",
+                  }))}
+                />
+                {playerOptions()}
+              </div>
+            </div>
+            {range && (
+              <PlaybackTimeline
+                key={target.type === "sentence" ? target.sentenceId : target.sceneId}
+                range={range}
+                position={targetStarted ? (currentMs ?? range.startMs) : range.startMs}
+                playing={playing && targetStarted}
+                rate={playbackRate}
+                label={ui.seek}
+                disabled={busy || needsReload || editing || !adapter.seek}
+                onSeek={jump}
+              />
+            )}
           </div>
         </footer>
       ) : (
-        <p className="shrink-0 border-t border-border p-3 text-xs text-muted-foreground">
-          {copy.noVideo}
-        </p>
+        <footer className="shrink-0 border-t border-border px-3 py-2">
+          <div className="mx-auto flex w-full min-w-0 max-w-[720px] items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">{copy.noVideo}</p>
+            {menuActions.length > 0 && playerOptions(false)}
+          </div>
+        </footer>
       )}
     </div>
   );

@@ -16,7 +16,7 @@ export function PiFeedback({
     <div className="grid min-w-0 gap-3 text-sm leading-relaxed wrap-anywhere" data-ui="piFeedback">
       <p role="status">{feedback.message}</p>
       {feedback.detail && (
-        <details className="min-w-0 border-t border-border pt-2" open={context === "prompt"}>
+        <details className="min-w-0 border-t border-border pt-3" open={context === "prompt"}>
           <summary className="cursor-pointer py-1 text-xs font-normal text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2">
             {piFeedbackCopy(locale, "details")}
           </summary>

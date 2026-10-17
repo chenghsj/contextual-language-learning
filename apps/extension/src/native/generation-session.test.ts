@@ -8,6 +8,7 @@ import {
   type GenerationEvent,
   type GenerationState,
 } from "./generation-session";
+import type { JobSummary } from "@contextual/core";
 import { testRuntime } from "./test-runtime";
 
 function setup() {
@@ -40,6 +41,55 @@ function setup() {
     },
   };
 }
+
+test("cancellation stays pending until Host acknowledgement and stays unconfirmed after disconnect", context => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const app = setup();
+  const port = app.ports[0];
+  port.receive({
+    type: "generationState",
+    active: { requestId: randomUUID(), jobId: app.input.id },
+  });
+  app.session.cancel();
+  const request = port.sent.at(-1)!;
+  assert.equal(app.state.cancellations?.[app.input.id]?.status, "pending");
+  context.mock.timers.tick(30_000);
+  assert.equal(app.state.cancellations?.[app.input.id]?.status, "unconfirmed");
+  port.receive({ id: request.id, type: "cancelled" });
+  assert.equal(app.state.cancellations?.[app.input.id], undefined);
+  app.session.cancelJob(app.input.id);
+  port.disconnect();
+  assert.equal(app.state.cancellations?.[app.input.id]?.status, "unconfirmed");
+  app.session.dispose();
+});
+
+test("confirmed cancellation does not surface the original AI abort as a failure", () => {
+  const app = setup(),
+    port = app.ports[0],
+    requestId = randomUUID();
+  port.receive({ type: "generationState", active: { requestId, jobId: app.input.id } });
+  app.session.cancel();
+  port.receive({
+    type: "job",
+    id: requestId,
+    job: {
+      id: app.input.id,
+      status: "cancelled",
+      sourceTitle: "Cancelled AI",
+      provider: "openai",
+      completed: 0,
+      total: 1,
+      createdAt: document.createdAt,
+      updatedAt: document.createdAt,
+    },
+  });
+  port.receive({ type: "error", id: requestId, message: "AI aborted after cleanup" });
+  assert.equal(
+    app.events.some(event => event.type === "error"),
+    false,
+  );
+  app.session.dispose();
+});
 
 test("duplicate confirmation uses an immutable checked snapshot; invalidated responses are ignored", () => {
   const app = setup();
@@ -261,4 +311,73 @@ test("enqueueing another job preserves partial document chunks and queued errors
   app.session.cancelJob(app.input.id, "custom");
   assert.equal(port.sent.at(-1)?.type, "cancelCustom");
   app.session.dispose();
+});
+
+test("durable admission emits once per new submission, never for replay or restored jobs", () => {
+  const app = setup(),
+    port = app.ports[0];
+  app.session.start(app.input);
+  const check = port.sent.at(-1)!;
+  port.receive({ id: check.id, type: "duplicates", token: randomUUID(), matches: [] });
+  const sent = port.sent.at(-1)! as unknown as { payload: typeof app.input };
+  assert.equal(app.state.submitting, true);
+  assert.equal(app.events.filter(event => event.type === "admitted").length, 0);
+  app.input.source.title = "Next video's edited title";
+  app.session.invalidatePreflight();
+  assert.equal(sent.payload.source.title, document.source.title);
+  assert.equal(app.state.checking, true, "editing does not unlock an unacknowledged request");
+  const job: JobSummary = {
+    id: app.input.id,
+    sourceTitle: document.source.title,
+    provider: "openai",
+    status: "queued",
+    completed: 0,
+    total: 6,
+    createdAt: document.createdAt,
+    updatedAt: document.createdAt,
+  };
+  port.receive({ id: app.input.id, type: "job", job });
+  assert.equal(app.state.submitting, false);
+  assert.equal(app.events.filter(event => event.type === "admitted").length, 1);
+  port.receive({ id: app.input.id, type: "job", job });
+  port.receive({ id: app.input.id, type: "job", job: { ...job, status: "running", completed: 1 } });
+  port.receive({
+    type: "generationState",
+    active: { requestId: job.id, jobId: job.id, summary: job },
+  });
+  port.receive({ id: randomUUID(), type: "jobs", jobs: [job] });
+  assert.equal(app.events.filter(event => event.type === "admitted").length, 1);
+  port.disconnect();
+  app.session.subscribe(() => {});
+  const restored = app.ports.at(-1)!;
+  restored.receive({
+    type: "generationState",
+    active: { requestId: job.id, jobId: job.id, summary: job },
+  });
+  restored.receive({ id: job.id, type: "job", job });
+  assert.equal(app.events.filter(event => event.type === "admitted").length, 1);
+  app.session.dispose();
+});
+
+test("preflight and admission errors do not report success or retain the submission lock", () => {
+  for (const stage of ["preflight", "admission"] as const) {
+    const app = setup(),
+      port = app.ports[0];
+    app.session.start(app.input);
+    const check = port.sent.at(-1)!;
+    if (stage === "admission")
+      port.receive({ id: check.id, type: "duplicates", token: randomUUID(), matches: [] });
+    port.receive({
+      id: stage === "preflight" ? check.id : app.input.id,
+      type: "error",
+      message: "Disk unavailable",
+    });
+    assert.equal(app.events.filter(event => event.type === "admitted").length, 0);
+    assert.equal(app.state.checking, false);
+    assert.equal(app.state.submitting, false);
+    assert.ok(
+      app.events.some(event => event.type === "error" && event.message === "Disk unavailable"),
+    );
+    app.session.dispose();
+  }
 });

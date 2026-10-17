@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CustomGenerationRequestSchema, type AgentSettings } from "@immersive/core";
+import { CustomGenerationRequestSchema, type AgentSettings } from "@contextual/core";
 import { FileCustomRepository } from "../storage/custom";
 import { CustomJobManager } from "../jobs/custom-manager";
 import { planCustomJob, validateMarkdown } from "./custom-pipeline";

@@ -2,15 +2,22 @@ import { customDuplicateKey } from "../custom-duplicates";
 import { createHash, randomBytes } from "node:crypto";
 import {
   readLearningDocument,
+  currentLearningExecution,
+  LEARNING_POINTS_PROMPT_VERSION,
+  LEARNING_POINTS_WORKFLOW_VERSION,
+  LANGUAGE_STRATEGY_VERSION,
+  LEVEL_STRATEGY_VERSION,
+  QUALITY_STRATEGY_VERSION,
+  RETIRED_LESSON_MESSAGE,
   CustomDocumentSchema,
   CustomDriveSummarySchema,
   type DriveLessonSummary,
   type DuplicateMatch,
   type GenerationRequest,
   type LearningDocument,
-} from "@immersive/core";
+} from "@contextual/core";
 import { settingsKey, sourceKey, transcriptKey, videoFolderNameFromKey } from "../duplicates";
-import { learningDocumentToMarkdown as toMarkdownForDrive } from "@immersive/core";
+import { learningDocumentToMarkdown as toMarkdownForDrive } from "@contextual/core";
 import { accessTokenFor, listGoogleAccounts } from "./oauth";
 
 interface DriveFile {
@@ -22,10 +29,41 @@ interface DriveFile {
   parents?: string[];
 }
 
-/** Old Drive files remain untouched and invisible to V5 browsing/restore. */
-export function isV5DriveFile(file: Pick<DriveFile, "appProperties">): boolean {
-  return file.appProperties?.immersiveSchemaVersion === "5";
+/** Normalize legacy metadata in memory; uploads write only the current identifiers. */
+export function normalizeDriveFile<T extends Pick<DriveFile, "appProperties">>(file: T): T {
+  if (!file.appProperties) return file;
+  const properties = { ...file.appProperties };
+  for (const [key, value] of Object.entries(properties)) {
+    if (key.startsWith("immersive")) {
+      const current = "contextual" + key.slice("immersive".length);
+      if (!(current in properties)) properties[current] = value;
+      delete properties[key];
+    }
+  }
+  return { ...file, appProperties: properties };
 }
+
+export function isLearningDriveFile(file: Pick<DriveFile, "appProperties">): boolean {
+  const p = normalizeDriveFile(file).appProperties;
+  return (
+    p?.contextualSchemaVersion === "7" &&
+    p.contextualPromptVersion === LEARNING_POINTS_PROMPT_VERSION &&
+    p.contextualWorkflowVersion === LEARNING_POINTS_WORKFLOW_VERSION &&
+    p.contextualLanguageStrategyVersion === LANGUAGE_STRATEGY_VERSION &&
+    p.contextualLevelStrategyVersion === LEVEL_STRATEGY_VERSION &&
+    p.contextualQualityStrategyVersion === QUALITY_STRATEGY_VERSION
+  );
+}
+const learningVersionQuery = () =>
+  [
+    propertyMatch("contextualSchemaVersion", "7"),
+    propertyMatch("contextualPromptVersion", LEARNING_POINTS_PROMPT_VERSION),
+    propertyMatch("contextualWorkflowVersion", LEARNING_POINTS_WORKFLOW_VERSION),
+    propertyMatch("contextualLanguageStrategyVersion", LANGUAGE_STRATEGY_VERSION),
+    propertyMatch("contextualLevelStrategyVersion", LEVEL_STRATEGY_VERSION),
+    propertyMatch("contextualQualityStrategyVersion", QUALITY_STRATEGY_VERSION),
+  ].join(" and ");
+
 interface DriveList {
   files?: DriveFile[];
   nextPageToken?: string;
@@ -174,7 +212,7 @@ async function listFiles(
     url.searchParams.set("pageSize", String(Math.min(limit, 1000)));
     if (pageToken) url.searchParams.set("pageToken", pageToken);
     const page = await apiJSON<DriveList>(accountId, url.toString(), {}, operation);
-    files.push(...(page.files ?? []));
+    files.push(...(page.files ?? []).map(normalizeDriveFile));
     pageToken = page.nextPageToken;
   } while (pageToken && files.length < limit);
   return files.slice(0, limit);
@@ -192,7 +230,13 @@ export function propertyMatch(key: string, value: string): string {
   if (!/^[A-Za-z0-9]{1,80}$/.test(key) || !/^[A-Za-z0-9_-]{1,120}$/.test(value)) {
     throw new Error("Invalid Drive lookup property");
   }
-  return "appProperties has { key='" + key + "' and value='" + value + "' }";
+  const match = (name: string) =>
+    "appProperties has { key='" + name + "' and value='" + value + "' }";
+  if (key.startsWith("contextual")) {
+    const legacy = "immersive" + key.slice("contextual".length);
+    return "(" + match(key) + " or " + match(legacy) + ")";
+  }
+  return match(key);
 }
 
 /** A settings lookup never creates a Drive folder. */
@@ -239,7 +283,7 @@ async function videoFolder(
     5000,
   );
   const matches = folders.filter(
-    folder => folder.appProperties?.immersiveSourceKey === key || folder.name.endsWith(suffix),
+    folder => folder.appProperties?.contextualSourceKey === key || folder.name.endsWith(suffix),
   );
   if (matches.length > 1)
     throw new DriveContentConflict("Multiple Drive folders exist for the same video");
@@ -254,7 +298,7 @@ async function videoFolder(
         name,
         mimeType: FOLDER_TYPE,
         parents: [appFolderId],
-        appProperties: { immersiveSourceKey: key },
+        appProperties: { contextualSourceKey: key },
       }),
     },
     "備份教材",
@@ -303,7 +347,7 @@ async function uploadFile(
       body: new Uint8Array(data),
     });
   }
-  const boundary = "immersive_" + randomBytes(12).toString("hex");
+  const boundary = "contextual_" + randomBytes(12).toString("hex");
   const body = Buffer.concat([
     Buffer.from(
       "--" +
@@ -331,37 +375,61 @@ async function uploadFile(
   );
 }
 
-export async function findDriveDuplicates(request: GenerationRequest): Promise<DuplicateMatch[]> {
+export interface LearningDrivePorts {
+  accounts: typeof listGoogleAccounts;
+  files: typeof listFiles;
+  fetch: typeof googleFetch;
+  upload: typeof uploadFile;
+  folder(accountId: string, document: LearningDocument): Promise<string>;
+}
+const learningDrivePorts: LearningDrivePorts = {
+  accounts: listGoogleAccounts,
+  files: listFiles,
+  fetch: googleFetch,
+  upload: uploadFile,
+  folder: async (accountId, document) =>
+    videoFolder(
+      accountId,
+      await appFolder(accountId),
+      document.source.title,
+      sourceKey(document.source, document.cues),
+    ),
+};
+export async function findDriveDuplicates(
+  request: GenerationRequest,
+  ports: LearningDrivePorts = learningDrivePorts,
+): Promise<DuplicateMatch[]> {
   if (request.destination?.kind !== "drive") return [];
   const accountId = request.destination.accountId;
   // Do not silently treat an OAuth/network failure as "not generated".
-  const accounts = await listGoogleAccounts();
+  const accounts = await ports.accounts();
   const account = accounts.find(item => item.id === accountId);
   if (!account) throw new Error("請先連線所選的 Google Drive 帳號");
   const key = sourceKey(request.source, request.cues);
   const transcript = transcriptKey(request.cues);
-  const files = await listFiles(
+  const files = await ports.files(
     accountId,
     "(" +
-      propertyMatch("immersiveSourceKey", key) +
+      propertyMatch("contextualSourceKey", key) +
       " or " +
-      propertyMatch("immersiveTranscriptKey", transcript) +
+      propertyMatch("contextualTranscriptKey", transcript) +
       ") and trashed = false and " +
-      propertyMatch("immersiveSchemaVersion", "5"),
+      learningVersionQuery(),
     "id,name,createdTime,webViewLink,appProperties",
     100,
   );
   const expected = settingsKey(request);
   return files
-    .filter(file => file.appProperties?.immersiveFormat === "json" && isV5DriveFile(file))
+    .filter(file => file.appProperties?.contextualFormat === "json" && isLearningDriveFile(file))
     .map(file => ({
-      documentId: file.appProperties?.immersiveDocumentId ?? "",
+      documentId: file.appProperties?.contextualDocumentId ?? "",
       title: file.name,
       createdAt: file.createdTime ?? new Date(0).toISOString(),
       destination: "Google Drive · " + account.email,
       exactSettings:
-        file.appProperties?.immersiveSettingsKey === expected &&
-        file.appProperties?.immersiveTranscriptKey === transcript,
+        file.appProperties?.contextualSchemaVersion === "7" &&
+        file.appProperties?.contextualSettingsKey === expected &&
+        file.appProperties?.contextualTranscriptKey === transcript,
       local: false,
       url:
         file.webViewLink ??
@@ -377,7 +445,7 @@ export class DriveContentConflict extends Error {
   }
 }
 
-/** A revision may change only the user's optional V5 playback windows. */
+/** A revision may change only the user's optional playback windows. */
 export function isPlaybackOnlyDriveRevision(
   before: LearningDocument,
   after: LearningDocument,
@@ -424,7 +492,7 @@ async function updateOwnedPlaybackBackup(
   if (!remote.equals(oldContent)) {
     throw new DriveContentConflict("雲端教材與上次備份不同；保留雲端檔案，請先確認版本");
   }
-  const boundary = "immersive_" + randomBytes(12).toString("hex");
+  const boundary = "contextual_" + randomBytes(12).toString("hex");
   const body = Buffer.concat([
     Buffer.from(
       "--" +
@@ -465,51 +533,69 @@ export async function publishDriveDocument(
   document: LearningDocument,
   markdown: string,
   previousDocument?: LearningDocument,
+  ports: LearningDrivePorts = learningDrivePorts,
 ): Promise<string> {
   if (previousDocument && !isPlaybackOnlyDriveRevision(previousDocument, document)) {
     throw new DriveContentConflict(
       "Only explicit playback calibration may revise an existing Drive lesson",
     );
   }
-  const account = (await listGoogleAccounts()).find(item => item.id === accountId);
+  const account = (await ports.accounts()).find(item => item.id === accountId);
   if (!account) throw new Error("Google Drive 帳號尚未連線");
+  if (!currentLearningExecution(document.execution)) throw new Error(RETIRED_LESSON_MESSAGE);
   const fingerprint = sourceKey(document.source, document.cues);
-  const appFolderId = await appFolder(accountId);
-  const folderId = await videoFolder(accountId, appFolderId, document.source.title, fingerprint);
+  const folderId = await ports.folder(accountId, document);
   const properties = {
-    immersiveSourceKey: fingerprint,
-    immersiveTranscriptKey: transcriptKey(document.cues),
-    immersiveSettingsKey: settingsKey({ profile: document.profile, agent: document.generation }),
-    immersiveDocumentId: document.id,
-    immersiveSchemaVersion: String(document.schemaVersion),
-    immersiveTitle: boundedDriveProperty("immersiveTitle", document.source.title),
-    immersiveCreatedAt: document.createdAt,
-    immersiveLanguage: document.profile.targetLanguage,
-    immersiveLevel: document.profile.level,
-    immersiveScenes: String(document.sections.length),
-    immersiveExpressions: String(
-      document.sections.reduce((count, scene) => count + scene.focusItems.length, 0),
-    ),
+    contextualSourceKey: fingerprint,
+    contextualTranscriptKey: transcriptKey(document.cues),
+    contextualSettingsKey: settingsKey({
+      profile: document.profile,
+      agent: document.generation,
+      ...(document.schemaVersion === 7
+        ? {
+            outputSchemaVersion: 7,
+            workflowVersion: document.execution?.workflowVersion,
+            promptVersion: document.execution?.promptVersion,
+            languageStrategyVersion: document.execution?.languageStrategyVersion,
+            levelStrategyVersion: document.execution?.levelStrategyVersion,
+            qualityStrategyVersion: document.execution?.qualityStrategyVersion,
+          }
+        : {}),
+    }),
+    contextualPromptVersion: document.execution!.promptVersion,
+    contextualWorkflowVersion: document.execution!.workflowVersion,
+    contextualLanguageStrategyVersion: document.execution!.languageStrategyVersion!,
+    contextualLevelStrategyVersion: document.execution!.levelStrategyVersion!,
+    contextualQualityStrategyVersion: document.execution!.qualityStrategyVersion!,
+    contextualDocumentId: document.id,
+    contextualSchemaVersion: String(document.schemaVersion),
+    contextualTitle: boundedDriveProperty("contextualTitle", document.source.title),
+    contextualCreatedAt: document.createdAt,
+    contextualLanguage: document.profile.targetLanguage,
+    contextualLevel: document.profile.level,
+    contextualScenes: String(document.sections.length),
+    contextualPoints: String(document.points.length),
+    contextualReusableItems: String(document.reusableItems.length),
   };
   const docKey = createHash("sha256").update(document.id).digest("hex");
-  const found = await listFiles(
+  const found = await ports.files(
     accountId,
     "trashed = false and " +
-      propertyMatch("immersiveDocumentKey", docKey) +
+      propertyMatch("contextualDocumentKey", docKey) +
       " and " +
-      propertyMatch("immersiveSchemaVersion", "5"),
+      propertyMatch("contextualSchemaVersion", String(document.schemaVersion)),
     "id,name,webViewLink,appProperties,parents",
     100,
   );
   let jsonUrl = "";
   for (const format of ["json", "md"] as const) {
-    const name = "Immersive-" + document.id + "." + format;
+    const name = "Contextual-" + document.id + "." + format;
     const content = Buffer.from(
       format === "json" ? JSON.stringify(document, null, 2) + "\n" : markdown,
       "utf8",
     );
     const expectedHash = createHash("sha256").update(content).digest("hex");
-    const existing = found.filter(file => file.appProperties?.immersiveFormat === format);
+    const existing = found.filter(file => file.appProperties?.contextualFormat === format);
     if (existing.length > 1) {
       throw new DriveContentConflict(
         "Multiple Drive backups exist for the same lesson format; no file was overwritten",
@@ -517,9 +603,9 @@ export async function publishDriveDocument(
     }
     const metadata = {
       ...properties,
-      immersiveFormat: format,
-      immersiveDocumentKey: docKey,
-      immersiveContentHash: expectedHash,
+      contextualFormat: format,
+      contextualDocumentKey: docKey,
+      contextualContentHash: expectedHash,
     };
     validateDriveAppProperties(metadata);
     const oldContent =
@@ -541,7 +627,7 @@ export async function publishDriveDocument(
             metadata,
           )
         : await (async () => {
-            const response = await googleFetch(
+            const response = await ports.fetch(
               accountId,
               API + "/files/" + encodeURIComponent(existing[0].id) + "?alt=media",
               {},
@@ -551,7 +637,7 @@ export async function publishDriveDocument(
             if (remote.length > 25_000_000)
               throw new DriveContentConflict("Cloud lesson exceeds the update limit");
             const remoteHash = createHash("sha256").update(remote).digest("hex");
-            const recordedHash = existing[0].appProperties?.immersiveContentHash;
+            const recordedHash = existing[0].appProperties?.contextualContentHash;
             if (recordedHash && remoteHash !== recordedHash) {
               throw new DriveContentConflict("雲端教材已在應用程式外變更；已保留兩邊檔案");
             }
@@ -588,7 +674,7 @@ export async function publishDriveDocument(
               metadata,
             );
           })()
-      : await uploadFile(
+      : await ports.upload(
           accountId,
           folderId,
           name,
@@ -604,39 +690,51 @@ export async function publishDriveDocument(
   return jsonUrl;
 }
 
-export async function listDriveLessons(accountId: string): Promise<DriveLessonSummary[]> {
-  if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
+export async function listDriveLessons(
+  accountId: string,
+  ports: LearningDrivePorts = learningDrivePorts,
+): Promise<DriveLessonSummary[]> {
+  if (!(await ports.accounts()).some(account => account.id === accountId)) {
     throw new Error("Google Drive account is not connected");
   }
-  const files = await listFiles(
+  const files = await ports.files(
     accountId,
-    "trashed = false and appProperties has { key='immersiveFormat' and value='json' } and " +
-      propertyMatch("immersiveSchemaVersion", "5"),
+    "trashed = false and " +
+      propertyMatch("contextualFormat", "json") +
+      " and " +
+      learningVersionQuery(),
     "id,name,createdTime,webViewLink,appProperties",
     500,
   );
   const unique = new Map<string, DriveLessonSummary>();
   for (const file of files) {
-    if (!isV5DriveFile(file)) continue;
-    const id = file.appProperties?.immersiveDocumentId;
+    if (!isLearningDriveFile(file)) continue;
+    const id = file.appProperties?.contextualDocumentId;
     if (!id || !/^[0-9a-f-]{36}$/i.test(id) || unique.has(id)) continue;
     unique.set(id, {
       documentId: id,
-      title: file.appProperties?.immersiveTitle || "Immersive lesson " + id.slice(0, 8),
+      schemaVersion: 7,
+      ...(/^\d+$/.test(file.appProperties?.contextualPoints ?? "")
+        ? { pointCount: Number(file.appProperties!.contextualPoints) }
+        : {}),
+      ...(/^\d+$/.test(file.appProperties?.contextualReusableItems ?? "")
+        ? { reusableItemCount: Number(file.appProperties!.contextualReusableItems) }
+        : {}),
+      title: file.appProperties?.contextualTitle || "Contextual lesson " + id.slice(0, 8),
       createdAt:
-        file.appProperties?.immersiveCreatedAt || file.createdTime || new Date(0).toISOString(),
-      ...(/^[a-f0-9]{64}$/.test(file.appProperties?.immersiveSourceKey ?? "")
-        ? { sourceKey: file.appProperties!.immersiveSourceKey }
+        file.appProperties?.contextualCreatedAt || file.createdTime || new Date(0).toISOString(),
+      ...(/^[a-f0-9]{64}$/.test(file.appProperties?.contextualSourceKey ?? "")
+        ? { sourceKey: file.appProperties!.contextualSourceKey }
         : {}),
-      ...(file.appProperties?.immersiveLanguage
-        ? { targetLanguage: file.appProperties.immersiveLanguage }
+      ...(file.appProperties?.contextualLanguage
+        ? { targetLanguage: file.appProperties.contextualLanguage }
         : {}),
-      ...(file.appProperties?.immersiveLevel ? { level: file.appProperties.immersiveLevel } : {}),
-      ...(/^\d{1,3}$/.test(file.appProperties?.immersiveScenes ?? "")
-        ? { sceneCount: Number(file.appProperties!.immersiveScenes) }
+      ...(file.appProperties?.contextualLevel ? { level: file.appProperties.contextualLevel } : {}),
+      ...(/^\d{1,3}$/.test(file.appProperties?.contextualScenes ?? "")
+        ? { sceneCount: Number(file.appProperties!.contextualScenes) }
         : {}),
-      ...(/^\d{1,4}$/.test(file.appProperties?.immersiveExpressions ?? "")
-        ? { expressionCount: Number(file.appProperties!.immersiveExpressions) }
+      ...(/^\d{1,4}$/.test(file.appProperties?.contextualExpressions ?? "")
+        ? { expressionCount: Number(file.appProperties!.contextualExpressions) }
         : {}),
       accountId,
       url:
@@ -651,29 +749,46 @@ export async function listDriveLessons(accountId: string): Promise<DriveLessonSu
 export async function getDriveDocument(
   accountId: string,
   documentId: string,
+  ports: LearningDrivePorts = learningDrivePorts,
 ): Promise<LearningDocument> {
   if (!/^[0-9a-f-]{36}$/i.test(documentId)) throw new Error("Invalid lesson ID");
-  if (!(await listGoogleAccounts()).some(account => account.id === accountId)) {
+  if (!(await ports.accounts()).some(account => account.id === accountId)) {
     throw new Error("Google Drive account is not connected");
   }
   const key = createHash("sha256").update(documentId).digest("hex");
-  const files = await listFiles(
+  const files = await ports.files(
     accountId,
     "trashed = false and " +
-      propertyMatch("immersiveDocumentKey", key) +
+      propertyMatch("contextualDocumentKey", key) +
       " and " +
-      propertyMatch("immersiveSchemaVersion", "5"),
+      learningVersionQuery(),
     "id,name,appProperties",
     100,
   );
   const file = files.find(
     item =>
-      item.appProperties?.immersiveFormat === "json" &&
-      item.appProperties?.immersiveDocumentId === documentId &&
-      isV5DriveFile(item),
+      item.appProperties?.contextualFormat === "json" &&
+      item.appProperties?.contextualDocumentId === documentId &&
+      isLearningDriveFile(item),
   );
-  if (!file) throw new Error("Lesson not found in Google Drive");
-  const response = await googleFetch(
+  if (!file) {
+    const older = await ports.files(
+      accountId,
+      "trashed = false and " + propertyMatch("contextualDocumentKey", key),
+      "id,name,appProperties",
+      100,
+    );
+    if (
+      older.some(
+        item =>
+          item.appProperties?.contextualDocumentId === documentId &&
+          item.appProperties?.contextualSchemaVersion !== "custom-v1",
+      )
+    )
+      throw new Error(RETIRED_LESSON_MESSAGE);
+    throw new Error("Lesson not found in Google Drive");
+  }
+  const response = await ports.fetch(
     accountId,
     API + "/files/" + encodeURIComponent(file.id) + "?alt=media",
   );
@@ -682,26 +797,35 @@ export async function getDriveDocument(
   }
   const bytes = Buffer.from(await response.arrayBuffer());
   if (bytes.length > 25_000_000) throw new Error("Drive lesson exceeds the import size limit");
-  const checksum = file.appProperties?.immersiveContentHash;
+  const checksum = file.appProperties?.contextualContentHash;
   if (checksum && createHash("sha256").update(bytes).digest("hex") !== checksum) {
     throw new DriveContentConflict("Drive lesson does not match its recorded checksum");
   }
-  const document = readLearningDocument(JSON.parse(bytes.toString("utf8")) as unknown);
+  const raw: unknown = JSON.parse(bytes.toString("utf8"));
+  if (
+    !raw ||
+    typeof raw !== "object" ||
+    !currentLearningExecution((raw as { execution?: unknown }).execution)
+  )
+    throw new Error(RETIRED_LESSON_MESSAGE);
+  const document = readLearningDocument(raw);
+  if (String(document.schemaVersion) !== file.appProperties?.contextualSchemaVersion)
+    throw new DriveContentConflict("Drive lesson schema metadata mismatch");
   if (document.id !== documentId)
     throw new DriveContentConflict("Drive lesson ID does not match requested ID");
   return document;
 }
 
-/** Custom files are immutable per document id, independently of V5 lessons. */
+/** Custom files are immutable per document id, independently of standard lessons. */
 async function customDriveFiles(accountId: string, documentId?: string) {
   return listFiles(
     accountId,
     "trashed = false and " +
-      propertyMatch("immersiveSchemaVersion", "custom-v1") +
+      propertyMatch("contextualSchemaVersion", "custom-v1") +
       (documentId
         ? " and " +
           propertyMatch(
-            "immersiveDocumentKey",
+            "contextualDocumentKey",
             createHash("sha256").update(documentId).digest("hex"),
           )
         : ""),
@@ -712,7 +836,7 @@ async function customDriveFiles(accountId: string, documentId?: string) {
 export interface CustomDrivePorts {
   files: typeof customDriveFiles;
   fetch: typeof googleFetch;
-  folder(accountId: string, document: import("@immersive/core").CustomDocument): Promise<string>;
+  folder(accountId: string, document: import("@contextual/core").CustomDocument): Promise<string>;
   upload: typeof uploadFile;
 }
 const customDrivePorts: CustomDrivePorts = {
@@ -741,8 +865,8 @@ async function checkedCustomBytes(
   const bytes = Buffer.from(await response.arrayBuffer());
   if (
     bytes.length > 20_000_000 ||
-    !file.appProperties?.immersiveContentHash ||
-    createHash("sha256").update(bytes).digest("hex") !== file.appProperties.immersiveContentHash
+    !file.appProperties?.contextualContentHash ||
+    createHash("sha256").update(bytes).digest("hex") !== file.appProperties.contextualContentHash
   )
     throw new DriveContentConflict(
       "Custom Drive content changed outside the application; both versions are preserved",
@@ -751,11 +875,11 @@ async function checkedCustomBytes(
 }
 export async function publishCustomDriveDocument(
   accountId: string,
-  document: import("@immersive/core").CustomDocument,
+  document: import("@contextual/core").CustomDocument,
   ports = customDrivePorts,
 ): Promise<string> {
   const parsed = CustomDocumentSchema.parse(document),
-    files = await ports.files(accountId, parsed.id);
+    files = (await ports.files(accountId, parsed.id)).map(normalizeDriveFile);
   const folder = await ports.folder(accountId, parsed);
   const { markdown, ...metadata } = parsed;
   let url = "";
@@ -770,26 +894,27 @@ export async function publishCustomDriveDocument(
           );
     const bytes = Buffer.from(text, "utf8"),
       hash = createHash("sha256").update(bytes).digest("hex");
-    const matches = files.filter(file => file.appProperties?.immersiveFormat === format);
+    const matches = files.filter(file => file.appProperties?.contextualFormat === format);
     if (matches.length > 1)
       throw new DriveContentConflict(
         "Multiple custom Drive backups exist; no file was overwritten",
       );
     const properties = {
-      immersiveSchemaVersion: "custom-v1",
-      immersiveKind: "custom",
-      immersiveDocumentId: parsed.id,
-      immersiveDocumentKey: createHash("sha256").update(parsed.id).digest("hex"),
-      immersiveInputKey: parsed.execution.inputFingerprint,
-      immersiveDuplicateKey: customDuplicateKey(parsed.request),
-      immersiveFormat: format,
-      immersiveContentHash: hash,
-      immersiveTitle: boundedDriveProperty("immersiveTitle", parsed.title),
-      immersiveSourceTitle: boundedDriveProperty(
-        "immersiveSourceTitle",
+      contextualSchemaVersion: "custom-v1",
+      contextualKind: "custom",
+      contextualDocumentId: parsed.id,
+      contextualDocumentKey: createHash("sha256").update(parsed.id).digest("hex"),
+      contextualInputKey: parsed.execution.inputFingerprint,
+      contextualDuplicateKey: customDuplicateKey(parsed.request),
+      contextualSourceKey: sourceKey(parsed.request.source, parsed.request.cues),
+      contextualFormat: format,
+      contextualContentHash: hash,
+      contextualTitle: boundedDriveProperty("contextualTitle", parsed.title),
+      contextualSourceTitle: boundedDriveProperty(
+        "contextualSourceTitle",
         parsed.request.source.title,
       ),
-      immersiveCreatedAt: parsed.createdAt,
+      contextualCreatedAt: parsed.createdAt,
     };
     const file = matches[0];
     if (file) {
@@ -817,22 +942,23 @@ export async function publishCustomDriveDocument(
 export async function listCustomDriveDocuments(
   accountId: string,
   ports = customDrivePorts,
-): Promise<import("@immersive/core").CustomDriveSummary[]> {
-  const files = (await ports.files(accountId)).filter(
-    file => file.appProperties?.immersiveFormat === "json",
-  );
+): Promise<import("@contextual/core").CustomDriveSummary[]> {
+  const files = (await ports.files(accountId))
+    .map(normalizeDriveFile)
+    .filter(file => file.appProperties?.contextualFormat === "json");
   const seen = new Set<string>();
   return files.map(file => {
     const properties = file.appProperties!,
-      id = properties.immersiveDocumentId;
+      id = properties.contextualDocumentId;
     if (seen.has(id)) throw new DriveContentConflict("Multiple custom Drive metadata files exist");
     seen.add(id);
     return CustomDriveSummarySchema.parse({
       kind: "custom",
       documentId: id,
-      title: properties.immersiveTitle,
-      sourceTitle: properties.immersiveSourceTitle,
-      createdAt: properties.immersiveCreatedAt,
+      title: properties.contextualTitle,
+      sourceTitle: properties.contextualSourceTitle,
+      sourceKey: properties.contextualSourceKey,
+      createdAt: properties.contextualCreatedAt,
       accountId,
       url: file.webViewLink ?? `https://drive.google.com/file/d/${file.id}/view`,
     });
@@ -842,10 +968,10 @@ export async function getCustomDriveDocument(
   accountId: string,
   documentId: string,
   ports = customDrivePorts,
-): Promise<import("@immersive/core").CustomDocument> {
-  const files = await ports.files(accountId, documentId);
-  const metadata = files.filter(file => file.appProperties?.immersiveFormat === "json"),
-    content = files.filter(file => file.appProperties?.immersiveFormat === "md");
+): Promise<import("@contextual/core").CustomDocument> {
+  const files = (await ports.files(accountId, documentId)).map(normalizeDriveFile);
+  const metadata = files.filter(file => file.appProperties?.contextualFormat === "json"),
+    content = files.filter(file => file.appProperties?.contextualFormat === "md");
   if (metadata.length !== 1 || content.length !== 1)
     throw new DriveContentConflict(
       "Custom backup is incomplete or duplicated; no local content was replaced",
@@ -868,19 +994,21 @@ export async function findCustomDriveDuplicates(
   ports = typeof legacyFingerprintOrPorts === "object"
     ? legacyFingerprintOrPorts
     : customDrivePorts,
-): Promise<import("@immersive/core").DuplicateMatch[]> {
-  const files = (await ports.files(accountId)).filter(
-    file =>
-      file.appProperties?.immersiveFormat === "json" &&
-      (file.appProperties.immersiveDuplicateKey === fingerprint ||
-        file.appProperties.immersiveInputKey === fingerprint ||
-        (typeof legacyFingerprintOrPorts === "string" &&
-          file.appProperties.immersiveInputKey === legacyFingerprintOrPorts)),
-  );
+): Promise<import("@contextual/core").DuplicateMatch[]> {
+  const files = (await ports.files(accountId))
+    .map(normalizeDriveFile)
+    .filter(
+      file =>
+        file.appProperties?.contextualFormat === "json" &&
+        (file.appProperties.contextualDuplicateKey === fingerprint ||
+          file.appProperties.contextualInputKey === fingerprint ||
+          (typeof legacyFingerprintOrPorts === "string" &&
+            file.appProperties.contextualInputKey === legacyFingerprintOrPorts)),
+    );
   return files.map(file => ({
-    documentId: file.appProperties!.immersiveDocumentId,
-    title: file.appProperties!.immersiveTitle,
-    createdAt: file.appProperties!.immersiveCreatedAt,
+    documentId: file.appProperties!.contextualDocumentId,
+    title: file.appProperties!.contextualTitle,
+    createdAt: file.appProperties!.contextualCreatedAt,
     local: false,
     destination: "drive",
     exactSettings: true,

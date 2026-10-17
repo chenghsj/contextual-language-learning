@@ -2,6 +2,8 @@ import React from "react";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
+import { JSDOM } from "jsdom";
+import { settingsLayoutCopy } from "./settings-layout";
 import { VideoLibrary } from "../components/video-library";
 import { GenerationStatus } from "../components/generation-status";
 import { translate } from "./messages";
@@ -67,11 +69,25 @@ test("progress screen has a library exit and real phases without generation sett
       onCancel={noop}
     />,
   );
-  assert.match(html, /正在建立教材/);
-  assert.match(html, /分析字幕.*選擇場景.*建立教材內容.*整理與儲存/);
-  assert.match(html, /教材完成後會通知你/);
-  assert.match(html, /回到教材庫/);
-  assert.doesNotMatch(html, /API Key|Native Host|role="combobox"/);
+  const dom = new JSDOM(html);
+  try {
+    const ui = sidePanelLayoutCopy["zh-TW"];
+    const section = dom.window.document.querySelector("section")!;
+    assert.equal(section.getAttribute("aria-label"), ui.generationTitle);
+    assert.deepEqual(
+      [...section.querySelectorAll("ol li")].map(item => item.textContent),
+      [ui.analyzing, ui.selecting, ui.creating, ui.saving],
+    );
+    assert.equal(section.querySelector(".animate-spin")?.parentElement?.textContent, ui.creating);
+    assert.ok(section.textContent?.includes(settingsLayoutCopy["zh-TW"].runningNotify));
+    assert.ok(
+      [...section.querySelectorAll("button")].some(button => button.textContent === ui.backLibrary),
+    );
+    assert.equal(section.querySelector('[role="combobox"]'), null);
+    assert.doesNotMatch(section.textContent!, /API Key|Native Host/);
+  } finally {
+    dom.window.close();
+  }
 });
 test("all layout copy has the same non-empty keys in every supported locale", () => {
   const expected = Object.keys(sidePanelLayoutCopy.en).sort();

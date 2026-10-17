@@ -1,4 +1,4 @@
-import type { DriveLessonSummary, LessonSummary } from "@immersive/core";
+import type { DriveLessonSummary, LessonSummary } from "@contextual/core";
 
 export type LessonFilter = "all" | "local" | "drive";
 export type LessonEntry = {

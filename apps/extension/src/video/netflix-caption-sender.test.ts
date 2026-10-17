@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { validateNetflixCaptionSender, type NetflixCaptionSender } from "./netflix-caption-sender";
 
-const extensionId = "immersive-extension-test";
+const extensionId = "contextual-extension-test";
 const watch = "https://www.netflix.com/watch/81234567";
 const sender: NetflixCaptionSender = {
   id: extensionId,

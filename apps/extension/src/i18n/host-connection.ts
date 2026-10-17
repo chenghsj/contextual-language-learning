@@ -1,6 +1,15 @@
 /** Native Host setup and connection status in each supported interface language. */
 export const hostConnectionCopy = {
   en: {
+    installerSteps:
+      "Download the installer for your computer, extract it, then open Setup and select your browser.",
+    localInstallerSteps:
+      "Extract the local test installer ZIP and open Setup to install the service for your browser.",
+    installerAfterInstall: "When installation finishes, return here and check the connection.",
+    downloadInstaller: "Download local service",
+    downloadUpdate: "Download update",
+    installerUninstall:
+      "Open the local service Setup again, select your browser, and choose Uninstall after tasks finish.",
     windowsRequirements:
       "Windows requires Windows PowerShell 5.1 and .NET Framework to create the Native Host launcher during installation. Run Node.js commands in PowerShell or Command Prompt; administrator rights are not required.",
     linuxRequirements:
@@ -24,7 +33,7 @@ export const hostConnectionCopy = {
 
     title: "Local connection service",
     name: "Native Host",
-    help: "The local service embeds Pi SDK and connects to your selected AI provider. No CLI installation is required.",
+    help: "Connects your selected AI service to local lessons and backups.",
     connected: "Connected",
     disconnected: "Not connected",
     checking: "Checking connection…",
@@ -52,7 +61,7 @@ export const hostConnectionCopy = {
       "Confirm the selected browser. Chrome, Edge and Chromium each require their own Host registration.",
     error: "Could not copy. Select and copy the command manually.",
     connectionFailed:
-      "Unable to connect to the Host. Install it for this extension ID and browser, then reload the extension and check again.",
+      "Unable to connect to the local service. Complete installation, then check again.",
     installMethod: "Installation method",
     packageInstall: "Download a Host package",
     sourceInstall: "Update from the project",
@@ -62,6 +71,12 @@ export const hostConnectionCopy = {
       "After installing, reload the extension on your browser’s extensions page, then check the connection again.",
   },
   "zh-TW": {
+    installerSteps: "下載適合這台電腦的安裝包，解壓縮後開啟設定程式，選擇瀏覽器並安裝。",
+    localInstallerSteps: "解壓縮本機測試安裝 ZIP，開啟設定程式，為使用的瀏覽器安裝本機服務。",
+    installerAfterInstall: "安裝完成後，回到這裡按「檢查連線」。",
+    downloadInstaller: "下載本機服務",
+    downloadUpdate: "下載更新",
+    installerUninstall: "等待任務完成後，再次開啟本機服務設定程式，選擇瀏覽器並按「解除安裝」。",
     windowsRequirements:
       "Windows 安裝時需要 Windows PowerShell 5.1 與 .NET Framework 建立 Host launcher。Node.js 指令可在 PowerShell 或命令提示字元執行，不需系統管理員權限。",
     linuxRequirements:
@@ -83,7 +98,7 @@ export const hostConnectionCopy = {
 
     title: "本機連接服務",
     name: "Native Host",
-    help: "本機服務內建 Pi SDK，負責連接所選 AI 服務，不需另外安裝 CLI。",
+    help: "連接所選 AI 服務，提供本機教材存取與備份。",
     connected: "已連線",
     disconnected: "尚未連線",
     checking: "正在檢查連線…",
@@ -106,8 +121,7 @@ export const hostConnectionCopy = {
     lastChecked: "上次檢查",
     manual: "請確認所選瀏覽器。Chrome、Edge 與 Chromium 需要分別註冊 Host。",
     error: "無法複製，請手動選取指令。",
-    connectionFailed:
-      "無法連接 Host。請使用目前的擴充功能 ID，為所選瀏覽器安裝 Host，再重新載入擴充功能並檢查連線。",
+    connectionFailed: "無法連接本機服務。請完成安裝，再重新檢查。",
     installMethod: "安裝方式",
     packageInstall: "下載 Host 套件",
     sourceInstall: "從專案更新",
@@ -115,6 +129,12 @@ export const hostConnectionCopy = {
     afterInstall: "安裝完成後，到瀏覽器的擴充功能頁重新載入此擴充功能，再檢查連線。",
   },
   "zh-CN": {
+    installerSteps: "下载适合这台电脑的安装包，解压后打开设置程序，选择浏览器并安装。",
+    localInstallerSteps: "解压本地测试安装 ZIP，打开设置程序，为使用的浏览器安装本地服务。",
+    installerAfterInstall: "安装完成后，回到这里点击“检查连接”。",
+    downloadInstaller: "下载本地服务",
+    downloadUpdate: "下载更新",
+    installerUninstall: "等待任务完成后，再次打开本地服务设置程序，选择浏览器并点击“卸载”。",
     windowsRequirements:
       "Windows 安装时需要 Windows PowerShell 5.1 与 .NET Framework 创建 Host launcher。Node.js 命令可在 PowerShell 或命令提示符执行，无需管理员权限。",
     linuxRequirements:
@@ -136,7 +156,7 @@ export const hostConnectionCopy = {
 
     title: "本地连接服务",
     name: "Native Host",
-    help: "本地服务内置 Pi SDK，负责连接所选 AI 服务，无需另外安装 CLI。",
+    help: "连接所选 AI 服务，提供本地教材访问与备份。",
     connected: "已连接",
     disconnected: "尚未连接",
     checking: "正在检查连接…",
@@ -159,8 +179,7 @@ export const hostConnectionCopy = {
     lastChecked: "上次检查",
     manual: "请确认所选浏览器。Chrome、Edge 和 Chromium 需要分别注册 Host。",
     error: "无法复制，请手动选择命令。",
-    connectionFailed:
-      "无法连接 Host。请使用当前扩展 ID，为所选浏览器安装 Host，再重新加载扩展并检查连接。",
+    connectionFailed: "无法连接本地服务。请完成安装后重新检查。",
     installMethod: "安装方式",
     packageInstall: "下载 Host 包",
     sourceInstall: "从项目更新",
@@ -168,6 +187,15 @@ export const hostConnectionCopy = {
     afterInstall: "安装完成后，到浏览器扩展页面重新加载此扩展，再检查连接。",
   },
   ja: {
+    installerSteps:
+      "このパソコン用のインストーラーをダウンロードして展開し、設定プログラムでブラウザを選んでインストールしてください。",
+    localInstallerSteps:
+      "ローカルテスト用 ZIP を展開し、設定プログラムでブラウザ用のサービスをインストールしてください。",
+    installerAfterInstall: "インストール後、ここに戻って接続を確認してください。",
+    downloadInstaller: "ローカルサービスをダウンロード",
+    downloadUpdate: "更新をダウンロード",
+    installerUninstall:
+      "タスク完了後、設定プログラムを再度開き、ブラウザを選んでアンインストールしてください。",
     windowsRequirements:
       "Windows のインストールでは Host launcher の作成に Windows PowerShell 5.1 と .NET Framework が必要です。Node.js コマンドは PowerShell またはコマンドプロンプトで実行できます。管理者権限は不要です。",
     linuxRequirements:
@@ -191,7 +219,7 @@ export const hostConnectionCopy = {
 
     title: "ローカル接続サービス",
     name: "Native Host",
-    help: "ローカルサービスに Pi SDK が内蔵されています。CLI のインストールは不要です。",
+    help: "選択した AI サービスに接続し、ローカル教材とバックアップを利用できます。",
     connected: "接続済み",
     disconnected: "未接続",
     checking: "接続を確認中…",
@@ -219,7 +247,7 @@ export const hostConnectionCopy = {
       "選択したブラウザーを確認してください。Chrome・Edge・Chromium はそれぞれ Host の登録が必要です。",
     error: "コピーできません。手動でコマンドを選択してください。",
     connectionFailed:
-      "Host に接続できません。現在の拡張機能 ID とブラウザーで Host を登録し、拡張機能を再読み込みして接続を確認してください。",
+      "ローカルサービスに接続できません。インストールを完了してから再度確認してください。",
     installMethod: "インストール方法",
     packageInstall: "Host パッケージをダウンロード",
     sourceInstall: "プロジェクトから更新",
@@ -229,6 +257,14 @@ export const hostConnectionCopy = {
       "インストール後、ブラウザーの拡張機能ページでこの拡張機能を再読み込みし、接続を確認してください。",
   },
   ko: {
+    installerSteps:
+      "이 컴퓨터에 맞는 설치 파일을 다운로드하고 압축을 푼 뒤 설정 프로그램에서 브라우저를 선택하여 설치하세요.",
+    localInstallerSteps:
+      "로컬 테스트 ZIP의 압축을 풀고 설정 프로그램에서 브라우저용 서비스를 설치하세요.",
+    installerAfterInstall: "설치 후 여기로 돌아와 연결을 확인하세요.",
+    downloadInstaller: "로컬 서비스 다운로드",
+    downloadUpdate: "업데이트 다운로드",
+    installerUninstall: "작업 완료 후 설정 프로그램을 다시 열고 브라우저를 선택하여 제거하세요.",
     windowsRequirements:
       "Windows 설치 시 Host launcher를 만들려면 Windows PowerShell 5.1과 .NET Framework가 필요합니다. Node.js 명령은 PowerShell 또는 명령 프롬프트에서 실행할 수 있으며 관리자 권한은 필요하지 않습니다.",
     linuxRequirements:
@@ -252,7 +288,7 @@ export const hostConnectionCopy = {
 
     title: "로컬 연결 서비스",
     name: "Native Host",
-    help: "로컬 서비스에 Pi SDK가 내장되어 있습니다. CLI 설치가 필요 없습니다.",
+    help: "선택한 AI 서비스에 연결하고 로컬 학습 자료와 백업을 제공합니다.",
     connected: "연결됨",
     disconnected: "연결되지 않음",
     checking: "연결 확인 중…",
@@ -278,8 +314,7 @@ export const hostConnectionCopy = {
     lastChecked: "마지막 확인",
     manual: "선택한 브라우저를 확인하세요. Chrome, Edge, Chromium은 각각 Host 등록이 필요합니다.",
     error: "복사할 수 없습니다. 명령을 수동 선택하세요.",
-    connectionFailed:
-      "Host에 연결할 수 없습니다. 현재 확장 프로그램 ID와 선택한 브라우저로 Host를 등록한 뒤 확장 프로그램을 다시 로드하고 연결을 확인하세요.",
+    connectionFailed: "로컬 서비스에 연결할 수 없습니다. 설치를 완료한 뒤 다시 확인하세요.",
     installMethod: "설치 방법",
     packageInstall: "Host 패키지 다운로드",
     sourceInstall: "프로젝트에서 업데이트",

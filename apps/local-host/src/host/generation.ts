@@ -5,7 +5,7 @@ import type {
   GenerationRequest,
   HostRequest,
   LearningDocument,
-} from "@immersive/core";
+} from "@contextual/core";
 import { assertPiProvider } from "../agents";
 import { findLocalDuplicates, requestKey } from "../duplicates";
 import { findDriveDuplicates } from "../drive/api";
@@ -44,6 +44,8 @@ export function createGenerationHandler(
   async function handle(request: HostRequest): Promise<boolean> {
     switch (request.type) {
       case "checkDuplicates": {
+        if (request.payload.outputSchemaVersion !== 7)
+          throw new Error("Protocol 12 requires outputSchemaVersion: 7 for standard generation");
         const matches = await duplicates(request.payload);
         const token = randomUUID();
         checks.set(token, {
@@ -55,6 +57,8 @@ export function createGenerationHandler(
         return true;
       }
       case "generate": {
+        if (request.payload.outputSchemaVersion !== 7)
+          throw new Error("Protocol 12 requires outputSchemaVersion: 7 for standard generation");
         const admit = async () => {
           assertPiProvider(request.payload.agent.provider);
           const checked = checks.get(request.checkToken);

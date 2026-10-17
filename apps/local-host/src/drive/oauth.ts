@@ -3,9 +3,10 @@ import { execFile } from "node:child_process";
 import { createServer } from "node:http";
 import { promisify } from "node:util";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
+import { createDriveKeychainStore } from "./keychain-credentials";
+import { appConfigRoot } from "../platform/paths";
 import { join } from "node:path";
-import type { DriveAccount } from "@immersive/core";
+import type { DriveAccount } from "@contextual/core";
 import {
   oauthCallbackHeaders,
   oauthCallbackPageStart,
@@ -14,9 +15,9 @@ import {
 } from "./oauth-callback-page";
 
 const exec = promisify(execFile);
-const root = join(homedir(), "Library", "Application Support", "Immersive Learning");
+const root = appConfigRoot();
 const accountsPath = join(root, "google-accounts.json");
-const keychainService = "dev.immersive.language-learning.google-drive";
+const keychain = createDriveKeychainStore();
 const clientIdPattern = /^[A-Za-z0-9_.-]+\.apps\.googleusercontent\.com$/;
 
 interface OAuthConfig {
@@ -102,32 +103,6 @@ async function savedAccounts(): Promise<SavedAccount[]> {
   }
 }
 
-async function keychainWrite(id: string, refreshToken: string): Promise<void> {
-  if (process.platform !== "darwin")
-    throw new Error("Google account storage currently requires macOS Keychain");
-  // macOS 'security' stores the secret in Keychain. Avoid log output from this command.
-  await exec(
-    "/usr/bin/security",
-    ["add-generic-password", "-s", keychainService, "-a", id, "-w", refreshToken, "-U"],
-    { maxBuffer: 4096 },
-  );
-}
-
-async function keychainRead(id: string): Promise<string> {
-  if (process.platform !== "darwin")
-    throw new Error("Google account storage currently requires macOS Keychain");
-  try {
-    const { stdout } = await exec(
-      "/usr/bin/security",
-      ["find-generic-password", "-s", keychainService, "-a", id, "-w"],
-      { maxBuffer: 16_384 },
-    );
-    return stdout.trim();
-  } catch {
-    throw new Error("此 Google 帳號的憑證已失效，請重新連線");
-  }
-}
-
 /**
  * Report Google's OAuth error code, but never echo token endpoint bodies.
  * The response may contain identifiers or secrets and is not safe to display verbatim.
@@ -179,6 +154,16 @@ type AuthorizationSession = {
   redirectUri: string;
   finish: (outcome: OAuthCallbackOutcome) => void;
 };
+
+export function googleAuthorizationError(parameters: URLSearchParams): Error {
+  if (parameters.get("error") === "access_denied")
+    return new Error("Google authorization was declined");
+  return new Error(
+    parameters.has("error")
+      ? "Google authorization failed"
+      : "Google did not provide an authorization code",
+  );
+}
 
 /**
  * Stream the local callback page immediately after Google returns. Keep the
@@ -237,13 +222,7 @@ async function authorizationCode(clientId: string): Promise<AuthorizationSession
     const code = url.searchParams.get("code");
     if (!code) {
       finish("error");
-      rejectCode(
-        new Error(
-          url.searchParams.has("error")
-            ? "Google authorization was declined"
-            : "Google did not provide an authorization code",
-        ),
-      );
+      rejectCode(googleAuthorizationError(url.searchParams));
       return;
     }
     if (timeout) clearTimeout(timeout);
@@ -325,7 +304,7 @@ export async function connectGoogleAccount(): Promise<DriveAccount> {
     const previous = (await savedAccounts()).find(
       item => item.id === account.id && item.clientId === config.clientId,
     );
-    if (token.refresh_token) await keychainWrite(account.id, token.refresh_token);
+    if (token.refresh_token) await keychain.write(account.id, token.refresh_token);
     else if (!previous)
       throw new Error("Google did not issue a refresh token; reconnect with consent");
     const accounts = await savedAccounts();
@@ -352,7 +331,7 @@ export async function accessTokenFor(accountId: string): Promise<string> {
   if (cached && cached.expiry > Date.now()) return cached.value;
   const form = new URLSearchParams({
     client_id: config.clientId,
-    refresh_token: await keychainRead(accountId),
+    refresh_token: await keychain.read(accountId),
     grant_type: "refresh_token",
   });
   if (config.clientSecret) form.set("client_secret", config.clientSecret);
@@ -369,13 +348,7 @@ export async function disconnectGoogleAccount(accountId: string): Promise<void> 
   const accounts = await savedAccounts();
   if (!accounts.some(item => item.id === accountId)) throw new Error("Google 帳號尚未連線");
   accessTokens.delete(accountId);
-  if (process.platform === "darwin") {
-    await exec(
-      "/usr/bin/security",
-      ["delete-generic-password", "-s", keychainService, "-a", accountId],
-      { maxBuffer: 4096 },
-    ).catch(() => undefined);
-  }
+  await keychain.remove(accountId);
   await writePrivate(
     accountsPath,
     accounts.filter(item => item.id !== accountId),

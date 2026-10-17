@@ -61,7 +61,7 @@ async function click(element: HTMLElement) {
   });
 }
 
-test("one player changes target; timing transport is unbounded, previews are short, and Done persists", async () => {
+test("one player changes target; timing captures the stopped clock, previews the draft, and Done persists", async () => {
   let currentMs = 1500,
     playing = false;
   let normalPlays = 0,
@@ -181,11 +181,7 @@ test("one player changes target; timing transport is unbounded, previews are sho
     });
     await click(button("Pause", container.querySelector("footer")!));
     assert.ok(pauses > 0);
-    await click(
-      Array.from(container.querySelectorAll("button")).find(item =>
-        item.textContent?.includes("I haven't decided"),
-      )!,
-    );
+    await click(button("Play this sentence 2", container));
     assert.equal(loops.at(-1)?.startMs, 3100);
     assert.ok(button("Next sentence", container.querySelector("footer")!));
     currentMs = 4000;
@@ -220,32 +216,67 @@ test("one player changes target; timing transport is unbounded, previews are sho
       "infinite",
       "new scene playback uses the preserved loop preference",
     );
-    await click(
-      Array.from(container.querySelectorAll("button")).find(item =>
-        item.textContent?.includes("I haven't decided"),
-      )!,
-    );
+    await click(button("Play this sentence 2", container));
     await click(button("Playback options"));
     await click(button("Adjust timing"));
     assert.equal(saves.length, 0);
-    await click(button("Pause", container.querySelector("section")!));
+    assert.equal(playing, false, "opening timing pauses the video");
+    assert.equal(container.querySelector("footer"), null, "editing has only one player");
+    assert.equal(button("Next scene", container.querySelector("nav")!).disabled, true);
+    assert.equal(container.querySelector('[aria-label="End +0.5s"]'), null);
     await click(button("Play", container.querySelector("section")!));
     assert.equal(normalPlays, 1, "timing play uses native play, not the selected range");
-    await click(button("End +0.5s"));
+    currentMs = 2809;
+    await click(button("Set start here"));
+    assert.equal(playing, false, "marking pauses playback before reading the clock");
+    await click(button("Play", container.querySelector("section")!));
+    currentMs = 6100;
+    await click(button("Set end here"));
+    assert.equal(playing, false);
+    currentMs = 2000;
+    await click(button("Set end here"));
+    assert.match(
+      container.querySelector('section [role="status"]')!.textContent!,
+      /start before the end/,
+    );
+    currentMs = Number.NaN;
+    await click(button("Set end here"));
+    assert.match(container.querySelector('section [role="status"]')!.textContent!, /Cannot read/);
+    await click(button("Start -0.1s"));
+    await click(button("End +0.1s"));
+    await click(button("Test start"));
+    assert.equal(loops.at(-1)?.startMs, 1700);
+    assert.equal(loops.at(-1)?.endMs, 3700);
     await click(button("Test end"));
+    assert.equal(loops.at(-1)?.startMs, 5200);
+    assert.equal(loops.at(-1)?.endMs, 7200);
+    await click(button("Preview range"));
     assert.deepEqual(loops.at(-1), {
-      startMs: 5000,
-      endMs: 7000,
+      startMs: 2700,
+      endMs: 6200,
       repeats: 1,
       delaySeconds: 0,
       resumeMs: undefined,
     });
     assert.equal(saves.length, 0, "auditioning never writes lesson data");
     await click(button("Done"));
-    assert.deepEqual(saves, [{ id: "cue-2", range: { startMs: 3100, endMs: 6000 } }]);
+    assert.deepEqual(saves, [{ id: "cue-2", range: { startMs: 2700, endMs: 6200 } }]);
+    assert.ok(container.querySelector("footer"), "Done restores the normal player");
     await click(button("Playback options"));
     await click(button("Adjust timing"));
-    await click(button("Start -0.1s"));
+    currentMs = 5300;
+    await click(button("Set start here"));
+    await click(button("Start +0.1s"));
+    assert.ok(container.querySelector('section [role="status"]'), "too-short edits are rejected");
+    await click(button("Preview range"));
+    assert.equal(loops.at(-1)?.startMs, 5300, "invalid fine-tuning leaves the draft intact");
+    assert.equal(loops.at(-1)?.endMs, 5600, "YouTube uses the next source cue's start");
+    await click(button("Cancel"));
+    assert.equal(saves.length, 1, "cancel discards the draft without saving");
+    await click(button("Playback options"));
+    await click(button("Adjust timing"));
+    currentMs = 2900;
+    await click(button("Set start here"));
     await click(button("Reset timing"));
     assert.equal(saves.length, 1, "resetting a draft does not persist until Done");
     await click(button("Done"));
@@ -451,7 +482,7 @@ test("timeline advances between status polls and scrubbing commits only on relea
     });
     assert.equal(
       Number(slider.value),
-      initial + 300,
+      initial + 1000,
       "missing status samples must not allow unlimited extrapolation",
     );
     await act(async () => {
@@ -477,7 +508,9 @@ test("timeline advances between status polls and scrubbing commits only on relea
       slider.dispatchEvent(new Event("lostpointercapture", { bubbles: true }));
     });
     assert.equal(loops.length, 2, "losing capture after release must not seek twice");
+    currentMs = 4200;
     await click(button("Pause", container.querySelector("footer")!));
+    assert.equal(slider.value, "4200", "pause confirms the actual stopped video position");
     const pausedPosition = slider.value;
     await act(async () => {
       frame?.(performance.now() + 500);
@@ -496,5 +529,104 @@ test("timeline advances between status polls and scrubbing commits only on relea
     container.remove();
     window.requestAnimationFrame = originalFrame;
     window.cancelAnimationFrame = originalCancel;
+  }
+});
+
+test("timeline does not rewind for delayed samples or playback state changes", async () => {
+  const { PlaybackTimeline } = await import("../components/playback-timeline");
+  const originalFrame = window.requestAnimationFrame;
+  const originalCancel = window.cancelAnimationFrame;
+  const originalNow = Object.getOwnPropertyDescriptor(performance, "now");
+  let now = 0;
+  let frame: FrameRequestCallback | undefined;
+  Object.defineProperty(performance, "now", { configurable: true, value: () => now });
+  window.requestAnimationFrame = callback => {
+    frame = callback;
+    return 1;
+  };
+  window.cancelAnimationFrame = () => {
+    frame = undefined;
+  };
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  async function render(position: number, playing: boolean) {
+    await act(async () => {
+      root.render(
+        <PlaybackTimeline
+          range={{ startMs: 1000, endMs: 7500 }}
+          position={position}
+          playing={playing}
+          rate={1}
+          disabled={false}
+          label="Playback position"
+          onSeek={() => {}}
+        />,
+      );
+    });
+  }
+  async function tick(time: number) {
+    now = time;
+    await act(async () => frame?.(now));
+  }
+  const position = () =>
+    Number(container.querySelector<HTMLInputElement>('input[type="range"]')!.value);
+  try {
+    await render(1000, true);
+    await tick(250);
+    assert.equal(position(), 1250);
+    now = 300;
+    await render(1240, true);
+    assert.equal(position(), 1250, "a delayed status sample must not rewind the animated thumb");
+    await tick(320);
+    const beforePause = position();
+    await render(1240, false);
+    assert.equal(position(), beforePause, "pause must not jump back to the last status sample");
+    await render(1250, false);
+    assert.equal(position(), beforePause, "a small prediction lead stays frozen while paused");
+    now = 400;
+    await render(1320, false);
+    assert.equal(position(), 1320, "the confirmed paused position remains authoritative");
+    await render(1320, true);
+    assert.equal(position(), 1320, "resuming starts at the paused position");
+    await tick(650);
+    const beforeSample = position();
+    now = 700;
+    await render(1560, true);
+    assert.equal(position(), beforeSample);
+    await tick(720);
+    assert.ok(position() >= beforeSample);
+    await render(1100, true);
+    assert.equal(position(), 1100, "a real backward seek or loop restart updates immediately");
+    await tick(1000);
+    assert.equal(position(), 1380);
+    await tick(2000);
+    assert.equal(position(), 2100, "stalled video samples cannot extrapolate indefinitely");
+    await render(1000, true);
+    let previous = position();
+    for (let time = 2016; time <= 3200; time += 16) {
+      await tick(time);
+      const next = position();
+      assert.ok(
+        next - previous >= 14 && next - previous <= 18,
+        `steady playback must move smoothly each frame, got ${next - previous}ms at ${time}ms`,
+      );
+      previous = next;
+      if ((time - 2000) % 400 === 0) {
+        const before = position();
+        await render(1000 + time - 2000 - 60, true);
+        assert.equal(position(), before, "a normal status update cannot jump the thumb forward");
+      }
+    }
+    now = 3216;
+    await render(5000, true);
+    assert.equal(position(), 5000, "a real forward seek bypasses gradual clock correction");
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+    window.requestAnimationFrame = originalFrame;
+    window.cancelAnimationFrame = originalCancel;
+    if (originalNow) Object.defineProperty(performance, "now", originalNow);
+    else Reflect.deleteProperty(performance, "now");
   }
 });

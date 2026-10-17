@@ -52,3 +52,36 @@ test("long plain-text input is split without dropping words", () => {
   assert.equal(cues.map(cue => cue.originalText).join(" "), input);
   assert.ok(cues.every(cue => cue.originalText.length <= 1500));
 });
+
+test("ruby readings stay outside source text and retain their source ranges", () => {
+  const [cue] = parseSubtitles(
+    "WEBVTT\n\n00:00:10.000 --> 00:00:12.000\n（<ruby>赤福<rt>あかふく</rt></ruby>） ヒカルの漫画\n<ruby.under>面白<rt>おもしれ</rt></ruby>え～",
+  );
+  assert.equal(cue.originalText, "（赤福） ヒカルの漫画 面白え～");
+  assert.deepEqual(cue.ruby, [
+    { start: 1, end: 3, reading: "あかふく", position: "over" },
+    { start: 12, end: 14, reading: "おもしれ", position: "under" },
+  ]);
+});
+
+test("ruby supports styled HTML, fallback parentheses, entities and repeated base text", () => {
+  const [cue] = parseSubtitles(
+    '1\n00:00:01,000 --> 00:00:02,000\n  &lt;例&gt; <ruby style="ruby-position: under"><span>面白</span><rp>（</rp><rt><span>おもしれ</span></rt><rp>）</rp></ruby>え～ <ruby>面白<rt>おもしろ</rt></ruby>い &amp; &#x1F600;',
+  );
+  assert.equal(cue.originalText, "<例> 面白え～ 面白い & 😀");
+  assert.deepEqual(cue.ruby, [
+    { start: 4, end: 6, reading: "おもしれ", position: "under" },
+    { start: 9, end: 11, reading: "おもしろ", position: "over" },
+  ]);
+});
+
+test("multi-pair VTT ruby and unclosed annotations do not contaminate source text", () => {
+  const [cue] = parseSubtitles(
+    "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\n<ruby>赤<rt>あか</rt>福<rt>ふく</rt></ruby> <ruby>面白<rt>おもしれ",
+  );
+  assert.equal(cue.originalText, "赤福 面白");
+  assert.deepEqual(cue.ruby?.slice(0, 2), [
+    { start: 0, end: 1, reading: "あか", position: "over" },
+    { start: 1, end: 2, reading: "ふく", position: "over" },
+  ]);
+});

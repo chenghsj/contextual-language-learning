@@ -6,6 +6,7 @@ import {
   ThinkingLevelSchema,
 } from "./schema";
 import { isPiProviderId } from "./pi-providers";
+import { SpeechSettingsSchema } from "./speech";
 const locales = z.enum(["auto", "en", "zh-TW", "zh-CN", "ja", "ko"]);
 const repeat = z.enum(["2", "3", "5", "infinite"]);
 const providers = z
@@ -20,6 +21,7 @@ export const PreferencesSchema = z
       .record(z.string().max(120))
       .refine(value => Object.keys(value).every(isPiProviderId)),
     pronunciationModes: z.record(z.enum(["off", "native", "roman", "ipa"])).optional(),
+    speech: SpeechSettingsSchema.optional(),
     profile: LearningProfileSchema,
     explanationLanguageMode: z.enum(["auto", "custom"]),
     destination: z.object({ kind: z.literal("local"), directory: z.string().max(2048).optional() }),
@@ -28,6 +30,7 @@ export const PreferencesSchema = z
     analysisNotificationsEnabled: z.boolean(),
     uiLocalePreference: locales,
     themePreference: z.enum(["system", "light", "dark"]),
+    motionPreference: z.enum(["reduced", "full"]).catch("full"),
     repeat,
     delay: z.number().int().min(0).max(3),
     sceneRepeat: repeat,

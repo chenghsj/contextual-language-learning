@@ -1,6 +1,12 @@
 import { ExecutionMetadataSchema } from "./execution";
+import { GenerationInputEstimateSchema } from "./usage-estimate";
 import { CustomContentSummarySchema, CustomDriveSummarySchema } from "./custom";
 import { z } from "zod";
+import {
+  SystemVoiceSchema,
+  SpeechVoiceCatalogSchema,
+  SpeechVoiceInstallationSchema,
+} from "./speech";
 import {
   DriveAccountSchema,
   DuplicateMatchSchema,
@@ -12,7 +18,7 @@ import { PiPromptSchema, PiEventSchema, PiProviderInfoSchema } from "./protocol-
 import { JobSummarySchema } from "./jobs";
 
 /** Increment when the Native Messaging request or response contract changes incompatibly. */
-export const HOST_PROTOCOL_VERSION = 6;
+export const HOST_PROTOCOL_VERSION = 12;
 const id = z.string().min(1).max(100);
 const uuid = z.string().uuid();
 const text = z.string().max(20_000);
@@ -31,6 +37,9 @@ const lesson = z.object({
   level: z.string(),
   sceneCount: z.number().int().nonnegative().optional(),
   expressionCount: z.number().int().nonnegative().optional(),
+  schemaVersion: z.literal(7).optional(),
+  pointCount: z.number().int().nonnegative().optional(),
+  reusableItemCount: z.number().int().nonnegative().optional(),
   sceneIds: z.array(uuid).optional(),
   backup: z
     .object({
@@ -52,11 +61,39 @@ const driveLesson = z.object({
   level: z.string().optional(),
   sceneCount: z.number().int().nonnegative().optional(),
   expressionCount: z.number().int().nonnegative().optional(),
+  schemaVersion: z.literal(7).optional(),
+  pointCount: z.number().int().nonnegative().optional(),
+  reusableItemCount: z.number().int().nonnegative().optional(),
 });
 const base = z.object({ id });
 
 /** Validate untrusted messages at the Extension boundary before reading their fields. */
 export const HostMessageSchema = z.discriminatedUnion("type", [
+  base.extend({ type: z.literal("speechVoiceRemoved"), voiceId: z.string().min(1).max(256) }),
+  base.extend({
+    type: z.literal("speechVoiceFolder"),
+    voiceId: z.string().min(1).max(256),
+    directory: z.string().min(1).max(4096),
+  }),
+  base.extend({
+    type: z.literal("speechVoiceFolderOpened"),
+    voiceId: z.string().min(1).max(256),
+    directory: z.string().min(1).max(4096),
+  }),
+  base.extend({ type: z.literal("speechVoiceCatalog"), catalog: SpeechVoiceCatalogSchema }),
+  base.extend({
+    type: z.literal("speechVoiceInstallation"),
+    installation: SpeechVoiceInstallationSchema,
+  }),
+  base.extend({
+    type: z.literal("speechVoices"),
+    voices: z.array(SystemVoiceSchema).max(1000),
+    supported: z.boolean().optional(),
+    experimentalBackend: z.literal("windows-narrator").optional(),
+  }),
+  base.extend({ type: z.literal("speechFinished"), status: z.enum(["completed", "stopped"]) }),
+  base.extend({ type: z.literal("speechStopped") }),
+  base.extend({ type: z.literal("generationEstimate"), estimate: GenerationInputEstimateSchema }),
   base.extend({ type: z.literal("jobExecution"), execution: ExecutionMetadataSchema.nullable() }),
   base.extend({
     type: z.literal("customDriveDocuments"),
@@ -95,10 +132,13 @@ export const HostMessageSchema = z.discriminatedUnion("type", [
         id: z.string(),
         label: z.string(),
         thinkingLevels: z.array(ThinkingLevelSchema).optional(),
+        disabled: z.boolean().optional(),
+        availability: z.enum(["listed", "unknown"]).optional(),
       }),
     ),
     source: z.enum(["sdk", "unavailable"]),
     notice: z.string().optional(),
+    warning: z.string().optional(),
   }),
   base.extend({
     type: z.literal("progress"),
@@ -148,6 +188,7 @@ export const HostMessageSchema = z.discriminatedUnion("type", [
     url: z.string().url().nullable(),
   }),
   base.extend({ type: z.literal("folder"), directory: z.string() }),
+  base.extend({ type: z.literal("folderOpened"), directory: z.string() }),
   base.extend({
     type: z.literal("driveAccounts"),
     accounts: z.array(DriveAccountSchema),

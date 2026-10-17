@@ -1,4 +1,4 @@
-import type { SubtitleCue } from "@immersive/core";
+import type { SubtitleCue } from "@contextual/core";
 
 type ActiveCuePlayback = { cueId: string; startMs: number; endMs: number };
 

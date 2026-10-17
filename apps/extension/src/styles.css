@@ -3,6 +3,28 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* App overrides and the system fallback share the existing Tailwind variants. */
+@custom-variant motion-reduce {
+  &:where(html[data-motion="reduced"], html[data-motion="reduced"] *) {
+    @slot;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &:where(html:not([data-motion]), html:not([data-motion]) *) {
+      @slot;
+    }
+  }
+}
+@custom-variant motion-safe {
+  &:where(html[data-motion="full"], html[data-motion="full"] *) {
+    @slot;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    &:where(html:not([data-motion]), html:not([data-motion]) *) {
+      @slot;
+    }
+  }
+}
+
 :root {
   --background: oklch(0.9818 0.0054 95.0986);
   --foreground: oklch(0.3438 0.0269 95.7226);
@@ -36,7 +58,7 @@
   --sidebar-accent-foreground: oklch(0.325 0 0);
   --sidebar-border: oklch(0.9401 0 0);
   --sidebar-ring: oklch(0.7731 0 0);
-  --font-sans: Outfit, sans-serif;
+  --font-sans: Outfit, "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: Geist Mono, ui-monospace, monospace;
   --radius: 1rem;
@@ -56,6 +78,124 @@
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+  --motion-enter: 180ms;
+  --motion-exit: 160ms;
+  --motion-feedback: 140ms;
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes app-accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+@keyframes app-accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+[data-slot="accordion-content"][data-state="open"] {
+  animation: app-accordion-down var(--motion-enter) var(--motion-ease);
+}
+[data-slot="accordion-content"][data-state="closed"] {
+  animation: app-accordion-up var(--motion-exit) var(--motion-ease);
+}
+[data-slot="sheet-overlay"][data-state="open"] {
+  animation-duration: 240ms;
+}
+[data-slot="sheet-overlay"][data-state="closed"] {
+  animation-duration: 180ms;
+}
+
+/* Respect app preference for third-party motion without touching positioning transforms. */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion]) *,
+  html:not([data-motion]) *::before,
+  html:not([data-motion]) *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+html[data-motion="full"] [data-sonner-toaster] {
+  transition: transform var(--motion-enter) var(--motion-ease) !important;
+}
+html[data-motion="full"] [data-sonner-toast] {
+  transition:
+    transform var(--motion-enter) var(--motion-ease),
+    opacity var(--motion-feedback),
+    height var(--motion-enter),
+    box-shadow var(--motion-feedback) !important;
+}
+html[data-motion="full"] .sonner-loader {
+  transition:
+    opacity var(--motion-feedback),
+    transform var(--motion-feedback) !important;
+}
+html[data-motion="full"] .sonner-loading-bar {
+  animation: sonner-spin 1.2s linear infinite !important;
+  animation-delay: calc((var(--motion-bar-index, 1) - 12) * 100ms) !important;
+}
+.sonner-loading-bar:nth-child(1) {
+  --motion-bar-index: 1;
+}
+.sonner-loading-bar:nth-child(2) {
+  --motion-bar-index: 2;
+}
+.sonner-loading-bar:nth-child(3) {
+  --motion-bar-index: 3;
+}
+.sonner-loading-bar:nth-child(4) {
+  --motion-bar-index: 4;
+}
+.sonner-loading-bar:nth-child(5) {
+  --motion-bar-index: 5;
+}
+.sonner-loading-bar:nth-child(6) {
+  --motion-bar-index: 6;
+}
+.sonner-loading-bar:nth-child(7) {
+  --motion-bar-index: 7;
+}
+.sonner-loading-bar:nth-child(8) {
+  --motion-bar-index: 8;
+}
+.sonner-loading-bar:nth-child(9) {
+  --motion-bar-index: 9;
+}
+.sonner-loading-bar:nth-child(10) {
+  --motion-bar-index: 10;
+}
+.sonner-loading-bar:nth-child(11) {
+  --motion-bar-index: 11;
+}
+.sonner-loading-bar:nth-child(12) {
+  --motion-bar-index: 12;
+}
+html[data-motion="full"] .sonner-loading-wrapper[data-visible="false"] {
+  animation: sonner-fade-out var(--motion-feedback) ease forwards !important;
+}
+html[data-motion="reduced"] .sonner-loading-wrapper[data-visible="false"] {
+  visibility: hidden;
 }
 
 .dark {
@@ -91,7 +231,7 @@
   --sidebar-accent-foreground: oklch(0.8074 0.0142 93.0137);
   --sidebar-border: oklch(0.9401 0 0);
   --sidebar-ring: oklch(0.7731 0 0);
-  --font-sans: Outfit, sans-serif;
+  --font-sans: Outfit, "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: Geist Mono, ui-monospace, monospace;
   --radius: 1rem;
@@ -164,12 +304,35 @@
   --shadow-2xl: var(--shadow-2xl);
 }
 
+/* Product typography roles. Keep these in sync with /DESIGN.md. */
+@theme {
+  --text-ui-body: 0.875rem;
+  --text-ui-body--line-height: 1.625;
+  --text-ui-source: 0.9375rem;
+  --text-ui-source--line-height: 2rem;
+  --text-ui-heading: 0.875rem;
+  --text-ui-heading--line-height: 1.25rem;
+  --text-ui-label: 0.75rem;
+  --text-ui-label--line-height: 1rem;
+  --text-ui-meta: 0.6875rem;
+  --text-ui-meta--line-height: 1rem;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  /* The app owns the viewport; pages and overlays own their scroll regions. */
+  html.app-shell,
+  html.app-shell body,
+  html.app-shell #root {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans text-ui-body antialiased;
+    font-synthesis: none;
   }
   :where(
     button,
@@ -215,6 +378,13 @@
 [data-sonner-toast].app-notice [data-icon] {
   align-self: flex-start;
   margin-top: 3px;
+}
+
+/* Keep the close target usable above modal sheets and large enough to hit. */
+[data-sonner-toast][data-styled="true"] [data-close-button]::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
 }
 
 /* One shared range track; both handles retain native keyboard and screen-reader behavior. */

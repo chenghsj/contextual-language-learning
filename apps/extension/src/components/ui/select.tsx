@@ -85,7 +85,7 @@ export function SelectItem({
 }
 
 /** Radix does not allow an empty SelectItem value. Keep saved empty IDs unchanged. */
-export const EMPTY_OPTION_VALUE = "__immersive_default_select_option__";
+export const EMPTY_OPTION_VALUE = "__contextual_default_select_option__";
 export function encodeSelectValue(value: string): string {
   if (value === EMPTY_OPTION_VALUE) throw new Error("Reserved Select option value.");
   return value === "" ? EMPTY_OPTION_VALUE : value;
@@ -97,6 +97,7 @@ export type SelectFieldOption = { value: string | number; label: string; disable
 export function SelectField({
   id,
   ariaLabel,
+  ariaDescribedBy,
   value,
   onValueChange,
   options,
@@ -105,6 +106,7 @@ export function SelectField({
 }: {
   id?: string;
   ariaLabel: string;
+  ariaDescribedBy?: string;
   value: string | number;
   onValueChange: (value: string) => void;
   options: readonly SelectFieldOption[];
@@ -118,7 +120,12 @@ export function SelectField({
       onValueChange={next => onValueChange(decodeSelectValue(next))}
       disabled={disabled}
     >
-      <SelectTrigger id={id} aria-label={ariaLabel} className={className}>
+      <SelectTrigger
+        id={id}
+        aria-label={ariaLabel}
+        aria-describedby={ariaDescribedBy}
+        className={className}
+      >
         <SelectValue>{selectedLabel}</SelectValue>
       </SelectTrigger>
       <SelectContent>

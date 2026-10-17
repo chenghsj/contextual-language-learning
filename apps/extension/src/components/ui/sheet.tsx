@@ -5,6 +5,7 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "../../lib/utils";
+import { Button } from "./button";
 
 export const Sheet = SheetPrimitive.Root;
 export const SheetTrigger = SheetPrimitive.Trigger;
@@ -60,9 +61,15 @@ export function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">
-            <X className="size-4" />
-            <span className="sr-only">{closeLabel}</span>
+          <SheetPrimitive.Close asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-5 size-8"
+              aria-label={closeLabel}
+            >
+              <X className="size-4" aria-hidden="true" />
+            </Button>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Content>
@@ -77,6 +84,28 @@ export function SheetHeader({ className, ...props }: React.ComponentProps<"div">
       className={cn("flex flex-col gap-1.5 p-4", className)}
       {...props}
     />
+  );
+}
+
+export function SheetTitleRow({
+  children,
+  closeLabel = "Close",
+  className,
+  ...props
+}: React.ComponentProps<"div"> & { closeLabel?: string }) {
+  return (
+    <div
+      data-slot="sheet-title-row"
+      className={cn("flex min-h-8 items-center justify-between gap-2", className)}
+      {...props}
+    >
+      {children}
+      <SheetPrimitive.Close asChild>
+        <Button variant="ghost" size="icon" className="size-8" aria-label={closeLabel}>
+          <X className="size-4" aria-hidden="true" />
+        </Button>
+      </SheetPrimitive.Close>
+    </div>
   );
 }
 
@@ -97,7 +126,7 @@ export function SheetTitle({
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("font-semibold text-foreground", className)}
+      className={cn("min-w-0 flex-1 text-sm font-semibold leading-5 text-foreground", className)}
       {...props}
     />
   );

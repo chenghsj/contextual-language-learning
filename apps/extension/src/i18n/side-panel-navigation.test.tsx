@@ -56,7 +56,7 @@ test("each navigation action selects its page and reader detail returns to Libra
 
 test("Library exposes lessons; Activity owns the full history and resume actions", async () => {
   const app = await readSource(new URL("../App.tsx", import.meta.url));
-  assert.match(app, /page === "activity" && <main/);
+  assert.match(app, /sheetPage\.current === "activity" && <main/);
   assert.match(app, /hidden=\{basePage !== "lessons"\}/);
   assert.match(app, /basePage === "lesson" && <main/);
   const tasks = await readSource(new URL("../components/task-history.tsx", import.meta.url));

@@ -1,4 +1,4 @@
-import { LearningDocumentSchema, type HostMessage, type LearningDocument } from "@immersive/core";
+import { readLearningDocument, type HostMessage, type LearningDocument } from "@contextual/core";
 
 type ChunkMessage = Extract<HostMessage, { type: "documentChunk" }>;
 
@@ -43,9 +43,7 @@ export class DocumentChunkAssembler {
       full.set(part, offset);
       offset += part.length;
     }
-    const document = LearningDocumentSchema.parse(
-      JSON.parse(new TextDecoder().decode(full)) as unknown,
-    );
+    const document = readLearningDocument(JSON.parse(new TextDecoder().decode(full)) as unknown);
     if (document.id !== this.documentId) throw new Error("Document chunk identity mismatch");
     return document;
   }

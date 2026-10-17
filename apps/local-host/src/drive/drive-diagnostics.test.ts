@@ -1,3 +1,4 @@
+import { pointsFixture } from "../../../../packages/core/test/learning-points-fixture";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
@@ -6,11 +7,11 @@ import {
   driveApiError,
   isPlaybackOnlyDriveRevision,
   isPlaybackOnlyMarkdownRevision,
-  isV5DriveFile,
+  isLearningDriveFile,
   MAX_DRIVE_PROPERTY_BYTES,
   validateDriveAppProperties,
 } from "./api";
-import { LearningDocumentSchema, learningDocumentToMarkdown } from "@immersive/core";
+import { LearningDocumentV7Schema, learningDocumentToMarkdown } from "@contextual/core";
 
 test("Drive permission diagnostics show safe reason and relevant next action", () => {
   const error = driveApiError(
@@ -57,44 +58,44 @@ test("Drive CJK and emoji titles fit appProperties UTF-8 limits without splittin
     "畫完這個再去死 第12話【未來世界～今後也一直畫喜歡的東西吧】｜Muse木棉花 動畫 線上看 🎬".repeat(
       3,
     );
-  const shortened = boundedDriveProperty("immersiveTitle", title);
+  const shortened = boundedDriveProperty("contextualTitle", title);
   assert.ok(title.startsWith(shortened));
   assert.ok(shortened.length < title.length);
   assert.ok(
-    Buffer.byteLength("immersiveTitle", "utf8") + Buffer.byteLength(shortened, "utf8") <=
+    Buffer.byteLength("contextualTitle", "utf8") + Buffer.byteLength(shortened, "utf8") <=
       MAX_DRIVE_PROPERTY_BYTES,
   );
   assert.ok(
-    Buffer.byteLength("immersiveTitle", "utf8") +
+    Buffer.byteLength("contextualTitle", "utf8") +
       Buffer.byteLength(shortened, "utf8") +
       Buffer.byteLength("日", "utf8") >
       MAX_DRIVE_PROPERTY_BYTES,
   );
 
-  const emoji = boundedDriveProperty("immersiveTitle", "🎬".repeat(40));
+  const emoji = boundedDriveProperty("contextualTitle", "🎬".repeat(40));
   assert.equal(
     emoji,
     "🎬".repeat(
-      Math.floor((MAX_DRIVE_PROPERTY_BYTES - Buffer.byteLength("immersiveTitle", "utf8")) / 4),
+      Math.floor((MAX_DRIVE_PROPERTY_BYTES - Buffer.byteLength("contextualTitle", "utf8")) / 4),
     ),
   );
   assert.doesNotMatch(emoji, /[\uD800-\uDBFF]$/);
 
   const properties = {
-    immersiveSourceKey: "a".repeat(64),
-    immersiveTranscriptKey: "b".repeat(64),
-    immersiveSettingsKey: "c".repeat(64),
-    immersiveDocumentId: "00000000-0000-4000-8000-000000000001",
-    immersiveSchemaVersion: "3",
-    immersiveTitle: shortened,
-    immersiveCreatedAt: "2026-09-26T00:00:00.000Z",
-    immersiveFormat: "json",
-    immersiveDocumentKey: "d".repeat(64),
-    immersiveContentHash: "e".repeat(64),
+    contextualSourceKey: "a".repeat(64),
+    contextualTranscriptKey: "b".repeat(64),
+    contextualSettingsKey: "c".repeat(64),
+    contextualDocumentId: "00000000-0000-4000-8000-000000000001",
+    contextualSchemaVersion: "3",
+    contextualTitle: shortened,
+    contextualCreatedAt: "2026-09-26T00:00:00.000Z",
+    contextualFormat: "json",
+    contextualDocumentKey: "d".repeat(64),
+    contextualContentHash: "e".repeat(64),
   };
   assert.doesNotThrow(() => validateDriveAppProperties(properties));
   assert.throws(
-    () => validateDriveAppProperties({ ...properties, immersiveTitle: title }),
+    () => validateDriveAppProperties({ ...properties, contextualTitle: title }),
     /UTF-8 property size limit/,
   );
   assert.throws(
@@ -169,60 +170,10 @@ test("HTTP 403 permission denied alone does not incorrectly insist the user must
 });
 
 test("Drive accepts only a calibrated playback revision of an unchanged app lesson", () => {
-  const before = LearningDocumentSchema.parse({
-    id: "00000000-0000-4000-8000-000000000001",
-    schemaVersion: 5,
-    createdAt: "2026-09-26T00:00:00.000Z",
-    source: { platform: "import", title: "Context" },
-    profile: {
-      targetLanguage: "en",
-      instructionLanguage: "en",
-      level: "B1",
-      sceneCount: 2,
-      contextualExampleCount: 1,
-    },
-    generation: { provider: "anthropic", modelId: "" },
-    cues: [{ id: "a", startMs: 1000, endMs: 2000, originalText: "Hello" }],
-    sections: [
-      {
-        id: "00000000-0000-4000-8000-000000000002",
-        title: "Greeting",
-        context: "Hello",
-        learningGoal: "Greet",
-        cueIds: ["a"],
-        focusCueIds: ["a"],
-        startMs: 1000,
-        endMs: 2000,
-        translations: [{ cueId: "a", text: "Hello" }],
-        vocabulary: [],
-        insights: [],
-        exercises: [],
-        focusItems: [
-          {
-            expression: "Hello",
-            sourceCueIds: ["a"],
-            meaning: "Hello",
-            contextExplanation: "Hello",
-            contextCueIds: ["a"],
-            wordNotes: [],
-            examples: [
-              {
-                situation: "Meeting",
-                dialogue: [
-                  { text: "Hello", translation: "Hello" },
-                  { text: "Hello!", translation: "Hello!" },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  });
-  if (before.schemaVersion !== 5) throw new Error("Unexpected schema");
-  const after = LearningDocumentSchema.parse({
+  const before = pointsFixture().document;
+  const after = LearningDocumentV7Schema.parse({
     ...before,
-    playbackOverrides: { a: { startMs: 1100, endMs: 2200 } },
+    playbackOverrides: { "cue-1": { startMs: 1100, endMs: 2200 } },
   });
   assert.equal(isPlaybackOnlyDriveRevision(before, after), true);
   assert.equal(
@@ -234,7 +185,7 @@ test("Drive accepts only a calibrated playback revision of an unchanged app less
   );
   assert.equal(isPlaybackOnlyDriveRevision(after, after), false);
   const sceneId = before.sections[0].id;
-  const sceneRevision = LearningDocumentSchema.parse({
+  const sceneRevision = LearningDocumentV7Schema.parse({
     ...before,
     scenePlaybackOverrides: { [sceneId]: { startMs: 700, endMs: 2400 } },
   });
@@ -278,9 +229,7 @@ test("Drive accepts only a calibrated playback revision of an unchanged app less
   );
 });
 
-test("old Drive lesson files are excluded from V5 operations", () => {
-  assert.equal(isV5DriveFile({ appProperties: { immersiveSchemaVersion: "5" } }), true);
-  for (const version of ["1", "2", "3", "4"])
-    assert.equal(isV5DriveFile({ appProperties: { immersiveSchemaVersion: version } }), false);
-  assert.equal(isV5DriveFile({ appProperties: { immersiveFormat: "json" } }), false);
+test("retired Drive lessons are excluded", () => {
+  for (const contextualSchemaVersion of ["1", "2", "3", "4", "5", "6"])
+    assert.equal(isLearningDriveFile({ appProperties: { contextualSchemaVersion } }), false);
 });

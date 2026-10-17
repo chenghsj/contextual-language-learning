@@ -7,6 +7,26 @@ import {
   isCompatibleHostHealth,
 } from "./native-messaging";
 
+test("provider messages preserve SDK authentication names and accept older Hosts", () => {
+  const provider = {
+    id: "openai",
+    label: "OpenAI",
+    connected: false,
+    methods: ["oauth", "api_key"],
+  };
+  for (const extra of [
+    {},
+    { methodLabels: { oauth: "OpenAI (ChatGPT subscription)", api_key: "OpenAI API key" } },
+  ]) {
+    const message = {
+      id: randomUUID(),
+      type: "piProviders",
+      providers: [{ ...provider, ...extra }],
+    };
+    assert.deepEqual(HostMessageSchema.parse(message), message);
+  }
+});
+
 test("V5 Extension accepts only matching Host protocol and Pi SDK mode", () => {
   const health = {
     id: randomUUID(),
@@ -95,12 +115,25 @@ test("model capabilities survive the Native Messaging boundary", () => {
     id: randomUUID(),
     type: "agentModels",
     source: "sdk",
-    models: [{ id: "model", label: "Model", thinkingLevels: ["low", "high"] }],
+    models: [
+      {
+        id: "model",
+        label: "Model",
+        thinkingLevels: ["low", "high"],
+        disabled: true,
+        availability: "unknown",
+      },
+    ],
+    warning: "Model catalog refresh failed; existing candidates remain usable",
   };
   const parsed = HostMessageSchema.parse(message);
   assert.equal(parsed.type, "agentModels");
-  if (parsed.type === "agentModels")
+  if (parsed.type === "agentModels") {
     assert.deepEqual(parsed.models[0].thinkingLevels, ["low", "high"]);
+    assert.equal(parsed.models[0].disabled, true);
+    assert.equal(parsed.models[0].availability, "unknown");
+    assert.equal(parsed.warning, message.warning);
+  }
   assert.equal(
     HostMessageSchema.safeParse({
       ...message,

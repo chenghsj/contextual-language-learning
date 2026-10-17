@@ -1,9 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { join } from "node:path";
+import { access, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { defaultDocumentsFolder } from "../platform/paths";
+import { basename, dirname, join } from "node:path";
 import {
   JobSnapshotSchema,
+  currentLearningExecution,
+  readableLearningExecution,
+  RETIRED_LESSON_MESSAGE,
   readLearningDocument,
   learningDocumentToMarkdown,
   withSentenceTiming,
@@ -11,7 +14,7 @@ import {
   type JobSummary,
   type LearningDocument,
   type PlaybackOverride,
-} from "@immersive/core";
+} from "@contextual/core";
 import {
   LessonJobRecordSchema,
   type LessonJobRecord,
@@ -19,13 +22,35 @@ import {
   type JobRepository,
   type StoragePorts,
 } from "./ports";
-import { findVideoDocument, listVideoDocumentIds, videoFolder } from "./video-folders";
+import { findVideoDocument, listVideoDocuments, videoFolder } from "./video-folders";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function safeId(id: string): string {
   if (!UUID.test(id)) throw new Error("Invalid repository ID");
   return id;
+}
+
+/** Metadata-only retired-ID detection; never parses, copies or migrates old content. */
+async function hasRetiredId(root: string, id: string, kind: "job" | "document"): Promise<boolean> {
+  if (basename(root) !== "data-v7") return false;
+  for (const version of ["data-v6", "data-v5"]) {
+    const retired = join(dirname(root), version);
+    const paths =
+      kind === "job"
+        ? [join(retired, "jobs", id + ".json"), join(retired, "lesson-records", id + ".json")]
+        : [join(retired, id + ".json"), await findVideoDocument(retired, id)];
+    for (const path of paths) {
+      if (!path) continue;
+      try {
+        await access(path);
+        return true;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
+    }
+  }
+  return false;
 }
 
 async function atomicWrite(path: string, content: string): Promise<void> {
@@ -42,7 +67,7 @@ export class FileJobRepository implements JobRepository {
   private readonly folder: string;
   private readonly locks = new Map<string, Promise<void>>();
   private readonly recordsFolder: string;
-  constructor(root: string) {
+  constructor(private readonly root: string) {
     this.folder = join(root, "jobs");
     this.recordsFolder = join(root, "lesson-records");
   }
@@ -51,20 +76,27 @@ export class FileJobRepository implements JobRepository {
     return join(this.folder, safeId(id) + ".json");
   }
 
-  async get(id: string): Promise<JobSnapshot | null> {
+  async get(id: string, skipRetired = false): Promise<JobSnapshot | null> {
     try {
-      return JobSnapshotSchema.parse(
-        JSON.parse(await readFile(this.filename(id), "utf8")) as unknown,
-      );
+      const raw = JSON.parse(await readFile(this.filename(id), "utf8"));
+      if (raw.schemaVersion !== 5 || !readableLearningExecution(raw.execution)) {
+        if (skipRetired) return null;
+        throw new Error(RETIRED_LESSON_MESSAGE);
+      }
+      return JobSnapshotSchema.parse(raw);
     } catch (error) {
-      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT")
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+        if (!skipRetired && (await hasRetiredId(this.root, safeId(id), "job")))
+          throw new Error(RETIRED_LESSON_MESSAGE);
         return null;
+      }
       throw new Error("Cannot load saved job " + id + ": " + String(error));
     }
   }
 
   async create(job: JobSnapshot): Promise<void> {
     const valid = JobSnapshotSchema.parse(job);
+    if (!currentLearningExecution(valid.execution)) throw new Error(RETIRED_LESSON_MESSAGE);
     await mkdir(this.folder, { recursive: true, mode: 0o700 });
     const filename = this.filename(valid.summary.id);
     if (await this.getRecord(valid.summary.id)) throw new Error("This job ID already exists");
@@ -79,7 +111,7 @@ export class FileJobRepository implements JobRepository {
     const items = await Promise.all(
       names.map(async name => {
         const id = name.slice(0, -5);
-        const job = await this.get(id);
+        const job = await this.get(id, true);
         return job?.summary ?? null;
       }),
     );
@@ -117,13 +149,18 @@ export class FileJobRepository implements JobRepository {
     }
   }
 
-  async getRecord(id: string): Promise<LessonJobRecord | null> {
-    const job = await this.get(id);
+  async getRecord(id: string, skipRetired = false): Promise<LessonJobRecord | null> {
+    const job = await this.get(id, skipRetired);
     if (job) return LessonJobRecordSchema.parse({ ...job, schemaVersion: 1 });
     try {
-      const record = LessonJobRecordSchema.parse(
-        JSON.parse(await readFile(join(this.recordsFolder, safeId(id) + ".json"), "utf8")),
+      const raw = JSON.parse(
+        await readFile(join(this.recordsFolder, safeId(id) + ".json"), "utf8"),
       );
+      if (!readableLearningExecution(raw.summary?.execution)) {
+        if (skipRetired) return null;
+        throw new Error(RETIRED_LESSON_MESSAGE);
+      }
+      const record = LessonJobRecordSchema.parse(raw);
       if (record.summary.id !== id) throw new Error("Lesson record identity mismatch");
       return record;
     } catch (error) {
@@ -147,7 +184,7 @@ export class FileJobRepository implements JobRepository {
     for (const name of names) {
       if (!name.endsWith(".json") || !UUID.test(name.slice(0, -5)) || known.has(name.slice(0, -5)))
         continue;
-      const record = await this.getRecord(name.slice(0, -5));
+      const record = await this.getRecord(name.slice(0, -5), true);
       if (record) jobs.push(record.summary);
     }
     return jobs;
@@ -209,12 +246,28 @@ export class FileDocumentRepository implements DocumentRepository {
   private documentPath(id: string): Promise<string | null> {
     return findVideoDocument(this.root, id);
   }
-  async get(id: string): Promise<LearningDocument | null> {
+  async get(id: string, skipRetired = false): Promise<LearningDocument | null> {
     const safe = safeId(id);
     const path = await this.documentPath(safe);
-    if (!path) return null;
+    if (!path) {
+      if (!skipRetired && (await hasRetiredId(this.root, safe, "document")))
+        throw new Error(RETIRED_LESSON_MESSAGE);
+      return null;
+    }
+    return this.readDocument(safe, path, skipRetired);
+  }
+  private async readDocument(
+    id: string,
+    path: string,
+    skipRetired: boolean,
+  ): Promise<LearningDocument | null> {
     try {
-      return readLearningDocument(JSON.parse(await readFile(path, "utf8")) as unknown);
+      const raw = JSON.parse(await readFile(path, "utf8"));
+      if (raw.schemaVersion !== 7 || !readableLearningExecution(raw.execution)) {
+        if (skipRetired) return null;
+        throw new Error(RETIRED_LESSON_MESSAGE);
+      }
+      return readLearningDocument(raw);
     } catch (error) {
       if (error && typeof error === "object" && "code" in error && error.code === "ENOENT")
         return null;
@@ -223,15 +276,17 @@ export class FileDocumentRepository implements DocumentRepository {
   }
   async list(limit = 5000): Promise<LearningDocument[]> {
     await mkdir(this.root, { recursive: true, mode: 0o700 });
-    const ids = await listVideoDocumentIds(this.root);
-    const documents = await Promise.all(ids.map(id => this.get(id)));
+    const entries = await listVideoDocuments(this.root);
+    const documents = await Promise.all(
+      entries.map(({ id, path }) => this.readDocument(id, path, true)),
+    );
     return documents
       .filter((value): value is LearningDocument => value !== null)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, Math.min(limit, 5000));
   }
 
-  /** The only intentional mutation of a finished V5 lesson: calibrated playback, never source cues. */
+  /** The only intentional mutation of a finished lesson: calibrated playback, never source cues. */
   async updatePlaybackRange(
     id: string,
     cueId: string,
@@ -263,7 +318,7 @@ export class FileDocumentRepository implements DocumentRepository {
     await prior;
     try {
       const document = await this.get(safe);
-      if (!document || document.schemaVersion !== 5) throw new Error("Saved V5 document not found");
+      if (!document) throw new Error("Saved document not found");
       if (
         kind === "cue" &&
         (!document.cues.some(cue => cue.id === targetId) ||
@@ -283,9 +338,10 @@ export class FileDocumentRepository implements DocumentRepository {
           ? withSentenceTiming(document, targetId, range)
           : { ...document, [field]: overrides },
       );
-      if (updated.schemaVersion !== 5) throw new Error("Playback update changed document schema");
+      if (updated.schemaVersion !== document.schemaVersion)
+        throw new Error("Playback update changed document schema");
       const path = await this.documentPath(safe);
-      if (!path) throw new Error("Saved V5 document not found");
+      if (!path) throw new Error("Saved document not found");
       await atomicWrite(path, JSON.stringify(updated, null, 2) + "\n");
       await atomicWrite(path.slice(0, -5) + ".md", learningDocumentToMarkdown(updated));
       return updated;
@@ -296,6 +352,8 @@ export class FileDocumentRepository implements DocumentRepository {
   }
 
   async save(document: LearningDocument, markdown: string): Promise<void> {
+    if (!currentLearningExecution(document.execution)) throw new Error(RETIRED_LESSON_MESSAGE);
+    document = readLearningDocument(document);
     const id = safeId(document.id);
     await mkdir(this.root, { recursive: true, mode: 0o700 });
     if (await this.get(id))
@@ -308,12 +366,6 @@ export class FileDocumentRepository implements DocumentRepository {
   }
 }
 
-export function localStoragePorts(
-  root = join(homedir(), "Documents", "Immersive Learning", "data-v5"),
-): StoragePorts {
-  const jobs = new FileJobRepository(root);
-  return {
-    jobs,
-    documents: new FileDocumentRepository(root),
-  };
+export function localStoragePorts(root = join(defaultDocumentsFolder(), "data-v7")): StoragePorts {
+  return { jobs: new FileJobRepository(root), documents: new FileDocumentRepository(root) };
 }

@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { buildGenerationRequest } from "./generation-request";
+import { buildGenerationRequest, buildCreationRequest } from "./generation-request";
 
-test("preflight and generation share a lean V5 request", () => {
+test("preflight and generation share a explicit V7 request", () => {
   const request = buildGenerationRequest(
     {
       source: { platform: "import", title: "Dialogue" },
@@ -27,9 +27,11 @@ test("preflight and generation share a lean V5 request", () => {
     "cues",
     "destination",
     "id",
+    "outputSchemaVersion",
     "profile",
     "source",
   ]);
+  assert.equal(request.outputSchemaVersion, 7);
   assert.equal(request.profile.sceneCount, 4);
   assert.equal("lessonFormat" in request, false);
 });
@@ -68,4 +70,16 @@ test("selected input is detached from subsequent subtitle and settings edits", (
   ]);
   assert.equal(snapshot.agent.modelId, "fixed");
   assert.equal(snapshot.analysisRange?.endMs, 2000);
+  const custom = buildCreationRequest(input, {
+    prompt: "Summarize the selected dialogue.",
+    context: { subtitles: false, title: true },
+  });
+  assert.equal("kind" in custom && custom.kind, "custom");
+  assert.deepEqual(
+    custom.cues.map(cue => cue.id),
+    ["keep-id", "excluded"],
+  );
+  assert.equal("context" in custom && custom.context.subtitles, false);
+  input.cues[0].originalText = "edited again";
+  assert.equal(custom.cues[0].originalText, "edited");
 });

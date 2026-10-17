@@ -257,6 +257,20 @@ export function customContentCopy(locale: UiLocale) {
     ko: "콘텐츠 생성 완료",
   }[locale];
   return {
+    annotationsHint: {
+      en: "Shows readings supplied in the document. Missing readings are not generated.",
+      "zh-TW": "顯示文件已有的括號讀音；缺少的讀音不會自動產生。",
+      "zh-CN": "显示文件已有的括号读音；缺少的读音不会自动生成。",
+      ja: "文書内の括弧付きの読みを表示します。ない読みは自動生成しません。",
+      ko: "문서에 있는 괄호 속 발음만 표시합니다. 없는 발음은 자동 생성하지 않습니다.",
+    }[locale],
+    save: {
+      en: "Save",
+      "zh-TW": "儲存",
+      "zh-CN": "保存",
+      ja: "保存",
+      ko: "저장",
+    }[locale],
     generationTitle,
     created,
     type,

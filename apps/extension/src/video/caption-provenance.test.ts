@@ -24,6 +24,10 @@ test("accepts same-language regional caption tracks and rejects other languages"
   assert.equal(subtitleLanguageMatches("ja", "ja_JP"), true);
   assert.equal(subtitleLanguageMatches("ja", "en"), false);
   assert.equal(subtitleLanguageMatches("en", "english"), false);
+  assert.equal(subtitleLanguageMatches("zh-TW", "zh-Hant"), true);
+  assert.equal(subtitleLanguageMatches("zh-CN", "zh-Hans"), true);
+  assert.equal(subtitleLanguageMatches("zh-TW", "zh-Hans"), false);
+  assert.equal(subtitleLanguageMatches("zh-CN", "zh-Hant"), false);
   for (const [language, regional] of [
     ["id", "id-ID"],
     ["th", "th-TH"],
