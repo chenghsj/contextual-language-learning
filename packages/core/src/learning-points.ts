@@ -928,20 +928,31 @@ export function prepareTeachingBatch(
   try {
     validateTeachingBatchInternal(output, input, profile, namespace, false);
   } catch (error) {
-    // Optional segmentation must not prevent reliable whole-utterance teaching.
-    // Remove it only when the complete remaining contract independently validates.
+    // First prove that the failure is confined to optional segmentation. Then
+    // restore valid fragments instead of discarding every chunk in this batch.
     const withoutChunks = structuredClone(output);
     for (const utterance of withoutChunks.utterances) {
       if (utterance.chunks !== undefined) {
-        omittedChunkUtteranceIds.push(utterance.id);
         delete utterance.chunks;
       }
     }
-    if (!omittedChunkUtteranceIds.length) throw error;
-    try {
-      validateTeachingBatchInternal(withoutChunks, input, profile, namespace, false);
-    } catch (remainingError) {
-      throw remainingError;
+    if (!output.utterances.some(u => u.chunks !== undefined)) throw error;
+    validateTeachingBatchInternal(withoutChunks, input, profile, namespace, false);
+    for (const [index, original] of output.utterances.entries()) {
+      if (!original.chunks) continue;
+      const utterance = withoutChunks.utterances[index];
+      for (const chunk of original.chunks) {
+        const accepted = utterance.chunks;
+        utterance.chunks = [...(accepted ?? []), chunk];
+        try {
+          validateTeachingBatchInternal(withoutChunks, input, profile, namespace, false);
+        } catch {
+          if (accepted) utterance.chunks = accepted;
+          else delete utterance.chunks;
+          if (!omittedChunkUtteranceIds.includes(original.id))
+            omittedChunkUtteranceIds.push(original.id);
+        }
+      }
     }
     output.utterances = withoutChunks.utterances;
   }

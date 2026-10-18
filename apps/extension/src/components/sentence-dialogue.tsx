@@ -6,7 +6,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import { Play } from "lucide-react";
+import { ChevronDown, Play } from "lucide-react";
 import {
   readerPresentation,
   type ReaderGroup,
@@ -215,6 +215,7 @@ export function SentenceDialogue({
   const speechScope = document.id + ":" + scene.id;
   const speechLabels = speechCopy(locale);
   const dialogueRef = useRef<HTMLDivElement>(null);
+  const selectionBeforePointerDown = useRef<Range | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const update = () =>
@@ -256,18 +257,46 @@ export function SentenceDialogue({
     Record<string, { analysisId: string; chunkId: string }>
   >({});
   const [expanded, setExpanded] = useState<Record<string, string[]>>({});
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [exampleTranslations, setExampleTranslations] = useState<Record<string, boolean>>({});
   const [exampleLimits, setExampleLimits] = useState<Record<string, number>>({});
   useEffect(() => {
     setSelectedChunks({});
     setExpanded({});
+    setOpenGroups({});
     setExampleTranslations({});
     setExampleLimits({});
   }, [document.id, sourceScene.id]);
   const targetLanguage = document.profile.targetLanguage;
   const cueMap = new Map(document.cues.map(cue => [cue.id, cue]));
   const analysisId = (id: string) => "analysis-" + scene.id + "-" + id;
+  function isSourceTextSelection(event: React.MouseEvent): boolean {
+    const selection = window.getSelection();
+    if (event.detail === 0 || !selection?.rangeCount || !selection.toString()) return false;
+    const before = selectionBeforePointerDown.current;
+    const after = selection.getRangeAt(0);
+    // A retained speech selection is not a new drag-selection gesture.
+    return (
+      !before ||
+      before.startContainer !== after.startContainer ||
+      before.startOffset !== after.startOffset ||
+      before.endContainer !== after.endContainer ||
+      before.endOffset !== after.endOffset
+    );
+  }
+  const allExpanded = groups.length > 0 && groups.every(group => openGroups[group.id]);
+  function toggleGroup(group: ReaderGroup): void {
+    if (disabled) return;
+    window.getSelection()?.removeAllRanges();
+    setOpenGroups(previous => ({ ...previous, [group.id]: !previous[group.id] }));
+    setSelectedChunks(previous => {
+      const next = { ...previous };
+      delete next[group.id];
+      return next;
+    });
+  }
   function selectChunk(group: ReaderGroup, analysis: ReaderAnalysis, chunkId: string): void {
+    setOpenGroups(previous => ({ ...previous, [group.id]: true }));
     setSelectedChunks({
       [group.id]: { analysisId: analysis.id, chunkId },
     });
@@ -591,7 +620,18 @@ export function SentenceDialogue({
   }
 
   return (
-    <div ref={dialogueRef} role="group" aria-label={reader.dialogue} className="@container">
+    <div
+      ref={dialogueRef}
+      role="group"
+      aria-label={reader.dialogue}
+      className="@container"
+      onPointerDownCapture={() => {
+        const selection = window.getSelection();
+        selectionBeforePointerDown.current = selection?.rangeCount
+          ? selection.getRangeAt(0).cloneRange()
+          : null;
+      }}
+    >
       <div
         ref={toolbarRef}
         className="sticky -top-3 z-10 -mx-3 mb-2 grid gap-1 border-b border-border bg-card px-3 py-2"
@@ -601,7 +641,27 @@ export function SentenceDialogue({
           <h3 className="min-w-0 text-xs font-semibold">{reader.dialogue}</h3>
           {toolbarPlaybackAction}
         </div>
-        <div className="-ml-2 flex min-w-0 flex-wrap items-center gap-1">{toolbarActions}</div>
+        <div className="-ml-2 flex min-w-0 flex-wrap items-center gap-1">
+          {groups.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="min-h-8 text-xs"
+              data-ui="analysis-toggle-all"
+              disabled={disabled}
+              onClick={() => {
+                window.getSelection()?.removeAllRanges();
+                setOpenGroups(
+                  allExpanded ? {} : Object.fromEntries(groups.map(group => [group.id, true])),
+                );
+                if (allExpanded) setSelectedChunks({});
+              }}
+            >
+              {allExpanded ? copy.collapseAll : copy.expandAll}
+            </Button>
+          )}
+          {toolbarActions}
+        </div>
       </div>
       <div className="grid gap-2" data-ui="dialogue-utterances">
         {blocks.map(({ cueIds, group }) => {
@@ -634,13 +694,26 @@ export function SentenceDialogue({
                   data-ui="analysis-source-header"
                   className="col-span-3 flex min-h-8 min-w-0 items-center justify-between gap-2 pl-6"
                 >
-                  <span
-                    className="text-[11px] tabular-nums text-muted-foreground"
-                    data-ui="analysis-range"
-                    id={analysisId(group.id) + ":range"}
+                  <Button
+                    variant="ghost"
+                    className="-ml-2 h-8 min-w-0 flex-1 justify-start gap-2 px-2 text-[11px] tabular-nums text-muted-foreground"
+                    data-ui="analysis-toggle"
+                    aria-label={
+                      (openGroups[group.id] ? copy.hideAnalysis : copy.viewAnalysis) + " " + range
+                    }
+                    aria-expanded={!!openGroups[group.id]}
+                    aria-controls={analysisId(group.id) + ":content"}
+                    disabled={disabled}
+                    onClick={() => toggleGroup(group)}
                   >
-                    {range}
-                  </span>
+                    <span data-ui="analysis-range" id={analysisId(group.id) + ":range"}>
+                      {range}
+                    </span>
+                    <ChevronDown
+                      aria-hidden="true"
+                      className={"size-3.5 " + (openGroups[group.id] ? "rotate-180" : "")}
+                    />
+                  </Button>
                   <div className="shrink-0">
                     <SpeechButton
                       size="icon"
@@ -700,8 +773,8 @@ export function SentenceDialogue({
                       aria-controls={analysisId(group!.id) + ":selection"}
                       disabled={disabled}
                       onClick={event => {
-                        if (event.detail !== 0 && window.getSelection()?.toString())
-                          event.preventDefault();
+                        if (isSourceTextSelection(event)) event.preventDefault();
+                        else window.getSelection()?.removeAllRanges();
                       }}
                       className="inline h-auto min-h-8 min-w-0 max-w-full rounded-sm p-0 text-left text-[15px] leading-8 whitespace-normal underline decoration-border underline-offset-4 hover:bg-muted/70 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[state=on]:decoration-primary data-[state=on]:decoration-2 motion-reduce:transition-none [box-decoration-break:clone]"
                     >
@@ -738,6 +811,18 @@ export function SentenceDialogue({
                       data-ui="sourceSentence"
                       data-source-cue={id}
                       aria-current={playingCueId === id ? "true" : undefined}
+                      onClick={event => {
+                        if (!group || disabled) return;
+                        if (
+                          event.target instanceof Element &&
+                          event.target.closest(
+                            "button, a, input, select, textarea, [role=button], [role=radio]",
+                          )
+                        )
+                          return;
+                        if (isSourceTextSelection(event)) return;
+                        toggleGroup(group);
+                      }}
                     >
                       <span
                         data-ui="sentence-number"
@@ -748,7 +833,10 @@ export function SentenceDialogue({
                           ? null
                           : String(index + 1).padStart(2, "0")}
                       </span>
-                      <div className="min-w-0" data-ui="sentence-text">
+                      <div
+                        className={"min-w-0 " + (group && !disabled ? "cursor-pointer" : "")}
+                        data-ui="sentence-text"
+                      >
                         {fragments.length > 0 && group ? (
                           <ToggleGroup
                             type="single"
@@ -826,7 +914,15 @@ export function SentenceDialogue({
                       </div>
                     </div>
                     {group?.anchorCueId === id && (
-                      <div className="col-start-2 col-span-2 grid min-w-0 gap-5 pt-3">
+                      <div
+                        id={analysisId(group.id) + ":content"}
+                        data-ui="analysis-content"
+                        hidden={!openGroups[group.id]}
+                        className={
+                          "col-start-2 col-span-2 min-w-0 gap-5 pt-3 " +
+                          (openGroups[group.id] ? "grid" : "hidden")
+                        }
+                      >
                         {group.analyses.some(analysis => analysis.chunks?.length) && (
                           <p
                             className="text-xs leading-relaxed text-muted-foreground"

@@ -3,8 +3,30 @@ import assert from "node:assert/strict";
 import { piFeedback, type PiFeedbackContext } from "./pi-feedback";
 import { piCopy } from "./pi";
 import { translate, type UiLocale } from "./messages";
+import { playbackTimingMessages } from "./playback-timing";
 
 const locales: UiLocale[] = ["en", "zh-TW", "zh-CN", "ja", "ko"];
+test("playback timing confirmations and errors stay direct and follow the UI locale", () => {
+  for (const sourceLocale of locales)
+    for (const locale of locales) {
+      for (const key of [
+        "loopRangeSaved",
+        "loopRangeReset",
+        "invalidLoopRange",
+        "positionUnavailable",
+      ] as const) {
+        assert.deepEqual(
+          piFeedback(
+            locale,
+            playbackTimingMessages[sourceLocale][key],
+            key === "loopRangeSaved" || key === "loopRangeReset" ? "event" : "error",
+          ),
+          { message: playbackTimingMessages[locale][key] },
+          `${sourceLocale} -> ${locale}: ${key} must not be classified as an AI service message`,
+        );
+      }
+    }
+});
 test("operation abort is not treated as login cancellation", () => {
   assert.equal(
     piFeedback("zh-TW", "This operation was aborted", "generation").message,

@@ -60,15 +60,25 @@ function render(locale: UiLocale, doc: typeof document = document): string {
   );
 }
 
-test("current reader keeps source and whole-sentence reading visible without interpretation modes", () => {
+test("current reader exposes source-group disclosure and preserves whole-sentence content", () => {
   const html = render("zh-TW");
   const copy = contextualReaderMessages["zh-TW"];
   assert.ok(html.includes(copy.dialogue));
   assert.ok(html.includes("I haven&#x27;t decided yet."));
   assert.ok(html.includes("整句意思"));
   assert.ok(html.includes('data-ui="inlineAnalysis"'));
-  assert.ok(!html.includes('data-ui="analysis-toggle"'));
-  assert.ok(!html.includes('data-ui="analysis-toggle-all"'));
+  const dom = new JSDOM(html);
+  const toggles = dom.window.document.querySelectorAll('[data-ui="analysis-toggle"]');
+  assert.ok(toggles.length);
+  for (const toggle of toggles) {
+    assert.equal(toggle.getAttribute("aria-expanded"), "false");
+    assert.equal(
+      dom.window.document.getElementById(toggle.getAttribute("aria-controls")!)?.hidden,
+      true,
+    );
+  }
+  assert.ok(html.includes('data-ui="analysis-toggle-all"'));
+  assert.ok(!html.includes('data-ui="core-explanation-toggle"'));
   assert.ok(!html.includes("A friend asks about a trip."));
   assert.ok(html.includes(copy.previousScene) && html.includes(copy.nextScene));
   assert.ok(html.includes('data-ui="unifiedPlayer"'));

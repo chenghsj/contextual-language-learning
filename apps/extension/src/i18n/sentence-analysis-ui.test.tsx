@@ -52,7 +52,7 @@ async function click(element: Element | null) {
   });
 }
 
-test("core stays visible, extensions are optional, legacy multiple examples remain accessible, scene changes reset optional sections", async () => {
+test("opened source groups retain complete core and optional sections, including legacy examples", async () => {
   const doc = structuredClone(v7Fixture);
   const scene = doc.sections[0];
   const completeExplanation =
@@ -94,6 +94,7 @@ test("core stays visible, extensions are optional, legacy multiple examples rema
     );
   try {
     await act(async () => render());
+    await click(container.querySelector('[data-ui="analysis-toggle-all"]'));
     assert.ok(container.textContent?.includes(doc.points[0].explanation));
     const explanation = container.querySelector(
       '[data-ui="coreExplanation"] [data-ui="explanation-text"]',
@@ -153,6 +154,88 @@ test("core stays visible, extensions are optional, legacy multiple examples rema
     assert.equal(container.querySelectorAll('[data-ui="inlineAnalysis"]').length, 2);
     assert.equal(container.textContent?.includes(extension.explanation), false);
     assert.equal(container.textContent?.includes("Another saved example"), false);
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+  }
+});
+
+test("source groups own analysis disclosure while source fragments and playback stay independent", async () => {
+  const doc = (await import("../../dev/reader-v7-fixture")).crossCueV7Fixture();
+  const scene = doc.sections[0];
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  const played: string[] = [];
+  const render = () =>
+    root.render(
+      <SentenceDialogue
+        document={doc}
+        scene={scene}
+        locale="zh-TW"
+        playingCueId={null}
+        disabled={false}
+        playbackDisabled={false}
+        translationVisible={false}
+        onPlayCue={id => played.push(id)}
+        onPlayOccurrence={() => {}}
+        annotatedText={text => text}
+      />,
+    );
+  try {
+    await act(async () => render());
+    const toggles = [...container.querySelectorAll('[data-ui="analysis-toggle"]')];
+    assert.equal(toggles.length, 2, "one disclosure per source group, including a cross-cue group");
+    assert.equal(container.querySelector('[data-ui="core-explanation-toggle"]'), null);
+    const panel = (toggle: Element) =>
+      document.getElementById(toggle.getAttribute("aria-controls")!)!;
+    for (const toggle of toggles) {
+      assert.equal(toggle.getAttribute("aria-expanded"), "false");
+      assert.equal(panel(toggle).hidden, true);
+    }
+    await click(container.querySelector('[data-source-cue="cue-1"] [data-ui="sentence-text"]'));
+    assert.equal(toggles[0].getAttribute("aria-expanded"), "true");
+    assert.equal(panel(toggles[0]).hidden, false);
+    await click(toggles[1]);
+    assert.equal(
+      toggles[0].getAttribute("aria-expanded"),
+      "true",
+      "opening another group retains the first",
+    );
+    assert.equal(toggles[1].getAttribute("aria-expanded"), "true");
+    await click(container.querySelector('[data-source-cue="cue-3"] [data-ui="cue-play"]'));
+    assert.deepEqual(played, ["cue-3"]);
+    assert.equal(
+      toggles[1].getAttribute("aria-expanded"),
+      "true",
+      "playback does not collapse analysis",
+    );
+    await click(container.querySelector('[data-ui="coreExplanation"]'));
+    assert.equal(toggles[1].getAttribute("aria-expanded"), "true");
+    await click(container.querySelector('[data-source-cue="cue-3"] [data-ui="sentence-text"]'));
+    assert.equal(
+      toggles[1].getAttribute("aria-expanded"),
+      "false",
+      "either cross-cue source controls the same panel",
+    );
+    const fragment = container.querySelector('[data-ui="source-chunk-hover"]');
+    await click(fragment);
+    assert.equal(toggles[1].getAttribute("aria-expanded"), "true");
+    assert.ok(container.querySelector('[data-ui="selectedChunkMeaning"]'));
+    await click(fragment);
+    assert.equal(container.querySelector('[data-ui="selectedChunkMeaning"]'), null);
+    assert.equal(toggles[1].getAttribute("aria-expanded"), "true");
+    const all = container.querySelector('[data-ui="analysis-toggle-all"]');
+    await click(all);
+    for (const toggle of toggles) assert.equal(panel(toggle).hidden, true);
+    await click(all);
+    for (const toggle of toggles) assert.equal(panel(toggle).hidden, false);
+    scene.id = "next-scene";
+    await act(async () => render());
+    for (const toggle of container.querySelectorAll('[data-ui="analysis-toggle"]')) {
+      assert.equal(toggle.getAttribute("aria-expanded"), "false");
+      assert.equal(panel(toggle).hidden, true);
+    }
   } finally {
     await act(async () => root.unmount());
     container.remove();
@@ -499,7 +582,7 @@ test("complete originals share blocks without moving intervening subtitles, and 
   }
 });
 
-test("whole-sentence reading stays visible and in source order without mode or expand-all controls", async () => {
+test("source-group disclosure retains complete originals and source-ordered analysis panels", async () => {
   const doc = (await import("../../dev/reader-v7-fixture")).crossCueV7Fixture();
   const scene = doc.sections[0];
   const container = document.createElement("div");
@@ -532,8 +615,13 @@ test("whole-sentence reading stays visible and in source order without mode or e
       [["cue-1"], ["cue-2", "cue-3"]],
     );
     assert.equal(container.querySelectorAll('[data-ui="analysis-group"]').length, 2);
-    assert.equal(container.querySelector('[data-ui="analysis-toggle"]'), null);
-    assert.equal(container.querySelector('[data-ui="analysis-toggle-all"]'), null);
+    assert.equal(container.querySelectorAll('[data-ui="analysis-toggle"]').length, 2);
+    assert.ok(container.querySelector('[data-ui="analysis-toggle-all"]'));
+    assert.ok(
+      [...container.querySelectorAll<HTMLElement>('[data-ui="analysis-content"]')].every(
+        panel => panel.hidden,
+      ),
+    );
     const lastSource = blocks[1].querySelector('[data-source-cue="cue-3"]')!;
     assert.ok(
       lastSource.compareDocumentPosition(blocks[1].querySelector('[data-ui="analysis-group"]')!) &
@@ -795,7 +883,9 @@ test("source, fragment and paced example read-aloud send exact original text thr
         </SystemSpeechProvider>,
       ),
     );
-    const sourceSpeech = container.querySelectorAll('[data-ui="analysis-source-header"] button');
+    const sourceSpeech = container.querySelectorAll(
+      '[data-ui="analysis-source-header"] button[aria-label="Read complete sentence"]',
+    );
     assert.equal(sourceSpeech.length, 2);
     await click(sourceSpeech[1]);
     assert.equal(

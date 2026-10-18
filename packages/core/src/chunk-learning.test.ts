@@ -146,6 +146,35 @@ test("Host omits unreliable optional chunks while preserving validated whole-utt
   );
 });
 
+test("one invalid chunk preserves reliable clickable fragments in the same and other utterances", () => {
+  const { raw, input, request } = pointsFixture();
+  request.profile.enabledExplanations!.push("chunks");
+  const first = {
+    id: "question",
+    meaning: "為何仍在家",
+    spans: [{ cueId: "cue-1", start: 0, end: 24 }],
+  };
+  const second = {
+    id: "preparing",
+    meaning: "正準備出門",
+    spans: [{ cueId: "cue-2", start: 0, end: 23 }],
+  };
+  raw.utterances[0].chunks = [first];
+  raw.utterances[1].chunks = [
+    { id: "bad-offset", meaning: "錯誤位置", spans: [{ cueId: "cue-2", start: 24, end: 1000 }] },
+    second,
+  ];
+  const before = structuredClone(raw);
+  const prepared = prepareTeachingBatch(raw, input, request.profile, "batch");
+  assert.deepEqual(prepared.safeOutput.utterances[0].chunks, [first]);
+  assert.deepEqual(prepared.safeOutput.utterances[1].chunks, [second]);
+  assert.deepEqual(prepared.omittedChunkUtteranceIds, [raw.utterances[1].id]);
+  assert.deepEqual(raw, before);
+  assert.doesNotThrow(() =>
+    validateTeachingBatch(prepared.safeOutput, input, request.profile, "batch"),
+  );
+});
+
 test("explicitly unclear source names lose guessed readings without losing reliable adjacent annotations or making another model call", () => {
   const { raw, input, request } = pointsFixture();
   request.profile.targetLanguage = "ja";

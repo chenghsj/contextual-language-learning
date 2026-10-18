@@ -2,6 +2,7 @@ import { messages, type UiLocale } from "./messages";
 import { piCopy } from "./pi";
 import { piAuthMessage } from "./pi-auth";
 import { contextualReaderMessages } from "./contextual-reader";
+import { playbackTimingMessages } from "./playback-timing";
 import { needsVideoReaderReload } from "../video/reader-health";
 
 const copy = {
@@ -165,7 +166,7 @@ export function piFeedbackCopy(locale: UiLocale, key: keyof typeof copy): string
 // Application-owned messages are already localized. Recognize their templates
 // as well so switching locale also updates pending feedback without a new request.
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const templates = [messages, piCopy]
+const templates = [messages, piCopy, playbackTimingMessages]
   .flatMap(catalog =>
     Object.values(catalog).flatMap(strings =>
       Object.entries(strings as Record<string, string>).map(([key, value]) => {

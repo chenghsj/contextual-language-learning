@@ -7,11 +7,24 @@ import { PiFeedback } from "../components/pi-feedback";
 import { AiModelSelection } from "../components/ai-model-selection";
 import { TaskHistory } from "../components/task-history";
 import { translate } from "./messages";
+import { playbackTimingMessages } from "./playback-timing";
 
 const noop = () => {};
 function documentFor(node: React.ReactNode) {
   return new JSDOM(renderToStaticMarkup(node)).window.document;
 }
+test("timing completion and reset show the result without AI fallback or technical details", () => {
+  for (const key of ["loopRangeSaved", "loopRangeReset"] as const) {
+    const doc = documentFor(
+      <PiFeedback locale="zh-TW" context="event" message={playbackTimingMessages.en[key]} />,
+    );
+    assert.equal(
+      doc.querySelector('[role="status"]')?.textContent,
+      playbackTimingMessages["zh-TW"][key],
+    );
+    assert.equal(doc.querySelector("details"), null);
+  }
+});
 test("unknown prompt requirements are visible and raw diagnostic text is escaped", () => {
   const doc = documentFor(
     <PiFeedback
