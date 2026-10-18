@@ -1,0 +1,24 @@
+{
+  "algorithm": "sha256",
+  "scope": "Original runner metadata, runtime provenance, execution log, saved jobs and final generated JSON/Markdown. Reviews and verification summaries excluded. Rejected intermediate candidate payloads are not available from this runner.",
+  "files": {
+    "conditions.json": "23dbe75a380d9e1099cf0c8b5f42cdfddc874126be1671240e59145028511f3d",
+    "en-normal-transfer-automatic/jobs/bb4e72e2-48d0-4bf3-b0f8-97bdfd296f9e.json": "fa1bc72c8c0c140eb85d761d03c63b08b50ec375cfc14423caa1a6519cc683ad",
+    "en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/bb4e72e2-48d0-4bf3-b0f8-97bdfd296f9e.json": "273d92e2532b5ebb7ac733bb49bf02ab539b7d49faa736ba31bd8dfb4b1ee594",
+    "en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/bb4e72e2-48d0-4bf3-b0f8-97bdfd296f9e.md": "cb563e846fc8728f9189bc974ccb44ff4e2884b4533c3d1a7b8895a035d87c9b",
+    "en-uncertainty-quote-topic-automatic/jobs/11d4e617-9862-405f-ba89-c7643d734ffc.json": "93fbc3baa69e473398a3461ee6404f1d9e4ec979122188bd3ba3362a3ff4bef2",
+    "en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/11d4e617-9862-405f-ba89-c7643d734ffc.json": "93aaf8889fbb6918a1b766b55d52f98f273da8c3da1c028670ed338094e2c831",
+    "en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/11d4e617-9862-405f-ba89-c7643d734ffc.md": "12829e51379bdc7dcdcca359ec9c866f698e37d28859900cc4b5ca092ab6859c",
+    "ja-normal-transfer-automatic/jobs/a31d0e9f-1d6c-4428-9b44-c1ec9e14a3b8.json": "6ccfda8d55e322b4de143aa98b3b3305064fe4cd24d32c6a89e24cca5e35444c",
+    "ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/a31d0e9f-1d6c-4428-9b44-c1ec9e14a3b8.json": "e81f126c6bf58fcbee88f13a77c13fcb745317c20952871b3523b01df5f7831c",
+    "ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/a31d0e9f-1d6c-4428-9b44-c1ec9e14a3b8.md": "89deef4dbe5941ff1f40cb83098d271cd7f67a8434114fd375ec6d8c93595823",
+    "ja-uncertainty-quote-topic-automatic/jobs/628ca92c-31da-48ec-bfbd-2fa7b3d5245f.json": "0d3182cf2f5a75c54ad119d2422aa138aa28f54603644275b4eca593c30e815a",
+    "ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/628ca92c-31da-48ec-bfbd-2fa7b3d5245f.json": "f411ba37379d0cd65e58ee187e9f94f25bac2a2275f636726aadcbc3e79a13a7",
+    "ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/628ca92c-31da-48ec-bfbd-2fa7b3d5245f.md": "c2b0ed64f6c7227d2013dbb977fd3265f362ae824d71fd2a18b5d3f5aa62965d",
+    "live-run.log": "1e495962f400a6cf98cb23402b94dde344b943f513d9bbe0b3c294028888524b",
+    "report.json": "0f048e4896f37a5bc3e99f09b847e67626aaad133d941d063ec25a18d065900f",
+    "requests.json": "6e7af3c2a510d5ff84a97f627bae9f8ffdf2d4470ea152fdf798766a2a80c2e2",
+    "run-context.json": "f9fe3c76614325dd152a3b2479d003357d7b28d617e0ec7d1ab792c7ae74cf34",
+    "runtime-environment.json": "b5c08672381b41ad4d3b37c3f87b259d41ffb63be663f772dd58c6aaef747683"
+  }
+}

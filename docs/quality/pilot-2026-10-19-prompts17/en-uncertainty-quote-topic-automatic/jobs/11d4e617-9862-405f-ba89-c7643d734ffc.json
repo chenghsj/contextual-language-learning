@@ -1,0 +1,908 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "f297d2a1995403e111efc34dca27b106112bb9c4822beb817e4c028591b550a4",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T16:47:13.907Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 27423.983083000006,
+        "usage": {
+          "input": 2761,
+          "output": 4418,
+          "reasoning": 4116
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T16:47:21.357Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 7438.123875000005,
+        "usage": {
+          "input": 2364,
+          "output": 993,
+          "reasoning": 955
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T16:48:25.692Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 64320.00112500001,
+        "usage": {
+          "input": 4498,
+          "output": 9969,
+          "reasoning": 8757
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "f297d2a1995403e111efc34dca27b106112bb9c4822beb817e4c028591b550a4",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "11d4e617-9862-405f-ba89-c7643d734ffc",
+    "sourceTitle": "en-uncertainty-quote-topic-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-18T16:46:45.623Z",
+    "updatedAt": "2026-10-18T16:48:25.722Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "11d4e617-9862-405f-ba89-c7643d734ffc"
+  },
+  "request": {
+    "id": "11d4e617-9862-405f-ba89-c7643d734ffc",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "en-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "en",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Did Maya talk about the meeting?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“Please tell me the time,” she said. Anyway, have you eaten?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Not yet. What does [???] mean here?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "The caption is unclear."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "cdaca17c-e499-4359-a0e3-93547a601bf7",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "詢問會議與切換話題",
+      "context": {
+        "text": "對話內容包含對 Maya 是否談論會議的提問、引述「請告訴我時間」的發言、轉換話題詢問是否已用餐、尚未用餐的答覆、詢問「[???]（來源未明片段）」在此處的意思，以及關於字幕不清楚的說明。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Maya 有提到那場會議嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「請告訴我時間，」她說。話說回來，你吃過了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡的 [???]（來源未明片段）是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "3d22addb-6ed1-4e96-9677-b316fe24f5ac",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:chk1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 9,
+                  "end": 19
+                }
+              ],
+              "meaning": "談論；提及"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 32
+            }
+          ]
+        },
+        {
+          "id": "c4b24cba-bd02-45b8-916c-4c1570b20486",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 37
+            }
+          ]
+        },
+        {
+          "id": "ec9b279f-44a0-4687-a68f-ca533035b787",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:chk2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 37,
+                  "end": 43
+                }
+              ],
+              "meaning": "話說回來；反正"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 37,
+              "end": 60
+            }
+          ]
+        },
+        {
+          "id": "182d02b9-8c9d-4641-ae59-6e8bf71627ba",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "id": "54883433-06bc-45c1-81f8-f7288cfbe82d",
+          "meaning": "詢問「[???]（來源未明片段）」在此處是什麼意思",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 9,
+              "end": 35
+            }
+          ]
+        },
+        {
+          "id": "f04764cb-f8bb-4822-a07e-cbd64800d56d",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 23
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "cdaca17c-e499-4359-a0e3-93547a601bf7",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "3d22addb-6ed1-4e96-9677-b316fe24f5ac",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 32
+                  }
+                ]
+              },
+              {
+                "id": "c4b24cba-bd02-45b8-916c-4c1570b20486",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 37
+                  }
+                ]
+              },
+              {
+                "id": "ec9b279f-44a0-4687-a68f-ca533035b787",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 37,
+                    "end": 60
+                  }
+                ]
+              },
+              {
+                "id": "182d02b9-8c9d-4641-ae59-6e8bf71627ba",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              },
+              {
+                "id": "54883433-06bc-45c1-81f8-f7288cfbe82d",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 9,
+                    "end": 35
+                  }
+                ]
+              },
+              {
+                "id": "f04764cb-f8bb-4822-a07e-cbd64800d56d",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 23
+                  }
+                ]
+              }
+            ],
+            "learningValue": "學習日常對話中的引述句型、話題轉換詞 Anyway、現在完成式日常問句（Have you eaten?）與自然簡答（Not yet.）。",
+            "opportunities": [
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "學習轉折副詞 Anyway 用於主動切換話題的口語功能。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2",
+                  "c3"
+                ],
+                "description": "學習現在完成式用於生活問候（Have you eaten?）以及簡答 Not yet 的對應結構。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "學習動詞片語 talk about 搭配名詞表示「討論、提及某事」。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "cdaca17c-e499-4359-a0e3-93547a601bf7",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "3d22addb-6ed1-4e96-9677-b316fe24f5ac",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 32
+              }
+            ]
+          },
+          {
+            "id": "c4b24cba-bd02-45b8-916c-4c1570b20486",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 37
+              }
+            ]
+          },
+          {
+            "id": "ec9b279f-44a0-4687-a68f-ca533035b787",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 37,
+                "end": 60
+              }
+            ]
+          },
+          {
+            "id": "182d02b9-8c9d-4641-ae59-6e8bf71627ba",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 9
+              }
+            ]
+          },
+          {
+            "id": "54883433-06bc-45c1-81f8-f7288cfbe82d",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 9,
+                "end": 35
+              }
+            ]
+          },
+          {
+            "id": "f04764cb-f8bb-4822-a07e-cbd64800d56d",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 23
+              }
+            ]
+          }
+        ],
+        "learningValue": "學習日常對話中的引述句型、話題轉換詞 Anyway、現在完成式日常問句（Have you eaten?）與自然簡答（Not yet.）。",
+        "opportunities": [
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "學習轉折副詞 Anyway 用於主動切換話題的口語功能。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2",
+              "c3"
+            ],
+            "description": "學習現在完成式用於生活問候（Have you eaten?）以及簡答 Not yet 的對應結構。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "學習動詞片語 talk about 搭配名詞表示「討論、提及某事」。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "cdaca17c-e499-4359-a0e3-93547a601bf7",
+        "utteranceIds": [
+          "3d22addb-6ed1-4e96-9677-b316fe24f5ac",
+          "c4b24cba-bd02-45b8-916c-4c1570b20486",
+          "ec9b279f-44a0-4687-a68f-ca533035b787",
+          "182d02b9-8c9d-4641-ae59-6e8bf71627ba",
+          "54883433-06bc-45c1-81f8-f7288cfbe82d",
+          "f04764cb-f8bb-4822-a07e-cbd64800d56d"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "cdaca17c-e499-4359-a0e3-93547a601bf7",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "詢問會議與切換話題",
+            "context": {
+              "text": "對話內容包含對 Maya 是否談論會議的提問、引述「請告訴我時間」的發言、轉換話題詢問是否已用餐、尚未用餐的答覆、詢問「[???]（來源未明片段）」在此處的意思，以及關於字幕不清楚的說明。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "Maya 有提到那場會議嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "「請告訴我時間，」她說。話說回來，你吃過了嗎？"
+              },
+              {
+                "cueId": "c3",
+                "text": "還沒。這裡的 [???]（來源未明片段）是什麼意思？"
+              },
+              {
+                "cueId": "c4",
+                "text": "字幕不清楚。"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "3d22addb-6ed1-4e96-9677-b316fe24f5ac",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:chk1",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 9,
+                        "end": 19
+                      }
+                    ],
+                    "meaning": "談論；提及"
+                  }
+                ],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 32
+                  }
+                ]
+              },
+              {
+                "id": "c4b24cba-bd02-45b8-916c-4c1570b20486",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 37
+                  }
+                ]
+              },
+              {
+                "id": "ec9b279f-44a0-4687-a68f-ca533035b787",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:chk2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 37,
+                        "end": 43
+                      }
+                    ],
+                    "meaning": "話說回來；反正"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 37,
+                    "end": 60
+                  }
+                ]
+              },
+              {
+                "id": "182d02b9-8c9d-4641-ae59-6e8bf71627ba",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              },
+              {
+                "id": "54883433-06bc-45c1-81f8-f7288cfbe82d",
+                "meaning": "詢問「[???]（來源未明片段）」在此處是什麼意思",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 9,
+                    "end": 35
+                  }
+                ]
+              },
+              {
+                "id": "f04764cb-f8bb-4822-a07e-cbd64800d56d",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 23
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:p1",
+              "utteranceIds": [
+                "3d22addb-6ed1-4e96-9677-b316fe24f5ac"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "talk about 的用法",
+              "sourceCueIds": [
+                "c1"
+              ],
+              "contextCueIds": [],
+              "explanation": "talk about 在此表示「談論、提及某個話題或事件」，後面接名詞或名詞片語作為談論的主題。",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 9,
+                  "end": 19
+                }
+              ]
+            },
+            {
+              "id": "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:p2",
+              "utteranceIds": [
+                "ec9b279f-44a0-4687-a68f-ca533035b787"
+              ],
+              "category": "usage",
+              "presentation": "core",
+              "title": "Anyway 轉換話題的用法",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "Anyway 在口語對話中常放在句首，用來結束前一個話題並主動切換到新的話題，相當於中文的「話說回來」或「言歸正傳」。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 37,
+                  "end": 43
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:r1",
+              "pointIds": [
+                "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:p1"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c1"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c1",
+                      "start": 9,
+                      "end": 19
+                    }
+                  ],
+                  "text": "talk about"
+                }
+              ],
+              "pattern": "talk about [noun]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩位同事在休息時間確認專案進度",
+                  "dialogue": [
+                    {
+                      "text": "Did you talk about the new schedule with Kevin?",
+                      "translation": "你有和 Kevin 討論新的時程表嗎？"
+                    },
+                    {
+                      "text": "Yes, we agreed to start next Monday.",
+                      "translation": "有，我們同意下週一開始。"
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "talk about the new schedule"
+                }
+              ]
+            },
+            {
+              "id": "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:r2",
+              "pointIds": [
+                "cdaca17c-e499-4359-a0e3-93547a601bf7:s0:p2"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 37,
+                      "end": 43
+                    }
+                  ],
+                  "text": "Anyway"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "朋友聊完天氣後轉換話題詢問週末計畫",
+                  "dialogue": [
+                    {
+                      "text": "It is raining really hard outside today.",
+                      "translation": "今天外面雨下得真大。"
+                    },
+                    {
+                      "text": "Anyway, do you want to see a movie this weekend?",
+                      "translation": "話說回來，你這週末想去看電影嗎？"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "Anyway"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

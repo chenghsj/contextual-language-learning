@@ -1,0 +1,17 @@
+{
+  "evidence": "verified",
+  "mode": "current sources and frozen artifacts",
+  "sourceDrift": [],
+  "accepted": 4,
+  "cases": 4,
+  "coveragePassed": 4,
+  "semanticPassed": 4,
+  "calls": 13,
+  "sumCaseDurationMs": 335578,
+  "usage": {
+    "input": 48815,
+    "output": 49608,
+    "reasoning": 42598
+  },
+  "modelCallsStartedByVerifier": 0
+}

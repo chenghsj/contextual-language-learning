@@ -1,0 +1,27 @@
+{
+  "case": "ja-normal-transfer-automatic",
+  "document": "docs/quality/pilot-2026-10-19-prompts17/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/a31d0e9f-1d6c-4428-9b44-c1ec9e14a3b8.json",
+  "documentHash": "e81f126c6bf58fcbee88f13a77c13fcb745317c20952871b3523b01df5f7831c",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source summary, temporal relation and simple response",
+      "result": "The context is a neutral inventory of source speech acts. It does not add seeing, a named participant, a definite cancellation or source emotion. The dictionary-form + ところだった explanation and translation preserve imminent departure at the time of the call. うん is basic_only without filler points or examples."
+    },
+    {
+      "scope": "construction, pronunciation and invented dialogues",
+      "result": "[動詞辞書形]ところだった and [動詞て形]くれる？ instantiate without duplicated suffixes. The missed-call/bath example and plate request/reply have coherent actors, translations and exact targets. Japanese word readings align with the written source/example words; no original audio was assessed."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "style",
+      "path": "/points/1/explanation",
+      "quote": "並以疑問語調作結",
+      "description": "The generic description also calls the tone 親切自然 without conditioning it on context or delivery. Qualify the interrogative intonation and friendliness as possible general usage rather than a required contour or verified property of this recording. The request construction and meaning remain correct; no audio was checked."
+    }
+  ],
+  "boundary": "Same text-only rubric and nonblocking tone-wording classification as the prior frozen round. No audio, real Chrome/video acceptance, learning-effect measurement or teacher certification. Original output unchanged."
+}

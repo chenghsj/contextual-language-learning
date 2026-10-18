@@ -1,0 +1,19 @@
+{
+  "case": "en-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/pilot-2026-10-19-prompts17/en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/11d4e617-9862-405f-ba89-c7643d734ffc.json",
+  "documentHash": "93aaf8889fbb6918a1b766b55d52f98f273da8c3da1c028670ed338094e2c831",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source roles, deictic reference and damaged text",
+      "result": "The impersonal summary lists the source questions, quotation, topic change, reply and caption statement. Source she remains 她 without identifying her as Maya. Here stays 此處/這裡 without a screen, writing or gesture. [???] is marked as unclear in context, translation and the affected utterance meaning; no repaired meaning, pronunciation, point or reusable source form is invented."
+    },
+    {
+      "scope": "boundary coverage, level and examples",
+      "result": "The quoted report and Anyway topic switch are separate units; Not yet and the unclear-fragment question are separate as well. Not yet remains basic_only without the prior round's avoidable extra point/example. talk about [noun] and Anyway have coherent source-grounded explanations and new dialogues. The affirmative reply confirms the same discussion and participants asked about; no reversed actor is introduced."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only source/editorial screening of this fresh single output. No audio, real Chrome/video acceptance, learning-effect measurement or teacher certification. Original output unchanged."
+}

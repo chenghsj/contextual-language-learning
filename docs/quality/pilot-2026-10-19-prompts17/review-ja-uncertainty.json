@@ -1,0 +1,23 @@
+{
+  "case": "ja-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/pilot-2026-10-19-prompts17/ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/628ca92c-31da-48ec-bfbd-2fa7b3d5245f.json",
+  "documentHash": "f411ba37379d0cd65e58ee187e9f94f25bac2a2275f636726aadcbc3e79a13a7",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "unresolved participants, quoted speech and deictic reference",
+      "result": "The summary mentions ミオ without asserting that the name is the subject or the quoted speaker. Translation preserves the comma-delimited name and does not add a named reporting subject or gender. ここにある remains 在這邊/此處 rather than writing, a screen or a perception event."
+    },
+    {
+      "scope": "unclear fragment and reliable surrounding material",
+      "result": "悪いない is explicitly marked as a fragment of unclear form in context, translation and the affected utterance meaning. No guessed correction, meaning or reading is supplied. The point and reusable source form cite only って何？, excluding the damaged token. The quoted utterance/topic switch and まだ/new question are separated; まだ stays basic_only without filler."
+    },
+    {
+      "scope": "contraction, dialogue roles and translations",
+      "result": "The explanation reconstructs 話していた and omits only い. [動詞て形]た yields 話してた/読んでた without a repeated suffix. The new conversations correctly instantiate the contraction, quotation, topic change and definition question. The corridor question/reply has consistent participants; the Suzuki quotation and offline-meetup example keep invented details within AI examples."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only source/editorial screening of this fresh single output. No audio, real Chrome/video acceptance, learning-effect measurement or teacher certification. Original output unchanged."
+}

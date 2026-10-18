@@ -1,0 +1,84 @@
+{
+  "sourceCommit": "939c401bbae44bbf8c1df3853dfabbe160ab8d74",
+  "scope": "One fresh run for each of four fixed cases on the Reader-integrated source. Counts do not estimate overall language accuracy or run-to-run reliability.",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "decision": "four_sample_passed_do_not_expand_automatically",
+  "counts": {
+    "requested": 4,
+    "generated": 4,
+    "structuralPassed": 4,
+    "fixedSourcePassed": 4,
+    "identityPassed": 4,
+    "coveragePassed": 4,
+    "semanticPassed": 4,
+    "accepted": 4
+  },
+  "usage": {
+    "calls": 13,
+    "structuralRepairCalls": 1,
+    "wholeCaseReruns": 0,
+    "providerFallbacks": 0,
+    "sumCaseDurationMs": 335578,
+    "reportedTokens": {
+      "input": 48815,
+      "output": 49608,
+      "reasoning": 42598
+    },
+    "callsWithoutUsage": 0,
+    "reasoningIncludedInOutput": true,
+    "billing": "subscription",
+    "monetaryCost": "not reported; no currency estimate inferred"
+  },
+  "cases": [
+    {
+      "case": "en-normal-transfer-automatic",
+      "document": "docs/quality/pilot-2026-10-19-prompts17/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/bb4e72e2-48d0-4bf3-b0f8-97bdfd296f9e.json",
+      "documentHash": "273d92e2532b5ebb7ac733bb49bf02ab539b7d49faa736ba31bd8dfb4b1ee594",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "review-en-normal.json",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "case": "en-uncertainty-quote-topic-automatic",
+      "document": "docs/quality/pilot-2026-10-19-prompts17/en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/11d4e617-9862-405f-ba89-c7643d734ffc.json",
+      "documentHash": "93aaf8889fbb6918a1b766b55d52f98f273da8c3da1c028670ed338094e2c831",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "review-en-uncertainty.json",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "case": "ja-normal-transfer-automatic",
+      "document": "docs/quality/pilot-2026-10-19-prompts17/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/a31d0e9f-1d6c-4428-9b44-c1ec9e14a3b8.json",
+      "documentHash": "e81f126c6bf58fcbee88f13a77c13fcb745317c20952871b3523b01df5f7831c",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "review-ja-normal.json",
+      "errors": 0,
+      "warnings": 1
+    },
+    {
+      "case": "ja-uncertainty-quote-topic-automatic",
+      "document": "docs/quality/pilot-2026-10-19-prompts17/ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/628ca92c-31da-48ec-bfbd-2fa7b3d5245f.json",
+      "documentHash": "f411ba37379d0cd65e58ee187e9f94f25bac2a2275f636726aadcbc3e79a13a7",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "review-ja-uncertainty.json",
+      "errors": 0,
+      "warnings": 0
+    }
+  ],
+  "limits": [
+    "Fixed English B1 and Japanese N3 cases, one fresh run each; no expansion to 28.",
+    "No installed Host update, real Chrome/video acceptance, audio verification, teacher/native-speaker certification or learning-effect test.",
+    "The runner preserves final documents, jobs, execution calls and diagnostics; it does not preserve the first rejected candidate response or the exact successful-repair trigger.",
+    "Original runner artifacts remain unchanged; source/editorial reviews and acceptance are separate files."
+  ]
+}

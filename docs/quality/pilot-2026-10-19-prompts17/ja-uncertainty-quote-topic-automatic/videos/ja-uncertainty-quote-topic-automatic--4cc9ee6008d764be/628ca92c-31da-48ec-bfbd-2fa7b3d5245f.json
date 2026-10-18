@@ -1,0 +1,535 @@
+{
+  "id": "628ca92c-31da-48ec-bfbd-2fa7b3d5245f",
+  "createdAt": "2026-10-18T16:49:13.304Z",
+  "source": {
+    "platform": "import",
+    "title": "ja-uncertainty-quote-topic-automatic"
+  },
+  "profile": {
+    "targetLanguage": "ja",
+    "instructionLanguage": "zh-TW",
+    "level": "N3",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "ed36a5ab03d288b50dc8e1dc9eeed42ae0d472413c2739000dc3089348289391",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T16:49:32.285Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 17989.672290999995,
+        "usage": {
+          "input": 4291,
+          "output": 2663,
+          "reasoning": 2337
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T16:49:37.544Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 5248.876916999987,
+        "usage": {
+          "input": 4101,
+          "output": 690,
+          "reasoning": 651
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T16:51:33.252Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 115696.14237500002,
+        "usage": {
+          "input": 4972,
+          "output": 18036,
+          "reasoning": 16264
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "ミオ、集まりのことを話してた？"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "「時間を教えて」って。ところで、もう食べた？"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "まだ。ここにある「悪いない」って何？"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "字幕がよくわからない。"
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "d86633c1-62de-4693-a6b7-86c92bc014bc",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "關於聚會與字幕的日常對話",
+      "context": {
+        "text": "對話包含提及「ミオ」並詢問聚會話題的問句、轉述「時間を教えて」請求的發言、轉換話題至是否用餐的提問、簡短的回應、針對此處「悪いない」（形式未詳之原文片段）含義的提問，以及提及字幕難以理解的陳述。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "ミオ，有在聊聚會的事嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「告訴我時間」這樣說。話說回來，已經吃了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。在這邊的「悪いない」（形式未詳之原文片段）是什麼？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不太清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "69d93e28-28ae-4f01-942b-03c32224defa",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p1"
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 15
+            }
+          ]
+        },
+        {
+          "id": "44c3856f-680b-451b-a2f8-e5c010bbcc25",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p2"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 11
+            }
+          ]
+        },
+        {
+          "id": "89eeb928-cfbf-42f1-9f5b-2a580cbae326",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p3"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 11,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "c66cd649-7e1f-4cb2-aeca-7f5f5c41915e",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "id": "2900f104-8e29-4e1f-9c77-90f61b938534",
+          "meaning": "在這邊的「悪いない」（形式未詳之原文片段）是什麼意思？",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p4"
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 3,
+              "end": 18
+            }
+          ]
+        },
+        {
+          "id": "bac21524-9d20-445c-a078-d3dc6de3f7b6",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 11
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p1",
+      "utteranceIds": [
+        "69d93e28-28ae-4f01-942b-03c32224defa"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "「話してた」（〜てた）",
+      "sourceCueIds": [
+        "c1"
+      ],
+      "contextCueIds": [],
+      "explanation": "「話してた」是動詞「話す」的て形「話して」接上補助動詞「いた」構成的「話していた」，在日常口語中省略「い」而成的縮約形式。用於表示過去某個時間點正在進行的動作或持續的狀態。",
+      "sourceSpans": [
+        {
+          "cueId": "c1",
+          "start": 10,
+          "end": 14
+        }
+      ]
+    },
+    {
+      "id": "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p2",
+      "utteranceIds": [
+        "44c3856f-680b-451b-a2f8-e5c010bbcc25"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "「って」（引用標記）",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "「って」為口語中常見的引用助詞，相當於「〜と言って（いた）」或「〜と」。接在引述的內容之後，用以轉述他人的發言、要求或傳聞，句末常省略後續的述語。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 8,
+          "end": 10
+        }
+      ]
+    },
+    {
+      "id": "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p3",
+      "utteranceIds": [
+        "89eeb928-cfbf-42f1-9f5b-2a580cbae326"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "「ところで」（話題轉換）",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "「ところで」為轉折接續詞，用於打破當前的話題並切換至新的話題，相當於中文的「話說回來」、「對了」。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 11,
+          "end": 15
+        }
+      ]
+    },
+    {
+      "id": "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p4",
+      "utteranceIds": [
+        "2900f104-8e29-4e1f-9c77-90f61b938534"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "「〜って何？」（詢問詞義）",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "「〜って何？」在口語中常接在詞語或事物之後，用來詢問其定義或含義，相當於較正式的「〜というのは何ですか」。其中「って」提示提問主題，「何」表示疑問。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 14,
+          "end": 18
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:r1",
+      "pointIds": [
+        "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 10,
+              "end": 14
+            }
+          ],
+          "text": "話してた"
+        }
+      ],
+      "pattern": "[動詞て形]た",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "詢問朋友剛才在走廊和誰交談",
+          "dialogue": [
+            {
+              "text": "さっき廊下で誰と話してたの？",
+              "translation": "你剛才在走廊和誰說話呢？"
+            },
+            {
+              "text": "田中先生と話してたよ。",
+              "translation": "我和田中老師在說話喔。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "話してた"
+        }
+      ]
+    },
+    {
+      "id": "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:r2",
+      "pointIds": [
+        "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 8,
+              "end": 10
+            }
+          ],
+          "text": "って"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "轉述同事交代的留言",
+          "dialogue": [
+            {
+              "text": "鈴木さんは何て言ってた？",
+              "translation": "鈴木先生說了什麼？"
+            },
+            {
+              "text": "「会議は三時から」って。",
+              "translation": "他說「會議三點開始」。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "って"
+        }
+      ]
+    },
+    {
+      "id": "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:r3",
+      "pointIds": [
+        "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p3"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 11,
+              "end": 15
+            }
+          ],
+          "text": "ところで"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "與朋友聊完天氣後轉換話題詢問週末計畫",
+          "dialogue": [
+            {
+              "text": "明日は晴れるみたいだね。",
+              "translation": "明天好像會放晴呢。"
+            },
+            {
+              "text": "よかった。ところで、週末の予定は決まった？",
+              "translation": "太好了。話說回來，週末的計畫決定了嗎？"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "ところで"
+        }
+      ]
+    },
+    {
+      "id": "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:r4",
+      "pointIds": [
+        "d86633c1-62de-4693-a6b7-86c92bc014bc:s0:p4"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 14,
+              "end": 18
+            }
+          ],
+          "text": "って何？"
+        }
+      ],
+      "pattern": "[名詞]って何？",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "詢問朋友剛才提到的詞語含義",
+          "dialogue": [
+            {
+              "text": "さっき言ってたオフ会って何？",
+              "translation": "剛才說的線下聚會是什麼意思？"
+            },
+            {
+              "text": "ネットの仲間が実際に会う集まりのことだよ。",
+              "translation": "是指網友實際見面的聚會活動喔。"
+            }
+          ],
+          "targetLineIndex": 0,
+          "targetText": "オフ会って何？"
+        }
+      ]
+    }
+  ]
+}

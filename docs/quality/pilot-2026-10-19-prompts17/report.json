@@ -1,0 +1,356 @@
+[
+  {
+    "case": "en-normal-transfer-automatic",
+    "status": "generated",
+    "durationMs": 47929,
+    "id": "bb4e72e2-48d0-4bf3-b0f8-97bdfd296f9e",
+    "scenes": 1,
+    "utterances": 4,
+    "points": 2,
+    "reusableItems": 2,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "1e3baa452649512ec658c73f59fde63837afb989e2a565cdf04e41eff749283a",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:46:05.474Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 6551.889040999999,
+          "usage": {
+            "input": 2515,
+            "output": 618,
+            "reasoning": 356
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:46:09.376Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 3887.98725,
+          "usage": {
+            "input": 2198,
+            "output": 278,
+            "reasoning": 240
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:46:45.597Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 36204.495041,
+          "usage": {
+            "input": 4263,
+            "output": 5646,
+            "reasoning": 4555
+          }
+        }
+      ],
+      "pronunciationDiagnostics": []
+    },
+    "semanticAcceptance": "pending independent review; generation and program validation are not semantic acceptance"
+  },
+  {
+    "case": "en-uncertainty-quote-topic-automatic",
+    "status": "generated",
+    "durationMs": 100100,
+    "id": "11d4e617-9862-405f-ba89-c7643d734ffc",
+    "scenes": 1,
+    "utterances": 6,
+    "points": 2,
+    "reusableItems": 2,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "f297d2a1995403e111efc34dca27b106112bb9c4822beb817e4c028591b550a4",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:47:13.907Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 27423.983083000006,
+          "usage": {
+            "input": 2761,
+            "output": 4418,
+            "reasoning": 4116
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:47:21.357Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 7438.123875000005,
+          "usage": {
+            "input": 2364,
+            "output": 993,
+            "reasoning": 955
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:48:25.692Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 64320.00112500001,
+          "usage": {
+            "input": 4498,
+            "output": 9969,
+            "reasoning": 8757
+          }
+        }
+      ],
+      "pronunciationDiagnostics": []
+    },
+    "semanticAcceptance": "pending independent review; generation and program validation are not semantic acceptance"
+  },
+  {
+    "case": "ja-normal-transfer-automatic",
+    "status": "generated",
+    "durationMs": 47580,
+    "id": "a31d0e9f-1d6c-4428-9b44-c1ec9e14a3b8",
+    "scenes": 1,
+    "utterances": 4,
+    "points": 2,
+    "reusableItems": 2,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "db1de0efed40418255c0bf198d44d2b1c861bcfad3c6b69545da08766faa091a",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:48:38.024Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 11489.46425000002,
+          "usage": {
+            "input": 4120,
+            "output": 1486,
+            "reasoning": 1233
+          }
+        },
+        {
+          "step": "window-0-repair",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:48:45.415Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 7379.190750000009,
+          "usage": {
+            "input": 4184,
+            "output": 853,
+            "reasoning": 626
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:48:48.242Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 2816.1290840000147,
+          "usage": {
+            "input": 3874,
+            "output": 206,
+            "reasoning": 169
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:49:13.282Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 25033.807834000007,
+          "usage": {
+            "input": 4674,
+            "output": 3752,
+            "reasoning": 2339
+          }
+        }
+      ],
+      "pronunciationDiagnostics": [
+        {
+          "id": "s0:/pronunciations/0:all:empty_annotation",
+          "batchId": "s0",
+          "sceneId": "55d40dc6-9ddc-4e5a-af84-880d16fb25ab",
+          "path": "/pronunciations/0",
+          "cueId": "c1",
+          "code": "empty_annotation",
+          "action": "omitted"
+        },
+        {
+          "id": "s0:/pronunciations/3:all:empty_annotation",
+          "batchId": "s0",
+          "sceneId": "55d40dc6-9ddc-4e5a-af84-880d16fb25ab",
+          "path": "/pronunciations/3",
+          "cueId": "c4",
+          "code": "empty_annotation",
+          "action": "omitted"
+        }
+      ]
+    },
+    "semanticAcceptance": "pending independent review; generation and program validation are not semantic acceptance"
+  },
+  {
+    "case": "ja-uncertainty-quote-topic-automatic",
+    "status": "generated",
+    "durationMs": 139969,
+    "id": "628ca92c-31da-48ec-bfbd-2fa7b3d5245f",
+    "scenes": 1,
+    "utterances": 6,
+    "points": 4,
+    "reusableItems": 4,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "ed36a5ab03d288b50dc8e1dc9eeed42ae0d472413c2739000dc3089348289391",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:49:32.285Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 17989.672290999995,
+          "usage": {
+            "input": 4291,
+            "output": 2663,
+            "reasoning": 2337
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:49:37.544Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 5248.876916999987,
+          "usage": {
+            "input": 4101,
+            "output": 690,
+            "reasoning": 651
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-18T16:51:33.252Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 115696.14237500002,
+          "usage": {
+            "input": 4972,
+            "output": 18036,
+            "reasoning": 16264
+          }
+        }
+      ],
+      "pronunciationDiagnostics": []
+    },
+    "semanticAcceptance": "pending independent review; generation and program validation are not semantic acceptance"
+  }
+]

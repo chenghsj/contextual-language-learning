@@ -1,0 +1,10 @@
+{
+  "nodeVersion": "v22.20.0",
+  "packageManager": "pnpm@9.15.4",
+  "dependencyVersions": {
+    "@earendil-works/pi-ai": "1.0.4",
+    "@earendil-works/pi-coding-agent": "1.0.4",
+    "pi-antigravity": "0.10.0",
+    "zod": "3.25.76"
+  }
+}

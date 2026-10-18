@@ -1,0 +1,19 @@
+{
+  "case": "en-normal-transfer-automatic",
+  "document": "docs/quality/pilot-2026-10-19-prompts17/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/bb4e72e2-48d0-4bf3-b0f8-97bdfd296f9e.json",
+  "documentHash": "273d92e2532b5ebb7ac733bb49bf02ab539b7d49faa736ba31bd8dfb4b1ee594",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source summary, timing and response",
+      "result": "Context lists text-supported speech acts without linking unlabelled participants. Departure is imminent at the time of the call; cancellation is not asserted. All four source cues and their translations are preserved. Sure is basic_only without filler teaching."
+    },
+    {
+      "scope": "teaching, frames and AI examples",
+      "result": "be about to [verb] and wait a minute retain their supported senses. Both examples have coherent roles and timing: the colleague proposes checking after an imminent call; the passenger requests time to retrieve keys. Source situations are not inferred from those invented examples. Source-form slices and example targets match the displayed text."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only source/editorial screening of this fresh single output. No audio, real Chrome/video acceptance, learning-effect measurement or teacher certification. Original output unchanged."
+}
