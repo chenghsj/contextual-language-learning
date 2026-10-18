@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ContextualSceneReader } from "../src/components/contextual-scene-reader";
-import { withSentenceTiming } from "@immersive/core";
+import { withSentenceTiming } from "@contextual/core";
 import type { VideoAdapter } from "../src/video/types";
 import { document as fixture } from "./reader-fixture";
 import "../src/styles.css";
@@ -67,9 +67,16 @@ function Preview() {
     ],
   });
   const [rate, setRate] = useState(1);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState(
+    new URLSearchParams(location.search).has("episode")
+      ? "舊版完整教材預覽已封存，目前顯示合成測試資料。"
+      : "",
+  );
   return (
     <div className="mx-auto flex h-dvh max-w-[480px] flex-col bg-background p-3 text-foreground">
+      <p className="shrink-0 pb-2 text-xs text-muted-foreground">
+        閱讀驗收預覽 · 合成資料與模擬播放
+      </p>
       <ContextualSceneReader
         document={doc}
         adapter={adapter}

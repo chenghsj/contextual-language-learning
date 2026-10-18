@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-18",
+  "sourceHead": "0bc2700890231bd1036421c475ebb2a7df57924f",
+  "archiveRelativeToRepository": "../immersive-language-learning-archives/quality-v7-2026-10-18.zip",
+  "archiveSha256": "9707b9c8c83ebce28747ef33a3775fc3233ff3d79bb3e04337f7f72c980de6f2",
+  "archivedSourceFiles": 524,
+  "retiredArtifactFiles": 514,
+  "originalArtifactBytes": 15148423,
+  "verified": "ZIP CRC and every archived source file SHA-256 match before cleanup.",
+  "retiredTools": [
+    "apps/local-host/scripts/publish-v7-episode.ts",
+    "apps/local-host/scripts/regenerate-v7-episode.ts",
+    "apps/local-host/scripts/verify-v7-episode-regressions.ts",
+    "apps/local-host/scripts/measure-current-prompts.ts",
+    "apps/local-host/scripts/diagnostics/final-wire-trace.ts"
+  ],
+  "contextFiles": [
+    "docs/learning-points-v7-implementation.md",
+    "apps/extension/dev/reader-preview.tsx",
+    "apps/local-host/scripts/quality-v7-cases.ts",
+    "apps/local-host/scripts/check-v7-case-coverage.ts",
+    "apps/local-host/scripts/learning-points-quality.ts"
+  ]
+}
