@@ -315,6 +315,20 @@ function validateTeachingBatchInternal(
       fail("invalid_point_reference: orphan point");
   }
   for (const item of output.reusableItems) {
+    // This is a narrow batch-generation guard, not a general morphology parser.
+    // Persisted compatible lessons keep the validation rules they were saved with.
+    if (
+      checkTeaching &&
+      profile.targetLanguage === "ja" &&
+      item.kind === "frame" &&
+      typeof item.pattern === "string" &&
+      /\[\s*(?:動詞(?:的)?て形|Vて形|verb\s+te[- ]form)(?:\s*省略[「『]?い[」』]?)?\s*\]\s*(?:[+＋]\s*)?[てで]た/iu.test(
+        item.pattern,
+      )
+    )
+      fail(
+        `invalid_construction: frame ${item.id} appends a second て/で after a complete te-form slot. Reconstruct [動詞て形]いた, then omit only auxiliary い to obtain [動詞て形]た. Check both 話していた→話してた and 読んでいた→読んでた. Preserve exact source and examples.`,
+      );
     if (
       profile.targetLanguage === "ja" &&
       item.kind === "frame" &&

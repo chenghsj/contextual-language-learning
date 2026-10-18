@@ -1,0 +1,23 @@
+{
+  "algorithm": "sha256",
+  "scope": "Original runner metadata, scoped source patch, jobs and generated JSON/Markdown. Reviews and verification summaries excluded.",
+  "files": {
+    "conditions.json": "968170c96f89176ca02875f4666dd6f377d277d68d4d8321df73078884c2905c",
+    "en-normal-transfer-automatic/jobs/e82d91c0-3741-4a18-a2c8-5c857b5456e4.json": "924e5e64b0dfc9ae5924d4c77062a4181ef9506af93c5399f39afdcc3f01ff0e",
+    "en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/e82d91c0-3741-4a18-a2c8-5c857b5456e4.json": "76efdb47bb0d094a76c04ff33e07a98e6ae63e618a3ce52cf555cb3b7f84b13d",
+    "en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/e82d91c0-3741-4a18-a2c8-5c857b5456e4.md": "2282dbed17d057e81a46e2881c3a87d8e04a1714a381dd47e06dc8458c5f2423",
+    "en-uncertainty-quote-topic-automatic/jobs/d29d809f-1707-44a0-a714-1542c76232dd.json": "66d06cf803802d274a236d187e6686c60d2b199d62bf3099b9ee0aa95d95a1eb",
+    "en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/d29d809f-1707-44a0-a714-1542c76232dd.json": "ca60ed52f013c5930620484300fd22372bba83a7e8570fa9aa9c4c348672fe09",
+    "en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/d29d809f-1707-44a0-a714-1542c76232dd.md": "1ea5461578c523329eddb544531594998ea4f5e1a3c33ff2e60c3405382f9d31",
+    "ja-normal-transfer-automatic/jobs/1523feee-d185-40ef-876b-65c9a9af1110.json": "edccb661468e90a369138fdfc17365a232c86c027dd17fc5ac66375b74253577",
+    "ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/1523feee-d185-40ef-876b-65c9a9af1110.json": "375712c87d3e36251b8b1b5d69a14025d738e14c03b330ecf9289c3aec76f7b4",
+    "ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/1523feee-d185-40ef-876b-65c9a9af1110.md": "f277c4fda03ce767654813775336e25190e7b86625af64cfbfa8a9b75b676788",
+    "ja-uncertainty-quote-topic-automatic/jobs/9fbcd0e9-27ab-4760-a1b4-2e97fb04a311.json": "e1e0fcf87662b102bc4aee2ac9371527f9bd6305f03fe87fd2dd3fce3ce1f8a4",
+    "ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/9fbcd0e9-27ab-4760-a1b4-2e97fb04a311.json": "8666663999d2b27a1e12723f53c37e486eb35afbfb8bd00591f6cd5a57100098",
+    "ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/9fbcd0e9-27ab-4760-a1b4-2e97fb04a311.md": "f4ede9f20bc81c5a900e8f466b094465812cddd23260cd1584cae3b5a3e074aa",
+    "report.json": "24a8d5c0616c1233bc319f914f1c7dd2a67386d6be8a5577cc3012cc487ea68d",
+    "requests.json": "3f2a5a9a3c703e9c36aa1714a206892a878ff2723b9622f11185ce60970ab3d2",
+    "run-context.json": "ed38bf3c68f68fcfa94e175a88c5419586c14045c9a680d2acbe63349ef4e4e9",
+    "source-change.patch": "8e2a9e68b65acb61d917035f1d158707f785df99ca9caffc841b8cbd2de0ef69"
+  }
+}

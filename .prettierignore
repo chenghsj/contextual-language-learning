@@ -9,3 +9,11 @@ patches/
 release-assets/
 .codex/
 .agents/
+
+# Preserve original inference evidence; offline verifiers check its byte hashes.
+docs/quality/pilot-2026-10-18*/conditions.json
+docs/quality/pilot-2026-10-18*/requests.json
+docs/quality/pilot-2026-10-18*/report.json
+docs/quality/pilot-2026-10-18*/run-context.json
+docs/quality/pilot-2026-10-18*/**/jobs/
+docs/quality/pilot-2026-10-18*/**/videos/

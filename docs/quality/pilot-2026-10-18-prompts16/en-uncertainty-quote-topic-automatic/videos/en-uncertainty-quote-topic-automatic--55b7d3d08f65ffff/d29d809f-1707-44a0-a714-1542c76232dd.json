@@ -1,0 +1,448 @@
+{
+  "id": "d29d809f-1707-44a0-a714-1542c76232dd",
+  "createdAt": "2026-10-18T04:53:19.206Z",
+  "source": {
+    "platform": "import",
+    "title": "en-uncertainty-quote-topic-automatic"
+  },
+  "profile": {
+    "targetLanguage": "en",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-16",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "b249a0c06129893b1e053c3a8e90a04039171374d79594985c634e08439682fc",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T04:54:02.887Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 42891.074875000006,
+        "usage": {
+          "input": 2761,
+          "output": 6824,
+          "reasoning": 6534
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T04:54:11.277Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 8382.84220900001,
+        "usage": {
+          "input": 2346,
+          "output": 1183,
+          "reasoning": 1146
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T04:55:09.644Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 58352.083833,
+        "usage": {
+          "input": 4342,
+          "output": 10932,
+          "reasoning": 9682
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Did Maya talk about the meeting?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "“Please tell me the time,” she said. Anyway, have you eaten?"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Not yet. What does [???] mean here?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "The caption is unclear."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "aab68aef-8dd2-4fb2-973f-cb0405704c29",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "日常話題轉換與疑問",
+      "context": {
+        "text": "對話內容包含：詢問 Maya 是否談到了會議、引述請求告知時間的話語、轉換話題詢問是否用餐、回覆尚未用餐、詢問原文字詞不清的「[???]」在此處的意思，以及說明字幕不清楚。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Maya 有提到那場會議嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「請告訴我時間，」她說。話說回來，你吃過了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡的 [???]（原文字詞不清）是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "10124d21-f94e-4ab6-adeb-fcc94fd7e71c",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 32
+            }
+          ]
+        },
+        {
+          "id": "cf7aa9a1-323a-408a-9988-d836616ce95a",
+          "meaning": "「請告訴我時間，」她說。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 37
+            }
+          ]
+        },
+        {
+          "id": "1116ba24-9ebe-4f6f-99eb-ea14e9528f96",
+          "meaning": "話說回來，你吃過了嗎？",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:k1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 37,
+                  "end": 43
+                }
+              ],
+              "meaning": "話說回來 / 總之"
+            },
+            {
+              "id": "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:k2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 45,
+                  "end": 60
+                }
+              ],
+              "meaning": "你吃過了嗎？"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 37,
+              "end": 60
+            }
+          ]
+        },
+        {
+          "id": "ffbe8554-7600-4297-906a-73c57f89cbcb",
+          "meaning": "還沒。",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c2"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:k3",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 7
+                }
+              ],
+              "meaning": "還沒"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "id": "b5befe30-c13d-46cc-83b8-ed6328b298d1",
+          "meaning": "這裡的 [???]（原文字詞不清）是什麼意思？",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 9,
+              "end": 35
+            }
+          ]
+        },
+        {
+          "id": "d5a30c74-ba67-4a91-88df-9fbcc87326b3",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 23
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:p1",
+      "utteranceIds": [
+        "1116ba24-9ebe-4f6f-99eb-ea14e9528f96"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "Anyway 用於轉換話題",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "在對話中，「Anyway」常用來結束前一個話題，將談話焦點轉移到新的事項或回到主要問題上，語氣自然且常見於日常口語。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 37,
+          "end": 43
+        }
+      ]
+    },
+    {
+      "id": "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:p2",
+      "utteranceIds": [
+        "ffbe8554-7600-4297-906a-73c57f89cbcb"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "Not yet 的簡短否定回答",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [
+        "c2"
+      ],
+      "explanation": "「Not yet」表示「還沒」，常用來簡短回應以現在完成式詢問的動作（如前文的「have you eaten?」），表達該事件目前尚未發生，但未來仍有可能完成。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:r1",
+      "pointIds": [
+        "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:p1"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 37,
+              "end": 43
+            }
+          ],
+          "text": "Anyway"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在閒聊完天氣後轉換話題詢問午餐安排",
+          "dialogue": [
+            {
+              "text": "It has been raining all morning.",
+              "translation": "整個早上都在下雨。"
+            },
+            {
+              "text": "Anyway, are you still free for lunch?",
+              "translation": "話說回來，你中午還有空吃午餐嗎？"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Anyway"
+        }
+      ]
+    },
+    {
+      "id": "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:r2",
+      "pointIds": [
+        "aab68aef-8dd2-4fb2-973f-cb0405704c29:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 7
+            }
+          ],
+          "text": "Not yet"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在辦公室確認專案報告是否已寄出",
+          "dialogue": [
+            {
+              "text": "Have you sent the project report to the manager?",
+              "translation": "你把專案報告寄給主管了嗎？"
+            },
+            {
+              "text": "Not yet. I am still checking the numbers.",
+              "translation": "還沒。我還在檢查數據。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Not yet"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "cases": [
+    {
+      "case": "en-normal-transfer-automatic",
+      "generation": "generated",
+      "document": "docs/quality/pilot-2026-10-18/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/7dd98341-e363-41df-a22d-554fb180d1ef.json",
+      "documentHash": "7c1cd7f338bf3c16698d410af0148eadde86988380b226fb3d285f26b1949c13",
+      "structural": "passed",
+      "fixedSource": "passed",
+      "identity": "passed",
+      "coverage": "passed",
+      "coverageDiagnostic": null,
+      "durationMs": 45076,
+      "calls": 3,
+      "steps": ["window-0", "selection", "s0"],
+      "knownUsage": {
+        "input": 8041,
+        "output": 5913,
+        "reasoning": 2865
+      },
+      "callsWithoutUsage": 0,
+      "semantic": "pending separate inspection"
+    },
+    {
+      "case": "en-uncertainty-quote-topic-automatic",
+      "generation": "generated",
+      "document": "docs/quality/pilot-2026-10-18/en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/c5f8fd72-b3e3-446e-ad12-7f9acc3c95d4.json",
+      "documentHash": "8bcec6eaef37d3278c2e7af5347fc8ec5abed5802bf4861165c3fb36d05778d5",
+      "structural": "passed",
+      "fixedSource": "passed",
+      "identity": "passed",
+      "coverage": "passed",
+      "coverageDiagnostic": null,
+      "durationMs": 101980,
+      "calls": 3,
+      "steps": ["window-0", "selection", "s0"],
+      "knownUsage": {
+        "input": 8667,
+        "output": 16341,
+        "reasoning": 13516
+      },
+      "callsWithoutUsage": 0,
+      "semantic": "pending separate inspection"
+    },
+    {
+      "case": "ja-normal-transfer-automatic",
+      "generation": "generated",
+      "document": "docs/quality/pilot-2026-10-18/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/e11cfa50-ba15-4756-a4b0-97488fcb2961.json",
+      "documentHash": "825f2b3fb055f1c32ebe63189706905320b331f5854668d233823de72b5e8b96",
+      "structural": "passed",
+      "fixedSource": "passed",
+      "identity": "passed",
+      "coverage": "passed",
+      "coverageDiagnostic": null,
+      "durationMs": 72896,
+      "calls": 3,
+      "steps": ["window-0", "selection", "s0"],
+      "knownUsage": {
+        "input": 11476,
+        "output": 10603,
+        "reasoning": 8724
+      },
+      "callsWithoutUsage": 0,
+      "semantic": "pending separate inspection"
+    },
+    {
+      "case": "ja-uncertainty-quote-topic-automatic",
+      "generation": "generated",
+      "document": "docs/quality/pilot-2026-10-18/ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/fe1216a5-5db6-4aac-8638-475b4fa0f331.json",
+      "documentHash": "e9e2338ecce1164d8a4869a82306f5cd39d9200a2464d7923b83a34cff0fbf0d",
+      "structural": "passed",
+      "fixedSource": "passed",
+      "identity": "passed",
+      "coverage": "failed",
+      "coverageDiagnostic": "/Users/cheng/Desktop/immersive-language-learning/apps/local-host/scripts/check-v7-case-coverage.ts:32\n        throw new Error(\"Unclear source became a reusable target: \" + path);\n              ^\n\n\nError: Unclear source became a reusable target: /Users/cheng/Desktop/immersive-language-learning/docs/quality/pilot-2026-10-18/ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/fe1216a5-5db6-4aac-8638-475b4fa0f331.json\n    at <anonymous> (/Users/cheng/Desktop/immersive-language-learning/apps/local-host/scripts/check-v7-case-coverage.ts:32:15)\n\nNode.js v22.20.0\n",
+      "durationMs": 102244,
+      "calls": 5,
+      "steps": ["window-0", "window-0-repair", "selection", "s0", "s0-repair"],
+      "knownUsage": {
+        "input": 23807,
+        "output": 18571,
+        "reasoning": 8380
+      },
+      "callsWithoutUsage": 0,
+      "semantic": "pending separate inspection"
+    }
+  ],
+  "note": "Program/coverage checks only; semantic acceptance remains separate. Reasoning is a subset of output; do not sum it again."
+}

@@ -1,0 +1,27 @@
+{
+  "case": "ja-normal-transfer-automatic",
+  "document": "docs/quality/pilot-2026-10-18-prompts15/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/8bcbb9ca-4571-450a-842d-2a2cf2c1afed.json",
+  "documentHash": "26beefeed2b6dc4c0d8ce5234a935e424030aa61bc324b5b1d2ca3ee742049ef",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "context and time relation",
+      "result": "The summary is now a neutral inventory, without seeing, emotion or a cancelled departure. Translation and explanation preserve the imminent stage in 出かけるところだった."
+    },
+    {
+      "scope": "frames, examples and simple response",
+      "result": "Both dictionary-form + ところだった and full te-form + くれる instantiate correctly in the mail and plate examples. うん remains basic_only without filler. Source and example reading alignment is retained; no audio was checked."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "style",
+      "paths": ["/points/0/explanation", "/points/2/explanation"],
+      "quote": "親近",
+      "description": "General explanations still associate the question/request with closeness. Qualify this by context and avoid implying a verified tone or that omission of か alone accounts for its interpersonal effect. No particular recorded intonation is asserted here."
+    }
+  ],
+  "boundary": "Same strict text-only rubric as baseline. No actual audio, video, human/native-speaker certification or learning-effect verification. Original output unchanged."
+}

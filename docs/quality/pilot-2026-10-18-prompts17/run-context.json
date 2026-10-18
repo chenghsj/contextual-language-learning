@@ -1,0 +1,23 @@
+{
+  "sourceCommit": "a95d558e8abfd3a03e31412fc5e893bc463f0b0e",
+  "sourceState": "Uncommitted scoped fix over sourceCommit; see source-change.patch and exact hashes. Other worktree changes excluded from patch.",
+  "sourceChangeHash": "c3d57d31b2922e198ee937be52dc9d1b327eda79635da17b08807d4bb7506294",
+  "coreHashes": {
+    "packages/core/src/schema.ts": "b4fee2a082c9dd2a7d5353e7e659ca61b09b8e161b44b91f7b86df6ae642a089",
+    "packages/core/src/learning-points.ts": "f520a223f1ed3c50a25b060e92019a008a9e3243483771e540e2dc893627a2dc"
+  },
+  "caseCount": 4,
+  "caseIds": [
+    "en-normal-transfer-automatic",
+    "en-uncertainty-quote-topic-automatic",
+    "ja-normal-transfer-automatic",
+    "ja-uncertainty-quote-topic-automatic"
+  ],
+  "baseline": "../pilot-2026-10-18",
+  "fixedRequestsMatchBaselineExceptIds": true,
+  "plan": "One live run per fixed case at prompts-17 after substantive vocative/subject and example yes/no role checks; preserve both prior failed rounds. No automatic same-version whole-case rerun, model fallback or 28-case expansion.",
+  "chromeAcceptance": "deferred",
+  "semanticReview": "pending separate Codex source/editorial inspection; not native-speaker certification",
+  "runnerHash": "58162e1d202d754de3b0dba744c72f176366592090de486c68b4852877ff1814",
+  "previousRound": "../pilot-2026-10-18-prompts16"
+}

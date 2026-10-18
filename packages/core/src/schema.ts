@@ -315,9 +315,9 @@ export type ReusableItem = z.infer<typeof ReusableItemSchema>;
 export type LearningSceneV7 = z.infer<typeof LearningSceneV7Schema>;
 export type SourceUtterance = z.infer<typeof SourceUtteranceSchema>;
 export const LEARNING_POINTS_WORKFLOW_VERSION = "learning-points-v7-1";
-export const LEARNING_POINTS_PROMPT_VERSION = "learning-points-prompts-14";
+export const LEARNING_POINTS_PROMPT_VERSION = "learning-points-prompts-17";
 export const LANGUAGE_STRATEGY_VERSION = "learning-language-strategies-4";
-export const QUALITY_STRATEGY_VERSION = "program-validation-1";
+export const QUALITY_STRATEGY_VERSION = "program-validation-2";
 export const LEVEL_STRATEGY_VERSION = "learning-level-strategies-1";
 
 export const RETIRED_LESSON_MESSAGE = "此教材版本已停止支援，請重新生成";
@@ -346,7 +346,11 @@ export function readableLearningExecution(value: unknown): boolean {
     e.schemaVersion === "7" &&
     e.languageStrategyVersion === LANGUAGE_STRATEGY_VERSION &&
     e.levelStrategyVersion === LEVEL_STRATEGY_VERSION &&
-    e.qualityStrategyVersion === "learning-quality-1" &&
-    ["learning-points-prompts-12", "learning-points-prompts-13"].includes(e.promptVersion)
+    ((e.qualityStrategyVersion === "learning-quality-1" &&
+      ["learning-points-prompts-12", "learning-points-prompts-13"].includes(e.promptVersion)) ||
+      (e.qualityStrategyVersion === "program-validation-1" &&
+        e.promptVersion === "learning-points-prompts-14") ||
+      (e.qualityStrategyVersion === "program-validation-2" &&
+        ["learning-points-prompts-15", "learning-points-prompts-16"].includes(e.promptVersion)))
   );
 }

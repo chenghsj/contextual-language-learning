@@ -1,0 +1,18 @@
+{
+  "baseCommit": "e0053b2cb580d2ae6c2cc93d35e683f3f681ac3d",
+  "scope": "Isolated HEAD snapshot plus only this generation fix and its quality evidence. Other worktree changes excluded.",
+  "sourceHashes": {
+    "apps/local-host/src/generation/learning-points-pipeline.test.ts": "b89a703288484c6dc6a101c747e612653740724555251a30f8f9864084093afe",
+    "apps/local-host/src/generation/learning-points-prompts.ts": "298e9700b241501f82f55e42b90b68b5f04d983eac0724ed02332a5e4e50a1c2",
+    "apps/local-host/src/generation/learning-points-rules.ts": "4d1fa365baddc0469a8f8dff9021f2bf8fe9f5f8c8dbf51da3d74932053d6ea8",
+    "apps/local-host/src/generation/new-workflow.test.ts": "321695694ad0c48677b632734ed979f110ebf2f98d578416ab79ed7ce87cefe3",
+    "packages/core/src/learning-points.test.ts": "9d8f4731ed52d5d926782d29e37e7863a9acac6b0ffbc54d4393d6fb73814eaf",
+    "packages/core/src/learning-points.ts": "cd134b749b290441ef227fb8d62106f1a472c201b9bc845fce54bba6a24b0d05",
+    "packages/core/src/schema.ts": "b4fee2a082c9dd2a7d5353e7e659ca61b09b8e161b44b91f7b86df6ae642a089"
+  },
+  "casesHash": "1cbe63bff290f35901212996c6eb3c8036375c331999859887d8221b01b1756e",
+  "runnerHash": "58162e1d202d754de3b0dba744c72f176366592090de486c68b4852877ff1814",
+  "transportPatchHash": "bd0ff22846e5665562e5a6263fb5e3000284e942bf06523c104cbba39e94bdef",
+  "nodeVersion": "v22.20.0",
+  "packageManager": "pnpm@9.15.4"
+}

@@ -1,0 +1,35 @@
+{
+  "case": "ja-normal-transfer-automatic",
+  "document": "docs/quality/pilot-2026-10-18-prompts16/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/1523feee-d185-40ef-876b-65c9a9af1110.json",
+  "documentHash": "375712c87d3e36251b8b1b5d69a14025d738e14c03b330ecf9289c3aec76f7b4",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "source context, translation and time relation",
+      "result": "The summary is an impersonal inventory without seeing, invented emotion, participant linking or cancellation. The imminent-departure meaning is retained in translation, chunks and the ところだった explanation. うん stays basic_only without filler."
+    },
+    {
+      "scope": "reusable frames and second example",
+      "result": "Both displayed constructions are well formed, including one complete te-form before くれる. The notebook request example is coherent with its translations. Source and example text/reading alignment is retained; no audio was checked."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "example_role_inconsistency",
+      "path": "/reusableItems/0/examples/0",
+      "quote": "さっきチャイム鳴らした？",
+      "description": "The situation says the target speaker explains being about to sleep when interrupted by a doorbell. The first line asks the second speaker whether they rang the bell; the target line begins うん, confirming that the sleeper rang it. The roles do not realize the stated interruption scenario. The isolated 寝るところだった construction is correct, but a correct target cannot repair an incoherent dialogue.",
+      "suggestedDirection": "Make the question ask about the interrupted activity, or consistently assign the visitor and sleeper; check both turns and the situation together."
+    },
+    {
+      "severity": "warning",
+      "type": "style",
+      "path": "/points/1/explanation",
+      "quote": "並配合語調上揚",
+      "description": "Present rising pitch as a possible general delivery rather than a required condition or verified property of this recording; qualify the familiar-register description by context."
+    }
+  ],
+  "boundary": "Same strict text-only rubric as baseline. No actual audio, video, human/native-speaker certification or learning-effect verification. Original output unchanged."
+}

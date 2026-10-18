@@ -1,0 +1,19 @@
+{
+  "case": "en-normal-transfer-automatic",
+  "document": "docs/quality/pilot-2026-10-18-prompts16/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/e82d91c0-3741-4a18-a2c8-5c857b5456e4.json",
+  "documentHash": "76efdb47bb0d094a76c04ff33e07a98e6ae63e618a3ce52cf555cb3b7f84b13d",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "context and source roles",
+      "result": "The summary now lists the presence question, imminent departure at the call, waiting request and reply without continuing a participant subject across turns. Translations and chunks preserve the original time relation without a claimed cancellation."
+    },
+    {
+      "scope": "points, reusable forms and examples",
+      "result": "be about to [verb] and wait a minute preserve their source meanings. The office and taxi examples instantiate their target forms with matching translations. Sure stays basic_only without filler. One existing structural repair occurred; no semantic review call was added."
+    }
+  ],
+  "issues": [],
+  "boundary": "Same strict text-only rubric as baseline. No actual audio, video, human/native-speaker certification or learning-effect verification. Original output unchanged."
+}

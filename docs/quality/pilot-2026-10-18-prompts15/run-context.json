@@ -1,0 +1,22 @@
+{
+  "sourceCommit": "a95d558e8abfd3a03e31412fc5e893bc463f0b0e",
+  "sourceState": "Uncommitted scoped fix over sourceCommit; see source-change.patch and exact hashes. Other worktree changes excluded from patch.",
+  "sourceChangeHash": "f7684fba8f2eacba894a712674e38b1a358dfadfc565becc207040958650c721",
+  "coreHashes": {
+    "packages/core/src/schema.ts": "973c5499d44128c194ec0d523517d941c2f6543b5c94d9ded847b1067f2aaa94",
+    "packages/core/src/learning-points.ts": "f520a223f1ed3c50a25b060e92019a008a9e3243483771e540e2dc893627a2dc"
+  },
+  "caseCount": 4,
+  "caseIds": [
+    "en-normal-transfer-automatic",
+    "en-uncertainty-quote-topic-automatic",
+    "ja-normal-transfer-automatic",
+    "ja-uncertainty-quote-topic-automatic"
+  ],
+  "baseline": "../pilot-2026-10-18",
+  "fixedRequestsMatchBaselineExceptIds": true,
+  "plan": "One live run per fixed case; existing bounded structural repair only. No automatic whole-case rerun, model fallback or 28-case expansion.",
+  "chromeAcceptance": "deferred",
+  "semanticReview": "pending separate Codex source/editorial inspection; not native-speaker certification",
+  "runnerHash": "58162e1d202d754de3b0dba744c72f176366592090de486c68b4852877ff1814"
+}

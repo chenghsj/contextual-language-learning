@@ -1,0 +1,421 @@
+{
+  "id": "65ac64f4-e087-4fae-adf9-29c92e1956a4",
+  "createdAt": "2026-10-18T05:00:28.031Z",
+  "source": {
+    "platform": "import",
+    "title": "en-uncertainty-quote-topic-automatic"
+  },
+  "profile": {
+    "targetLanguage": "en",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "78c91a41c1d4e4c9a2da226b5d5831c373f7b411c40a70136e2b3983d1fc7142",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T05:00:51.480Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 22328.093708,
+        "usage": {
+          "input": 2761,
+          "output": 3999,
+          "reasoning": 3725
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T05:01:01.752Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 10259.748833999998,
+        "usage": {
+          "input": 2336,
+          "output": 1029,
+          "reasoning": 989
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T05:01:43.686Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 41924.231875,
+        "usage": {
+          "input": 4466,
+          "output": 7626,
+          "reasoning": 6513
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Did Maya talk about the meeting?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "“Please tell me the time,” she said. Anyway, have you eaten?"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Not yet. What does [???] mean here?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "The caption is unclear."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "3f34e901-4589-4b17-aa6b-0ad9a81e1b30",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "日常問候與話題轉換",
+      "context": {
+        "text": "對話包含詢問 Maya 是否談及會議、引述他人話語、轉換話題詢問是否用餐、回答尚未用餐、詢問此處「[???]」（原文標示不明）的意思，以及提及字幕不清楚。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Maya 有談到那場會議嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「請告訴我時間，」她說道。話說回來，你吃了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡的「[???]」（原文標示不明）是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "b991e98a-f998-488a-a271-1040af44ddeb",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 32
+            }
+          ]
+        },
+        {
+          "id": "6aa004d8-4291-4528-9a65-51b1081e96af",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 37
+            }
+          ]
+        },
+        {
+          "id": "2acf71d2-c28e-4358-aa8c-7a3d47f72a8d",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c2"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "3f34e901-4589-4b17-aa6b-0ad9a81e1b30:s0:p1"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 37,
+              "end": 60
+            }
+          ]
+        },
+        {
+          "id": "c55ca085-d118-4746-a3b6-70ed539b3420",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c2",
+            "c3"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "3f34e901-4589-4b17-aa6b-0ad9a81e1b30:s0:p2"
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "id": "4d5dd0d3-541e-4d47-9efa-cf5dbaf56f91",
+          "meaning": "詢問此處「[???]」（原文標示不明）的意思",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 9,
+              "end": 35
+            }
+          ]
+        },
+        {
+          "id": "6fe9cc86-02bd-4da7-ac58-126385573fbd",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 23
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "3f34e901-4589-4b17-aa6b-0ad9a81e1b30:s0:p1",
+      "utteranceIds": [
+        "2acf71d2-c28e-4358-aa8c-7a3d47f72a8d"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "Anyway 的話題轉換用法",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [
+        "c2"
+      ],
+      "explanation": "在此處用於結束前一個話題並開啟新的焦點，相當於「話說回來」或「總之」。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 37,
+          "end": 43
+        }
+      ]
+    },
+    {
+      "id": "3f34e901-4589-4b17-aa6b-0ad9a81e1b30:s0:p2",
+      "utteranceIds": [
+        "c55ca085-d118-4746-a3b6-70ed539b3420"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "Not yet 的簡短回答",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [
+        "c2",
+        "c3"
+      ],
+      "explanation": "用於簡短回答尚未完成或尚未發生的動作，相當於「還沒」。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "3f34e901-4589-4b17-aa6b-0ad9a81e1b30:s0:r1",
+      "pointIds": [
+        "3f34e901-4589-4b17-aa6b-0ad9a81e1b30:s0:p1"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 37,
+              "end": 43
+            }
+          ],
+          "text": "Anyway"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "兩人討論完工作進度後，一人轉換話題詢問晚餐安排。",
+          "dialogue": [
+            {
+              "text": "The report is finally finished.",
+              "translation": "報告終於完成了。"
+            },
+            {
+              "text": "Anyway, do you want to grab dinner together?",
+              "translation": "話說回來，你想一起吃晚餐嗎？"
+            },
+            {
+              "text": "Sounds great, let's go.",
+              "translation": "聽起來很棒，我們走吧。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Anyway"
+        }
+      ]
+    },
+    {
+      "id": "3f34e901-4589-4b17-aa6b-0ad9a81e1b30:s0:r2",
+      "pointIds": [
+        "3f34e901-4589-4b17-aa6b-0ad9a81e1b30:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 7
+            }
+          ],
+          "text": "Not yet"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "一人詢問對方包裹是否已經送達，對方回答尚未送達。",
+          "dialogue": [
+            {
+              "text": "Has the package arrived?",
+              "translation": "包裹送達了嗎？"
+            },
+            {
+              "text": "Not yet, but the driver should be here soon.",
+              "translation": "還沒，但司機應該很快就到了。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Not yet"
+        }
+      ]
+    }
+  ]
+}

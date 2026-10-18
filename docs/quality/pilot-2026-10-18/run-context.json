@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "a95d558e8abfd3a03e31412fc5e893bc463f0b0e",
+  "caseCount": 4,
+  "caseIds": [
+    "en-normal-transfer-automatic",
+    "en-uncertainty-quote-topic-automatic",
+    "ja-normal-transfer-automatic",
+    "ja-uncertainty-quote-topic-automatic"
+  ],
+  "plan": "One bounded live generation per fixed case; no automatic whole-case reruns or provider/model fallback.",
+  "chromeAcceptance": "deferred",
+  "semanticReview": "pending separate Codex source/editorial inspection; no native-speaker certification",
+  "runnerHash": "58162e1d202d754de3b0dba744c72f176366592090de486c68b4852877ff1814"
+}

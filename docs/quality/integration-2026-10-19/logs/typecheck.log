@@ -1,0 +1,4 @@
+
+> contextual-language-learning@0.1.0 typecheck /private/tmp/cll-quality-integration-e7psq1l3/source
+> tsc -p packages/core/tsconfig.json --noEmit && tsc -p apps/local-host/tsconfig.json --noEmit && tsc -p apps/extension/tsconfig.json --noEmit
+

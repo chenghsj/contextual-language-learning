@@ -1,0 +1,43 @@
+{
+  "case": "ja-normal-transfer-automatic",
+  "document": "docs/quality/pilot-2026-10-18/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/e11cfa50-ba15-4756-a4b0-97488fcb2961.json",
+  "documentHash": "825f2b3fb055f1c32ebe63189706905320b331f5854668d233823de72b5e8b96",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "translations and two reusable frames",
+      "result": "The departure time relation and request sense are retained. The bath and door examples instantiate the correct source constructions, keep te-form only once and are explicitly AI-created."
+    },
+    {
+      "scope": "c4 response and source annotations",
+      "result": "うん remains a basic reply without extra points or examples. Source slices, cue order and dictionary-form reading alignment are retained; no recorded audio was checked."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "unsupported_inference",
+      "path": "/sections/0/context/text",
+      "quote": "一方看到另一方還停留在此處",
+      "sourceCueIds": ["c1"],
+      "description": "The source asks whether someone is still here, but establishes no act of seeing or visible scene. The context invents visual evidence from text-only dialogue.",
+      "suggestedDirection": "Describe the question neutrally without 看到 or an asserted visual interaction."
+    },
+    {
+      "severity": "warning",
+      "type": "style",
+      "path": "/points/0/explanation",
+      "quote": "語氣比單純的疑問句更親近柔和",
+      "description": "The account of の？ needs qualification by context and general possible prosody; it should not teach universally softer tone or imply that this recording has a verified rising contour. The useful explanation-seeking function can be retained."
+    },
+    {
+      "severity": "warning",
+      "type": "style",
+      "path": "/points/1/explanation",
+      "quote": "用於說明被其他事情（如電話響起）打斷前的打算",
+      "description": "The core time-point explanation is useful, but the source does not establish that departure was cancelled or physically interrupted. Separate a possible interruption context from what this line itself proves."
+    }
+  ],
+  "boundary": "Failure is against the fixed text-only source-fidelity criterion. Grammar/reading comments are editorial screening, not native-speaker or audio certification."
+}

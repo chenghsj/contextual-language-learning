@@ -1,0 +1,1394 @@
+TAP version 13
+# Subtest: reader renders original Netflix ruby below its base without model readings
+ok 1 - reader renders original Netflix ruby below its base without model readings
+  ---
+  duration_ms: 124.212916
+  type: 'test'
+  ...
+# Subtest: current reader exposes source-group disclosure and preserves whole-sentence content
+ok 2 - current reader exposes source-group disclosure and preserves whole-sentence content
+  ---
+  duration_ms: 31.47775
+  type: 'test'
+  ...
+# Subtest: current reader stays localized in five UI languages and retains source-only dialogue
+ok 3 - current reader stays localized in five UI languages and retains source-only dialogue
+  ---
+  duration_ms: 68.783625
+  type: 'test'
+  ...
+# Subtest: current reader puts pronunciation settings in its header and renders only aligned saved readings
+ok 4 - current reader puts pronunciation settings in its header and renders only aligned saved readings
+  ---
+  duration_ms: 21.284083
+  type: 'test'
+  ...
+# Subtest: current reader keeps existing Japanese kana outside ruby annotations
+ok 5 - current reader keeps existing Japanese kana outside ruby annotations
+  ---
+  duration_ms: 10.53125
+  type: 'test'
+  ...
+# Subtest: current reader explains when the selected pronunciation has no saved readings
+ok 6 - current reader explains when the selected pronunciation has no saved readings
+  ---
+  duration_ms: 14.655333
+  type: 'test'
+  ...
+# Subtest: current reader preserves cue references and requires no manual export
+ok 7 - current reader preserves cue references and requires no manual export
+  ---
+  duration_ms: 10.520125
+  type: 'test'
+  ...
+# Subtest: unified reader has one player, contextual navigation and advanced timing entry
+ok 8 - unified reader has one player, contextual navigation and advanced timing entry
+  ---
+  duration_ms: 56.147625
+  type: 'test'
+  ...
+# Subtest: timing completion and reset show the result without AI fallback or technical details
+ok 9 - timing completion and reset show the result without AI fallback or technical details
+  ---
+  duration_ms: 66.697375
+  type: 'test'
+  ...
+# Subtest: unknown prompt requirements are visible and raw diagnostic text is escaped
+ok 10 - unknown prompt requirements are visible and raw diagnostic text is escaped
+  ---
+  duration_ms: 13.641583
+  type: 'test'
+  ...
+# Subtest: model loading failures use localized explanation with expandable provider diagnostics
+ok 11 - model loading failures use localized explanation with expandable provider diagnostics
+  ---
+  duration_ms: 39.532791
+  type: 'test'
+  ...
+# Subtest: persisted task failures follow current language without altering stored errors
+ok 12 - persisted task failures follow current language without altering stored errors
+  ---
+  duration_ms: 18.805708
+  type: 'test'
+  ...
+# Subtest: playback timing confirmations and errors stay direct and follow the UI locale
+ok 13 - playback timing confirmations and errors stay direct and follow the UI locale
+  ---
+  duration_ms: 20.065
+  type: 'test'
+  ...
+# Subtest: operation abort is not treated as login cancellation
+ok 14 - operation abort is not treated as login cancellation
+  ---
+  duration_ms: 4.753
+  type: 'test'
+  ...
+# Subtest: every supported provider interactive message has a translation, not a generic fallback
+ok 15 - every supported provider interactive message has a translation, not a generic fallback
+  ---
+  duration_ms: 17.46825
+  type: 'test'
+  ...
+# Subtest: all unknown SDK outputs get localized feedback and lossless original detail
+ok 16 - all unknown SDK outputs get localized feedback and lossless original detail
+  ---
+  duration_ms: 3.086167
+  type: 'test'
+  ...
+# Subtest: runtime and API failures are localized at every feedback boundary
+ok 17 - runtime and API failures are localized at every feedback boundary
+  ---
+  duration_ms: 23.580334
+  type: 'test'
+  ...
+# Subtest: model denial and unsupported requests have distinct feedback without guessing from generic HTTP status
+ok 18 - model denial and unsupported requests have distinct feedback without guessing from generic HTTP status
+  ---
+  duration_ms: 4.18025
+  type: 'test'
+  ...
+# Subtest: existing application feedback follows locale changes without replacing dynamic identifiers
+ok 19 - existing application feedback follows locale changes without replacing dynamic identifiers
+  ---
+  duration_ms: 1.52625
+  type: 'test'
+  ...
+# Subtest: video reader connection failures show recovery without hiding it in diagnostics
+ok 20 - video reader connection failures show recovery without hiding it in diagnostics
+  ---
+  duration_ms: 0.075916
+  type: 'test'
+  ...
+# Subtest: proactive playback recovery remains a direct video notification
+ok 21 - proactive playback recovery remains a direct video notification
+  ---
+  duration_ms: 0.1885
+  type: 'test'
+  ...
+# Subtest: opened source groups retain complete core and optional sections, including legacy examples
+ok 22 - opened source groups retain complete core and optional sections, including legacy examples
+  ---
+  duration_ms: 153.114792
+  type: 'test'
+  ...
+# Subtest: source groups own analysis disclosure while source fragments and playback stay independent
+ok 23 - source groups own analysis disclosure while source fragments and playback stay independent
+  ---
+  duration_ms: 74.764708
+  type: 'test'
+  ...
+# Subtest: basic-only responses retain meaning when translation is hidden and skip empty or identical context
+ok 24 - basic-only responses retain meaning when translation is hidden and skip empty or identical context
+  ---
+  duration_ms: 6.035416
+  type: 'test'
+  ...
+# Subtest: one cue displays both analyses in source order and a cross-cue analysis follows its complete source
+ok 25 - one cue displays both analyses in source order and a cross-cue analysis follows its complete source
+  ---
+  duration_ms: 10.447792
+  type: 'test'
+  ...
+# Subtest: translation-only reactions and sound labels keep source and playback without analysis selectors
+ok 26 - translation-only reactions and sound labels keep source and playback without analysis selectors
+  ---
+  duration_ms: 9.809666
+  type: 'test'
+  ...
+# Subtest: empty sound units do not add selectors beside a useful clarification
+ok 27 - empty sound units do not add selectors beside a useful clarification
+  ---
+  duration_ms: 5.506958
+  type: 'test'
+  ...
+# Subtest: complete originals share blocks without moving intervening subtitles, and retain per-cue playback
+ok 28 - complete originals share blocks without moving intervening subtitles, and retain per-cue playback
+  ---
+  duration_ms: 24.446459
+  type: 'test'
+  ...
+# Subtest: source-group disclosure retains complete originals and source-ordered analysis panels
+ok 29 - source-group disclosure retains complete originals and source-ordered analysis panels
+  ---
+  duration_ms: 32.8595
+  type: 'test'
+  ...
+# Subtest: fragment meanings and roles remain available without a separate comparison section
+ok 30 - fragment meanings and roles remain available without a separate comparison section
+  ---
+  duration_ms: 21.093542
+  type: 'test'
+  ...
+# Subtest: fragment lookup updates in place, preserves the complete reading, and closes by selecting its source again
+ok 31 - fragment lookup updates in place, preserves the complete reading, and closes by selecting its source again
+  ---
+  duration_ms: 46.36925
+  type: 'test'
+  ...
+# Subtest: duplicate content has no empty analysis or extension entry, and translation visibility recalculates it
+ok 32 - duplicate content has no empty analysis or extension entry, and translation visibility recalculates it
+  ---
+  duration_ms: 15.796583
+  type: 'test'
+  ...
+# (node:38297) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: source, fragment and paced example read-aloud send exact original text through the system speech controller
+ok 33 - source, fragment and paced example read-aloud send exact original text through the system speech controller
+  ---
+  duration_ms: 49.247833
+  type: 'test'
+  ...
+# Subtest: Drive lists current lessons, rejects retired downloads and preserves calibration
+ok 34 - Drive lists current lessons, rejects retired downloads and preserves calibration
+  ---
+  duration_ms: 47.185583
+  type: 'test'
+  ...
+# Subtest: shared-cue units expand together and stop at 32768 frozen output tokens
+ok 35 - shared-cue units expand together and stop at 32768 frozen output tokens
+  ---
+  duration_ms: 53.245667
+  type: 'test'
+  ...
+# Subtest: shared-cue units expand together and stop at 65536 frozen output tokens
+ok 36 - shared-cue units expand together and stop at 65536 frozen output tokens
+  ---
+  duration_ms: 36.014292
+  type: 'test'
+  ...
+# Subtest: large custom inputs freeze a multi-level plan and resume only incomplete nodes
+ok 37 - large custom inputs freeze a multi-level plan and resume only incomplete nodes
+  ---
+  duration_ms: 446.559167
+  type: 'test'
+  ...
+# Subtest: final output survives save failure; retry saving does not call the model again
+ok 38 - final output survives save failure; retry saving does not call the model again
+  ---
+  duration_ms: 59.638041
+  type: 'test'
+  ...
+# Subtest: explicit cancellation keeps checkpoint and rejects silent version or model changes
+ok 39 - explicit cancellation keeps checkpoint and rejects silent version or model changes
+  ---
+  duration_ms: 34.326292
+  type: 'test'
+  ...
+# Subtest: budget and output validation reject oversize content without truncating input
+ok 40 - budget and output validation reject oversize content without truncating input
+  ---
+  duration_ms: 0.291334
+  type: 'test'
+  ...
+# Subtest: initial input includes each chunk's instructions and uses SDK pricing without inference
+ok 41 - initial input includes each chunk's instructions and uses SDK pricing without inference
+  ---
+  duration_ms: 45.821959
+  type: 'test'
+  ...
+# Subtest: subscription auth is separate from API catalog prices
+ok 42 - subscription auth is separate from API catalog prices
+  ---
+  duration_ms: 0.138792
+  type: 'test'
+  ...
+# Subtest: zh-TW: native notation survives offline generation, storage and document validation
+ok 43 - zh-TW: native notation survives offline generation, storage and document validation
+  ---
+  duration_ms: 54.422042
+  type: 'test'
+  ...
+# Subtest: zh-CN: native notation survives offline generation, storage and document validation
+ok 44 - zh-CN: native notation survives offline generation, storage and document validation
+  ---
+  duration_ms: 30.475208
+  type: 'test'
+  ...
+# Subtest: V6 runs complete utterances, repairs once, splits, checkpoints and resumes
+ok 45 - V6 runs complete utterances, repairs once, splits, checkpoints and resumes
+  ---
+  duration_ms: 52.779792
+  type: 'test'
+  ...
+# Subtest: missing utterances and malformed output get exactly one repair before failure
+ok 46 - missing utterances and malformed output get exactly one repair before failure
+  ---
+  duration_ms: 39.572875
+  type: 'test'
+  ...
+# Subtest: malformed Japanese contraction template receives the existing single structural repair
+ok 47 - malformed Japanese contraction template receives the existing single structural repair
+  ---
+  duration_ms: 35.43725
+  type: 'test'
+  ...
+# Subtest: 14 languages and 17 level strategies; Detailed never changes candidate/selection input
+ok 48 - 14 languages and 17 level strategies; Detailed never changes candidate/selection input
+  ---
+  duration_ms: 6.727542
+  type: 'test'
+  ...
+# Subtest: truncated teaching output splits immediately without a same-budget repair or lost utterances
+ok 49 - truncated teaching output splits immediately without a same-budget repair or lost utterances
+  ---
+  duration_ms: 26.18
+  type: 'test'
+  ...
+# Subtest: a truncated single utterance expands its budget while retaining completed batches
+ok 50 - a truncated single utterance expands its budget while retaining completed batches
+  ---
+  duration_ms: 22.264708
+  type: 'test'
+  ...
+# Subtest: legacy truncated checkpoints resume with a larger budget and preserve their repair allowance
+ok 51 - legacy truncated checkpoints resume with a larger budget and preserve their repair allowance
+  ---
+  duration_ms: 23.692875
+  type: 'test'
+  ...
+# Subtest: budget expansion stops at model or context capacity without renewing automatic repair
+ok 52 - budget expansion stops at model or context capacity without renewing automatic repair
+  ---
+  duration_ms: 59.74175
+  type: 'test'
+  ...
+# Subtest: invalid JSON remains a structural error without expanding output or reporting a budget failure
+ok 53 - invalid JSON remains a structural error without expanding output or reporting a budget failure
+  ---
+  duration_ms: 12.677167
+  type: 'test'
+  ...
+# Subtest: interrupted expanded budget is persisted and resumed without doubling or rerunning completed work
+ok 54 - interrupted expanded budget is persisted and resumed without doubling or rerunning completed work
+  ---
+  duration_ms: 25.298416
+  type: 'test'
+  ...
+# Subtest: invalid selection gets one repair; non-progress and blocked teaching preserve checkpoint
+ok 55 - invalid selection gets one repair; non-progress and blocked teaching preserve checkpoint
+  ---
+  duration_ms: 22.20175
+  type: 'test'
+  ...
+# Subtest: V4 resume rejects changed workflow, prompt, language, level or frozen source before any model call
+ok 56 - V4 resume rejects changed workflow, prompt, language, level or frozen source before any model call
+  ---
+  duration_ms: 7.511458
+  type: 'test'
+  ...
+# Subtest: invalid optional readings are omitted locally while teaching remains complete
+ok 57 - invalid optional readings are omitted locally while teaching remains complete
+  ---
+  duration_ms: 57.97275
+  type: 'test'
+  ...
+# Subtest: received teaching racing cancellation is saved and not regenerated on resume
+ok 58 - received teaching racing cancellation is saved and not regenerated on resume
+  ---
+  duration_ms: 21.397416
+  type: 'test'
+  ...
+# Subtest: structural repair uses shared allowance; subsequent reading failure downgrades without another call
+ok 59 - structural repair uses shared allowance; subsequent reading failure downgrades without another call
+  ---
+  duration_ms: 16.712583
+  type: 'test'
+  ...
+# Subtest: structural resume carries saved issues and does not reset the repair budget
+ok 60 - structural resume carries saved issues and does not reset the repair budget
+  ---
+  duration_ms: 16.858
+  type: 'test'
+  ...
+# Subtest: interruption after the validated draft is saved resumes without another model call
+ok 61 - interruption after the validated draft is saved resumes without another model call
+  ---
+  duration_ms: 39.419792
+  type: 'test'
+  ...
+# Subtest: high reasoning starts with headroom without changing the saved intensity
+ok 62 - high reasoning starts with headroom without changing the saved intensity
+  ---
+  duration_ms: 20.527666
+  type: 'test'
+  ...
+# Subtest: near-cap invalid JSON is treated as truncation even when the provider reports stop
+ok 63 - near-cap invalid JSON is treated as truncation even when the provider reports stop
+  ---
+  duration_ms: 32.464333
+  type: 'test'
+  ...
+# Subtest: reasoning headroom respects the frozen model and context capacity
+ok 64 - reasoning headroom respects the frozen model and context capacity
+  ---
+  duration_ms: 0.113416
+  type: 'test'
+  ...
+# Subtest: valid JSON at the output cap is accepted without a capacity retry
+ok 65 - valid JSON at the output cap is accepted without a capacity retry
+  ---
+  duration_ms: 20.418125
+  type: 'test'
+  ...
+# Subtest: retired prompt versions cannot enter a new pipeline
+ok 66 - retired prompt versions cannot enter a new pipeline
+  ---
+  duration_ms: 0.171125
+  type: 'test'
+  ...
+# Subtest: invalid example readings retain useful examples and their diagnostics across cancellation
+ok 67 - invalid example readings retain useful examples and their diagnostics across cancellation
+  ---
+  duration_ms: 43.10825
+  type: 'test'
+  ...
+# Subtest: valid teaching with uncertainty completes in one call without quality review
+ok 68 - valid teaching with uncertainty completes in one call without quality review
+  ---
+  duration_ms: 31.595292
+  type: 'test'
+  ...
+# Subtest: resuming learning-points-prompts-13 retains completed batches and regenerates only unfinished teaching
+ok 69 - resuming learning-points-prompts-13 retains completed batches and regenerates only unfinished teaching
+  ---
+  duration_ms: 64.078458
+  type: 'test'
+  ...
+# Subtest: resuming learning-points-prompts-14 retains completed batches and regenerates only unfinished teaching
+ok 70 - resuming learning-points-prompts-14 retains completed batches and regenerates only unfinished teaching
+  ---
+  duration_ms: 43.948459
+  type: 'test'
+  ...
+# Subtest: resuming learning-points-prompts-15 retains completed batches and regenerates only unfinished teaching
+ok 71 - resuming learning-points-prompts-15 retains completed batches and regenerates only unfinished teaching
+  ---
+  duration_ms: 47.790917
+  type: 'test'
+  ...
+# Subtest: resuming learning-points-prompts-16 retains completed batches and regenerates only unfinished teaching
+ok 72 - resuming learning-points-prompts-16 retains completed batches and regenerates only unfinished teaching
+  ---
+  duration_ms: 52.5965
+  type: 'test'
+  ...
+# Subtest: review can cite necessary frozen context but not unrelated or other-batch source
+ok 73 - review can cite necessary frozen context but not unrelated or other-batch source
+  ---
+  duration_ms: 12.6795
+  type: 'test'
+  ...
+# Subtest: Japanese omitted objects and unfinished context receive narrow risks, explicit self objects do not
+ok 74 - Japanese omitted objects and unfinished context receive narrow risks, explicit self objects do not
+  ---
+  duration_ms: 2.928958
+  type: 'test'
+  ...
+# Subtest: Japanese completion endings do not trigger review unless teaching claims accident or regret
+ok 75 - Japanese completion endings do not trigger review unless teaching claims accident or regret
+  ---
+  duration_ms: 2.759833
+  type: 'test'
+  ...
+# Subtest: no risk means zero reviews even with frames, nonempty context and advanced proficiency
+ok 76 - no risk means zero reviews even with frames, nonempty context and advanced proficiency
+  ---
+  duration_ms: 2.177209
+  type: 'test'
+  ...
+# Subtest: warning accepts and completed review is never resent on resume
+ok 77 - warning accepts and completed review is never resent on resume
+  ---
+  duration_ms: 3.475042
+  type: 'test'
+  ...
+# Subtest: one review, one repair, one recheck; frozen units persist and only current evidence included
+ok 78 - one review, one repair, one recheck; frozen units persist and only current evidence included
+  ---
+  duration_ms: 2.921709
+  type: 'test'
+  ...
+# Subtest: invalid-review blocks publication and resume cannot restore allowance
+ok 79 - invalid-review blocks publication and resume cannot restore allowance
+  ---
+  duration_ms: 2.641166
+  type: 'test'
+  ...
+# Subtest: boundary blocks publication and resume cannot restore allowance
+ok 80 - boundary blocks publication and resume cannot restore allowance
+  ---
+  duration_ms: 2.854166
+  type: 'test'
+  ...
+# Subtest: invalid-repair blocks publication and resume cannot restore allowance
+ok 81 - invalid-repair blocks publication and resume cannot restore allowance
+  ---
+  duration_ms: 5.034417
+  type: 'test'
+  ...
+# Subtest: recheck-error blocks publication and resume cannot restore allowance
+ok 82 - recheck-error blocks publication and resume cannot restore allowance
+  ---
+  duration_ms: 7.800625
+  type: 'test'
+  ...
+# Subtest: unknown-paid blocks publication and resume cannot restore allowance
+ok 83 - unknown-paid blocks publication and resume cannot restore allowance
+  ---
+  duration_ms: 3.841167
+  type: 'test'
+  ...
+# Subtest: cancel interrupted stage and resume only unfinished stage, preserving completed review
+ok 84 - cancel interrupted stage and resume only unfinished stage, preserving completed review
+  ---
+  duration_ms: 6.804375
+  type: 'test'
+  ...
+# Subtest: draft and review hash mismatches and unresolved started request cannot be replayed
+ok 85 - draft and review hash mismatches and unresolved started request cannot be replayed
+  ---
+  duration_ms: 7.552
+  type: 'test'
+  ...
+# Subtest: all 14 languages x valid levels x explanation languages isolate specialized rules
+ok 86 - all 14 languages x valid levels x explanation languages isolate specialized rules
+  ---
+  duration_ms: 74.877917
+  type: 'test'
+  ...
+# Subtest: French quotation markers trigger review and source/unit drift rejects a saved quality phase
+ok 87 - French quotation markers trigger review and source/unit drift rejects a saved quality phase
+  ---
+  duration_ms: 2.427667
+  type: 'test'
+  ...
+# Subtest: Portuguese completed-past terminology is a targeted risk, not a global construction trigger
+ok 88 - Portuguese completed-past terminology is a targeted risk, not a global construction trigger
+  ---
+  duration_ms: 1.69025
+  type: 'test'
+  ...
+# Subtest: a Japanese contraction formula that voices an already complete te-form is a targeted construction risk
+ok 89 - a Japanese contraction formula that voices an already complete te-form is a targeted construction risk
+  ---
+  duration_ms: 0.9925
+  type: 'test'
+  ...
+# Subtest: cancellation cannot turn a received invalid paid review into a replayable pending phase
+ok 90 - cancellation cannot turn a received invalid paid review into a replayable pending phase
+  ---
+  duration_ms: 2.435542
+  type: 'test'
+  ...
+# Subtest: risk detection covers a causal scene title and role linking in scene context without reviewing every title
+ok 91 - risk detection covers a causal scene title and role linking in scene context without reviewing every title
+  ---
+  duration_ms: 1.100208
+  type: 'test'
+  ...
+# Subtest: current-only workflow rejects retired prompts and allows no additional context
+ok 92 - current-only workflow rejects retired prompts and allows no additional context
+  ---
+  duration_ms: 0.889458
+  type: 'test'
+  ...
+# Subtest: N1 and N3 prompts preserve reactions without requiring teaching or splitting sound labels
+ok 93 - N1 and N3 prompts preserve reactions without requiring teaching or splitting sound labels
+  ---
+  duration_ms: 5.380834
+  type: 'test'
+  ...
+# Subtest: repair sends teaching input once and existing points as a compact index
+ok 94 - repair sends teaching input once and existing points as a compact index
+  ---
+  duration_ms: 1.052625
+  type: 'test'
+  ...
+# Subtest: compact teaching and structural repair retain source-fidelity and Japanese slot checks
+ok 95 - compact teaching and structural repair retain source-fidelity and Japanese slot checks
+  ---
+  duration_ms: 1.334875
+  type: 'test'
+  ...
+# Subtest: two candidate requests overlap, complete out of order without lost writes; 429 slows remaining windows
+ok 96 - two candidate requests overlap, complete out of order without lost writes; 429 slows remaining windows
+  ---
+  duration_ms: 115.340708
+  type: 'test'
+  ...
+# Subtest: cancellation settles both active requests and retains their available paid usage; activity stays ephemeral
+ok 97 - cancellation settles both active requests and retains their available paid usage; activity stays ephemeral
+  ---
+  duration_ms: 12.456917
+  type: 'test'
+  ...
+# Subtest: a provider stream failure with paid usage is not sent again as a validation repair
+ok 98 - a provider stream failure with paid usage is not sent again as a validation repair
+  ---
+  duration_ms: 8.229875
+  type: 'test'
+  ...
+# Subtest: splitting a window while its peer completes preserves stable IDs and subtitle order
+ok 99 - splitting a window while its peer completes preserves stable IDs and subtitle order
+  ---
+  duration_ms: 54.4925
+  type: 'test'
+  ...
+# Subtest: recovery processes only unfinished candidate windows after an interrupted execution
+ok 100 - recovery processes only unfinished candidate windows after an interrupted execution
+  ---
+  duration_ms: 21.226084
+  type: 'test'
+  ...
+# Subtest: a validated candidate response racing cancellation is retained and not regenerated on resume
+ok 101 - a validated candidate response racing cancellation is retained and not regenerated on resume
+  ---
+  duration_ms: 15.910417
+  type: 'test'
+  ...
+# Subtest: 3.8 medium reserves final JSON headroom within frozen capacity while other medium models retain their budget
+ok 102 - 3.8 medium reserves final JSON headroom within frozen capacity while other medium models retain their budget
+  ---
+  duration_ms: 0.326792
+  type: 'test'
+  ...
+# Subtest: candidate offset guides reconstruct unchanged multilingual source without cutting graphemes
+ok 103 - candidate offset guides reconstruct unchanged multilingual source without cutting graphemes
+  ---
+  duration_ms: 17.601375
+  type: 'test'
+  ...
+# Subtest: selection and teaching show exact frozen unit slices, including a visibly broken boundary
+ok 104 - selection and teaching show exact frozen unit slices, including a visibly broken boundary
+  ---
+  duration_ms: 1.594125
+  type: 'test'
+  ...
+# Subtest: quality patch replaces content and retains every unrelated field and fixed identity
+ok 105 - quality patch replaces content and retains every unrelated field and fixed identity
+  ---
+  duration_ms: 11.032458
+  type: 'test'
+  ...
+# Subtest: identity edits, prototype paths, unknown fields, duplicate patches and changed unit arrays reject
+ok 106 - identity edits, prototype paths, unknown fields, duplicate patches and changed unit arrays reject
+  ---
+  duration_ms: 1.639625
+  type: 'test'
+  ...
+# Subtest: repair can clear unnecessary basics without removing source or relaxing required fields
+ok 107 - repair can clear unnecessary basics without removing source or relaxing required fields
+  ---
+  duration_ms: 2.043
+  type: 'test'
+  ...
+# Subtest: candidate and teaching prompts carry separate source readings and clean source text
+ok 108 - candidate and teaching prompts carry separate source readings and clean source text
+  ---
+  duration_ms: 11.951958
+  type: 'test'
+  ...
+# Subtest: only deadline-caused interruption resumes automatically, never a concurrent paid/validation failure
+ok 109 - only deadline-caused interruption resumes automatically, never a concurrent paid/validation failure
+  ---
+  duration_ms: 0.36225
+  type: 'test'
+  ...
+# Subtest: standard cancellation waits for the AI execution to settle before acknowledging
+ok 110 - standard cancellation waits for the AI execution to settle before acknowledging
+  ---
+  duration_ms: 4.511458
+  type: 'test'
+  ...
+# Subtest: custom cancellation waits for the AI execution to settle before acknowledging
+ok 111 - custom cancellation waits for the AI execution to settle before acknowledging
+  ---
+  duration_ms: 3.224333
+  type: 'test'
+  ...
+# Subtest: standard jobs use only the current utterance workflow
+ok 112 - standard jobs use only the current utterance workflow
+  ---
+  duration_ms: 11.337
+  type: 'test'
+  ...
+# Subtest: admission persists each snapshot during earlier work; execution is FIFO and failure releases worker
+ok 113 - admission persists each snapshot during earlier work; execution is FIFO and failure releases worker
+  ---
+  duration_ms: 0.745333
+  type: 'test'
+  ...
+# Subtest: cancel queued work without calling model, and pause queued work when connection closes
+ok 114 - cancel queued work without calling model, and pause queued work when connection closes
+  ---
+  duration_ms: 0.158667
+  type: 'test'
+  ...
+# Subtest: failed snapshot persistence does not occupy the queue
+ok 115 - failed snapshot persistence does not occupy the queue
+  ---
+  duration_ms: 0.121541
+  type: 'test'
+  ...
+# (node:38516) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a cancellation deadline rejects without claiming the AI stopped; a retry can confirm later
+ok 116 - a cancellation deadline rejects without claiming the AI stopped; a retry can confirm later
+  ---
+  duration_ms: 0.625708
+  type: 'test'
+  ...
+# Subtest: cancellation cannot be acknowledged on behalf of another live Host
+ok 117 - cancellation cannot be acknowledged on behalf of another live Host
+  ---
+  duration_ms: 0.189541
+  type: 'test'
+  ...
+# Subtest: Drive filters accept both document versions and reject query injection
+ok 118 - Drive filters accept both document versions and reject query injection
+  ---
+  duration_ms: 0.434625
+  type: 'test'
+  ...
+# Subtest: custom publication retries durable content, preserves conflicting copies and resumes backups after restart
+ok 119 - custom publication retries durable content, preserves conflicting copies and resumes backups after restart
+  ---
+  duration_ms: 126.543958
+  type: 'test'
+  ...
+# Subtest: failed partial publication repairs both files to latest calibration and rejects external edits
+ok 120 - failed partial publication repairs both files to latest calibration and rejects external edits
+  ---
+  duration_ms: 55.050375
+  type: 'test'
+  ...
+# Subtest: restore loads inside the lesson queue and preserves a differing local revision
+ok 121 - restore loads inside the lesson queue and preserves a differing local revision
+  ---
+  duration_ms: 7.98275
+  type: 'test'
+  ...
+# Subtest: an in-flight old backup finishes before calibration uploads a new revision, while other lessons proceed
+ok 122 - an in-flight old backup finishes before calibration uploads a new revision, while other lessons proceed
+  ---
+  duration_ms: 20.678959
+  type: 'test'
+  ...
+# Subtest: revision is based on canonical content and rejected queue work releases the next operation
+ok 123 - revision is based on canonical content and rejected queue work releases the next operation
+  ---
+  duration_ms: 3.957542
+  type: 'test'
+  ...
+# Subtest: current storage skips retired envelopes, preserves files and rejects direct access
+ok 124 - current storage skips retired envelopes, preserves files and rejects direct access
+  ---
+  duration_ms: 25.019083
+  type: 'test'
+  ...
+# Subtest: corrupt current checkpoints fail visibly instead of resetting
+ok 125 - corrupt current checkpoints fail visibly instead of resetting
+  ---
+  duration_ms: 5.707334
+  type: 'test'
+  ...
+# Subtest: retired V5 IDs are identified without parsing or modifying their files
+ok 126 - retired V5 IDs are identified without parsing or modifying their files
+  ---
+  duration_ms: 2.306334
+  type: 'test'
+  ...
+# Subtest: compatible completed V7 lessons remain readable across prompt changes without rewriting files
+ok 127 - compatible completed V7 lessons remain readable across prompt changes without rewriting files
+  ---
+  duration_ms: 9.665208
+  type: 'test'
+  ...
+# Subtest: legacy resume after canonical save finalizes the existing lesson without relabelling or overwriting it
+ok 128 - legacy resume after canonical save finalizes the existing lesson without relabelling or overwriting it
+  ---
+  duration_ms: 8.466042
+  type: 'test'
+  ...
+# Subtest: listing discovered document paths preserves ordering, limits and corrupt-file errors
+ok 129 - listing discovered document paths preserves ordering, limits and corrupt-file errors
+  ---
+  duration_ms: 8.016291
+  type: 'test'
+  ...
+# Subtest: listing and direct reads both reject duplicate IDs across video folders
+ok 130 - listing and direct reads both reject duplicate IDs across video folders
+  ---
+  duration_ms: 4.375208
+  type: 'test'
+  ...
+# Subtest: batch history clearing includes records beyond the latest 50, reports failures, and rechecks status
+ok 131 - batch history clearing includes records beyond the latest 50, reports failures, and rechecks status
+  ---
+  duration_ms: 121.668417
+  type: 'test'
+  ...
+# Subtest: current calibration round trips source without regenerating or overwriting
+ok 132 - current calibration round trips source without regenerating or overwriting
+  ---
+  duration_ms: 78.906
+  type: 'test'
+  ...
+# Subtest: publication and Drive failures retain canonical current material; retries do not generate again
+ok 133 - publication and Drive failures retain canonical current material; retries do not generate again
+  ---
+  duration_ms: 41.854125
+  type: 'test'
+  ...
+# Subtest: deleting completed history preserves lessons and operational metadata without transcripts or checkpoints
+ok 134 - deleting completed history preserves lessons and operational metadata without transcripts or checkpoints
+  ---
+  duration_ms: 14.139875
+  type: 'test'
+  ...
+# Subtest: V5/V6 malformed files are skipped before parsing; direct IDs retire, all file hashes unchanged
+ok 135 - V5/V6 malformed files are skipped before parsing; direct IDs retire, all file hashes unchanged
+  ---
+  duration_ms: 22.727458
+  type: 'test'
+  ...
+# Subtest: range uses half-open overlap and preserves canonical cue ids and times
+ok 136 - range uses half-open overlap and preserves canonical cue ids and times
+  ---
+  duration_ms: 0.519375
+  type: 'test'
+  ...
+# Subtest: invalid times and out-of-duration ranges cannot become a request
+ok 137 - invalid times and out-of-duration ranges cannot become a request
+  ---
+  duration_ms: 0.877292
+  type: 'test'
+  ...
+# Subtest: partially timed input only allows full content
+ok 138 - partially timed input only allows full content
+  ---
+  duration_ms: 0.144125
+  type: 'test'
+  ...
+# Subtest: exact range time formatting preserves milliseconds on round trip
+ok 139 - exact range time formatting preserves milliseconds on round trip
+  ---
+  duration_ms: 0.048
+  type: 'test'
+  ...
+# Subtest: new teaching requires presentation; legacy documents retain all old examples unchanged
+ok 140 - new teaching requires presentation; legacy documents retain all old examples unchanged
+  ---
+  duration_ms: 14.630875
+  type: 'test'
+  ...
+# Subtest: strict chunk guards reject punctuation, whitespace, overlaps, bounds and Unicode splitting
+ok 141 - strict chunk guards reject punctuation, whitespace, overlaps, bounds and Unicode splitting
+  ---
+  duration_ms: 6.461666
+  type: 'test'
+  ...
+# Subtest: reader preserves IDs and presentation, deduplicates, and associates only exact discontinuous spans
+ok 142 - reader preserves IDs and presentation, deduplicates, and associates only exact discontinuous spans
+  ---
+  duration_ms: 0.839833
+  type: 'test'
+  ...
+# Subtest: necessary points need no extensions or reusable items; exactly one example is enforced for new standard teaching
+ok 143 - necessary points need no extensions or reusable items; exactly one example is enforced for new standard teaching
+  ---
+  duration_ms: 1.617917
+  type: 'test'
+  ...
+# Subtest: new chunks cannot cut inside Japanese words or Korean inflected words
+ok 144 - new chunks cannot cut inside Japanese words or Korean inflected words
+  ---
+  duration_ms: 3.181792
+  type: 'test'
+  ...
+# Subtest: Host omits unreliable optional chunks while preserving validated whole-utterance content
+ok 145 - Host omits unreliable optional chunks while preserving validated whole-utterance content
+  ---
+  duration_ms: 2.559459
+  type: 'test'
+  ...
+# Subtest: one invalid chunk preserves reliable clickable fragments in the same and other utterances
+ok 146 - one invalid chunk preserves reliable clickable fragments in the same and other utterances
+  ---
+  duration_ms: 2.477916
+  type: 'test'
+  ...
+# Subtest: explicitly unclear source names lose guessed readings without losing reliable adjacent annotations or making another model call
+ok 147 - explicitly unclear source names lose guessed readings without losing reliable adjacent annotations or making another model call
+  ---
+  duration_ms: 1.828708
+  type: 'test'
+  ...
+# Subtest: current export preserves source and labeled examples, omits empty context
+ok 148 - current export preserves source and labeled examples, omits empty context
+  ---
+  duration_ms: 13.6775
+  type: 'test'
+  ...
+# Subtest: retired standard documents are rejected
+ok 149 - retired standard documents are rejected
+  ---
+  duration_ms: 0.142708
+  type: 'test'
+  ...
+# Subtest: state machine permits only legal transitions
+ok 150 - state machine permits only legal transitions
+  ---
+  duration_ms: 2.833209
+  type: 'test'
+  ...
+# Subtest: checkpoints must agree with completed count and document versions are explicit
+ok 151 - checkpoints must agree with completed count and document versions are explicit
+  ---
+  duration_ms: 0.338875
+  type: 'test'
+  ...
+# Subtest: standard reader rejects missing or stale execution identity before parsing content
+ok 152 - standard reader rejects missing or stale execution identity before parsing content
+  ---
+  duration_ms: 17.999459
+  type: 'test'
+  ...
+# Subtest: language choices are valid in saved learning profiles independently of interface locale
+ok 153 - language choices are valid in saved learning profiles independently of interface locale
+  ---
+  duration_ms: 1.795458
+  type: 'test'
+  ...
+# Subtest: twelve languages share CEFR without overwriting Japanese or Korean levels
+ok 154 - twelve languages share CEFR without overwriting Japanese or Korean levels
+  ---
+  duration_ms: 0.32
+  type: 'test'
+  ...
+# Subtest: Chinese track matching recognizes script aliases without guessing bare zh or mixing scripts
+ok 155 - Chinese track matching recognizes script aliases without guessing bare zh or mixing scripts
+  ---
+  duration_ms: 0.078667
+  type: 'test'
+  ...
+# Subtest: old profiles are balanced/all-enabled and emphasis never survives disabling
+ok 156 - old profiles are balanced/all-enabled and emphasis never survives disabling
+  ---
+  duration_ms: 0.532875
+  type: 'test'
+  ...
+# Subtest: literal occurrences preserve repeated positions, original quotes and Unicode offsets
+ok 157 - literal occurrences preserve repeated positions, original quotes and Unicode offsets
+  ---
+  duration_ms: 1.117959
+  type: 'test'
+  ...
+# Subtest: Chinese phrases match within unspaced words and across adjacent cues with exact offsets
+ok 158 - Chinese phrases match within unspaced words and across adjacent cues with exact offsets
+  ---
+  duration_ms: 0.135333
+  type: 'test'
+  ...
+# Subtest: cross-cue matching respects gaps, boundaries, partial input and untimed subtitles
+ok 159 - cross-cue matching respects gaps, boundaries, partial input and untimed subtitles
+  ---
+  duration_ms: 0.125625
+  type: 'test'
+  ...
+# Subtest: Japanese complete te-form slots cannot duplicate て in concession frames or final documents
+ok 160 - Japanese complete te-form slots cannot duplicate て in concession frames or final documents
+  ---
+  duration_ms: 13.401541
+  type: 'test'
+  ...
+# Subtest: new Japanese teaching rejects a second te-form suffix, including a misleading contraction slot
+ok 161 - new Japanese teaching rejects a second te-form suffix, including a misleading contraction slot
+  ---
+  duration_ms: 3.387458
+  type: 'test'
+  ...
+# Subtest: learning-points-prompts-14 documents remain readable without applying new teaching-only construction checks
+ok 162 - learning-points-prompts-14 documents remain readable without applying new teaching-only construction checks
+  ---
+  duration_ms: 2.191125
+  type: 'test'
+  ...
+# Subtest: learning-points-prompts-15 documents remain readable without applying new teaching-only construction checks
+ok 163 - learning-points-prompts-15 documents remain readable without applying new teaching-only construction checks
+  ---
+  duration_ms: 1.1525
+  type: 'test'
+  ...
+# Subtest: learning-points-prompts-16 documents remain readable without applying new teaching-only construction checks
+ok 164 - learning-points-prompts-16 documents remain readable without applying new teaching-only construction checks
+  ---
+  duration_ms: 1.191
+  type: 'test'
+  ...
+# Subtest: V6 keeps three points, grammar frames without Chunks, and a point with no examples
+ok 165 - V6 keeps three points, grammar frames without Chunks, and a point with no examples
+  ---
+  duration_ms: 3.330625
+  type: 'test'
+  ...
+# Subtest: translation-only units retain complete source coverage without mandatory explanations
+ok 166 - translation-only units retain complete source coverage without mandatory explanations
+  ---
+  duration_ms: 4.465375
+  type: 'test'
+  ...
+# Subtest: split Japanese reactions can contain no teaching while retaining source, translation and export
+ok 167 - split Japanese reactions can contain no teaching while retaining source, translation and export
+  ---
+  duration_ms: 2.365917
+  type: 'test'
+  ...
+# Subtest: every disabled category rejects supplementary output; all Off still gives basic reading
+ok 168 - every disabled category rejects supplementary output; all Off still gives basic reading
+  ---
+  duration_ms: 5.28375
+  type: 'test'
+  ...
+# Subtest: source, point, span, coverage and example validation reject invalid teaching
+ok 169 - source, point, span, coverage and example validation reject invalid teaching
+  ---
+  duration_ms: 7.319917
+  type: 'test'
+  ...
+# Subtest: examples 1/2/3 keep exact count; source forms and frames have distinct targets
+ok 170 - examples 1/2/3 keep exact count; source forms and frames have distinct targets
+  ---
+  duration_ms: 3.809625
+  type: 'test'
+  ...
+# Subtest: V4 checkpoints and protocol 11 retain version and counts
+ok 171 - V4 checkpoints and protocol 11 retain version and counts
+  ---
+  duration_ms: 1.950459
+  type: 'test'
+  ...
+# Subtest: cross-cue utterances and discontinuous source components keep exact offsets
+ok 172 - cross-cue utterances and discontinuous source components keep exact offsets
+  ---
+  duration_ms: 1.270791
+  type: 'test'
+  ...
+# Subtest: reuse existing point IDs without new examples; same strings may have different points
+ok 173 - reuse existing point IDs without new examples; same strings may have different points
+  ---
+  duration_ms: 1.057709
+  type: 'test'
+  ...
+# Subtest: V6 namespaces long chunk IDs once and keeps reliable readings separate from punctuation
+ok 174 - V6 namespaces long chunk IDs once and keeps reliable readings separate from punctuation
+  ---
+  duration_ms: 1.498458
+  type: 'test'
+  ...
+# Subtest: a shortened exact source form reports its proven UTF-16 end without repairing or guessing
+ok 175 - a shortened exact source form reports its proven UTF-16 end without repairing or guessing
+  ---
+  duration_ms: 0.878625
+  type: 'test'
+  ...
+# Subtest: provider messages preserve SDK authentication names and accept older Hosts
+ok 176 - provider messages preserve SDK authentication names and accept older Hosts
+  ---
+  duration_ms: 1.246833
+  type: 'test'
+  ...
+# Subtest: V5 Extension accepts only matching Host protocol and Pi SDK mode
+ok 177 - V5 Extension accepts only matching Host protocol and Pi SDK mode
+  ---
+  duration_ms: 0.283208
+  type: 'test'
+  ...
+# Subtest: Native Messaging rejects malformed results before they enter UI state
+ok 178 - Native Messaging rejects malformed results before they enter UI state
+  ---
+  duration_ms: 0.588959
+  type: 'test'
+  ...
+# Subtest: history deletion messages validate IDs and partial failure results
+ok 179 - history deletion messages validate IDs and partial failure results
+  ---
+  duration_ms: 1.709709
+  type: 'test'
+  ...
+# Subtest: model capabilities survive the Native Messaging boundary
+ok 180 - model capabilities survive the Native Messaging boundary
+  ---
+  duration_ms: 0.185209
+  type: 'test'
+  ...
+# Subtest: Netflix watch URLs are matched by video ID, never by a lookalike domain
+ok 181 - Netflix watch URLs are matched by video ID, never by a lookalike domain
+  ---
+  duration_ms: 0.360042
+  type: 'test'
+  ...
+# Subtest: sentence edits expand all containing scenes without replacing source times
+ok 182 - sentence edits expand all containing scenes without replacing source times
+  ---
+  duration_ms: 0.998917
+  type: 'test'
+  ...
+# Subtest: overlapping sentences remain independent and expand scene at both ends
+ok 183 - overlapping sentences remain independent and expand scene at both ends
+  ---
+  duration_ms: 0.082041
+  type: 'test'
+  ...
+# Subtest: canonicalize Japanese readings without changing evidence; strict document validation stays strict
+ok 184 - canonicalize Japanese readings without changing evidence; strict document validation stays strict
+  ---
+  duration_ms: 13.184167
+  type: 'test'
+  ...
+# Subtest: only bad readings are omitted, while alignment and references remain fatal
+ok 185 - only bad readings are omitted, while alignment and references remain fatal
+  ---
+  duration_ms: 13.227542
+  type: 'test'
+  ...
+# Subtest: all fourteen language formats and example annotations use the same processing
+ok 186 - all fourteen language formats and example annotations use the same processing
+  ---
+  duration_ms: 17.59175
+  type: 'test'
+  ...
+# Subtest: empty punctuation readings normalize without repair across languages; empty word readings remain pending
+ok 187 - empty punctuation readings normalize without repair across languages; empty word readings remain pending
+  ---
+  duration_ms: 16.801417
+  type: 'test'
+  ...
+# Subtest: reading-only repair cannot alter core content or target other annotations
+ok 188 - reading-only repair cannot alter core content or target other annotations
+  ---
+  duration_ms: 1.480167
+  type: 'test'
+  ...
+# Subtest: diagnostics survive documents and markdown; malformed target references are rejected
+ok 189 - diagnostics survive documents and markdown; malformed target references are rejected
+  ---
+  duration_ms: 4.159708
+  type: 'test'
+  ...
+# Subtest: misaligned optional example readings are omitted while exact example text, risks and core validation survive
+ok 190 - misaligned optional example readings are omitted while exact example text, risks and core validation survive
+  ---
+  duration_ms: 1.714875
+  type: 'test'
+  ...
+# Subtest: uncertain source readings are omitted for all 14 instruction languages and paired quotation styles
+ok 191 - uncertain source readings are omitted for all 14 instruction languages and paired quotation styles
+  ---
+  duration_ms: 16.517583
+  type: 'test'
+  ...
+# Subtest: generation drops only empty expression-pattern placeholders without loosening persisted schema or source checks
+ok 192 - generation drops only empty expression-pattern placeholders without loosening persisted schema or source checks
+  ---
+  duration_ms: 1.380125
+  type: 'test'
+  ...
+# Subtest: supported video platforms and SDK providers use explicit contracts
+ok 193 - supported video platforms and SDK providers use explicit contracts
+  ---
+  duration_ms: 1.021
+  type: 'test'
+  ...
+# Subtest: every advertised Pi service can be saved as a generation provider
+ok 194 - every advertised Pi service can be saved as a generation provider
+  ---
+  duration_ms: 0.442917
+  type: 'test'
+  ...
+# Subtest: invalid provider IDs are rejected before adapter lookup
+ok 195 - invalid provider IDs are rejected before adapter lookup
+  ---
+  duration_ms: 0.072625
+  type: 'test'
+  ...
+# Subtest: shared-source analyses are ordered together after complete source without changing saved content
+ok 196 - shared-source analyses are ordered together after complete source without changing saved content
+  ---
+  duration_ms: 11.677208
+  type: 'test'
+  ...
+# Subtest: empty and repeated explanations disappear before visibility; hidden translation exposes existing meaning
+ok 197 - empty and repeated explanations disappear before visibility; hidden translation exposes existing meaning
+  ---
+  duration_ms: 1.695541
+  type: 'test'
+  ...
+# Subtest: uncertainty disclosures remain visible in affected fields even when equal to translation
+ok 198 - uncertainty disclosures remain visible in affected fields even when equal to translation
+  ---
+  duration_ms: 2.195666
+  type: 'test'
+  ...
+# Subtest: JSON export retains even unselected source; adjacent title spans do not invent spacing
+ok 199 - JSON export retains even unselected source; adjacent title spans do not invent spacing
+  ---
+  duration_ms: 1.862417
+  type: 'test'
+  ...
+# Subtest: overlapping duplicate caption updates do not become separate learning lines
+ok 200 - overlapping duplicate caption updates do not become separate learning lines
+  ---
+  duration_ms: 0.609125
+  type: 'test'
+  ...
+# Subtest: a scene job tracks curation checkpoints separately from sections
+ok 201 - a scene job tracks curation checkpoints separately from sections
+  ---
+  duration_ms: 2.84375
+  type: 'test'
+  ...
+# Subtest: unique verbatim form repairs only range metadata and linked exact citations, without mutating raw or fixed units
+ok 202 - unique verbatim form repairs only range metadata and linked exact citations, without mutating raw or fixed units
+  ---
+  duration_ms: 12.409834
+  type: 'test'
+  ...
+# Subtest: correct ranges are unchanged; repeated forms and unrelated cue identities are never guessed
+ok 203 - correct ranges are unchanged; repeated forms and unrelated cue identities are never guessed
+  ---
+  duration_ms: 3.8615
+  type: 'test'
+  ...
+# Subtest: alignment respects Unicode grapheme boundaries and never repairs existing documents
+ok 204 - alignment respects Unicode grapheme boundaries and never repairs existing documents
+  ---
+  duration_ms: 1.842583
+  type: 'test'
+  ...
+# Subtest: overlapping literal occurrences remain ambiguous
+ok 205 - overlapping literal occurrences remain ambiguous
+  ---
+  duration_ms: 1.448042
+  type: 'test'
+  ...
+# Subtest: within-cue topics and across-cue utterances fully cover immutable UTF-16 text
+ok 206 - within-cue topics and across-cue utterances fully cover immutable UTF-16 text
+  ---
+  duration_ms: 11.694833
+  type: 'test'
+  ...
+# Subtest: combining marks, ZWJ emoji, regional flags and no-space scripts cannot be bisected
+ok 207 - combining marks, ZWJ emoji, regional flags and no-space scripts cannot be bisected
+  ---
+  duration_ms: 0.460584
+  type: 'test'
+  ...
+# Subtest: gap, overlap, duplicate cue reference and point outside associated unit are rejected
+ok 208 - gap, overlap, duplicate cue reference and point outside associated unit are rejected
+  ---
+  duration_ms: 1.276917
+  type: 'test'
+  ...
+# Subtest: reusable frames can cite discontinuous components across nonadjacent subtitles
+ok 209 - reusable frames can cite discontinuous components across nonadjacent subtitles
+  ---
+  duration_ms: 2.116375
+  type: 'test'
+  ...
+# Subtest: Siri resource identity collapses aliases while preserving unrelated names and voices
+ok 210 - Siri resource identity collapses aliases while preserving unrelated names and voices
+  ---
+  duration_ms: 0.751375
+  type: 'test'
+  ...
+# Subtest: reader uses Siri for the requested language and preserves matching public voice preferences
+ok 211 - reader uses Siri for the requested language and preserves matching public voice preferences
+  ---
+  duration_ms: 0.308583
+  type: 'test'
+  ...
+# Subtest: Siri priority requires an eligible installed voice in the requested language
+ok 212 - Siri priority requires an eligible installed voice in the requested language
+  ---
+  duration_ms: 0.144542
+  type: 'test'
+  ...
+# Subtest: public Siri preferences are not mapped by display names or unconfirmed resource identities
+ok 213 - public Siri preferences are not mapped by display names or unconfirmed resource identities
+  ---
+  duration_ms: 0.062292
+  type: 'test'
+  ...
+# Subtest: download choices exclude existing resources even when playback discovery misses them
+ok 214 - download choices exclude existing resources even when playback discovery misses them
+  ---
+  duration_ms: 0.094375
+  type: 'test'
+  ...
+# Subtest: speech protocol bounds text and rate, accepts Japanese, and preserves terminal status
+ok 215 - speech protocol bounds text and rate, accepts Japanese, and preserves terminal status
+  ---
+  duration_ms: 1.2935
+  type: 'test'
+  ...
+# Subtest: reader choices keep neural/enhanced/premium and exclude basic or unclassified voices
+ok 216 - reader choices keep neural/enhanced/premium and exclude basic or unclassified voices
+  ---
+  duration_ms: 0.100958
+  type: 'test'
+  ...
+# Subtest: explicit Chinese locales select matching regional voices and do not cross-fallback
+ok 217 - explicit Chinese locales select matching regional voices and do not cross-fallback
+  ---
+  duration_ms: 0.047875
+  type: 'test'
+  ...
+# Subtest: voice selection filters by the spoken language, including regional variants
+ok 218 - voice selection filters by the spoken language, including regional variants
+  ---
+  duration_ms: 0.16275
+  type: 'test'
+  ...
+# Subtest: automatic voice order prefers neural and enhanced voices without mutating the list
+ok 219 - automatic voice order prefers neural and enhanced voices without mutating the list
+  ---
+  duration_ms: 0.389333
+  type: 'test'
+  ...
+# Subtest: subtitle speech marks cue boundaries without changing words, punctuation or cue-internal wraps
+ok 220 - subtitle speech marks cue boundaries without changing words, punctuation or cue-internal wraps
+  ---
+  duration_ms: 0.077
+  type: 'test'
+  ...
+# Subtest: source ruby survives request schemas and cue markup round trips
+ok 221 - source ruby survives request schemas and cue markup round trips
+  ---
+  duration_ms: 11.29575
+  type: 'test'
+  ...
+# Subtest: source readings override model guesses and work without generated pronunciations
+ok 222 - source readings override model guesses and work without generated pronunciations
+  ---
+  duration_ms: 0.241417
+  type: 'test'
+  ...
+# Subtest: SRT and VTT preserve timestamps and original text
+ok 223 - SRT and VTT preserve timestamps and original text
+  ---
+  duration_ms: 0.682667
+  type: 'test'
+  ...
+# Subtest: invalid and empty cues are skipped
+ok 224 - invalid and empty cues are skipped
+  ---
+  duration_ms: 0.065333
+  type: 'test'
+  ...
+# Subtest: text import and chunking keep all cues in order
+ok 225 - text import and chunking keep all cues in order
+  ---
+  duration_ms: 0.337292
+  type: 'test'
+  ...
+# Subtest: YouTube timestamps use an allowlisted video host
+ok 226 - YouTube timestamps use an allowlisted video host
+  ---
+  duration_ms: 0.075167
+  type: 'test'
+  ...
+# Subtest: long plain-text input is split without dropping words
+ok 227 - long plain-text input is split without dropping words
+  ---
+  duration_ms: 0.091708
+  type: 'test'
+  ...
+# Subtest: ruby readings stay outside source text and retain their source ranges
+ok 228 - ruby readings stay outside source text and retain their source ranges
+  ---
+  duration_ms: 0.358541
+  type: 'test'
+  ...
+# Subtest: ruby supports styled HTML, fallback parentheses, entities and repeated base text
+ok 229 - ruby supports styled HTML, fallback parentheses, entities and repeated base text
+  ---
+  duration_ms: 0.211959
+  type: 'test'
+  ...
+# Subtest: multi-pair VTT ruby and unclosed annotations do not contaminate source text
+ok 230 - multi-pair VTT ruby and unclosed annotations do not contaminate source text
+  ---
+  duration_ms: 0.118875
+  type: 'test'
+  ...
+1..230
+# tests 230
+# suites 0
+# pass 230
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16998.813334

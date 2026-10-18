@@ -1,0 +1,470 @@
+diff --git a/apps/local-host/src/generation/learning-points-pipeline.test.ts b/apps/local-host/src/generation/learning-points-pipeline.test.ts
+index 7f8cdbe..25161f1 100644
+--- a/apps/local-host/src/generation/learning-points-pipeline.test.ts
++++ b/apps/local-host/src/generation/learning-points-pipeline.test.ts
+@@ -212,6 +212,38 @@ test("missing utterances and malformed output get exactly one repair before fail
+     await rm(root, { recursive: true, force: true });
+   }
+ });
++test("malformed Japanese contraction template receives the existing single structural repair", async () => {
++  const root = await mkdtemp(join(tmpdir(), "cll-ja-frame-repair-"));
++  try {
++    const f = pointsFixture();
++    f.request.profile.targetLanguage = "ja";
++    f.request.profile.level = "N3";
++    const g = generators(f),
++      storage = localStoragePorts(root);
++    let calls = 0;
++    const manager = new JobManager(
++      {
++        storage,
++        ...g,
++        generateSection: async (agent, prompt) => {
++          const raw = await g.generateSection(agent, prompt);
++          raw.reusableItems[0].pattern =
++            ++calls === 1 ? "[動詞て形省略い]てた？" : "[動詞て形]た？";
++          if (calls === 2) assert.match(prompt, /invalid_construction/);
++          return raw;
++        },
++      },
++      () => {},
++    );
++    const document = await manager.start(f.request.id, f.request);
++    assert.equal(calls, 2);
++    assert.equal(document.reusableItems[0].pattern, "[動詞て形]た？");
++    assert.deepEqual((await storage.documents.get(document.id))?.cues, f.request.cues);
++  } finally {
++    await rm(root, { recursive: true, force: true });
++  }
++});
++
+ test("14 languages and 17 level strategies; Detailed never changes candidate/selection input", () => {
+   const f = pointsFixture();
+   const levels = new Set<string>();
+@@ -904,6 +936,9 @@ test("retired prompt versions cannot enter a new pipeline", () => {
+     "learning-points-prompts-9",
+     "learning-points-prompts-10",
+     "learning-points-prompts-12",
++    "learning-points-prompts-14",
++    "learning-points-prompts-15",
++    "learning-points-prompts-16",
+   ]) {
+     assert.equal(supportsLearningPointsPromptVersion(version), false);
+     assert.throws(() => learningPointsPrompts(version), /Unsupported/);
+@@ -988,107 +1023,112 @@ test("valid teaching with uncertainty completes in one call without quality revi
+   }
+ });
+ 
+-test("resuming a legacy quality block regenerates only unfinished teaching and retains completed batches", async () => {
+-  const root = await mkdtemp(join(tmpdir(), "cll-simple-resume-"));
+-  try {
+-    const f = pointsFixture(),
+-      storage = localStoragePorts(root),
+-      g = generators(f);
+-    let firstCalls = 0,
+-      failedDraft: any;
+-    const manager = new JobManager(
+-      {
+-        storage,
+-        ...g,
+-        generateSection: async (a, prompt) => {
+-          const data = teachingData(prompt);
+-          if (data.requiredUtteranceIds.length > 1)
+-            return {
+-              status: "needs_split",
+-              sceneId: data.scene.id,
+-              utteranceGroups: data.requiredUtteranceIds.map((id: string) => [id]),
+-            };
+-          const raw = await g.generateSection(a, prompt);
+-          if (data.requiredUtteranceIds[0] === data.scene.utterances[0].id) {
+-            firstCalls++;
+-            return raw;
+-          }
+-          failedDraft = raw;
+-          throw new Error("injected unfinished batch");
++for (const legacy of [
++  { promptVersion: "learning-points-prompts-13", qualityStrategyVersion: "learning-quality-1" },
++  { promptVersion: "learning-points-prompts-14", qualityStrategyVersion: "program-validation-1" },
++  { promptVersion: "learning-points-prompts-15", qualityStrategyVersion: "program-validation-2" },
++  { promptVersion: "learning-points-prompts-16", qualityStrategyVersion: "program-validation-2" },
++])
++  test(`resuming ${legacy.promptVersion} retains completed batches and regenerates only unfinished teaching`, async () => {
++    const root = await mkdtemp(join(tmpdir(), "cll-simple-resume-"));
++    try {
++      const f = pointsFixture(),
++        storage = localStoragePorts(root),
++        g = generators(f);
++      let firstCalls = 0,
++        failedDraft: any;
++      const manager = new JobManager(
++        {
++          storage,
++          ...g,
++          generateSection: async (a, prompt) => {
++            const data = teachingData(prompt);
++            if (data.requiredUtteranceIds.length > 1)
++              return {
++                status: "needs_split",
++                sceneId: data.scene.id,
++                utteranceGroups: data.requiredUtteranceIds.map((id: string) => [id]),
++              };
++            const raw = await g.generateSection(a, prompt);
++            if (data.requiredUtteranceIds[0] === data.scene.utterances[0].id) {
++              firstCalls++;
++              return raw;
++            }
++            failedDraft = raw;
++            throw new Error("injected unfinished batch");
++          },
+         },
+-      },
+-      () => {},
+-    );
+-    await assert.rejects(manager.start(f.request.id, f.request));
+-    const before = await storage.jobs.get(f.request.id);
+-    assert.ok(before?.schemaVersion === 5);
+-    const completed = structuredClone(before.learningPlan.batches[0]);
+-    await storage.jobs.update(f.request.id, job => {
+-      assert.ok(job.schemaVersion === 5 && job.execution);
+-      const execution = {
+-        ...job.execution,
+-        promptVersion: "learning-points-prompts-13",
+-        qualityStrategyVersion: "learning-quality-1",
+-      };
+-      const batches = job.learningPlan.batches.map(b => {
+-        if (b.result) return b;
+-        const scene = job.learningPlan.selected!.find(s => s.id === b.sceneId)!;
+-        const evidence = new Set([...scene.dialogueCueIds, ...scene.contextCueIds]);
+-        const results = job.learningPlan.batches.flatMap(part =>
+-          part.result ? [part.result] : [],
+-        );
+-        const input = {
+-          scene,
+-          requiredUtteranceIds: b.utteranceIds,
+-          sourceWindow: job.request.cues.filter(c => evidence.has(c.id)),
+-          existingPoints: results.flatMap(r => r.points),
+-          existingReusableItems: results.flatMap(r => r.reusableItems),
++        () => {},
++      );
++      await assert.rejects(manager.start(f.request.id, f.request));
++      const before = await storage.jobs.get(f.request.id);
++      assert.ok(before?.schemaVersion === 5);
++      const completed = structuredClone(before.learningPlan.batches[0]);
++      await storage.jobs.update(f.request.id, job => {
++        assert.ok(job.schemaVersion === 5 && job.execution);
++        const execution = {
++          ...job.execution,
++          ...legacy,
+         };
+-        const hash = (value: unknown) =>
+-          createHash("sha256").update(JSON.stringify(value)).digest("hex");
++        const batches = job.learningPlan.batches.map(b => {
++          if (b.result || legacy.qualityStrategyVersion !== "learning-quality-1") return b;
++          const scene = job.learningPlan.selected!.find(s => s.id === b.sceneId)!;
++          const evidence = new Set([...scene.dialogueCueIds, ...scene.contextCueIds]);
++          const results = job.learningPlan.batches.flatMap(part =>
++            part.result ? [part.result] : [],
++          );
++          const input = {
++            scene,
++            requiredUtteranceIds: b.utteranceIds,
++            sourceWindow: job.request.cues.filter(c => evidence.has(c.id)),
++            existingPoints: results.flatMap(r => r.points),
++            existingReusableItems: results.flatMap(r => r.reusableItems),
++          };
++          const hash = (value: unknown) =>
++            createHash("sha256").update(JSON.stringify(value)).digest("hex");
++          return {
++            ...b,
++            quality: {
++              phase: "blocked" as const,
++              repairEligible: false,
++              risks: [],
++              diagnostic: "Major issues remain after one repair",
++              draft: failedDraft,
++              inputHash: hash({ input, profile: job.request.profile, agent: job.request.agent }),
++              draftHash: hash(failedDraft),
++              originalDraftHash: hash(failedDraft),
++            },
++          };
++        });
+         return {
+-          ...b,
+-          quality: {
+-            phase: "blocked" as const,
+-            repairEligible: false,
+-            risks: [],
+-            diagnostic: "Major issues remain after one repair",
+-            draft: failedDraft,
+-            inputHash: hash({ input, profile: job.request.profile, agent: job.request.agent }),
+-            draftHash: hash(failedDraft),
+-            originalDraftHash: hash(failedDraft),
+-          },
++          ...job,
++          execution,
++          summary: { ...job.summary, execution },
++          learningPlan: { ...job.learningPlan, batches },
+         };
+       });
+-      return {
+-        ...job,
+-        execution,
+-        summary: { ...job.summary, execution },
+-        learningPlan: { ...job.learningPlan, batches },
+-      };
+-    });
+-    const calls: string[][] = [];
+-    const resumed = new JobManager(
+-      {
+-        storage,
+-        ...g,
+-        generateSection: async (a, prompt) => {
+-          calls.push(teachingData(prompt).requiredUtteranceIds);
+-          return g.generateSection(a, prompt);
++      const calls: string[][] = [];
++      const resumed = new JobManager(
++        {
++          storage,
++          ...g,
++          generateSection: async (a, prompt) => {
++            calls.push(teachingData(prompt).requiredUtteranceIds);
++            return g.generateSection(a, prompt);
++          },
+         },
+-      },
+-      () => {},
+-    );
+-    const doc = await resumed.resume(f.request.id, f.request.id);
+-    assert.equal(firstCalls, 1);
+-    assert.deepEqual(calls, [before.learningPlan.batches[1].utteranceIds]);
+-    const after = await storage.jobs.get(f.request.id);
+-    assert.ok(after?.schemaVersion === 5);
+-    assert.deepEqual(after.learningPlan.batches[0], completed);
+-    assert.equal(after.learningPlan.batches[1].quality, undefined);
+-    assert.equal(doc.sections[0].utterances.length, 2);
+-    assert.equal(doc.execution!.previousExecution?.promptVersion, "learning-points-prompts-13");
+-  } finally {
+-    await rm(root, { recursive: true, force: true });
+-  }
+-});
++        () => {},
++      );
++      const doc = await resumed.resume(f.request.id, f.request.id);
++      assert.equal(firstCalls, 1);
++      assert.deepEqual(calls, [before.learningPlan.batches[1].utteranceIds]);
++      const after = await storage.jobs.get(f.request.id);
++      assert.ok(after?.schemaVersion === 5);
++      assert.deepEqual(after.learningPlan.batches[0], completed);
++      assert.equal(after.learningPlan.batches[1].quality, undefined);
++      assert.equal(doc.sections[0].utterances.length, 2);
++      assert.equal(doc.execution!.previousExecution?.promptVersion, legacy.promptVersion);
++    } finally {
++      await rm(root, { recursive: true, force: true });
++    }
++  });
+diff --git a/apps/local-host/src/generation/learning-points-prompts.ts b/apps/local-host/src/generation/learning-points-prompts.ts
+index 79b6889..5bbf526 100644
+--- a/apps/local-host/src/generation/learning-points-prompts.ts
++++ b/apps/local-host/src/generation/learning-points-prompts.ts
+@@ -96,9 +96,9 @@ export function learningPointsPrompts(version = LEARNING_POINTS_PROMPT_VERSION)
+     );
+     if (teaching)
+       parts.push(
+-        compact
+-          ? "Context supports meaning but not invented identities, motives or recording-specific delivery."
+-          : rules.QUALITY_GROUNDING,
++        rules.QUALITY_GROUNDING,
++        rules.DEICTIC_GROUNDING,
++        compact ? (rules.TEACHING_LANGUAGE_CHECKS[p.targetLanguage] ?? "") : "",
+         `Examples per reusable item: ${p.contextualExampleCount}`,
+         enabled.includes("pronunciation")
+           ? rules.PRONUNCIATION + "\n" + rules.pronunciationRules(p.targetLanguage)
+@@ -119,6 +119,7 @@ OR {status:"needs_split",sceneId:string,utteranceGroups:string[][]}
+ OR {status:"blocked",sceneId:string,reason:"single_utterance_exceeds_budget",utteranceIds:[string]}.
+ Use short batch-local IDs for new points, items and chunks (for example p1, r1, c1); never copy or prefix the Host-assigned utterance UUID into new IDs. Chunks/source spans use UTF-16 offsets, exclusive end. No extra fields. New item pointIds only reference new points; existing items are already available. New point utteranceIds only reference assigned utterances. sourceForms text is the exact slices of sourceSpans joined directly or with one space; cueIds derive from spans; use only cues covered by the actual substring. Only frames require pattern; expressions omit pattern. Every assigned cue translated exactly once, in order. All assigned utterance IDs exactly once. AI examples 2-3 lines, exactly exampleCount per item. basic_only requires pointIds: [] (the required field is never omitted); explained requires a nonempty pointIds array.
+ An example is ONE object containing a dialogue array of 2-3 lines. targetLineIndex and targetText belong to that example object, not a line. Never put dialogue lines directly in examples.
++FIELD-LEVEL SOURCE CONTRACT: Without explicit source speaker labels, context.text MUST be an impersonal inventory of topics or speech acts, without participant subjects or pronouns linking turns. Do not narrate "one person explains, then asks" or "the other person responds"; list the account, question, request and reply without assigning them to the same or different people. Apply this even when conversational alternation seems plausible. Translations and utterance meanings must also retain any unresolved role or reference. Deictic references alone do not establish a medium: do not add written text, a screen, a visible object or a perception event. Preserve only the source-supported reference/location in every affected field. The original source remains unchanged; invented situations belong only in AI examples.
+ Illustrative JSON shape only (placeholder content is not source evidence):
+ {"reusableItems":[{"id":"r1","pointIds":["p1"],"kind":"frame","sourceForms":[{"cueIds":["SOURCE_CUE_ID"],"sourceSpans":[{"cueId":"SOURCE_CUE_ID","start":0,"end":17}],"text":"EXACT_SOURCE_FORM"}],"pattern":"ABSTRACT_PATTERN","examples":[{"origin":"ai","situation":"NEW_SITUATION","dialogue":[{"text":"NEW_LINE_ONE","translation":"TRANSLATION_ONE"},{"text":"NEW_LINE_TWO","translation":"TRANSLATION_TWO"}],"targetLineIndex":1,"targetText":"EXACT_SUBSTRING_OF_NEW_LINE_TWO"}]}]}
+ Expression items MUST OMIT the pattern key entirely; do not output a blank or null pattern. Only frame items have a nonempty pattern.
+diff --git a/apps/local-host/src/generation/learning-points-rules.ts b/apps/local-host/src/generation/learning-points-rules.ts
+index 305b042..a8a6d22 100644
+--- a/apps/local-host/src/generation/learning-points-rules.ts
++++ b/apps/local-host/src/generation/learning-points-rules.ts
+@@ -196,6 +196,16 @@ LANGUAGE_CHECKS.vi =
+ LANGUAGE_CHECKS.ja +=
+   " Ambiguous name and omitted report illustration (not additional source evidence): in ミオ、集まりのことを話してた？ / 「時間を教えて」って。, ミオ followed by a comma may be a vocative or an omitted-marked topic. Without labels do not assert which role it has, do not require a third-person-only translation, and do not establish ミオ as the speaker of the next quote. Keep a concise ambiguity note when needed. The reliable claim is that the passage asks about talking about a gathering and quotes a request for the time; って marks quoted content without establishing its speaker. For まだ。ここにある「悪いない」って何？ / 字幕がよくわからない。, keep the known request-for-meaning construction separate from the unclear quoted fragment. ここにある means 'here/the thing here', not 'written here', 'on screen', handwriting or a visible object. Keep the unclear fragment explicit, never infer corrected text or teach it as a reliable expression. A neutral scene summary lists the eating question, the negative reply, the unclear-fragment question and the subtitle-comprehension statement without linking separate unlabelled turns to the same person. Preserve these limits in translations, meanings, contexts, chunks, points and repair replacements. Any rising-intonation advice must explicitly say it is a general possibility, never the recording's delivery or an obligatory rule.";
+ 
++export const DEICTIC_GROUNDING =
++  "DEICTIC REFERENCES: A deictic expression establishes only a reference or location, not that text is written there, visible on a screen or being pointed to. Do not add a medium or perception event in translation, utterance meaning, context or chunks. A separate mention of captions does not identify the physical medium of an unresolved reference. Keep a neutral reference and its uncertainty instead.";
++
++/** Essential morphology checks also apply to compact teaching, without historical case examples. */
++export const TEACHING_LANGUAGE_CHECKS: Partial<Record<keyof typeof LANGUAGES, string>> = {
++  ja: "JAPANESE FRAME CHECK: Reconstruct the complete inflected predicate before abstracting a contraction. A complete [動詞て形] slot includes its final て OR で. In [動詞て形]いた, deleting only auxiliary い gives [動詞て形]た, never [動詞て形省略い]てた or [動詞て形]でた. For a conditional, keep the underlying [動詞て形]いたら or [動詞て形]いれば and explain deletion of い separately. For concession, append も to the complete te-form, not another ても. Check every displayed pattern and explanatory equation by substituting BOTH a て-ending and a で-ending verb; a correct example does not repair an incorrect pattern. A sentence ending or punctuation alone does not establish softness, emotion or recorded intonation; qualify general possibilities by context.",
++};
++TEACHING_LANGUAGE_CHECKS.ja +=
++  " JAPANESE OMITTED ROLES: A sentence-initial name separated by a comma may be a vocative addressing someone, rather than the grammatical subject or topic of the following predicate. Do not turn it into an asserted subject in a scene summary, translation or explanation without evidence. Describe the question's topic without attributing its action to the named person; preserve an unresolved vocative/topic role explicitly when needed. A following quoted utterance also does not establish who originally said it. Comma punctuation and adjacent unlabelled turns are not speaker labels.";
++
+ /** One teaching instruction set; uncertainty is handled locally, without a review stage. */
+ export const SIMPLE_TEACHING = `STAGE: Teach the assigned complete source utterances.
+ Keep scene IDs, requiredUtteranceIds, source text and source spans unchanged. Cover every assigned utterance and translate each assigned cue once in source order. Other cues are context only.
+@@ -203,12 +213,16 @@ Keep scene IDs, requiredUtteranceIds, source text and source spans unchanged. Co
+ Use contextual meaning before technical form. Explain only what helps understanding or reuse at the selected level, within enabled categories. Integrate related vocabulary, grammar and usage rather than filling category quotas. Use core for essential meaning or restrictions, extended only for a distinct useful addition.
+ When translation suffices, use decision:"basic_only", meaning:"", contextExplanation:"", pointIds:[] and omit unnecessary chunks, points, items and examples. Sound labels and ordinary reactions remain in the dialogue without becoming teaching targets. Source uncertainty is an exception: retain a short clarification where essential.
+ 
+-Preserve proper names and recurring character references exactly as written. Context may establish that a token refers to a person without establishing its correct spelling; use that reference normally, preserve the token and omit an uncertain name reading. Do not translate a likely name as an ordinary object or guess corrected kanji. An unresolved word does not invalidate reliable surrounding text: quote it, disclose only the unresolved meaning, and omit teaching or readings that depend on a guess. Never invent speakers, motives, gestures or actual intonation. Omitted arguments and adjacent questions may be understood from supported context; do not invent an exact speaker identity.
++Preserve proper names and recurring character references exactly as written. Context may establish that a token refers to a person without establishing its correct spelling; use that reference normally, preserve the token and omit an uncertain name reading. Do not translate a likely name as an ordinary object or guess corrected kanji. Omitted arguments may be understood when context establishes them, but adjacent unlabelled turns or a name alone do not establish a quoted speaker, gender, recipient or the same person's participation in multiple turns. Keep unresolved roles unspecified or explicitly qualified in EACH affected translation, meaning, context, chunk and point; a later note does not fix a confident earlier claim. In explanation languages with gendered pronouns, do not add a gender absent from the source. Scene context is a neutral inventory of text-supported topics and speech acts, not an imagined visual scene. A question about presence does not establish seeing; caption uncertainty does not establish a screen, writing or a gesture.
++
++An unresolved word does not invalidate reliable surrounding text. Quote the exact fragment with an explicit unclear-source marker in EACH affected translation, meaning, context and chunk meaning, including the utterance meaning when it would otherwise be empty. Do not guess its repair, meaning, grammatical function or reading. Points and reusable sourceForms must exclude the unresolved fragment: cite only an independently reliable surrounding substring and teach only its supported construction. If that cannot be done reliably, omit the point or reusable item, while preserving the complete original utterance and explicit uncertainty in basic fields. Merely repeating the damaged token without a local uncertainty marker is insufficient.
+ 
+ Chunks, when enabled and useful, are meaningful nonoverlapping source spans in order. Points cite exact spans inside their assigned units and explain the complete construction. Preserve inflection, negation, particles and connectors when deriving a reusable frame. Distinguish source forms from dictionary forms and abstract patterns. Reuse an existing point ID only when its meaning and function apply; otherwise create a new point with a short local ID.
+ 
+ Create reusable items only for reliable expressions or frames worth reusing. Supply exactly the requested number of examples per new item: one situation and 2-3 natural dialogue lines with matching translations. Preserve the source's sense, construction and register in a new situation. Expression targets reproduce an exact source form; frame targets instantiate the pattern. targetLineIndex is zero-based and targetText is copied from that dialogue line. Clearly label examples as AI-created through origin:"ai".
+ 
++EXAMPLE ROLE CHECK: Treat each situation and its dialogue as one coherent conversation. Before returning it, track who asks, acts and receives each action. For every yes/no question, check exactly what an affirmative or negative reply confirms and whether the rest of that reply agrees with that actor and event; a short affirmative is not a generic acknowledgement that can reverse the roles. The target speaker's action and timing must match the situation as well as the preceding turn. Revise an incoherent example before returning it; correct grammar or a matching target substring alone is insufficient. These checks concern invented examples and must never supply missing roles or events to the actual source.
++
+ Only provide reliable requested pronunciation; keep complete words and exact source alignment. Omit unsupported optional readings while retaining teaching. If the batch cannot fit, request a partition into smaller atomic groups without dropping assigned utterances.
+ Before returning JSON, check exact coverage, references, enabled categories, source slices, example targets and required arrays.
+ 
+diff --git a/apps/local-host/src/generation/new-workflow.test.ts b/apps/local-host/src/generation/new-workflow.test.ts
+index db7138b..f395b7f 100644
+--- a/apps/local-host/src/generation/new-workflow.test.ts
++++ b/apps/local-host/src/generation/new-workflow.test.ts
+@@ -60,6 +60,29 @@ test("repair sends teaching input once and existing points as a compact index",
+   assert.equal(data.existingPoints[0].reusableItems[0].examples, undefined);
+ });
+ 
++test("compact teaching and structural repair retain source-fidelity and Japanese slot checks", () => {
++  const f = pointsFixture();
++  for (const targetLanguage of ["en", "ja"] as const) {
++    f.request.profile.targetLanguage = targetLanguage;
++    f.request.profile.level = targetLanguage === "ja" ? "N3" : "B1";
++    for (const repair of [undefined, { previousOutput: {}, issues: [] }]) {
++      const prompt = pointsTeachingPrompt(f.request, f.input, 8192, repair);
++      assert.match(prompt, /SCENE CONTEXT: Describe what the text establishes/);
++      assert.match(prompt, /gender/);
++      assert.match(prompt, /EACH affected/);
++      assert.match(prompt, /sourceForms.*exclude the unresolved fragment/);
++      assert.match(prompt, /context\.text MUST be an impersonal inventory/);
++      assert.match(prompt, /DEICTIC REFERENCES:.*location.*written/);
++      assert.match(prompt, /EXAMPLE ROLE CHECK:.*yes\/no/);
++      if (targetLanguage === "ja") {
++        assert.match(prompt, /\[動詞て形\]た/);
++        assert.match(prompt, /BOTH a て-ending and a で-ending/);
++        assert.match(prompt, /vocative/);
++      }
++    }
++  }
++});
++
+ import { mkdtemp, rm } from "node:fs/promises";
+ import { join } from "node:path";
+ import { tmpdir } from "node:os";
+diff --git a/packages/core/src/learning-points.test.ts b/packages/core/src/learning-points.test.ts
+index f08d7e2..f16254c 100644
+--- a/packages/core/src/learning-points.test.ts
++++ b/packages/core/src/learning-points.test.ts
+@@ -39,6 +39,48 @@ test("Japanese complete te-form slots cannot duplicate て in concession frames
+   assert.doesNotThrow(() => validateTeachingBatch(f.raw, f.input, f.request.profile, "batch"));
+ });
+ 
++test("new Japanese teaching rejects a second te-form suffix, including a misleading contraction slot", () => {
++  const f = pointsFixture();
++  f.request.profile.targetLanguage = "ja";
++  f.request.profile.level = "N3";
++  for (const pattern of [
++    "[動詞て形省略い]てた？",
++    "[動詞て形]てた",
++    "[Vて形]＋でた？",
++    "[verb te-form] + てたら",
++  ]) {
++    f.raw.reusableItems[0].pattern = pattern;
++    assert.throws(
++      () => validateTeachingBatch(f.raw, f.input, f.request.profile, "batch"),
++      /invalid_construction/,
++      pattern,
++    );
++  }
++  for (const pattern of ["[動詞て形]た？", "[動詞て形]いた", "[動詞て形]いたら", "〜てた？"]) {
++    f.raw.reusableItems[0].pattern = pattern;
++    assert.doesNotThrow(() => validateTeachingBatch(f.raw, f.input, f.request.profile, "batch"));
++  }
++  f.request.profile.targetLanguage = "en";
++  f.raw.reusableItems[0].pattern = "[動詞て形省略い]てた？";
++  assert.doesNotThrow(() => validateTeachingBatch(f.raw, f.input, f.request.profile, "batch"));
++});
++
++for (const legacy of [
++  { promptVersion: "learning-points-prompts-14", qualityStrategyVersion: "program-validation-1" },
++  { promptVersion: "learning-points-prompts-15", qualityStrategyVersion: "program-validation-2" },
++  { promptVersion: "learning-points-prompts-16", qualityStrategyVersion: "program-validation-2" },
++])
++  test(`${legacy.promptVersion} documents remain readable without applying new teaching-only construction checks`, () => {
++    const f = pointsFixture();
++    f.document.profile.targetLanguage = "ja";
++    f.document.profile.level = "N3";
++    Object.assign(f.document.execution!, legacy);
++    f.document.reusableItems[0].pattern = "[動詞て形省略い]てた？";
++    const before = JSON.stringify(f.document);
++    assert.deepEqual(readLearningDocument(f.document), f.document);
++    assert.equal(JSON.stringify(f.document), before);
++  });
++
+ test("V6 keeps three points, grammar frames without Chunks, and a point with no examples", () => {
+   const { document, input } = pointsFixture();
+   assert.equal(document.points.length, 3);
+diff --git a/packages/core/src/learning-points.ts b/packages/core/src/learning-points.ts
+index 17b83e8..37d3653 100644
+--- a/packages/core/src/learning-points.ts
++++ b/packages/core/src/learning-points.ts
+@@ -315,6 +315,20 @@ function validateTeachingBatchInternal(
+       fail("invalid_point_reference: orphan point");
+   }
+   for (const item of output.reusableItems) {
++    // This is a narrow batch-generation guard, not a general morphology parser.
++    // Persisted compatible lessons keep the validation rules they were saved with.
++    if (
++      checkTeaching &&
++      profile.targetLanguage === "ja" &&
++      item.kind === "frame" &&
++      typeof item.pattern === "string" &&
++      /\[\s*(?:動詞(?:的)?て形|Vて形|verb\s+te[- ]form)(?:\s*省略[「『]?い[」』]?)?\s*\]\s*(?:[+＋]\s*)?[てで]た/iu.test(
++        item.pattern,
++      )
++    )
++      fail(
++        `invalid_construction: frame ${item.id} appends a second て/で after a complete te-form slot. Reconstruct [動詞て形]いた, then omit only auxiliary い to obtain [動詞て形]た. Check both 話していた→話してた and 読んでいた→読んでた. Preserve exact source and examples.`,
++      );
+     if (
+       profile.targetLanguage === "ja" &&
+       item.kind === "frame" &&
+diff --git a/packages/core/src/schema.ts b/packages/core/src/schema.ts
+index 709be22..5833fc6 100644
+--- a/packages/core/src/schema.ts
++++ b/packages/core/src/schema.ts
+@@ -315,9 +315,9 @@ export type ReusableItem = z.infer<typeof ReusableItemSchema>;
+ export type LearningSceneV7 = z.infer<typeof LearningSceneV7Schema>;
+ export type SourceUtterance = z.infer<typeof SourceUtteranceSchema>;
+ export const LEARNING_POINTS_WORKFLOW_VERSION = "learning-points-v7-1";
+-export const LEARNING_POINTS_PROMPT_VERSION = "learning-points-prompts-14";
++export const LEARNING_POINTS_PROMPT_VERSION = "learning-points-prompts-17";
+ export const LANGUAGE_STRATEGY_VERSION = "learning-language-strategies-4";
+-export const QUALITY_STRATEGY_VERSION = "program-validation-1";
++export const QUALITY_STRATEGY_VERSION = "program-validation-2";
+ export const LEVEL_STRATEGY_VERSION = "learning-level-strategies-1";
+ 
+ export const RETIRED_LESSON_MESSAGE = "此教材版本已停止支援，請重新生成";
+@@ -346,7 +346,11 @@ export function readableLearningExecution(value: unknown): boolean {
+     e.schemaVersion === "7" &&
+     e.languageStrategyVersion === LANGUAGE_STRATEGY_VERSION &&
+     e.levelStrategyVersion === LEVEL_STRATEGY_VERSION &&
+-    e.qualityStrategyVersion === "learning-quality-1" &&
+-    ["learning-points-prompts-12", "learning-points-prompts-13"].includes(e.promptVersion)
++    ((e.qualityStrategyVersion === "learning-quality-1" &&
++      ["learning-points-prompts-12", "learning-points-prompts-13"].includes(e.promptVersion)) ||
++      (e.qualityStrategyVersion === "program-validation-1" &&
++        e.promptVersion === "learning-points-prompts-14") ||
++      (e.qualityStrategyVersion === "program-validation-2" &&
++        ["learning-points-prompts-15", "learning-points-prompts-16"].includes(e.promptVersion)))
+   );
+ }

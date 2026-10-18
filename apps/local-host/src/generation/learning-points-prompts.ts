@@ -96,9 +96,9 @@ export function learningPointsPrompts(version = LEARNING_POINTS_PROMPT_VERSION) 
     );
     if (teaching)
       parts.push(
-        compact
-          ? "Context supports meaning but not invented identities, motives or recording-specific delivery."
-          : rules.QUALITY_GROUNDING,
+        rules.QUALITY_GROUNDING,
+        rules.DEICTIC_GROUNDING,
+        compact ? (rules.TEACHING_LANGUAGE_CHECKS[p.targetLanguage] ?? "") : "",
         `Examples per reusable item: ${p.contextualExampleCount}`,
         enabled.includes("pronunciation")
           ? rules.PRONUNCIATION + "\n" + rules.pronunciationRules(p.targetLanguage)
@@ -119,6 +119,7 @@ OR {status:"needs_split",sceneId:string,utteranceGroups:string[][]}
 OR {status:"blocked",sceneId:string,reason:"single_utterance_exceeds_budget",utteranceIds:[string]}.
 Use short batch-local IDs for new points, items and chunks (for example p1, r1, c1); never copy or prefix the Host-assigned utterance UUID into new IDs. Chunks/source spans use UTF-16 offsets, exclusive end. No extra fields. New item pointIds only reference new points; existing items are already available. New point utteranceIds only reference assigned utterances. sourceForms text is the exact slices of sourceSpans joined directly or with one space; cueIds derive from spans; use only cues covered by the actual substring. Only frames require pattern; expressions omit pattern. Every assigned cue translated exactly once, in order. All assigned utterance IDs exactly once. AI examples 2-3 lines, exactly exampleCount per item. basic_only requires pointIds: [] (the required field is never omitted); explained requires a nonempty pointIds array.
 An example is ONE object containing a dialogue array of 2-3 lines. targetLineIndex and targetText belong to that example object, not a line. Never put dialogue lines directly in examples.
+FIELD-LEVEL SOURCE CONTRACT: Without explicit source speaker labels, context.text MUST be an impersonal inventory of topics or speech acts, without participant subjects or pronouns linking turns. Do not narrate "one person explains, then asks" or "the other person responds"; list the account, question, request and reply without assigning them to the same or different people. Apply this even when conversational alternation seems plausible. Translations and utterance meanings must also retain any unresolved role or reference. Deictic references alone do not establish a medium: do not add written text, a screen, a visible object or a perception event. Preserve only the source-supported reference/location in every affected field. The original source remains unchanged; invented situations belong only in AI examples.
 Illustrative JSON shape only (placeholder content is not source evidence):
 {"reusableItems":[{"id":"r1","pointIds":["p1"],"kind":"frame","sourceForms":[{"cueIds":["SOURCE_CUE_ID"],"sourceSpans":[{"cueId":"SOURCE_CUE_ID","start":0,"end":17}],"text":"EXACT_SOURCE_FORM"}],"pattern":"ABSTRACT_PATTERN","examples":[{"origin":"ai","situation":"NEW_SITUATION","dialogue":[{"text":"NEW_LINE_ONE","translation":"TRANSLATION_ONE"},{"text":"NEW_LINE_TWO","translation":"TRANSLATION_TWO"}],"targetLineIndex":1,"targetText":"EXACT_SUBSTRING_OF_NEW_LINE_TWO"}]}]}
 Expression items MUST OMIT the pattern key entirely; do not output a blank or null pattern. Only frame items have a nonempty pattern.

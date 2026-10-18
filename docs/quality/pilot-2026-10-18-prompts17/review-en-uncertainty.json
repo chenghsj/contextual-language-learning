@@ -1,0 +1,27 @@
+{
+  "case": "en-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/pilot-2026-10-18-prompts17/en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/65ac64f4-e087-4fae-adf9-29c92e1956a4.json",
+  "documentHash": "b3a5ddb6669a40199d8fac43b5ae9b1f39fbd252eb157847524a0be707876757",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source roles, summary and damaged text",
+      "result": "The summary is a neutral inventory. She remains the source pronoun, without attribution to Maya. [???] remains explicitly unclear in context, translation and utterance meaning, with no guessed replacement, screen or writing assertion, teaching target or reading."
+    },
+    {
+      "scope": "topic boundaries and examples",
+      "result": "The reported quote and topic shift are separated; the short reply and new question also remain separate. The dinner and package examples have coherent questions/replies and preserve the original Anyway and Not yet functions."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "redundancy",
+      "paths": ["/points/1", "/reusableItems/1"],
+      "quote": "Not yet",
+      "description": "The transparent B1 reply is already translated as 還沒; a separate point and extra example remain avoidable repetition. The explanation and example do not contain an identified material meaning error."
+    }
+  ],
+  "boundary": "Same strict text-only rubric as baseline. No actual audio, video, human/native-speaker certification or learning-effect verification. Original output unchanged."
+}

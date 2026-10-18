@@ -1,0 +1,788 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "9a081186ca0a5d0de0c657017274158508e4e8a89b4756fcd48445516f509ba1",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T04:59:58.530Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 8385.11825,
+        "usage": {
+          "input": 2515,
+          "output": 1445,
+          "reasoning": 1208
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T05:00:01.725Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 3185.864958,
+        "usage": {
+          "input": 2175,
+          "output": 290,
+          "reasoning": 250
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T05:00:28.010Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 26218.503916,
+        "usage": {
+          "input": 4240,
+          "output": 4755,
+          "reasoning": 3619
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "9a081186ca0a5d0de0c657017274158508e4e8a89b4756fcd48445516f509ba1",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "40a7acb8-33f5-45e9-9826-83b92cb37827",
+    "sourceTitle": "en-normal-transfer-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-18T04:59:48.884Z",
+    "updatedAt": "2026-10-18T05:00:28.030Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "40a7acb8-33f5-45e9-9826-83b92cb37827"
+  },
+  "request": {
+    "id": "40a7acb8-33f5-45e9-9826-83b92cb37827",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "en-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "en",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Why are you still here?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "I was about to leave when you called."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Can you wait a minute?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Sure."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "離開前的短暫等待",
+      "context": {
+        "text": "包含詢問為何仍在現場、說明在電話打來前正好正要離開、請求稍等片刻，以及答應等待的回應。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "你怎麼還在這裡？"
+        },
+        {
+          "cueId": "c2",
+          "text": "你打電話來的時候，我正好正要離開。"
+        },
+        {
+          "cueId": "c3",
+          "text": "你能等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "好的。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "d318af72-79a7-42cc-90db-2eae249e816b",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 23
+            }
+          ]
+        },
+        {
+          "id": "ccc070dd-86c5-45b8-81b0-6e35768c73b8",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:c1_1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 2,
+                  "end": 20
+                }
+              ],
+              "meaning": "正好正要離開"
+            },
+            {
+              "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:c1_2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 21,
+                  "end": 36
+                }
+              ],
+              "meaning": "當你打電話來時"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 37
+            }
+          ]
+        },
+        {
+          "id": "9709d53f-ef67-47f5-8310-0273e17240bc",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:c2_1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 8,
+                  "end": 21
+                }
+              ],
+              "meaning": "稍等一下"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "517a5cec-fe53-4203-b3d1-5e2d3e9a99e8",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "d318af72-79a7-42cc-90db-2eae249e816b",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 23
+                  }
+                ]
+              },
+              {
+                "id": "ccc070dd-86c5-45b8-81b0-6e35768c73b8",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 37
+                  }
+                ]
+              },
+              {
+                "id": "9709d53f-ef67-47f5-8310-0273e17240bc",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 22
+                  }
+                ]
+              },
+              {
+                "id": "517a5cec-fe53-4203-b3d1-5e2d3e9a99e8",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 5
+                  }
+                ]
+              }
+            ],
+            "learningValue": "日常生活對話，包含說明剛好正要離開的時態結構「was about to... when...」以及請求對方稍候的實用句型。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "學習「was about to + 原形動詞」搭配 when 子句，表示過去正打算做某事時被其他事情打斷或巧合發生的時態用法。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "學習常見口語短語「wait a minute」，用於請求他人稍等片刻。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "d318af72-79a7-42cc-90db-2eae249e816b",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 23
+              }
+            ]
+          },
+          {
+            "id": "ccc070dd-86c5-45b8-81b0-6e35768c73b8",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 37
+              }
+            ]
+          },
+          {
+            "id": "9709d53f-ef67-47f5-8310-0273e17240bc",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 22
+              }
+            ]
+          },
+          {
+            "id": "517a5cec-fe53-4203-b3d1-5e2d3e9a99e8",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 5
+              }
+            ]
+          }
+        ],
+        "learningValue": "日常生活對話，包含說明剛好正要離開的時態結構「was about to... when...」以及請求對方稍候的實用句型。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "學習「was about to + 原形動詞」搭配 when 子句，表示過去正打算做某事時被其他事情打斷或巧合發生的時態用法。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "學習常見口語短語「wait a minute」，用於請求他人稍等片刻。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "082316fb-76fb-4b77-8c2d-79b6647e12e7",
+        "utteranceIds": [
+          "d318af72-79a7-42cc-90db-2eae249e816b",
+          "ccc070dd-86c5-45b8-81b0-6e35768c73b8",
+          "9709d53f-ef67-47f5-8310-0273e17240bc",
+          "517a5cec-fe53-4203-b3d1-5e2d3e9a99e8"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "離開前的短暫等待",
+            "context": {
+              "text": "包含詢問為何仍在現場、說明在電話打來前正好正要離開、請求稍等片刻，以及答應等待的回應。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "你怎麼還在這裡？"
+              },
+              {
+                "cueId": "c2",
+                "text": "你打電話來的時候，我正好正要離開。"
+              },
+              {
+                "cueId": "c3",
+                "text": "你能等一下嗎？"
+              },
+              {
+                "cueId": "c4",
+                "text": "好的。"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "d318af72-79a7-42cc-90db-2eae249e816b",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 23
+                  }
+                ]
+              },
+              {
+                "id": "ccc070dd-86c5-45b8-81b0-6e35768c73b8",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:c1_1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 2,
+                        "end": 20
+                      }
+                    ],
+                    "meaning": "正好正要離開"
+                  },
+                  {
+                    "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:c1_2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 21,
+                        "end": 36
+                      }
+                    ],
+                    "meaning": "當你打電話來時"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 37
+                  }
+                ]
+              },
+              {
+                "id": "9709d53f-ef67-47f5-8310-0273e17240bc",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:c2_1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 8,
+                        "end": 21
+                      }
+                    ],
+                    "meaning": "稍等一下"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 22
+                  }
+                ]
+              },
+              {
+                "id": "517a5cec-fe53-4203-b3d1-5e2d3e9a99e8",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 5
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:p1",
+              "utteranceIds": [
+                "ccc070dd-86c5-45b8-81b0-6e35768c73b8"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "was about to... when... 的時態用法",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "「be about to + 原形動詞」表示「即將、正要」進行某個動作。過去式「was/were about to... when...」常用於表達過去某個時間點正打算做某事時，巧合發生了另一件事（由 when 引導的過去簡單式子句）。在此處用來說明通話當時剛好正準備離開。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 2,
+                  "end": 36
+                }
+              ]
+            },
+            {
+              "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:p2",
+              "utteranceIds": [
+                "9709d53f-ef67-47f5-8310-0273e17240bc"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "wait a minute",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [],
+              "explanation": "「wait a minute」在口語中表示「稍等一下」或「等我一下」，常用於請求對方給予片刻時間處理手邊事情。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 8,
+                  "end": 21
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:r1",
+              "pointIds": [
+                "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:p1"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 2,
+                      "end": 36
+                    }
+                  ],
+                  "text": "was about to leave when you called"
+                }
+              ],
+              "pattern": "be about to [verb] when [clause]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "說明剛好正要出門時突然有人敲門的狀況。",
+                  "dialogue": [
+                    {
+                      "text": "Are you still at home?",
+                      "translation": "你還在家嗎？"
+                    },
+                    {
+                      "text": "Yes, I was about to go out when someone knocked on the door.",
+                      "translation": "對，有人敲門時我正好正要出門。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "was about to go out when someone knocked on the door"
+                }
+              ]
+            },
+            {
+              "id": "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:r2",
+              "pointIds": [
+                "082316fb-76fb-4b77-8c2d-79b6647e12e7:s0:p2"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 8,
+                      "end": 21
+                    }
+                  ],
+                  "text": "wait a minute"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "在出門前請同行者稍等片刻，以便拿取忘了帶的鑰匙。",
+                  "dialogue": [
+                    {
+                      "text": "We should leave right now.",
+                      "translation": "我們現在該出發了。"
+                    },
+                    {
+                      "text": "Can you wait a minute? I forgot my keys.",
+                      "translation": "你能等一下嗎？我忘了帶鑰匙。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "wait a minute"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

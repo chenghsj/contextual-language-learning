@@ -1,0 +1,20 @@
+{
+  "baseCommit": "a95d558e8abfd3a03e31412fc5e893bc463f0b0e",
+  "scopedPatchHash": "c3d57d31b2922e198ee937be52dc9d1b327eda79635da17b08807d4bb7506294",
+  "result": "passed",
+  "method": "Reconstruct base tracked files in a disposable directory, apply scoped patch, then compare all recorded source hashes. No worktree writes or model calls.",
+  "sourceFilesVerified": [
+    "packages/core/src/schema.ts",
+    "packages/core/src/learning-points.ts",
+    "apps/local-host/scripts/quality-v7-cases.ts",
+    "apps/local-host/scripts/learning-points-quality.ts",
+    "apps/local-host/src/generation/learning-points-rules.ts",
+    "apps/local-host/src/generation/learning-points-prompts.ts",
+    "patches/pi-antigravity@0.10.0.patch",
+    "apps/local-host/src/generation/learning-execution.ts",
+    "apps/local-host/src/generation/learning-candidates.ts",
+    "apps/local-host/src/generation/learning-selection.ts",
+    "apps/local-host/src/generation/learning-teaching.ts",
+    "apps/local-host/src/generation/learning-points-pipeline.ts"
+  ]
+}

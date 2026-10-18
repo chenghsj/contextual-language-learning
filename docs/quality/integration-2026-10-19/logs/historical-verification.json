@@ -1,0 +1,69 @@
+[
+  {
+    "promptVersion": 15,
+    "evidence": "verified",
+    "mode": "frozen historical artifacts only",
+    "sourceDrift": [
+      "promptVersion",
+      "packages/core/src/schema.ts",
+      "packages/core/src/learning-points.ts",
+      "apps/local-host/src/generation/learning-points-rules.ts",
+      "apps/local-host/src/generation/learning-points-prompts.ts"
+    ],
+    "accepted": 2,
+    "cases": 4,
+    "coveragePassed": 4,
+    "semanticPassed": 2,
+    "calls": 12,
+    "sumCaseDurationMs": 405897,
+    "usage": {
+      "input": 40950,
+      "output": 69530,
+      "reasoning": 62103,
+      "cacheRead": 2087
+    },
+    "modelCallsStartedByVerifier": 0
+  },
+  {
+    "promptVersion": 16,
+    "evidence": "verified",
+    "mode": "frozen historical artifacts only",
+    "sourceDrift": [
+      "promptVersion",
+      "packages/core/src/schema.ts",
+      "packages/core/src/learning-points.ts",
+      "apps/local-host/src/generation/learning-points-rules.ts"
+    ],
+    "accepted": 2,
+    "cases": 4,
+    "coveragePassed": 4,
+    "semanticPassed": 2,
+    "calls": 13,
+    "sumCaseDurationMs": 338644,
+    "usage": {
+      "input": 47278,
+      "output": 57519,
+      "reasoning": 49708,
+      "cacheRead": 2087
+    },
+    "modelCallsStartedByVerifier": 0
+  },
+  {
+    "promptVersion": 17,
+    "evidence": "verified",
+    "mode": "frozen historical artifacts only",
+    "sourceDrift": ["packages/core/src/learning-points.ts"],
+    "accepted": 4,
+    "cases": 4,
+    "coveragePassed": 4,
+    "semanticPassed": 4,
+    "calls": 12,
+    "sumCaseDurationMs": 293368,
+    "usage": {
+      "input": 44619,
+      "output": 49555,
+      "reasoning": 42244
+    },
+    "modelCallsStartedByVerifier": 0
+  }
+]

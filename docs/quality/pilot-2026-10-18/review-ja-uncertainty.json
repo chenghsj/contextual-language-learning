@@ -1,0 +1,60 @@
+{
+  "case": "ja-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/pilot-2026-10-18/ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/fe1216a5-5db6-4aac-8638-475b4fa0f331.json",
+  "documentHash": "e9e2338ecce1164d8a4869a82306f5cd39d9200a2464d7923b83a34cff0fbf0d",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "source preservation and structural repairs",
+      "result": "Final cues and pronunciation segment text preserve the fixed input, including こと. ミオ and 悪いない have no guessed name or unclear-token reading. The pipeline used two structural retries, not semantic review or whole-case reruns."
+    },
+    {
+      "scope": "quote/topic boundary, simple reply and reliable surroundings",
+      "result": "The quote and ところで topic switch are separated, and まだ is basic_only without filler points. The reliable って何？ frame can be explained without assigning a meaning to 悪いない. The output does not actually guess a correction or meaning for that token."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "unsupported_inference",
+      "paths": ["/sections/0/translations/1/text", "/sections/0/utterances/1/meaning"],
+      "quote": "她說",
+      "sourceCueIds": ["c1", "c2"],
+      "description": "Neither the Japanese quoted statement nor って establishes a female speaker. The fixed text has no speaker labels, and ミオ、 also leaves the vocative/subject interpretation open. Translation and utterance meaning both assert gender without qualification.",
+      "suggestedDirection": "Preserve the quote with an unspecified reporting subject and mark unresolved references in each affected field."
+    },
+    {
+      "severity": "error",
+      "type": "unsupported_inference",
+      "path": "/sections/0/context/text",
+      "quote": "最後針對畫面上出現的字幕詞彙提出疑問",
+      "sourceCueIds": ["c3", "c4"],
+      "description": "The fixed text mentions here and an unclear caption but supplies no screen or image evidence. The summary asserts a visible screen location. Its earlier phrase also turns the first question about whether the meeting was discussed into an established account of what ミオ said.",
+      "suggestedDirection": "Summarize only the questions and topic shift, preserving unresolved participants and location."
+    },
+    {
+      "severity": "error",
+      "type": "uncertainty_not_preserved",
+      "paths": [
+        "/sections/0/translations/2/text",
+        "/sections/0/utterances/4/meaning",
+        "/reusableItems/3/sourceForms/0/text"
+      ],
+      "quote": "悪いない",
+      "sourceCueIds": ["c3", "c4"],
+      "description": "The affected translation and utterance meaning retain the literal token but do not identify it as unclear. The full damaged quote is also promoted to a reusable source form without a local caveat. This fails the fixed uncertainty gate. The reliable surrounding って何？ construction is valid to teach; the failure does not mean the output invented a meaning for 悪いない.",
+      "suggestedDirection": "Mark the damaged token as unresolved in each affected rendering; teach only reliable surrounding material and avoid promoting the unclear token as a reusable source target."
+    },
+    {
+      "severity": "error",
+      "type": "invalid_construction",
+      "path": "/reusableItems/0/pattern",
+      "quote": "[動詞て形省略い]てた？",
+      "sourceCueIds": ["c1"],
+      "description": "The slot says to use the verb te-form, which already ends in て or で, then appends another てた. 話して + てた produces 話しててた instead of the source 話してた; 読んで + てた likewise fails. A complete te-form slot does not itself contain the auxiliary い to delete. The point explanation correctly reconstructs 話していた, and the concrete example is correct, but they do not repair the contradictory reusable template.",
+      "suggestedDirection": "Use the full underlying [動詞て形]いた and explain deletion of only い, or the resulting [動詞て形]た; check both て- and で-ending substitutions."
+    }
+  ],
+  "boundary": "AI source/editorial screening against this fixed text-only rubric. Coverage failure is not by itself a language error. No audio, native-speaker certification, learning-effect measurement or actual Chrome acceptance."
+}

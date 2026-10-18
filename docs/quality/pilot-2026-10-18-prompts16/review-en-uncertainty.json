@@ -1,0 +1,27 @@
+{
+  "case": "en-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/pilot-2026-10-18-prompts16/en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/d29d809f-1707-44a0-a714-1542c76232dd.json",
+  "documentHash": "ca60ed52f013c5930620484300fd22372bba83a7e8570fa9aa9c4c348672fe09",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "context, roles and unclear token",
+      "result": "The summary is an impersonal inventory. The original she stays a pronoun rather than becoming Maya, and [???] is explicitly unresolved in the affected context, translation and meaning. No screen, handwriting, replacement token or guessed meaning is added; the damaged material is excluded from teaching targets."
+    },
+    {
+      "scope": "boundaries and reusable examples",
+      "result": "The quote/report and topic switch are separate, as are the short reply and new question. Anyway and Not yet examples preserve source function and matching translations."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "redundancy",
+      "paths": ["/points/1", "/reusableItems/1", "/sections/0/utterances/3"],
+      "quote": "Not yet",
+      "description": "For the fixed B1 sample, the translated 還沒 is repeated as a point, chunk and extra example. This is avoidable elementary teaching; no material meaning error was found."
+    }
+  ],
+  "boundary": "Same strict text-only rubric as baseline. No actual audio, video, human/native-speaker certification or learning-effect verification. Original output unchanged."
+}

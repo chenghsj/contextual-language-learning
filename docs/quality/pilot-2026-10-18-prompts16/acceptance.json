@@ -1,0 +1,84 @@
+{
+  "sourceCommit": "a95d558e8abfd3a03e31412fc5e893bc463f0b0e",
+  "scope": "Four fixed single-run cases for this prompt version; counts do not estimate general language accuracy.",
+  "reviewer": "Codex source/editorial inspection, not human/native-speaker certification",
+  "decision": "do_not_expand_to_28_before_fix_and_focused_revalidation",
+  "counts": {
+    "requested": 4,
+    "generated": 4,
+    "structuralPassed": 4,
+    "fixedSourcePassed": 4,
+    "identityPassed": 4,
+    "coveragePassed": 4,
+    "semanticPassed": 2,
+    "accepted": 2
+  },
+  "usage": {
+    "calls": 13,
+    "structuralRepairCalls": 1,
+    "wholeCaseReruns": 0,
+    "providerFallbacks": 0,
+    "sumCaseDurationMs": 338644,
+    "reportedTokens": {
+      "input": 47278,
+      "output": 57519,
+      "reasoning": 49708,
+      "cacheRead": 2087
+    },
+    "callsWithoutUsage": 0,
+    "reasoningIncludedInOutput": true,
+    "billing": "subscription",
+    "monetaryCost": "not reported; no currency estimate inferred"
+  },
+  "cases": [
+    {
+      "case": "en-normal-transfer-automatic",
+      "document": "docs/quality/pilot-2026-10-18-prompts16/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/e82d91c0-3741-4a18-a2c8-5c857b5456e4.json",
+      "documentHash": "76efdb47bb0d094a76c04ff33e07a98e6ae63e618a3ce52cf555cb3b7f84b13d",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "review-en-normal.json",
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "case": "en-uncertainty-quote-topic-automatic",
+      "document": "docs/quality/pilot-2026-10-18-prompts16/en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/d29d809f-1707-44a0-a714-1542c76232dd.json",
+      "documentHash": "ca60ed52f013c5930620484300fd22372bba83a7e8570fa9aa9c4c348672fe09",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "review-en-uncertainty.json",
+      "errors": 0,
+      "warnings": 1
+    },
+    {
+      "case": "ja-normal-transfer-automatic",
+      "document": "docs/quality/pilot-2026-10-18-prompts16/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/1523feee-d185-40ef-876b-65c9a9af1110.json",
+      "documentHash": "375712c87d3e36251b8b1b5d69a14025d738e14c03b330ecf9289c3aec76f7b4",
+      "coverage": "passed",
+      "semantic": "failed",
+      "accepted": false,
+      "review": "review-ja-normal.json",
+      "errors": 1,
+      "warnings": 1
+    },
+    {
+      "case": "ja-uncertainty-quote-topic-automatic",
+      "document": "docs/quality/pilot-2026-10-18-prompts16/ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/9fbcd0e9-27ab-4760-a1b4-2e97fb04a311.json",
+      "documentHash": "8666663999d2b27a1e12723f53c37e486eb35afbfb8bd00591f6cd5a57100098",
+      "coverage": "passed",
+      "semantic": "failed",
+      "accepted": false,
+      "review": "review-ja-uncertainty.json",
+      "errors": 1,
+      "warnings": 0
+    }
+  ],
+  "limits": [
+    "One run per case at this version; any later changed-version trial is recorded separately.",
+    "No actual user Chrome/video acceptance, teacher/native-speaker certification or learning-effect test.",
+    "Original run artifacts unchanged; acceptance recorded separately."
+  ]
+}

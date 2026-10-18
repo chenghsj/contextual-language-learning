@@ -60,6 +60,29 @@ test("repair sends teaching input once and existing points as a compact index", 
   assert.equal(data.existingPoints[0].reusableItems[0].examples, undefined);
 });
 
+test("compact teaching and structural repair retain source-fidelity and Japanese slot checks", () => {
+  const f = pointsFixture();
+  for (const targetLanguage of ["en", "ja"] as const) {
+    f.request.profile.targetLanguage = targetLanguage;
+    f.request.profile.level = targetLanguage === "ja" ? "N3" : "B1";
+    for (const repair of [undefined, { previousOutput: {}, issues: [] }]) {
+      const prompt = pointsTeachingPrompt(f.request, f.input, 8192, repair);
+      assert.match(prompt, /SCENE CONTEXT: Describe what the text establishes/);
+      assert.match(prompt, /gender/);
+      assert.match(prompt, /EACH affected/);
+      assert.match(prompt, /sourceForms.*exclude the unresolved fragment/);
+      assert.match(prompt, /context\.text MUST be an impersonal inventory/);
+      assert.match(prompt, /DEICTIC REFERENCES:.*location.*written/);
+      assert.match(prompt, /EXAMPLE ROLE CHECK:.*yes\/no/);
+      if (targetLanguage === "ja") {
+        assert.match(prompt, /\[動詞て形\]た/);
+        assert.match(prompt, /BOTH a て-ending and a で-ending/);
+        assert.match(prompt, /vocative/);
+      }
+    }
+  }
+});
+
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";

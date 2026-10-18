@@ -1,0 +1,90 @@
+{
+  "cases": [
+    {
+      "case": "en-normal-transfer-automatic",
+      "generation": "generated",
+      "document": "docs/quality/pilot-2026-10-18-prompts16/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/e82d91c0-3741-4a18-a2c8-5c857b5456e4.json",
+      "documentHash": "76efdb47bb0d094a76c04ff33e07a98e6ae63e618a3ce52cf555cb3b7f84b13d",
+      "structural": "passed",
+      "fixedSource": "passed",
+      "identity": "passed",
+      "coverage": "passed",
+      "coverageDiagnostic": null,
+      "durationMs": 67406,
+      "calls": 4,
+      "steps": ["window-0", "selection", "s0", "s0-repair"],
+      "knownUsage": {
+        "input": 14311,
+        "output": 10771,
+        "reasoning": 8296
+      },
+      "callsWithoutUsage": 0,
+      "semantic": "pending separate inspection"
+    },
+    {
+      "case": "en-uncertainty-quote-topic-automatic",
+      "generation": "generated",
+      "document": "docs/quality/pilot-2026-10-18-prompts16/en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/d29d809f-1707-44a0-a714-1542c76232dd.json",
+      "documentHash": "ca60ed52f013c5930620484300fd22372bba83a7e8570fa9aa9c4c348672fe09",
+      "structural": "passed",
+      "fixedSource": "passed",
+      "identity": "passed",
+      "coverage": "passed",
+      "coverageDiagnostic": null,
+      "durationMs": 110468,
+      "calls": 3,
+      "steps": ["window-0", "selection", "s0"],
+      "knownUsage": {
+        "input": 9449,
+        "output": 18939,
+        "reasoning": 17362
+      },
+      "callsWithoutUsage": 0,
+      "semantic": "pending separate inspection"
+    },
+    {
+      "case": "ja-normal-transfer-automatic",
+      "generation": "generated",
+      "document": "docs/quality/pilot-2026-10-18-prompts16/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/1523feee-d185-40ef-876b-65c9a9af1110.json",
+      "documentHash": "375712c87d3e36251b8b1b5d69a14025d738e14c03b330ecf9289c3aec76f7b4",
+      "structural": "passed",
+      "fixedSource": "passed",
+      "identity": "passed",
+      "coverage": "passed",
+      "coverageDiagnostic": null,
+      "durationMs": 46723,
+      "calls": 3,
+      "steps": ["window-0", "selection", "s0"],
+      "knownUsage": {
+        "input": 10354,
+        "output": 7278,
+        "reasoning": 5602,
+        "cacheRead": 2087
+      },
+      "callsWithoutUsage": 0,
+      "semantic": "pending separate inspection"
+    },
+    {
+      "case": "ja-uncertainty-quote-topic-automatic",
+      "generation": "generated",
+      "document": "docs/quality/pilot-2026-10-18-prompts16/ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/9fbcd0e9-27ab-4760-a1b4-2e97fb04a311.json",
+      "documentHash": "8666663999d2b27a1e12723f53c37e486eb35afbfb8bd00591f6cd5a57100098",
+      "structural": "passed",
+      "fixedSource": "passed",
+      "identity": "passed",
+      "coverage": "passed",
+      "coverageDiagnostic": null,
+      "durationMs": 114047,
+      "calls": 3,
+      "steps": ["window-0", "selection", "s0"],
+      "knownUsage": {
+        "input": 13164,
+        "output": 20531,
+        "reasoning": 18448
+      },
+      "callsWithoutUsage": 0,
+      "semantic": "pending separate inspection"
+    }
+  ],
+  "note": "Program/coverage checks only; semantic acceptance remains separate. Reasoning is a subset of output; do not sum it again."
+}

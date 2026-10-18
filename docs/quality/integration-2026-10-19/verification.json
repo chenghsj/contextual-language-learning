@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-19",
+  "timezone": "Asia/Taipei",
+  "baseCommit": "e0053b2cb580d2ae6c2cc93d35e683f3f681ac3d",
+  "promptVersion": "learning-points-prompts-17",
+  "qualityStrategyVersion": "program-validation-2",
+  "snapshot": "isolated commit candidate",
+  "unitTests": {
+    "passed": 230,
+    "failed": 0
+  },
+  "workspaceTypecheck": "passed",
+  "qualityToolTypecheck": "passed",
+  "productionBuild": {
+    "extension": "passed",
+    "nativeHost": "passed"
+  },
+  "extensionAssets": "passed",
+  "hostStdioSmoke": "passed",
+  "readerPreview": {
+    "passed": 12,
+    "standardization": 8,
+    "selectionInteraction": 4,
+    "widths": [320, 480],
+    "themes": ["light", "dark"],
+    "engine": "headless Chrome",
+    "source": "synthetic fixture; simulated playback"
+  },
+  "prepareOnly": {
+    "cases": 28,
+    "languages": 14,
+    "modelCalls": 0
+  },
+  "historicalPilotVerification": "All four raw manifests retain byte hashes; prompts-15/16/17 historical verifiers passed.",
+  "historicalPrompts17": {
+    "accepted": 4,
+    "cases": 4,
+    "review": "Codex AI editorial review at its original frozen source",
+    "sourceDrift": ["packages/core/src/learning-points.ts"]
+  },
+  "semanticAcceptanceForIntegratedRuntime": "not reassessed with fresh inference",
+  "newInferenceCalls": 0,
+  "installedHostUpdated": false,
+  "personalChromeSessionUsed": false,
+  "realVideoAcceptance": "deferred",
+  "unrelatedWorktreePathsProtected": 229,
+  "formatCheck": "passed across isolated candidate"
+}

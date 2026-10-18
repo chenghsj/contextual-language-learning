@@ -1,0 +1,23 @@
+{
+  "sourceCommit": "a95d558e8abfd3a03e31412fc5e893bc463f0b0e",
+  "sourceState": "Uncommitted scoped fix over sourceCommit; see source-change.patch and exact hashes. Other worktree changes excluded from patch.",
+  "sourceChangeHash": "8e2a9e68b65acb61d917035f1d158707f785df99ca9caffc841b8cbd2de0ef69",
+  "coreHashes": {
+    "packages/core/src/schema.ts": "5ab84a0edb0af131c5f90cc625c300c4bb6730d11652721b2ffb9fdb90bc8a4d",
+    "packages/core/src/learning-points.ts": "f520a223f1ed3c50a25b060e92019a008a9e3243483771e540e2dc893627a2dc"
+  },
+  "caseCount": 4,
+  "caseIds": [
+    "en-normal-transfer-automatic",
+    "en-uncertainty-quote-topic-automatic",
+    "ja-normal-transfer-automatic",
+    "ja-uncertainty-quote-topic-automatic"
+  ],
+  "baseline": "../pilot-2026-10-18",
+  "fixedRequestsMatchBaselineExceptIds": true,
+  "plan": "One live run per fixed case at prompts-16 after a substantive field-contract fix; preserve all prompts-15 results. No automatic same-version whole-case reruns, model fallback or 28-case expansion.",
+  "chromeAcceptance": "deferred",
+  "semanticReview": "pending separate Codex source/editorial inspection; not native-speaker certification",
+  "runnerHash": "58162e1d202d754de3b0dba744c72f176366592090de486c68b4852877ff1814",
+  "previousRound": "../pilot-2026-10-18-prompts15"
+}

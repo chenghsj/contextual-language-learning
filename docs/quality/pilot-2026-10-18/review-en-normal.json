@@ -1,0 +1,31 @@
+{
+  "case": "en-normal-transfer-automatic",
+  "document": "docs/quality/pilot-2026-10-18/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/7dd98341-e363-41df-a22d-554fb180d1ef.json",
+  "documentHash": "7c1cd7f338bf3c16698d410af0148eadde86988380b226fb3d285f26b1949c13",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "all four source translations and section context",
+      "result": "Meaning and dialogue order preserved; no claim that leaving was definitively cancelled. Context uses unnamed participants supported by the exchange."
+    },
+    {
+      "scope": "points[0], reusableItems[0]",
+      "result": "Imminent departure and past viewpoint are retained. The new office example instantiates be about to without presenting its invented office setting as source evidence."
+    },
+    {
+      "scope": "points[1], reusableItems[1]",
+      "result": "wait a minute is explained as a short wait rather than exact timing, and the two-line example retains the same request sense."
+    },
+    {
+      "scope": "utterances for c1 and c4",
+      "result": "Basic question/acknowledgement have no filler point, chunk or example; Sure remains a basic response."
+    },
+    {
+      "scope": "source forms, examples and readings",
+      "result": "Source forms are unchanged; each new item has one explicitly AI-created dialogue example. Readings are consistent with general dictionary pronunciation, not verification of recorded audio."
+    }
+  ],
+  "issues": [],
+  "boundary": "One short fixed sample only; not a stability, learning-effect or real-browser acceptance claim."
+}

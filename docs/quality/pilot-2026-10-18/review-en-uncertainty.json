@@ -1,0 +1,45 @@
+{
+  "case": "en-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/pilot-2026-10-18/en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/c5f8fd72-b3e3-446e-ad12-7f9acc3c95d4.json",
+  "documentHash": "8bcec6eaef37d3278c2e7af5347fc8ec5abed5802bf4861165c3fb36d05778d5",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "all translations, points and examples",
+      "result": "Source spelling and unclear marker are retained; tell me the time and Anyway are explained coherently. AI example targets preserve the selected constructions."
+    },
+    {
+      "scope": "c2/c3 units and unclear fragment",
+      "result": "Topic/quote and simple-response/question boundaries are exercised. The unknown marker is not a learning point or reusable target."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "unsupported_inference",
+      "path": "/sections/0/context/text",
+      "quote": "討論到 Maya 是否提及會議，並轉述其詢問時間的話語",
+      "sourceCueIds": ["c1", "c2"],
+      "description": "The summary uses 其 after Maya, attributing the quoted request to Maya without preserving the fixed case's unresolved she reference. The source provides no speaker labels and does not establish this named identity.",
+      "suggestedDirection": "Use a neutral inventory: asks whether Maya discussed the meeting, then reports a request for the time; do not name or bind the quote speaker."
+    },
+    {
+      "severity": "error",
+      "type": "unsupported_inference",
+      "path": "/sections/0/utterances/4/contextExplanation",
+      "quote": "說話者針對畫面中無法辨識的字詞 [???] 提出疑問",
+      "sourceCueIds": ["c3", "c4"],
+      "description": "The input says here and caption, but provides no screen or image evidence. 畫面中 adds a specific visual location that this imported text does not establish.",
+      "suggestedDirection": "Keep the uncertain token and refer neutrally to 此處／原文；the following caption statement can be mentioned as text evidence."
+    },
+    {
+      "severity": "warning",
+      "type": "redundancy",
+      "paths": ["/points/2", "/reusableItems/2", "/sections/0/utterances/3"],
+      "quote": "Not yet 的簡短回應用法",
+      "description": "For this B1 sample the transparent reply is already covered by 還沒; a point, chunk and extra example add avoidable basic-response teaching. No factual language error was found in the explanation."
+    }
+  ],
+  "boundary": "Flags follow this run's fixed source-fidelity rubric; not native-speaker certification. Original generated output is unchanged and was not rerun."
+}

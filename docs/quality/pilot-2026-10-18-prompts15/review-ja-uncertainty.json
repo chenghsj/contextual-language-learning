@@ -1,0 +1,36 @@
+{
+  "case": "ja-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/pilot-2026-10-18-prompts15/ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/d345352c-fad9-4153-98eb-8c084ead7a45.json",
+  "documentHash": "1c50f5e5e3603c2b1ebbef257b6b49e137de69e645f4c67f5d42f7b97e6b622c",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "gender, unclear-source handling and reusable template",
+      "result": "The quote is now translated without a female subject. The unclear token is locally marked in context, translation and utterance meaning and excluded from points/items/readings. The contraction is expanded correctly and the resulting [動詞て形]た pattern works for both て- and で-ending forms."
+    },
+    {
+      "scope": "boundaries, examples and readings",
+      "result": "The quote/topic and reply/new-question boundaries are separate; まだ has no filler teaching. Example targets instantiate their frames. The source kana name reading is a direct script rendering, not a guessed kanji spelling. No audio was checked."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "unsupported_inference",
+      "paths": ["/sections/0/translations/2/text", "/sections/0/utterances/4/meaning"],
+      "quote": "這裡寫著的",
+      "sourceCueIds": ["c3", "c4"],
+      "description": "The affected fields expand a deictic reference into written text at that location. The fixed source establishes here and an unclear caption but does not identify the referent as writing here. Local uncertainty markers for the damaged token do not remove this separate assertion.",
+      "suggestedDirection": "Keep the deictic reference neutral, without adding a medium, writing event or visual scene."
+    },
+    {
+      "severity": "warning",
+      "type": "style",
+      "path": "/reusableItems/2/examples/0/dialogue/0/text",
+      "quote": "會議",
+      "description": "The newly created Japanese example uses the old-form character 會 rather than contemporary 会. Prefer standard contemporary target-language spelling in learning examples; this is separate from preserving original source characters."
+    }
+  ],
+  "boundary": "Same strict text-only rubric as baseline. No actual audio, video, human/native-speaker certification or learning-effect verification. Original output unchanged."
+}

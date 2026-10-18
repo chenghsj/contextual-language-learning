@@ -1,0 +1,27 @@
+{
+  "case": "ja-normal-transfer-automatic",
+  "document": "docs/quality/pilot-2026-10-18-prompts17/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/172b52aa-ed69-49a5-8c5c-2ee619844826.json",
+  "documentHash": "a2e198aed0c885737bb0a76a9b8b591a3d29fbcf1f831aabee6a4d47ab610a6a",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source context, translation and temporal relation",
+      "result": "The summary lists speech acts without seeing, asserted emotion or speaker linking. The original imminent-departure sense is preserved, and possible plan changes are explicitly qualified instead of asserted as a necessary cancellation."
+    },
+    {
+      "scope": "frames, example roles and response",
+      "result": "Both displayed patterns instantiate correctly. The meeting/message example now has a consistent message recipient explaining a delayed read; its answer does not confirm an incompatible actor. The key request/reply is also coherent. うん stays basic_only without extra teaching, and source/reading alignment is retained."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "style",
+      "paths": ["/points/0/explanation", "/points/2/explanation"],
+      "quote": "上升語調",
+      "description": "General tone advice and claims of greater friendliness should be explicitly qualified by context and possible delivery; they do not certify this recording. No actual audio was checked."
+    }
+  ],
+  "boundary": "Same strict text-only rubric as baseline. No actual audio, video, human/native-speaker certification or learning-effect verification. Original output unchanged."
+}

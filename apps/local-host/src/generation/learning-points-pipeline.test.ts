@@ -212,6 +212,38 @@ test("missing utterances and malformed output get exactly one repair before fail
     await rm(root, { recursive: true, force: true });
   }
 });
+test("malformed Japanese contraction template receives the existing single structural repair", async () => {
+  const root = await mkdtemp(join(tmpdir(), "cll-ja-frame-repair-"));
+  try {
+    const f = pointsFixture();
+    f.request.profile.targetLanguage = "ja";
+    f.request.profile.level = "N3";
+    const g = generators(f),
+      storage = localStoragePorts(root);
+    let calls = 0;
+    const manager = new JobManager(
+      {
+        storage,
+        ...g,
+        generateSection: async (agent, prompt) => {
+          const raw = await g.generateSection(agent, prompt);
+          raw.reusableItems[0].pattern =
+            ++calls === 1 ? "[動詞て形省略い]てた？" : "[動詞て形]た？";
+          if (calls === 2) assert.match(prompt, /invalid_construction/);
+          return raw;
+        },
+      },
+      () => {},
+    );
+    const document = await manager.start(f.request.id, f.request);
+    assert.equal(calls, 2);
+    assert.equal(document.reusableItems[0].pattern, "[動詞て形]た？");
+    assert.deepEqual((await storage.documents.get(document.id))?.cues, f.request.cues);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("14 languages and 17 level strategies; Detailed never changes candidate/selection input", () => {
   const f = pointsFixture();
   const levels = new Set<string>();
@@ -904,6 +936,9 @@ test("retired prompt versions cannot enter a new pipeline", () => {
     "learning-points-prompts-9",
     "learning-points-prompts-10",
     "learning-points-prompts-12",
+    "learning-points-prompts-14",
+    "learning-points-prompts-15",
+    "learning-points-prompts-16",
   ]) {
     assert.equal(supportsLearningPointsPromptVersion(version), false);
     assert.throws(() => learningPointsPrompts(version), /Unsupported/);
@@ -988,107 +1023,112 @@ test("valid teaching with uncertainty completes in one call without quality revi
   }
 });
 
-test("resuming a legacy quality block regenerates only unfinished teaching and retains completed batches", async () => {
-  const root = await mkdtemp(join(tmpdir(), "cll-simple-resume-"));
-  try {
-    const f = pointsFixture(),
-      storage = localStoragePorts(root),
-      g = generators(f);
-    let firstCalls = 0,
-      failedDraft: any;
-    const manager = new JobManager(
-      {
-        storage,
-        ...g,
-        generateSection: async (a, prompt) => {
-          const data = teachingData(prompt);
-          if (data.requiredUtteranceIds.length > 1)
-            return {
-              status: "needs_split",
-              sceneId: data.scene.id,
-              utteranceGroups: data.requiredUtteranceIds.map((id: string) => [id]),
-            };
-          const raw = await g.generateSection(a, prompt);
-          if (data.requiredUtteranceIds[0] === data.scene.utterances[0].id) {
-            firstCalls++;
-            return raw;
-          }
-          failedDraft = raw;
-          throw new Error("injected unfinished batch");
-        },
-      },
-      () => {},
-    );
-    await assert.rejects(manager.start(f.request.id, f.request));
-    const before = await storage.jobs.get(f.request.id);
-    assert.ok(before?.schemaVersion === 5);
-    const completed = structuredClone(before.learningPlan.batches[0]);
-    await storage.jobs.update(f.request.id, job => {
-      assert.ok(job.schemaVersion === 5 && job.execution);
-      const execution = {
-        ...job.execution,
-        promptVersion: "learning-points-prompts-13",
-        qualityStrategyVersion: "learning-quality-1",
-      };
-      const batches = job.learningPlan.batches.map(b => {
-        if (b.result) return b;
-        const scene = job.learningPlan.selected!.find(s => s.id === b.sceneId)!;
-        const evidence = new Set([...scene.dialogueCueIds, ...scene.contextCueIds]);
-        const results = job.learningPlan.batches.flatMap(part =>
-          part.result ? [part.result] : [],
-        );
-        const input = {
-          scene,
-          requiredUtteranceIds: b.utteranceIds,
-          sourceWindow: job.request.cues.filter(c => evidence.has(c.id)),
-          existingPoints: results.flatMap(r => r.points),
-          existingReusableItems: results.flatMap(r => r.reusableItems),
-        };
-        const hash = (value: unknown) =>
-          createHash("sha256").update(JSON.stringify(value)).digest("hex");
-        return {
-          ...b,
-          quality: {
-            phase: "blocked" as const,
-            repairEligible: false,
-            risks: [],
-            diagnostic: "Major issues remain after one repair",
-            draft: failedDraft,
-            inputHash: hash({ input, profile: job.request.profile, agent: job.request.agent }),
-            draftHash: hash(failedDraft),
-            originalDraftHash: hash(failedDraft),
+for (const legacy of [
+  { promptVersion: "learning-points-prompts-13", qualityStrategyVersion: "learning-quality-1" },
+  { promptVersion: "learning-points-prompts-14", qualityStrategyVersion: "program-validation-1" },
+  { promptVersion: "learning-points-prompts-15", qualityStrategyVersion: "program-validation-2" },
+  { promptVersion: "learning-points-prompts-16", qualityStrategyVersion: "program-validation-2" },
+])
+  test(`resuming ${legacy.promptVersion} retains completed batches and regenerates only unfinished teaching`, async () => {
+    const root = await mkdtemp(join(tmpdir(), "cll-simple-resume-"));
+    try {
+      const f = pointsFixture(),
+        storage = localStoragePorts(root),
+        g = generators(f);
+      let firstCalls = 0,
+        failedDraft: any;
+      const manager = new JobManager(
+        {
+          storage,
+          ...g,
+          generateSection: async (a, prompt) => {
+            const data = teachingData(prompt);
+            if (data.requiredUtteranceIds.length > 1)
+              return {
+                status: "needs_split",
+                sceneId: data.scene.id,
+                utteranceGroups: data.requiredUtteranceIds.map((id: string) => [id]),
+              };
+            const raw = await g.generateSection(a, prompt);
+            if (data.requiredUtteranceIds[0] === data.scene.utterances[0].id) {
+              firstCalls++;
+              return raw;
+            }
+            failedDraft = raw;
+            throw new Error("injected unfinished batch");
           },
+        },
+        () => {},
+      );
+      await assert.rejects(manager.start(f.request.id, f.request));
+      const before = await storage.jobs.get(f.request.id);
+      assert.ok(before?.schemaVersion === 5);
+      const completed = structuredClone(before.learningPlan.batches[0]);
+      await storage.jobs.update(f.request.id, job => {
+        assert.ok(job.schemaVersion === 5 && job.execution);
+        const execution = {
+          ...job.execution,
+          ...legacy,
+        };
+        const batches = job.learningPlan.batches.map(b => {
+          if (b.result || legacy.qualityStrategyVersion !== "learning-quality-1") return b;
+          const scene = job.learningPlan.selected!.find(s => s.id === b.sceneId)!;
+          const evidence = new Set([...scene.dialogueCueIds, ...scene.contextCueIds]);
+          const results = job.learningPlan.batches.flatMap(part =>
+            part.result ? [part.result] : [],
+          );
+          const input = {
+            scene,
+            requiredUtteranceIds: b.utteranceIds,
+            sourceWindow: job.request.cues.filter(c => evidence.has(c.id)),
+            existingPoints: results.flatMap(r => r.points),
+            existingReusableItems: results.flatMap(r => r.reusableItems),
+          };
+          const hash = (value: unknown) =>
+            createHash("sha256").update(JSON.stringify(value)).digest("hex");
+          return {
+            ...b,
+            quality: {
+              phase: "blocked" as const,
+              repairEligible: false,
+              risks: [],
+              diagnostic: "Major issues remain after one repair",
+              draft: failedDraft,
+              inputHash: hash({ input, profile: job.request.profile, agent: job.request.agent }),
+              draftHash: hash(failedDraft),
+              originalDraftHash: hash(failedDraft),
+            },
+          };
+        });
+        return {
+          ...job,
+          execution,
+          summary: { ...job.summary, execution },
+          learningPlan: { ...job.learningPlan, batches },
         };
       });
-      return {
-        ...job,
-        execution,
-        summary: { ...job.summary, execution },
-        learningPlan: { ...job.learningPlan, batches },
-      };
-    });
-    const calls: string[][] = [];
-    const resumed = new JobManager(
-      {
-        storage,
-        ...g,
-        generateSection: async (a, prompt) => {
-          calls.push(teachingData(prompt).requiredUtteranceIds);
-          return g.generateSection(a, prompt);
+      const calls: string[][] = [];
+      const resumed = new JobManager(
+        {
+          storage,
+          ...g,
+          generateSection: async (a, prompt) => {
+            calls.push(teachingData(prompt).requiredUtteranceIds);
+            return g.generateSection(a, prompt);
+          },
         },
-      },
-      () => {},
-    );
-    const doc = await resumed.resume(f.request.id, f.request.id);
-    assert.equal(firstCalls, 1);
-    assert.deepEqual(calls, [before.learningPlan.batches[1].utteranceIds]);
-    const after = await storage.jobs.get(f.request.id);
-    assert.ok(after?.schemaVersion === 5);
-    assert.deepEqual(after.learningPlan.batches[0], completed);
-    assert.equal(after.learningPlan.batches[1].quality, undefined);
-    assert.equal(doc.sections[0].utterances.length, 2);
-    assert.equal(doc.execution!.previousExecution?.promptVersion, "learning-points-prompts-13");
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
+        () => {},
+      );
+      const doc = await resumed.resume(f.request.id, f.request.id);
+      assert.equal(firstCalls, 1);
+      assert.deepEqual(calls, [before.learningPlan.batches[1].utteranceIds]);
+      const after = await storage.jobs.get(f.request.id);
+      assert.ok(after?.schemaVersion === 5);
+      assert.deepEqual(after.learningPlan.batches[0], completed);
+      assert.equal(after.learningPlan.batches[1].quality, undefined);
+      assert.equal(doc.sections[0].utterances.length, 2);
+      assert.equal(doc.execution!.previousExecution?.promptVersion, legacy.promptVersion);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });

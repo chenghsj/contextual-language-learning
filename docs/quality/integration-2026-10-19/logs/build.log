@@ -1,0 +1,41 @@
+
+> contextual-language-learning@0.1.0 build /private/tmp/cll-quality-integration-e7psq1l3/source
+> pnpm --filter @contextual/extension build && pnpm --filter @contextual/local-host build
+
+
+> @contextual/extension@0.1.0 build /private/tmp/cll-quality-integration-e7psq1l3/source/apps/extension
+> vite build && node scripts/build-content.mjs
+
+vite v6.4.3 building for production...
+transforming...
+✓ 2031 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/sidepanel.html                                0.61 kB │ gzip:   0.37 kB
+dist/assets/sidepanel-15zmR4x-.css                69.22 kB │ gzip:  12.96 kB
+dist/assets/alert-dialog-8VEA2wgm.js               3.26 kB │ gzip:   1.16 kB
+dist/background.js                                 4.36 kB │ gzip:   1.93 kB
+dist/assets/speech-settings-BzQi51Kx.js            5.13 kB │ gzip:   2.04 kB
+dist/assets/drive-backup-settings-Bak-eLtY.js      6.38 kB │ gzip:   2.03 kB
+dist/assets/siri-voice-downloads-CxyhfYYk.js      10.75 kB │ gzip:   3.85 kB
+dist/assets/pi-settings-CL2ZVC2D.js               14.34 kB │ gzip:   5.10 kB
+dist/assets/subtitle-editor-Crwp36Z8.js           15.11 kB │ gzip:   5.87 kB
+dist/assets/custom-viewer-QDbliBS7.js            133.96 kB │ gzip:  42.10 kB
+dist/assets/notification-navigation-Bu8uL6W7.js  215.65 kB │ gzip:  61.26 kB
+dist/assets/sidepanel-ic7EdwqV.js                909.18 kB │ gzip: 293.38 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.40s
+
+> @contextual/local-host@0.1.0 build /private/tmp/cll-quality-integration-e7psq1l3/source/apps/local-host
+> node scripts/build.mjs
+
+
+  dist/native-host.mjs  15.9mb ⚠️
+
+⚡ Done in 636ms
+Built macOS system speech helper (arm64 + x86_64, macOS 13+).
+Built Siri speech helper (Apple Silicon, macOS 26+).

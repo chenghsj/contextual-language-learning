@@ -1,0 +1,23 @@
+{
+  "algorithm": "sha256",
+  "scope": "Original runner metadata, scoped source patch, jobs and generated JSON/Markdown. Reviews and verification summaries excluded.",
+  "files": {
+    "conditions.json": "27ec4b3c579cf5750fcbe622ef52c1d7cd42f9e4085845d29f5f622159b37338",
+    "en-normal-transfer-automatic/jobs/c2352002-37bb-4a1d-9d3a-98edadcf9992.json": "069364c720e0e78a1a65eca52f9189bd7489dd0bc3a39a40d7d28cef16ae126b",
+    "en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/c2352002-37bb-4a1d-9d3a-98edadcf9992.json": "15e18ca4dc4f0b1a693af8dc2b096beaeb5cc130d4acac6fbc25ba42f8d977e1",
+    "en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/c2352002-37bb-4a1d-9d3a-98edadcf9992.md": "56c91345c6c3eb8eefbcb659de9b11e72f34b1633cfbb84212871e2c3bc0485e",
+    "en-uncertainty-quote-topic-automatic/jobs/d5f2c8aa-eb8e-4761-858e-cc4ef8abed66.json": "713eb735480de67f847a3775d114e95162ce56831731a309c04331f4315a8a08",
+    "en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/d5f2c8aa-eb8e-4761-858e-cc4ef8abed66.json": "f85f7ec89fc46477be6be1e7ab61565b1b501a693e969292b5eb47c0bebadda5",
+    "en-uncertainty-quote-topic-automatic/videos/en-uncertainty-quote-topic-automatic--55b7d3d08f65ffff/d5f2c8aa-eb8e-4761-858e-cc4ef8abed66.md": "03fc3b252e22cb7c0f29528404a6fb380fdb8a8844a1bafa070038dd9b21c01f",
+    "ja-normal-transfer-automatic/jobs/8bcbb9ca-4571-450a-842d-2a2cf2c1afed.json": "de1e37ce463d72c6f2bb1cbcdb86f82e2595f744ff9e286896f6957c56c79bab",
+    "ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/8bcbb9ca-4571-450a-842d-2a2cf2c1afed.json": "26beefeed2b6dc4c0d8ce5234a935e424030aa61bc324b5b1d2ca3ee742049ef",
+    "ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/8bcbb9ca-4571-450a-842d-2a2cf2c1afed.md": "4e2c5ca1f2e21293979fcc3a07b694dfd24528f7e6aa5d033071ee17cf45e7ad",
+    "ja-uncertainty-quote-topic-automatic/jobs/d345352c-fad9-4153-98eb-8c084ead7a45.json": "879ce489106c4dd30251125a1ddff234ec9c6610de50fa8d8e9a9e2822bc794e",
+    "ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/d345352c-fad9-4153-98eb-8c084ead7a45.json": "1c50f5e5e3603c2b1ebbef257b6b49e137de69e645f4c67f5d42f7b97e6b622c",
+    "ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/d345352c-fad9-4153-98eb-8c084ead7a45.md": "a71a3a1504ad82521b3cbbcf53dc18ce4fc805ec37a2f6406ad1aca224ad033d",
+    "report.json": "fbec4a520514c3cba05166e59fa0f52f285b1efd83e9088db1951e31f80ecc44",
+    "requests.json": "264623c1d79627248639558aea654b03e083f102aa2ce225c94314d389d9c02d",
+    "run-context.json": "7aff42cc64eb63595714b6fdb04906e67992d9c6e8d332eb96e1c1f6a6bffe7b",
+    "source-change.patch": "f7684fba8f2eacba894a712674e38b1a358dfadfc565becc207040958650c721"
+  }
+}

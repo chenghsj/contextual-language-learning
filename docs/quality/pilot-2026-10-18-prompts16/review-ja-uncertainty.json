@@ -1,0 +1,29 @@
+{
+  "case": "ja-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/pilot-2026-10-18-prompts16/ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/9fbcd0e9-27ab-4760-a1b4-2e97fb04a311.json",
+  "documentHash": "8666663999d2b27a1e12723f53c37e486eb35afbfb8bd00591f6cd5a57100098",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "deictic reference, quote speaker and damaged token",
+      "result": "Translations and meanings now preserve a neutral 這裡 reference, without written text or screen imagery. The quote has no invented female speaker. 悪いない is locally marked as unclear and excluded from points/items/readings."
+    },
+    {
+      "scope": "contraction and examples",
+      "result": "The contraction reconstructs 話していた and uses [動詞て形]た, with coherent new conversations. Source names and cues are retained; the short negative response has no filler points."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "unsupported_inference",
+      "path": "/sections/0/context/text",
+      "quote": "詢問ミオ是否提過聚會的事",
+      "sourceCueIds": ["c1"],
+      "description": "The summary makes ミオ the subject of the reported talking. The comma-delimited initial name in this unlabelled Japanese question may instead be a vocative; the fixed text does not establish this subject. Keeping the comma in the translation does not repair the separate summary assertion.",
+      "suggestedDirection": "Describe the question topic without assigning a subject; preserve the unresolved vocative/topic role where needed."
+    }
+  ],
+  "boundary": "Same strict text-only rubric as baseline. No actual audio, video, human/native-speaker certification or learning-effect verification. Original output unchanged."
+}

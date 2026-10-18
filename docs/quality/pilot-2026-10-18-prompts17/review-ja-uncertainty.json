@@ -1,0 +1,31 @@
+{
+  "case": "ja-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/pilot-2026-10-18-prompts17/ja-uncertainty-quote-topic-automatic/videos/ja-uncertainty-quote-topic-automatic--4cc9ee6008d764be/31c7ef32-b422-4b12-8472-a86a6af3e610.json",
+  "documentHash": "45913ef392e872fbae357c66aa5641992e984484ecc96a6b4e8bec3551e02b8d",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "vocative/topic ambiguity and reported speech",
+      "result": "The summary no longer makes ミオ the subject of talking or the speaker of the next quote. Translation preserves the comma-delimited name without assigning a named reporting subject or gender; meanings and points do not reintroduce that role."
+    },
+    {
+      "scope": "deictic reference and unclear fragment",
+      "result": "The translation and meaning use neutral 這裡/此處, without a screen or writing event. 悪いない remains explicitly unresolved in each affected field. No guessed correction, meaning or source reading is added. The reliable って何 frame cites only that suffix, excluding the damaged token."
+    },
+    {
+      "scope": "contraction, source coverage and examples",
+      "result": "[動詞て形]いた contracts to [動詞て形]た without repeating て. The new conversations instantiate the contraction, topic shift and meaning-question constructions, with consistent roles and translations. The simple まだ reply has no filler points or examples."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "terminology",
+      "path": "/points/0/explanation",
+      "quote": "省略輔助動詞「い」",
+      "description": "Prefer explicitly saying that only い inside the auxiliary form いた is omitted. The displayed underlying form, contraction and reusable pattern are correct, so this is a wording-precision warning rather than a malformed-construction failure."
+    }
+  ],
+  "boundary": "Same strict text-only rubric as baseline. No actual audio, video, human/native-speaker certification or learning-effect verification. Original output unchanged."
+}

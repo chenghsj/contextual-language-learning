@@ -1,0 +1,19 @@
+{
+  "case": "en-normal-transfer-automatic",
+  "document": "docs/quality/pilot-2026-10-18-prompts17/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/40a7acb8-33f5-45e9-9826-83b92cb37827.json",
+  "documentHash": "c690e2759ffe2da46b8f5b5bb3440809495753201a6b7992accccacbc8daf363",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; no native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source fidelity and timing",
+      "result": "The summary lists speech acts without assigning one speaker across the account, request and reply. The source remains about imminent departure at the time of the call, with no asserted cancellation or visible interaction. Sure stays basic_only without filler."
+    },
+    {
+      "scope": "constructions and example roles",
+      "result": "be about to ... when ... and wait a minute retain their source senses and valid targets. The yes reply confirms still being home, not causing the knock; the situation and both turns agree. The keys example also has consistent requester and waiting roles. AI-created scenarios are not imported into source explanations."
+    }
+  ],
+  "issues": [],
+  "boundary": "Same strict text-only rubric as baseline. No actual audio, video, human/native-speaker certification or learning-effect verification. Original output unchanged."
+}

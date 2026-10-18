@@ -39,6 +39,48 @@ test("Japanese complete te-form slots cannot duplicate て in concession frames 
   assert.doesNotThrow(() => validateTeachingBatch(f.raw, f.input, f.request.profile, "batch"));
 });
 
+test("new Japanese teaching rejects a second te-form suffix, including a misleading contraction slot", () => {
+  const f = pointsFixture();
+  f.request.profile.targetLanguage = "ja";
+  f.request.profile.level = "N3";
+  for (const pattern of [
+    "[動詞て形省略い]てた？",
+    "[動詞て形]てた",
+    "[Vて形]＋でた？",
+    "[verb te-form] + てたら",
+  ]) {
+    f.raw.reusableItems[0].pattern = pattern;
+    assert.throws(
+      () => validateTeachingBatch(f.raw, f.input, f.request.profile, "batch"),
+      /invalid_construction/,
+      pattern,
+    );
+  }
+  for (const pattern of ["[動詞て形]た？", "[動詞て形]いた", "[動詞て形]いたら", "〜てた？"]) {
+    f.raw.reusableItems[0].pattern = pattern;
+    assert.doesNotThrow(() => validateTeachingBatch(f.raw, f.input, f.request.profile, "batch"));
+  }
+  f.request.profile.targetLanguage = "en";
+  f.raw.reusableItems[0].pattern = "[動詞て形省略い]てた？";
+  assert.doesNotThrow(() => validateTeachingBatch(f.raw, f.input, f.request.profile, "batch"));
+});
+
+for (const legacy of [
+  { promptVersion: "learning-points-prompts-14", qualityStrategyVersion: "program-validation-1" },
+  { promptVersion: "learning-points-prompts-15", qualityStrategyVersion: "program-validation-2" },
+  { promptVersion: "learning-points-prompts-16", qualityStrategyVersion: "program-validation-2" },
+])
+  test(`${legacy.promptVersion} documents remain readable without applying new teaching-only construction checks`, () => {
+    const f = pointsFixture();
+    f.document.profile.targetLanguage = "ja";
+    f.document.profile.level = "N3";
+    Object.assign(f.document.execution!, legacy);
+    f.document.reusableItems[0].pattern = "[動詞て形省略い]てた？";
+    const before = JSON.stringify(f.document);
+    assert.deepEqual(readLearningDocument(f.document), f.document);
+    assert.equal(JSON.stringify(f.document), before);
+  });
+
 test("V6 keeps three points, grammar frames without Chunks, and a point with no examples", () => {
   const { document, input } = pointsFixture();
   assert.equal(document.points.length, 3);
