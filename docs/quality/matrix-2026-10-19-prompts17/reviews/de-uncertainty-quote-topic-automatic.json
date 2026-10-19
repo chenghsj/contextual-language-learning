@@ -1,0 +1,27 @@
+{
+  "case": "de-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-2/de-uncertainty-quote-topic-automatic/videos/de-uncertainty-quote-topic-automatic--e195c461c947287b/98307d1a-5819-4f49-b087-5e9ecefefb1c.json",
+  "documentHash": "760247563359f6a34a78e9f3790c31b0ecb1ddfc3b69944f49c90025b6b6ca6a",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source identity and unclear reference",
+      "result": "sie remains the source feminine pronoun without being identified as Maya. Summary lists source content rather than linking unlabelled turns to one participant. hier remains here; [???] is explicitly unresolved in summary, translation and affected unit meaning, with no guessed correction or reusable target."
+    },
+    {
+      "scope": "construction, boundary and new dialogues",
+      "result": "Reported quotation and Übrigens topic change are separate. sprechen über + accusative, the perfect-tense verb frame, and topic-switch function match the source. The new discussion, phone-number request and report-progress dialogues have consistent actors, referents and yes/no answers. The damaged fragment is not taught."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "redundancy",
+      "paths": ["/points/2", "/reusableItems/2"],
+      "quote": "Noch nicht",
+      "description": "The transparent short reply is already translated as 還沒, yet receives a separate core point and reusable dialogue. The explanation and example are correct; the additional teaching is avoidable repetition at B1."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

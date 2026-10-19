@@ -1,0 +1,19 @@
+{
+  "case": "ms-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-3/ms-uncertainty-quote-topic-automatic/videos/ms-uncertainty-quote-topic-automatic--1ed9691ee319e893/a4e52fc4-c1a5-4cd0-b99c-c74cc5ce400d.json",
+  "documentHash": "60501067f0cba5f6fedeb53b2bad3cfdf1e027ebf19651385b0c148302df891d",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source roles and local uncertainty",
+      "result": "The quotation is rendered with neutral 對方/其. The possible connection of -nya to Maya is explicitly qualified rather than asserted, and no gender is added to the source. [???] is locally marked unclear in summary, translation and affected meaning/context; di sini is not turned into a physical medium. Source spelling is retained."
+    },
+    {
+      "scope": "teaching and example coherence",
+      "result": "perjumpaan, katanya, the sudah/belum aspect contrast and sari kata match the reliable source substrings. The meeting-attendance, teacher-message, report-progress and subtitle-size examples have consistent actors, targets and translations. Invented teacher gender stays in the AI example; the original source remains unspecified. The unknown fragment is not a point or reusable target."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

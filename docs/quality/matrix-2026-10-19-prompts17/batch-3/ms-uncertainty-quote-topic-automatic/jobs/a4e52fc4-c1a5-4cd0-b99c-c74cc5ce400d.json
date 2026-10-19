@@ -1,0 +1,1435 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "6b1528fafac8e36c56454dcdc55a37a1cbc780f2d53e21df23d7ee4b1f017d9a",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:22:20.643Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 33775.42083300004,
+        "usage": {
+          "input": 2712,
+          "output": 4677,
+          "reasoning": 4330
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:22:29.239Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 8585.781041999988,
+        "usage": {
+          "input": 2406,
+          "output": 1196,
+          "reasoning": 1158
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:24:21.552Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 112300.34616599994,
+        "usage": {
+          "input": 4538,
+          "output": 17772,
+          "reasoning": 15833
+        }
+      },
+      {
+        "step": "s0-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:25:20.069Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 58497.61249999993,
+        "usage": {
+          "input": 6748,
+          "output": 9548,
+          "reasoning": 7075
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "6b1528fafac8e36c56454dcdc55a37a1cbc780f2d53e21df23d7ee4b1f017d9a",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "a4e52fc4-c1a5-4cd0-b99c-c74cc5ce400d",
+    "sourceTitle": "ms-uncertainty-quote-topic-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-18T17:21:45.888Z",
+    "updatedAt": "2026-10-18T17:25:20.117Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "a4e52fc4-c1a5-4cd0-b99c-c74cc5ce400d"
+  },
+  "request": {
+    "id": "a4e52fc4-c1a5-4cd0-b99c-c74cc5ce400d",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "ms-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "ms",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Maya bercakap tentang perjumpaan itu?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“Tolong beritahu waktunya,” katanya. Oh ya, sudah makan?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Belum. Apa maksud [???] di sini?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Sari kata itu tidak jelas."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "aa1231b6-fa04-41de-820c-c9c612fc2288",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "關於會面與字幕的對話",
+      "context": {
+        "text": "對話包含詢問 Maya 是否談及會面、轉述「請告知時間」的請求、轉換話題詢問是否用餐與簡短否定回應、對此處標記為「[???]」之未明內容含義的疑問，以及說明字幕不清楚的陳述。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Maya 有談到那次會面嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「請告知時間，」對方說道。對了，吃過了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡標記為「[???]」之未明內容是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "那個字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "68c495b2-acd0-47a4-92cd-2b80717804dd",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c1"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c1_k1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 4
+                }
+              ],
+              "meaning": "Maya（人名）"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c1_k2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 5,
+                  "end": 21
+                }
+              ],
+              "meaning": "談到、談論"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c1_k3",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 22,
+                  "end": 32
+                }
+              ],
+              "meaning": "會面、聚會"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c1_k4",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 33,
+                  "end": 36
+                }
+              ],
+              "meaning": "那次"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 37
+            }
+          ]
+        },
+        {
+          "id": "6ea4073a-9519-48ad-8f04-50b8e7b30181",
+          "meaning": "「請告知時間，」其說道。",
+          "contextExplanation": "句中「katanya」為第三人稱引述，後綴「-nya」在語境中可能指前文提及的 Maya，但字面上僅標示第三人稱。",
+          "contextCueIds": [
+            "c1",
+            "c2"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 1,
+                  "end": 7
+                }
+              ],
+              "meaning": "請"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 8,
+                  "end": 16
+                }
+              ],
+              "meaning": "告知、告訴"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 17,
+                  "end": 25
+                }
+              ],
+              "meaning": "其時間"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k4",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 28,
+                  "end": 35
+                }
+              ],
+              "meaning": "其說道"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 37
+            }
+          ]
+        },
+        {
+          "id": "85f4fdc7-6360-4464-a045-a4eb4fb4a64c",
+          "meaning": "對了，吃過了嗎？",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c2"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k5",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 37,
+                  "end": 42
+                }
+              ],
+              "meaning": "對了、噢對"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k6",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 44,
+                  "end": 49
+                }
+              ],
+              "meaning": "已經"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k7",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 50,
+                  "end": 55
+                }
+              ],
+              "meaning": "吃飯"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 37,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "1dd98893-bd1f-46ab-a9cc-7a5bc7f81477",
+          "meaning": "還沒。",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c3"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c3_k1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 5
+                }
+              ],
+              "meaning": "還沒"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 7
+            }
+          ]
+        },
+        {
+          "id": "56a6e3b7-e9d9-49f7-b8fa-c9bff0ee2318",
+          "meaning": "這裡標記為「[???]」之未明內容是什麼意思？",
+          "contextExplanation": "語句包含未明的原話片段「[???]」，其確切詞義無法判定。",
+          "contextCueIds": [
+            "c3"
+          ],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 7,
+              "end": 32
+            }
+          ]
+        },
+        {
+          "id": "ac6500e7-f718-4a88-ba19-d030e0de3499",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c4"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p4"
+          ],
+          "chunks": [
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c4_k1",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 0,
+                  "end": 9
+                }
+              ],
+              "meaning": "字幕"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c4_k2",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 10,
+                  "end": 13
+                }
+              ],
+              "meaning": "那個"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c4_k3",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 14,
+                  "end": 19
+                }
+              ],
+              "meaning": "不"
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c4_k4",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 20,
+                  "end": 25
+                }
+              ],
+              "meaning": "清楚"
+            }
+          ],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 26
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "aa1231b6-fa04-41de-820c-c9c612fc2288",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "68c495b2-acd0-47a4-92cd-2b80717804dd",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 37
+                  }
+                ]
+              },
+              {
+                "id": "6ea4073a-9519-48ad-8f04-50b8e7b30181",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 37
+                  }
+                ]
+              },
+              {
+                "id": "85f4fdc7-6360-4464-a045-a4eb4fb4a64c",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 37,
+                    "end": 56
+                  }
+                ]
+              },
+              {
+                "id": "1dd98893-bd1f-46ab-a9cc-7a5bc7f81477",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 7
+                  }
+                ]
+              },
+              {
+                "id": "56a6e3b7-e9d9-49f7-b8fa-c9bff0ee2318",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 7,
+                    "end": 32
+                  }
+                ]
+              },
+              {
+                "id": "ac6500e7-f718-4a88-ba19-d030e0de3499",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 26
+                  }
+                ]
+              }
+            ],
+            "learningValue": "掌握日常對話中的引述表達、話題轉換、以 sudah/belum 進行的問答呼應，以及派生名詞與形容詞否定句式。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "引述他人說話的結構「katanya」與名詞後綴「-nya」在句中的指代功能"
+              },
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c2",
+                  "c3"
+                ],
+                "description": "使用「sudah...」詢問進展並以「Belum」作簡短回應的日常問答習慣"
+              },
+              {
+                "category": "vocabulary",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "由詞根 jumpa 加上前後綴構成的名詞 perjumpaan 以及與 bercakap tentang 的搭配"
+              },
+              {
+                "category": "vocabulary",
+                "sourceCueIds": [
+                  "c4"
+                ],
+                "description": "名詞片語 sari kata（字幕）與否定詞 tidak 修飾形容詞 jelas 的用法"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "aa1231b6-fa04-41de-820c-c9c612fc2288",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "68c495b2-acd0-47a4-92cd-2b80717804dd",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 37
+              }
+            ]
+          },
+          {
+            "id": "6ea4073a-9519-48ad-8f04-50b8e7b30181",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 37
+              }
+            ]
+          },
+          {
+            "id": "85f4fdc7-6360-4464-a045-a4eb4fb4a64c",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 37,
+                "end": 56
+              }
+            ]
+          },
+          {
+            "id": "1dd98893-bd1f-46ab-a9cc-7a5bc7f81477",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 7
+              }
+            ]
+          },
+          {
+            "id": "56a6e3b7-e9d9-49f7-b8fa-c9bff0ee2318",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 7,
+                "end": 32
+              }
+            ]
+          },
+          {
+            "id": "ac6500e7-f718-4a88-ba19-d030e0de3499",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 26
+              }
+            ]
+          }
+        ],
+        "learningValue": "掌握日常對話中的引述表達、話題轉換、以 sudah/belum 進行的問答呼應，以及派生名詞與形容詞否定句式。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "引述他人說話的結構「katanya」與名詞後綴「-nya」在句中的指代功能"
+          },
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c2",
+              "c3"
+            ],
+            "description": "使用「sudah...」詢問進展並以「Belum」作簡短回應的日常問答習慣"
+          },
+          {
+            "category": "vocabulary",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "由詞根 jumpa 加上前後綴構成的名詞 perjumpaan 以及與 bercakap tentang 的搭配"
+          },
+          {
+            "category": "vocabulary",
+            "sourceCueIds": [
+              "c4"
+            ],
+            "description": "名詞片語 sari kata（字幕）與否定詞 tidak 修飾形容詞 jelas 的用法"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "aa1231b6-fa04-41de-820c-c9c612fc2288",
+        "utteranceIds": [
+          "68c495b2-acd0-47a4-92cd-2b80717804dd",
+          "6ea4073a-9519-48ad-8f04-50b8e7b30181",
+          "85f4fdc7-6360-4464-a045-a4eb4fb4a64c",
+          "1dd98893-bd1f-46ab-a9cc-7a5bc7f81477",
+          "56a6e3b7-e9d9-49f7-b8fa-c9bff0ee2318",
+          "ac6500e7-f718-4a88-ba19-d030e0de3499"
+        ],
+        "repairAttempted": true,
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "aa1231b6-fa04-41de-820c-c9c612fc2288",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "關於會面與字幕的對話",
+            "context": {
+              "text": "對話包含詢問 Maya 是否談及會面、轉述「請告知時間」的請求、轉換話題詢問是否用餐與簡短否定回應、對此處標記為「[???]」之未明內容含義的疑問，以及說明字幕不清楚的陳述。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "Maya 有談到那次會面嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "「請告知時間，」對方說道。對了，吃過了嗎？"
+              },
+              {
+                "cueId": "c3",
+                "text": "還沒。這裡標記為「[???]」之未明內容是什麼意思？"
+              },
+              {
+                "cueId": "c4",
+                "text": "那個字幕不清楚。"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "68c495b2-acd0-47a4-92cd-2b80717804dd",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c1"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c1_k1",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 0,
+                        "end": 4
+                      }
+                    ],
+                    "meaning": "Maya（人名）"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c1_k2",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 5,
+                        "end": 21
+                      }
+                    ],
+                    "meaning": "談到、談論"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c1_k3",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 22,
+                        "end": 32
+                      }
+                    ],
+                    "meaning": "會面、聚會"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c1_k4",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 33,
+                        "end": 36
+                      }
+                    ],
+                    "meaning": "那次"
+                  }
+                ],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 37
+                  }
+                ]
+              },
+              {
+                "id": "6ea4073a-9519-48ad-8f04-50b8e7b30181",
+                "meaning": "「請告知時間，」其說道。",
+                "contextExplanation": "句中「katanya」為第三人稱引述，後綴「-nya」在語境中可能指前文提及的 Maya，但字面上僅標示第三人稱。",
+                "contextCueIds": [
+                  "c1",
+                  "c2"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 1,
+                        "end": 7
+                      }
+                    ],
+                    "meaning": "請"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 8,
+                        "end": 16
+                      }
+                    ],
+                    "meaning": "告知、告訴"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k3",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 17,
+                        "end": 25
+                      }
+                    ],
+                    "meaning": "其時間"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k4",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 28,
+                        "end": 35
+                      }
+                    ],
+                    "meaning": "其說道"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 37
+                  }
+                ]
+              },
+              {
+                "id": "85f4fdc7-6360-4464-a045-a4eb4fb4a64c",
+                "meaning": "對了，吃過了嗎？",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c2"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p3"
+                ],
+                "chunks": [
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k5",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 37,
+                        "end": 42
+                      }
+                    ],
+                    "meaning": "對了、噢對"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k6",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 44,
+                        "end": 49
+                      }
+                    ],
+                    "meaning": "已經"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c2_k7",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 50,
+                        "end": 55
+                      }
+                    ],
+                    "meaning": "吃飯"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 37,
+                    "end": 56
+                  }
+                ]
+              },
+              {
+                "id": "1dd98893-bd1f-46ab-a9cc-7a5bc7f81477",
+                "meaning": "還沒。",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c3"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p3"
+                ],
+                "chunks": [
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c3_k1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 5
+                      }
+                    ],
+                    "meaning": "還沒"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 7
+                  }
+                ]
+              },
+              {
+                "id": "56a6e3b7-e9d9-49f7-b8fa-c9bff0ee2318",
+                "meaning": "這裡標記為「[???]」之未明內容是什麼意思？",
+                "contextExplanation": "語句包含未明的原話片段「[???]」，其確切詞義無法判定。",
+                "contextCueIds": [
+                  "c3"
+                ],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 7,
+                    "end": 32
+                  }
+                ]
+              },
+              {
+                "id": "ac6500e7-f718-4a88-ba19-d030e0de3499",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c4"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p4"
+                ],
+                "chunks": [
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c4_k1",
+                    "spans": [
+                      {
+                        "cueId": "c4",
+                        "start": 0,
+                        "end": 9
+                      }
+                    ],
+                    "meaning": "字幕"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c4_k2",
+                    "spans": [
+                      {
+                        "cueId": "c4",
+                        "start": 10,
+                        "end": 13
+                      }
+                    ],
+                    "meaning": "那個"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c4_k3",
+                    "spans": [
+                      {
+                        "cueId": "c4",
+                        "start": 14,
+                        "end": 19
+                      }
+                    ],
+                    "meaning": "不"
+                  },
+                  {
+                    "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:c4_k4",
+                    "spans": [
+                      {
+                        "cueId": "c4",
+                        "start": 20,
+                        "end": 25
+                      }
+                    ],
+                    "meaning": "清楚"
+                  }
+                ],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 26
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p1",
+              "utteranceIds": [
+                "68c495b2-acd0-47a4-92cd-2b80717804dd"
+              ],
+              "category": "vocabulary",
+              "presentation": "core",
+              "title": "perjumpaan（會面、聚會）",
+              "sourceCueIds": [
+                "c1"
+              ],
+              "contextCueIds": [
+                "c1"
+              ],
+              "explanation": "「perjumpaan」是由動詞詞根「jumpa」（遇見）加上前後綴「per-...-an」構成的名詞，表示「會面」或「聚會」這一事件或場合。常與介詞「tentang」（關於）搭配。",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 22,
+                  "end": 32
+                }
+              ]
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p2",
+              "utteranceIds": [
+                "6ea4073a-9519-48ad-8f04-50b8e7b30181"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "katanya（引述他人話語）",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [
+                "c1",
+                "c2"
+              ],
+              "explanation": "「katanya」由「kata」（說）結合第三人稱後綴「-nya」構成，常用於直接或間接引述，意思是「其說道」、「據其表示」。在句中置於引言後，標明該話語為轉述內容。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 28,
+                  "end": 35
+                }
+              ]
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p3",
+              "utteranceIds": [
+                "85f4fdc7-6360-4464-a045-a4eb4fb4a64c",
+                "1dd98893-bd1f-46ab-a9cc-7a5bc7f81477"
+              ],
+              "category": "usage",
+              "presentation": "core",
+              "title": "sudah 與 belum 的時態問答呼應",
+              "sourceCueIds": [
+                "c2",
+                "c3"
+              ],
+              "contextCueIds": [
+                "c2",
+                "c3"
+              ],
+              "explanation": "以「sudah...」（已經……了嗎？）詢問某事是否完成時，若尚未發生，慣用的自然回應是「Belum」（還沒），而非單純否定詞「tidak」。「Belum」明確表達「目前尚未完成」的體貌狀態。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 44,
+                  "end": 49
+                },
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 5
+                }
+              ]
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p4",
+              "utteranceIds": [
+                "ac6500e7-f718-4a88-ba19-d030e0de3499"
+              ],
+              "category": "vocabulary",
+              "presentation": "core",
+              "title": "sari kata（字幕）",
+              "sourceCueIds": [
+                "c4"
+              ],
+              "contextCueIds": [
+                "c4"
+              ],
+              "explanation": "「sari kata」指影視作品的「字幕」。否定後方修飾的形容詞「jelas」（清楚）時，使用修飾形容詞與動詞的否定詞「tidak」。",
+              "sourceSpans": [
+                {
+                  "cueId": "c4",
+                  "start": 0,
+                  "end": 9
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:r1",
+              "pointIds": [
+                "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p1"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c1"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c1",
+                      "start": 22,
+                      "end": 32
+                    }
+                  ],
+                  "text": "perjumpaan"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩位同事確認下午會議的出席情況。",
+                  "dialogue": [
+                    {
+                      "text": "Adakah awak akan hadir ke perjumpaan itu?",
+                      "translation": "你會出席那次會面嗎？"
+                    },
+                    {
+                      "text": "Ya, saya akan datang tepat pada masanya.",
+                      "translation": "會的，我會準時到達。"
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "perjumpaan"
+                }
+              ]
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:r2",
+              "pointIds": [
+                "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p2"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 28,
+                      "end": 35
+                    }
+                  ],
+                  "text": "katanya"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "一位同學向另一位轉述老師的通知。",
+                  "dialogue": [
+                    {
+                      "text": "“Kelas esok bermula awal,” katanya.",
+                      "translation": "「明天的課提早開始，」他說道。"
+                    },
+                    {
+                      "text": "Baiklah, terima kasih kerana memberitahu saya.",
+                      "translation": "好的，謝謝你告訴我。"
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "katanya"
+                }
+              ]
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:r3",
+              "pointIds": [
+                "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p3"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 44,
+                      "end": 55
+                    }
+                  ],
+                  "text": "sudah makan"
+                }
+              ],
+              "pattern": "sudah [kata kerja]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩位朋友在圖書館詢問彼此作業進度。",
+                  "dialogue": [
+                    {
+                      "text": "Awak sudah hantar laporan itu?",
+                      "translation": "你已經交出那份報告了嗎？"
+                    },
+                    {
+                      "text": "Belum, saya masih menyemaknya.",
+                      "translation": "還沒，我還在檢查。"
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "sudah hantar"
+                }
+              ]
+            },
+            {
+              "id": "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:r4",
+              "pointIds": [
+                "aa1231b6-fa04-41de-820c-c9c612fc2288:s0:p4"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c4"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c4",
+                      "start": 0,
+                      "end": 9
+                    }
+                  ],
+                  "text": "Sari kata"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩位朋友準備觀賞外語紀錄片。",
+                  "dialogue": [
+                    {
+                      "text": "Sari kata video ini terlalu kecil.",
+                      "translation": "這部影片的字幕太小了。"
+                    },
+                    {
+                      "text": "Biar saya besarkan saiznya.",
+                      "translation": "讓我把字體調大一點。"
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "Sari kata"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

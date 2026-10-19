@@ -1,0 +1,549 @@
+{
+  "id": "528376ec-2682-4157-810c-e2ec9b258080",
+  "createdAt": "2026-10-18T17:20:05.421Z",
+  "source": {
+    "platform": "import",
+    "title": "zh-TW-uncertainty-quote-topic-automatic"
+  },
+  "profile": {
+    "targetLanguage": "zh-TW",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "c512fe033bdc268d8edf1e864ed17c4237d75d5289d67237c566239f82247fee",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:20:42.334Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 36092.455707999994,
+        "usage": {
+          "input": 2583,
+          "output": 5387,
+          "reasoning": 5083
+        }
+      },
+      {
+        "step": "window-0-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:21:14.304Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 31960.662415999977,
+        "usage": {
+          "input": 2647,
+          "output": 4725,
+          "reasoning": 4412
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:21:21.175Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 6859.907999999996,
+        "usage": {
+          "input": 2418,
+          "output": 904,
+          "reasoning": 864
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:22:47.229Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 86040.9325,
+        "usage": {
+          "input": 4574,
+          "output": 12958,
+          "reasoning": 11286
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "ミオ有提到聚會嗎？"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "「請告訴我時間」，是這麼說的。對了，吃飯了嗎？"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "還沒。這裡的[???]是什麼意思？"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "字幕不清楚。"
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "5ed25f5c-f23d-45d7-bde1-8d5b0769d624",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "聚會詢問與對話理解",
+      "context": {
+        "text": "這段對話包含詢問ミオ是否提到聚會、引述「請告訴我時間」的發言內容、轉換話題詢問是否用餐、回答尚未，以及詢問這裡的「[???]」（原文未明）是什麼意思、說明字幕不清楚。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "ミオ有提到聚會嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「請告訴我時間」，是這麼說的。對了，吃飯了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡的「[???]」（原文未明）是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "a1ae6749-4458-4c42-935c-950623718f6b",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p1"
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "id": "16d8238f-65b9-4c7d-881c-0f4dbfe63685",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p2"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 15
+            }
+          ]
+        },
+        {
+          "id": "5ebcdc89-0527-4afb-a66c-e158cd9c494f",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p3"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 15,
+              "end": 23
+            }
+          ]
+        },
+        {
+          "id": "c75b28ee-a769-44cb-a66d-c49a354527cd",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "id": "55d1b27d-425e-4d5f-8f05-2de0b5b5c7bc",
+          "meaning": "詢問這裡的「[???]」（原文未明）是什麼意思。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p4"
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 3,
+              "end": 17
+            }
+          ]
+        },
+        {
+          "id": "934c5893-e355-4967-924e-16815b1c7cbc",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 6
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p1",
+      "utteranceIds": [
+        "a1ae6749-4458-4c42-935c-950623718f6b"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "「有」＋動詞表示確認事情是否發生",
+      "sourceCueIds": [
+        "c1"
+      ],
+      "contextCueIds": [],
+      "explanation": "在動詞前加上「有」，常用於肯定或疑問句中，用來確認某動作或事件是否確實發生過。",
+      "sourceSpans": [
+        {
+          "cueId": "c1",
+          "start": 2,
+          "end": 5
+        }
+      ]
+    },
+    {
+      "id": "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p2",
+      "utteranceIds": [
+        "16d8238f-65b9-4c7d-881c-0f4dbfe63685"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "「是這麼說的」表示轉述引述內容",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "接在引述的談話或語句後面，表示前述內容是某人原話或大致說過的話，常用於口語轉述。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 9,
+          "end": 14
+        }
+      ]
+    },
+    {
+      "id": "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p3",
+      "utteranceIds": [
+        "5ebcdc89-0527-4afb-a66c-e158cd9c494f"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "「對了」用於轉移話題或忽然想起某事",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "口語中用來轉換交談話題，或在對話中忽然想起另一件事時順勢提出。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 15,
+          "end": 17
+        }
+      ]
+    },
+    {
+      "id": "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p4",
+      "utteranceIds": [
+        "55d1b27d-425e-4d5f-8f05-2de0b5b5c7bc"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "「是什麼意思」用於詢問詞意或含義",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "用於詢問某個詞語、句子或表現所代表的含義或意圖。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 11,
+          "end": 16
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:r1",
+      "pointIds": [
+        "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 2,
+              "end": 5
+            }
+          ],
+          "text": "有提到"
+        }
+      ],
+      "pattern": "有＋[動詞]",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在辦公室確認同事是否已經寄送文件。",
+          "dialogue": [
+            {
+              "text": "你有通知大家明天的集合時間嗎？",
+              "translation": "你有通知大家明天的集合時間嗎？"
+            },
+            {
+              "text": "我剛才已經有通知了，大家都知道。",
+              "translation": "我剛才已經有通知了，大家都知道。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "有通知"
+        }
+      ]
+    },
+    {
+      "id": "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:r2",
+      "pointIds": [
+        "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 9,
+              "end": 14
+            }
+          ],
+          "text": "是這麼說的"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "轉述老師對明天考試範圍的說明。",
+          "dialogue": [
+            {
+              "text": "老師剛才有說明天要考哪一課嗎？",
+              "translation": "老師剛才有說明天要考哪一課嗎？"
+            },
+            {
+              "text": "「只考第三課」，是這麼說的。",
+              "translation": "「只考第三課」，是這麼說的。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "是這麼說的"
+        }
+      ]
+    },
+    {
+      "id": "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:r3",
+      "pointIds": [
+        "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p3"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 15,
+              "end": 17
+            }
+          ],
+          "text": "對了"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "聊完工作後突然想起要歸還借來的東西。",
+          "dialogue": [
+            {
+              "text": "今天的文件都處理好了。",
+              "translation": "今天的文件都處理好了"
+            },
+            {
+              "text": "辛苦了！對了，這本書先還給你。",
+              "translation": "辛苦了！對了，這本書先還給你。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "對了"
+        }
+      ]
+    },
+    {
+      "id": "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:r4",
+      "pointIds": [
+        "5ed25f5c-f23d-45d7-bde1-8d5b0769d624:s0:p4"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 11,
+              "end": 16
+            }
+          ],
+          "text": "是什麼意思"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "閱讀文章時向朋友詢問不懂的生詞。",
+          "dialogue": [
+            {
+              "text": "這個詞我第一次看到，是什麼意思？",
+              "translation": "這個詞我第一次看到，是什麼意思？"
+            },
+            {
+              "text": "那是「馬上出發」的意思。",
+              "translation": "那是「馬上出發」的意思。"
+            }
+          ],
+          "targetLineIndex": 0,
+          "targetText": "是什麼意思"
+        }
+      ]
+    }
+  ]
+}

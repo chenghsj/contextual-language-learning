@@ -1,0 +1,424 @@
+{
+  "id": "020fe616-b451-4085-821e-654fc431d743",
+  "createdAt": "2026-10-18T17:06:51.100Z",
+  "source": {
+    "platform": "import",
+    "title": "it-normal-transfer-automatic"
+  },
+  "profile": {
+    "targetLanguage": "it",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "a08a5f43d7a2d4fd27762d3a54e24e682dd652eb9b4d1432e28d718de7304e18",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:06:58.010Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 5953.766040999995,
+        "usage": {
+          "input": 2465,
+          "output": 692,
+          "reasoning": 432
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:07:00.729Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 2707.3522079999966,
+        "usage": {
+          "input": 2187,
+          "output": 213,
+          "reasoning": 174
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:07:47.304Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 46561.788499999995,
+        "usage": {
+          "input": 4247,
+          "output": 6758,
+          "reasoning": 5555
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Perché sei ancora qui?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "Stavo per uscire quando hai chiamato."
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Puoi aspettare un momento?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "Sì."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "efb5aef7-0191-470b-9a47-3828bdf64316",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "出門前的對話",
+      "context": {
+        "text": "對話包含對仍在此處的詢問、說明正要出門時接到通話、請求稍等片刻，以及簡短答應的回應。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "你為什麼還在這裡？"
+        },
+        {
+          "cueId": "c2",
+          "text": "你打來的時候我正準備要出門。"
+        },
+        {
+          "cueId": "c3",
+          "text": "你能等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "好。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "0df63f17-9a2b-4254-b861-82cec0eaf8ba",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "48de7827-564b-43f5-8d42-d73fe181201b",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c1"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "efb5aef7-0191-470b-9a47-3828bdf64316:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "efb5aef7-0191-470b-9a47-3828bdf64316:s0:c2_1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 16
+                }
+              ],
+              "meaning": "我正打算出門"
+            },
+            {
+              "id": "efb5aef7-0191-470b-9a47-3828bdf64316:s0:c2_2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 17,
+                  "end": 36
+                }
+              ],
+              "meaning": "在你打來的時候"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 37
+            }
+          ]
+        },
+        {
+          "id": "ed04a597-b8d6-4f0f-94a0-6ccbda9df43e",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "efb5aef7-0191-470b-9a47-3828bdf64316:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "efb5aef7-0191-470b-9a47-3828bdf64316:s0:c3_1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 4
+                }
+              ],
+              "meaning": "你能……嗎"
+            },
+            {
+              "id": "efb5aef7-0191-470b-9a47-3828bdf64316:s0:c3_2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 5,
+                  "end": 25
+                }
+              ],
+              "meaning": "等一下"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 26
+            }
+          ]
+        },
+        {
+          "id": "b1b6f0cf-2421-4cea-8fd7-83a048ea2daf",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "efb5aef7-0191-470b-9a47-3828bdf64316:s0:p1",
+      "utteranceIds": [
+        "48de7827-564b-43f5-8d42-d73fe181201b"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "stare per + 原形動詞：表示即將發生的動作",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [
+        "c1"
+      ],
+      "explanation": "句中「stavo per uscire」使用動詞 stare 的未完成過去時（stavo）搭配介系詞 per 與原形動詞（uscire），表示過去某個特定時刻「正打算做某事」或「即將要做某事」。後方接續「quando + 近過去時（hai chiamato）」，描述原本即將進行的動作碰上了某個事件。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 0,
+          "end": 16
+        }
+      ]
+    },
+    {
+      "id": "efb5aef7-0191-470b-9a47-3828bdf64316:s0:p2",
+      "utteranceIds": [
+        "ed04a597-b8d6-4f0f-94a0-6ccbda9df43e"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "aspettare un momento：日常請求「等一下」",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "「aspettare un momento」意為「等一下、稍等片刻」。此處搭配助動詞 potere 的第二人稱單數現在時「puoi」，構成禮貌且常見的日常請求句型「Puoi aspettare...?」（你能等一下嗎？）。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 5,
+          "end": 25
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "efb5aef7-0191-470b-9a47-3828bdf64316:s0:r1",
+      "pointIds": [
+        "efb5aef7-0191-470b-9a47-3828bdf64316:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 16
+            }
+          ],
+          "text": "Stavo per uscire"
+        }
+      ],
+      "pattern": "stare per + [infinito]",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "Marco 詢問 Laura 是否有空談話，Laura 表示自己正要開始開會。",
+          "dialogue": [
+            {
+              "text": "Hai due minuti per parlare?",
+              "translation": "你有兩分鐘可以說話嗎？"
+            },
+            {
+              "text": "Scusa, stavo per iniziare una riunione.",
+              "translation": "抱歉，我正要開始開會。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "stavo per iniziare"
+        }
+      ]
+    },
+    {
+      "id": "efb5aef7-0191-470b-9a47-3828bdf64316:s0:r2",
+      "pointIds": [
+        "efb5aef7-0191-470b-9a47-3828bdf64316:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 5,
+              "end": 25
+            }
+          ],
+          "text": "aspettare un momento"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "兩位朋友準備出門時，其中一人請對方稍等一下以確認證件。",
+          "dialogue": [
+            {
+              "text": "Puoi aspettare un momento? Devo prendere i documenti.",
+              "translation": "你能等一下嗎？我得拿一下證件。"
+            },
+            {
+              "text": "Certo, fai con calma.",
+              "translation": "當然，你慢慢來。"
+            }
+          ],
+          "targetLineIndex": 0,
+          "targetText": "aspettare un momento"
+        }
+      ]
+    }
+  ]
+}

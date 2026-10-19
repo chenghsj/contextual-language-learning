@@ -1,0 +1,576 @@
+{
+  "id": "0f9b0b7e-3666-4a7a-a840-399c0026e6a1",
+  "createdAt": "2026-10-18T17:14:57.989Z",
+  "source": {
+    "platform": "import",
+    "title": "id-uncertainty-quote-topic-automatic"
+  },
+  "profile": {
+    "targetLanguage": "id",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "07f0741a1cf6f52efe3cea3d72631a8742b377580fd2159a2bf0eb297e2c10de",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:15:31.014Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 31865.766125000002,
+        "usage": {
+          "input": 2731,
+          "output": 5135,
+          "reasoning": 4778
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:15:35.549Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 4523.625709,
+        "usage": {
+          "input": 2474,
+          "output": 485,
+          "reasoning": 445
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:16:39.804Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 64238.369499999986,
+        "usage": {
+          "input": 4576,
+          "output": 9789,
+          "reasoning": 8030
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Maya membicarakan pertemuan itu?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "“Tolong beri tahu waktunya,” katanya. Ngomong-ngomong, sudah makan?"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Belum. Apa arti [???] di sini?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "Teksnya tidak jelas."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "會議與日常對話",
+      "context": {
+        "text": "對話內容包含詢問 Maya 是否談及該場會議、引述「請告知時間」之請求、轉移話題詢問是否已用餐、表示尚未用餐之回答，以及詢問此處〔未明文字 [???]〕之意與文字不清楚之說明。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Maya 有談到那場會議嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「請告訴我時間，」對方說。順便問一下，吃過飯了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡的〔未明文字 [???]〕是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "文字不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "5e87b239-e4bf-40b4-8f8a-e889da9566c7",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:ck1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 4
+                }
+              ],
+              "meaning": "人名（Maya）"
+            },
+            {
+              "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:ck2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 5,
+                  "end": 17
+                }
+              ],
+              "meaning": "談論、討論"
+            },
+            {
+              "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:ck3",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 18,
+                  "end": 31
+                }
+              ],
+              "meaning": "那場會議"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 32
+            }
+          ]
+        },
+        {
+          "id": "c1698c42-ec46-45c9-8b5b-f87caad14247",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:ck4",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 1,
+                  "end": 7
+                }
+              ],
+              "meaning": "請"
+            },
+            {
+              "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:ck5",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 8,
+                  "end": 17
+                }
+              ],
+              "meaning": "告訴、通知"
+            },
+            {
+              "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:ck6",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 18,
+                  "end": 26
+                }
+              ],
+              "meaning": "時間"
+            },
+            {
+              "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:ck7",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 29,
+                  "end": 36
+                }
+              ],
+              "meaning": "對方說"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 38
+            }
+          ]
+        },
+        {
+          "id": "efc84cad-3c1a-48a8-a348-316f6d4785fb",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:ck8",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 38,
+                  "end": 53
+                }
+              ],
+              "meaning": "順便一提、話說回來"
+            },
+            {
+              "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:ck9",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 55,
+                  "end": 66
+                }
+              ],
+              "meaning": "已經吃了嗎"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 38,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "2578dd42-478f-48f7-8e7c-e41b3cc2fbd8",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 7
+            }
+          ]
+        },
+        {
+          "id": "801934a0-bb64-4c57-a06d-e6af8627c370",
+          "meaning": "詢問此處〔未明文字 [???]〕的意思是什麼。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 7,
+              "end": 30
+            }
+          ]
+        },
+        {
+          "id": "2b367d4e-e395-412b-8366-5f73f0d46c88",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 20
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:p1",
+      "utteranceIds": [
+        "5e87b239-e4bf-40b4-8f8a-e889da9566c7"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "動詞 membicarakan（談論、討論）的構詞與及物用法",
+      "sourceCueIds": [
+        "c1"
+      ],
+      "contextCueIds": [],
+      "explanation": "由詞根 bicara（說話、談話）加上及物動詞環綴 meN-...-kan 構成，表示「討論、談及某事」，後方直接接賓語，不需介詞。",
+      "sourceSpans": [
+        {
+          "cueId": "c1",
+          "start": 5,
+          "end": 17
+        }
+      ]
+    },
+    {
+      "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:p2",
+      "utteranceIds": [
+        "c1698c42-ec46-45c9-8b5b-f87caad14247"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "常用片語 beri tahu（告訴、通知）",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "由動詞 beri（給）與 tahu（知道）組合而成的常用片語，表示「告知、通知某人某事」，口語常與 tolong 連用以構成禮貌請求。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 8,
+          "end": 17
+        }
+      ]
+    },
+    {
+      "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:p3",
+      "utteranceIds": [
+        "efc84cad-3c1a-48a8-a348-316f6d4785fb"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "以 ngomong-ngomong 自然轉換話題",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "口語中用來轉換話題的標記詞，相當於中文的「順便一提」、「話說回來」，用於在結束前一件事後帶入新的對話內容。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 38,
+          "end": 53
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:r1",
+      "pointIds": [
+        "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 5,
+              "end": 17
+            }
+          ],
+          "text": "membicarakan"
+        }
+      ],
+      "pattern": "membicarakan [topik]",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "兩位同事在辦公室確認稍後開會的主題",
+          "dialogue": [
+            {
+              "text": "Apa yang akan kita bahas di rapat nanti?",
+              "translation": "我們等一下會議上要討論什麼？"
+            },
+            {
+              "text": "Kita akan membicarakan rencana proyek baru.",
+              "translation": "我們要討論新專案的計畫。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "membicarakan rencana proyek baru"
+        }
+      ]
+    },
+    {
+      "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:r2",
+      "pointIds": [
+        "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 8,
+              "end": 17
+            }
+          ],
+          "text": "beri tahu"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "朋友向對方請求有最新消息時儘快通知",
+          "dialogue": [
+            {
+              "text": "Kapan hasil ujiannya diumumkan?",
+              "translation": "考試成績什麼時候公布？"
+            },
+            {
+              "text": "Tolong beri tahu saya kalau sudah ada pengumuman.",
+              "translation": "如果有公告的話請告訴我。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "beri tahu"
+        }
+      ]
+    },
+    {
+      "id": "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:r3",
+      "pointIds": [
+        "b527d944-1d4d-40ff-883a-ed72a3a406e4:s0:p3"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 38,
+              "end": 53
+            }
+          ],
+          "text": "Ngomong-ngomong"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "兩人在聊完工作後，一人轉換話題詢問週末計畫",
+          "dialogue": [
+            {
+              "text": "Laporan ini sudah selesai saya periksa.",
+              "translation": "這份報告我已經檢查完畢了。"
+            },
+            {
+              "text": "Ngomong-ngomong, ada acara apa akhir pekan ini?",
+              "translation": "順便問一下，這個週末有什麼活動嗎？"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Ngomong-ngomong"
+        }
+      ]
+    }
+  ]
+}

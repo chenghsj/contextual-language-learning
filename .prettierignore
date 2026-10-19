@@ -17,3 +17,11 @@ docs/quality/pilot-*/report.json
 docs/quality/pilot-*/run-context.json
 docs/quality/pilot-*/**/jobs/
 docs/quality/pilot-*/**/videos/
+
+# Batched matrix runs retain the same immutable runner artifacts.
+docs/quality/matrix-*/**/conditions.json
+docs/quality/matrix-*/**/requests.json
+docs/quality/matrix-*/**/report.json
+docs/quality/matrix-*/**/run-context.json
+docs/quality/matrix-*/**/jobs/
+docs/quality/matrix-*/**/videos/

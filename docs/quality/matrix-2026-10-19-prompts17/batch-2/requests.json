@@ -1,0 +1,332 @@
+[
+  {
+    "id": "ef3c078d-ac3a-4a4d-b4b9-9c5b8f7bcf9c",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "de-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "de",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Warum bist du noch hier?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Ich wollte gerade losgehen, als du angerufen hast."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Kannst du kurz warten?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Ja."
+      }
+    ]
+  },
+  {
+    "id": "98307d1a-5819-4f49-b087-5e9ecefefb1c",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "de-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "de",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Hat Maya über das Treffen gesprochen?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "„Sag mir bitte die Uhrzeit“, sagte sie. Übrigens, hast du schon gegessen?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Noch nicht. Was bedeutet hier [???]?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Der Untertitel ist unklar."
+      }
+    ]
+  },
+  {
+    "id": "020fe616-b451-4085-821e-654fc431d743",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "it-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "it",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Perché sei ancora qui?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Stavo per uscire quando hai chiamato."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Puoi aspettare un momento?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Sì."
+      }
+    ]
+  },
+  {
+    "id": "e06b914e-f719-4299-b2e0-8844c11a029b",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "it-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "it",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Maya ha parlato della riunione?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“Dimmi l’ora”, ha detto. A proposito, hai già mangiato?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Non ancora. Che cosa significa [???] qui?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Il sottotitolo non è chiaro."
+      }
+    ]
+  },
+  {
+    "id": "75c75605-83f2-41c6-b4f5-88a3a263c1d0",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "pt-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "pt",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Por que você ainda está aqui?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Eu estava prestes a sair quando você ligou."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Pode esperar um momento?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Sim."
+      }
+    ]
+  },
+  {
+    "id": "de681892-d82d-4cbe-9a27-ecbaf07e58c8",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "pt-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "pt",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Maya falou sobre a reunião?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“Diga a hora”, ela disse. A propósito, você já comeu?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Ainda não. O que significa [???] aqui?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "A legenda não está clara."
+      }
+    ]
+  }
+]

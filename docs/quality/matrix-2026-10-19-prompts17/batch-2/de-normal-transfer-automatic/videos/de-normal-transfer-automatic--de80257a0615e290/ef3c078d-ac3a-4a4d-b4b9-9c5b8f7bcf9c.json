@@ -1,0 +1,549 @@
+{
+  "id": "ef3c078d-ac3a-4a4d-b4b9-9c5b8f7bcf9c",
+  "createdAt": "2026-10-18T17:03:31.796Z",
+  "source": {
+    "platform": "import",
+    "title": "de-normal-transfer-automatic"
+  },
+  "profile": {
+    "targetLanguage": "de",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "0dd416cbdafb4dccf6abb385b73c9fa614073962d06a70afe6c33e1a9e01f56e",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:03:45.318Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 11717.320042,
+        "usage": {
+          "input": 2525,
+          "output": 1442,
+          "reasoning": 1148
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:03:49.335Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 4011.4972500000003,
+        "usage": {
+          "input": 2223,
+          "output": 210,
+          "reasoning": 175
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:04:38.414Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 49073.593375000004,
+        "usage": {
+          "input": 4283,
+          "output": 7499,
+          "reasoning": 6013
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Warum bist du noch hier?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "Ich wollte gerade losgehen, als du angerufen hast."
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Kannst du kurz warten?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "Ja."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "eed7e927-ae8d-4daf-995f-71ec83fa404a",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "準備出門時的對話",
+      "context": {
+        "text": "對話包含詢問為何仍在現場、說明正打算動身時接到電話、請求稍候以及表示同意的回應。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "你怎麼還在這裡？"
+        },
+        {
+          "cueId": "c2",
+          "text": "我正打算出發，這時你打電話來了。"
+        },
+        {
+          "cueId": "c3",
+          "text": "你能稍等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "好。"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "Warum",
+              "reading": "/vaˈʁʊm/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "bist",
+              "reading": "/bɪst/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "du",
+              "reading": "/duː/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "noch",
+              "reading": "/nɔx/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "hier",
+              "reading": "/hiːɐ̯/"
+            },
+            {
+              "text": "?"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "Ich",
+              "reading": "/ɪç/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "wollte",
+              "reading": "/ˈvɔltə/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "gerade",
+              "reading": "/ɡəˈʁaːdə/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "losgehen",
+              "reading": "/ˈloːsˌɡeːən/"
+            },
+            {
+              "text": ","
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "als",
+              "reading": "/als/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "du",
+              "reading": "/duː/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "angerufen",
+              "reading": "/ˈanɡəˌʁuːfn̩/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "hast",
+              "reading": "/hast/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "Kannst",
+              "reading": "/kanst/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "du",
+              "reading": "/duː/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "kurz",
+              "reading": "/kʊʁts/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "warten",
+              "reading": "/ˈvaʁtn̩/"
+            },
+            {
+              "text": "?"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "Ja",
+              "reading": "/jaː/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "56535787-b628-4272-9167-6dfe9c227521",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 24
+            }
+          ]
+        },
+        {
+          "id": "8b0df5ae-7293-4bc2-a525-1c15c105c91d",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "eed7e927-ae8d-4daf-995f-71ec83fa404a:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "eed7e927-ae8d-4daf-995f-71ec83fa404a:s0:ch2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 28,
+                  "end": 49
+                }
+              ],
+              "meaning": "這時你打電話來了"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 50
+            }
+          ]
+        },
+        {
+          "id": "ba79a12d-44a2-4cef-9bbe-ddfa79280bf3",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "eed7e927-ae8d-4daf-995f-71ec83fa404a:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "eed7e927-ae8d-4daf-995f-71ec83fa404a:s0:ch3",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 22
+                }
+              ],
+              "meaning": "你能稍等一下嗎？"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "23cc94cd-0624-4d38-abd8-aa088f280b59",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "eed7e927-ae8d-4daf-995f-71ec83fa404a:s0:p1",
+      "utteranceIds": [
+        "8b0df5ae-7293-4bc2-a525-1c15c105c91d"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "wollte gerade ... als ...：正打算做某事，這時……",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "「wollte gerade + 動詞原形，als ...」用於描述過去原本正打算進行某事，此時發生了另一個突發事件。從屬連接詞 als 引導過去單次發生的時間從句，從句動詞（如 hast）依規則移至句尾。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 4,
+          "end": 49
+        }
+      ]
+    },
+    {
+      "id": "eed7e927-ae8d-4daf-995f-71ec83fa404a:s0:p2",
+      "utteranceIds": [
+        "ba79a12d-44a2-4cef-9bbe-ddfa79280bf3"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "Kannst du kurz warten?：請求短暫稍候",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "日常口語中請對方稍等片刻的常見句型。副詞 kurz 在此表示「簡短、片刻」。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 22
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "eed7e927-ae8d-4daf-995f-71ec83fa404a:s0:r1",
+      "pointIds": [
+        "eed7e927-ae8d-4daf-995f-71ec83fa404a:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 4,
+              "end": 49
+            }
+          ],
+          "text": "wollte gerade losgehen, als du angerufen hast"
+        }
+      ],
+      "pattern": "wollte gerade [Infinitiv], als [Subjekt] [Nebensatzverb]",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "說明剛要出門時突然下雨的情境",
+          "dialogue": [
+            {
+              "text": "Bist du schon unterwegs?",
+              "translation": "你已經在路上了嗎？"
+            },
+            {
+              "text": "Nein, ich wollte gerade losgehen, als es anfing zu regnen.",
+              "translation": "還沒，我正打算出門，這時就開始下雨了。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "wollte gerade losgehen, als es anfing zu regnen"
+        }
+      ]
+    },
+    {
+      "id": "eed7e927-ae8d-4daf-995f-71ec83fa404a:s0:r2",
+      "pointIds": [
+        "eed7e927-ae8d-4daf-995f-71ec83fa404a:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 22
+            }
+          ],
+          "text": "Kannst du kurz warten?"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在辦公室接聽電話時請同事稍候",
+          "dialogue": [
+            {
+              "text": "Hast du kurz Zeit für mich?",
+              "translation": "你現在有空嗎？"
+            },
+            {
+              "text": "Ich bin gleich fertig. Kannst du kurz warten?",
+              "translation": "我馬上就好。你能稍等一下嗎？"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Kannst du kurz warten?"
+        }
+      ]
+    }
+  ]
+}

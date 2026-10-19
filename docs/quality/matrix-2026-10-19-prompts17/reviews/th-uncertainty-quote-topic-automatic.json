@@ -1,0 +1,49 @@
+{
+  "case": "th-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-3/th-uncertainty-quote-topic-automatic/videos/th-uncertainty-quote-topic-automatic--0f303b4b10645ea6/8d858397-6d3c-45a6-8dcb-4fe76e0927f0.json",
+  "documentHash": "83b387bd41bf24848412f1910d3872ba80d7e792a694828262c6c5b960a7ffbe",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "source uncertainty and boundaries",
+      "result": "มายา is preserved in its source spelling and the summary does not identify the quotation as that person's speech. Both [???] fragments are locally marked unclear; no guessed repair, source reading or reusable target includes them. Quote/topic units are separate, and the deictic reference does not become writing or a screen."
+    },
+    {
+      "scope": "reliable constructions and examples",
+      "result": "พูดถึง, ช่วย ... ด้วย, ว่าแต่ and หมายความว่าอะไร keep their source functions. The budget, book lookup, weekend and abbreviation dialogues have coherent target roles. The final source quote nevertheless uses an unqualified masculine Chinese pronoun for Thai gender-unspecified เขา."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "unsupported_source_gender",
+      "paths": [
+        "/sections/0/translations/1/text",
+        "/sections/0/utterances/1/meaning",
+        "/sections/0/utterances/1/chunks/0/meaning"
+      ],
+      "quote": "他說",
+      "description": "เขา can refer to a person of either gender. The source supplies no speaker labels or gender for this reported statement. The affected Chinese translation, meaning and chunk use 他 without a local uncertainty qualification, rather than retaining a gender-unspecified reporting reference under this rubric.",
+      "suggestedDirection": "Use a neutral reporting form such as 對方說 or an explicitly unresolved reference in each affected field; do not identify the speaker with Maya either.",
+      "references": [
+        {
+          "title": "Thai2English dictionary, เขา",
+          "url": "https://thai2english.com/thai/%E0%B9%80%E0%B8%82%E0%B8%B2"
+        },
+        {
+          "title": "Thai With Grace, Third person pronouns in Thai",
+          "url": "https://thaiwithgrace.com/third-person-pronouns-in-thai/"
+        }
+      ]
+    },
+    {
+      "severity": "warning",
+      "type": "incomplete_tone_notation",
+      "path": "/reusableItems/0/examples/0/dialogue/0/pronunciation/0/reading",
+      "quote": "pʰuːt̚.tʰɯŋ",
+      "description": "Several long example transcriptions omit lexical tone marks even while other syllables are tone-marked. Verify and make the notation consistent, or omit optional uncertain readings. No actual audio or recording-specific tone contour was assessed."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

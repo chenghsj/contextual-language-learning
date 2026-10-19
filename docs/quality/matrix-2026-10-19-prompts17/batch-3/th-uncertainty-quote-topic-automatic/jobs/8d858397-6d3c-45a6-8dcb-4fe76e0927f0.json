@@ -1,0 +1,1360 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "82f2d296a3eafefbcd4a73243512dfbc5213a0df7a873a6659ff6be7a0917ac0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:18:56.306Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 53992.53858299999,
+        "usage": {
+          "input": 2656,
+          "output": 8581,
+          "reasoning": 8110
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:19:03.837Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 7518.104125000013,
+        "usage": {
+          "input": 2586,
+          "output": 1039,
+          "reasoning": 1002
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:20:46.584Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 102730.739375,
+        "usage": {
+          "input": 4669,
+          "output": 16403,
+          "reasoning": 13524
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "82f2d296a3eafefbcd4a73243512dfbc5213a0df7a873a6659ff6be7a0917ac0",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "8d858397-6d3c-45a6-8dcb-4fe76e0927f0",
+    "sourceTitle": "th-uncertainty-quote-topic-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-18T17:18:00.263Z",
+    "updatedAt": "2026-10-18T17:20:46.623Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "8d858397-6d3c-45a6-8dcb-4fe76e0927f0"
+  },
+  "request": {
+    "id": "8d858397-6d3c-45a6-8dcb-4fe76e0927f0",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "th-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "th",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "มายาพูดถึงการประชุมไหม"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "เขาบอกว่า “ช่วยบอกเวลาด้วย” ว่าแต่กินข้าวหรือยัง [???]"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "ยัง [???] ตรงนี้หมายความว่าอะไร"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "คำบรรยายไม่ชัดเจน"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "詢問會議與字幕確認",
+      "context": {
+        "text": "本段包含詢問 มายา 是否提及會議、轉述告知時間的請求、轉換話題詢問是否用餐（含來源不明內容 [???]）、回答尚未（含來源不明內容 [???]）、詢問某處的含義，以及指出字幕不清楚。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "มายา提到會議了嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "他說「請幫忙告訴時間」，話說回來，吃飯了嗎〔來源內容不明：[???]〕"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒〔來源內容不明：[???]〕，這裡是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "5d954898-ab91-482b-917b-2a067ca7b32a",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c1_k1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 4
+                }
+              ],
+              "meaning": "มายา（人名）"
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c1_k2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 4,
+                  "end": 10
+                }
+              ],
+              "meaning": "提到、談及"
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c1_k3",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 10,
+                  "end": 19
+                }
+              ],
+              "meaning": "會議"
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c1_k4",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 19,
+                  "end": 22
+                }
+              ],
+              "meaning": "嗎（疑問助詞）"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "2bae0bb8-6030-424b-affb-d536309505b5",
+          "meaning": "他說「請幫忙告訴時間」",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c2_k1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 9
+                }
+              ],
+              "meaning": "他說"
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c2_k2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 11,
+                  "end": 26
+                }
+              ],
+              "meaning": "請幫忙告知時間"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 28
+            }
+          ]
+        },
+        {
+          "id": "0425462d-a55c-45d3-a2ee-883d60d08c9f",
+          "meaning": "話說回來，吃飯了嗎〔來源內容不明：[???]〕",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c3_k1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 28,
+                  "end": 34
+                }
+              ],
+              "meaning": "話說回來、對了"
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c3_k2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 34,
+                  "end": 48
+                }
+              ],
+              "meaning": "吃飯了嗎"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 28,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "2f58773d-8dcf-4673-9ab7-b599fad45de9",
+          "meaning": "還沒〔來源內容不明：[???]〕",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 10
+            }
+          ]
+        },
+        {
+          "id": "6e1cd075-af6e-492b-a1fa-d1f652931983",
+          "meaning": "這裡是什麼意思？",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p4"
+          ],
+          "chunks": [
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c5_k1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 10,
+                  "end": 16
+                }
+              ],
+              "meaning": "這裡"
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c5_k2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 16,
+                  "end": 31
+                }
+              ],
+              "meaning": "是什麼意思"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 10,
+              "end": 31
+            }
+          ]
+        },
+        {
+          "id": "3c7c35cd-73aa-4a22-b950-ace039911e9b",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "chunks": [
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c6_k1",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 0,
+                  "end": 8
+                }
+              ],
+              "meaning": "字幕"
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c6_k2",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 8,
+                  "end": 17
+                }
+              ],
+              "meaning": "不清楚"
+            }
+          ],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 17
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "5d954898-ab91-482b-917b-2a067ca7b32a",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 22
+                  }
+                ]
+              },
+              {
+                "id": "2bae0bb8-6030-424b-affb-d536309505b5",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 28
+                  }
+                ]
+              },
+              {
+                "id": "0425462d-a55c-45d3-a2ee-883d60d08c9f",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 28,
+                    "end": 54
+                  }
+                ]
+              },
+              {
+                "id": "2f58773d-8dcf-4673-9ab7-b599fad45de9",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 10
+                  }
+                ]
+              },
+              {
+                "id": "6e1cd075-af6e-492b-a1fa-d1f652931983",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 10,
+                    "end": 31
+                  }
+                ]
+              },
+              {
+                "id": "3c7c35cd-73aa-4a22-b950-ace039911e9b",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 17
+                  }
+                ]
+              }
+            ],
+            "learningValue": "本段對話涵蓋轉述他人話語、禮貌請求句型「ช่วย...ด้วย」、利用「ว่าแต่」切換話題，以及「...หรือยัง」問答與詢問意思的實用句型，適合訓練日常對話銜接與提問結構。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "「ช่วย...ด้วย」在句中構成請求協助的句型（「請...幫忙」），用於客氣拜託他人。"
+              },
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "「ว่าแต่」作為轉折詞，用於在對話中切換到新話題（「話說回來/對了」）。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2",
+                  "c3"
+                ],
+                "description": "問句「...หรือยัง」（「...了沒」）與答句「ยัง」（「還沒」）的日常問答呼應。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "「หมายความว่าอะไร」為固定表達，意為「是什麼意思」，用於詢問詞語或內容的涵義。"
+              },
+              {
+                "category": "vocabulary",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "「พูดถึง」表示「提到、談及」，後接討論的對象或主題。"
+              },
+              {
+                "category": "vocabulary",
+                "sourceCueIds": [
+                  "c4"
+                ],
+                "description": "「คำบรรยาย」指「字幕」或「解說文字」，「ชัดเจน」表示「清楚、明確」。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "5d954898-ab91-482b-917b-2a067ca7b32a",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 22
+              }
+            ]
+          },
+          {
+            "id": "2bae0bb8-6030-424b-affb-d536309505b5",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 28
+              }
+            ]
+          },
+          {
+            "id": "0425462d-a55c-45d3-a2ee-883d60d08c9f",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 28,
+                "end": 54
+              }
+            ]
+          },
+          {
+            "id": "2f58773d-8dcf-4673-9ab7-b599fad45de9",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 10
+              }
+            ]
+          },
+          {
+            "id": "6e1cd075-af6e-492b-a1fa-d1f652931983",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 10,
+                "end": 31
+              }
+            ]
+          },
+          {
+            "id": "3c7c35cd-73aa-4a22-b950-ace039911e9b",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 17
+              }
+            ]
+          }
+        ],
+        "learningValue": "本段對話涵蓋轉述他人話語、禮貌請求句型「ช่วย...ด้วย」、利用「ว่าแต่」切換話題，以及「...หรือยัง」問答與詢問意思的實用句型，適合訓練日常對話銜接與提問結構。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "「ช่วย...ด้วย」在句中構成請求協助的句型（「請...幫忙」），用於客氣拜託他人。"
+          },
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "「ว่าแต่」作為轉折詞，用於在對話中切換到新話題（「話說回來/對了」）。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2",
+              "c3"
+            ],
+            "description": "問句「...หรือยัง」（「...了沒」）與答句「ยัง」（「還沒」）的日常問答呼應。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "「หมายความว่าอะไร」為固定表達，意為「是什麼意思」，用於詢問詞語或內容的涵義。"
+          },
+          {
+            "category": "vocabulary",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "「พูดถึง」表示「提到、談及」，後接討論的對象或主題。"
+          },
+          {
+            "category": "vocabulary",
+            "sourceCueIds": [
+              "c4"
+            ],
+            "description": "「คำบรรยาย」指「字幕」或「解說文字」，「ชัดเจน」表示「清楚、明確」。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "766e909d-de6c-46fc-b525-bf82ebb46e0d",
+        "utteranceIds": [
+          "5d954898-ab91-482b-917b-2a067ca7b32a",
+          "2bae0bb8-6030-424b-affb-d536309505b5",
+          "0425462d-a55c-45d3-a2ee-883d60d08c9f",
+          "2f58773d-8dcf-4673-9ab7-b599fad45de9",
+          "6e1cd075-af6e-492b-a1fa-d1f652931983",
+          "3c7c35cd-73aa-4a22-b950-ace039911e9b"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "詢問會議與字幕確認",
+            "context": {
+              "text": "本段包含詢問 มายา 是否提及會議、轉述告知時間的請求、轉換話題詢問是否用餐（含來源不明內容 [???]）、回答尚未（含來源不明內容 [???]）、詢問某處的含義，以及指出字幕不清楚。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "มายา提到會議了嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "他說「請幫忙告訴時間」，話說回來，吃飯了嗎〔來源內容不明：[???]〕"
+              },
+              {
+                "cueId": "c3",
+                "text": "還沒〔來源內容不明：[???]〕，這裡是什麼意思？"
+              },
+              {
+                "cueId": "c4",
+                "text": "字幕不清楚。"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "5d954898-ab91-482b-917b-2a067ca7b32a",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c1_k1",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 0,
+                        "end": 4
+                      }
+                    ],
+                    "meaning": "มายา（人名）"
+                  },
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c1_k2",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 4,
+                        "end": 10
+                      }
+                    ],
+                    "meaning": "提到、談及"
+                  },
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c1_k3",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 10,
+                        "end": 19
+                      }
+                    ],
+                    "meaning": "會議"
+                  },
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c1_k4",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 19,
+                        "end": 22
+                      }
+                    ],
+                    "meaning": "嗎（疑問助詞）"
+                  }
+                ],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 22
+                  }
+                ]
+              },
+              {
+                "id": "2bae0bb8-6030-424b-affb-d536309505b5",
+                "meaning": "他說「請幫忙告訴時間」",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c2_k1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 9
+                      }
+                    ],
+                    "meaning": "他說"
+                  },
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c2_k2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 11,
+                        "end": 26
+                      }
+                    ],
+                    "meaning": "請幫忙告知時間"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 28
+                  }
+                ]
+              },
+              {
+                "id": "0425462d-a55c-45d3-a2ee-883d60d08c9f",
+                "meaning": "話說回來，吃飯了嗎〔來源內容不明：[???]〕",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p3"
+                ],
+                "chunks": [
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c3_k1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 28,
+                        "end": 34
+                      }
+                    ],
+                    "meaning": "話說回來、對了"
+                  },
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c3_k2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 34,
+                        "end": 48
+                      }
+                    ],
+                    "meaning": "吃飯了嗎"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 28,
+                    "end": 54
+                  }
+                ]
+              },
+              {
+                "id": "2f58773d-8dcf-4673-9ab7-b599fad45de9",
+                "meaning": "還沒〔來源內容不明：[???]〕",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 10
+                  }
+                ]
+              },
+              {
+                "id": "6e1cd075-af6e-492b-a1fa-d1f652931983",
+                "meaning": "這裡是什麼意思？",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p4"
+                ],
+                "chunks": [
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c5_k1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 10,
+                        "end": 16
+                      }
+                    ],
+                    "meaning": "這裡"
+                  },
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c5_k2",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 16,
+                        "end": 31
+                      }
+                    ],
+                    "meaning": "是什麼意思"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 10,
+                    "end": 31
+                  }
+                ]
+              },
+              {
+                "id": "3c7c35cd-73aa-4a22-b950-ace039911e9b",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "chunks": [
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c6_k1",
+                    "spans": [
+                      {
+                        "cueId": "c4",
+                        "start": 0,
+                        "end": 8
+                      }
+                    ],
+                    "meaning": "字幕"
+                  },
+                  {
+                    "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:c6_k2",
+                    "spans": [
+                      {
+                        "cueId": "c4",
+                        "start": 8,
+                        "end": 17
+                      }
+                    ],
+                    "meaning": "不清楚"
+                  }
+                ],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 17
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p1",
+              "utteranceIds": [
+                "5d954898-ab91-482b-917b-2a067ca7b32a"
+              ],
+              "category": "vocabulary",
+              "presentation": "core",
+              "title": "พูดถึง（提到、談及）",
+              "sourceCueIds": [
+                "c1"
+              ],
+              "contextCueIds": [],
+              "explanation": "「พูดถึง」表示「提到、談及」，由「พูด」（說）與「ถึง」（到、至）組合而成，後方常接討論的對象、主題或事情。句尾搭配「ไหม」構成「พูดถึง...ไหม」，用於詢問某人是否曾提及特定話題。",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 4,
+                  "end": 10
+                }
+              ]
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p2",
+              "utteranceIds": [
+                "2bae0bb8-6030-424b-affb-d536309505b5"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "句型「ช่วย...ด้วย」（請幫忙……）",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "「ช่วย...ด้วย」為泰語中常見的客氣請求句型。「ช่วย」置於動詞前表示「協助、幫忙」，句尾加上助詞「ด้วย」（順便、也、請），使請求語氣更委婉柔和。中間填入具體的動作或請求內容，如本句的「ช่วยบอกเวลาด้วย」（請幫忙告知時間）。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 11,
+                  "end": 26
+                }
+              ]
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p3",
+              "utteranceIds": [
+                "0425462d-a55c-45d3-a2ee-883d60d08c9f"
+              ],
+              "category": "usage",
+              "presentation": "core",
+              "title": "話題轉折詞「ว่าแต่」（話說回來、對了）",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "「ว่าแต่」用於對話中切換主題，相當於漢語的「話說回來」、「對了」，常用於結束上一件事的討論，並順勢帶出新的提問或話題。本句在轉述完請求後，使用「ว่าแต่」開啟生活話題「กินข้าวหรือยัง」（吃飯了嗎）。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 28,
+                  "end": 34
+                }
+              ]
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p4",
+              "utteranceIds": [
+                "6e1cd075-af6e-492b-a1fa-d1f652931983"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "詢問含義「หมายความว่าอะไร」（是什麼意思）",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [],
+              "explanation": "「หมายความว่าอะไร」為常用固定表達，由「หมายความ」（意思是、指）與疑問詞「อะไร」（什麼）組成，用於詢問詞彙、符號或內容所代表的意思。句首可接主詞或指定位置，如「ตรงนี้หมายความว่าอะไร」（這裡是什麼意思）。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 16,
+                  "end": 31
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:r1",
+              "pointIds": [
+                "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p1"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c1"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c1",
+                      "start": 4,
+                      "end": 10
+                    }
+                  ],
+                  "text": "พูดถึง"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩位同事在確認主管剛才在會議中是否談到新的預算案。",
+                  "dialogue": [
+                    {
+                      "text": "เมื่อกี้ผู้จัดการพูดถึงเรื่องงบประมาณไหม",
+                      "translation": "剛才經理有提到預算的事情嗎？",
+                      "pronunciation": [
+                        {
+                          "text": "เมื่อกี้ผู้จัดการพูดถึงเรื่องงบประมาณไหม",
+                          "reading": "/mɯ̂a̯.kíː.pʰûː.t͡ɕat̚.kaːn.pʰuːt̚.tʰɯŋ.rɯ̂a̯ŋ.ŋop̚.pra.maːn.mǎj/"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "ไม่ได้พูดถึงเลยครับ เขาพูดแค่เรื่องกำหนดการ",
+                      "translation": "完全沒提到，他只講了時程表。",
+                      "pronunciation": [
+                        {
+                          "text": "ไม่ได้พูดถึงเลยครับ เขาพูดแค่เรื่องกำหนดการ",
+                          "reading": "/mâj.dâːj.pʰuːt̚.tʰɯŋ.lɤːj.kʰráp̚ kʰǎw.pʰuːt̚.kʰɛ̂ː.rɯ̂a̯ŋ.kam.nòt̚.kaːn/"
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "พูดถึง"
+                }
+              ]
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:r2",
+              "pointIds": [
+                "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p2"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 11,
+                      "end": 26
+                    }
+                  ],
+                  "text": "ช่วยบอกเวลาด้วย"
+                }
+              ],
+              "pattern": "ช่วย + [動作/請求內容] + ด้วย",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "在圖書館內，一人需要找一本書，客氣請館員協助查詢。",
+                  "dialogue": [
+                    {
+                      "text": "ขอโทษนะคะ ช่วยหาหนังสือเล่มนี้ให้ด้วยค่ะ",
+                      "translation": "不好意思，請幫忙找一下這本書。",
+                      "pronunciation": [
+                        {
+                          "text": "ขอโทษนะคะ ช่วยหาหนังสือเล่มนี้ให้ด้วยค่ะ",
+                          "reading": "/kʰɔ̌ː.tʰôːt̚.ná.kʰáʔ t͡ɕʰûa̯j.hǎː.nǎŋ.sɯ̌ː.lêm.níː.hâj.dûa̯j.kʰâʔ/"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "ได้ครับ ขอรหัสหนังสือสักครู่ครับ",
+                      "translation": "好的，請稍候並提供書本編號。",
+                      "pronunciation": [
+                        {
+                          "text": "ได้ครับ ขอรหัสหนังสือสักครู่ครับ",
+                          "reading": "/dâːj.kʰráp̚ kʰɔ̌ː.ra.hàt̚.nǎŋ.sɯ̌ː.sàk̚.kʰrûː.kʰráp̚/"
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "ช่วยหาหนังสือเล่มนี้ให้ด้วย"
+                }
+              ]
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:r3",
+              "pointIds": [
+                "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p3"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 28,
+                      "end": 34
+                    }
+                  ],
+                  "text": "ว่าแต่"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩位朋友聊完今天的天氣後，其中一人轉移話題詢問對方的週末計畫。",
+                  "dialogue": [
+                    {
+                      "text": "วันนี้อากาศดีมากเลยนะ",
+                      "translation": "今天天氣真好呢。",
+                      "pronunciation": [
+                        {
+                          "text": "วันนี้อากาศดีมากเลยนะ",
+                          "reading": "/wan.níː.ʔaː.kàːt̚.diː.mâːk̚.lɤːj.náʔ/"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "ว่าแต่วันเสาร์นี้เธอว่างไหม",
+                      "translation": "話說回來，這個星期六你有空嗎？",
+                      "pronunciation": [
+                        {
+                          "text": "ว่าแต่วันเสาร์นี้เธอว่างไหม",
+                          "reading": "/wâː.tɛ̀ː.wan.sǎw.níː.tʰɤː.wâːŋ.mǎj/"
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "ว่าแต่"
+                }
+              ]
+            },
+            {
+              "id": "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:r4",
+              "pointIds": [
+                "766e909d-de6c-46fc-b525-bf82ebb46e0d:s0:p4"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 16,
+                      "end": 31
+                    }
+                  ],
+                  "text": "หมายความว่าอะไร"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩位同學在研究一份指示，其中一人詢問某個縮寫的含義。",
+                  "dialogue": [
+                    {
+                      "text": "คำย่อคำนี้หมายความว่าอะไร",
+                      "translation": "這個縮寫是什麼意思？",
+                      "pronunciation": [
+                        {
+                          "text": "คำย่อคำนี้หมายความว่าอะไร",
+                          "reading": "/kʰam.jɔ̂ː.kʰam.níː.mǎːj.kʰwaːm.wâː.ʔa.raj/"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "หมายถึงชื่อย่อของบริษัทครับ",
+                      "translation": "代表公司的簡稱喔。",
+                      "pronunciation": [
+                        {
+                          "text": "หมายถึงชื่อย่อของบริษัทครับ",
+                          "reading": "/mǎːj.tʰɯ̌ŋ.t͡ɕʰɯ̂ː.jɔ̂ː.kʰɔ̌ːŋ.bɔː.rí.sàt̚.kʰráp̚/"
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "หมายความว่าอะไร"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

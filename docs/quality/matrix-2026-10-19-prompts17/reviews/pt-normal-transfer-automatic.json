@@ -1,0 +1,27 @@
+{
+  "case": "pt-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-2/pt-normal-transfer-automatic/videos/pt-normal-transfer-automatic--a9ca01c8f1715b79/75c75605-83f2-41c6-b4f5-88a3a263c1d0.json",
+  "documentHash": "ccac0349c31a9deba9a217280182ad601678ae59ec9c05f3118f0da867987e7b",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source fidelity and time relation",
+      "result": "The neutral summary, translations and chunks retain being here, imminent departure at the call, the waiting request and the affirmative reply. No named speaker, cancellation, motive or visual scene is added. Sim is basic_only without filler."
+    },
+    {
+      "scope": "frames and example coherence",
+      "result": "estar prestes a + infinitive and pode + infinitive retain source meaning and inflect correctly. The no-more-work departure reply answers the same question asked; the receptionist's waiting request matches the invented visitor scenario. The small Chinese omission in 您可以隔壁房間等幾分鐘嗎 does not change the intended location or request."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "overgeneralized_wording",
+      "path": "/points/1/explanation",
+      "quote": "突然發生",
+      "description": "The background/single-past-event contrast does not require suddenness. Prefer an event occurring in that background situation. The source translation and imminent-departure construction remain correct."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

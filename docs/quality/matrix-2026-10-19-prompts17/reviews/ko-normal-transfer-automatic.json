@@ -1,0 +1,19 @@
+{
+  "case": "ko-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-1/ko-normal-transfer-automatic/videos/ko-normal-transfer-automatic--7dd5414df57c05a0/af013557-ecd0-498d-a1c9-08e5c4feb4a6.json",
+  "documentHash": "e9dc61ce2f064eb3b3009c7d13b7a4cf450a5c81f67b036ea746c498dc7b06af",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source fidelity and time relation",
+      "result": "Neutral summary and translations retain the still-here question, imminent departure at the call, waiting request and affirmative reply. No fixed participant identities, cancellation or visual scene is added. 네 remains basic_only without filler."
+    },
+    {
+      "scope": "construction and example coherence",
+      "result": "-(으)려던 참이다 and -아/어 줄 수 있어요? retain the intended imminent-action and benefactive-request senses. The meeting departure and bag-watching dialogues instantiate the patterns with coherent roles, targets and translations. No unsupported source pronunciation is introduced."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

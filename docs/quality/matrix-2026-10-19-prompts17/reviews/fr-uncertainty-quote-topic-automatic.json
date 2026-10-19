@@ -1,0 +1,19 @@
+{
+  "case": "fr-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-1/fr-uncertainty-quote-topic-automatic/videos/fr-uncertainty-quote-topic-automatic--3abb990be7c0b272/64c6a2b3-932a-4d4b-9138-a9df21641066.json",
+  "documentHash": "595b9ac074762f2499a1bd8030ec49fb4d2547338e5ecaccfddd68de9fa113a5",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "available source content and language quality",
+      "result": "The selected quotation/topic-switch material keeps elle as the source pronoun without equating it with Maya. Dis-moi and a-t-elle dit are translated consistently; the inverted reporting clause, inserted t and Au fait explanations fit the shown source. The library-opinion and colleague-topic examples have coherent actors and target meanings."
+    },
+    {
+      "scope": "fixed-risk coverage limitation",
+      "result": "Only c1 and c2 were selected into the learning sections. The [???] question and caption statement in c3/c4 remain in raw cues but are absent from selected utterances, so the fixed uncertainty coverage gate fails. No invented meaning is assigned to an actually taught unclear fragment; absence of this risk test is kept separate from the semantic verdict on the material that was generated. This case is not accepted."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

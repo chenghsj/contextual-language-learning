@@ -1,0 +1,871 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "772ac2a9479679f228ed657f33dccacc622d8420618318e0c21c5ee2a4484d43",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:03:45.842Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 12182.082958,
+        "usage": {
+          "input": 2506,
+          "output": 1536,
+          "reasoning": 1217
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:03:50.533Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 4680.679375,
+        "usage": {
+          "input": 2310,
+          "output": 316,
+          "reasoning": 275
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:04:33.186Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 42645.334459000005,
+        "usage": {
+          "input": 4325,
+          "output": 6056,
+          "reasoning": 3961
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "772ac2a9479679f228ed657f33dccacc622d8420618318e0c21c5ee2a4484d43",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "af013557-ecd0-498d-a1c9-08e5c4feb4a6",
+    "sourceTitle": "ko-normal-transfer-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-18T17:03:30.954Z",
+    "updatedAt": "2026-10-18T17:04:33.226Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "af013557-ecd0-498d-a1c9-08e5c4feb4a6"
+  },
+  "request": {
+    "id": "af013557-ecd0-498d-a1c9-08e5c4feb4a6",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "ko-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "ko",
+      "instructionLanguage": "zh-TW",
+      "level": "3",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "아직 여기 있어요?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "전화가 왔을 때 막 나가려던 참이었어요."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "잠깐 기다려 줄 수 있어요?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "네."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "a1385c52-d6cc-4340-9543-00e60a5e127a",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "出門前的通話與等待請求",
+      "context": {
+        "text": "對話包含詢問是否仍在此處、說明接到電話時剛好正打算出門、請求稍候片刻，以及肯定的回應。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "還在這裡嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "接到電話時，剛好正打算出門。"
+        },
+        {
+          "cueId": "c3",
+          "text": "可以等我一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "好的。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "e5dedaca-8061-4f9f-858d-2ecbbc8aca6f",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 10
+            }
+          ]
+        },
+        {
+          "id": "113d2f4d-fea1-4739-83ce-6093b660f99f",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c1"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:c2-k1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 8
+                }
+              ],
+              "meaning": "接到電話時"
+            },
+            {
+              "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:c2-k2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 9,
+                  "end": 10
+                }
+              ],
+              "meaning": "剛好／正要"
+            },
+            {
+              "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:c2-k3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 11,
+                  "end": 21
+                }
+              ],
+              "meaning": "正打算要出門"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "0eff33b4-172c-4b61-9890-a36a6cbf0e3f",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c2"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:c3-k1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 2
+                }
+              ],
+              "meaning": "稍微／一下子"
+            },
+            {
+              "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:c3-k2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 3,
+                  "end": 15
+                }
+              ],
+              "meaning": "可以等我一下嗎？"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 15
+            }
+          ]
+        },
+        {
+          "id": "0f50f824-7955-4e83-8b03-46ad3f3dbca2",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "a1385c52-d6cc-4340-9543-00e60a5e127a",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "e5dedaca-8061-4f9f-858d-2ecbbc8aca6f",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 10
+                  }
+                ]
+              },
+              {
+                "id": "113d2f4d-fea1-4739-83ce-6093b660f99f",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 22
+                  }
+                ]
+              },
+              {
+                "id": "0eff33b4-172c-4b61-9890-a36a6cbf0e3f",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 15
+                  }
+                ]
+              },
+              {
+                "id": "0f50f824-7955-4e83-8b03-46ad3f3dbca2",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 2
+                  }
+                ]
+              }
+            ],
+            "learningValue": "日常對話中說明自身當前動向與提出等待請求的完整互動，包含表達恰好打算做某事的文法與禮貌請求句型。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "學習「-(으)려던 참이다」表示「正打算、剛好要……」的時機與意圖表達。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "學習結合「-아/어 주다」與「-(으)ㄹ 수 있다」構成的禮貌請求表達「-아/어 줄 수 있어요?」。"
+              },
+              {
+                "category": "vocabulary",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "掌握副詞「막」在此處搭配意圖或動作、表示「剛好、正要」的用法。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "掌握日常中請求對方稍後片刻的實用搭配「잠깐 기다려 주다」。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "a1385c52-d6cc-4340-9543-00e60a5e127a",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "e5dedaca-8061-4f9f-858d-2ecbbc8aca6f",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 10
+              }
+            ]
+          },
+          {
+            "id": "113d2f4d-fea1-4739-83ce-6093b660f99f",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 22
+              }
+            ]
+          },
+          {
+            "id": "0eff33b4-172c-4b61-9890-a36a6cbf0e3f",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 15
+              }
+            ]
+          },
+          {
+            "id": "0f50f824-7955-4e83-8b03-46ad3f3dbca2",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 2
+              }
+            ]
+          }
+        ],
+        "learningValue": "日常對話中說明自身當前動向與提出等待請求的完整互動，包含表達恰好打算做某事的文法與禮貌請求句型。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "學習「-(으)려던 참이다」表示「正打算、剛好要……」的時機與意圖表達。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "學習結合「-아/어 주다」與「-(으)ㄹ 수 있다」構成的禮貌請求表達「-아/어 줄 수 있어요?」。"
+          },
+          {
+            "category": "vocabulary",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "掌握副詞「막」在此處搭配意圖或動作、表示「剛好、正要」的用法。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "掌握日常中請求對方稍後片刻的實用搭配「잠깐 기다려 주다」。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "a1385c52-d6cc-4340-9543-00e60a5e127a",
+        "utteranceIds": [
+          "e5dedaca-8061-4f9f-858d-2ecbbc8aca6f",
+          "113d2f4d-fea1-4739-83ce-6093b660f99f",
+          "0eff33b4-172c-4b61-9890-a36a6cbf0e3f",
+          "0f50f824-7955-4e83-8b03-46ad3f3dbca2"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "a1385c52-d6cc-4340-9543-00e60a5e127a",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "出門前的通話與等待請求",
+            "context": {
+              "text": "對話包含詢問是否仍在此處、說明接到電話時剛好正打算出門、請求稍候片刻，以及肯定的回應。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "還在這裡嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "接到電話時，剛好正打算出門。"
+              },
+              {
+                "cueId": "c3",
+                "text": "可以等我一下嗎？"
+              },
+              {
+                "cueId": "c4",
+                "text": "好的。"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "e5dedaca-8061-4f9f-858d-2ecbbc8aca6f",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 10
+                  }
+                ]
+              },
+              {
+                "id": "113d2f4d-fea1-4739-83ce-6093b660f99f",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c1"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:c2-k1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 8
+                      }
+                    ],
+                    "meaning": "接到電話時"
+                  },
+                  {
+                    "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:c2-k2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 9,
+                        "end": 10
+                      }
+                    ],
+                    "meaning": "剛好／正要"
+                  },
+                  {
+                    "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:c2-k3",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 11,
+                        "end": 21
+                      }
+                    ],
+                    "meaning": "正打算要出門"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 22
+                  }
+                ]
+              },
+              {
+                "id": "0eff33b4-172c-4b61-9890-a36a6cbf0e3f",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c2"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:c3-k1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 2
+                      }
+                    ],
+                    "meaning": "稍微／一下子"
+                  },
+                  {
+                    "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:c3-k2",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 3,
+                        "end": 15
+                      }
+                    ],
+                    "meaning": "可以等我一下嗎？"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 15
+                  }
+                ]
+              },
+              {
+                "id": "0f50f824-7955-4e83-8b03-46ad3f3dbca2",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 2
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:p1",
+              "utteranceIds": [
+                "113d2f4d-fea1-4739-83ce-6093b660f99f"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "-(으)려던 참이다",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [
+                "c1"
+              ],
+              "explanation": "接在動詞詞幹後，表示在該時間點「正巧打算、正好準備做某事」。此處搭配過去時制「-(으)려던 참이었다」，用來說明電話打來時自己恰好正準備動身外出。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 11,
+                  "end": 21
+                }
+              ]
+            },
+            {
+              "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:p2",
+              "utteranceIds": [
+                "0eff33b4-172c-4b61-9890-a36a6cbf0e3f"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "-아/어 줄 수 있어요?",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [],
+              "explanation": "由表示為他人做事的「-아/어 주다」與表示能力的「-(으)ㄹ 수 있다」結合而成，用於禮貌詢問對方能否協助自己做某事，語氣委婉客氣。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 3,
+                  "end": 15
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:r1",
+              "pointIds": [
+                "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:p1"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 11,
+                      "end": 21
+                    }
+                  ],
+                  "text": "나가려던 참이었어요"
+                }
+              ],
+              "pattern": "V-(으)려던 참이다",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "同事詢問何時要去開會，回答說正好正打算過去。",
+                  "dialogue": [
+                    {
+                      "text": "회의실로 언제 가실 거예요?",
+                      "translation": "您什麼時候要去會議室？"
+                    },
+                    {
+                      "text": "지금 가려고요. 마침 출발하려던 참이었어요.",
+                      "translation": "現在要去，我剛好正打算出發。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "출발하려던 참이었어요"
+                }
+              ]
+            },
+            {
+              "id": "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:r2",
+              "pointIds": [
+                "a1385c52-d6cc-4340-9543-00e60a5e127a:s0:p2"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 3,
+                      "end": 15
+                    }
+                  ],
+                  "text": "기다려 줄 수 있어요?"
+                }
+              ],
+              "pattern": "V-아/어 줄 수 있어요?",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "在圖書館暫時離席，請朋友幫忙照看包包。",
+                  "dialogue": [
+                    {
+                      "text": "화장실에 다녀올 동안 가방 좀 봐줄 수 있어요?",
+                      "translation": "我去洗手間的這段時間，可以幫忙看一下包包嗎？"
+                    },
+                    {
+                      "text": "네, 걱정 말고 다녀오세요.",
+                      "translation": "好的，別擔心，快去吧。"
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "봐줄 수 있어요?"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

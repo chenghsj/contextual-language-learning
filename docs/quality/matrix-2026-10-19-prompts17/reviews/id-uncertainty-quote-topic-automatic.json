@@ -1,0 +1,19 @@
+{
+  "case": "id-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-3/id-uncertainty-quote-topic-automatic/videos/id-uncertainty-quote-topic-automatic--c3da22bf61497266/0f9b0b7e-3666-4a7a-a840-399c0026e6a1.json",
+  "documentHash": "2d4214179253fd106fb8e94225dcb872ad2959a6678102517f46b64ed5b61ab1",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source roles and local uncertainty",
+      "result": "The summary lists meeting, quotation, topic change, reply and unclear-text question without assigning the quotation to Maya. katanya stays an unspecified reporting reference without added gender. [???] is marked unclear in summary, translation and affected unit meaning; no correction, reading or source target is invented."
+    },
+    {
+      "scope": "construction and dialogue roles",
+      "result": "membicarakan + topic, beri tahu and ngomong-ngomong retain their source senses. The project-topic exchange and work/weekend transition are coherent. The exam-announcement dialogue requests future notification without claiming that the respondent already knows the answer. Belum remains basic_only without extra teaching; quote/topic and answer/question boundaries are separate."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

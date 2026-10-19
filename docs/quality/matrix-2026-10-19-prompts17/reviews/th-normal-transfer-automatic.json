@@ -1,0 +1,37 @@
+{
+  "case": "th-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-3/th-normal-transfer-automatic/videos/th-normal-transfer-automatic--265e4cac6d4ac328/834b60bb-8218-4c04-8ec4-3d4bb8a7aac6.json",
+  "documentHash": "974e846c11c6e4f4a97d65874d008e01b3347b5eadca36865e510c68e56f2ce2",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source timing and teaching",
+      "result": "The neutral summary and translations retain imminent departure at the incoming call and the waiting request, without a definite cancelled action or invented identities. The กำลังจะ and รอสักครู่ได้ไหม constructions are correct in context. The simple ได้ remains basic_only."
+    },
+    {
+      "scope": "new conversations and readings",
+      "result": "The lunch-destination answer and document-status waiting request have coherent roles, timing and target translations. The words align with their displayed pronunciation segments. No claim is made about the source recording's delivery; incomplete lexical-tone notation is recorded separately."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "incomplete_tone_notation",
+      "paths": [
+        "/sections/0/pronunciations/1/segments/0/reading",
+        "/reusableItems/0/examples/0/dialogue/0/pronunciation/0/reading",
+        "/reusableItems/0/examples/0/dialogue/1/pronunciation/0/reading"
+      ],
+      "quote": "t͡ɕaʔ",
+      "description": "จะ has the standard lexical low tone, but these otherwise tone-marked transcriptions leave that syllable unmarked. Make the notation consistent, for example t͡ɕàʔ, or omit an optional uncertain annotation. This is a notation-completeness warning, not a finding about actual audio or reduced connected-speech delivery.",
+      "references": [
+        {
+          "title": "Northern Illinois University, Thai tone chart",
+          "url": "https://seasite.niu.edu/thai/selfassessment/module1/tone_chart.htm"
+        }
+      ]
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

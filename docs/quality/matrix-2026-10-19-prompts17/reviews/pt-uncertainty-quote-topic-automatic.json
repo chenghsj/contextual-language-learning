@@ -1,0 +1,34 @@
+{
+  "case": "pt-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-2/pt-uncertainty-quote-topic-automatic/videos/pt-uncertainty-quote-topic-automatic--54112db714726355/de681892-d82d-4cbe-9a27-ecbaf07e58c8.json",
+  "documentHash": "a1a6a6bbca8af72b55922d6c15f9295f1a10fff905c39b91672b536976b0384f",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source roles, boundaries and uncertainty",
+      "result": "ela stays the explicit feminine source pronoun without being attributed to Maya. The impersonal summary does not invent a screen or writing, and [???] is locally marked unclear in context, translation and affected unit meaning. Quote/topic and answer/question units are separate; unclear text is not promoted to a target."
+    },
+    {
+      "scope": "teaching and example coherence",
+      "result": "A propósito and Ainda não explanations retain topic-change and not-yet senses. The coffee invitation and unseen-notice dialogues have consistent participants, event timing and affirmative/negative replies. No invented example detail supplies missing source identities."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "translation_precision",
+      "paths": ["/sections/0/translations/1/text", "/sections/0/context/text"],
+      "quote": "說個時間",
+      "description": "For Diga a hora, a more precise rendering such as 告訴時間 or 報出時間 avoids the Chinese wording's possible suggestion of proposing an arbitrary time. The source does not establish what the time refers to, and the output does not explicitly assert a new scheduling event."
+    },
+    {
+      "severity": "warning",
+      "type": "redundancy",
+      "paths": ["/points/1", "/reusableItems/1"],
+      "quote": "Ainda não",
+      "description": "The already translated short response receives another core point and full example. Its meaning and dialogue are correct, but this is avoidable repetition at B1."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

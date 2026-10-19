@@ -1,0 +1,27 @@
+{
+  "case": "zh-CN-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-4/zh-CN-normal-transfer-automatic/videos/zh-CN-normal-transfer-automatic--5c9d919b971cb3f1/a40825a2-adce-4a26-9e9a-f3df604b0eb5.json",
+  "documentHash": "0fe07c75fcc3217bb3ec7975db268f869ebefc9f6b86644007c01713b174c2c6",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source preservation and timing",
+      "result": "Simplified Chinese source cues remain unchanged, with Traditional Chinese explanation translations. Summary and temporal explanation preserve imminent departure at the call without definite cancellation or named participant invention. The final 可以 stays basic_only without filler."
+    },
+    {
+      "scope": "frames, readings and examples",
+      "result": "怎么还 + predicate, 正要 + verb phrase and 等一下 retain source meaning and instantiate correctly. The meeting/phone research, delayed document review and umbrella waiting dialogues have coherent actions, actors and replies. Supplied Pinyin aligns with the words; dictionary third-tone readings are not claimed as measured connected speech."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "tone_wording",
+      "path": "/points/0/explanation",
+      "quote": "感到意外的語氣",
+      "description": "Qualify surprise or unexpectedness as a possible contextual force of 怎么还 rather than a verified emotion or source delivery. The continuing-state question and complete source meaning remain correct."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

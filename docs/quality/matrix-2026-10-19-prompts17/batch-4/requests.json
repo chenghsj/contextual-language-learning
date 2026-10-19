@@ -1,0 +1,332 @@
+[
+  {
+    "id": "797c742b-78ef-4193-8ca3-62f0cf00fbf5",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "vi-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "vi",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Sao bạn vẫn còn ở đây?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Tôi đang định đi thì bạn gọi."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Bạn chờ một chút được không?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Được."
+      }
+    ]
+  },
+  {
+    "id": "22ca5500-c257-44d8-a4a4-fceeda1824fb",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "vi-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "vi",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Maya có nói về cuộc họp không?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“Cho tôi biết giờ nhé”, cô ấy nói. À, bạn ăn chưa?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Chưa. [???] ở đây nghĩa là gì?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Phụ đề không rõ."
+      }
+    ]
+  },
+  {
+    "id": "761cc993-9ddd-4491-a5f6-cb5b70821425",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "zh-TW-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "zh-TW",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "你怎麼還在這裡？"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "你打來的時候，我正要出門。"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "可以等一下嗎？"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "可以。"
+      }
+    ]
+  },
+  {
+    "id": "528376ec-2682-4157-810c-e2ec9b258080",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "zh-TW-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "zh-TW",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "ミオ有提到聚會嗎？"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "「請告訴我時間」，是這麼說的。對了，吃飯了嗎？"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "還沒。這裡的[???]是什麼意思？"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "字幕不清楚。"
+      }
+    ]
+  },
+  {
+    "id": "a40825a2-adce-4a26-9e9a-f3df604b0eb5",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "zh-CN-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "zh-CN",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "你怎么还在这里？"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "你打来的时候，我正要出门。"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "可以等一下吗？"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "可以。"
+      }
+    ]
+  },
+  {
+    "id": "3a81f36b-bc78-4425-aab1-9dc0cd3a39c8",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "zh-CN-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "zh-CN",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "ミオ有提到聚会吗？"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“请告诉我时间”，是这么说的。对了，吃饭了吗？"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "还没。这里的[???]是什么意思？"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "字幕不清楚。"
+      }
+    ]
+  }
+]

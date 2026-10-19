@@ -1,0 +1,41 @@
+{
+  "case": "it-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-2/it-uncertainty-quote-topic-automatic/videos/it-uncertainty-quote-topic-automatic--ad117456da3e8339/e06b914e-f719-4299-b2e0-8844c11a029b.json",
+  "documentHash": "2689e428a375975ecb27a4b3e86f81dcaed6c8f43ee6e47e2250fb2aaae5eb0b",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "source roles, boundaries and local uncertainty",
+      "result": "The impersonal summary and translations leave the ha detto subject unspecified, without naming Maya or adding gender. qui remains here and [???] is marked unclear in summary, translation and affected unit meaning/context. Quote/topic and reply/question boundaries are separate; source targets exclude the damaged fragment."
+    },
+    {
+      "scope": "examples and construction scope",
+      "result": "Dimmi, A proposito and Non ancora dialogues have coherent actors, targets and translations. The local derivation di' + mi → dimmi is correct, but the explanation expands it into an unqualified doubling rule that omits the gli exception, so the lesson is not accepted."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "overgeneralized_morphology_rule",
+      "path": "/points/0/explanation",
+      "quote": "代名詞字首子音會雙寫",
+      "description": "The explanation presents consonant doubling after monosyllabic imperatives as an unqualified pronoun rule. The pronoun gli and compounds beginning with gli are exceptions: di' + gli is digli, not diggli. Correct dimmi in the source and example does not validate the broader productive rule.",
+      "suggestedDirection": "Limit the explanation to mi in dimmi, or state the applicable short imperatives and the gli exception.",
+      "references": [
+        {
+          "title": "Treccani, Pronomi personali",
+          "url": "https://www.treccani.it/enciclopedia/pronomi-personali_%28La-grammatica-italiana%29/"
+        }
+      ]
+    },
+    {
+      "severity": "warning",
+      "type": "redundancy",
+      "paths": ["/points/2", "/reusableItems/2"],
+      "quote": "Non ancora",
+      "description": "The translated short reply receives a separate core point and full example. Its meaning and dialogue are correct, but this repeats transparent B1 content."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

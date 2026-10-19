@@ -1,0 +1,454 @@
+{
+  "id": "de681892-d82d-4cbe-9a27-ecbaf07e58c8",
+  "createdAt": "2026-10-18T17:11:11.813Z",
+  "source": {
+    "platform": "import",
+    "title": "pt-uncertainty-quote-topic-automatic"
+  },
+  "profile": {
+    "targetLanguage": "pt",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "c1b3f27ac9fa54a2cf83e66b4a3ca0bcf4485ee9d72c0904048d63f43fa25a6f",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:11:49.778Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 37608.21766600001,
+        "usage": {
+          "input": 2810,
+          "output": 5927,
+          "reasoning": 5587
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:11:57.287Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 7496.864791000029,
+        "usage": {
+          "input": 2453,
+          "output": 762,
+          "reasoning": 723
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:13:11.212Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 73912.31958399998,
+        "usage": {
+          "input": 4519,
+          "output": 11559,
+          "reasoning": 10261
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Maya falou sobre a reunião?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "“Diga a hora”, ela disse. A propósito, você já comeu?"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Ainda não. O que significa [???] aqui?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "A legenda não está clara."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "4a7aa7c7-cf22-478d-ac77-0090b1067980",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "日常詢問與字幕確認",
+      "context": {
+        "text": "對話包含詢問 Maya 是否談及會議、轉述「說個時間」的要求、順帶詢問是否已用餐、尚未用餐的回答、詢問此處來源不清晰內容「[???]」的意思，以及提及字幕不清楚。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Maya 談到會議的事了嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「說個時間吧」，她說。順便問一下，你吃過了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡的「[???]」（來源內容不清晰）是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "4c4be4c1-0f41-4c59-8804-45ff3e994eb2",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 27
+            }
+          ]
+        },
+        {
+          "id": "62b32209-986f-4830-9852-e4af8ebcbfb5",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 26
+            }
+          ]
+        },
+        {
+          "id": "0fc8e79b-1c6f-444b-8ca7-e08d50099e74",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:c1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 26,
+                  "end": 37
+                }
+              ],
+              "meaning": "順便一提"
+            },
+            {
+              "id": "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:c2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 39,
+                  "end": 52
+                }
+              ],
+              "meaning": "你吃了嗎"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 26,
+              "end": 53
+            }
+          ]
+        },
+        {
+          "id": "1eeff55d-1b43-4bf5-ae3b-4547022c78f1",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:c3",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 9
+                }
+              ],
+              "meaning": "還沒"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 11
+            }
+          ]
+        },
+        {
+          "id": "54ab78be-f9ac-4270-add8-de12be065bc7",
+          "meaning": "詢問此處來源不清晰的內容「[???]」是什麼意思",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 11,
+              "end": 38
+            }
+          ]
+        },
+        {
+          "id": "ed68c952-6275-487b-b0f7-f85cf2683fcf",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 25
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:p1",
+      "utteranceIds": [
+        "0fc8e79b-1c6f-444b-8ca7-e08d50099e74"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "轉移話題的片語「A propósito」",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "「A propósito」相當於「順便一提」或「話說回來」，在口語中用來轉換話題，或附帶提出另一個新問題。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 26,
+          "end": 37
+        }
+      ]
+    },
+    {
+      "id": "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:p2",
+      "utteranceIds": [
+        "1eeff55d-1b43-4bf5-ae3b-4547022c78f1"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "表示尚未發生的簡短否定回答「Ainda não」",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [
+        "c2"
+      ],
+      "explanation": "「Ainda não」意為「還沒」，是用來回應「já ...?」（已經……了嗎？）的標準日常簡答，表示動作在說話當下尚未發生。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 9
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:r1",
+      "pointIds": [
+        "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:p1"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 26,
+              "end": 37
+            }
+          ],
+          "text": "A propósito"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在討論工作報告的空檔，順便詢問對方是否要一起喝咖啡。",
+          "dialogue": [
+            {
+              "text": "Enviei os arquivos para o cliente agora pouco.",
+              "translation": "我剛把檔案寄給客戶了。"
+            },
+            {
+              "text": "Perfeito! A propósito, você quer tomar um café comigo?",
+              "translation": "太好了！順便問一下，你想和我一起喝杯咖啡嗎？"
+            },
+            {
+              "text": "Quero sim, vamos lá.",
+              "translation": "好啊，我們走吧。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "A propósito"
+        }
+      ]
+    },
+    {
+      "id": "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:r2",
+      "pointIds": [
+        "4a7aa7c7-cf22-478d-ac77-0090b1067980:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 9
+            }
+          ],
+          "text": "Ainda não"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "同事詢問對方是否已經看過剛寄出的通知。",
+          "dialogue": [
+            {
+              "text": "Você já viu o aviso que a gerência mandou?",
+              "translation": "你已經看過管理層寄的通知了嗎？"
+            },
+            {
+              "text": "Ainda não, estava em uma ligação.",
+              "translation": "還沒，我剛才在通電話。"
+            },
+            {
+              "text": "Sem problemas, dê uma olhada quando puder.",
+              "translation": "沒問題，你有空時看一下。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Ainda não"
+        }
+      ]
+    }
+  ]
+}

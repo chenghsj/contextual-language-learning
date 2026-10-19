@@ -1,0 +1,464 @@
+{
+  "id": "4e323bb8-c533-4789-b5bc-749560932738",
+  "createdAt": "2026-10-18T17:20:46.627Z",
+  "source": {
+    "platform": "import",
+    "title": "ms-normal-transfer-automatic"
+  },
+  "profile": {
+    "targetLanguage": "ms",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "c384e49e51462178d6d14c4d501797fba487ce070f19eb7e9cf4c1eef00dd170",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:20:55.886Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 8514.101792000001,
+        "usage": {
+          "input": 2483,
+          "output": 979,
+          "reasoning": 694
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:20:59.327Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 3431.8347919999505,
+        "usage": {
+          "input": 2220,
+          "output": 243,
+          "reasoning": 203
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:21:45.857Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 46517.710375000024,
+        "usage": {
+          "input": 4286,
+          "output": 6724,
+          "reasoning": 5500
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Kenapa kamu masih di sini?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "Saya baru hendak keluar ketika kamu menelefon."
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Boleh tunggu sebentar?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "Boleh."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "出門前的通話",
+      "context": {
+        "text": "對話包含詢問對方為何仍在此處、說明剛打算出門時接到電話的情況、請求稍作等待，以及肯定的回應。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "你為什麼還在這裡？"
+        },
+        {
+          "cueId": "c2",
+          "text": "你打電話來的時候，我才剛要出門。"
+        },
+        {
+          "cueId": "c3",
+          "text": "可以稍等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "可以。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "2c9ddf14-249b-48b0-9726-67f9f165a9f9",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 26
+            }
+          ]
+        },
+        {
+          "id": "902de3ca-f00e-49af-82f8-ae3b2cb71d93",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:chk1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 4
+                }
+              ],
+              "meaning": "我"
+            },
+            {
+              "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:chk2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 5,
+                  "end": 16
+                }
+              ],
+              "meaning": "剛正要"
+            },
+            {
+              "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:chk3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 17,
+                  "end": 23
+                }
+              ],
+              "meaning": "出門"
+            },
+            {
+              "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:chk4",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 24,
+                  "end": 30
+                }
+              ],
+              "meaning": "當……的時候"
+            },
+            {
+              "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:chk5",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 31,
+                  "end": 45
+                }
+              ],
+              "meaning": "你打電話"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 46
+            }
+          ]
+        },
+        {
+          "id": "80960a6e-3f52-40d5-a4c4-e25932307d04",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:chk6",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 5
+                }
+              ],
+              "meaning": "可以"
+            },
+            {
+              "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:chk7",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 6,
+                  "end": 12
+                }
+              ],
+              "meaning": "等"
+            },
+            {
+              "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:chk8",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 13,
+                  "end": 21
+                }
+              ],
+              "meaning": "片刻／一會兒"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "ffac2473-35a4-4b12-acd5-cd7fe1425f60",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 6
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:p1",
+      "utteranceIds": [
+        "902de3ca-f00e-49af-82f8-ae3b2cb71d93"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "baru hendak 的時態用法",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "「baru hendak」表示「剛打算」或「剛正要」做某事，後接動詞原形。在句中說明動作剛要發生時正好碰上另一事件（如接到電話）。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 5,
+          "end": 16
+        }
+      ]
+    },
+    {
+      "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:p2",
+      "utteranceIds": [
+        "80960a6e-3f52-40d5-a4c4-e25932307d04"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "Boleh tunggu sebentar? 的日常請求用法",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "「Boleh tunggu sebentar?」在日常生活中用於禮貌請求對方稍候片刻。以「Boleh」引導疑問句，比直接使用祈使句更為客氣。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 22
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:r1",
+      "pointIds": [
+        "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 5,
+              "end": 16
+            }
+          ],
+          "text": "baru hendak"
+        }
+      ],
+      "pattern": "baru hendak [kata kerja]",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "詢問對方是否已經吃午餐，對方表示剛打算去吃。",
+          "dialogue": [
+            {
+              "text": "Kamu sudah makan tengah hari?",
+              "translation": "你吃午餐了嗎？"
+            },
+            {
+              "text": "Belum, saya baru hendak makan.",
+              "translation": "還沒，我剛正要吃。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "baru hendak makan"
+        }
+      ]
+    },
+    {
+      "id": "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:r2",
+      "pointIds": [
+        "ad6b5b47-a2e6-44a4-b185-2c37ff8885e5:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 22
+            }
+          ],
+          "text": "Boleh tunggu sebentar?"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "開會前需要拿筆記本，請求同事稍等一下。",
+          "dialogue": [
+            {
+              "text": "Mari kita mula perbincangan sekarang.",
+              "translation": "我們現在開始討論吧。"
+            },
+            {
+              "text": "Boleh tunggu sebentar? Saya mahu ambil buku.",
+              "translation": "可以稍等一下嗎？我想拿書。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Boleh tunggu sebentar?"
+        }
+      ]
+    }
+  ]
+}

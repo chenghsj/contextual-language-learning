@@ -1,0 +1,805 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "b5b8b5fd3bd96d69675898656585eccc8217fa4627227d8b8586d62b57434a23",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:11:58.244Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 59963.63579199999,
+        "usage": {
+          "input": 2858,
+          "output": 8916,
+          "reasoning": 8502
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:12:00.947Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 2691.862208000035,
+        "usage": {
+          "input": 2280,
+          "output": 164,
+          "reasoning": 126
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:13:04.663Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 63692.35074999998,
+        "usage": {
+          "input": 4314,
+          "output": 10025,
+          "reasoning": 8753
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "b5b8b5fd3bd96d69675898656585eccc8217fa4627227d8b8586d62b57434a23",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "64c6a2b3-932a-4d4b-9138-a9df21641066",
+    "sourceTitle": "fr-uncertainty-quote-topic-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-18T17:10:57.206Z",
+    "updatedAt": "2026-10-18T17:13:04.695Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "64c6a2b3-932a-4d4b-9138-a9df21641066"
+  },
+  "request": {
+    "id": "64c6a2b3-932a-4d4b-9138-a9df21641066",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "fr-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "fr",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Maya a parlé de la réunion ?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "« Dis-moi l’heure », a-t-elle dit. Au fait, tu as mangé ?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Pas encore. Que veut dire [???] ici ?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Le sous-titre n’est pas clair."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "6e952694-3ff7-4759-90ca-012aa38cb57f",
+      "cueIds": [
+        "c1",
+        "c2"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 5800,
+      "title": "詢問會議與轉移話題",
+      "context": {
+        "text": "包含對 Maya 是否提及會議的詢問、對要求提供時間之話語的引述，以及轉移話題詢問是否用餐。",
+        "evidenceCueIds": [
+          "c1",
+          "c2"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Maya 有提到會議的事嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「告訴我時間」，她說。對了，你吃了嗎？"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "5cf42c83-b583-4b01-90b1-77fe335d5115",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 28
+            }
+          ]
+        },
+        {
+          "id": "de8741f7-595d-4047-97e0-b8a7129f6bf6",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p1",
+            "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:ch1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 2,
+                  "end": 9
+                }
+              ],
+              "meaning": "告訴我"
+            },
+            {
+              "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:ch2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 10,
+                  "end": 17
+                }
+              ],
+              "meaning": "時間"
+            },
+            {
+              "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:ch3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 21,
+                  "end": 33
+                }
+              ],
+              "meaning": "她說"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 35
+            }
+          ]
+        },
+        {
+          "id": "9edef31f-78df-45d5-b811-d8a4f5a40f68",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:ch4",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 35,
+                  "end": 42
+                }
+              ],
+              "meaning": "對了、順帶一提"
+            },
+            {
+              "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:ch5",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 44,
+                  "end": 55
+                }
+              ],
+              "meaning": "你吃了嗎"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 35,
+              "end": 57
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "6e952694-3ff7-4759-90ca-012aa38cb57f",
+            "dialogueCueIds": [
+              "c1",
+              "c2"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "5cf42c83-b583-4b01-90b1-77fe335d5115",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 28
+                  }
+                ]
+              },
+              {
+                "id": "de8741f7-595d-4047-97e0-b8a7129f6bf6",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 35
+                  }
+                ]
+              },
+              {
+                "id": "9edef31f-78df-45d5-b811-d8a4f5a40f68",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 35,
+                    "end": 57
+                  }
+                ]
+              }
+            ],
+            "learningValue": "透過這段簡短對話可學習複合過去時詢問、引述他人話語時的倒裝句型（a-t-elle dit）、肯定命令式接代名詞（Dis-moi），以及口語中用「Au fait」轉移話題的自然銜接技巧。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "引用直接引語時的倒裝結構「a-t-elle dit」，以及動詞與代名詞之間為維持語流順暢而插入的「-t-」（t euphonique）。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "常用口語銜接短語「Au fait」（順帶一提、對了），用於在對話中切換至新的話題。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "肯定命令式「Dis-moi」，受詞代名詞置於動詞後以連字號連接，且第一人稱單數使用重讀形式「moi」。"
+              },
+              {
+                "category": "pronunciation",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "短語「Au fait」在表示「對了、順帶一提」時，字尾的子音「t」一般需要發音（發作 /o.fɛt/）。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "動詞搭配「parler de + 名詞」（談論、提及某事），並以助動詞 avoir 構成複合過去時詢問過去事件。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "6e952694-3ff7-4759-90ca-012aa38cb57f",
+        "dialogueCueIds": [
+          "c1",
+          "c2"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "5cf42c83-b583-4b01-90b1-77fe335d5115",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 28
+              }
+            ]
+          },
+          {
+            "id": "de8741f7-595d-4047-97e0-b8a7129f6bf6",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 35
+              }
+            ]
+          },
+          {
+            "id": "9edef31f-78df-45d5-b811-d8a4f5a40f68",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 35,
+                "end": 57
+              }
+            ]
+          }
+        ],
+        "learningValue": "透過這段簡短對話可學習複合過去時詢問、引述他人話語時的倒裝句型（a-t-elle dit）、肯定命令式接代名詞（Dis-moi），以及口語中用「Au fait」轉移話題的自然銜接技巧。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "引用直接引語時的倒裝結構「a-t-elle dit」，以及動詞與代名詞之間為維持語流順暢而插入的「-t-」（t euphonique）。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "常用口語銜接短語「Au fait」（順帶一提、對了），用於在對話中切換至新的話題。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "肯定命令式「Dis-moi」，受詞代名詞置於動詞後以連字號連接，且第一人稱單數使用重讀形式「moi」。"
+          },
+          {
+            "category": "pronunciation",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "短語「Au fait」在表示「對了、順帶一提」時，字尾的子音「t」一般需要發音（發作 /o.fɛt/）。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "動詞搭配「parler de + 名詞」（談論、提及某事），並以助動詞 avoir 構成複合過去時詢問過去事件。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "6e952694-3ff7-4759-90ca-012aa38cb57f",
+        "utteranceIds": [
+          "5cf42c83-b583-4b01-90b1-77fe335d5115",
+          "de8741f7-595d-4047-97e0-b8a7129f6bf6",
+          "9edef31f-78df-45d5-b811-d8a4f5a40f68"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "6e952694-3ff7-4759-90ca-012aa38cb57f",
+            "cueIds": [
+              "c1",
+              "c2"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 5800,
+            "title": "詢問會議與轉移話題",
+            "context": {
+              "text": "包含對 Maya 是否提及會議的詢問、對要求提供時間之話語的引述，以及轉移話題詢問是否用餐。",
+              "evidenceCueIds": [
+                "c1",
+                "c2"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "Maya 有提到會議的事嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "「告訴我時間」，她說。對了，你吃了嗎？"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "5cf42c83-b583-4b01-90b1-77fe335d5115",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 28
+                  }
+                ]
+              },
+              {
+                "id": "de8741f7-595d-4047-97e0-b8a7129f6bf6",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p1",
+                  "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:ch1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 2,
+                        "end": 9
+                      }
+                    ],
+                    "meaning": "告訴我"
+                  },
+                  {
+                    "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:ch2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 10,
+                        "end": 17
+                      }
+                    ],
+                    "meaning": "時間"
+                  },
+                  {
+                    "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:ch3",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 21,
+                        "end": 33
+                      }
+                    ],
+                    "meaning": "她說"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 35
+                  }
+                ]
+              },
+              {
+                "id": "9edef31f-78df-45d5-b811-d8a4f5a40f68",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p3"
+                ],
+                "chunks": [
+                  {
+                    "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:ch4",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 35,
+                        "end": 42
+                      }
+                    ],
+                    "meaning": "對了、順帶一提"
+                  },
+                  {
+                    "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:ch5",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 44,
+                        "end": 55
+                      }
+                    ],
+                    "meaning": "你吃了嗎"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 35,
+                    "end": 57
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p1",
+              "utteranceIds": [
+                "de8741f7-595d-4047-97e0-b8a7129f6bf6"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "直接引語後的倒裝與諧音 -t-",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "在引述人物說話內容後，動詞與主詞代名詞常倒裝（如 a-t-elle dit）。當以母音結尾的動詞（此處為助動詞 a）接上以母音開頭的代名詞（elle）時，中間須插入帶連字號的「-t-」（t euphonique）以避免母音直接相碰，使發音更流暢。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 21,
+                  "end": 33
+                }
+              ]
+            },
+            {
+              "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p2",
+              "utteranceIds": [
+                "de8741f7-595d-4047-97e0-b8a7129f6bf6"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "肯定命令式與受詞代名詞 moi",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "在肯定命令式中，受詞代名詞置於動詞之後並以連字號連接。此時第一人稱單數受詞代名詞由 me 改為重讀形式 moi，表示「告訴我」。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 2,
+                  "end": 9
+                }
+              ]
+            },
+            {
+              "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p3",
+              "utteranceIds": [
+                "9edef31f-78df-45d5-b811-d8a4f5a40f68"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "轉移話題短語 Au fait",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "口語中常用的銜接短語，相當於「對了」或「順帶一提」，用於在對話中切換到新話題。在此片語中，fait 的字尾字母 t 通常要發音，唸作 /o fɛt/。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 35,
+                  "end": 42
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:r1",
+              "pointIds": [
+                "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p2"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 2,
+                      "end": 9
+                    }
+                  ],
+                  "text": "Dis-moi"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "在圖書館討論報告時，一人想知道對方的看法。",
+                  "dialogue": [
+                    {
+                      "text": "Dis-moi ce que tu penses de cette idée.",
+                      "translation": "跟我說說你覺得這個想法怎麼樣。"
+                    },
+                    {
+                      "text": "Je trouve que c'est un très bon début.",
+                      "translation": "我覺得這是一個很好的開始。"
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "Dis-moi"
+                }
+              ]
+            },
+            {
+              "id": "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:r2",
+              "pointIds": [
+                "6e952694-3ff7-4759-90ca-012aa38cb57f:s0:p3"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 35,
+                      "end": 42
+                    }
+                  ],
+                  "text": "Au fait"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩位同事聊完工作後，一人想起另一件事想詢問。",
+                  "dialogue": [
+                    {
+                      "text": "On se voit demain pour la réunion.",
+                      "translation": "我們明天開會見。"
+                    },
+                    {
+                      "text": "D'accord. Au fait, tu as apporté le dossier ?",
+                      "translation": "好的。對了，你帶那份文件了嗎？"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "Au fait"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

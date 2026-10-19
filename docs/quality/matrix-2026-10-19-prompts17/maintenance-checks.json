@@ -1,0 +1,36 @@
+{
+  "completedAt": "2026-10-19T01:31:47.801534+00:00",
+  "reportDate": "2026-10-19",
+  "timezone": "Asia/Taipei",
+  "scope": "Quality evidence/verifier only; product generation source unchanged. Raw inference artifacts are excluded from formatting and independently hash-verified.",
+  "checks": [
+    {
+      "command": [
+        "node",
+        "/Users/cheng/Library/pnpm/.tools/pnpm/9.15.4/node_modules/pnpm/bin/pnpm.cjs",
+        "exec",
+        "tsc",
+        "-p",
+        "docs/quality/matrix-2026-10-19-prompts17/tsconfig.json",
+        "--noEmit"
+      ],
+      "exitCode": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "node",
+        "/Users/cheng/Library/pnpm/.tools/pnpm/9.15.4/node_modules/pnpm/bin/pnpm.cjs",
+        "exec",
+        "prettier",
+        "--check",
+        "docs/quality/matrix-2026-10-19-prompts17",
+        "docs/quality/README.md"
+      ],
+      "exitCode": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    }
+  ],
+  "offlineVerification": "source-verification.json",
+  "newInferenceCallsStartedByTheseChecks": 0
+}

@@ -1,0 +1,27 @@
+{
+  "case": "ko-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-1/ko-uncertainty-quote-topic-automatic/videos/ko-uncertainty-quote-topic-automatic--a8f250cd0a9325e3/f6c393ea-17a5-443f-9c95-1d3468cca1f0.json",
+  "documentHash": "66159752f0cdaa18db23da3580002b4efdcd9d32421bc9b59e37c32b1aa1faed",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source roles, quote/topic boundary and uncertainty",
+      "result": "민수 is preserved in its original written form. Neither the quote nor summary assigns the reported request to a specific speaker, recipient or gender. Both [???] occurrences are locally marked unclear in context/translation and affected unit meaning; 여기 does not become a screen or writing event. The quote and topic switch are separate units."
+    },
+    {
+      "scope": "reliable teaching and example roles",
+      "result": "Points and sourceForms exclude the damaged fragments and teach the independently reliable request-reporting, topic marker and negative adjective. The department-head message and unfinished-room dialogues have coherent roles and target meanings. No unsupported source reading is supplied."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "redundancy",
+      "paths": ["/points/2", "/reusableItems/1"],
+      "quote": "아직요",
+      "description": "The already translated short reply receives a separate point and full reusable example. Its meaning and polite ending are correct, but the extra teaching is avoidable at this selected level, like the previous English Not yet warning."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

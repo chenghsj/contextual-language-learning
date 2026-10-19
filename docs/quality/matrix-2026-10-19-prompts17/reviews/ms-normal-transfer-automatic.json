@@ -1,0 +1,19 @@
+{
+  "case": "ms-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-3/ms-normal-transfer-automatic/videos/ms-normal-transfer-automatic--fbb7f764ec22225f/4e323bb8-c533-4789-b5bc-749560932738.json",
+  "documentHash": "0e0d8cc6b36f6f08289eec835497f9cae30bf522381357c345c8af3574dc4c24",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source fidelity, timing and response",
+      "result": "Summary and translations preserve the still-here question, being just about to leave when called and the waiting request. No definite cancellation, new participant identity or invented visual event is asserted. Boleh remains basic_only without filler."
+    },
+    {
+      "scope": "teaching and example coherence",
+      "result": "baru hendak + verb and Boleh tunggu sebentar retain their intended senses. The not-yet-eaten lunch response and the meeting-delay request have consistent actors, timing, target text and Chinese translations. The invented notebook/book detail remains in the example context."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

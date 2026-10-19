@@ -1,0 +1,27 @@
+{
+  "case": "es-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-1/es-normal-transfer-automatic/videos/es-normal-transfer-automatic--bedf8d06e8c23c78/27913053-a0b1-47d6-8a1e-b5ac3baa40b2.json",
+  "documentHash": "b4666bd107ab01fc242026a9e765b6191063697839cd13eb9ea9242b9e7bed70",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source preservation and time relation",
+      "result": "Source and translations retain the still-here question, imminent departure at the call, request to wait and affirmative response. The summary does not assign identities or an actual cancelled departure. Sí remains basic_only without filler."
+    },
+    {
+      "scope": "frames, examples and supplied readings",
+      "result": "seguir + location, estar a punto de + infinitive, imperfect/past timing and the puedes request retain their source senses. The cooking reply answers whether eating has occurred, and the office request/reply uses consistent actors and directions. Targets and supplied written pronunciation segments align with their words; no original audio was checked."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "overgeneralized_wording",
+      "path": "/points/2/explanation",
+      "quote": "突然發生",
+      "description": "The past-event explanation need not make suddenness a necessary feature of the cuando event. Prefer an event occurring at that background moment. The source meaning and timing relation remain correct and do not assert a mandatory cancellation."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

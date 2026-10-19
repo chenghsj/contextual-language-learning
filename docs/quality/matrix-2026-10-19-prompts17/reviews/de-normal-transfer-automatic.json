@@ -1,0 +1,27 @@
+{
+  "case": "de-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-2/de-normal-transfer-automatic/videos/de-normal-transfer-automatic--de80257a0615e290/ef3c078d-ac3a-4a4d-b4b9-9c5b8f7bcf9c.json",
+  "documentHash": "94628e25ef5cefd69544a09a22c62d40cbecfc7fc00a73f705c00178ad0a9e68",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source timing, summary and reply",
+      "result": "The source and translations preserve intended departure at the time of the call without asserting an actual cancelled departure. Context is an impersonal inventory. Ja remains basic_only. The subordinate-clause word-order explanation for the als clause identifies the final finite verb correctly."
+    },
+    {
+      "scope": "examples and written pronunciation",
+      "result": "The not-yet-on-the-way/rain reply answers the same event asked about; the office waiting request has coherent roles. Targets instantiate the source frames. Supplied lexical IPA is treated as written pronunciation guidance, not evidence of the recording's delivery."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "overgeneralized_wording",
+      "path": "/points/0/explanation",
+      "quote": "突發事件",
+      "description": "The timing construction is described as involving a sudden event. Prefer describing another event occurring at that moment without making suddenness a necessary property. The source translation and intended-departure relation remain correct, and no definite cancellation or emotion is asserted."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

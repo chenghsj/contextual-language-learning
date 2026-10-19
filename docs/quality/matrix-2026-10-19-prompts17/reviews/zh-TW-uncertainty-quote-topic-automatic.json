@@ -1,0 +1,28 @@
+{
+  "case": "zh-TW-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-4/zh-TW-uncertainty-quote-topic-automatic/videos/zh-TW-uncertainty-quote-topic-automatic--55559a73cb5cf209/528376ec-2682-4157-810c-e2ec9b258080.json",
+  "documentHash": "047ff52e662d8546194ac19ca2f6a18d80ccc8b17ac39faf4f9cab469bdc6448",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "source preservation and unresolved reference",
+      "result": "ミオ remains in its source spelling and is only the subject of the source's meeting question, not an asserted quoted speaker. [???] is locally marked unresolved in summary, translation and affected meaning. The reliable 是什麼意思 target excludes it; 這裡 does not become writing or a screen. 還沒 remains basic_only."
+    },
+    {
+      "scope": "constructions and invented examples",
+      "result": "有 + action, 是這麼說的, 對了 and 是什麼意思 are explained consistently with the source. The teacher quote, returned book and vocabulary question dialogues are coherent. The first example's situation describes document delivery while its actual dialogue confirms a meeting-time notification, so that example does not satisfy the same-conversation contract."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "example_situation_mismatch",
+      "path": "/reusableItems/0/examples/0/situation",
+      "quote": "寄送文件",
+      "description": "The situation says the colleagues are confirming whether documents were sent. The question and answer instead ask/confirm notifying everyone of tomorrow's meeting time. No document sending is mentioned, so the target action and the situation describe different tasks.",
+      "suggestedDirection": "Make the situation describe notifying people of the meeting time, or make the dialogue actually ask and answer about sending the documents; preserve the target construction."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

@@ -1,0 +1,35 @@
+{
+  "case": "vi-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-4/vi-normal-transfer-automatic/videos/vi-normal-transfer-automatic--ba7640c6bc82068b/797c742b-78ef-4193-8ca3-62f0cf00fbf5.json",
+  "documentHash": "6fbca37de0158157570569764fff2cf3c8f4e09ccf3c726e6ac29de18b108862",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "source timing, modality and reply",
+      "result": "The complete translations preserve the continuing-presence question, imminent intention, call and waiting request. The explanation explicitly avoids treating the intention as necessarily cancelled. Gọi is not forced into a definite telephone medium, and Được remains basic_only."
+    },
+    {
+      "scope": "frames and example roles",
+      "result": "The coffee-stock question/reply, rain/intended-lunch explanation and pen-borrowing permission have coherent event and participant roles. Their targets instantiate vẫn còn, đang định ... thì ... and được không. The source heading, however, introduces an encounter not established by the text."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "unsupported_source_event",
+      "path": "/sections/0/title",
+      "quote": "臨時遇見",
+      "description": "The fixed source only asks about remaining here, reports being about to leave when called, and requests waiting. It does not establish a chance encounter or meeting event. The heading adds that event as source context even though the detailed summary remains neutral.",
+      "suggestedDirection": "Use a source-grounded heading about remaining/leaving and waiting, without an invented encounter."
+    },
+    {
+      "severity": "warning",
+      "type": "chunk_granularity",
+      "path": "/sections/0/utterances/1/chunks",
+      "quote": "叫、喊",
+      "description": "The sentence is split into six small chunks, including individual pronoun, verb and connector entries. Prefer meaningful construction-sized chunks at B1 rather than reconstructing a word-by-word gloss; the complete translation and timing explanation remain coherent."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

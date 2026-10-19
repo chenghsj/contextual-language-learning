@@ -1,0 +1,332 @@
+[
+  {
+    "id": "af013557-ecd0-498d-a1c9-08e5c4feb4a6",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "ko-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "ko",
+      "instructionLanguage": "zh-TW",
+      "level": "3",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "아직 여기 있어요?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "전화가 왔을 때 막 나가려던 참이었어요."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "잠깐 기다려 줄 수 있어요?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "네."
+      }
+    ]
+  },
+  {
+    "id": "f6c393ea-17a5-443f-9c95-1d3468cca1f0",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "ko-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "ko",
+      "instructionLanguage": "zh-TW",
+      "level": "3",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "민수가 모임 이야기를 했어요?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "시간을 알려 달라고 했어요. 그런데 밥은 먹었어요? [???]"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "아직요. 여기 [???]는 무슨 뜻이에요?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "자막이 분명하지 않아요."
+      }
+    ]
+  },
+  {
+    "id": "27913053-a0b1-47d6-8a1e-b5ac3baa40b2",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "es-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "es",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "¿Por qué sigues aquí?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Estaba a punto de salir cuando llamaste."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "¿Puedes esperar un momento?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Sí."
+      }
+    ]
+  },
+  {
+    "id": "1e69f470-4e3a-4d54-9527-cfb5e4c489e9",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "es-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "es",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "¿Maya habló de la reunión?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“Dime la hora”, dijo. Por cierto, ¿ya comiste? [???]"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Todavía no. ¿Qué significa [???] aquí?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "El subtítulo no está claro."
+      }
+    ]
+  },
+  {
+    "id": "8f7f9129-b094-45b8-9924-d4ce249a3306",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "fr-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "fr",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Pourquoi es-tu encore là ?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "J’allais partir quand tu as appelé."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Tu peux attendre un instant ?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Oui."
+      }
+    ]
+  },
+  {
+    "id": "64c6a2b3-932a-4d4b-9138-a9df21641066",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "fr-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "fr",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Maya a parlé de la réunion ?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "« Dis-moi l’heure », a-t-elle dit. Au fait, tu as mangé ?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Pas encore. Que veut dire [???] ici ?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Le sous-titre n’est pas clair."
+      }
+    ]
+  }
+]

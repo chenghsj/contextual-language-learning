@@ -1,0 +1,1248 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "8120fd4f66a16133dee765e63bd810011d3f5ebd1739235a4afdac8d58e911fa",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:24:44.662Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 46656.83574999997,
+        "usage": {
+          "input": 2590,
+          "output": 6983,
+          "reasoning": 6646
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:24:51.324Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 6648.803375000018,
+        "usage": {
+          "input": 2433,
+          "output": 839,
+          "reasoning": 800
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:26:16.428Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 85093.99079199997,
+        "usage": {
+          "input": 4589,
+          "output": 13621,
+          "reasoning": 11912
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "8120fd4f66a16133dee765e63bd810011d3f5ebd1739235a4afdac8d58e911fa",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "3a81f36b-bc78-4425-aab1-9dc0cd3a39c8",
+    "sourceTitle": "zh-CN-uncertainty-quote-topic-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-18T17:23:57.458Z",
+    "updatedAt": "2026-10-18T17:26:16.452Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "3a81f36b-bc78-4425-aab1-9dc0cd3a39c8"
+  },
+  "request": {
+    "id": "3a81f36b-bc78-4425-aab1-9dc0cd3a39c8",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "zh-CN-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "zh-CN",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "ミオ有提到聚会吗？"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“请告诉我时间”，是这么说的。对了，吃饭了吗？"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "还没。这里的[???]是什么意思？"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "字幕不清楚。"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "b2d7d91f-50da-4f52-b448-a8cdce743c4e",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "詢問聚會與字詞含義",
+      "context": {
+        "text": "對話包含詢問ミオ是否提及聚會、轉述「請告訴我時間」的話語、詢問是否用餐與「還沒」的回答，以及針對此處未辨識內容「[???]」含義的提問與字幕不清楚的說明。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "ミオ有提到聚會嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「請告訴我時間」，是這麼說的。對了，吃飯了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡的[???]（未辨識內容）是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "ミオ"
+            },
+            {
+              "text": "有",
+              "reading": "yǒu"
+            },
+            {
+              "text": "提到",
+              "reading": "tí dào"
+            },
+            {
+              "text": "聚会",
+              "reading": "jù huì"
+            },
+            {
+              "text": "吗",
+              "reading": "ma"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "“"
+            },
+            {
+              "text": "请",
+              "reading": "qǐng"
+            },
+            {
+              "text": "告诉",
+              "reading": "gào su"
+            },
+            {
+              "text": "我",
+              "reading": "wǒ"
+            },
+            {
+              "text": "时间",
+              "reading": "shí jiān"
+            },
+            {
+              "text": "”"
+            },
+            {
+              "text": "，"
+            },
+            {
+              "text": "是",
+              "reading": "shì"
+            },
+            {
+              "text": "这么",
+              "reading": "zhè me"
+            },
+            {
+              "text": "说",
+              "reading": "shuō"
+            },
+            {
+              "text": "的",
+              "reading": "de"
+            },
+            {
+              "text": "。"
+            },
+            {
+              "text": "对了",
+              "reading": "duì le"
+            },
+            {
+              "text": "，"
+            },
+            {
+              "text": "吃饭",
+              "reading": "chī fàn"
+            },
+            {
+              "text": "了",
+              "reading": "le"
+            },
+            {
+              "text": "吗",
+              "reading": "ma"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "还没",
+              "reading": "hái méi"
+            },
+            {
+              "text": "。"
+            },
+            {
+              "text": "这里",
+              "reading": "zhè lǐ"
+            },
+            {
+              "text": "的",
+              "reading": "de"
+            },
+            {
+              "text": "[???]"
+            },
+            {
+              "text": "是",
+              "reading": "shì"
+            },
+            {
+              "text": "什么",
+              "reading": "shén me"
+            },
+            {
+              "text": "意思",
+              "reading": "yì si"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "字幕",
+              "reading": "zì mù"
+            },
+            {
+              "text": "不",
+              "reading": "bù"
+            },
+            {
+              "text": "清楚",
+              "reading": "qīng chu"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "dd65300d-75fe-4a52-8cc8-231401340153",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "id": "3c6c100f-f82c-4743-a251-6ff9233a215b",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p1"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 15
+            }
+          ]
+        },
+        {
+          "id": "4a358eca-ae34-4f90-b28a-a7d9b94e390d",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p2"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 15,
+              "end": 23
+            }
+          ]
+        },
+        {
+          "id": "808c1ec4-4d4c-48e7-a7be-e169d0baea95",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "id": "f6818112-defc-45a3-915b-696a8c53d22f",
+          "meaning": "詢問此處[???]（未辨識內容）是什麼意思",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p3"
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 3,
+              "end": 17
+            }
+          ]
+        },
+        {
+          "id": "01635e79-4abc-4662-9f5f-91b3c75a1450",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 6
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "b2d7d91f-50da-4f52-b448-a8cdce743c4e",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "dd65300d-75fe-4a52-8cc8-231401340153",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              },
+              {
+                "id": "3c6c100f-f82c-4743-a251-6ff9233a215b",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 15
+                  }
+                ]
+              },
+              {
+                "id": "4a358eca-ae34-4f90-b28a-a7d9b94e390d",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 15,
+                    "end": 23
+                  }
+                ]
+              },
+              {
+                "id": "808c1ec4-4d4c-48e7-a7be-e169d0baea95",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 3
+                  }
+                ]
+              },
+              {
+                "id": "f6818112-defc-45a3-915b-696a8c53d22f",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 3,
+                    "end": 17
+                  }
+                ]
+              },
+              {
+                "id": "01635e79-4abc-4662-9f5f-91b3c75a1450",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 6
+                  }
+                ]
+              }
+            ],
+            "learningValue": "這段對話展示了轉述他人原話的句型、切換話題的話語標記，以及詢問含義與表達說明的實用日常口語。",
+            "opportunities": [
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "「是這麼說的」用於直接或間接引述他人話語後的確認與補充。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "「對了」作為日常會話標記，用於轉換話題或引出剛想到的事情。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "「有＋動詞＋嗎？」用於詢問過去是否發生過某動作或提及某事。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "「是什麼意思？」為詢問詞語、內容或情況具體含義的常用表達。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "b2d7d91f-50da-4f52-b448-a8cdce743c4e",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "dd65300d-75fe-4a52-8cc8-231401340153",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 9
+              }
+            ]
+          },
+          {
+            "id": "3c6c100f-f82c-4743-a251-6ff9233a215b",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 15
+              }
+            ]
+          },
+          {
+            "id": "4a358eca-ae34-4f90-b28a-a7d9b94e390d",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 15,
+                "end": 23
+              }
+            ]
+          },
+          {
+            "id": "808c1ec4-4d4c-48e7-a7be-e169d0baea95",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 3
+              }
+            ]
+          },
+          {
+            "id": "f6818112-defc-45a3-915b-696a8c53d22f",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 3,
+                "end": 17
+              }
+            ]
+          },
+          {
+            "id": "01635e79-4abc-4662-9f5f-91b3c75a1450",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 6
+              }
+            ]
+          }
+        ],
+        "learningValue": "這段對話展示了轉述他人原話的句型、切換話題的話語標記，以及詢問含義與表達說明的實用日常口語。",
+        "opportunities": [
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "「是這麼說的」用於直接或間接引述他人話語後的確認與補充。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "「對了」作為日常會話標記，用於轉換話題或引出剛想到的事情。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "「有＋動詞＋嗎？」用於詢問過去是否發生過某動作或提及某事。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "「是什麼意思？」為詢問詞語、內容或情況具體含義的常用表達。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "b2d7d91f-50da-4f52-b448-a8cdce743c4e",
+        "utteranceIds": [
+          "dd65300d-75fe-4a52-8cc8-231401340153",
+          "3c6c100f-f82c-4743-a251-6ff9233a215b",
+          "4a358eca-ae34-4f90-b28a-a7d9b94e390d",
+          "808c1ec4-4d4c-48e7-a7be-e169d0baea95",
+          "f6818112-defc-45a3-915b-696a8c53d22f",
+          "01635e79-4abc-4662-9f5f-91b3c75a1450"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "b2d7d91f-50da-4f52-b448-a8cdce743c4e",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "詢問聚會與字詞含義",
+            "context": {
+              "text": "對話包含詢問ミオ是否提及聚會、轉述「請告訴我時間」的話語、詢問是否用餐與「還沒」的回答，以及針對此處未辨識內容「[???]」含義的提問與字幕不清楚的說明。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "ミオ有提到聚會嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "「請告訴我時間」，是這麼說的。對了，吃飯了嗎？"
+              },
+              {
+                "cueId": "c3",
+                "text": "還沒。這裡的[???]（未辨識內容）是什麼意思？"
+              },
+              {
+                "cueId": "c4",
+                "text": "字幕不清楚。"
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "ミオ"
+                  },
+                  {
+                    "text": "有",
+                    "reading": "yǒu"
+                  },
+                  {
+                    "text": "提到",
+                    "reading": "tí dào"
+                  },
+                  {
+                    "text": "聚会",
+                    "reading": "jù huì"
+                  },
+                  {
+                    "text": "吗",
+                    "reading": "ma"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "“"
+                  },
+                  {
+                    "text": "请",
+                    "reading": "qǐng"
+                  },
+                  {
+                    "text": "告诉",
+                    "reading": "gào su"
+                  },
+                  {
+                    "text": "我",
+                    "reading": "wǒ"
+                  },
+                  {
+                    "text": "时间",
+                    "reading": "shí jiān"
+                  },
+                  {
+                    "text": "”"
+                  },
+                  {
+                    "text": "，"
+                  },
+                  {
+                    "text": "是",
+                    "reading": "shì"
+                  },
+                  {
+                    "text": "这么",
+                    "reading": "zhè me"
+                  },
+                  {
+                    "text": "说",
+                    "reading": "shuō"
+                  },
+                  {
+                    "text": "的",
+                    "reading": "de"
+                  },
+                  {
+                    "text": "。"
+                  },
+                  {
+                    "text": "对了",
+                    "reading": "duì le"
+                  },
+                  {
+                    "text": "，"
+                  },
+                  {
+                    "text": "吃饭",
+                    "reading": "chī fàn"
+                  },
+                  {
+                    "text": "了",
+                    "reading": "le"
+                  },
+                  {
+                    "text": "吗",
+                    "reading": "ma"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "还没",
+                    "reading": "hái méi"
+                  },
+                  {
+                    "text": "。"
+                  },
+                  {
+                    "text": "这里",
+                    "reading": "zhè lǐ"
+                  },
+                  {
+                    "text": "的",
+                    "reading": "de"
+                  },
+                  {
+                    "text": "[???]"
+                  },
+                  {
+                    "text": "是",
+                    "reading": "shì"
+                  },
+                  {
+                    "text": "什么",
+                    "reading": "shén me"
+                  },
+                  {
+                    "text": "意思",
+                    "reading": "yì si"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "字幕",
+                    "reading": "zì mù"
+                  },
+                  {
+                    "text": "不",
+                    "reading": "bù"
+                  },
+                  {
+                    "text": "清楚",
+                    "reading": "qīng chu"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              }
+            ],
+            "utterances": [
+              {
+                "id": "dd65300d-75fe-4a52-8cc8-231401340153",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              },
+              {
+                "id": "3c6c100f-f82c-4743-a251-6ff9233a215b",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p1"
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 15
+                  }
+                ]
+              },
+              {
+                "id": "4a358eca-ae34-4f90-b28a-a7d9b94e390d",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p2"
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 15,
+                    "end": 23
+                  }
+                ]
+              },
+              {
+                "id": "808c1ec4-4d4c-48e7-a7be-e169d0baea95",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 3
+                  }
+                ]
+              },
+              {
+                "id": "f6818112-defc-45a3-915b-696a8c53d22f",
+                "meaning": "詢問此處[???]（未辨識內容）是什麼意思",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p3"
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 3,
+                    "end": 17
+                  }
+                ]
+              },
+              {
+                "id": "01635e79-4abc-4662-9f5f-91b3c75a1450",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 6
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p1",
+              "utteranceIds": [
+                "3c6c100f-f82c-4743-a251-6ff9233a215b"
+              ],
+              "category": "usage",
+              "presentation": "core",
+              "title": "是這麼說的（轉述引言）",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "在此處接在引述的話語之後，用來確認前句確實是對方的原話。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 9,
+                  "end": 14
+                }
+              ]
+            },
+            {
+              "id": "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p2",
+              "utteranceIds": [
+                "4a358eca-ae34-4f90-b28a-a7d9b94e390d"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "對了（轉換話題）",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "在此處作為話語標記，表示剛好想起某事或順勢開啟新的話題。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 15,
+                  "end": 17
+                }
+              ]
+            },
+            {
+              "id": "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p3",
+              "utteranceIds": [
+                "f6818112-defc-45a3-915b-696a8c53d22f"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "是什麼意思（詢問含義）",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [],
+              "explanation": "在此處用於向對方詢問某個內容或詞語的具體含義。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 11,
+                  "end": 16
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:r1",
+              "pointIds": [
+                "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p1"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 9,
+                      "end": 14
+                    }
+                  ],
+                  "text": "是这么说的"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩人在確認老師交代的作業要求。",
+                  "dialogue": [
+                    {
+                      "text": "老师真的要求明天交报告吗？",
+                      "translation": "老師真的要求明天交報告嗎？"
+                    },
+                    {
+                      "text": "“明天中午前发到邮箱”，是这么说的。",
+                      "translation": "「明天中午前寄到信箱」，是這麼說的。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "是这么说的"
+                }
+              ]
+            },
+            {
+              "id": "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:r2",
+              "pointIds": [
+                "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p2"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 15,
+                      "end": 17
+                    }
+                  ],
+                  "text": "对了"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "同事在聊完工作進度後轉換話題。",
+                  "dialogue": [
+                    {
+                      "text": "方案已经发给客户了。",
+                      "translation": "方案已經寄給客戶了。"
+                    },
+                    {
+                      "text": "太好了。对了，下周的活动你参加吗？",
+                      "translation": "太好了。對了，下週的活動你參加嗎？"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "对了"
+                }
+              ]
+            },
+            {
+              "id": "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:r3",
+              "pointIds": [
+                "b2d7d91f-50da-4f52-b448-a8cdce743c4e:s0:p3"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 11,
+                      "end": 16
+                    }
+                  ],
+                  "text": "是什么意思"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "朋友在看通知時詢問不理解的詞語。",
+                  "dialogue": [
+                    {
+                      "text": "通知里写的“暂定”是什么意思？",
+                      "translation": "通知裡寫的「暫定」是什麼意思？"
+                    },
+                    {
+                      "text": "就是目前先这么决定，之后可能还会调整。",
+                      "translation": "就是目前先這麼決定，之後可能還會調整。"
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "是什么意思"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

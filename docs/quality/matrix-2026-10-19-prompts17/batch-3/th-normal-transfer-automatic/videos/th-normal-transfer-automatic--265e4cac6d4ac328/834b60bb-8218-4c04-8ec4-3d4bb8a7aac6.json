@@ -1,0 +1,591 @@
+{
+  "id": "834b60bb-8218-4c04-8ec4-3d4bb8a7aac6",
+  "createdAt": "2026-10-18T17:16:39.846Z",
+  "source": {
+    "platform": "import",
+    "title": "th-normal-transfer-automatic"
+  },
+  "profile": {
+    "targetLanguage": "th",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "c95b793821d5f8ad23aee236d2cfb52059d20142a1b00c3870f28671dbb9729f",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:16:52.552Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 11513.475708000013,
+        "usage": {
+          "input": 2435,
+          "output": 1469,
+          "reasoning": 1205
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:16:55.343Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 2781.727583,
+        "usage": {
+          "input": 2246,
+          "output": 180,
+          "reasoning": 138
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:18:00.229Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 64872.41595800003,
+        "usage": {
+          "input": 4256,
+          "output": 9826,
+          "reasoning": 8141
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "ทำไมยังอยู่ที่นี่"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "กำลังจะออกไปตอนที่เธอโทรมา"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "รอสักครู่ได้ไหม"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "ได้"
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "出門前的對話",
+      "context": {
+        "text": "對話包含詢問為何仍在原地、說明電話打來時正準備出門、提出稍候請求以及表示同意。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "為什麼還在這裡？"
+        },
+        {
+          "cueId": "c2",
+          "text": "你打電話來的時候正準備要出門"
+        },
+        {
+          "cueId": "c3",
+          "text": "可以稍等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "可以"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "ทำไม",
+              "reading": "/tʰam.maj/"
+            },
+            {
+              "text": "ยัง",
+              "reading": "/jaŋ/"
+            },
+            {
+              "text": "อยู่",
+              "reading": "/jùː/"
+            },
+            {
+              "text": "ที่นี่",
+              "reading": "/tʰîː.nîː/"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "กำลังจะ",
+              "reading": "/kam.laŋ.t͡ɕaʔ/"
+            },
+            {
+              "text": "ออกไป",
+              "reading": "/ʔɔ̀ːk.paj/"
+            },
+            {
+              "text": "ตอนที่",
+              "reading": "/tɔːn.tʰîː/"
+            },
+            {
+              "text": "เธอ",
+              "reading": "/tʰɤː/"
+            },
+            {
+              "text": "โทรมา",
+              "reading": "/tʰoː.maː/"
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "รอ",
+              "reading": "/rɔː/"
+            },
+            {
+              "text": "สักครู่",
+              "reading": "/sàk.kʰrûː/"
+            },
+            {
+              "text": "ได้ไหม",
+              "reading": "/dâj.mǎj/"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "ได้",
+              "reading": "/dâj/"
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "6e89e72e-48ff-4db2-8f31-2e9ae6834b11",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 17
+            }
+          ]
+        },
+        {
+          "id": "e3635d53-fb42-408e-abe2-8cd8c61bcd5d",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:c2-1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 7
+                }
+              ],
+              "meaning": "正準備要"
+            },
+            {
+              "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:c2-2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 7,
+                  "end": 12
+                }
+              ],
+              "meaning": "出門、出去"
+            },
+            {
+              "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:c2-3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 12,
+                  "end": 18
+                }
+              ],
+              "meaning": "在……的時候"
+            },
+            {
+              "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:c2-4",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 18,
+                  "end": 26
+                }
+              ],
+              "meaning": "你打電話來"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 26
+            }
+          ]
+        },
+        {
+          "id": "41796099-1e4b-4068-9edd-bd929add4d62",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:c3-1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 9
+                }
+              ],
+              "meaning": "稍等一下"
+            },
+            {
+              "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:c3-2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 9,
+                  "end": 15
+                }
+              ],
+              "meaning": "可以嗎"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 15
+            }
+          ]
+        },
+        {
+          "id": "90992dce-5682-48f3-82ba-e0aba3d9b6a8",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:p1",
+      "utteranceIds": [
+        "e3635d53-fb42-408e-abe2-8cd8c61bcd5d"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "「กำลังจะ...」表示正打算進行的動作",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "在句中「กำลังจะ...」表示「正要／正準備要」做某事，後接動詞短語「ออกไป」（出門），說明在電話打來（ตอนที่เธอโทรมา）的當下正打算採取的動作。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:p2",
+      "utteranceIds": [
+        "41796099-1e4b-4068-9edd-bd929add4d62"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "禮貌請求「รอสักครู่ได้ไหม」",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "「รอสักครู่ได้ไหม」意為「可以稍等一下嗎？」，由「รอ」（等）、「สักครู่」（一會兒）與疑問結尾「ได้ไหม」（可以嗎）組成，是請求對方稍候的常用禮貌表達。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 15
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:r1",
+      "pointIds": [
+        "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 7
+            }
+          ],
+          "text": "กำลังจะ"
+        }
+      ],
+      "pattern": "กำลังจะ + 動詞",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "準備去吃午餐時同事詢問近況",
+          "dialogue": [
+            {
+              "text": "จะไปไหนเหรอ",
+              "translation": "你要去哪裡？",
+              "pronunciation": [
+                {
+                  "text": "จะ",
+                  "reading": "/t͡ɕaʔ/"
+                },
+                {
+                  "text": "ไป",
+                  "reading": "/paj/"
+                },
+                {
+                  "text": "ไหน",
+                  "reading": "/nǎj/"
+                },
+                {
+                  "text": "เหรอ",
+                  "reading": "/rɤ̌ː/"
+                }
+              ]
+            },
+            {
+              "text": "กำลังจะไปกินข้าว",
+              "translation": "正準備去吃飯。",
+              "pronunciation": [
+                {
+                  "text": "กำลังจะ",
+                  "reading": "/kam.laŋ.t͡ɕaʔ/"
+                },
+                {
+                  "text": "ไป",
+                  "reading": "/paj/"
+                },
+                {
+                  "text": "กิน",
+                  "reading": "/kin/"
+                },
+                {
+                  "text": "ข้าว",
+                  "reading": "/kʰâːw/"
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "กำลังจะไปกินข้าว"
+        }
+      ]
+    },
+    {
+      "id": "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:r2",
+      "pointIds": [
+        "e93f64b7-a0d9-425e-a061-5b3569d5a41a:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 15
+            }
+          ],
+          "text": "รอสักครู่ได้ไหม"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "辦公室裡同事詢問文件是否已備妥",
+          "dialogue": [
+            {
+              "text": "เอกสารชุดนี้พร้อมหรือยัง",
+              "translation": "這份文件準備好了嗎？",
+              "pronunciation": [
+                {
+                  "text": "เอกสาร",
+                  "reading": "/ʔèːk.kà.sǎːn/"
+                },
+                {
+                  "text": "ชุดนี้",
+                  "reading": "/t͡ɕʰút.níː/"
+                },
+                {
+                  "text": "พร้อม",
+                  "reading": "/pʰrɔ́ːm/"
+                },
+                {
+                  "text": "หรือยัง",
+                  "reading": "/rɯ̌ː.jaŋ/"
+                }
+              ]
+            },
+            {
+              "text": "รอสักครู่ได้ไหม กำลังพิมพ์อยู่",
+              "translation": "可以稍等一下嗎？正在列印中。",
+              "pronunciation": [
+                {
+                  "text": "รอสักครู่ได้ไหม",
+                  "reading": "/rɔː.sàk.kʰrûː.dâj.mǎj/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "กำลัง",
+                  "reading": "/kam.laŋ/"
+                },
+                {
+                  "text": "พิมพ์",
+                  "reading": "/pʰim/"
+                },
+                {
+                  "text": "อยู่",
+                  "reading": "/jùː/"
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "รอสักครู่ได้ไหม"
+        }
+      ]
+    }
+  ]
+}

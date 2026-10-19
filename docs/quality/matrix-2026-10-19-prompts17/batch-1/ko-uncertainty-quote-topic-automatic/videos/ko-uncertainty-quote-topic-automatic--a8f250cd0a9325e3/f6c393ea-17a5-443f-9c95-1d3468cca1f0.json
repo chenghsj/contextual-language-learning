@@ -1,0 +1,458 @@
+{
+  "id": "f6c393ea-17a5-443f-9c95-1d3468cca1f0",
+  "createdAt": "2026-10-18T17:04:33.228Z",
+  "source": {
+    "platform": "import",
+    "title": "ko-uncertainty-quote-topic-automatic"
+  },
+  "profile": {
+    "targetLanguage": "ko",
+    "instructionLanguage": "zh-TW",
+    "level": "3",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "2488422fb9c50f90870a43a187f7b62c627fd8c262a5533df350bb5488532f76",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:05:17.366Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 42989.702083,
+        "usage": {
+          "input": 2703,
+          "output": 6322,
+          "reasoning": 5930
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:05:22.865Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 5495.723542000007,
+        "usage": {
+          "input": 2515,
+          "output": 395,
+          "reasoning": 355
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:06:44.379Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 81508.57733300001,
+        "usage": {
+          "input": 4597,
+          "output": 12699,
+          "reasoning": 11094
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "민수가 모임 이야기를 했어요?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "시간을 알려 달라고 했어요. 그런데 밥은 먹었어요? [???]"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "아직요. 여기 [???]는 무슨 뜻이에요?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "자막이 분명하지 않아요."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "7b442834-d7e2-4e74-b455-9b92414dec47",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "聚會詢問與字幕說明",
+      "context": {
+        "text": "內容包含詢問 민수 是否提及聚會、轉述請求告知時間的說明、轉移話題詢問是否用餐並伴隨來源不明內容 [???]、回答尚未用餐、針對此處來源不明內容 [???] 詢問含意，以及指出字幕不清楚的說明。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "민수 有提到聚會的事嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "說了請告知時間。不過吃飯了嗎？[來源不明內容 [???]]"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡 [來源不明內容 [???]] 是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "acf7dfae-c8ca-44a1-99db-ccb37defcaa9",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 16
+            }
+          ]
+        },
+        {
+          "id": "5268d3a6-ad62-4faa-be82-0d29a1b5500d",
+          "meaning": "轉述請求告知時間。",
+          "contextExplanation": "此處原文未載明說話者、轉述者與受話者的具體身分，僅呈現間接轉述請求告知時間的語義。",
+          "contextCueIds": [
+            "c1"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "7b442834-d7e2-4e74-b455-9b92414dec47:s0:p1"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 16
+            }
+          ]
+        },
+        {
+          "id": "9e396a39-be71-48d2-89b9-31f811577821",
+          "meaning": "不過吃飯了嗎？[來源不明內容 [???]]",
+          "contextExplanation": "末尾包含來源不明片段 [???]，無法確立其字詞或含意。",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "7b442834-d7e2-4e74-b455-9b92414dec47:s0:p2"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 16,
+              "end": 34
+            }
+          ]
+        },
+        {
+          "id": "5336d50f-085b-4eb2-b311-8f89b6dee6f0",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "7b442834-d7e2-4e74-b455-9b92414dec47:s0:p3"
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 5
+            }
+          ]
+        },
+        {
+          "id": "020004ca-1cbe-4d47-9e34-33a282264df1",
+          "meaning": "這裡 [來源不明內容 [???]] 是什麼意思？",
+          "contextExplanation": "「여기」僅指示位置或參照處，未指明具體媒介；「[???]」為來源不明片段。",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 5,
+              "end": 23
+            }
+          ]
+        },
+        {
+          "id": "5c273f74-a716-4d04-9a43-011fd801ac34",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "7b442834-d7e2-4e74-b455-9b92414dec47:s0:p4"
+          ],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 13
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "7b442834-d7e2-4e74-b455-9b92414dec47:s0:p1",
+      "utteranceIds": [
+        "5268d3a6-ad62-4faa-be82-0d29a1b5500d"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "間接引述請求：-달라고 하다",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [
+        "c1"
+      ],
+      "explanation": "在間接引述句中，當轉述請求者要求對方為自己做某事（動詞 + -아/어 주다）時，需換成「-아/어 달라고 하다」。「알려 달라고 했어요」表示轉述某人要求告知（該人）。本來源未具體標明發出請求者與對象的身分。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 4,
+          "end": 14
+        }
+      ]
+    },
+    {
+      "id": "7b442834-d7e2-4e74-b455-9b92414dec47:s0:p2",
+      "utteranceIds": [
+        "9e396a39-be71-48d2-89b9-31f811577821"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "轉換話題：그런데",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "「그런데」在此處作為話題轉換標記，用於承接前文後自然切換到新的提問或話題（「不過／話說回來」）。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 16,
+          "end": 19
+        }
+      ]
+    },
+    {
+      "id": "7b442834-d7e2-4e74-b455-9b92414dec47:s0:p3",
+      "utteranceIds": [
+        "5336d50f-085b-4eb2-b311-8f89b6dee6f0"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "簡略回答：아직요",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "副詞「아직」（還、尚）加上敬語助詞「-요」，在口語中用作禮貌的省略簡答，相當於「還沒呢／還沒」。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 3
+        }
+      ]
+    },
+    {
+      "id": "7b442834-d7e2-4e74-b455-9b92414dec47:s0:p4",
+      "utteranceIds": [
+        "5c273f74-a716-4d04-9a43-011fd801ac34"
+      ],
+      "category": "vocabulary",
+      "presentation": "core",
+      "title": "形容詞：분명하다 與否定形",
+      "sourceCueIds": [
+        "c4"
+      ],
+      "contextCueIds": [],
+      "explanation": "「분명하다」表示清楚、分明或明確。搭配否定句型「-지 않다」構成「분명하지 않아요」，在此處用於陳述字幕不清晰、不清楚。",
+      "sourceSpans": [
+        {
+          "cueId": "c4",
+          "start": 4,
+          "end": 12
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "7b442834-d7e2-4e74-b455-9b92414dec47:s0:r1",
+      "pointIds": [
+        "7b442834-d7e2-4e74-b455-9b92414dec47:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 4,
+              "end": 14
+            }
+          ],
+          "text": "알려 달라고 했어요"
+        }
+      ],
+      "pattern": "V-아/어 달라고 하다",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在辦公室裡，同事詢問主管是否有其他吩咐，另一人轉述請其寄送資料的要求。",
+          "dialogue": [
+            {
+              "text": "부장님이 다른 말씀은 없으셨어요?",
+              "translation": "部長沒有說別的話嗎？"
+            },
+            {
+              "text": "자료를 메일로 보내 달라고 하셨어요.",
+              "translation": "他說了請把資料用電子郵件寄給他。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "보내 달라고 하셨어요"
+        }
+      ]
+    },
+    {
+      "id": "7b442834-d7e2-4e74-b455-9b92414dec47:s0:r2",
+      "pointIds": [
+        "7b442834-d7e2-4e74-b455-9b92414dec47:s0:p3"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 3
+            }
+          ],
+          "text": "아직요"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在會議前，組長詢問會議室是否已準備就緒，組員回答尚未完成。",
+          "dialogue": [
+            {
+              "text": "회의실 정리는 다 끝났어요?",
+              "translation": "會議室整理都結束了嗎？"
+            },
+            {
+              "text": "아직요. 의자를 마저 배치하고 있어요.",
+              "translation": "還沒呢。還在把椅子擺好。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "아직요"
+        }
+      ]
+    }
+  ]
+}

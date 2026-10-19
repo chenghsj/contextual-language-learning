@@ -1,0 +1,18 @@
+{
+  "evidence": "verified",
+  "mode": "current source and frozen artifacts",
+  "sourceDrift": [],
+  "counts": {
+    "requested": 28,
+    "generated": 28,
+    "structuralPassed": 28,
+    "fixedSourcePassed": 28,
+    "identityPassed": 28,
+    "coveragePassed": 27,
+    "semanticPassed": 21,
+    "accepted": 20
+  },
+  "recordedCalls": 88,
+  "incompleteCallAccounting": [],
+  "modelCallsStartedByVerifier": 0
+}

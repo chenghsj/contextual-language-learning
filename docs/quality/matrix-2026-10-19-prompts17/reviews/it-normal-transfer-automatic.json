@@ -1,0 +1,19 @@
+{
+  "case": "it-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-2/it-normal-transfer-automatic/videos/it-normal-transfer-automatic--8a122cc091d74705/020fe616-b451-4085-821e-654fc431d743.json",
+  "documentHash": "6a0282019d930205ee645f994e8fea3650fed3103f849fedabee24d1b3832534",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source summary, temporal meaning and basic reply",
+      "result": "Summary lists source speech acts without joining unlabelled participants or inventing an interrupted/cancelled departure. Stavo per uscire retains imminent departure at the time of the call, and Sì remains basic_only with no filler."
+    },
+    {
+      "scope": "teaching and example role consistency",
+      "result": "The imperfect stare per + infinitive and potere request are explained with correct source forms. The imminent-meeting dialogue and the request to retrieve documents have coherent situations, actors, replies and translations. No invented example detail is imported into source explanation."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

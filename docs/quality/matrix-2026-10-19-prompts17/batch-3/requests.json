@@ -1,0 +1,332 @@
+[
+  {
+    "id": "050fb976-475b-4c52-9803-1578ff003d12",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "id-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "id",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Kenapa kamu masih di sini?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Aku baru mau pergi waktu kamu menelepon."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Bisa tunggu sebentar?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Bisa."
+      }
+    ]
+  },
+  {
+    "id": "0f9b0b7e-3666-4a7a-a840-399c0026e6a1",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "id-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "id",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Maya membicarakan pertemuan itu?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“Tolong beri tahu waktunya,” katanya. Ngomong-ngomong, sudah makan?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Belum. Apa arti [???] di sini?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Teksnya tidak jelas."
+      }
+    ]
+  },
+  {
+    "id": "834b60bb-8218-4c04-8ec4-3d4bb8a7aac6",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "th-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "th",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "ทำไมยังอยู่ที่นี่"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "กำลังจะออกไปตอนที่เธอโทรมา"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "รอสักครู่ได้ไหม"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "ได้"
+      }
+    ]
+  },
+  {
+    "id": "8d858397-6d3c-45a6-8dcb-4fe76e0927f0",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "th-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "th",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "มายาพูดถึงการประชุมไหม"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "เขาบอกว่า “ช่วยบอกเวลาด้วย” ว่าแต่กินข้าวหรือยัง [???]"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "ยัง [???] ตรงนี้หมายความว่าอะไร"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "คำบรรยายไม่ชัดเจน"
+      }
+    ]
+  },
+  {
+    "id": "4e323bb8-c533-4789-b5bc-749560932738",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "ms-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "ms",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Kenapa kamu masih di sini?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Saya baru hendak keluar ketika kamu menelefon."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Boleh tunggu sebentar?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Boleh."
+      }
+    ]
+  },
+  {
+    "id": "a4e52fc4-c1a5-4cd0-b99c-c74cc5ce400d",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "ms-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "ms",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Maya bercakap tentang perjumpaan itu?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“Tolong beritahu waktunya,” katanya. Oh ya, sudah makan?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Belum. Apa maksud [???] di sini?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Sari kata itu tidak jelas."
+      }
+    ]
+  }
+]

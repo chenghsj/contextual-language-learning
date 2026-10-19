@@ -1,0 +1,945 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "bc5410cca9f0fa42da7447804ef5adb10376e4183cfa09885e62e49ff384c146",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:10:04.484Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 7849.496624999971,
+        "usage": {
+          "input": 2508,
+          "output": 922,
+          "reasoning": 625
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:10:08.138Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 3651.0157500000205,
+        "usage": {
+          "input": 2226,
+          "output": 305,
+          "reasoning": 268
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:10:57.175Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 49025.936916999985,
+        "usage": {
+          "input": 4290,
+          "output": 7571,
+          "reasoning": 6089
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "bc5410cca9f0fa42da7447804ef5adb10376e4183cfa09885e62e49ff384c146",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "8f7f9129-b094-45b8-9924-d4ce249a3306",
+    "sourceTitle": "fr-normal-transfer-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-18T17:09:54.712Z",
+    "updatedAt": "2026-10-18T17:10:57.204Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "8f7f9129-b094-45b8-9924-d4ce249a3306"
+  },
+  "request": {
+    "id": "8f7f9129-b094-45b8-9924-d4ce249a3306",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "fr-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "fr",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Pourquoi es-tu encore là ?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "J’allais partir quand tu as appelé."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Tu peux attendre un instant ?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Oui."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "確認去留與請求稍候",
+      "context": {
+        "text": "對話包含詢問為何仍在此處、說明原本正要離開時接到電話、詢問能否稍候片刻，以及簡短的肯定答覆。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "你怎麼還在這裡？"
+        },
+        {
+          "cueId": "c2",
+          "text": "你打來的時候我正打算離開。"
+        },
+        {
+          "cueId": "c3",
+          "text": "你能等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "好。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "9571fe68-3e95-4db1-bd58-f709526fbec6",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c1_1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 8
+                }
+              ],
+              "meaning": "為什麼"
+            },
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c1_2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 9,
+                  "end": 14
+                }
+              ],
+              "meaning": "你是"
+            },
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c1_3",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 15,
+                  "end": 24
+                }
+              ],
+              "meaning": "還在這裡"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 26
+            }
+          ]
+        },
+        {
+          "id": "d7507dbc-bd86-45e0-9d6f-4e9b642cc64d",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c2_1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 15
+                }
+              ],
+              "meaning": "我正打算離開"
+            },
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c2_2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 16,
+                  "end": 21
+                }
+              ],
+              "meaning": "當……的時候"
+            },
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c2_3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 22,
+                  "end": 34
+                }
+              ],
+              "meaning": "你打了電話"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 35
+            }
+          ]
+        },
+        {
+          "id": "58d06770-59d5-43e8-ba57-a776e98ca32c",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c3_1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 16
+                }
+              ],
+              "meaning": "你能等"
+            },
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c3_2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 17,
+                  "end": 27
+                }
+              ],
+              "meaning": "片刻／一會兒"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 29
+            }
+          ]
+        },
+        {
+          "id": "535c197a-a797-4ae7-a613-a5db3692ce3b",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "9571fe68-3e95-4db1-bd58-f709526fbec6",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 26
+                  }
+                ]
+              },
+              {
+                "id": "d7507dbc-bd86-45e0-9d6f-4e9b642cc64d",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 35
+                  }
+                ]
+              },
+              {
+                "id": "58d06770-59d5-43e8-ba57-a776e98ca32c",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 29
+                  }
+                ]
+              },
+              {
+                "id": "535c197a-a797-4ae7-a613-a5db3692ce3b",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 4
+                  }
+                ]
+              }
+            ],
+            "learningValue": "日常對話中詢問去留與請求稍候的常見句型，涵蓋過去未完成時表達「正打算……」與複合過去時的時間交錯用法。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "「aller 的未完成過去時＋不定式」表示過去正打算做某事，與 quand 引導的複合過去時子句搭配使用。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c1",
+                  "c3"
+                ],
+                "description": "學習常見副詞與時間片語「encore là」（還在這裡）及「un instant」（片刻、一會兒）。"
+              },
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c1",
+                  "c3"
+                ],
+                "description": "對比倒裝疑問句（Pourquoi es-tu...）與語調疑問句（Tu peux... ?）在口語與正式情境中的運用。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "9571fe68-3e95-4db1-bd58-f709526fbec6",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 26
+              }
+            ]
+          },
+          {
+            "id": "d7507dbc-bd86-45e0-9d6f-4e9b642cc64d",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 35
+              }
+            ]
+          },
+          {
+            "id": "58d06770-59d5-43e8-ba57-a776e98ca32c",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 29
+              }
+            ]
+          },
+          {
+            "id": "535c197a-a797-4ae7-a613-a5db3692ce3b",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 4
+              }
+            ]
+          }
+        ],
+        "learningValue": "日常對話中詢問去留與請求稍候的常見句型，涵蓋過去未完成時表達「正打算……」與複合過去時的時間交錯用法。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "「aller 的未完成過去時＋不定式」表示過去正打算做某事，與 quand 引導的複合過去時子句搭配使用。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c1",
+              "c3"
+            ],
+            "description": "學習常見副詞與時間片語「encore là」（還在這裡）及「un instant」（片刻、一會兒）。"
+          },
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c1",
+              "c3"
+            ],
+            "description": "對比倒裝疑問句（Pourquoi es-tu...）與語調疑問句（Tu peux... ?）在口語與正式情境中的運用。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416",
+        "utteranceIds": [
+          "9571fe68-3e95-4db1-bd58-f709526fbec6",
+          "d7507dbc-bd86-45e0-9d6f-4e9b642cc64d",
+          "58d06770-59d5-43e8-ba57-a776e98ca32c",
+          "535c197a-a797-4ae7-a613-a5db3692ce3b"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "確認去留與請求稍候",
+            "context": {
+              "text": "對話包含詢問為何仍在此處、說明原本正要離開時接到電話、詢問能否稍候片刻，以及簡短的肯定答覆。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "你怎麼還在這裡？"
+              },
+              {
+                "cueId": "c2",
+                "text": "你打來的時候我正打算離開。"
+              },
+              {
+                "cueId": "c3",
+                "text": "你能等一下嗎？"
+              },
+              {
+                "cueId": "c4",
+                "text": "好。"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "9571fe68-3e95-4db1-bd58-f709526fbec6",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c1_1",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 0,
+                        "end": 8
+                      }
+                    ],
+                    "meaning": "為什麼"
+                  },
+                  {
+                    "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c1_2",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 9,
+                        "end": 14
+                      }
+                    ],
+                    "meaning": "你是"
+                  },
+                  {
+                    "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c1_3",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 15,
+                        "end": 24
+                      }
+                    ],
+                    "meaning": "還在這裡"
+                  }
+                ],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 26
+                  }
+                ]
+              },
+              {
+                "id": "d7507dbc-bd86-45e0-9d6f-4e9b642cc64d",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c2_1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 15
+                      }
+                    ],
+                    "meaning": "我正打算離開"
+                  },
+                  {
+                    "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c2_2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 16,
+                        "end": 21
+                      }
+                    ],
+                    "meaning": "當……的時候"
+                  },
+                  {
+                    "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c2_3",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 22,
+                        "end": 34
+                      }
+                    ],
+                    "meaning": "你打了電話"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 35
+                  }
+                ]
+              },
+              {
+                "id": "58d06770-59d5-43e8-ba57-a776e98ca32c",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p3"
+                ],
+                "chunks": [
+                  {
+                    "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c3_1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 16
+                      }
+                    ],
+                    "meaning": "你能等"
+                  },
+                  {
+                    "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:c3_2",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 17,
+                        "end": 27
+                      }
+                    ],
+                    "meaning": "片刻／一會兒"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 29
+                  }
+                ]
+              },
+              {
+                "id": "535c197a-a797-4ae7-a613-a5db3692ce3b",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 4
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p1",
+              "utteranceIds": [
+                "d7507dbc-bd86-45e0-9d6f-4e9b642cc64d"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "未完成過去時搭配不定式表示過去正打算做某事",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "「aller 的未完成過去時（allais/allait 等）＋動詞不定式」用來表達過去某個時間點「正打算做……」或「剛要去做……」。在句中常與 quand 引導的複合過去時（passé composé）子句連用，表示某個突發動作發生時，另一項動作原本正準備進行。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 15
+                }
+              ]
+            },
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p2",
+              "utteranceIds": [
+                "9571fe68-3e95-4db1-bd58-f709526fbec6"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "「encore là」表示仍然留在原地",
+              "sourceCueIds": [
+                "c1"
+              ],
+              "contextCueIds": [],
+              "explanation": "encore 表示「仍然、還」，là 表示「這裡／在那裡」。「encore là」是日常法語中極常見的固定片語，用來指某人或某物尚未離開、仍然留在現場。",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 15,
+                  "end": 24
+                }
+              ]
+            },
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p3",
+              "utteranceIds": [
+                "58d06770-59d5-43e8-ba57-a776e98ca32c"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "「un instant」作時間狀語表示片刻或稍候",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [],
+              "explanation": "un instant 字面意為「一個瞬間」，在口語與書面語中常作時間副詞片語，相當於「一會兒、片刻」。常與 attendre 等動詞搭配，提出禮貌的等待請求。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 17,
+                  "end": 27
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:r1",
+              "pointIds": [
+                "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p1"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 0,
+                      "end": 15
+                    }
+                  ],
+                  "text": "J’allais partir"
+                }
+              ],
+              "pattern": "[aller à l'imparfait] + [infinitif]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "準備出門時外面突然下起大雨，鄰居看見後詢問情況。",
+                  "dialogue": [
+                    {
+                      "text": "Tu ne sors plus faire tes courses ?",
+                      "translation": "你不出門買菜了嗎？"
+                    },
+                    {
+                      "text": "J’allais sortir, mais il a commencé à pleuvoir.",
+                      "translation": "我正打算出門，但突然下起雨來了。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "J’allais sortir"
+                }
+              ]
+            },
+            {
+              "id": "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:r2",
+              "pointIds": [
+                "91aa40ac-e1cd-409b-83a1-6b63ea9fd416:s0:p3"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 17,
+                      "end": 27
+                    }
+                  ],
+                  "text": "un instant"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "在櫃檯辦理手續時，接待人員請前來領件的人稍候查詢資料。",
+                  "dialogue": [
+                    {
+                      "text": "Bonjour, je viens chercher mon colis.",
+                      "translation": "您好，我來領取我的包裹。"
+                    },
+                    {
+                      "text": "Attendez un instant, je vérifie sur l’ordinateur.",
+                      "translation": "請稍等一下，我用電腦查詢一下。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "un instant"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

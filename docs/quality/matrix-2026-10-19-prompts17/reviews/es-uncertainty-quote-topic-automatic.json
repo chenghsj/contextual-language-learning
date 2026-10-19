@@ -1,0 +1,35 @@
+{
+  "case": "es-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-1/es-uncertainty-quote-topic-automatic/videos/es-uncertainty-quote-topic-automatic--e7e2303510d77dee/1e69f470-4e3a-4d54-9527-cfb5e4c489e9.json",
+  "documentHash": "e85f60998bc7976e367343ec8960e729f4e638e30025642cca3b9a832face746",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "local uncertainty and source constructions",
+      "result": "Both [???] occurrences are marked as unclear in affected translations, unit meanings and summary. aquí does not add a physical medium. Dime, Por cierto and Todavía no sourceForms exclude the damaged fragments; the imperative/pronoun and accent explanation is consistent with dime."
+    },
+    {
+      "scope": "examples and source-role boundary",
+      "result": "All three new dialogues have coherent requester, respondent and action roles, with matching target text. The quote/topic boundary and short reply/new question are separate. The source summary nevertheless links the quoted speech to the previously named Maya, so the output is not accepted despite passing program/coverage checks."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "unsupported_source_identity",
+      "path": "/sections/0/context/text",
+      "quote": "對其話語的引述",
+      "description": "After mentioning Maya, 其 identifies the following quotation as that person's speech. The fixed Spanish dijo has an omitted subject; adjacent turns do not establish it as Maya. This violates the source-level requirement to list the quotation independently without linking unlabelled participants.",
+      "suggestedDirection": "Describe the quoted request as an independent speech act without 其 or an attributed speaker; preserve the unresolved subject."
+    },
+    {
+      "severity": "warning",
+      "type": "redundancy",
+      "paths": ["/points/2", "/reusableItems/2"],
+      "quote": "Todavía no",
+      "description": "The already translated short response receives a separate core point and full new dialogue. The meaning and dialogue are correct, but this is avoidable repetition at B1."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

@@ -1,0 +1,27 @@
+{
+  "case": "zh-TW-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-4/zh-TW-normal-transfer-automatic/videos/zh-TW-normal-transfer-automatic--9e35b6a7e547a4ae/761cc993-9ddd-4491-a5f6-cb5b70821425.json",
+  "documentHash": "c5c97b8c2bf4b7a2c21be3c67406ffa688d1a35bd6f49a78bf3bfb80f6ae3da1",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source fidelity and timing",
+      "result": "Original Traditional Chinese cues remain unchanged in translation and exact source slices. Neutral summary preserves imminent departure at the incoming call and the waiting request without invented identities or definite cancellation. The final 可以 is basic_only without filler."
+    },
+    {
+      "scope": "frames, readings and invented examples",
+      "result": "The 怎麼還, 的時候/正要 and waiting-request forms instantiate coherently in the overtime, cooking-call and checkout dialogues. Written Zhuyin aligns with the retained words; one invalid optional 想吃 reading was omitted with a recorded diagnostic, while its source text stayed intact. No actual audio was checked."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "tone_wording",
+      "path": "/points/0/explanation",
+      "quote": "感到意外的語氣",
+      "description": "Qualify surprise or unexpectedness as a possible contextual force of 怎麼還 rather than a verified emotion or recording delivery. The continuing-state question and whole-sentence meaning remain correct."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

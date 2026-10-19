@@ -1,0 +1,454 @@
+{
+  "id": "75c75605-83f2-41c6-b4f5-88a3a263c1d0",
+  "createdAt": "2026-10-18T17:10:02.237Z",
+  "source": {
+    "platform": "import",
+    "title": "pt-normal-transfer-automatic"
+  },
+  "profile": {
+    "targetLanguage": "pt",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "8a585eca43e097458b05f04e456811992a000ab32c5c89843341f875564d31c0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:10:11.111Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 7435.709250000014,
+        "usage": {
+          "input": 2584,
+          "output": 1011,
+          "reasoning": 724
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:10:14.438Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 3316.809957999969,
+        "usage": {
+          "input": 2275,
+          "output": 251,
+          "reasoning": 215
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:11:11.774Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 57323.794375,
+        "usage": {
+          "input": 4276,
+          "output": 9413,
+          "reasoning": 8116
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Por que você ainda está aqui?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "Eu estava prestes a sair quando você ligou."
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Pode esperar um momento?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "Sim."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "準備外出時的應對與請求",
+      "context": {
+        "text": "包含詢問仍在此處的原因、說明接到電話時正準備出門的情況、請求稍候以及表示答應。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "你怎麼還在這裡？"
+        },
+        {
+          "cueId": "c2",
+          "text": "你打電話來的時候，我正要出門。"
+        },
+        {
+          "cueId": "c3",
+          "text": "可以稍等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "好。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "c21aaa26-c5b7-405d-8748-f281b616e580",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 29
+            }
+          ]
+        },
+        {
+          "id": "e868d03e-313f-4abe-8df7-6192ab183a65",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:p1",
+            "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:c1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 2
+                }
+              ],
+              "meaning": "我"
+            },
+            {
+              "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:c2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 3,
+                  "end": 24
+                }
+              ],
+              "meaning": "正要出門"
+            },
+            {
+              "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:c3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 25,
+                  "end": 42
+                }
+              ],
+              "meaning": "當你打電話來時"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 43
+            }
+          ]
+        },
+        {
+          "id": "eb50ddd0-00cf-46fd-98b8-2969e6d5b0e3",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:c4",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 12
+                }
+              ],
+              "meaning": "可以等"
+            },
+            {
+              "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:c5",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 13,
+                  "end": 23
+                }
+              ],
+              "meaning": "一下／片刻"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 24
+            }
+          ]
+        },
+        {
+          "id": "ce9f1b67-5a01-4dfc-a08c-05c1fe624975",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:p1",
+      "utteranceIds": [
+        "e868d03e-313f-4abe-8df7-6192ab183a65"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "estar prestes a + 原形動詞 表「即將做某事」",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "「estar prestes a + 原形動詞」表示動作即將發生、處於立刻就要進行的狀態。此處動詞 estar 使用過去未完成式 estava，描述當時正處於即將外出的時間點。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 3,
+          "end": 24
+        }
+      ]
+    },
+    {
+      "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:p2",
+      "utteranceIds": [
+        "e868d03e-313f-4abe-8df7-6192ab183a65"
+      ],
+      "category": "grammar",
+      "presentation": "extended",
+      "title": "未完成過去式與 quando 引導的簡單過去式搭配",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "以過去未完成式 estava 提供持續或醞釀中的背景狀態，後方以 quando 連接簡單過去式 ligou，表示在該背景中突然發生的單次完成動作。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 3,
+          "end": 42
+        }
+      ]
+    },
+    {
+      "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:p3",
+      "utteranceIds": [
+        "eb50ddd0-00cf-46fd-98b8-2969e6d5b0e3"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "pode + 原形動詞 表日常禮貌請求",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "在日常會話中，使用 poder 的現在式第三人稱單數 pode 搭配原形動詞，是提出客氣請求或詢問對方是否方便的常見句型。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 12
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:r1",
+      "pointIds": [
+        "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 3,
+              "end": 24
+            }
+          ],
+          "text": "estava prestes a sair"
+        }
+      ],
+      "pattern": "estar prestes a + [infinitivo]",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在辦公室準備下班時回答同事的詢問",
+          "dialogue": [
+            {
+              "text": "Você ainda tem trabalho para fazer?",
+              "translation": "你還有工作要做嗎？"
+            },
+            {
+              "text": "Não, estou prestes a sair agora.",
+              "translation": "沒有，我現在正準備離開。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "estou prestes a sair"
+        }
+      ]
+    },
+    {
+      "id": "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:r2",
+      "pointIds": [
+        "fe165781-0db8-4f33-ac39-3df0c2ba1cb2:s0:p3"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "text": "Pode esperar"
+        }
+      ],
+      "pattern": "Pode + [infinitivo]?",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在接待處請訪客稍候片刻",
+          "dialogue": [
+            {
+              "text": "Tenho uma reunião com o gerente às duas horas.",
+              "translation": "我兩點和經理有會議。"
+            },
+            {
+              "text": "Pode esperar alguns minutos na sala ao lado?",
+              "translation": "您可以隔壁房間等幾分鐘嗎？"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Pode esperar"
+        }
+      ]
+    }
+  ]
+}

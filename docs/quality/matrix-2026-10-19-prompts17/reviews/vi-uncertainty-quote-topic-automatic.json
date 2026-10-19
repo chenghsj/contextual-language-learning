@@ -1,0 +1,19 @@
+{
+  "case": "vi-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-4/vi-uncertainty-quote-topic-automatic/videos/vi-uncertainty-quote-topic-automatic--efc103b857f4088e/22ca5500-c257-44d8-a4a4-fceeda1824fb.json",
+  "documentHash": "a53f20859a0329bba621ae1949fb5e4932b9213ee598d3b3aa4371630d1c909f",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source identity and local uncertainty",
+      "result": "cô ấy remains the source feminine pronoun without identification as Maya. Summary neutrally lists questions and reported content. [???] is explicitly unresolved in context, translation and the affected meaning/context explanation; ở đây does not become a screen, writing or perception event."
+    },
+    {
+      "scope": "reliable targets, boundaries and dialogue roles",
+      "result": "The yes/no có ... không structure, Cho tôi biết and nghĩa là gì target only reliable source substrings. Quote/topic and Chưa/new question units are separate; Chưa has no filler teaching. The Anh/em email exchange, help notification and student/teacher definition dialogue have consistent roles and matching translations."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

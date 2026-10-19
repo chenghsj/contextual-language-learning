@@ -1,0 +1,1423 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "83ab1f394b25cea1a8be22a3721790f0be13384b28ac02ef3f41f0f1507c7543",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:06:54.626Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 9110.91070800001,
+        "usage": {
+          "input": 2599,
+          "output": 1109,
+          "reasoning": 803
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:06:58.078Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 3441.3557080000173,
+        "usage": {
+          "input": 2359,
+          "output": 303,
+          "reasoning": 263
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:07:54.929Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 56837.64041700002,
+        "usage": {
+          "input": 4314,
+          "output": 9043,
+          "reasoning": 6660
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-17",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "83ab1f394b25cea1a8be22a3721790f0be13384b28ac02ef3f41f0f1507c7543",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "27913053-a0b1-47d6-8a1e-b5ac3baa40b2",
+    "sourceTitle": "es-normal-transfer-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-18T17:06:44.409Z",
+    "updatedAt": "2026-10-18T17:07:54.958Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "27913053-a0b1-47d6-8a1e-b5ac3baa40b2"
+  },
+  "request": {
+    "id": "27913053-a0b1-47d6-8a1e-b5ac3baa40b2",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "es-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "es",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "¿Por qué sigues aquí?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Estaba a punto de salir cuando llamaste."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "¿Puedes esperar un momento?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Sí."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "詢問原因與臨時等待",
+      "context": {
+        "text": "對話包含詢問對方為何仍在現場、說明正要出門時接到電話的情況、請求稍作等待，以及簡短的肯定答覆。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "你為什麼還在這裡？"
+        },
+        {
+          "cueId": "c2",
+          "text": "你打來的時候我正準備要出門。"
+        },
+        {
+          "cueId": "c3",
+          "text": "你能等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "好。"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "¿"
+            },
+            {
+              "text": "Por",
+              "reading": "/poɾ/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "qué",
+              "reading": "/ˈke/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "sigues",
+              "reading": "/ˈsi.ɣes/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "aquí",
+              "reading": "/aˈki/"
+            },
+            {
+              "text": "?"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "Estaba",
+              "reading": "/esˈta.βa/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "a",
+              "reading": "/a/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "punto",
+              "reading": "/ˈpun̪.to/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "de",
+              "reading": "/de/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "salir",
+              "reading": "/saˈliɾ/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "cuando",
+              "reading": "/ˈkwan̪.do/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "llamaste",
+              "reading": "/ʝaˈmas.te/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "¿"
+            },
+            {
+              "text": "Puedes",
+              "reading": "/ˈpwe.ðes/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "esperar",
+              "reading": "/es.peˈɾaɾ/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "un",
+              "reading": "/un/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "momento",
+              "reading": "/moˈmen̪.to/"
+            },
+            {
+              "text": "?"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "Sí",
+              "reading": "/ˈsi/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "a9990a99-80b5-438b-8e38-f559cf221648",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 8
+                }
+              ],
+              "meaning": "為什麼"
+            },
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 9,
+                  "end": 21
+                }
+              ],
+              "meaning": "你還在這裡？"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 21
+            }
+          ]
+        },
+        {
+          "id": "7297e9e6-a886-43d4-b856-c8fbd784ce28",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p2",
+            "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 23
+                }
+              ],
+              "meaning": "我正準備要出門"
+            },
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch4",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 24,
+                  "end": 40
+                }
+              ],
+              "meaning": "當你打電話來的時候"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 40
+            }
+          ]
+        },
+        {
+          "id": "e0bc2024-56f3-45ce-a0c7-a247fa0deb33",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p4"
+          ],
+          "chunks": [
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch5",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 15
+                }
+              ],
+              "meaning": "你能等"
+            },
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch6",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 16,
+                  "end": 27
+                }
+              ],
+              "meaning": "一下嗎？"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 27
+            }
+          ]
+        },
+        {
+          "id": "15b20d9d-97b9-40c4-a2fc-a64590e61858",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "a9990a99-80b5-438b-8e38-f559cf221648",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 21
+                  }
+                ]
+              },
+              {
+                "id": "7297e9e6-a886-43d4-b856-c8fbd784ce28",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 40
+                  }
+                ]
+              },
+              {
+                "id": "e0bc2024-56f3-45ce-a0c7-a247fa0deb33",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 27
+                  }
+                ]
+              },
+              {
+                "id": "15b20d9d-97b9-40c4-a2fc-a64590e61858",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 3
+                  }
+                ]
+              }
+            ],
+            "learningValue": "日常對話中詢問原因、解釋突發狀況與請求等待的自然表達，包含常用片語與過去時態搭配。",
+            "opportunities": [
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "「estar a punto de + 原形動詞」表示「正要……、即將做某事」的時態結構。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "未完成過去時（estaba）搭配「cuando + 簡單過去時（llamaste）」描述被突發事件打斷的背景狀態。"
+              },
+              {
+                "category": "vocabulary",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "動詞「seguir」搭配地點副詞（aquí）表示狀態的持續（「依然、還在這裡」）。"
+              },
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "使用「¿Puedes esperar un momento?」進行口語禮貌請求的表達方式。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "a9990a99-80b5-438b-8e38-f559cf221648",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 21
+              }
+            ]
+          },
+          {
+            "id": "7297e9e6-a886-43d4-b856-c8fbd784ce28",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 40
+              }
+            ]
+          },
+          {
+            "id": "e0bc2024-56f3-45ce-a0c7-a247fa0deb33",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 27
+              }
+            ]
+          },
+          {
+            "id": "15b20d9d-97b9-40c4-a2fc-a64590e61858",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 3
+              }
+            ]
+          }
+        ],
+        "learningValue": "日常對話中詢問原因、解釋突發狀況與請求等待的自然表達，包含常用片語與過去時態搭配。",
+        "opportunities": [
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "「estar a punto de + 原形動詞」表示「正要……、即將做某事」的時態結構。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "未完成過去時（estaba）搭配「cuando + 簡單過去時（llamaste）」描述被突發事件打斷的背景狀態。"
+          },
+          {
+            "category": "vocabulary",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "動詞「seguir」搭配地點副詞（aquí）表示狀態的持續（「依然、還在這裡」）。"
+          },
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "使用「¿Puedes esperar un momento?」進行口語禮貌請求的表達方式。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "63989d86-2e08-416f-b7ab-3c7cce5e127d",
+        "utteranceIds": [
+          "a9990a99-80b5-438b-8e38-f559cf221648",
+          "7297e9e6-a886-43d4-b856-c8fbd784ce28",
+          "e0bc2024-56f3-45ce-a0c7-a247fa0deb33",
+          "15b20d9d-97b9-40c4-a2fc-a64590e61858"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "詢問原因與臨時等待",
+            "context": {
+              "text": "對話包含詢問對方為何仍在現場、說明正要出門時接到電話的情況、請求稍作等待，以及簡短的肯定答覆。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "你為什麼還在這裡？"
+              },
+              {
+                "cueId": "c2",
+                "text": "你打來的時候我正準備要出門。"
+              },
+              {
+                "cueId": "c3",
+                "text": "你能等一下嗎？"
+              },
+              {
+                "cueId": "c4",
+                "text": "好。"
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "¿"
+                  },
+                  {
+                    "text": "Por",
+                    "reading": "/poɾ/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "qué",
+                    "reading": "/ˈke/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "sigues",
+                    "reading": "/ˈsi.ɣes/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "aquí",
+                    "reading": "/aˈki/"
+                  },
+                  {
+                    "text": "?"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "Estaba",
+                    "reading": "/esˈta.βa/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "a",
+                    "reading": "/a/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "punto",
+                    "reading": "/ˈpun̪.to/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "de",
+                    "reading": "/de/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "salir",
+                    "reading": "/saˈliɾ/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "cuando",
+                    "reading": "/ˈkwan̪.do/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "llamaste",
+                    "reading": "/ʝaˈmas.te/"
+                  },
+                  {
+                    "text": "."
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "¿"
+                  },
+                  {
+                    "text": "Puedes",
+                    "reading": "/ˈpwe.ðes/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "esperar",
+                    "reading": "/es.peˈɾaɾ/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "un",
+                    "reading": "/un/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "momento",
+                    "reading": "/moˈmen̪.to/"
+                  },
+                  {
+                    "text": "?"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "Sí",
+                    "reading": "/ˈsi/"
+                  },
+                  {
+                    "text": "."
+                  }
+                ]
+              }
+            ],
+            "utterances": [
+              {
+                "id": "a9990a99-80b5-438b-8e38-f559cf221648",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch1",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 0,
+                        "end": 8
+                      }
+                    ],
+                    "meaning": "為什麼"
+                  },
+                  {
+                    "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch2",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 9,
+                        "end": 21
+                      }
+                    ],
+                    "meaning": "你還在這裡？"
+                  }
+                ],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 21
+                  }
+                ]
+              },
+              {
+                "id": "7297e9e6-a886-43d4-b856-c8fbd784ce28",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p2",
+                  "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p3"
+                ],
+                "chunks": [
+                  {
+                    "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch3",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 23
+                      }
+                    ],
+                    "meaning": "我正準備要出門"
+                  },
+                  {
+                    "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch4",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 24,
+                        "end": 40
+                      }
+                    ],
+                    "meaning": "當你打電話來的時候"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 40
+                  }
+                ]
+              },
+              {
+                "id": "e0bc2024-56f3-45ce-a0c7-a247fa0deb33",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p4"
+                ],
+                "chunks": [
+                  {
+                    "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch5",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 15
+                      }
+                    ],
+                    "meaning": "你能等"
+                  },
+                  {
+                    "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:ch6",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 16,
+                        "end": 27
+                      }
+                    ],
+                    "meaning": "一下嗎？"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 27
+                  }
+                ]
+              },
+              {
+                "id": "15b20d9d-97b9-40c4-a2fc-a64590e61858",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 3
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p1",
+              "utteranceIds": [
+                "a9990a99-80b5-438b-8e38-f559cf221648"
+              ],
+              "category": "vocabulary",
+              "presentation": "core",
+              "title": "seguir + 地點副詞表示「依然在……」",
+              "sourceCueIds": [
+                "c1"
+              ],
+              "contextCueIds": [],
+              "explanation": "動詞 seguir 在此接副詞 aquí，表示動作或狀態的延續，意為「依然在、還在」。此處為第二人稱單數現在時 sigues，用來詢問對方為何尚未離開原處。",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 9,
+                  "end": 20
+                }
+              ]
+            },
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p2",
+              "utteranceIds": [
+                "7297e9e6-a886-43d4-b856-c8fbd784ce28"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "estar a punto de + 原形動詞",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "表示「正要、即將做某事」。此處使用過去未完成時 estaba，表示在過去某個時刻正準備進行該動作（salir）。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 23
+                }
+              ]
+            },
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p3",
+              "utteranceIds": [
+                "7297e9e6-a886-43d4-b856-c8fbd784ce28"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "未完成過去時與 cuando 引導的簡單過去時搭配",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "在敘述過去事件時，常以未完成過去時（estaba）呈現進行中或準備中的背景狀態，並由 cuando 搭配簡單過去時（llamaste）引出在該背景下突然發生的特定事件。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 24,
+                  "end": 39
+                }
+              ]
+            },
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p4",
+              "utteranceIds": [
+                "e0bc2024-56f3-45ce-a0c7-a247fa0deb33"
+              ],
+              "category": "usage",
+              "presentation": "core",
+              "title": "¿Puedes + 原形動詞？口語請求",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [],
+              "explanation": "以 puedes（poder 的第二人稱單數現在時）加原形動詞構成疑問句，是日常對話中禮貌請求對方配合的常見句型；搭配 un momento 表示請求稍候片刻。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 27
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:r1",
+              "pointIds": [
+                "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p2"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 0,
+                      "end": 23
+                    }
+                  ],
+                  "text": "Estaba a punto de salir"
+                }
+              ],
+              "pattern": "estar a punto de + [infinitivo]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "對方詢問晚餐進度時，說明自己剛好正要開始料理。",
+                  "dialogue": [
+                    {
+                      "text": "¿Ya comiste?",
+                      "translation": "你吃過飯了嗎？",
+                      "pronunciation": [
+                        {
+                          "text": "¿"
+                        },
+                        {
+                          "text": "Ya",
+                          "reading": "/ˈʝa/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "comiste",
+                          "reading": "/koˈmis.te/"
+                        },
+                        {
+                          "text": "?"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "No, estaba a punto de cocinar cuando llegaste.",
+                      "translation": "還沒，你來的時候我正準備要做飯。",
+                      "pronunciation": [
+                        {
+                          "text": "No",
+                          "reading": "/ˈno/"
+                        },
+                        {
+                          "text": ", "
+                        },
+                        {
+                          "text": "estaba",
+                          "reading": "/esˈta.βa/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "a",
+                          "reading": "/a/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "punto",
+                          "reading": "/ˈpun̪.to/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "de",
+                          "reading": "/de/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "cocinar",
+                          "reading": "/ko.siˈnaɾ/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "cuando",
+                          "reading": "/ˈkwan̪.do/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "llegaste",
+                          "reading": "/ʝeˈɣas.te/"
+                        },
+                        {
+                          "text": "."
+                        }
+                      ]
+                    },
+                    {
+                      "text": "Perfecto, te ayudo.",
+                      "translation": "太好了，我幫你。",
+                      "pronunciation": [
+                        {
+                          "text": "Perfecto",
+                          "reading": "/peɾˈfek.to/"
+                        },
+                        {
+                          "text": ", "
+                        },
+                        {
+                          "text": "te",
+                          "reading": "/te/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "ayudo",
+                          "reading": "/aˈʝu.ðo/"
+                        },
+                        {
+                          "text": "."
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "estaba a punto de cocinar"
+                }
+              ]
+            },
+            {
+              "id": "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:r2",
+              "pointIds": [
+                "63989d86-2e08-416f-b7ab-3c7cce5e127d:s0:p4"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 0,
+                      "end": 27
+                    }
+                  ],
+                  "text": "¿Puedes esperar un momento?"
+                }
+              ],
+              "pattern": "¿Puedes + [infinitivo]?",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "文件準備齊全後，詢問同事能否抽空過來辦公室一趟。",
+                  "dialogue": [
+                    {
+                      "text": "Tengo los documentos listos.",
+                      "translation": "我把文件準備好了。",
+                      "pronunciation": [
+                        {
+                          "text": "Tengo",
+                          "reading": "/ˈteŋ.ɡo/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "los",
+                          "reading": "/los/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "documentos",
+                          "reading": "/do.kuˈmen̪.tos/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "listos",
+                          "reading": "/ˈlis.tos/"
+                        },
+                        {
+                          "text": "."
+                        }
+                      ]
+                    },
+                    {
+                      "text": "¿Puedes pasar por mi oficina ahora?",
+                      "translation": "你現在能來一下我的辦公室嗎？",
+                      "pronunciation": [
+                        {
+                          "text": "¿"
+                        },
+                        {
+                          "text": "Puedes",
+                          "reading": "/ˈpwe.ðes/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "pasar",
+                          "reading": "/paˈsaɾ/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "por",
+                          "reading": "/poɾ/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "mi",
+                          "reading": "/mi/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "oficina",
+                          "reading": "/o.fiˈsi.na/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "ahora",
+                          "reading": "/aˈo.ɾa/"
+                        },
+                        {
+                          "text": "?"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "Claro, voy enseguida.",
+                      "translation": "好的，我馬上過去。",
+                      "pronunciation": [
+                        {
+                          "text": "Claro",
+                          "reading": "/ˈkla.ɾo/"
+                        },
+                        {
+                          "text": ", "
+                        },
+                        {
+                          "text": "voy",
+                          "reading": "/ˈboj/"
+                        },
+                        {
+                          "text": " "
+                        },
+                        {
+                          "text": "enseguida",
+                          "reading": "/en.seˈɣi.ða/"
+                        },
+                        {
+                          "text": "."
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "¿Puedes pasar por mi oficina ahora?"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

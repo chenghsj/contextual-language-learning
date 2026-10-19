@@ -1,0 +1,19 @@
+{
+  "case": "id-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-3/id-normal-transfer-automatic/videos/id-normal-transfer-automatic--0b61dfeaa1d361c7/050fb976-475b-4c52-9803-1578ff003d12.json",
+  "documentHash": "246d7e6a877e886a51c2d16692c8151b91677b87a759f4239bb3ef8599f89f19",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source meaning and uncertainty boundary",
+      "result": "The complete translations preserve the still-here question, being just about to leave at the call and the request to wait. Summary lists speech acts without exact identities or invented events. The final Bisa remains a basic affirmative response without filler."
+    },
+    {
+      "scope": "frames and dialogue roles",
+      "result": "baru mau + verb and tunggu sebentar retain their source senses. The lunch/guest reply answers not-yet eating consistently, and the phone-transfer request/reply preserves the waiting and recipient roles. Invented Budi details remain in the example, not the source."
+    }
+  ],
+  "issues": [],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged."
+}

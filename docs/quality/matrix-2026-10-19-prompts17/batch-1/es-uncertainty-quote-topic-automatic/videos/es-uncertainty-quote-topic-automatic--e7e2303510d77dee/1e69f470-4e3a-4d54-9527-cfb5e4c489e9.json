@@ -1,0 +1,484 @@
+{
+  "id": "1e69f470-4e3a-4d54-9527-cfb5e4c489e9",
+  "createdAt": "2026-10-18T17:07:54.960Z",
+  "source": {
+    "platform": "import",
+    "title": "es-uncertainty-quote-topic-automatic"
+  },
+  "profile": {
+    "targetLanguage": "es",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "9110736de7839065dfc80069216932ee42605c8b683f4db30eb48f9d6e9eb60c",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:08:27.378Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 31425.973750000005,
+        "usage": {
+          "input": 2898,
+          "output": 4771,
+          "reasoning": 4344
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:08:31.852Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 4464.270166000002,
+        "usage": {
+          "input": 2615,
+          "output": 476,
+          "reasoning": 438
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:09:54.700Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 82835.44,
+        "usage": {
+          "input": 4642,
+          "output": 13179,
+          "reasoning": 11596
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "¿Maya habló de la reunión?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "“Dime la hora”, dijo. Por cierto, ¿ya comiste? [???]"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Todavía no. ¿Qué significa [???] aquí?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "El subtítulo no está claro."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "d9463399-4ebe-41ce-84a7-841aa2a19d66",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "詢問會議與確認字幕內容",
+      "context": {
+        "text": "包含關於 Maya 是否提及會議的詢問、對其話語的引述、關於用餐的詢問與未明內容 [??? 來源不明]、否定簡答、對此處 [??? 來源不明] 意思的提問，以及關於字幕不清楚的說明。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Maya 有提到會議的事嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「告訴我時間」，說道。對了，你吃了嗎？[??? 來源不明]"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡的 [??? 來源不明] 是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "b60c2306-b1c2-464f-aaa6-5f36f5b7267d",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 26
+            }
+          ]
+        },
+        {
+          "id": "38078419-a83e-4577-9ee6-6e3ed1353c67",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:p1"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "53e3ba09-c792-423d-ad7d-305a1ef0850b",
+          "meaning": "對了，你吃了嗎？[??? 來源不明]",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:p2"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 22,
+              "end": 52
+            }
+          ]
+        },
+        {
+          "id": "ca2f0a85-f9d1-478d-b536-ea94c674cb1c",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:p3"
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 12
+            }
+          ]
+        },
+        {
+          "id": "88177370-8ce7-47e6-8b0c-6c0060203f12",
+          "meaning": "這裡的 [??? 來源不明] 是什麼意思？",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 12,
+              "end": 38
+            }
+          ]
+        },
+        {
+          "id": "971d304f-9a2d-43a6-8812-b1b5d2668af8",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 27
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:p1",
+      "utteranceIds": [
+        "38078419-a83e-4577-9ee6-6e3ed1353c67"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "肯定命令式與受詞代詞附著：Dime",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [
+        "c1"
+      ],
+      "explanation": "在西語肯定命令式中，受詞代詞必須直接附著在動詞詞尾。此處為 decir 對 tú 的命令式 di 加上第一人稱單數間接受詞代詞 me，意為「告訴我」。附著後的單詞 dime 重音仍維持在倒數第二音節（di-），符合以母音結尾自然重讀倒數第二音節的規則，因此無須書寫重音符號。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 1,
+          "end": 5
+        }
+      ]
+    },
+    {
+      "id": "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:p2",
+      "utteranceIds": [
+        "53e3ba09-c792-423d-ad7d-305a1ef0850b"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "話題轉換短語：Por cierto",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "用於在對話中順帶開啟新話題或聯想到的事項，相當於「對了」或「順便提一下」。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 22,
+          "end": 32
+        }
+      ]
+    },
+    {
+      "id": "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:p3",
+      "utteranceIds": [
+        "ca2f0a85-f9d1-478d-b536-ea94c674cb1c"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "否定簡答短語：Todavía no",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "用於表示某事尚未發生或尚未完成，意為「還沒」或「尚未」，常在日常對話中作為簡短回答。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 10
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:r1",
+      "pointIds": [
+        "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:p1"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 1,
+              "end": 5
+            }
+          ],
+          "text": "Dime"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "一人向同事請教問題，同事表示願意聆聽並請對方說明。",
+          "dialogue": [
+            {
+              "text": "¿Tienes tiempo para una consulta rápida?",
+              "translation": "你有時間回答一個簡短的問題嗎？"
+            },
+            {
+              "text": "Sí, claro. Dime, ¿qué necesitas saber?",
+              "translation": "當然有。請說，你想了解什麼？"
+            },
+            {
+              "text": "Quería confirmar la fecha límite del proyecto.",
+              "translation": "我想確認專案的截止日期。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Dime"
+        }
+      ]
+    },
+    {
+      "id": "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:r2",
+      "pointIds": [
+        "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 22,
+              "end": 32
+            }
+          ],
+          "text": "Por cierto"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "兩人在討論週末行程時，一人順便詢問對方的火車票是否買好了。",
+          "dialogue": [
+            {
+              "text": "El sábado vamos a salir muy temprano.",
+              "translation": "我們週六要很早出發。"
+            },
+            {
+              "text": "Por cierto, ¿ya compraste los billetes de tren?",
+              "translation": "對了，你買好火車票了嗎？"
+            },
+            {
+              "text": "Sí, los compré por internet ayer por la tarde.",
+              "translation": "買了，我昨天下午在網路上買的。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Por cierto"
+        }
+      ]
+    },
+    {
+      "id": "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:r3",
+      "pointIds": [
+        "d9463399-4ebe-41ce-84a7-841aa2a19d66:s0:p3"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 10
+            }
+          ],
+          "text": "Todavía no"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "一人詢問報告是否已經寄給主管，另一人說明目前進度。",
+          "dialogue": [
+            {
+              "text": "¿Ya le enviaste el informe al director?",
+              "translation": "你已經把報告寄給主管了嗎？"
+            },
+            {
+              "text": "Todavía no. Estoy terminando las últimas correcciones.",
+              "translation": "還沒。我正在完成最後的修正。"
+            },
+            {
+              "text": "De acuerdo, avísame cuando lo envíes.",
+              "translation": "好的，寄出時通知我一聲。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Todavía no"
+        }
+      ]
+    }
+  ]
+}

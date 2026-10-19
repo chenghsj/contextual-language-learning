@@ -1,0 +1,471 @@
+{
+  "id": "22ca5500-c257-44d8-a4a4-fceeda1824fb",
+  "createdAt": "2026-10-18T17:16:08.884Z",
+  "source": {
+    "platform": "import",
+    "title": "vi-uncertainty-quote-topic-automatic"
+  },
+  "profile": {
+    "targetLanguage": "vi",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-17",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "8ce92e65f7bec9f3325231e302eec0abf97623fa741e35f6bfef5272496e5433",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:16:52.850Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 41139.158459,
+        "usage": {
+          "input": 2869,
+          "output": 6070,
+          "reasoning": 5717
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:17:02.271Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 9408.85712500001,
+        "usage": {
+          "input": 2482,
+          "output": 1320,
+          "reasoning": 1281
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-18T17:18:39.762Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 97477.94304199997,
+        "usage": {
+          "input": 4538,
+          "output": 15421,
+          "reasoning": 13927
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Maya có nói về cuộc họp không?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "“Cho tôi biết giờ nhé”, cô ấy nói. À, bạn ăn chưa?"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Chưa. [???] ở đây nghĩa là gì?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "Phụ đề không rõ."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "2919ac8e-4625-4f56-95e2-4ebcd465913d",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "詢問會議與詞義理解",
+      "context": {
+        "text": "內容包含：關於 Maya 是否提及會議的詢問、轉述「請讓我知道時間」的說法、詢問是否用餐與尚未用餐的回應、針對來源不明字詞「[???]」在此處含義的提問，以及關於字幕不清楚的陳述。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Maya 有提到會議的事嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「請告訴我時間喔」，她說。對了，你吃了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。「[???]（來源不明詞語）」在這裡是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "7cc9c2bc-7299-40af-96f5-56df1c5c3ce2",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:p1"
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 30
+            }
+          ]
+        },
+        {
+          "id": "a4f016cb-88a8-4fee-a73f-22998d2be92e",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:p2"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 35
+            }
+          ]
+        },
+        {
+          "id": "7b3dd0ae-d90d-45da-af71-1b991d6cbfc6",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 35,
+              "end": 50
+            }
+          ]
+        },
+        {
+          "id": "9f18461d-ed6f-4808-9385-8896311e59e5",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "id": "db69ac6e-1ac5-484c-91ea-0da9387c14a9",
+          "meaning": "提問來源不明詞語「[???]」在此處的意思是什麼。",
+          "contextExplanation": "原始字幕包含無法辨識的字詞「[???]（來源不明）」，此處僅能確認後方為詢問該詞含義的疑問句型。",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:p3"
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 6,
+              "end": 30
+            }
+          ]
+        },
+        {
+          "id": "fd5a7594-f8c3-4a70-aec7-bd544a30aa45",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 16
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:p1",
+      "utteranceIds": [
+        "7cc9c2bc-7299-40af-96f5-56df1c5c3ce2"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "「có... không?」是非疑問句結構",
+      "sourceCueIds": [
+        "c1"
+      ],
+      "contextCueIds": [],
+      "explanation": "在此處用於詢問 Maya 是否談及了會議。「có + 動詞／動詞短語 + không?」為越南語常見的是非疑問句結構，用以確認某個動作是否發生或情況是否存在。",
+      "sourceSpans": [
+        {
+          "cueId": "c1",
+          "start": 5,
+          "end": 30
+        }
+      ]
+    },
+    {
+      "id": "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:p2",
+      "utteranceIds": [
+        "a4f016cb-88a8-4fee-a73f-22998d2be92e"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "「Cho tôi biết」表達用法",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "在此處意為「讓我知道／告訴我」，是向對方請求告知資訊或回報情況時的常見表達。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 1,
+          "end": 13
+        }
+      ]
+    },
+    {
+      "id": "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:p3",
+      "utteranceIds": [
+        "db69ac6e-1ac5-484c-91ea-0da9387c14a9"
+      ],
+      "category": "vocabulary",
+      "presentation": "core",
+      "title": "「nghĩa là gì?」提問詞義",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "在此處用於詢問特定字詞的意思。「nghĩa」意為「意思、意義」，「là gì」意為「是什麼」，合在一起表示「是什麼意思？」，為詢問詞義或語意的高頻疑問句型。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 18,
+          "end": 30
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:r1",
+      "pointIds": [
+        "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 5,
+              "end": 30
+            }
+          ],
+          "text": "có nói về cuộc họp không?"
+        }
+      ],
+      "pattern": "có [hành động] không?",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在辦公室確認同事是否收到剛剛寄出的信件。",
+          "dialogue": [
+            {
+              "text": "Anh có nhận được email của em không?",
+              "translation": "你有收到我的電子郵件嗎？"
+            },
+            {
+              "text": "Anh vừa nhận được rồi, cảm ơn em nhé.",
+              "translation": "我剛收到了，謝謝你喔。"
+            }
+          ],
+          "targetLineIndex": 0,
+          "targetText": "có nhận được email của em không?"
+        }
+      ]
+    },
+    {
+      "id": "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:r2",
+      "pointIds": [
+        "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 1,
+              "end": 13
+            }
+          ],
+          "text": "Cho tôi biết"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "交接工作事項時，叮嚀對方若遇到問題隨時告知。",
+          "dialogue": [
+            {
+              "text": "Cho tôi biết nếu bạn cần giúp đỡ nhé.",
+              "translation": "如果你需要幫忙，請讓我知道喔。"
+            },
+            {
+              "text": "Được rồi, có gì tôi sẽ nhắn tin cho bạn.",
+              "translation": "好的，有需要的話我會傳訊息給你。"
+            }
+          ],
+          "targetLineIndex": 0,
+          "targetText": "Cho tôi biết"
+        }
+      ]
+    },
+    {
+      "id": "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:r3",
+      "pointIds": [
+        "2919ac8e-4625-4f56-95e2-4ebcd465913d:s0:p3"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 18,
+              "end": 30
+            }
+          ],
+          "text": "nghĩa là gì?"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在課堂上，學生向老師請教一個新生詞的意思。",
+          "dialogue": [
+            {
+              "text": "Thưa cô, từ này nghĩa là gì?",
+              "translation": "老師，請問這個詞是什麼意思？"
+            },
+            {
+              "text": "Từ này có nghĩa là 'thành công' em nhé.",
+              "translation": "這個詞的意思是「成功」喔。"
+            }
+          ],
+          "targetLineIndex": 0,
+          "targetText": "nghĩa là gì?"
+        }
+      ]
+    }
+  ]
+}
