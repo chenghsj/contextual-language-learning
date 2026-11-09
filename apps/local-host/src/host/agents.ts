@@ -19,7 +19,8 @@ export function interruptPiLogins(): void {
 }
 export async function handleAgentRequest(
   request: HostRequest,
-  { reply, hostVersion }: HostDispatcherDeps,
+  { reply, hostVersion }: Pick<HostDispatcherDeps, "reply" | "hostVersion">,
+  agentCatalog = getAgentCatalog,
 ): Promise<boolean> {
   switch (request.type) {
     case "estimateGeneration":
@@ -30,7 +31,7 @@ export async function handleAgentRequest(
       });
       return true;
     case "health": {
-      const agents = await getAgentCatalog();
+      const agents = request.includeAgents === false ? [] : await agentCatalog();
       reply({
         id: request.id,
         type: "health",

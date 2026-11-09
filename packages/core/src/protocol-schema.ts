@@ -129,7 +129,12 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
     value: z.string().max(20000),
   }),
   z.object({ type: z.literal("piAuthCancel"), id: z.string().uuid(), loginId: z.string().uuid() }),
-  z.object({ type: z.literal("health"), id: z.string().uuid() }),
+  z.object({
+    type: z.literal("health"),
+    id: z.string().uuid(),
+    // Connection handshakes only need protocol/version metadata.
+    includeAgents: z.boolean().optional(),
+  }),
   z.object({
     type: z.literal("agentModels"),
     id: z.string().uuid(),

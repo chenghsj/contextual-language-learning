@@ -983,3 +983,15 @@ test("successful catalogs cancel their deadlines and accept a fresh retry", cont
   panel.disconnect();
   assert.equal(app.native.disconnected, true);
 });
+
+test("library connection requests a lightweight handshake before forwarding its catalog", () => {
+  const app = setup();
+  const panel = app.connectPanel();
+  const id = randomUUID();
+  panel.onMessage.fire({ id, type: "listLessons" });
+  const handshake = app.native.sent.find(value => (value as { type: string }).type === "health");
+  assert.equal((handshake as { includeAgents?: boolean }).includeAgents, false);
+  assert.ok(app.native.sent.some(value => (value as { id: string }).id === id));
+  app.native.onMessage.fire({ id, type: "lessons", lessons: [] });
+  panel.disconnect();
+});

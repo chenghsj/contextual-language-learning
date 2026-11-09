@@ -171,7 +171,7 @@ export function installGenerationController(
       if (!clients.size) return;
       try {
         const native = connectHost(true);
-        native.postMessage({ id: handshakeId, type: "health" });
+        native.postMessage({ id: handshakeId, type: "health", includeAgents: false });
       } catch {
         scheduleReconnect();
       }
@@ -575,7 +575,8 @@ export function installGenerationController(
         else {
           const startHandshake = outbox.length === 0;
           outbox.push(request);
-          if (startHandshake) native.postMessage({ id: handshakeId, type: "health" });
+          if (startHandshake)
+            native.postMessage({ id: handshakeId, type: "health", includeAgents: false });
         }
       } catch (error) {
         forgetPending(request.id);

@@ -164,7 +164,7 @@ export function createHostDispatcher({
         );
         return;
       }
-      if (await handleAgentRequest(request, { storage, manager, reply, hostVersion })) return;
+      if (await handleAgentRequest(request, { reply, hostVersion })) return;
       if (
         await handleDriveRequest(request, {
           storage,
