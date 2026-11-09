@@ -1335,13 +1335,21 @@ function AppContent() {
     setCatalogError("");
     setCatalogErrorAccountId(undefined);
     try {
-      const response = await nativeOnce({ id: crypto.randomUUID(), type: "listLessons" });
-      if (response.type !== "lessons") throw new Error("Unexpected lesson catalog response");
+      // Show each local collection as soon as it arrives, even if its sibling stalls.
+      const local = await Promise.allSettled([
+        nativeOnce({ id: crypto.randomUUID(), type: "listLessons" }).then(response => {
+          if (response.type !== "lessons") throw new Error("Unexpected lesson catalog response");
+          if (version === catalogLoadIdRef.current) setLocalLessons(response.lessons);
+        }),
+        nativeOnce({ id: crypto.randomUUID(), type: "listCustomDocuments" }).then(response => {
+          if (response.type !== "customDocuments")
+            throw new Error("Unexpected custom catalog response");
+          if (version === catalogLoadIdRef.current) setLocalCustom(response.documents);
+        }),
+      ]);
       if (version !== catalogLoadIdRef.current) return;
-      setLocalLessons(response.lessons);
-      const custom = await nativeOnce({ id: crypto.randomUUID(), type: "listCustomDocuments" });
-      if (custom.type === "customDocuments" && version === catalogLoadIdRef.current)
-        setLocalCustom(custom.documents);
+      const failed = local.find(result => result.status === "rejected");
+      if (failed?.status === "rejected") throw failed.reason;
       const accountId = backup.accountId ?? driveAccounts[0]?.id;
       if (accountId) {
         try {

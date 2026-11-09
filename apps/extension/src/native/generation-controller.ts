@@ -37,6 +37,38 @@ export function installGenerationController(
 ): void {
   const clients = new Set<chrome.runtime.Port>();
   const pending = new Map<string, ForwardedRequest["type"]>();
+  const catalogTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  function forgetPending(id: string) {
+    clearTimeout(catalogTimers.get(id));
+    catalogTimers.delete(id);
+    pending.delete(id);
+  }
+  function clearPending() {
+    for (const id of pending.keys()) forgetPending(id);
+  }
+  function limitCatalogWait(request: HostRequest) {
+    const cloud =
+      request.type === "listDriveLessons" || request.type === "listCustomDriveDocuments";
+    if (!cloud && request.type !== "listLessons" && request.type !== "listCustomDocuments") return;
+    catalogTimers.set(
+      request.id,
+      setTimeout(
+        () => {
+          forgetPending(request.id);
+          outbox = outbox.filter(item => item.id !== request.id);
+          broadcast({
+            id: request.id,
+            type: "error",
+            message: cloud
+              ? "Google Drive catalog request timed out. Local content is still available. Please retry."
+              : "Local content catalog request timed out. Please retry or reconnect the local service.",
+          });
+          disconnectIdleHost();
+        },
+        cloud ? 30_000 : 20_000,
+      ),
+    );
+  }
   const authOwners = new Map<string, chrome.runtime.Port>();
   const healthChecks = new Map<
     string,
@@ -213,7 +245,7 @@ export function installGenerationController(
           "Native Host returned an invalid response. Update the Host and resume from task history.";
         for (const id of pending.keys()) broadcast({ id, type: "error", message: reason });
         for (const run of runs.values()) notifyAttention("interrupted", run);
-        pending.clear();
+        clearPending();
         runs.clear();
         active = null;
         broadcast(state());
@@ -245,7 +277,7 @@ export function installGenerationController(
               });
           }
           for (const run of runs.values()) notifyAttention("interrupted", run);
-          pending.clear();
+          clearPending();
           authOwners.clear();
           outbox = [];
           runs.clear();
@@ -272,7 +304,7 @@ export function installGenerationController(
         outbox = [];
         for (const request of queued) {
           if (request.type === "health") {
-            pending.delete(request.id);
+            forgetPending(request.id);
             broadcast({ ...message, id: request.id });
           } else native.postMessage(request);
         }
@@ -358,7 +390,7 @@ export function installGenerationController(
         if (message.type === "cancelled") notifyAttention("interrupted", run);
       }
       if (terminal) {
-        pending.delete(message.id);
+        forgetPending(message.id);
         speechOwners.delete(message.id);
         authOwners.delete(message.id);
         runs.delete(message.id);
@@ -386,7 +418,7 @@ export function installGenerationController(
         broadcast({ id: active.requestId, type: "error", message: reason });
       }
       for (const run of runs.values()) notifyAttention("interrupted", run);
-      pending.clear();
+      clearPending();
       runs.clear();
       active = null;
       broadcast(state());
@@ -535,6 +567,7 @@ export function installGenerationController(
         }
         if (request.type !== "piAuthAnswer" && request.type !== "piAuthCancel") {
           pending.set(request.id, request.type);
+          limitCatalogWait(request);
         }
         if (request.type === "piLogin") authOwners.set(request.id, client);
         if (request.type === "speak") speechOwners.set(request.id, client);
@@ -545,7 +578,7 @@ export function installGenerationController(
           if (startHandshake) native.postMessage({ id: handshakeId, type: "health" });
         }
       } catch (error) {
-        pending.delete(request.id);
+        forgetPending(request.id);
         speechOwners.delete(request.id);
         const failedRun = runs.get(request.id);
         if (failedRun) {
@@ -571,7 +604,7 @@ export function installGenerationController(
         if (ready) host?.postMessage({ id: crypto.randomUUID(), type: "stopSpeech", speechId: id });
         else {
           outbox = outbox.filter(request => request.id !== id);
-          pending.delete(id);
+          forgetPending(id);
         }
       }
       for (const [id, check] of healthChecks) {
@@ -587,7 +620,7 @@ export function installGenerationController(
         if (owner !== client) continue;
         authOwners.delete(id);
         outbox = outbox.filter(request => request.id !== id);
-        pending.delete(id);
+        forgetPending(id);
         if (ready)
           host?.postMessage({ id: crypto.randomUUID(), type: "piAuthCancel", loginId: id });
       }

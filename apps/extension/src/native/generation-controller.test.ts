@@ -937,3 +937,49 @@ test("the login owner can submit its prompt using the active login ID without by
   owner.disconnect();
   observer.disconnect();
 });
+
+test("silent catalog requests fail in bounded time without interrupting generation", context => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const app = setup();
+  const panel = app.connectPanel();
+  const generationId = randomUUID();
+  panel.onMessage.fire({ id: generationId, type: "resume", jobId: randomUUID() });
+  for (const type of [
+    "listLessons",
+    "listCustomDocuments",
+    "listDriveLessons",
+    "listCustomDriveDocuments",
+  ]) {
+    const id = randomUUID();
+    panel.onMessage.fire({ id, type, ...(type.includes("Drive") ? { accountId: "account" } : {}) });
+    context.mock.timers.tick(30_000);
+    assert.ok(
+      panel.sent.some(value => {
+        const message = value as { id?: string; type: string; message?: string };
+        return (
+          message.id === id && message.type === "error" && /timed out/.test(message.message ?? "")
+        );
+      }),
+      type + " must stop waiting and report a retryable failure",
+    );
+  }
+  panel.disconnect();
+  assert.equal(app.native.disconnected, false, "generation survives catalog timeouts");
+  app.native.onMessage.fire({ id: generationId, type: "generationSettled" });
+  assert.equal(app.native.disconnected, true, "timed-out requests no longer retain the host");
+});
+
+test("successful catalogs cancel their deadlines and accept a fresh retry", context => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const app = setup();
+  const panel = app.connectPanel();
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const id = randomUUID();
+    panel.onMessage.fire({ id, type: "listLessons" });
+    app.native.onMessage.fire({ id, type: "lessons", lessons: [] });
+    context.mock.timers.tick(30_000);
+    assert.equal(panel.sent.filter(value => (value as { id?: string }).id === id).length, 1);
+  }
+  panel.disconnect();
+  assert.equal(app.native.disconnected, true);
+});
