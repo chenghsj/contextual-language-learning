@@ -1,7 +1,7 @@
 import { customContentCopy } from "../i18n/custom-content";
 import type { CustomContentSummary, CustomDriveSummary } from "@contextual/core";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ListChecks, LoaderCircle, Trash2 } from "lucide-react";
+import { ListChecks, LoaderCircle, RefreshCw, Trash2 } from "lucide-react";
 import { libraryDeleteCopy } from "../i18n/library-delete";
 import type {
   DriveAccount,
@@ -441,21 +441,22 @@ export function VideoLibrary({
               </Button>
             </IconTooltip>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={busy || mutationBusy}
-            aria-busy={busy}
-            onClick={() => void refresh()}
-          >
-            {busy && (
-              <span
+          <IconTooltip label={refreshLabel}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label={refreshLabel}
+              disabled={busy || mutationBusy}
+              aria-busy={busy}
+              onClick={() => void refresh()}
+            >
+              <RefreshCw
                 aria-hidden="true"
-                className="size-3 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
+                className={busy ? "animate-spin motion-reduce:animate-none" : undefined}
               />
-            )}
-            {refreshLabel}
-          </Button>
+            </Button>
+          </IconTooltip>
         </div>
       </div>
       {catalogError && (
