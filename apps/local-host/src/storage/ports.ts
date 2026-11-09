@@ -35,6 +35,7 @@ export interface JobRepository {
 }
 
 export interface DocumentRepository {
+  delete(id: string): Promise<void>;
   get(id: string): Promise<LearningDocument | null>;
   list(limit?: number): Promise<LearningDocument[]>;
   save(document: LearningDocument, markdown: string): Promise<void>;

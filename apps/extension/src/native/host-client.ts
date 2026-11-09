@@ -79,6 +79,7 @@ const responseTypes = {
   listJobs: "jobs",
   deleteJobHistory: "jobHistoryDeleted",
   listLessons: "lessons",
+  deleteLocalLesson: "localLessonDeleted",
   listDriveLessons: "driveLessons",
   restoreDriveLesson: "driveRestored",
   backupExisting: "backupsScheduled",

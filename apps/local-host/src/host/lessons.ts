@@ -10,6 +10,10 @@ export async function handleLessonRequest(
   deliverDocument: (id: string, document: LearningDocument) => void,
 ): Promise<boolean> {
   switch (request.type) {
+    case "deleteLocalLesson":
+      await createDocumentSync(storage).deleteLocal(request.documentId);
+      reply({ id: request.id, type: "localLessonDeleted", documentId: request.documentId });
+      return true;
     case "listEndedJobs": {
       const jobs = await storage.jobs.list(Number.MAX_SAFE_INTEGER);
       reply({

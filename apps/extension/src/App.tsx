@@ -1403,6 +1403,29 @@ function AppContent() {
     }
   }
 
+  async function deleteLocalDocument(documentId: string, kind: "standard" | "custom") {
+    setStorageBusy(true);
+    try {
+      await nativeOnce({
+        id: crypto.randomUUID(),
+        type: kind === "custom" ? "deleteCustomDocument" : "deleteLocalLesson",
+        documentId,
+      });
+      // Invalidate catalog reads that started before deletion; retain the cloud row for restore.
+      catalogLoadIdRef.current++;
+      setLessonsBusy(false);
+      if (kind === "custom") {
+        setLocalCustom(items => items.filter(item => item.documentId !== documentId));
+        setCustomDocument(current => (current?.id === documentId ? null : current));
+      } else {
+        setLocalLessons(items => items.filter(item => item.documentId !== documentId));
+        setDocument(current => (current?.id === documentId ? null : current));
+      }
+    } finally {
+      setStorageBusy(false);
+    }
+  }
+
   async function backupExistingLessons(): Promise<void> {
     const accountId = backup.accountId ?? driveAccounts[0]?.id;
     if (!accountId) {
@@ -2642,6 +2665,7 @@ function AppContent() {
             onConnectDrive={accountId => connectDrive("library", accountId)}
             onOpen={openSavedDocument}
             onRestore={restoreLesson}
+            onDeleteLocal={deleteLocalDocument}
           />
         </main>
 

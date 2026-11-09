@@ -154,6 +154,7 @@ export const HostMessageSchema = z.discriminatedUnion("type", [
   }),
   base.extend({ type: z.literal("jobs"), jobs: z.array(JobSummarySchema) }),
   base.extend({ type: z.literal("lessons"), lessons: z.array(lesson) }),
+  base.extend({ type: z.literal("localLessonDeleted"), documentId: uuid }),
   base.extend({ type: z.literal("driveLessons"), lessons: z.array(driveLesson) }),
   base.extend({ type: z.literal("driveRestored"), documentId: uuid }),
   base.extend({ type: z.literal("backupsScheduled"), count: z.number().int().nonnegative() }),

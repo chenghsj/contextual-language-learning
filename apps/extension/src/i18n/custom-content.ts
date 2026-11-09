@@ -1,4 +1,5 @@
 import type { UiLocale } from "./messages";
+import { libraryDeleteCopy } from "./library-delete";
 const copy = {
   en: [
     "3. Content type",
@@ -294,7 +295,7 @@ export function customContentCopy(locale: UiLocale) {
     rename,
     exportMarkdown,
     deleteLocal,
-    deleteHint,
+    deleteHint: libraryDeleteCopy(locale).hint + " " + libraryDeleteCopy(locale).kept,
     all,
     custom,
     details,

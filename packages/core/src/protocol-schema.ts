@@ -152,6 +152,11 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("listJobs"), id: z.string().uuid() }),
   z.object({ type: z.literal("listLessons"), id: z.string().uuid() }),
   z.object({
+    type: z.literal("deleteLocalLesson"),
+    id: z.string().uuid(),
+    documentId: z.string().uuid(),
+  }),
+  z.object({
     type: z.literal("listDriveLessons"),
     id: z.string().uuid(),
     accountId: z.string().min(1).max(256),

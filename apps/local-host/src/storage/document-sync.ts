@@ -15,6 +15,14 @@ export function createDocumentSync(
   adapters: { publisher?: DocumentPublisher; backup?: BackupPublisher } = {},
 ) {
   return {
+    deleteLocal: (id: string) =>
+      serializeDocument(storage, id, async () => {
+        const record = await storage.jobs.getRecord(id);
+        if (record && record.summary.status !== "completed")
+          throw new Error("Only completed lessons can be deleted");
+        // Favorites own independent snapshots; their records and sync state stay intact.
+        await storage.documents.delete(id);
+      }),
     publish: (id: string) => publishSavedJob(storage, id, adapters.publisher),
     backup: (id: string) => backupSavedJob(storage, id, adapters.backup),
     saveCalibration: (

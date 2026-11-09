@@ -1,0 +1,130 @@
+import type { UiLocale } from "./messages";
+
+const copy = {
+  "zh-TW": {
+    batchDelete: "批次刪除",
+    allLabel: "全選",
+    exitSelection: "取消選取",
+    deleteShort: "刪除（{count}）",
+
+    selectionEmpty: "尚未選取",
+    hostUpdate: "本機服務尚未支援刪除文件。請更新本機服務，關閉並重新開啟側欄後重試。",
+    select: "選取文件",
+    done: "完成",
+    selectAll: "全選目前結果",
+    clearSelection: "取消全選",
+    deleteSelected: "刪除所選（{count}）",
+    batchTitle: "刪除 {count} 份本機文件？",
+    partialError: "已刪除 {deleted} 份，{failed} 份刪除失敗。請重試剩餘文件。",
+    action: "刪除本機文件",
+    title: "刪除這份本機文件？",
+    hint: "這會移除本機文件，無法復原。已收藏的內容會保留，仍可從「收藏」閱讀。",
+    kept: "Google Drive 備份、匯出檔案與任務紀錄會保留。若有雲端備份，文件仍會顯示在內容庫，可重新還原。",
+    cancel: "取消",
+    deleting: "刪除中…",
+    error: "無法刪除本機文件，請重試。若持續失敗，請更新本機服務並重新連線。",
+  },
+  "zh-CN": {
+    batchDelete: "批量删除",
+    allLabel: "全选",
+    exitSelection: "取消选择",
+    deleteShort: "删除（{count}）",
+
+    selectionEmpty: "尚未选择",
+    hostUpdate: "本地服务尚不支持删除文件。请更新本地服务，关闭并重新打开侧栏后重试。",
+    select: "选择文件",
+    done: "完成",
+    selectAll: "全选当前结果",
+    clearSelection: "取消全选",
+    deleteSelected: "删除所选（{count}）",
+    batchTitle: "删除 {count} 份本地文件？",
+    partialError: "已删除 {deleted} 份，{failed} 份删除失败。请重试剩余文件。",
+    action: "删除本地文件",
+    title: "删除这份本地文件？",
+    hint: "这会移除本地文件，无法撤销。已收藏的内容会保留，仍可从“收藏”阅读。",
+    kept: "Google Drive 备份、导出文件与任务记录会保留。如果有云端备份，文件仍会显示在内容库，可重新还原。",
+    cancel: "取消",
+    deleting: "正在删除…",
+    error: "无法删除本地文件，请重试。如果持续失败，请更新本地服务并重新连接。",
+  },
+  en: {
+    batchDelete: "Batch delete",
+    allLabel: "Select all",
+    exitSelection: "Cancel selection",
+    deleteShort: "Delete ({count})",
+
+    selectionEmpty: "None selected",
+    hostUpdate:
+      "The local service does not support document deletion yet. Update it, then close and reopen the side panel before retrying.",
+    select: "Select documents",
+    done: "Done",
+    selectAll: "Select all results",
+    clearSelection: "Clear selection",
+    deleteSelected: "Delete selected ({count})",
+    batchTitle: "Delete {count} local documents?",
+    partialError:
+      "Deleted {deleted}; {failed} could not be deleted. Retry the remaining documents.",
+    action: "Delete local document",
+    title: "Delete this local document?",
+    hint: "This removes the local document and cannot be undone. Saved favorites are kept and can still be read in Favorites.",
+    kept: "Google Drive backups, exported files and task history are kept. Backed-up documents stay in the library and can be restored.",
+    cancel: "Cancel",
+    deleting: "Deleting…",
+    error:
+      "Could not delete the local document. Try again. If this continues, update the local service and reconnect.",
+  },
+  ja: {
+    batchDelete: "まとめて削除",
+    allLabel: "すべて",
+    exitSelection: "選択を終了",
+    deleteShort: "削除（{count}）",
+
+    selectionEmpty: "未選択",
+    hostUpdate:
+      "ローカルサービスが文書の削除に対応していません。更新してからサイドパネルを閉じて開き直し、再試行してください。",
+    select: "文書を選択",
+    done: "完了",
+    selectAll: "現在の結果をすべて選択",
+    clearSelection: "選択を解除",
+    deleteSelected: "選択した文書を削除（{count}）",
+    batchTitle: "ローカル文書 {count} 件を削除しますか？",
+    partialError:
+      "{deleted} 件を削除しました。{failed} 件は削除できませんでした。残りの文書を再試行してください。",
+    action: "ローカル文書を削除",
+    title: "このローカル文書を削除しますか？",
+    hint: "ローカル文書を削除します。この操作は取り消せません。お気に入りは保持され、引き続き「お気に入り」で読めます。",
+    kept: "Google Drive のバックアップ、エクスポートしたファイル、タスク履歴は保持されます。バックアップがある文書はライブラリに残り、復元できます。",
+    cancel: "キャンセル",
+    deleting: "削除中…",
+    error:
+      "ローカル文書を削除できませんでした。再試行してください。解決しない場合はローカルサービスを更新して再接続してください。",
+  },
+  ko: {
+    batchDelete: "일괄 삭제",
+    allLabel: "전체",
+    exitSelection: "선택 취소",
+    deleteShort: "삭제 ({count})",
+
+    selectionEmpty: "선택 없음",
+    hostUpdate:
+      "로컬 서비스가 아직 문서 삭제를 지원하지 않습니다. 업데이트한 후 사이드 패널을 닫았다가 다시 열고 재시도하세요.",
+    select: "문서 선택",
+    done: "완료",
+    selectAll: "현재 결과 모두 선택",
+    clearSelection: "선택 해제",
+    deleteSelected: "선택 삭제 ({count})",
+    batchTitle: "로컬 문서 {count}개를 삭제할까요?",
+    partialError:
+      "{deleted}개 삭제됨; {failed}개를 삭제하지 못했습니다. 남은 문서를 다시 시도하세요.",
+    action: "로컬 문서 삭제",
+    title: "이 로컬 문서를 삭제할까요?",
+    hint: "로컬 문서가 삭제되며 취소할 수 없습니다. 즐겨찾기는 유지되며 ‘즐겨찾기’에서 계속 읽을 수 있습니다.",
+    kept: "Google Drive 백업, 내보낸 파일과 작업 기록은 유지됩니다. 백업된 문서는 라이브러리에 남으며 복원할 수 있습니다.",
+    cancel: "취소",
+    deleting: "삭제 중…",
+    error:
+      "로컬 문서를 삭제하지 못했습니다. 다시 시도하세요. 문제가 계속되면 로컬 서비스를 업데이트하고 다시 연결하세요.",
+  },
+} satisfies Record<UiLocale, Record<string, string>>;
+
+export const libraryDeleteCopy = (locale: UiLocale) => copy[locale];

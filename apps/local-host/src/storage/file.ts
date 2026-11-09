@@ -246,6 +246,13 @@ export class FileDocumentRepository implements DocumentRepository {
   private documentPath(id: string): Promise<string | null> {
     return findVideoDocument(this.root, id);
   }
+  /** Remove only this lesson's canonical pair, keeping other versions and exports. */
+  async delete(id: string): Promise<void> {
+    const path = await this.documentPath(safeId(id));
+    if (!path) return;
+    await rm(path.slice(0, -5) + ".md", { force: true });
+    await rm(path, { force: true });
+  }
   async get(id: string, skipRetired = false): Promise<LearningDocument | null> {
     const safe = safeId(id);
     const path = await this.documentPath(safe);
