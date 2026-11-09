@@ -8,7 +8,7 @@ import { formatDisplayTime } from "../lib/time-display";
 import { translate, type UiLocale } from "../i18n/messages";
 import { analysisRangeCopy } from "../i18n/analysis-range";
 import { customContentCopy } from "../i18n/custom-content";
-import { Button } from "./ui/button";
+import { Button, destructiveOutlineClassName } from "./ui/button";
 import { Input } from "./ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { unifiedPlayerMessages } from "../i18n/unified-player";
@@ -462,11 +462,14 @@ export function CustomViewer({
               </pre>
             </div>
           )}
-          <DialogFooter className="gap-2 sm:space-x-0">
-            <Button variant="outline" disabled={busy} onClick={() => setAction(null)}>
+          <DialogFooter className="flex-row flex-wrap items-center justify-end gap-2 sm:space-x-0">
+            <Button variant="outline" size="sm" disabled={busy} onClick={() => setAction(null)}>
               {cancelLabel}
             </Button>
             <Button
+              variant={action === "delete" ? "outline" : "default"}
+              className={action === "delete" ? destructiveOutlineClassName : undefined}
+              size="sm"
               disabled={busy}
               onClick={() => {
                 if (action === "delete")

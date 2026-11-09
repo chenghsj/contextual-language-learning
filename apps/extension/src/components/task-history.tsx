@@ -11,7 +11,7 @@ import { agentDisplayName } from "../i18n/agent-display";
 import { piCopy } from "../i18n/pi";
 import type { UiLocale, MessageKey, MessageParams } from "../i18n/messages";
 import { PiFeedback } from "./pi-feedback";
-import { Button } from "./ui/button";
+import { Button, destructiveOutlineClassName } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { SelectField } from "./ui/select";
 import { IconTooltip } from "./icon-tooltip";
@@ -568,17 +568,20 @@ export function TaskHistory({
               {deleteError}
             </p>
           )}
-          <DialogFooter className="gap-2">
+          <DialogFooter className="flex-row flex-wrap items-center justify-end gap-2">
             <Button
               ref={cancelRef}
               variant="outline"
+              size="sm"
               disabled={deleting}
               onClick={() => setConfirmation(null)}
             >
               {t("cancel")}
             </Button>
             <Button
-              variant="destructive"
+              variant="outline"
+              className={destructiveOutlineClassName}
+              size="sm"
               disabled={deleting || !hostReady || storageBusy || !confirmation?.jobs.length}
               aria-busy={deleting}
               onClick={() => void deleteConfirmed()}

@@ -7,7 +7,7 @@ import type { UiLocale } from "../i18n/messages";
 import { readDraft, writeDraft } from "../lib/draft-db";
 import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { Button, destructiveOutlineClassName } from "./ui/button";
 import { SelectField } from "./ui/select";
 import { Switch } from "./ui/switch";
 import { Disclosure } from "./disclosure";
@@ -363,12 +363,14 @@ export function CustomPrompt({
               {error}
             </p>
           )}
-          <DialogFooter>
-            <Button variant="outline" disabled={busy} onClick={() => setDeleting(null)}>
+          <DialogFooter className="flex-row flex-wrap items-center justify-end gap-2 sm:space-x-0">
+            <Button variant="outline" size="sm" disabled={busy} onClick={() => setDeleting(null)}>
               {ux.cancel}
             </Button>
             <Button
-              variant="destructive"
+              variant="outline"
+              className={destructiveOutlineClassName}
+              size="sm"
               disabled={busy}
               onClick={() => {
                 if (!deleting || saving.current) return;

@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import { cn } from "../../lib/utils";
-import { buttonVariants } from "./button";
+import { buttonVariants, destructiveOutlineClassName } from "./button";
 
 export const AlertDialog = AlertDialogPrimitive.Root;
 export const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
@@ -29,7 +29,12 @@ export function AlertDialogHeader(props: React.ComponentProps<"div">) {
 }
 
 export function AlertDialogFooter(props: React.ComponentProps<"div">) {
-  return <div {...props} className={cn("grid grid-cols-2 gap-2", props.className)} />;
+  return (
+    <div
+      {...props}
+      className={cn("flex flex-wrap items-center justify-end gap-2", props.className)}
+    />
+  );
 }
 
 export function AlertDialogTitle(props: React.ComponentProps<typeof AlertDialogPrimitive.Title>) {
@@ -57,8 +62,8 @@ export function AlertDialogCancel(props: React.ComponentProps<typeof AlertDialog
     <AlertDialogPrimitive.Cancel
       {...props}
       className={cn(
-        buttonVariants({ variant: "outline" }),
-        "h-auto min-h-11 whitespace-normal px-3",
+        buttonVariants({ variant: "outline", size: "sm" }),
+        "h-auto min-h-8 max-w-full whitespace-normal py-1.5",
         props.className,
       )}
     />
@@ -70,8 +75,9 @@ export function AlertDialogAction(props: React.ComponentProps<typeof AlertDialog
     <AlertDialogPrimitive.Action
       {...props}
       className={cn(
-        buttonVariants({ variant: "destructive" }),
-        "h-auto min-h-11 whitespace-normal px-3",
+        buttonVariants({ variant: "outline", size: "sm" }),
+        destructiveOutlineClassName,
+        "h-auto min-h-8 max-w-full whitespace-normal py-1.5",
         props.className,
       )}
     />
