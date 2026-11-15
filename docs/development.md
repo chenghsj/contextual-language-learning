@@ -140,6 +140,6 @@ Paths below refer to the development version cloned above.
 - [Architecture and data policies](https://github.com/chenghsj/contextual-language-learning/blob/codex/core-redesign/docs/architecture.md)
 - [Web reader](https://github.com/chenghsj/contextual-language-learning/blob/codex/core-redesign/docs/favorites-web-implementation.md)
 - [iPhone/iPad setup and verification limits](https://github.com/chenghsj/contextual-language-learning/blob/codex/core-redesign/apps/ios/README.md)
-- [Product UI standards](../DESIGN.md)
+- [Product UI standards](https://github.com/chenghsj/contextual-language-learning/blob/codex/core-redesign/DESIGN.md)
 - [Contribution guide](../CONTRIBUTING.md)
 - [Privacy](../PRIVACY.md) and [security](../SECURITY.md)
