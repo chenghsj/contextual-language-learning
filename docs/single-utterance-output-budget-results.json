@@ -1,0 +1,265 @@
+{
+  "date": "2026-10-09",
+  "checkout": "/Users/cheng/Desktop/immersive-language-learning",
+  "branch": "codex/core-redesign",
+  "head": "21969bc52c1ca59bf2779a8749c03b62a77650b4",
+  "scope": "Host output-capacity recovery; no teaching strategy, request or successful batch rewrite",
+  "firstLiveAttempt": {
+    "root": "/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/cll-budget-live-HJIRrl",
+    "originalPath": "/Users/cheng/Documents/Contextual Language Learning/data-v6/jobs/4e272871-4e9f-4ead-8aad-0da9c7dc9078.json",
+    "originalHash": "68d605798861023c9acf08a4d797b4ffe887219cfaa2379f0e40e744534ce079",
+    "shadowJobId": "96c345fc-92a6-4489-bf22-def02412a2a9",
+    "model": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.7-flash"
+    },
+    "settings": {
+      "targetLanguage": "ja",
+      "instructionLanguage": "zh-TW",
+      "level": "N3",
+      "sceneCount": 4,
+      "contextualExampleCount": 3,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "initialCompleted": 12,
+    "initialTotal": 14,
+    "status": "failed",
+    "error": "Error: Resumed teaching batch still invalid; checkpoint preserved: Error: Pi returned invalid lesson JSON. The model must return one JSON object (a JSON code block is also supported). Use Resume in task history to retry from the saved checkpoint.",
+    "newCalls": [
+      {
+        "step": "s3-1-0-output-16384",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-09T10:38:49.311Z",
+        "usage": {
+          "input": 15090,
+          "output": 7798,
+          "reasoning": 5081
+        }
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "complete": true
+      },
+      {
+        "id": "s1-0",
+        "complete": true
+      },
+      {
+        "id": "s1-1",
+        "complete": true
+      },
+      {
+        "id": "s2",
+        "complete": true
+      },
+      {
+        "id": "s3-0-0",
+        "complete": true
+      },
+      {
+        "id": "s3-0-1",
+        "complete": true
+      },
+      {
+        "id": "s3-1-0",
+        "complete": false,
+        "outputTokenBudget": 16384,
+        "lastIssue": {
+          "code": "validation_error",
+          "path": "batch",
+          "description": "Error: Pi returned invalid lesson JSON. The model must return one JSON object (a JSON code block is also supported). Use Resume in task history to retry from the saved checkpoint."
+        }
+      },
+      {
+        "id": "s3-1-1",
+        "complete": false
+      }
+    ],
+    "completedBatchesUnchanged": true,
+    "originalJobUnchanged": true
+  },
+  "resumeWithCapturedSdkResponse": {
+    "root": "/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/cll-budget-live-HJIRrl",
+    "originalHash": "68d605798861023c9acf08a4d797b4ffe887219cfaa2379f0e40e744534ce079",
+    "originalPath": "/Users/cheng/Documents/Contextual Language Learning/data-v6/jobs/4e272871-4e9f-4ead-8aad-0da9c7dc9078.json",
+    "verification": "real SDK call with captured response and production parser in isolated checkpoint",
+    "status": "completed",
+    "documentId": "96c345fc-92a6-4489-bf22-def02412a2a9",
+    "sourceUnchanged": true,
+    "newCalls": [
+      {
+        "step": "s3-1-0-output-16384",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-09T10:42:14.038Z",
+        "usage": {
+          "input": 15115,
+          "output": 7982,
+          "reasoning": 3241
+        }
+      },
+      {
+        "step": "s3-1-1-output-8192",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-09T10:42:34.123Z",
+        "usage": {
+          "input": 10008,
+          "output": 5421,
+          "reasoning": 3369
+        }
+      },
+      {
+        "step": "s3-1-1-output-8192",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-09T10:43:05.060Z",
+        "usage": {
+          "input": 17062,
+          "output": 8188,
+          "reasoning": 4494
+        }
+      },
+      {
+        "step": "s3-1-1-output-16384",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-09T10:43:29.809Z",
+        "usage": {
+          "input": 17063,
+          "output": 5687,
+          "reasoning": 830
+        }
+      }
+    ],
+    "completedBatchesUnchanged": true,
+    "originalJobUnchanged": true
+  },
+  "responses": [
+    {
+      "path": "/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/cll-budget-live-HJIRrl/captured-response-1.json",
+      "characters": 14763,
+      "incomplete": false,
+      "call": {
+        "step": "s3-1-0-output-16384",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-09T10:42:14.038Z",
+        "usage": {
+          "input": 15115,
+          "output": 7982,
+          "reasoning": 3241
+        }
+      }
+    },
+    {
+      "path": "/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/cll-budget-live-HJIRrl/captured-response-2.json",
+      "characters": 4841,
+      "incomplete": false,
+      "call": {
+        "step": "s3-1-1-output-8192",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-09T10:42:34.123Z",
+        "usage": {
+          "input": 10008,
+          "output": 5421,
+          "reasoning": 3369
+        }
+      }
+    },
+    {
+      "path": "/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/cll-budget-live-HJIRrl/captured-response-3.json",
+      "characters": 11635,
+      "incomplete": true,
+      "call": {
+        "step": "s3-1-1-output-8192",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-09T10:43:05.060Z",
+        "usage": {
+          "input": 17062,
+          "output": 8188,
+          "reasoning": 4494
+        }
+      }
+    },
+    {
+      "path": "/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/cll-budget-live-HJIRrl/captured-response-4.json",
+      "characters": 15500,
+      "incomplete": false,
+      "call": {
+        "step": "s3-1-1-output-16384",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-09T10:43:29.809Z",
+        "usage": {
+          "input": 17063,
+          "output": 5687,
+          "reasoning": 830
+        }
+      }
+    }
+  ],
+  "verification": {
+    "focused": {
+      "passed": 30,
+      "failed": 0,
+      "log": "/tmp/cll-budget-focused.log"
+    },
+    "compatibility": {
+      "passed": 6,
+      "failed": 0,
+      "log": "/tmp/cll-budget-compatibility.log"
+    },
+    "sdk": {
+      "passed": 9,
+      "failed": 0,
+      "log": "/tmp/cll-budget-sdk.log"
+    },
+    "fullRegression": {
+      "total": 582,
+      "passed": 575,
+      "failed": 7,
+      "log": "/tmp/cll-budget-full.log",
+      "preExistingFailures": [
+        "task cards use one Tailwind layout below the refresh control",
+        "progress screen has a library exit and real phases without generation settings",
+        "all six shared shadcn wrappers retain their original styles and variants",
+        "task actions show pending state and status badges never wrap vertically",
+        "zz-debug-prompt timeout"
+      ],
+      "environmentFailures": ["SDK OAuth localhost EPERM", "Antigravity OAuth localhost EPERM"],
+      "newFailures": []
+    },
+    "typecheck": "passed using installed TypeScript CLI; pnpm startup stalled before project code",
+    "build": "passed using Host build script directly",
+    "hostSmoke": "protocol 8 passed",
+    "installedHostSha256": "086739dd58f421365752d4674391b8ff30197110aba7d1e251cbcae17b4624fb"
+  },
+  "boundaries": [
+    "Original user task remains failed and untouched until the user resumes after reconnecting the installed Host.",
+    "Completed isolated document passes structural/source validation; this is not teaching-quality certification.",
+    "A first live attempt failed invalid JSON after expansion. Failure and usage are retained; one explicit isolated resume then completed."
+  ]
+}

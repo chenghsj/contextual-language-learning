@@ -1,0 +1,2206 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-13",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "learning-quality-1",
+    "inputFingerprint": "5ad1119b1dff747939ce60ce245bed9b231d694f55bc5b53ebba59d2570b1c1f",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "qualityReports": [
+      {
+        "batchId": "s0",
+        "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+        "draftHash": "e9fc40f3df7ffec6ccea701e403e3b69957886c5237c7d8e53f0ab7f79162ca6",
+        "reviewed": false,
+        "repaired": false,
+        "issues": []
+      }
+    ],
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-13T17:20:53.931Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 28619.591707999993,
+        "usage": {
+          "input": 3919,
+          "output": 4275,
+          "reasoning": 4031
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-13T17:20:57.563Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 3618.7447499999544,
+        "usage": {
+          "input": 3686,
+          "output": 217,
+          "reasoning": 178
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-13T17:22:04.431Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 66851.21391600004,
+        "usage": {
+          "input": 7679,
+          "output": 9371,
+          "reasoning": 7871
+        }
+      },
+      {
+        "step": "s0-pronunciation-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-13T17:22:19.350Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 14899.299583999906,
+        "usage": {
+          "input": 3936,
+          "output": 1939,
+          "reasoning": 1791
+        }
+      }
+    ],
+    "pronunciationDiagnostics": [
+      {
+        "id": "s0:/pronunciations/0:all:empty_annotation",
+        "batchId": "s0",
+        "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+        "path": "/pronunciations/0",
+        "cueId": "c1",
+        "code": "empty_annotation",
+        "action": "repaired"
+      },
+      {
+        "id": "s0:/pronunciations/3:all:empty_annotation",
+        "batchId": "s0",
+        "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+        "path": "/pronunciations/3",
+        "cueId": "c4",
+        "code": "empty_annotation",
+        "action": "repaired"
+      },
+      {
+        "id": "s0:/reusableItems/1/examples/0/dialogue/1/pronunciation:all:empty_annotation",
+        "batchId": "s0",
+        "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+        "path": "/reusableItems/1/examples/0/dialogue/1/pronunciation",
+        "itemId": "84362615-bcfc-425b-ac00-6fd005536409:s0:r2",
+        "exampleIndex": 0,
+        "lineIndex": 1,
+        "code": "empty_annotation",
+        "action": "repaired"
+      }
+    ]
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-13",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "learning-quality-1",
+      "inputFingerprint": "5ad1119b1dff747939ce60ce245bed9b231d694f55bc5b53ebba59d2570b1c1f",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "f601c448-aa4b-4bc3-a944-36304935e24e",
+    "sourceTitle": "ja-normal-transfer-N3-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-13T17:20:23.742Z",
+    "updatedAt": "2026-10-13T17:22:19.374Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "f601c448-aa4b-4bc3-a944-36304935e24e"
+  },
+  "request": {
+    "id": "f601c448-aa4b-4bc3-a944-36304935e24e",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "ja-normal-transfer-N3-automatic"
+    },
+    "profile": {
+      "targetLanguage": "ja",
+      "instructionLanguage": "zh-TW",
+      "level": "N3",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "まだここにいるの？"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "電話が来たとき、出かけるところだった。"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "少し待ってくれる？"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "うん。"
+      },
+      {
+        "id": "c5",
+        "startMs": 12000,
+        "endMs": 14800,
+        "originalText": "やった。[叫び声]"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "84362615-bcfc-425b-ac00-6fd005536409",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 14800,
+      "title": "出門前的簡短對話",
+      "context": {
+        "text": "對話中包含詢問對方是否還在此處、說明接到電話時正要出門的情況、請求對方稍等，以及簡短的回應與歡呼聲。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "還在這裡嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "接到電話的時候，正好正要出門。"
+        },
+        {
+          "cueId": "c3",
+          "text": "可以稍微等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "嗯。"
+        },
+        {
+          "cueId": "c5",
+          "text": "太好了。[叫聲]"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "まだ",
+              "reading": "まだ"
+            },
+            {
+              "text": "ここ",
+              "reading": "ここ"
+            },
+            {
+              "text": "に",
+              "reading": "に"
+            },
+            {
+              "text": "いる",
+              "reading": "いる"
+            },
+            {
+              "text": "の",
+              "reading": "の"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "電話",
+              "reading": "でんわ"
+            },
+            {
+              "text": "が"
+            },
+            {
+              "text": "来た",
+              "reading": "きた"
+            },
+            {
+              "text": "とき、"
+            },
+            {
+              "text": "出かける",
+              "reading": "でかける"
+            },
+            {
+              "text": "ところだった。"
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "少し",
+              "reading": "すこし"
+            },
+            {
+              "text": "待ってくれる",
+              "reading": "まってくれる"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "うん",
+              "reading": "うん"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "cueId": "c5",
+          "segments": [
+            {
+              "text": "やった。["
+            },
+            {
+              "text": "叫び声",
+              "reading": "さけびごえ"
+            },
+            {
+              "text": "]"
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "69db88df-34f7-4807-81f6-8fcdd5f75221",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "id": "4bcb5d4e-33d4-4730-bb98-63cce34a5ccf",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c1"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "84362615-bcfc-425b-ac00-6fd005536409:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:c1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 7
+                }
+              ],
+              "meaning": "接到電話的時候"
+            },
+            {
+              "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:c2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 8,
+                  "end": 18
+                }
+              ],
+              "meaning": "正好正要出門"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 19
+            }
+          ]
+        },
+        {
+          "id": "9b2078f6-7b1b-4e03-b2dd-739b0f795bf1",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "84362615-bcfc-425b-ac00-6fd005536409:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:c3",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 2
+                }
+              ],
+              "meaning": "稍微"
+            },
+            {
+              "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:c4",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 2,
+                  "end": 8
+                }
+              ],
+              "meaning": "能等一下嗎"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "id": "6416ef4f-5ac5-4098-81f7-ec7706856264",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "id": "a898e175-b1ea-423a-ad72-cfc3fdbddec9",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c5"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c5",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5"
+        ],
+        "candidates": [
+          {
+            "id": "84362615-bcfc-425b-ac00-6fd005536409",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "69db88df-34f7-4807-81f6-8fcdd5f75221",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              },
+              {
+                "id": "4bcb5d4e-33d4-4730-bb98-63cce34a5ccf",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 19
+                  }
+                ]
+              },
+              {
+                "id": "9b2078f6-7b1b-4e03-b2dd-739b0f795bf1",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              },
+              {
+                "id": "6416ef4f-5ac5-4098-81f7-ec7706856264",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 3
+                  }
+                ]
+              },
+              {
+                "id": "a898e175-b1ea-423a-ad72-cfc3fdbddec9",
+                "cueIds": [
+                  "c5"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c5",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              }
+            ],
+            "learningValue": "學習「動詞辭書形＋ところだった」表示正要進行某動作的時間點表達，以及日常口語請求「〜てくれる？」與簡短回應。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "學習「動詞辭書形＋ところだった」表示「正要……／正打算……」的用法。"
+              },
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "掌握以「〜てくれる？」向對方提出隨和請求的口語表達。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "84362615-bcfc-425b-ac00-6fd005536409",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "69db88df-34f7-4807-81f6-8fcdd5f75221",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 9
+              }
+            ]
+          },
+          {
+            "id": "4bcb5d4e-33d4-4730-bb98-63cce34a5ccf",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 19
+              }
+            ]
+          },
+          {
+            "id": "9b2078f6-7b1b-4e03-b2dd-739b0f795bf1",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 9
+              }
+            ]
+          },
+          {
+            "id": "6416ef4f-5ac5-4098-81f7-ec7706856264",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 3
+              }
+            ]
+          },
+          {
+            "id": "a898e175-b1ea-423a-ad72-cfc3fdbddec9",
+            "cueIds": [
+              "c5"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c5",
+                "start": 0,
+                "end": 9
+              }
+            ]
+          }
+        ],
+        "learningValue": "學習「動詞辭書形＋ところだった」表示正要進行某動作的時間點表達，以及日常口語請求「〜てくれる？」與簡短回應。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "學習「動詞辭書形＋ところだった」表示「正要……／正打算……」的用法。"
+          },
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "掌握以「〜てくれる？」向對方提出隨和請求的口語表達。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "quality": {
+          "phase": "accepted",
+          "originalDraft": {
+            "risks": [],
+            "status": "complete",
+            "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+            "title": "出門前的簡短對話",
+            "context": {
+              "text": "對話中包含詢問對方是否還在此處、說明接到電話時正要出門的情況、請求對方稍等，以及簡短的回應與歡呼聲。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4",
+                "c5"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "還在這裡嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "接到電話的時候，正好正要出門。"
+              },
+              {
+                "cueId": "c3",
+                "text": "可以稍微等一下嗎？"
+              },
+              {
+                "cueId": "c4",
+                "text": "嗯。"
+              },
+              {
+                "cueId": "c5",
+                "text": "太好了。[叫聲]"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "69db88df-34f7-4807-81f6-8fcdd5f75221",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "4bcb5d4e-33d4-4730-bb98-63cce34a5ccf",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c1"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "c1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 7
+                      }
+                    ],
+                    "meaning": "接到電話的時候"
+                  },
+                  {
+                    "id": "c2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 8,
+                        "end": 18
+                      }
+                    ],
+                    "meaning": "正好正要出門"
+                  }
+                ]
+              },
+              {
+                "id": "9b2078f6-7b1b-4e03-b2dd-739b0f795bf1",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "c3",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 2
+                      }
+                    ],
+                    "meaning": "稍微"
+                  },
+                  {
+                    "id": "c4",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 2,
+                        "end": 8
+                      }
+                    ],
+                    "meaning": "能等一下嗎"
+                  }
+                ]
+              },
+              {
+                "id": "6416ef4f-5ac5-4098-81f7-ec7706856264",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "a898e175-b1ea-423a-ad72-cfc3fdbddec9",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              }
+            ],
+            "points": [
+              {
+                "id": "p1",
+                "utteranceIds": [
+                  "4bcb5d4e-33d4-4730-bb98-63cce34a5ccf"
+                ],
+                "category": "grammar",
+                "presentation": "core",
+                "title": "〜ところだった（正要……的時候）",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "contextCueIds": [
+                  "c1"
+                ],
+                "explanation": "接在動詞辭書形後，表示在過去某個時間點「正準備要做某動作」或「正好處於要動身的前一刻」。此處使用過去式「〜ところだった」，客觀描述當時的時點狀態。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 8,
+                    "end": 18
+                  }
+                ]
+              },
+              {
+                "id": "p2",
+                "utteranceIds": [
+                  "9b2078f6-7b1b-4e03-b2dd-739b0f795bf1"
+                ],
+                "category": "usage",
+                "presentation": "core",
+                "title": "〜てくれる？（可以請你……嗎？）",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "contextCueIds": [],
+                "explanation": "「動詞て形＋くれる？」是用於平輩、熟人或親近對象的口語疑問句，向對方提出隨和的請求，詢問對方能否為自己做某事。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 2,
+                    "end": 9
+                  }
+                ]
+              }
+            ],
+            "reusableItems": [
+              {
+                "id": "r1",
+                "pointIds": [
+                  "p1"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c2"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c2",
+                        "start": 8,
+                        "end": 18
+                      }
+                    ],
+                    "text": "出かけるところだった"
+                  }
+                ],
+                "pattern": "[動詞辞書形]ところだった",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "說明朋友打電話來的時候，自己正好準備要睡覺。",
+                    "dialogue": [
+                      {
+                        "text": "昨日の夜、電話に出なかったね。",
+                        "translation": "昨晚你沒接電話呢。",
+                        "pronunciation": [
+                          {
+                            "text": "昨日",
+                            "reading": "きのう"
+                          },
+                          {
+                            "text": "の"
+                          },
+                          {
+                            "text": "夜",
+                            "reading": "よる"
+                          },
+                          {
+                            "text": "、"
+                          },
+                          {
+                            "text": "電話",
+                            "reading": "でんわ"
+                          },
+                          {
+                            "text": "に"
+                          },
+                          {
+                            "text": "出なかった",
+                            "reading": "でなかった"
+                          },
+                          {
+                            "text": "ね。"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "ごめん、ちょうど寝るところだった。",
+                        "translation": "抱歉，那時我正好正要睡覺。",
+                        "pronunciation": [
+                          {
+                            "text": "ごめん、ちょうど"
+                          },
+                          {
+                            "text": "寝る",
+                            "reading": "ねる"
+                          },
+                          {
+                            "text": "ところだった。"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 1,
+                    "targetText": "寝るところだった"
+                  }
+                ]
+              },
+              {
+                "id": "r2",
+                "pointIds": [
+                  "p2"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c3"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c3",
+                        "start": 2,
+                        "end": 9
+                      }
+                    ],
+                    "text": "待ってくれる？"
+                  }
+                ],
+                "pattern": "[動詞て形]くれる？",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "隨和地請朋友幫忙拿一下桌上的包包。",
+                    "dialogue": [
+                      {
+                        "text": "その鞄を取ってくれる？",
+                        "translation": "可以幫我拿一下那個包包嗎？",
+                        "pronunciation": [
+                          {
+                            "text": "その"
+                          },
+                          {
+                            "text": "鞄",
+                            "reading": "かばん"
+                          },
+                          {
+                            "text": "を"
+                          },
+                          {
+                            "text": "取ってくれる",
+                            "reading": "とってくれる"
+                          },
+                          {
+                            "text": "？"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "いいよ、はいどうぞ。",
+                        "translation": "好啊，拿去吧。",
+                        "pronunciation": [
+                          {
+                            "text": "いい",
+                            "reading": "いい"
+                          },
+                          {
+                            "text": "よ",
+                            "reading": "よ"
+                          },
+                          {
+                            "text": "、"
+                          },
+                          {
+                            "text": "はい",
+                            "reading": "はい"
+                          },
+                          {
+                            "text": "どうぞ",
+                            "reading": "どうぞ"
+                          },
+                          {
+                            "text": "。"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 0,
+                    "targetText": "取ってくれる？"
+                  }
+                ]
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "まだ",
+                    "reading": "まだ"
+                  },
+                  {
+                    "text": "ここ",
+                    "reading": "ここ"
+                  },
+                  {
+                    "text": "に",
+                    "reading": "に"
+                  },
+                  {
+                    "text": "いる",
+                    "reading": "いる"
+                  },
+                  {
+                    "text": "の",
+                    "reading": "の"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "電話",
+                    "reading": "でんわ"
+                  },
+                  {
+                    "text": "が"
+                  },
+                  {
+                    "text": "来た",
+                    "reading": "きた"
+                  },
+                  {
+                    "text": "とき、"
+                  },
+                  {
+                    "text": "出かける",
+                    "reading": "でかける"
+                  },
+                  {
+                    "text": "ところだった。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "少し",
+                    "reading": "すこし"
+                  },
+                  {
+                    "text": "待ってくれる",
+                    "reading": "まってくれる"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "うん",
+                    "reading": "うん"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c5",
+                "segments": [
+                  {
+                    "text": "やった。["
+                  },
+                  {
+                    "text": "叫び声",
+                    "reading": "さけびごえ"
+                  },
+                  {
+                    "text": "]"
+                  }
+                ]
+              }
+            ]
+          },
+          "draft": {
+            "risks": [],
+            "status": "complete",
+            "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+            "title": "出門前的簡短對話",
+            "context": {
+              "text": "對話中包含詢問對方是否還在此處、說明接到電話時正要出門的情況、請求對方稍等，以及簡短的回應與歡呼聲。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4",
+                "c5"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "還在這裡嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "接到電話的時候，正好正要出門。"
+              },
+              {
+                "cueId": "c3",
+                "text": "可以稍微等一下嗎？"
+              },
+              {
+                "cueId": "c4",
+                "text": "嗯。"
+              },
+              {
+                "cueId": "c5",
+                "text": "太好了。[叫聲]"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "69db88df-34f7-4807-81f6-8fcdd5f75221",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "4bcb5d4e-33d4-4730-bb98-63cce34a5ccf",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c1"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "c1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 7
+                      }
+                    ],
+                    "meaning": "接到電話的時候"
+                  },
+                  {
+                    "id": "c2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 8,
+                        "end": 18
+                      }
+                    ],
+                    "meaning": "正好正要出門"
+                  }
+                ]
+              },
+              {
+                "id": "9b2078f6-7b1b-4e03-b2dd-739b0f795bf1",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "c3",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 2
+                      }
+                    ],
+                    "meaning": "稍微"
+                  },
+                  {
+                    "id": "c4",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 2,
+                        "end": 8
+                      }
+                    ],
+                    "meaning": "能等一下嗎"
+                  }
+                ]
+              },
+              {
+                "id": "6416ef4f-5ac5-4098-81f7-ec7706856264",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "a898e175-b1ea-423a-ad72-cfc3fdbddec9",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              }
+            ],
+            "points": [
+              {
+                "id": "p1",
+                "utteranceIds": [
+                  "4bcb5d4e-33d4-4730-bb98-63cce34a5ccf"
+                ],
+                "category": "grammar",
+                "presentation": "core",
+                "title": "〜ところだった（正要……的時候）",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "contextCueIds": [
+                  "c1"
+                ],
+                "explanation": "接在動詞辭書形後，表示在過去某個時間點「正準備要做某動作」或「正好處於要動身的前一刻」。此處使用過去式「〜ところだった」，客觀描述當時的時點狀態。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 8,
+                    "end": 18
+                  }
+                ]
+              },
+              {
+                "id": "p2",
+                "utteranceIds": [
+                  "9b2078f6-7b1b-4e03-b2dd-739b0f795bf1"
+                ],
+                "category": "usage",
+                "presentation": "core",
+                "title": "〜てくれる？（可以請你……嗎？）",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "contextCueIds": [],
+                "explanation": "「動詞て形＋くれる？」是用於平輩、熟人或親近對象的口語疑問句，向對方提出隨和的請求，詢問對方能否為自己做某事。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 2,
+                    "end": 9
+                  }
+                ]
+              }
+            ],
+            "reusableItems": [
+              {
+                "id": "r1",
+                "pointIds": [
+                  "p1"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c2"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c2",
+                        "start": 8,
+                        "end": 18
+                      }
+                    ],
+                    "text": "出かけるところだった"
+                  }
+                ],
+                "pattern": "[動詞辞書形]ところだった",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "說明朋友打電話來的時候，自己正好準備要睡覺。",
+                    "dialogue": [
+                      {
+                        "text": "昨日の夜、電話に出なかったね。",
+                        "translation": "昨晚你沒接電話呢。",
+                        "pronunciation": [
+                          {
+                            "text": "昨日",
+                            "reading": "きのう"
+                          },
+                          {
+                            "text": "の"
+                          },
+                          {
+                            "text": "夜",
+                            "reading": "よる"
+                          },
+                          {
+                            "text": "、"
+                          },
+                          {
+                            "text": "電話",
+                            "reading": "でんわ"
+                          },
+                          {
+                            "text": "に"
+                          },
+                          {
+                            "text": "出なかった",
+                            "reading": "でなかった"
+                          },
+                          {
+                            "text": "ね。"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "ごめん、ちょうど寝るところだった。",
+                        "translation": "抱歉，那時我正好正要睡覺。",
+                        "pronunciation": [
+                          {
+                            "text": "ごめん、ちょうど"
+                          },
+                          {
+                            "text": "寝る",
+                            "reading": "ねる"
+                          },
+                          {
+                            "text": "ところだった。"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 1,
+                    "targetText": "寝るところだった"
+                  }
+                ]
+              },
+              {
+                "id": "r2",
+                "pointIds": [
+                  "p2"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c3"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c3",
+                        "start": 2,
+                        "end": 9
+                      }
+                    ],
+                    "text": "待ってくれる？"
+                  }
+                ],
+                "pattern": "[動詞て形]くれる？",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "隨和地請朋友幫忙拿一下桌上的包包。",
+                    "dialogue": [
+                      {
+                        "text": "その鞄を取ってくれる？",
+                        "translation": "可以幫我拿一下那個包包嗎？",
+                        "pronunciation": [
+                          {
+                            "text": "その"
+                          },
+                          {
+                            "text": "鞄",
+                            "reading": "かばん"
+                          },
+                          {
+                            "text": "を"
+                          },
+                          {
+                            "text": "取ってくれる",
+                            "reading": "とってくれる"
+                          },
+                          {
+                            "text": "？"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "いいよ、はいどうぞ。",
+                        "translation": "好啊，拿去吧。",
+                        "pronunciation": [
+                          {
+                            "text": "いい",
+                            "reading": "いい"
+                          },
+                          {
+                            "text": "よ",
+                            "reading": "よ"
+                          },
+                          {
+                            "text": "、"
+                          },
+                          {
+                            "text": "はい",
+                            "reading": "はい"
+                          },
+                          {
+                            "text": "どうぞ",
+                            "reading": "どうぞ"
+                          },
+                          {
+                            "text": "。"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 0,
+                    "targetText": "取ってくれる？"
+                  }
+                ]
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "まだ",
+                    "reading": "まだ"
+                  },
+                  {
+                    "text": "ここ",
+                    "reading": "ここ"
+                  },
+                  {
+                    "text": "に",
+                    "reading": "に"
+                  },
+                  {
+                    "text": "いる",
+                    "reading": "いる"
+                  },
+                  {
+                    "text": "の",
+                    "reading": "の"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "電話",
+                    "reading": "でんわ"
+                  },
+                  {
+                    "text": "が"
+                  },
+                  {
+                    "text": "来た",
+                    "reading": "きた"
+                  },
+                  {
+                    "text": "とき、"
+                  },
+                  {
+                    "text": "出かける",
+                    "reading": "でかける"
+                  },
+                  {
+                    "text": "ところだった。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "少し",
+                    "reading": "すこし"
+                  },
+                  {
+                    "text": "待ってくれる",
+                    "reading": "まってくれる"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "うん",
+                    "reading": "うん"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c5",
+                "segments": [
+                  {
+                    "text": "やった。["
+                  },
+                  {
+                    "text": "叫び声",
+                    "reading": "さけびごえ"
+                  },
+                  {
+                    "text": "]"
+                  }
+                ]
+              }
+            ]
+          },
+          "inputHash": "17a74b733b123c2e437a0387b07e1174f74c826c5ea87078eb6bfd8adc9aaf0b",
+          "draftHash": "e9fc40f3df7ffec6ccea701e403e3b69957886c5237c7d8e53f0ab7f79162ca6",
+          "risks": [],
+          "originalDraftHash": "e9fc40f3df7ffec6ccea701e403e3b69957886c5237c7d8e53f0ab7f79162ca6",
+          "repairEligible": true
+        },
+        "id": "s0",
+        "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+        "utteranceIds": [
+          "69db88df-34f7-4807-81f6-8fcdd5f75221",
+          "4bcb5d4e-33d4-4730-bb98-63cce34a5ccf",
+          "9b2078f6-7b1b-4e03-b2dd-739b0f795bf1",
+          "6416ef4f-5ac5-4098-81f7-ec7706856264",
+          "a898e175-b1ea-423a-ad72-cfc3fdbddec9"
+        ],
+        "repairAttempted": true,
+        "draftPronunciationDiagnostics": [
+          {
+            "id": "s0:/pronunciations/0:all:empty_annotation",
+            "batchId": "s0",
+            "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+            "path": "/pronunciations/0",
+            "cueId": "c1",
+            "code": "empty_annotation",
+            "action": "repaired"
+          },
+          {
+            "id": "s0:/pronunciations/3:all:empty_annotation",
+            "batchId": "s0",
+            "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+            "path": "/pronunciations/3",
+            "cueId": "c4",
+            "code": "empty_annotation",
+            "action": "repaired"
+          },
+          {
+            "id": "s0:/reusableItems/1/examples/0/dialogue/1/pronunciation:all:empty_annotation",
+            "batchId": "s0",
+            "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+            "path": "/reusableItems/1/examples/0/dialogue/1/pronunciation",
+            "itemId": "84362615-bcfc-425b-ac00-6fd005536409:s0:r2",
+            "exampleIndex": 0,
+            "lineIndex": 1,
+            "code": "empty_annotation",
+            "action": "repaired"
+          }
+        ],
+        "pronunciationDiagnostics": [
+          {
+            "id": "s0:/pronunciations/0:all:empty_annotation",
+            "batchId": "s0",
+            "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+            "path": "/pronunciations/0",
+            "cueId": "c1",
+            "code": "empty_annotation",
+            "action": "repaired"
+          },
+          {
+            "id": "s0:/pronunciations/3:all:empty_annotation",
+            "batchId": "s0",
+            "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+            "path": "/pronunciations/3",
+            "cueId": "c4",
+            "code": "empty_annotation",
+            "action": "repaired"
+          },
+          {
+            "id": "s0:/reusableItems/1/examples/0/dialogue/1/pronunciation:all:empty_annotation",
+            "batchId": "s0",
+            "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+            "path": "/reusableItems/1/examples/0/dialogue/1/pronunciation",
+            "itemId": "84362615-bcfc-425b-ac00-6fd005536409:s0:r2",
+            "exampleIndex": 0,
+            "lineIndex": 1,
+            "code": "empty_annotation",
+            "action": "repaired"
+          }
+        ],
+        "result": {
+          "section": {
+            "id": "84362615-bcfc-425b-ac00-6fd005536409",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4",
+              "c5"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 14800,
+            "title": "出門前的簡短對話",
+            "context": {
+              "text": "對話中包含詢問對方是否還在此處、說明接到電話時正要出門的情況、請求對方稍等，以及簡短的回應與歡呼聲。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4",
+                "c5"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "還在這裡嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "接到電話的時候，正好正要出門。"
+              },
+              {
+                "cueId": "c3",
+                "text": "可以稍微等一下嗎？"
+              },
+              {
+                "cueId": "c4",
+                "text": "嗯。"
+              },
+              {
+                "cueId": "c5",
+                "text": "太好了。[叫聲]"
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "まだ",
+                    "reading": "まだ"
+                  },
+                  {
+                    "text": "ここ",
+                    "reading": "ここ"
+                  },
+                  {
+                    "text": "に",
+                    "reading": "に"
+                  },
+                  {
+                    "text": "いる",
+                    "reading": "いる"
+                  },
+                  {
+                    "text": "の",
+                    "reading": "の"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "電話",
+                    "reading": "でんわ"
+                  },
+                  {
+                    "text": "が"
+                  },
+                  {
+                    "text": "来た",
+                    "reading": "きた"
+                  },
+                  {
+                    "text": "とき、"
+                  },
+                  {
+                    "text": "出かける",
+                    "reading": "でかける"
+                  },
+                  {
+                    "text": "ところだった。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "少し",
+                    "reading": "すこし"
+                  },
+                  {
+                    "text": "待ってくれる",
+                    "reading": "まってくれる"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "うん",
+                    "reading": "うん"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c5",
+                "segments": [
+                  {
+                    "text": "やった。["
+                  },
+                  {
+                    "text": "叫び声",
+                    "reading": "さけびごえ"
+                  },
+                  {
+                    "text": "]"
+                  }
+                ]
+              }
+            ],
+            "utterances": [
+              {
+                "id": "69db88df-34f7-4807-81f6-8fcdd5f75221",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              },
+              {
+                "id": "4bcb5d4e-33d4-4730-bb98-63cce34a5ccf",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c1"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "84362615-bcfc-425b-ac00-6fd005536409:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:c1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 7
+                      }
+                    ],
+                    "meaning": "接到電話的時候"
+                  },
+                  {
+                    "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:c2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 8,
+                        "end": 18
+                      }
+                    ],
+                    "meaning": "正好正要出門"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 19
+                  }
+                ]
+              },
+              {
+                "id": "9b2078f6-7b1b-4e03-b2dd-739b0f795bf1",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "84362615-bcfc-425b-ac00-6fd005536409:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:c3",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 2
+                      }
+                    ],
+                    "meaning": "稍微"
+                  },
+                  {
+                    "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:c4",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 2,
+                        "end": 8
+                      }
+                    ],
+                    "meaning": "能等一下嗎"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              },
+              {
+                "id": "6416ef4f-5ac5-4098-81f7-ec7706856264",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 3
+                  }
+                ]
+              },
+              {
+                "id": "a898e175-b1ea-423a-ad72-cfc3fdbddec9",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c5"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c5",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:p1",
+              "utteranceIds": [
+                "4bcb5d4e-33d4-4730-bb98-63cce34a5ccf"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "〜ところだった（正要……的時候）",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [
+                "c1"
+              ],
+              "explanation": "接在動詞辭書形後，表示在過去某個時間點「正準備要做某動作」或「正好處於要動身的前一刻」。此處使用過去式「〜ところだった」，客觀描述當時的時點狀態。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 8,
+                  "end": 18
+                }
+              ]
+            },
+            {
+              "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:p2",
+              "utteranceIds": [
+                "9b2078f6-7b1b-4e03-b2dd-739b0f795bf1"
+              ],
+              "category": "usage",
+              "presentation": "core",
+              "title": "〜てくれる？（可以請你……嗎？）",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [],
+              "explanation": "「動詞て形＋くれる？」是用於平輩、熟人或親近對象的口語疑問句，向對方提出隨和的請求，詢問對方能否為自己做某事。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 2,
+                  "end": 9
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:r1",
+              "pointIds": [
+                "84362615-bcfc-425b-ac00-6fd005536409:s0:p1"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 8,
+                      "end": 18
+                    }
+                  ],
+                  "text": "出かけるところだった"
+                }
+              ],
+              "pattern": "[動詞辞書形]ところだった",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "說明朋友打電話來的時候，自己正好準備要睡覺。",
+                  "dialogue": [
+                    {
+                      "text": "昨日の夜、電話に出なかったね。",
+                      "translation": "昨晚你沒接電話呢。",
+                      "pronunciation": [
+                        {
+                          "text": "昨日",
+                          "reading": "きのう"
+                        },
+                        {
+                          "text": "の"
+                        },
+                        {
+                          "text": "夜",
+                          "reading": "よる"
+                        },
+                        {
+                          "text": "、"
+                        },
+                        {
+                          "text": "電話",
+                          "reading": "でんわ"
+                        },
+                        {
+                          "text": "に"
+                        },
+                        {
+                          "text": "出なかった",
+                          "reading": "でなかった"
+                        },
+                        {
+                          "text": "ね。"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "ごめん、ちょうど寝るところだった。",
+                      "translation": "抱歉，那時我正好正要睡覺。",
+                      "pronunciation": [
+                        {
+                          "text": "ごめん、ちょうど"
+                        },
+                        {
+                          "text": "寝る",
+                          "reading": "ねる"
+                        },
+                        {
+                          "text": "ところだった。"
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "寝るところだった"
+                }
+              ]
+            },
+            {
+              "id": "84362615-bcfc-425b-ac00-6fd005536409:s0:r2",
+              "pointIds": [
+                "84362615-bcfc-425b-ac00-6fd005536409:s0:p2"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 2,
+                      "end": 9
+                    }
+                  ],
+                  "text": "待ってくれる？"
+                }
+              ],
+              "pattern": "[動詞て形]くれる？",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "隨和地請朋友幫忙拿一下桌上的包包。",
+                  "dialogue": [
+                    {
+                      "text": "その鞄を取ってくれる？",
+                      "translation": "可以幫我拿一下那個包包嗎？",
+                      "pronunciation": [
+                        {
+                          "text": "その"
+                        },
+                        {
+                          "text": "鞄",
+                          "reading": "かばん"
+                        },
+                        {
+                          "text": "を"
+                        },
+                        {
+                          "text": "取ってくれる",
+                          "reading": "とってくれる"
+                        },
+                        {
+                          "text": "？"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "いいよ、はいどうぞ。",
+                      "translation": "好啊，拿去吧。",
+                      "pronunciation": [
+                        {
+                          "text": "いい",
+                          "reading": "いい"
+                        },
+                        {
+                          "text": "よ",
+                          "reading": "よ"
+                        },
+                        {
+                          "text": "、"
+                        },
+                        {
+                          "text": "はい",
+                          "reading": "はい"
+                        },
+                        {
+                          "text": "どうぞ",
+                          "reading": "どうぞ"
+                        },
+                        {
+                          "text": "。"
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "取ってくれる？"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

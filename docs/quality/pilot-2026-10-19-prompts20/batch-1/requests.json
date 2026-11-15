@@ -1,0 +1,167 @@
+[
+  {
+    "id": "eb3b3318-7da8-4e71-aabd-0f4907534111",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "es-actor-recipient-variant-automatic"
+    },
+    "profile": {
+      "targetLanguage": "es",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Yo voy a pedir que nos envíen los horarios."
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Perfecto. Nosotros vamos a revisar las fechas."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Te avisaré cuando tenga una respuesta."
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Gracias."
+      }
+    ]
+  },
+  {
+    "id": "00c9a289-dec4-409a-aa92-baa2b282821b",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "es-temporal-aspect-contrast-automatic"
+    },
+    "profile": {
+      "targetLanguage": "es",
+      "instructionLanguage": "zh-TW",
+      "level": "B2",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Te avisaré cuando reciba la confirmación."
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Yo enviaré los documentos cuando haya recibido tu mensaje."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Entonces revisaremos juntos los horarios."
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "De acuerdo."
+      }
+    ]
+  },
+  {
+    "id": "47e8d9c4-15e0-4d82-8f0b-004f4f159921",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "en-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "en",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Why are you still here?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "I was about to leave when you called."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Can you wait a minute?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Sure."
+      }
+    ]
+  }
+]

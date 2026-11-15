@@ -1,0 +1,36 @@
+Browser tab: 7, Title: "Siri download task preview", URL: "http://127.0.0.1:5198/dev/siri-download-task-preview.html?locale=zh-TW".
+1 AXWebArea Siri download task preview, URL: 127.0.0.1:5198/dev/siri-download-task-preview.html?locale=zh-TW
+	2 container root
+		3 container 通知
+		4 container
+			5 text Contextual Language Learning
+			6 checkbox Description: 活動, Value: 0, ID: header-activity
+			7 checkbox Description: 設定, Value: 1, ID: header-settings
+		8 container Fixture controls
+			9 button Start Aaron
+			10 button Start Nora
+			11 button Complete first
+			12 button Fail first
+			13 button Fail next removal
+			14 button Disconnect
+		15 container Siri 聲音
+			16 text 聲音語言
+			17 combo box (collapsed) Description: 聲音語言, Value: 英文（美國）, Secondary Actions: Expand
+				18 text 英文（美國）
+			19 button 重新整理 Siri 聲音
+			20 tab group
+				21 tab (selected, settable, boolean) 已下載, Value: 1, ID: radix-_r_2e_-trigger-installed
+				22 tab (selectable, settable, boolean) 可下載, Value: 0, ID: radix-_r_2e_-trigger-downloadable
+			23 container Description: 已下載, ID: radix-_r_2e_-content-installed
+				24 content list 已下載的 Siri 聲音
+					25 container Aaron
+						26 text Aaron
+						27 text 英文（美國）
+						28 checkbox (disabled) Description: 試聽, Value: 0
+						29 button Description: 開啟資源資料夾, Help: /System/Library/AssetsV2/fixture
+						30 button 刪除下載資源
+						31 text macOS 未確認移除資源，聲音可能仍已安裝，請重新查詢。
+		32 container
+			33 text Siri 聲音下載  · UI fixture
+
+The focused UI element is 1 AXWebArea Siri download task preview, URL: 127.0.0.1:5198/dev/siri-download-task-preview.html?locale=zh-TW

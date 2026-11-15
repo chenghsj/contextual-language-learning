@@ -1,0 +1,840 @@
+{
+  "id": "4686a30b-b645-4eba-a01a-3e2616dba3c6",
+  "createdAt": "2026-10-19T02:43:53.807Z",
+  "source": {
+    "platform": "import",
+    "title": "en-normal-transfer-automatic"
+  },
+  "profile": {
+    "targetLanguage": "en",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-18",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-5",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "efa884dde6761a4bfb776b9afef292f8ab10841a9853473fef2579604c36e8eb",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:44:02.375Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 7548.285166999907,
+        "usage": {
+          "input": 2515,
+          "output": 872,
+          "reasoning": 613
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:44:05.339Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 2949.183667000034,
+        "usage": {
+          "input": 2188,
+          "output": 216,
+          "reasoning": 179
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:44:50.611Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 45253.39920899994,
+        "usage": {
+          "input": 4401,
+          "output": 7791,
+          "reasoning": 5707
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Why are you still here?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "I was about to leave when you called."
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Can you wait a minute?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "Sure."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "詢問停留原因與請求稍候",
+      "context": {
+        "text": "包含對仍留在原處的詢問、說明通話時正準備離開的答覆、稍候片刻的請求，以及簡短答應的回應。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "你怎麼還在這裡？"
+        },
+        {
+          "cueId": "c2",
+          "text": "你打來的時候我正準備要走。"
+        },
+        {
+          "cueId": "c3",
+          "text": "你能稍等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "好的。"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "Why",
+              "reading": "/waɪ/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "are",
+              "reading": "/ɑːr/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "you",
+              "reading": "/juː/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "still",
+              "reading": "/stɪl/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "here",
+              "reading": "/hɪr/"
+            },
+            {
+              "text": "?"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "I",
+              "reading": "/aɪ/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "was",
+              "reading": "/wʌz/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "about",
+              "reading": "/əˈbaʊt/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "to",
+              "reading": "/tuː/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "leave",
+              "reading": "/liːv/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "when",
+              "reading": "/wen/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "you",
+              "reading": "/juː/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "called",
+              "reading": "/kɔːld/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "Can",
+              "reading": "/kæn/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "you",
+              "reading": "/juː/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "wait",
+              "reading": "/weɪt/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "a",
+              "reading": "/ə/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "minute",
+              "reading": "/ˈmɪnɪt/"
+            },
+            {
+              "text": "?"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "Sure",
+              "reading": "/ʃʊr/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "c6b4903c-2dae-45d4-be5f-b74491afa273",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 23
+            }
+          ]
+        },
+        {
+          "id": "c4a864d4-deb1-4cad-8705-b1216f5c08da",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a:s0:c2_chk1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 2,
+                  "end": 20
+                }
+              ],
+              "meaning": "正準備要離開"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 37
+            }
+          ]
+        },
+        {
+          "id": "0ecd9595-876d-4ca4-adba-bca05c95a368",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a:s0:c3_chk1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 8,
+                  "end": 21
+                }
+              ],
+              "meaning": "稍等一下"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "b85d721b-266f-4cae-b409-66891dbcef16",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a:s0:p1",
+      "utteranceIds": [
+        "c4a864d4-deb1-4cad-8705-b1216f5c08da"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "was about to leave（正準備要離開）",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "「be about to + 原形動詞」表示在某個時間點「正準備／即將做某事」。此處使用過去式「was about to leave」，表示在對方打電話過來的那個當下，說話者剛好正要離開。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 2,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "id": "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a:s0:p2",
+      "utteranceIds": [
+        "0ecd9595-876d-4ca4-adba-bca05c95a368"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "wait a minute（稍等一下）",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "「wait a minute」在口語中常用來請求對方稍候片刻，字面雖為「等一分鐘」，但實際多指簡短的片刻，並不嚴格限於六十秒。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 8,
+          "end": 21
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a:s0:r1",
+      "pointIds": [
+        "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 2,
+              "end": 20
+            }
+          ],
+          "text": "was about to leave"
+        }
+      ],
+      "pattern": "be about to [verb]",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "同事在辦公室詢問對方是否準備好前往會議室，對方回答自己正準備拿筆記型電腦。",
+          "dialogue": [
+            {
+              "text": "Are you ready to head to the meeting room?",
+              "translation": "你準備好前往會議室了嗎？",
+              "pronunciation": [
+                {
+                  "text": "Are",
+                  "reading": "/ɑːr/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "you",
+                  "reading": "/juː/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "ready",
+                  "reading": "/ˈredi/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "to",
+                  "reading": "/tuː/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "head",
+                  "reading": "/hed/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "to",
+                  "reading": "/tuː/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "the",
+                  "reading": "/ðə/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "meeting",
+                  "reading": "/ˈmiːtɪŋ/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "room",
+                  "reading": "/ruːm/"
+                },
+                {
+                  "text": "?"
+                }
+              ]
+            },
+            {
+              "text": "Yes, I was about to grab my laptop.",
+              "translation": "準備好了，我剛好正要拿筆記型電腦。",
+              "pronunciation": [
+                {
+                  "text": "Yes",
+                  "reading": "/jes/"
+                },
+                {
+                  "text": ", "
+                },
+                {
+                  "text": "I",
+                  "reading": "/aɪ/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "was",
+                  "reading": "/wʌz/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "about",
+                  "reading": "/əˈbaʊt/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "to",
+                  "reading": "/tuː/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "grab",
+                  "reading": "/ɡræb/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "my",
+                  "reading": "/maɪ/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "laptop",
+                  "reading": "/ˈlæptɑːp/"
+                },
+                {
+                  "text": "."
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "was about to grab"
+        }
+      ]
+    },
+    {
+      "id": "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a:s0:r2",
+      "pointIds": [
+        "844cfc0e-634d-4dba-bf0b-5d0c48fd5d6a:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 8,
+              "end": 21
+            }
+          ],
+          "text": "wait a minute"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "一人準備關門出門，另一人請對方稍等片刻好找尋鑰匙。",
+          "dialogue": [
+            {
+              "text": "I am heading out the door now.",
+              "translation": "我現在要出門了。",
+              "pronunciation": [
+                {
+                  "text": "I",
+                  "reading": "/aɪ/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "am",
+                  "reading": "/æm/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "heading",
+                  "reading": "/ˈhedɪŋ/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "out",
+                  "reading": "/aʊt/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "the",
+                  "reading": "/ðə/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "door",
+                  "reading": "/dɔːr/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "now",
+                  "reading": "/naʊ/"
+                },
+                {
+                  "text": "."
+                }
+              ]
+            },
+            {
+              "text": "Please wait a minute, I need to find my keys.",
+              "translation": "請稍等一下，我需要找一下鑰匙。",
+              "pronunciation": [
+                {
+                  "text": "Please",
+                  "reading": "/pliːz/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "wait",
+                  "reading": "/weɪt/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "a",
+                  "reading": "/ə/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "minute",
+                  "reading": "/ˈmɪnɪt/"
+                },
+                {
+                  "text": ", "
+                },
+                {
+                  "text": "I",
+                  "reading": "/aɪ/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "need",
+                  "reading": "/niːd/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "to",
+                  "reading": "/tuː/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "find",
+                  "reading": "/faɪnd/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "my",
+                  "reading": "/maɪ/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "keys",
+                  "reading": "/kiːz/"
+                },
+                {
+                  "text": "."
+                }
+              ]
+            },
+            {
+              "text": "All right, take your time.",
+              "translation": "好的，你慢慢來。",
+              "pronunciation": [
+                {
+                  "text": "All",
+                  "reading": "/ɔːl/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "right",
+                  "reading": "/raɪt/"
+                },
+                {
+                  "text": ", "
+                },
+                {
+                  "text": "take",
+                  "reading": "/teɪk/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "your",
+                  "reading": "/jʊr/"
+                },
+                {
+                  "text": " "
+                },
+                {
+                  "text": "time",
+                  "reading": "/taɪm/"
+                },
+                {
+                  "text": "."
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "wait a minute"
+        }
+      ]
+    }
+  ]
+}

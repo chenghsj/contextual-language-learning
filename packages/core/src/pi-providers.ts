@@ -1,5 +1,6 @@
 /** The product's supported providers and their integration policies. */
 export const PI_PROVIDER_REGISTRY = [
+  { id: "local", adapter: "local", modelCatalog: "static" },
   { id: "openai", adapter: "builtin", modelCatalog: "static" },
   { id: "anthropic", adapter: "builtin", modelCatalog: "static" },
   { id: "google", adapter: "builtin", modelCatalog: "static" },
@@ -32,6 +33,7 @@ export const PI_PROVIDER_REGISTRY = [
   { id: "qwen-token-plan", adapter: "builtin", modelCatalog: "static" },
   { id: "qwen-token-plan-cn", adapter: "builtin", modelCatalog: "static" },
   { id: "qwen-token-plan-individual", adapter: "builtin", modelCatalog: "static" },
+  { id: "qwen-token-plan-individual-cn", adapter: "builtin", modelCatalog: "static" },
   { id: "radius", adapter: "builtin", modelCatalog: "dynamic" },
   { id: "together", adapter: "builtin", modelCatalog: "static" },
   { id: "typesafe", adapter: "builtin", modelCatalog: "static" },
@@ -57,6 +59,8 @@ export interface PiProviderInfo {
   id: string;
   label: string;
   connected: boolean;
+  /** Method of the saved credential, omitted by older Native Hosts. */
+  credentialMethod?: "api_key" | "oauth";
   methods: ("api_key" | "oauth")[];
   /** SDK-provided authentication names; optional for older Native Hosts. */
   methodLabels?: Partial<Record<"api_key" | "oauth", string>>;

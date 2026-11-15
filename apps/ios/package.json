@@ -1,0 +1,8 @@
+{
+  "name": "@contextual/ios",
+  "private": true,
+  "version": "0.1.0",
+  "devDependencies": {
+    "core-js-pure": "3.51.0"
+  }
+}

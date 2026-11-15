@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
+import { buildHostSetup, setupConfiguration } from "./package-host-setup.mjs";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { access, copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -48,76 +49,37 @@ for (const size of [16, 32, 48, 128]) {
   await access(join(extensionDist, path));
 }
 await access(hostDist);
-const installerFiles = [
-  "install-host.mjs",
-  "uninstall-host.mjs",
-  "native-host-platform.mjs",
-  "windows-launcher.cs",
-  "compile-launcher.ps1",
-];
-for (const name of installerFiles) await access(join(hostRoot, "scripts", name));
-
 const chromiumName = "contextual-language-learning-chromium-" + version + ".zip";
-const platforms = ["macos", "windows", "linux"];
-const hostNames = platforms.map(
-  platform => "contextual-language-learning-" + platform + "-host-" + version + ".zip",
+const extensionIds = Object.fromEntries(
+  [
+    ["chrome", process.env.CLL_CHROME_EXTENSION_ID],
+    ["edge", process.env.CLL_EDGE_EXTENSION_ID],
+    ["chromium", process.env.CLL_CHROMIUM_EXTENSION_ID],
+  ].filter(([, value]) => value),
 );
+const mode = process.env.CLL_SETUP_MODE === "local" ? "local" : "release";
+setupConfiguration({ platform: "darwin", arch: "arm64", version, extensionIds, mode });
+const hostNames = [];
 await rm(assetDir, { recursive: true, force: true });
 await mkdir(assetDir, { recursive: true });
-const stage = await mkdtemp(join(tmpdir(), "immersive-release-"));
+const stage = await mkdtemp(join(tmpdir(), "cll-release-"));
 try {
   // Archive contents of dist, not dist itself: manifest.json must be at archive root.
   await exec("zip", ["-X", "-q", "-r", join(assetDir, chromiumName), ".", "-x", "*.DS_Store"], {
     cwd: extensionDist,
   });
-  const hostStage = join(stage, "host");
-  await mkdir(join(hostStage, "dist"), { recursive: true });
-  await mkdir(join(hostStage, "scripts"), { recursive: true });
-  await copyFile(hostDist, join(hostStage, "dist/native-host.mjs"));
-  for (const name of installerFiles) {
-    await copyFile(join(hostRoot, "scripts", name), join(hostStage, "scripts", name));
-  }
-
-  for (let index = 0; index < platforms.length; index++) {
-    const platform = platforms[index];
-    const hostName = hostNames[index];
-    await writeFile(
-      join(hostStage, "README.md"),
-      [
-        "# AI-powered Contextual Language Learning — " + platform + " Native Host",
-        "",
-        "Requires Node.js 22+ and an account/API key for a supported Pi provider,",
-        "and the matching Chromium extension. Windows additionally requires Windows PowerShell 5.1",
-        "and .NET Framework to compile the small launcher executable during installation.",
-        "",
-        "1. Extract the Chromium ZIP separately and load it from chrome://extensions",
-        "   (or edge://extensions for Edge).",
-        "2. Copy the extension's 32-character ID from the browser's extensions page.",
-        "3. Inside this extracted Host directory run:",
-        "",
-        "   node scripts/install-host.mjs YOUR_EXTENSION_ID",
-        "",
-        "For Edge: add --browser edge. For Chromium: add --browser chromium.",
-        "The installer copies the Host to a stable user directory and registers",
-        "Native Messaging for the selected browser. It requires no administrator rights.",
-        "Use the same extension ID in the Host installer as the loaded extension.",
-        "On Windows, the installed native-host.exe is a locally compiled stdio proxy",
-        "to the installed Node runtime; do not point Chrome's manifest at a .cmd file.",
-        "On Linux, install zenity or kdialog for the native folder picker.",
-        "Google Drive OAuth and Keychain storage remain macOS-only and experimental.",
-        "Connect your AI provider from Extension Settings. Credentials are never included in this ZIP.",
-        "",
-        "To uninstall, fully quit the selected browser, then run from this extracted directory:",
-        "",
-        "   node scripts/uninstall-host.mjs",
-        "",
-        "For Edge: add --browser edge. For Chromium: add --browser chromium.",
-        "This removes only that browser's registration. The shared Host program is removed",
-        "after the last browser is unregistered. Lessons, task history, credentials and settings are preserved.",
-        "",
-      ].join("\n"),
-    );
-    await exec("zip", ["-X", "-q", "-r", join(assetDir, hostName), "."], { cwd: hostStage });
+  for (const platform of ["darwin", "win32", "linux"]) {
+    for (const arch of ["arm64", "x64"]) {
+      process.stdout.write("Building local-service setup: " + platform + " " + arch + "\n");
+      const setup = await buildHostSetup({
+        platform,
+        arch,
+        extensionIds,
+        mode,
+        outputDir: assetDir,
+      });
+      hostNames.push(setup.path.slice(assetDir.length + 1));
+    }
   }
 
   const archiveNames = [chromiumName, ...hostNames];
@@ -136,10 +98,34 @@ try {
   );
   for (const hostName of hostNames) {
     const contents = names(await exec("unzip", ["-Z", "-1", join(assetDir, hostName)]));
-    for (const path of ["dist/native-host.mjs", ...installerFiles.map(name => "scripts/" + name)]) {
-      assert.ok(contents.includes(path), hostName + " lacks " + path);
+    if (hostName.includes("-macos-")) {
+      assert.ok(
+        contents.some(path => path.endsWith("dist/macos-credentials")),
+        hostName + " lacks Keychain helper",
+      );
+      assert.ok(
+        contents.some(path => path.endsWith("dist/macos-speech.swift")),
+        hostName + " lacks speech source",
+      );
+      assert.ok(
+        contents.some(path => path.endsWith("dist/macos-speech")),
+        hostName + " lacks native speech helper",
+      );
     }
+    assert.ok(
+      contents.some(path => path.endsWith("setup/server.mjs")),
+      hostName + " lacks setup UI",
+    );
+    assert.ok(
+      contents.some(path => /runtime\/node(?:\.exe)?$/.test(path)),
+      hostName + " lacks bundled runtime",
+    );
+    assert.ok(
+      contents.some(path => path.endsWith("runtime/LICENSE")),
+      hostName + " lacks runtime license",
+    );
   }
+
   const lines = [];
   for (const name of archiveNames) {
     const digest = createHash("sha256")

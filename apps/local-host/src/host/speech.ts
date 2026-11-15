@@ -8,7 +8,23 @@ export function createSpeechHandler(
   return {
     close: () => service.close(),
     async handle(request: HostRequest): Promise<boolean> {
-      if (request.type === "listSpeechVoices") {
+      if (
+        request.type === "startSpeechDownload" ||
+        request.type === "cancelSpeechDownload" ||
+        request.type === "inspectSpeechDownloads"
+      ) {
+        const observations =
+          request.type === "inspectSpeechDownloads"
+            ? await service.inspectDownloads(request.operations)
+            : request.type === "startSpeechDownload"
+              ? await service.startDownload(request)
+              : await service.cancelDownload(request);
+        reply({
+          id: request.id,
+          type: "speechDownloadObservations",
+          observations,
+        });
+      } else if (request.type === "listSpeechVoices") {
         reply({
           id: request.id,
           type: "speechVoices",
@@ -38,7 +54,11 @@ export function createSpeechHandler(
         });
       } else if (request.type === "removeSpeechVoice") {
         await service.removeVoice(request.voiceId);
-        reply({ id: request.id, type: "speechVoiceRemoved", voiceId: request.voiceId });
+        reply({
+          id: request.id,
+          type: "speechVoiceRemoved",
+          voiceId: request.voiceId,
+        });
       } else if (request.type === "installSpeechVoice") {
         reply({
           id: request.id,

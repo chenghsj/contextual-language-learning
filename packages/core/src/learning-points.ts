@@ -17,6 +17,7 @@ import {
   CuePronunciationSchema,
   PronunciationSegmentSchema,
   StudyTranslationSchema,
+  currentLearningExecution,
   type LearningDocumentV7,
   type LearningPoint,
   type ReusableItem,
@@ -118,6 +119,22 @@ export function validateSpans(
       fail("invalid_span: overlapping or out of order");
     previousIndex = index;
     previousEnd = span.end;
+  }
+}
+
+/** New citations keep Latin words intact. Apostrophes/hyphens remain boundaries;
+ * this is deliberately not a morphological parser or a cross-cue word guesser. */
+function validateCitationWords(spans: SourceSpan[], cues: SubtitleCue[]) {
+  for (const span of spans) {
+    const text = cues.find(c => c.id === span.cueId)!.originalText;
+    for (const offset of [span.start, span.end])
+      if (
+        /\p{Script=Latin}\p{M}*$/u.test(text.slice(0, offset)) &&
+        /^\p{Script=Latin}/u.test(text.slice(offset))
+      )
+        fail(
+          `invalid_source_word: citation ${span.cueId} ${span.start}:${span.end} cuts inside a Latin word at UTF-16 offset ${offset}. Quote the complete source word and explain its stem or affix separately; preserve the original text and assigned unit boundaries.`,
+        );
   }
 }
 export function contiguousIds(ids: string[], cues: SubtitleCue[]) {
@@ -438,6 +455,14 @@ function validateTeachingBatchInternal(
     assignedCues,
     enabled.includes("pronunciation"),
   );
+  // Preserve exact-text alignment diagnostics and their repair hints before
+  // checking word boundaries on otherwise valid citations.
+  if (checkTeaching) {
+    for (const point of output.points) validateCitationWords(point.sourceSpans, input.sourceWindow);
+    for (const item of output.reusableItems)
+      for (const form of item.sourceForms)
+        validateCitationWords(form.sourceSpans, input.sourceWindow);
+  }
   const stableId = (id: string) => (namespace ? `${namespace}:${id}` : id);
   const pointId = (id: string) => (newIds.includes(id) ? stableId(id) : id);
   const points = output.points.map(p => ({ ...p, id: pointId(p.id) }));
@@ -483,6 +508,10 @@ function validateSpansAcrossChunks(
 export function validateLearningDocumentV7(value: unknown): LearningDocumentV7 {
   const doc = LearningDocumentV7Schema.parse(value),
     cues = doc.cues;
+  // Resumed documents can retain completed historical batches. New batches are
+  // checked before commit; do not retroactively reject preserved old citations.
+  const checkNewCitations =
+    currentLearningExecution(doc.execution) && !doc.execution?.previousExecution;
   uniqueIds(
     cues.map(c => c.id),
     "Duplicate source cue IDs",
@@ -507,6 +536,24 @@ export function validateLearningDocumentV7(value: unknown): LearningDocumentV7 {
     ],
     "Duplicate teaching IDs",
   );
+  for (const [groups, pool, field] of [
+    [doc.execution?.pointEquivalenceGroups ?? [], doc.points, "category"],
+    [doc.execution?.itemEquivalenceGroups ?? [], doc.reusableItems, "kind"],
+  ] as const) {
+    const seen = new Set<string>();
+    for (const group of groups) {
+      let kind: unknown;
+      for (const id of group) {
+        const item = pool.find(p => p.id === id);
+        if (!item || seen.has(id)) fail("Invalid teaching equivalence reference");
+        seen.add(id);
+        const value = (item as unknown as Record<string, unknown>)[field];
+        if (kind !== undefined && kind !== value)
+          fail("Incompatible teaching equivalence category");
+        kind = value;
+      }
+    }
+  }
   uniqueIds(
     doc.execution?.pronunciationDiagnostics?.map(d => d.id) ?? [],
     "Duplicate pronunciation diagnostics",
@@ -621,6 +668,7 @@ export function validateLearningDocumentV7(value: unknown): LearningDocumentV7 {
         "invalid_source_reference",
       );
       validateSpans(p.sourceSpans, cues, p.sourceCueIds);
+      if (checkNewCitations) validateCitationWords(p.sourceSpans, cues);
       exactIds(
         spanCueIds(p.sourceSpans),
         p.sourceCueIds,
@@ -649,6 +697,12 @@ export function validateLearningDocumentV7(value: unknown): LearningDocumentV7 {
     if (!doc.sections.some(s => s.utterances.some(u => u.pointIds.includes(p.id))))
       fail("Orphan learning point");
   // Validate every reusable item against its source points using a synthetic single full-source assignment.
+  if (checkNewCitations)
+    for (const item of doc.reusableItems)
+      for (const form of item.sourceForms) {
+        validateSpans(form.sourceSpans, cues, form.cueIds);
+        validateCitationWords(form.sourceSpans, cues);
+      }
   if (doc.reusableItems.length) {
     const scene = doc.sections[0];
     const utterances = doc.sections.flatMap(s => s.utterances);

@@ -17,6 +17,7 @@ export * from "./preferences";
 export * from "./analysis-range";
 
 export * from "./execution";
+export * from "./compact-plan";
 export * from "./usage-estimate";
 export * from "./custom";
 export * from "./explanations";
@@ -27,6 +28,14 @@ export * from "./expression-occurrences";
 export * from "./learning-points";
 export * from "./reader-model";
 export * from "./speech";
+export * from "./speech-downloads";
 
 export * from "./quality";
 export * from "./source-units";
+
+export * from "./favorites";
+export * from "./favorite-catalog";
+
+export * from "./local-model";
+export * from "./custom-model";
+export * from "./model-catalog";

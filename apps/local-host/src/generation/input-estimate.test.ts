@@ -15,7 +15,8 @@ import {
 import { estimateGenerationInput } from "./input-estimate";
 import { lessonResources } from "../agents/pi";
 import { billingKind } from "../agents/billing";
-import { pointsCandidatePrompt } from "./learning-points-prompts";
+import { learningPointsPrompts } from "./learning-points-prompts";
+const pointsCandidatePrompt = learningPointsPrompts().pointsCandidatePrompt;
 import { SYSTEM } from "./learning-points-rules";
 
 const request = (count = 1) =>
@@ -86,6 +87,8 @@ test("initial input includes each chunk's instructions and uses SDK pricing with
       0,
     );
     assert.equal(result.inputTokens, expected);
+    const experimental = await estimateGenerationInput(payload, runtime, "compact-scenes-1");
+    assert.ok(experimental.inputTokens < result.inputTokens);
     assert.equal(result.inputCalls, chunks.length);
     assert.ok(Math.abs(result.inputCostUsd! - (expected * 2) / 1_000_000) < 1e-12);
     assert.equal(result.billing, "api");

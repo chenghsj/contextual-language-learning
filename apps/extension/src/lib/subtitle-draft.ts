@@ -36,8 +36,33 @@ import { learningLanguageName } from "../i18n/preferences";
 import { translate, type UiLocale } from "../i18n/messages";
 import { playbackCueMap as derivePlaybackCues } from "../video/reader-playback";
 import type { LoopWindow } from "../video/loop-window";
+import { SUBTITLE_TIMING_ALGORITHM_VERSION, type TimingCorrection } from "./subtitle-timing";
+
+export type TimingPreviewInputs = {
+  mode: "offset" | "anchors";
+  offset: string;
+  anchors: {
+    subtitleFirst: string;
+    audioFirst: string;
+    subtitleLast: string;
+    audioLast: string;
+  };
+};
 function sourceCues(raw: string) {
   return raw.includes("-->") ? parseSubtitles(raw) : parsePlainText(raw);
+}
+function serializeDraftCues(cues: SubtitleCue[]) {
+  const clock = (ms: number) => {
+    const value = formatRangeTime(ms);
+    return value.includes(".") ? value : value + ".000";
+  };
+  return cues
+    .map((cue, index) =>
+      cue.startMs === null
+        ? cue.originalText
+        : `${index + 1}\n${clock(cue.startMs)} --> ${clock(cue.endMs!)}\n${serializeSubtitleMarkup(cue)}`,
+    )
+    .join("\n\n");
 }
 function inferredTimingOverrides(cues: SubtitleCue[], original: SubtitleCue[]) {
   const byId = new Map(original.map(cue => [cue.id, cue]));
@@ -55,6 +80,7 @@ function inferredTimingOverrides(cues: SubtitleCue[], original: SubtitleCue[]) {
 }
 export type SelectedVideo = { tabId: number; windowId: number; url: string; title: string };
 export type SubtitleDraftState = {
+  timingPreviewVersion: number;
   raw: string;
   originalRaw: string;
   edited: boolean;
@@ -103,6 +129,7 @@ export const browserSubtitleAdapters = {
 /** Draft provenance, cache and all async request versions live together. */
 export class SubtitleDraft {
   private state: SubtitleDraftState = {
+    timingPreviewVersion: 0,
     raw: "",
     originalRaw: "",
     edited: false,
@@ -128,6 +155,77 @@ export class SubtitleDraft {
     timingOverrides: {},
   };
   private listeners = new Set<(state: SubtitleDraftState) => void>();
+  private timingPreviews = new Map<
+    string,
+    {
+      algorithmVersion: number;
+      raw: string;
+      originalRaw: string;
+      overrides: string;
+      changes: TimingCorrection[];
+      inputs?: TimingPreviewInputs;
+    }
+  >();
+  timingPreview() {
+    const saved = this.timingPreviews.get(captionCacheKey(this.state.sourceUrl, this.language));
+    if (
+      !saved ||
+      saved.algorithmVersion !== SUBTITLE_TIMING_ALGORITHM_VERSION ||
+      !this.state.ready ||
+      saved.raw !== this.state.raw ||
+      saved.originalRaw !== this.state.originalRaw ||
+      saved.overrides !== JSON.stringify(this.state.timingOverrides) ||
+      !Array.isArray(saved.changes) ||
+      saved.changes.length > 3000
+    )
+      return null;
+    const ids = new Set(this.state.cues.map(cue => cue.id));
+    if (
+      saved.changes.some(
+        change =>
+          !ids.has(change.id) ||
+          !Number.isSafeInteger(change.startMs) ||
+          !Number.isSafeInteger(change.endMs) ||
+          change.startMs < 0 ||
+          change.endMs <= change.startMs,
+      )
+    )
+      return null;
+    return { snapshot: this.state, changes: saved.changes, inputs: saved.inputs };
+  }
+  saveTimingPreview(
+    changes: TimingCorrection[],
+    expected: SubtitleDraftState,
+    inputs?: TimingPreviewInputs,
+  ) {
+    // Window/focus metadata may change during preview; only subtitle identity/data matter.
+    if (
+      !this.state.ready ||
+      this.state.raw !== expected.raw ||
+      this.state.originalRaw !== expected.originalRaw ||
+      videoSourceKey(this.state.sourceUrl) !== videoSourceKey(expected.sourceUrl) ||
+      JSON.stringify(this.state.captionSource) !== JSON.stringify(expected.captionSource) ||
+      JSON.stringify(this.state.timingOverrides) !== JSON.stringify(expected.timingOverrides)
+    )
+      throw new Error("STALE_TIMING");
+    const key = captionCacheKey(this.state.sourceUrl, this.language);
+    this.timingPreviews.delete(key);
+    this.timingPreviews.set(key, {
+      algorithmVersion: SUBTITLE_TIMING_ALGORITHM_VERSION,
+      raw: this.state.raw,
+      originalRaw: this.state.originalRaw,
+      overrides: JSON.stringify(this.state.timingOverrides),
+      changes,
+      inputs,
+    });
+    while (this.timingPreviews.size > 10)
+      this.timingPreviews.delete(this.timingPreviews.keys().next().value!);
+    this.update({ timingPreviewVersion: this.state.timingPreviewVersion + 1 });
+  }
+  clearTimingPreview() {
+    if (this.timingPreviews.delete(captionCacheKey(this.state.sourceUrl, this.language)))
+      this.update({ timingPreviewVersion: this.state.timingPreviewVersion + 1 });
+  }
   private cache = new Map<
     string,
     {
@@ -266,17 +364,8 @@ export class SubtitleDraft {
     });
     if (cues.reduce((sum, cue) => sum + cue.originalText.length, 0) > 220000)
       throw new Error("Subtitle size limit exceeded");
-    const clock = (ms: number) => {
-      const value = formatRangeTime(ms);
-      return value.includes(".") ? value : value + ".000";
-    };
-    const raw = cues
-      .map((cue, index) =>
-        cue.startMs === null
-          ? cue.originalText
-          : `${index + 1}\n${clock(cue.startMs)} --> ${clock(cue.endMs!)}\n${serializeSubtitleMarkup(cue)}`,
-      )
-      .join("\n\n");
+    const raw = serializeDraftCues(cues);
+    this.timingPreviews.delete(captionCacheKey(this.state.sourceUrl, this.language));
     ++this.captionVersion;
     this.update({
       raw,
@@ -286,7 +375,48 @@ export class SubtitleDraft {
       subtitleBusy: false,
     });
   }
+  /** One validated update/save; an obsolete preview can never overwrite a newer draft. */
+  applyTimingCorrections(
+    changes: readonly TimingCorrection[],
+    expected: SubtitleDraftState,
+    duration?: number,
+  ) {
+    if (this.state !== expected || !this.state.ready) throw new Error("STALE_TIMING");
+    const byId = new Map(this.state.cues.map(cue => [cue.id, cue]));
+    const seen = new Set<string>();
+    for (const change of changes) {
+      const cue = byId.get(change.id);
+      if (
+        !cue ||
+        cue.startMs === null ||
+        cue.endMs === null ||
+        seen.has(change.id) ||
+        !Number.isSafeInteger(change.startMs) ||
+        !Number.isSafeInteger(change.endMs) ||
+        change.startMs < 0 ||
+        change.endMs <= change.startMs ||
+        (duration !== undefined && (!Number.isFinite(duration) || change.endMs > duration))
+      )
+        throw new Error("INVALID_TIMING");
+      seen.add(change.id);
+    }
+    if (!changes.length) return;
+    this.timingPreviews.delete(captionCacheKey(this.state.sourceUrl, this.language));
+    const corrections = new Map(changes.map(change => [change.id, change]));
+    const cues = this.state.cues.map(cue => ({ ...cue, ...corrections.get(cue.id) }));
+    const timingOverrides = { ...this.state.timingOverrides };
+    for (const { id, startMs, endMs } of changes) timingOverrides[id] = { startMs, endMs };
+    ++this.captionVersion;
+    this.update({
+      raw: serializeDraftCues(cues),
+      cues,
+      timingOverrides,
+      originalRaw: this.state.originalRaw,
+      subtitleBusy: false,
+    });
+  }
   restoreOriginal() {
+    this.timingPreviews.delete(captionCacheKey(this.state.sourceUrl, this.language));
     this.update({ raw: this.state.originalRaw, pendingCaption: null });
   }
   resolveCaption(useNew: boolean) {
@@ -319,6 +449,7 @@ export class SubtitleDraft {
   exportSaved() {
     return {
       version: 1 as const,
+      ...(this.timingPreviews.size ? { timingPreviews: [...this.timingPreviews.entries()] } : {}),
       entries: [...this.cache.entries()],
       revisions: this.revisions,
       latest: { sourceUrl: this.state.sourceUrl, title: this.state.title, language: this.language },
@@ -326,6 +457,10 @@ export class SubtitleDraft {
   }
   hydrateSaved(saved: ReturnType<SubtitleDraft["exportSaved"]>) {
     if (saved?.version !== 1 || !Array.isArray(saved.entries)) return;
+    if (Array.isArray(saved.timingPreviews))
+      for (const [key, value] of saved.timingPreviews.slice(-10))
+        if (typeof key === "string" && value && typeof value.raw === "string")
+          this.timingPreviews.set(key, value);
     this.revisions = saved.revisions ?? [];
     for (const [key, value] of saved.entries)
       if (typeof key === "string" && value && typeof value.raw === "string" && value.source)

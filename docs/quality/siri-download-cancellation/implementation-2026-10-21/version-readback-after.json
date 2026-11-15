@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-21T06:05:43.024Z",
+  "input": {
+    "action": "inspectSpeechDownloads",
+    "operations": [
+      {
+        "operationId": "6eac35fa-a83d-4aa7-acca-82eb9904aa56",
+        "voiceId": "siri:com.apple.speech.synthesis.voice.custom.siri.en-us-g.premium"
+      }
+    ]
+  },
+  "result": {
+    "speechDownloadObservations": [
+      {
+        "operationId": "6eac35fa-a83d-4aa7-acca-82eb9904aa56",
+        "subscription": "present",
+        "ordering": "settled",
+        "voiceId": "siri:com.apple.speech.synthesis.voice.custom.siri.en-us-g.premium",
+        "shared": false,
+        "resource": "absent",
+        "cancelFenced": true
+      }
+    ]
+  }
+}

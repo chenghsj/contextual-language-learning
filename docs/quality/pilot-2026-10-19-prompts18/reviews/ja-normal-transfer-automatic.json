@@ -1,0 +1,23 @@
+{
+  "case": "ja-normal-transfer-automatic",
+  "document": "batch-2/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/5f79dec2-1420-4439-9332-0b3d967123dd.json",
+  "documentHash": "fc828cbce2ce275497e3e0068ef7b3293f1f62dba497a881ad9be5f2f11d8363",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The accepted control keeps omitted source subjects unspecified, explicitly has telephone evidence in 電話, retains imminent departure and keeps うん basic_only. The dictionary-form and complete te-form slots are not duplicated. Both new examples have matching actions and aligned readings."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "unqualified_general_intonation",
+      "path": "/points/1/explanation",
+      "quote": "句尾上揚語調",
+      "description": "The explanation should qualify rising intonation as a possible general use rather than an obligatory or recording-specific property. No audio was assessed."
+    }
+  ],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

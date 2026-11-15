@@ -1,0 +1,48 @@
+{
+  "scope": "Temporary copy mutations only; no model calls or original evidence changes",
+  "checks": [
+    {
+      "name": "Unmodified evidence passes",
+      "exitCode": 0,
+      "expectedResult": true,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Pending finding remains valid only when excluded from acceptance",
+      "exitCode": 0,
+      "expectedResult": true,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Pending case cannot be accepted",
+      "exitCode": 1,
+      "expectedResult": false,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Verdict alone cannot hide a pending finding",
+      "exitCode": 1,
+      "expectedResult": false,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Unexercised required target is valid only when excluded from acceptance",
+      "exitCode": 0,
+      "expectedResult": true,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Unexercised required target cannot be accepted",
+      "exitCode": 1,
+      "expectedResult": false,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Changed raw response is rejected",
+      "exitCode": 1,
+      "expectedResult": false,
+      "matchedExpectation": true
+    }
+  ],
+  "newInferenceCalls": 0
+}

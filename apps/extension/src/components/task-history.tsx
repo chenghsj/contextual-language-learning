@@ -1,4 +1,5 @@
 import { pronunciationDiagnosticCopy } from "../i18n/pronunciation-diagnostics";
+import { generationPreviewCopy } from "../i18n/generation-preview";
 import { createFlowCopy } from "../i18n/create-flow";
 import { customContentCopy } from "../i18n/custom-content";
 import { cancellationCopy } from "../i18n/cancellation";
@@ -6,7 +7,12 @@ import type { CancellationState } from "../native/cancellation-tracker";
 import { layoutText, sidePanelLayoutCopy } from "../i18n/side-panel-layout";
 import { PageSection } from "./page-section";
 import React, { useEffect, useRef, useState } from "react";
-import { isPiProviderId, type AgentInfo, type JobSummary } from "@contextual/core";
+import {
+  isPiProviderId,
+  type AgentInfo,
+  type JobSummary,
+  type SpeechDownloadTask,
+} from "@contextual/core";
 import { agentDisplayName } from "../i18n/agent-display";
 import { piCopy } from "../i18n/pi";
 import type { UiLocale, MessageKey, MessageParams } from "../i18n/messages";
@@ -22,6 +28,10 @@ import { DialogTitleBar } from "./dialog-title-bar";
 import { JobProgress, JobStage, hasDynamicGenerationPlan } from "./job-progress";
 import { generationProgressCopy } from "../i18n/generation-progress";
 import { activityCopy } from "../i18n/activity";
+import { activityItems, visibleActivityItems } from "./activity-items";
+import { DownloadActivityItem } from "./download-activity-item";
+import { useSpeechDownloads, useSpeechDownloadSnapshot } from "./speech-downloads-provider";
+import { speechDownloadTaskCopy } from "../i18n/speech-download-task";
 
 type Props = {
   locale?: UiLocale;
@@ -38,13 +48,16 @@ type Props = {
   onResume: (id: string) => void;
   onCancel?: (job: JobSummary) => void;
   onOpen: (id: string) => void;
+  onOpenPreview?: (id: string) => void;
   onDetails?: (job: JobSummary) => void | Promise<void>;
   onRetryPublication: (id: string) => Promise<void>;
   onRetryBackup: (id: string) => Promise<void>;
   onListEnded?: () => Promise<JobSummary[]>;
-  onDeleteRecords?: (
-    ids: string[],
-  ) => Promise<{ deleted: string[]; failed: { jobId: string; message: string }[] }>;
+  onViewVoice?: (task: SpeechDownloadTask) => void;
+  onDeleteRecords?: (ids: string[]) => Promise<{
+    deleted: string[];
+    failed: { jobId: string; message: string }[];
+  }>;
 };
 export const jobStatusKeys: Record<JobSummary["status"], MessageKey> = {
   queued: "jobQueued",
@@ -93,7 +106,12 @@ export function TaskHistory({
   onRetryBackup,
   onListEnded,
   onDeleteRecords,
+  onViewVoice,
+  onOpenPreview,
 }: Props) {
+  const downloads = useSpeechDownloads();
+  const downloadSnapshot = useSpeechDownloadSnapshot();
+  const [downloadActionError, setDownloadActionError] = useState("");
   const ux = createFlowCopy(locale);
   const queued = jobs
     .filter(job => job.status === "queued")
@@ -114,9 +132,10 @@ export function TaskHistory({
   const [showAllJobs, setShowAllJobs] = useState(false);
   const [expandedJobs, setExpandedJobs] = useState<string[]>([]);
   const [endedJobs, setEndedJobs] = useState<JobSummary[]>([]);
-  const [confirmation, setConfirmation] = useState<{ jobs: JobSummary[]; batch: boolean } | null>(
-    null,
-  );
+  const [confirmation, setConfirmation] = useState<{
+    jobs: JobSummary[];
+    batch: boolean;
+  } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [listError, setListError] = useState("");
@@ -166,7 +185,10 @@ export function TaskHistory({
       if (result.failed.length) {
         setConfirmation(
           previous =>
-            previous && { ...previous, jobs: previous.jobs.filter(job => !removed.has(job.id)) },
+            previous && {
+              ...previous,
+              jobs: previous.jobs.filter(job => !removed.has(job.id)),
+            },
         );
         setDeleteError(
           t("partialJobDeletion", {
@@ -184,23 +206,12 @@ export function TaskHistory({
       setDeleting(false);
     }
   };
-  const filteredJobs = jobs.filter(job => matchesJobFilter(job.status, jobFilter));
-  const activeJobs = filteredJobs
-    .filter(job => matchesJobFilter(job.status, "active"))
-    .sort((a, b) => {
-      const rank = { running: 0, queued: 1, waiting: 2 };
-      const statusOrder = rank[a.status as keyof typeof rank] - rank[b.status as keyof typeof rank];
-      return (
-        statusOrder ||
-        (a.status === "queued"
-          ? a.createdAt.localeCompare(b.createdAt)
-          : b.updatedAt.localeCompare(a.updatedAt))
-      );
-    });
-  const endedRecords = filteredJobs
-    .filter(job => !matchesJobFilter(job.status, "active"))
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  const visibleJobs = [...activeJobs, ...(showAllJobs ? endedRecords : endedRecords.slice(0, 3))];
+  const filteredJobs = activityItems(jobs, downloadSnapshot.tasks, jobFilter);
+  const endedRecords = filteredJobs.filter(item => !item.active);
+  const visibleJobs = visibleActivityItems(filteredJobs, showAllJobs);
+  const endedDownloadIds = downloadSnapshot.tasks
+    .filter(task => ["completed", "failed", "cancelled"].includes(task.progress.status))
+    .map(task => task.id);
   const dayLabel = (timestamp: string) => {
     const date = new Date(timestamp);
     const today = new Date();
@@ -260,6 +271,15 @@ export function TaskHistory({
               aria-busy={loadingJobs}
               onClick={() => {
                 onRefresh();
+                void downloads
+                  .reconcile()
+                  .catch(error =>
+                    setDownloadActionError(
+                      error instanceof Error
+                        ? error.message
+                        : speechDownloadTaskCopy[locale].actionFailed,
+                    ),
+                  );
                 setRefreshEnded(value => value + 1);
               }}
             >
@@ -272,6 +292,21 @@ export function TaskHistory({
           </IconTooltip>
         </div>
         <div className="mt-2">
+          {downloadSnapshot.service === "storage-error" && (
+            <p role="alert" className="break-words text-ui-body text-destructive">
+              {speechDownloadTaskCopy[locale].storageError}
+            </p>
+          )}
+          {downloadSnapshot.service === "unavailable" && (
+            <p role="alert" className="break-words text-ui-body text-destructive">
+              {speechDownloadTaskCopy[locale].unavailable}
+            </p>
+          )}
+          {downloadSnapshot.paused && (
+            <p role="status" className="break-words text-ui-body">
+              {speechDownloadTaskCopy[locale].paused}
+            </p>
+          )}
           <Accordion
             type="multiple"
             value={expandedJobs}
@@ -279,219 +314,253 @@ export function TaskHistory({
             className="my-3 grid gap-1"
           >
             {!loadingJobs && !visibleJobs.length && (
-              <p className="text-xs text-muted-foreground">{flow.activityEmpty}</p>
+              <p className="text-ui-body text-muted-foreground">{flow.activityEmpty}</p>
             )}
-            {visibleJobs.map((job, index) => (
-              <React.Fragment key={job.id}>
-                {matchesJobFilter(job.status, "active") && index === 0 && (
-                  <h3 className="mt-3 text-xs font-medium text-muted-foreground">
+            {visibleJobs.map((item, index) => (
+              <React.Fragment key={item.id}>
+                {item.active && index === 0 && (
+                  <h3 className="mt-3 text-ui-heading font-semibold text-muted-foreground">
                     {activity.inProgress}
                   </h3>
                 )}
                 {jobFilter === "all" &&
-                  !matchesJobFilter(job.status, "active") &&
-                  (index === 0 || matchesJobFilter(visibleJobs[index - 1].status, "active")) && (
-                    <h3 className="mt-3 text-xs font-medium text-muted-foreground">
+                  !item.active &&
+                  (index === 0 || visibleJobs[index - 1].active) && (
+                    <h3 className="mt-3 text-ui-heading font-semibold text-muted-foreground">
                       {activity.history}
                     </h3>
                   )}
-                {!matchesJobFilter(job.status, "active") &&
+                {!item.active &&
                   (index === 0 ||
-                    matchesJobFilter(visibleJobs[index - 1].status, "active") ||
+                    visibleJobs[index - 1].active ||
                     new Date(visibleJobs[index - 1].updatedAt).toLocaleDateString() !==
-                      new Date(job.updatedAt).toLocaleDateString()) && (
-                    <h3 className="mt-3 text-[11px] font-medium text-muted-foreground">
-                      {dayLabel(job.updatedAt)}
+                      new Date(item.updatedAt).toLocaleDateString()) && (
+                    <h3 className="mt-3 text-ui-meta font-medium text-muted-foreground">
+                      {dayLabel(item.updatedAt)}
                     </h3>
                   )}
-                <AccordionItem
-                  value={job.id}
-                  data-ui="taskHistoryItem"
-                  className="min-w-0 border-border [&_p]:my-1 [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-8 [&_[data-ui=actions]_button]:whitespace-normal"
-                >
-                  <AccordionTrigger className="min-w-0 items-start gap-2 py-3 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25 [&>svg]:mt-0.5">
-                    <span className="grid min-w-0 flex-1 gap-2">
-                      <span
-                        className="line-clamp-2 min-w-0 break-words text-ui-heading font-semibold"
-                        title={job.sourceTitle}
+                {item.kind === "download" ? (
+                  <DownloadActivityItem
+                    task={item.task}
+                    locale={locale}
+                    expanded={expandedJobs.includes(item.id)}
+                    onViewVoice={onViewVoice ?? (() => {})}
+                  />
+                ) : (
+                  (() => {
+                    const job = item.job;
+                    return (
+                      <AccordionItem
+                        value={item.id}
+                        data-ui="taskHistoryItem"
+                        className="min-w-0 border-border [&_p]:my-1 [&_[data-ui=actions]_button]:h-auto [&_[data-ui=actions]_button]:min-h-8 [&_[data-ui=actions]_button]:whitespace-normal"
                       >
-                        {job.sourceTitle}
-                      </span>
-                      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                        <Badge className="shrink-0 whitespace-nowrap text-[11px] leading-4">
-                          {cancellations[job.id]
-                            ? cancellationCopy[locale][
-                                cancellations[job.id].status === "pending"
-                                  ? "pendingLabel"
-                                  : "unconfirmedLabel"
-                              ]
-                            : t(jobStatusKeys[job.status])}
-                        </Badge>
-                        <span className="min-w-0 break-words text-xs font-normal leading-4 text-muted-foreground">
-                          {jobSummary(job)}
-                        </span>
-                      </span>
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent
-                    forceMount
-                    hidden={!expandedJobs.includes(job.id)}
-                    data-ui="taskHistoryDetails"
-                    className="min-w-0 pb-3 text-ui-body"
-                  >
-                    {job.status !== "queued" && (
-                      <div data-ui="taskHistoryProgress" className="mb-3 grid gap-2">
-                        <JobProgress
-                          job={job}
-                          locale={locale}
-                          showStage={false}
-                          legacyText={layoutText(flow.completedSteps, {
-                            completed: job.completed,
-                            total: job.total,
-                          })}
-                        />
-                      </div>
-                    )}
-                    <p
-                      className="mb-3 text-ui-label leading-relaxed text-muted-foreground"
-                      data-ui="hint"
-                    >
-                      {agentDisplayName(
-                        job.provider,
-                        agentCatalog.find(item => item.id === job.provider)?.label,
-                      )}
-                      {job.backup &&
-                        " · " +
-                          t(
-                            job.backup.status === "backed-up"
-                              ? "backupSaved"
-                              : ["pending", "uploading"].includes(job.backup.status)
-                                ? "backupProcessing"
-                                : "backupFailedMessage",
-                          )}
-                    </p>
-                    {job.retry && (
-                      <p role="status">
-                        {ux.retrying} {job.retry.attempt}/2 · {Math.ceil(job.retry.delayMs / 1000)}s
-                        · {job.retry.reason}
-                      </p>
-                    )}
-                    {job.status === "running" && (
-                      <p className="text-muted-foreground">{ux.cancelHint}</p>
-                    )}
-                    {!!job.pronunciationMissingCount && (
-                      <p className="text-muted-foreground" data-ui="pronunciationMissingCount">
-                        {pronunciationDiagnosticCopy(locale).count(job.pronunciationMissingCount)}
-                      </p>
-                    )}
-                    {job.error && (
-                      <PiFeedback locale={locale} message={job.error} context="generation" />
-                    )}
-                    <div
-                      className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
-                      data-ui="actions"
-                    >
-                      {onDetails && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled={!hostReady}
-                          onClick={() => void onDetails(job)}
+                        <AccordionTrigger className="min-w-0 items-start gap-2 py-3 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25 [&>svg]:mt-0.5">
+                          <span className="grid min-w-0 flex-1 gap-2">
+                            <span
+                              className="line-clamp-2 min-w-0 break-words text-ui-heading font-semibold"
+                              title={job.sourceTitle}
+                            >
+                              {job.sourceTitle}
+                            </span>
+                            <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                              <Badge className="shrink-0 whitespace-nowrap text-ui-meta leading-4">
+                                {cancellations[job.id]
+                                  ? cancellationCopy[locale][
+                                      cancellations[job.id].status === "pending"
+                                        ? "pendingLabel"
+                                        : "unconfirmedLabel"
+                                    ]
+                                  : t(jobStatusKeys[job.status])}
+                              </Badge>
+                              <span className="min-w-0 break-words text-xs font-normal leading-4 text-muted-foreground">
+                                {jobSummary(job)}
+                              </span>
+                            </span>
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent
+                          forceMount
+                          hidden={!expandedJobs.includes(item.id)}
+                          data-ui="taskHistoryDetails"
+                          className="min-w-0 pb-3 text-ui-body"
                         >
-                          {customUi.details}
-                        </Button>
-                      )}
-                      {["waiting", "failed", "cancelled"].includes(job.status) &&
-                        (!isPiProviderId(job.provider) ? (
-                          <p className="text-muted-foreground">{ui.legacy}</p>
-                        ) : !agentCatalog.some(
-                            item => item.id === job.provider && item.installed,
-                          ) ? (
-                          <div className="grid gap-2">
-                            <p className="text-muted-foreground">{ui.resumeConnect}</p>
-                            {onConfigure && (
-                              <Button variant="outline" size="sm" onClick={onConfigure}>
-                                {ui.connect}
+                          {job.status !== "queued" && (
+                            <div data-ui="taskHistoryProgress" className="mb-3 grid gap-2">
+                              <JobProgress
+                                job={job}
+                                locale={locale}
+                                showStage={false}
+                                legacyText={layoutText(flow.completedSteps, {
+                                  completed: job.completed,
+                                  total: job.total,
+                                })}
+                              />
+                            </div>
+                          )}
+                          <p
+                            className="mb-3 text-ui-label leading-relaxed text-muted-foreground"
+                            data-ui="hint"
+                          >
+                            {agentDisplayName(
+                              job.provider,
+                              agentCatalog.find(item => item.id === job.provider)?.label,
+                            )}
+                            {job.backup &&
+                              " · " +
+                                t(
+                                  job.backup.status === "backed-up"
+                                    ? "backupSaved"
+                                    : ["pending", "uploading"].includes(job.backup.status)
+                                      ? "backupProcessing"
+                                      : "backupFailedMessage",
+                                )}
+                          </p>
+                          {job.retry && (
+                            <p role="status">
+                              {ux.retrying} {job.retry.attempt}/2 ·{" "}
+                              {Math.ceil(job.retry.delayMs / 1000)}s · {job.retry.reason}
+                            </p>
+                          )}
+                          {job.status === "running" && (
+                            <p className="text-muted-foreground">{ux.cancelHint}</p>
+                          )}
+                          {!!job.pronunciationMissingCount && (
+                            <p
+                              className="text-muted-foreground"
+                              data-ui="pronunciationMissingCount"
+                            >
+                              {pronunciationDiagnosticCopy(locale).count(
+                                job.pronunciationMissingCount,
+                              )}
+                            </p>
+                          )}
+                          {job.error && (
+                            <PiFeedback locale={locale} message={job.error} context="generation" />
+                          )}
+                          <div
+                            className="mt-2 flex flex-wrap items-center gap-2 [&>*]:min-w-0 [&>*]:max-w-full"
+                            data-ui="actions"
+                          >
+                            {onDetails && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={!hostReady}
+                                onClick={() => void onDetails(job)}
+                              >
+                                {customUi.details}
                               </Button>
                             )}
+                            {["waiting", "failed", "cancelled"].includes(job.status) &&
+                              (!isPiProviderId(job.provider) ? (
+                                <p className="text-muted-foreground">{ui.legacy}</p>
+                              ) : !agentCatalog.some(
+                                  item => item.id === job.provider && item.installed,
+                                ) ? (
+                                <div className="grid gap-2">
+                                  <p className="text-muted-foreground">{ui.resumeConnect}</p>
+                                  {onConfigure && (
+                                    <Button variant="outline" size="sm" onClick={onConfigure}>
+                                      {ui.connect}
+                                    </Button>
+                                  )}
+                                </div>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={!hostReady || deleting}
+                                  onClick={() => onResume(job.id)}
+                                >
+                                  {t("resume")}
+                                </Button>
+                              ))}
+                            {onCancel && ["queued", "running", "waiting"].includes(job.status) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={!hostReady || cancellations[job.id]?.status === "pending"}
+                                onClick={() => onCancel(job)}
+                              >
+                                {cancellations[job.id]
+                                  ? cancellationCopy[locale][
+                                      cancellations[job.id].status === "pending"
+                                        ? "pendingLabel"
+                                        : "retry"
+                                    ]
+                                  : t("cancel")}
+                              </Button>
+                            )}
+                            {!job.documentId && !!job.readySceneIds?.length && onOpenPreview && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={!hostReady}
+                                onClick={() => onOpenPreview(job.id)}
+                              >
+                                {generationPreviewCopy[locale].open} · {job.readySceneIds.length}／
+                                {job.selectedSceneCount ?? job.readySceneIds.length}
+                              </Button>
+                            )}
+                            {job.documentId && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => onOpen(job.documentId!)}
+                                >
+                                  {t("openLesson")}
+                                </Button>
+                                {job.publication && job.publication.status !== "published" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={storageBusy}
+                                    onClick={() => void onRetryPublication(job.id)}
+                                  >
+                                    {t("retryPublish")}
+                                  </Button>
+                                )}
+                                {job.backup &&
+                                  ["failed", "conflict"].includes(job.backup.status) && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      disabled={storageBusy}
+                                      onClick={() => void onRetryBackup(job.id)}
+                                    >
+                                      {t("retryBackup")}
+                                    </Button>
+                                  )}
+                              </>
+                            )}
+                            {canDelete &&
+                              ["completed", "failed", "cancelled"].includes(job.status) && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="ml-auto"
+                                  disabled={!hostReady || storageBusy || deleting}
+                                  onClick={() => openConfirmation([job], false)}
+                                >
+                                  {t("deleteJobRecord")}
+                                </Button>
+                              )}
                           </div>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={!hostReady || deleting}
-                            onClick={() => onResume(job.id)}
-                          >
-                            {t("resume")}
-                          </Button>
-                        ))}
-                      {onCancel && ["queued", "running", "waiting"].includes(job.status) && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={!hostReady || cancellations[job.id]?.status === "pending"}
-                          onClick={() => onCancel(job)}
-                        >
-                          {cancellations[job.id]
-                            ? cancellationCopy[locale][
-                                cancellations[job.id].status === "pending"
-                                  ? "pendingLabel"
-                                  : "retry"
-                              ]
-                            : t("cancel")}
-                        </Button>
-                      )}
-                      {job.documentId && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onOpen(job.documentId!)}
-                          >
-                            {t("openLesson")}
-                          </Button>
-                          {job.publication && job.publication.status !== "published" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={storageBusy}
-                              onClick={() => void onRetryPublication(job.id)}
-                            >
-                              {t("retryPublish")}
-                            </Button>
-                          )}
-                          {job.backup && ["failed", "conflict"].includes(job.backup.status) && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={storageBusy}
-                              onClick={() => void onRetryBackup(job.id)}
-                            >
-                              {t("retryBackup")}
-                            </Button>
-                          )}
-                        </>
-                      )}
-                      {canDelete && ["completed", "failed", "cancelled"].includes(job.status) && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="ml-auto"
-                          disabled={!hostReady || storageBusy || deleting}
-                          onClick={() => openConfirmation([job], false)}
-                        >
-                          {t("deleteJobRecord")}
-                        </Button>
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })()
+                )}
               </React.Fragment>
             ))}
           </Accordion>
           {filteredJobs.length > visibleJobs.length && (
             <Button variant="ghost" size="sm" onClick={() => setShowAllJobs(true)}>
-              {t("showMoreJobs", { count: filteredJobs.length - visibleJobs.length })}
+              {t("showMoreJobs", {
+                count: filteredJobs.length - visibleJobs.length,
+              })}
             </Button>
           )}
           {showAllJobs && endedRecords.length > 3 && (
@@ -499,20 +568,49 @@ export function TaskHistory({
               {t("showLessJobs")}
             </Button>
           )}
-          {canDelete && (
-            <div className="mt-4 border-t border-border pt-3">
-              <Button
-                ref={clearRef}
-                variant="ghost"
-                size="sm"
-                className="max-w-full whitespace-normal text-left"
-                disabled={!hostReady || storageBusy || deleting || !endedJobs.length || !!listError}
-                onClick={() => openConfirmation(endedJobs, true)}
-              >
-                {t("clearEndedJobRecords")}
-              </Button>
+          {(canDelete || endedDownloadIds.length > 0) && (
+            <div className="mt-4 grid gap-1 border-t border-border pt-3">
+              {endedDownloadIds.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="max-w-full justify-start whitespace-normal text-left"
+                  onClick={() =>
+                    void downloads
+                      .clearEnded(endedDownloadIds)
+                      .catch(error =>
+                        setDownloadActionError(
+                          error instanceof Error
+                            ? error.message
+                            : speechDownloadTaskCopy[locale].actionFailed,
+                        ),
+                      )
+                  }
+                >
+                  {speechDownloadTaskCopy[locale].clearEnded}
+                </Button>
+              )}
+              {downloadActionError && (
+                <p role="alert" className="break-words text-ui-body text-destructive">
+                  {downloadActionError}
+                </p>
+              )}
+              {canDelete && (
+                <Button
+                  ref={clearRef}
+                  variant="ghost"
+                  size="sm"
+                  className="max-w-full whitespace-normal text-left"
+                  disabled={
+                    !hostReady || storageBusy || deleting || !endedJobs.length || !!listError
+                  }
+                  onClick={() => openConfirmation(endedJobs, true)}
+                >
+                  {t("clearEndedJobRecords")}
+                </Button>
+              )}
               {listError && (
-                <p role="alert" className="mt-2 break-words text-xs text-destructive">
+                <p role="alert" className="mt-2 break-words text-ui-body text-destructive">
                   {listError}
                 </p>
               )}
@@ -545,15 +643,17 @@ export function TaskHistory({
           <DialogHeader className="text-left">
             <DialogTitleBar closeLabel={t("cancel")} closeDisabled={deleting}>
               {confirmation?.batch
-                ? t("clearEndedJobRecordsTitle", { count: confirmation.jobs.length })
+                ? t("clearEndedJobRecordsTitle", {
+                    count: confirmation.jobs.length,
+                  })
                 : t("deleteJobRecordTitle")}
             </DialogTitleBar>
-            <DialogDescription className="text-xs whitespace-pre-line">
+            <DialogDescription className="text-ui-body whitespace-pre-line">
               {t("deleteJobRecordHint")}
             </DialogDescription>
           </DialogHeader>
           {confirmation?.batch ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-ui-body text-muted-foreground">
               {t("endedJobCounts", {
                 completed: confirmation.jobs.filter(job => job.status === "completed").length,
                 failed: confirmation.jobs.filter(job => job.status === "failed").length,
@@ -561,14 +661,14 @@ export function TaskHistory({
               })}
             </p>
           ) : (
-            <p className="break-words text-sm">{confirmation?.jobs[0]?.sourceTitle}</p>
+            <p className="break-words text-ui-body">{confirmation?.jobs[0]?.sourceTitle}</p>
           )}
           {deleteError && (
-            <p role="alert" className="break-words text-sm text-destructive">
+            <p role="alert" className="break-words text-ui-body text-destructive">
               {deleteError}
             </p>
           )}
-          <DialogFooter className="flex-row flex-wrap items-center justify-end gap-2">
+          <DialogFooter className="flex-row flex-wrap items-center justify-end gap-2 sm:space-x-0">
             <Button
               ref={cancelRef}
               variant="outline"

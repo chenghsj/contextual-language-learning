@@ -129,12 +129,14 @@ export function googleTokenError(status: number, response: unknown): Error {
   return new Error("Google OAuth Token 交換失敗（HTTP " + status + "，" + code + "）。" + guidance);
 }
 
-async function tokenRequest(form: URLSearchParams): Promise<TokenResponse> {
+async function tokenRequest(form: URLSearchParams, signal?: AbortSignal): Promise<TokenResponse> {
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: form,
-    signal: AbortSignal.timeout(30_000),
+    signal: signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(30_000)])
+      : AbortSignal.timeout(30_000),
   });
   const data: unknown = await response.json().catch(() => null);
   if (
@@ -170,7 +172,11 @@ export function googleAuthorizationError(parameters: URLSearchParams): Error {
  * response open until token exchange and Keychain persistence have settled,
  * so the browser cannot report success merely because a code was received.
  */
-async function authorizationCode(clientId: string): Promise<AuthorizationSession> {
+export async function authorizationCode(
+  clientId: string,
+  options: { onAuthorization?: (url: string) => void; signal?: AbortSignal } = {},
+): Promise<AuthorizationSession> {
+  options.signal?.throwIfAborted();
   if (process.platform !== "darwin")
     throw new Error("Google Drive account login currently supports macOS");
   const verifier = randomBytes(48).toString("base64url");
@@ -182,6 +188,8 @@ async function authorizationCode(clientId: string): Promise<AuthorizationSession
     resolveCode = resolve;
     rejectCode = reject;
   });
+  void result.catch(() => {});
+  let abortResponse: (() => void) | undefined;
   let redirectUri = "";
   let handled = false;
   let closing = false;
@@ -219,6 +227,7 @@ async function authorizationCode(clientId: string): Promise<AuthorizationSession
       stopServer();
     }
 
+    abortResponse = () => finish("error");
     const code = url.searchParams.get("code");
     if (!code) {
       finish("error");
@@ -232,7 +241,14 @@ async function authorizationCode(clientId: string): Promise<AuthorizationSession
     resolveCode({ code, verifier, redirectUri, finish });
   });
 
+  function abort(): void {
+    abortResponse?.();
+    rejectCode(new Error("Google authorization was declined"));
+    stopServer();
+  }
   function stopServer(): void {
+    if (timeout) clearTimeout(timeout);
+    options.signal?.removeEventListener("abort", abort);
     if (closing) return;
     closing = true;
     server.close();
@@ -265,7 +281,10 @@ async function authorizationCode(clientId: string): Promise<AuthorizationSession
     stopServer();
   }, 180_000);
   try {
-    await exec("/usr/bin/open", [url.toString()], { timeout: 10_000, maxBuffer: 4096 });
+    options.signal?.addEventListener("abort", abort, { once: true });
+    if (options.signal?.aborted) abort();
+    else if (options.onAuthorization) options.onAuthorization(url.toString());
+    else await exec("/usr/bin/open", [url.toString()], { timeout: 10_000, maxBuffer: 4096 });
     return await result;
   } catch (error) {
     if (timeout) clearTimeout(timeout);
@@ -274,9 +293,11 @@ async function authorizationCode(clientId: string): Promise<AuthorizationSession
   }
 }
 
-export async function connectGoogleAccount(): Promise<DriveAccount> {
+export async function connectGoogleAccount(
+  options: { onAuthorization?: (url: string) => void; signal?: AbortSignal } = {},
+): Promise<DriveAccount> {
   const config = await googleConfig();
-  const session = await authorizationCode(config.clientId);
+  const session = await authorizationCode(config.clientId, options);
   try {
     const form = new URLSearchParams({
       client_id: config.clientId,
@@ -286,10 +307,12 @@ export async function connectGoogleAccount(): Promise<DriveAccount> {
       grant_type: "authorization_code",
     });
     if (config.clientSecret) form.set("client_secret", config.clientSecret);
-    const token = await tokenRequest(form);
+    const token = await tokenRequest(form, options.signal);
     const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
       headers: { Authorization: "Bearer " + token.access_token },
-      signal: AbortSignal.timeout(30_000),
+      signal: options.signal
+        ? AbortSignal.any([options.signal, AbortSignal.timeout(30_000)])
+        : AbortSignal.timeout(30_000),
     });
     if (!response.ok) throw new Error("Google identity verification failed");
     const info = (await response.json()) as Record<string, unknown>;
@@ -304,6 +327,7 @@ export async function connectGoogleAccount(): Promise<DriveAccount> {
     const previous = (await savedAccounts()).find(
       item => item.id === account.id && item.clientId === config.clientId,
     );
+    options.signal?.throwIfAborted();
     if (token.refresh_token) await keychain.write(account.id, token.refresh_token);
     else if (!previous)
       throw new Error("Google did not issue a refresh token; reconnect with consent");

@@ -8,6 +8,12 @@ import { defaultPreferences } from "../src/lib/preferences-store";
 import { document as lesson } from "./reader-fixture";
 import {
   HOST_PROTOCOL_VERSION,
+  captureFavorite,
+  captureCustomFavorite,
+  favoriteText,
+  type FavoriteCollection,
+  type FavoriteSnapshot,
+  type FavoriteSummary,
   validateLearningDocumentV7,
   type HostRequest,
   type HostMessage,
@@ -15,6 +21,7 @@ import {
   type JobSummary,
   type PiProviderInfo,
   type AgentModel,
+  type DiscoveredModel,
   type GenerationRequest,
   type LearningDocument,
 } from "@contextual/core";
@@ -57,6 +64,15 @@ const preferences = {
   motionPreference: new URLSearchParams(location.search).get("motion") ?? "full",
   agent: { provider: "openai", modelId: "fixture-model" },
   providerSettings: { openai: { provider: "openai", modelId: "fixture-model" } },
+  ...(new URLSearchParams(location.search).has("favoriteBackupAccount")
+    ? {
+        backup: {
+          enabled: false,
+          accountId:
+            new URLSearchParams(location.search).get("favoriteBackupAccount") ?? "drive-preview",
+        },
+      }
+    : {}),
   ...(new URLSearchParams(location.search).get("storagePath") === "long"
     ? {
         destination: {
@@ -67,7 +83,9 @@ const preferences = {
       }
     : {}),
 };
-const persistentMotionPreview = new URLSearchParams(location.search).has("motionAcceptance");
+const persistentMotionPreview =
+  new URLSearchParams(location.search).has("motionAcceptance") ||
+  new URLSearchParams(location.search).has("customModels");
 const motionPreviewKey = "motion-acceptance-preferences";
 const motionPreviewSaved = persistentMotionPreview
   ? sessionStorage.getItem(motionPreviewKey)
@@ -109,6 +127,40 @@ const motionLesson = () => {
 const docs = new Map<string, CustomDocument>();
 const jobs = new Map<string, JobSummary>();
 const generatedLessons = new Map<string, LearningDocument>();
+const compactPreview = new URLSearchParams(location.search).has("compactPreview");
+const compactFull = compactPreview ? motionLesson() : null;
+if (compactFull) {
+  jobs.set(compactFull.id, {
+    id: compactFull.id,
+    sourceTitle: compactFull.source.title,
+    provider: "anthropic",
+    status: "running",
+    phase: "creating",
+    completed: 3,
+    total: 5,
+    createdAt: compactFull.createdAt,
+    updatedAt: new Date().toISOString(),
+    previewRevision: 1,
+    readySceneIds: [compactFull.sections[1].id],
+    selectedSceneCount: 2,
+    execution: { ...compactFull.execution!, generationStrategyVersion: "compact-scenes-1" },
+  });
+  Object.assign(window, {
+    advanceCompactPreview: (complete = false) => {
+      const job = jobs.get(compactFull.id)!;
+      jobs.set(compactFull.id, {
+        ...job,
+        previewRevision: complete ? 3 : 2,
+        readySceneIds: compactFull.sections.map(s => s.id),
+        completed: complete ? 5 : 4,
+        status: complete ? "completed" : "running",
+        documentId: complete ? compactFull.id : undefined,
+        updatedAt: new Date().toISOString(),
+      });
+      if (complete) generatedLessons.set(compactFull.id, compactFull);
+    },
+  });
+}
 // Controlled queue for Activity acceptance. It never invokes a provider or writes user data.
 const activityQueuePreview = new URLSearchParams(location.search).get("activityQueue") === "1";
 const queuedGenerations = new Map<
@@ -134,24 +186,53 @@ const commands: HostRequest[] = [];
 const notifications: { id: string; title: string }[] = [];
 const generationPorts = new Set<{ disconnect(): void }>();
 const providerPreview = new URLSearchParams(location.search).get("providers") === "1";
-const previewProviders = [
-  { id: "openai", label: "OpenAI", connected: true, methods: ["api_key", "oauth"] },
+let previewLocalConfig: import("@contextual/core").LocalModelConfig | null = null;
+let previewLocalHasKey = false;
+const previewProviders: PiProviderInfo[] = [
+  { id: "local", label: "Local / custom", connected: false, methods: [] },
+  {
+    id: "openai",
+    label: "OpenAI",
+    connected: true,
+    credentialMethod: "oauth",
+    methods: ["api_key", "oauth"],
+  },
   { id: "anthropic", label: "Anthropic", connected: false, methods: ["api_key", "oauth"] },
-  { id: "google", label: "Google", connected: true, methods: ["api_key"] },
+  {
+    id: "google",
+    label: "Google",
+    connected: true,
+    credentialMethod: "api_key",
+    methods: ["api_key"],
+  },
   { id: "github-copilot", label: "GitHub Copilot", connected: false, methods: ["oauth"] },
 ];
+if (new URLSearchParams(location.search).has("customModels"))
+  previewProviders.push({
+    id: "antigravity",
+    label: "Google Antigravity",
+    connected: true,
+    methods: ["oauth"],
+  });
 const previewLogins = new Map<
   string,
-  { provider: string; reply: (message: Record<string, unknown>) => void }
+  {
+    provider: string;
+    method: NonNullable<PiProviderInfo["credentialMethod"]>;
+    reply: (message: Record<string, unknown>) => void;
+  }
 >();
-const drivePreview = storagePreview || new URLSearchParams(location.search).get("drive") === "1";
+const favoritesPreview = new URLSearchParams(location.search).has("favorites");
+const drivePreview =
+  favoritesPreview || storagePreview || new URLSearchParams(location.search).get("drive") === "1";
 const previewAccount = { id: "drive-preview", email: "learner@example.test" };
-const previewAccounts = storagePreview
-  ? [
-      previewAccount,
-      { id: "drive-second", email: "language.learning.secondary.account@example.test" },
-    ]
-  : [previewAccount];
+const previewAccounts =
+  storagePreview || favoritesPreview
+    ? [
+        previewAccount,
+        { id: "drive-second", email: "language.learning.secondary.account@example.test" },
+      ]
+    : [previewAccount];
 if (storagePreview) {
   const at = "2026-10-08T05:06:49.000Z";
   jobs.set(lesson.id, {
@@ -166,6 +247,38 @@ if (storagePreview) {
     backup: { status: "backed-up", accountId: previewAccount.id, updatedAt: at },
   });
 }
+const favoriteCollections = new Map<
+  string,
+  Map<string, { snapshot: FavoriteSnapshot; summary: FavoriteSummary; operationId: string }>
+>();
+const favoritesEnabled = new Set<string>();
+const favoriteImports = new Set<string>();
+function favoriteCollectionId(collection: FavoriteCollection) {
+  return collection.kind === "local" ? "local" : collection.accountId;
+}
+function favoriteRecords(collection: FavoriteCollection) {
+  const id = favoriteCollectionId(collection);
+  let records = favoriteCollections.get(id);
+  if (!records) {
+    records = new Map();
+    favoriteCollections.set(id, records);
+  }
+  return records;
+}
+function favoriteStatus(collection: FavoriteCollection) {
+  const enabled = collection.kind === "account" && favoritesEnabled.has(collection.accountId);
+  return {
+    collection,
+    enabled,
+    state: collection.kind === "local" ? "local" : enabled ? "synced" : "disabled",
+    pending: 0,
+  };
+}
+if (favoritesPreview)
+  saved["contextualStudyV5:" + lesson.id] = {
+    sceneId: motionLesson().sections[1].id,
+    visitedSceneIds: [],
+  };
 const openedUrls: string[] = [];
 const acceptance = {
   commands,
@@ -175,7 +288,24 @@ const acceptance = {
   hostRegistered: true,
   nativeConnections: 0,
   agentModels: [{ id: "fixture-model", label: "Fixture model" }] as AgentModel[],
+  failModelDiscovery: false,
+  modelDirectories: {
+    openai: [{ id: "gpt-future-search", label: "GPT Future Search" }],
+    antigravity: [
+      { id: "fixture-model-high", label: "Existing model (High)", catalogId: "fixture-model" },
+      {
+        id: "gemini-future-discovered-high",
+        label: "Gemini Future (High)",
+        catalogId: "gemini-future-discovered",
+      },
+    ],
+  } as Record<string, DiscoveredModel[]>,
   failBackup: false,
+  failNextFavorite: false,
+  failNextFavoriteConfiguration: false,
+  favoriteSourceDeleted: false,
+  deleteCustomSource: () => docs.clear(),
+  favoriteCollections,
   failPreferenceWrites: false,
   preferenceWriteFailures: 0,
   openedUrls,
@@ -230,7 +360,13 @@ const acceptance = {
   finishPiLogin: (providerId: string) => {
     for (const [id, login] of previewLogins) {
       if (login.provider !== providerId) continue;
-      previewProviders.find(provider => provider.id === providerId)!.connected = true;
+      Object.assign(
+        previewProviders.find(provider => provider.id === providerId)!,
+        {
+          connected: true,
+          credentialMethod: login.method,
+        },
+      );
       login.reply({ type: "piAuthDone" });
       previewLogins.delete(id);
     }
@@ -260,6 +396,27 @@ const execution = {
   chunkPlan: [],
   calls: [],
 };
+if (new URLSearchParams(location.search).get("customFavorites") === "1") {
+  const id = "00000000-0000-4000-8000-0000000000cf";
+  docs.set(id, {
+    schemaVersion: "custom-v1",
+    kind: "custom",
+    id,
+    title: "自訂教材收藏測試",
+    createdAt: "2026-10-21T00:00:00.000Z",
+    request: {
+      id,
+      kind: "custom",
+      source: { platform: "import", title: "Synthetic custom source" },
+      agent: { provider: "openai", modelId: "fixture-model" },
+      prompt: "Synthetic custom prompt",
+      context: { subtitles: true, title: true },
+      cues: lesson.cues,
+    },
+    execution,
+    markdown: "# 日本語筆記\n\n**ありがとう**：謝謝。\n\n完整的自訂教材內容。",
+  });
+}
 function nativePort() {
   if (!acceptance.hostRegistered) throw new Error("Specified native messaging host not found.");
   acceptance.nativeConnections++;
@@ -270,6 +427,144 @@ function nativePort() {
     const reply = (value: Omit<HostMessage, "id"> | Record<string, unknown>) =>
       host.postMessage({ id: request.id, ...value });
     switch (request.type) {
+      case "favoriteStates": {
+        const records = favoriteRecords(request.collection);
+        reply({
+          type: "favoriteStates",
+          collection: request.collection,
+          states: Object.fromEntries(
+            request.sceneIds.map(sceneId => [
+              sceneId,
+              [...records.values()].some(
+                record =>
+                  record.summary.documentId === request.documentId &&
+                  record.summary.sceneId === sceneId,
+              ),
+            ]),
+          ),
+        });
+        break;
+      }
+      case "setFavorite": {
+        if (acceptance.failNextFavorite) {
+          acceptance.failNextFavorite = false;
+          reply({ type: "error", message: "Preview favorite failure" });
+          break;
+        }
+        const input = request.input;
+        const records = favoriteRecords(input.collection);
+        const doc = favoritesPreview ? motionLesson() : lesson;
+        const custom = input.documentId === input.sceneId;
+        const scene = custom ? null : doc.sections.find(scene => scene.id === input.sceneId);
+        const key = custom
+          ? "c".repeat(64)
+          : (doc.sections.indexOf(scene!) + 1).toString(16).padStart(64, "0");
+        if (input.desired) {
+          const customDoc = docs.get(input.documentId);
+          const snapshot =
+            records.get(key)?.snapshot ??
+            (custom && customDoc
+              ? captureCustomFavorite(customDoc, "2026-10-21T00:00:00.000Z", "fixture")
+              : scene
+                ? captureFavorite(doc, scene.id, "2026-10-20T00:00:00.000Z", "fixture")
+                : null);
+          if (!snapshot) {
+            reply({ type: "error", message: "Saved content not found" });
+            break;
+          }
+          const text = favoriteText(snapshot);
+          const summary: FavoriteSummary = {
+            key,
+            documentId: input.documentId,
+            sceneId: input.sceneId,
+            kind: custom ? "custom" : "scene",
+            title: text.title,
+            sourceTitle: snapshot.source.title,
+            language: text.language,
+            excerpt: text.excerpt,
+            savedAt: snapshot.origin.capturedAt,
+            pending: false,
+          };
+          records.set(key, { snapshot, summary, operationId: input.mutationId });
+        } else records.delete(key);
+        reply({
+          type: "favoriteChanged",
+          collection: input.collection,
+          favorite: records.get(key)?.summary ?? null,
+        });
+        break;
+      }
+      case "listFavorites": {
+        const items = [...favoriteRecords(request.collection).values()]
+          .map(record => record.summary)
+          .filter(
+            item =>
+              (!request.query.language || item.language === request.query.language) &&
+              (!request.query.search ||
+                [item.title, item.sourceTitle, item.excerpt]
+                  .join(" ")
+                  .toLowerCase()
+                  .includes(request.query.search.toLowerCase())),
+          );
+        const offset = Number(request.query.cursor ?? 0);
+        const end = offset + request.query.limit;
+        reply({
+          type: "favorites",
+          collection: request.collection,
+          page: {
+            items: items.slice(offset, end),
+            nextCursor: end < items.length ? String(end) : undefined,
+            partial: false,
+          },
+        });
+        break;
+      }
+      case "getFavorite": {
+        const record = favoriteRecords(request.collection).get(request.key);
+        if (!record) reply({ type: "error", message: "Favorite not found" });
+        else {
+          const bytes = new TextEncoder().encode(JSON.stringify(record.snapshot));
+          const middle = Math.floor(bytes.length / 2);
+          [bytes.slice(0, middle), bytes.slice(middle)].forEach((part, index) =>
+            reply({
+              type: "favoriteChunk",
+              collection: request.collection,
+              key: request.key,
+              index,
+              total: 2,
+              dataBase64: btoa(Array.from(part, byte => String.fromCharCode(byte)).join("")),
+            }),
+          );
+        }
+        break;
+      }
+      case "favoriteStatus":
+      case "syncFavorites":
+        reply({ type: "favoriteStatus", status: favoriteStatus(request.collection) });
+        break;
+      case "configureFavorites": {
+        if (acceptance.failNextFavoriteConfiguration) {
+          acceptance.failNextFavoriteConfiguration = false;
+          reply({ type: "error", message: "Preview favorite configuration failure" });
+          break;
+        }
+        const collection: FavoriteCollection = {
+          kind: "account",
+          accountId: request.change.accountId,
+        };
+        if (request.change.kind === "enable") {
+          favoritesEnabled.add(request.change.accountId);
+          if (request.change.importLocal)
+            for (const [key, record] of favoriteRecords({ kind: "local" })) {
+              const imported = request.change.accountId + ":" + record.operationId;
+              if (favoriteImports.has(imported)) continue;
+              favoriteRecords(collection).set(key, record);
+              favoriteImports.add(imported);
+            }
+        } else favoritesEnabled.delete(request.change.accountId);
+        reply({ type: "favoriteStatus", status: favoriteStatus(collection) });
+        break;
+      }
       case "health":
         reply({
           type: "health",
@@ -283,6 +578,7 @@ function nativePort() {
                 id: provider.id,
                 label: provider.label,
                 installed: provider.connected,
+                credentialMethod: provider.credentialMethod,
               }))
             : [{ id: "openai", label: "OpenAI", installed: true }],
           protocolVersion: HOST_PROTOCOL_VERSION,
@@ -290,10 +586,52 @@ function nativePort() {
           agentMode: "pi-sdk",
         });
         break;
+      case "discoverModels":
+        if (acceptance.failModelDiscovery) {
+          reply({ type: "error", message: "Synthetic catalog failure" });
+        } else {
+          const subscription =
+            request.provider === "openai" &&
+            previewProviders.some(
+              provider => provider.id === "openai" && provider.credentialMethod === "oauth",
+            );
+          reply({
+            type: "discoveredModels",
+            models: subscription ? [] : (acceptance.modelDirectories[request.provider] ?? []),
+            source: subscription
+              ? "sdk"
+              : request.provider === "antigravity"
+                ? "account"
+                : "directory",
+          });
+        }
+        break;
       case "agentModels":
         reply({
           type: "agentModels",
-          models: acceptance.agentModels,
+          models:
+            request.settings.provider === "local" && previewLocalConfig
+              ? [
+                  {
+                    id: previewLocalConfig.modelId,
+                    label: previewLocalConfig.modelId,
+                    thinkingLevels: ["off"],
+                  },
+                ]
+              : request.settings.customModel &&
+                  request.settings.modelId &&
+                  !acceptance.agentModels.some(model => model.id === request.settings.modelId)
+                ? [
+                    ...acceptance.agentModels,
+                    {
+                      id: request.settings.modelId,
+                      label: request.settings.modelId,
+                      thinkingLevels: ["off"],
+                      availability: "unknown",
+                      custom: true,
+                    },
+                  ]
+                : acceptance.agentModels,
           source: "sdk",
         });
         break;
@@ -316,6 +654,31 @@ function nativePort() {
         });
         break;
       }
+      case "getLocalModelConfig":
+        reply({
+          type: "localModelConfig",
+          config: previewLocalConfig,
+          hasApiKey: previewLocalHasKey,
+        });
+        break;
+      case "setLocalModelConfig":
+        previewLocalHasKey =
+          request.apiKey !== undefined
+            ? !!request.apiKey
+            : previewLocalConfig?.baseUrl === request.config.baseUrl && previewLocalHasKey;
+        previewLocalConfig = request.config;
+        previewProviders.find(provider => provider.id === "local")!.connected = true;
+        reply({
+          type: "localModelConfig",
+          config: previewLocalConfig,
+          hasApiKey: previewLocalHasKey,
+        });
+        break;
+      case "testLocalModelConfig":
+        if (request.config.baseUrl.includes("offline"))
+          reply({ type: "error", message: "Local model connection failed." });
+        else reply({ type: "localModelTest", modelIds: ["local-fixture", "local-second"] });
+        break;
       case "piProviders":
         reply({
           type: "piProviders",
@@ -326,7 +689,11 @@ function nativePort() {
         break;
       case "piLogin":
         if (!providerPreview) break;
-        previewLogins.set(request.id, { provider: request.provider, reply });
+        previewLogins.set(request.id, {
+          provider: request.provider,
+          method: request.method,
+          reply,
+        });
         if (request.provider === "github-copilot" && request.method === "oauth") {
           reply({
             type: "piAuthPrompt",
@@ -365,7 +732,13 @@ function nativePort() {
           });
           break;
         }
-        previewProviders.find(provider => provider.id === login.provider)!.connected = true;
+        Object.assign(
+          previewProviders.find(provider => provider.id === login.provider)!,
+          {
+            connected: true,
+            credentialMethod: login.method,
+          },
+        );
         login.reply({ type: "piAuthDone" });
         previewLogins.delete(request.loginId);
         break;
@@ -376,7 +749,17 @@ function nativePort() {
         break;
       case "piLogout":
         if (!providerPreview) break;
-        previewProviders.find(provider => provider.id === request.provider)!.connected = false;
+        if (request.provider === "local") {
+          previewLocalConfig = null;
+          previewLocalHasKey = false;
+        }
+        Object.assign(
+          previewProviders.find(provider => provider.id === request.provider)!,
+          {
+            connected: false,
+            credentialMethod: undefined,
+          },
+        );
         reply({ type: "piProviders", providers: previewProviders });
         break;
       case "driveAccounts":
@@ -474,17 +857,37 @@ function nativePort() {
         });
         break;
       case "getDocument":
+        if (acceptance.favoriteSourceDeleted) {
+          reply({ type: "error", message: "Source lesson deleted" });
+          break;
+        }
         reply({
           type: "result",
           document:
             generatedLessons.get(request.documentId) ??
             (new URLSearchParams(location.search).has("readerImport")
               ? { ...lesson, source: { ...lesson.source, platform: "import", url: undefined } }
-              : new URLSearchParams(location.search).has("motionScenes")
+              : favoritesPreview || new URLSearchParams(location.search).has("motionScenes")
                 ? motionLesson()
                 : lesson),
         });
         break;
+      case "getJobPreview": {
+        if (!compactFull || request.jobId !== compactFull.id) {
+          reply({ type: "error", message: "No preview fixture" });
+          break;
+        }
+        const job = jobs.get(request.jobId)!;
+        reply({ type: "job", job });
+        reply({
+          type: "result",
+          document: {
+            ...compactFull,
+            sections: compactFull.sections.filter(s => job.readySceneIds!.includes(s.id)),
+          },
+        });
+        break;
+      }
       case "checkDuplicates":
       case "checkCustomDuplicates":
         reply({ type: "duplicates", token: crypto.randomUUID(), matches: [] });

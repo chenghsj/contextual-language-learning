@@ -15,6 +15,7 @@ import {
   normalizeSystemVoices,
   findSystemVoice,
   type SpeechInput,
+  type SpeechDownloadOperation,
   type SystemVoice,
 } from "@contextual/core";
 
@@ -27,7 +28,11 @@ export type SpeechRunner = (
 ) => SpeechProcess;
 
 export const runSpeechProcess: SpeechRunner = (command, args, input = "", timeout = 300_000) => {
-  const child = spawn(command, args, { shell: false, windowsHide: true, stdio: "pipe" });
+  const child = spawn(command, args, {
+    shell: false,
+    windowsHide: true,
+    stdio: "pipe",
+  });
   let stopped = false;
   let stdout = "";
   const timer = setTimeout(() => child.kill(), timeout);
@@ -147,6 +152,27 @@ export class SystemSpeechService {
     if (!this.siri) throw new Error("Siri voice downloads are unavailable on this platform.");
     return this.siri.install(voiceId);
   }
+  async startDownload(operation: SpeechDownloadOperation) {
+    if (this.closed) throw new Error("Native Host connection closed.");
+    if (!this.siri) throw new Error("Siri voice downloads are unavailable on this platform.");
+    const observations = await this.siri.startDownload(operation);
+    if (observations.some(observation => observation.resource === "installed"))
+      this.voices = undefined;
+    return observations;
+  }
+  async cancelDownload(operation: SpeechDownloadOperation) {
+    if (this.closed) throw new Error("Native Host connection closed.");
+    if (!this.siri) throw new Error("Siri voice downloads are unavailable on this platform.");
+    return this.siri.cancelDownload(operation);
+  }
+  async inspectDownloads(operations: SpeechDownloadOperation[]) {
+    if (this.closed) throw new Error("Native Host connection closed.");
+    if (!this.siri) throw new Error("Siri voice downloads are unavailable on this platform.");
+    const observations = await this.siri.inspectDownloads(operations);
+    if (observations.some(observation => observation.resource === "installed"))
+      this.voices = undefined;
+    return observations;
+  }
   async voiceInstallation(voiceId: string) {
     if (this.closed) throw new Error("Native Host connection closed.");
     if (!this.siri) throw new Error("Siri voice downloads are unavailable on this platform.");
@@ -194,7 +220,10 @@ export class SystemSpeechService {
           if (!siriVoices.length) throw error;
           this.voices = [];
         } else {
-          this.macBackend = Promise.resolve({ command: this.macHelper, args: [] });
+          this.macBackend = Promise.resolve({
+            command: this.macHelper,
+            args: [],
+          });
           this.voices = await load(this.macHelper, []).catch(error => {
             if (this.closed || !siriVoices.length) throw error;
             return [];

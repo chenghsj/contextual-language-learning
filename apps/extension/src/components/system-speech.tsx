@@ -195,20 +195,20 @@ function ConnectedSpeechStatus({
     );
   if (state.availability === "unsupported")
     return (
-      <p role="status" className="text-xs text-muted-foreground">
+      <p role="status" className="text-ui-body text-muted-foreground">
         {copy.unsupported}
       </p>
     );
   if (state.availability === "unavailable")
     return (
       <div className="grid min-w-0 gap-2">
-        <p role="status" className="text-xs text-muted-foreground">
+        <p role="status" className="text-ui-body text-muted-foreground">
           {copy.unavailable}
         </p>
         <Button
           variant="outline"
           size="sm"
-          className="min-h-11 justify-self-start text-xs"
+          className="justify-self-start text-xs"
           onClick={() => {
             void controller.listVoices(true).catch(() => {});
           }}
@@ -219,13 +219,13 @@ function ConnectedSpeechStatus({
     );
   if (language && !readAloudVoicesForLanguage(state.voices ?? [], language).length)
     return (
-      <p role="status" className="text-xs text-muted-foreground">
+      <p role="status" className="text-ui-body text-muted-foreground">
         {isNarrator ? narrator.empty : copy.empty}
       </p>
     );
   if (state.error)
     return (
-      <p role="alert" className="text-xs text-destructive">
+      <p role="alert" className="text-ui-body text-destructive">
         {state.errorKind === "voice"
           ? isNarrator
             ? narrator.empty

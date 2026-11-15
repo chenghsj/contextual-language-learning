@@ -1,0 +1,290 @@
+{
+  "id": "5de9028e-e299-4d82-b2fd-6af7388ad6cd",
+  "createdAt": "2026-10-09T00:00:00.000Z",
+  "source": {
+    "platform": "import",
+    "title": "範例教材：時間與轉折"
+  },
+  "profile": {
+    "targetLanguage": "en",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "usage"
+    ],
+    "emphasizedExplanations": [
+      "grammar"
+    ]
+  },
+  "generation": {
+    "provider": "openai",
+    "modelId": "offline"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-20",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-5",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-3",
+    "inputFingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+    "provider": "openai",
+    "modelId": "offline",
+    "contextWindow": 128000,
+    "maxOutputTokens": 8192,
+    "chunkPlan": [
+      [
+        "cue-1",
+        "cue-2"
+      ]
+    ],
+    "calls": []
+  },
+  "cues": [
+    {
+      "id": "cue-1",
+      "startMs": 0,
+      "endMs": 1800,
+      "originalText": "Why were you still home?"
+    },
+    {
+      "id": "cue-2",
+      "startMs": 2000,
+      "endMs": 3800,
+      "originalText": "I was about to head out when you called."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "dc67d173-0098-4b0b-81e0-71784afdd993",
+      "cueIds": [
+        "cue-1",
+        "cue-2"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 3800,
+      "title": "正準備出門時接到電話",
+      "context": {
+        "text": "一方詢問對方為何當時還在家，對方說接到電話時正準備出門。",
+        "evidenceCueIds": [
+          "cue-1",
+          "cue-2"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "cue-1",
+          "text": "你那時為什麼還在家？"
+        },
+        {
+          "cueId": "cue-2",
+          "text": "你打來時，我正準備出門。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "u1",
+          "meaning": "詢問對方當時為何仍在家。",
+          "contextExplanation": "後一句回應這個問題；字幕沒有說明人物關係。",
+          "contextCueIds": [
+            "cue-2"
+          ],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "cue-1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "cue-1",
+              "start": 0,
+              "end": 24
+            }
+          ]
+        },
+        {
+          "id": "u2",
+          "meaning": "電話打來的當下，說話者已準備出門，但尚未出發。",
+          "contextExplanation": "這句回應為何當時還在家；原文沒有交代之後是否出門。",
+          "contextCueIds": [
+            "cue-1"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "batch:p1",
+            "batch:p2",
+            "batch:p3"
+          ],
+          "cueIds": [
+            "cue-2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "cue-2",
+              "start": 0,
+              "end": 40
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "batch:p1",
+      "utteranceIds": [
+        "u2"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "過去某刻正要做某事",
+      "sourceCueIds": [
+        "cue-2"
+      ],
+      "contextCueIds": [
+        "cue-1"
+      ],
+      "explanation": "was about to + 動詞原形表示在過去那一刻正要做某事，焦點是動作即將開始。這裡尚未完成出門；和 was heading out 描述已在出門過程中的焦點不同。",
+      "sourceSpans": [
+        {
+          "cueId": "cue-2",
+          "start": 0,
+          "end": 40
+        }
+      ]
+    },
+    {
+      "id": "batch:p2",
+      "utteranceIds": [
+        "u2"
+      ],
+      "category": "vocabulary",
+      "presentation": "core",
+      "title": "head out：出門、離開此處",
+      "sourceCueIds": [
+        "cue-2"
+      ],
+      "contextCueIds": [
+        "cue-1"
+      ],
+      "explanation": "head out 在這裡表示出門或離開目前所在的地方；前一句 home 說明此處是在談離家出門。",
+      "sourceSpans": [
+        {
+          "cueId": "cue-2",
+          "start": 0,
+          "end": 40
+        }
+      ]
+    },
+    {
+      "id": "batch:p3",
+      "utteranceIds": [
+        "u2"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "when 連接兩件事的時間",
+      "sourceCueIds": [
+        "cue-2"
+      ],
+      "contextCueIds": [],
+      "explanation": "when you called 指出電話打來的時間點；主句說明那一刻的準備狀態。這個時間關係本身不表示電話造成取消出門，也不能據此確定事情後來的結果。",
+      "sourceSpans": [
+        {
+          "cueId": "cue-2",
+          "start": 0,
+          "end": 40
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "batch:r1",
+      "pointIds": [
+        "batch:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "cue-2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "cue-2",
+              "start": 2,
+              "end": 23
+            }
+          ],
+          "text": "was about to head out"
+        }
+      ],
+      "pattern": "be about to + 動詞原形",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "同事詢問會議何時開始。",
+          "dialogue": [
+            {
+              "text": "Are we ready?",
+              "translation": "我們準備好了嗎？"
+            },
+            {
+              "text": "Yes, we are about to start.",
+              "translation": "好了，我們正要開始。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "are about to start"
+        }
+      ]
+    },
+    {
+      "id": "batch:r2",
+      "pointIds": [
+        "batch:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "cue-2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "cue-2",
+              "start": 15,
+              "end": 23
+            }
+          ],
+          "text": "head out"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "朋友在門口確認是否出發。",
+          "dialogue": [
+            {
+              "text": "Shall we head out now?",
+              "translation": "我們現在出發好嗎？"
+            },
+            {
+              "text": "Yes, I am ready.",
+              "translation": "好，我準備好了。"
+            }
+          ],
+          "targetLineIndex": 0,
+          "targetText": "head out"
+        }
+      ]
+    }
+  ]
+}

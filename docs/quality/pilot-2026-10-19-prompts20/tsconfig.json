@@ -1,0 +1,13 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowImportingTsExtensions": true
+  },
+  "files": [
+    "../../../apps/local-host/scripts/learning-points-quality.ts",
+    "../../../apps/local-host/scripts/check-v7-case-coverage.ts",
+    "./verify.mts"
+  ],
+  "include": []
+}

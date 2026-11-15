@@ -6,7 +6,6 @@ import {
   type SpeechSettings,
   type SystemVoice,
   type SpeechVoiceCatalog,
-  type SpeechVoiceInstallation,
 } from "@contextual/core";
 import { openHostStream, type HostStream } from "./host-client";
 
@@ -195,26 +194,6 @@ export class SpeechController {
     // Finish a pre-removal query before clearing its potentially stale result.
     if (this.listing) await this.listing.catch(() => {});
     this.update({ voices: null });
-  }
-  async installVoice(voiceId: string): Promise<SpeechVoiceInstallation> {
-    const message = await this.request({
-      id: crypto.randomUUID(),
-      type: "installSpeechVoice",
-      voiceId,
-    });
-    if (message.type !== "speechVoiceInstallation" || message.installation.voiceId !== voiceId)
-      throw new Error("Invalid Siri voice installation response.");
-    return message.installation;
-  }
-  async voiceInstallation(voiceId: string): Promise<SpeechVoiceInstallation> {
-    const message = await this.request({
-      id: crypto.randomUUID(),
-      type: "getSpeechVoiceInstallation",
-      voiceId,
-    });
-    if (message.type !== "speechVoiceInstallation" || message.installation.voiceId !== voiceId)
-      throw new Error("Invalid Siri voice installation response.");
-    return message.installation;
   }
   private async stopCurrent(): Promise<void> {
     this.clearPause();

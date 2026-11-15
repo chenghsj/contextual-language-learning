@@ -73,7 +73,7 @@ export function GenerationService({
     return () => {
       live = false;
     };
-  }, [available, selected.provider, selected.modelId, provider?.id, onReady]);
+  }, [available, selected.provider, selected.modelId, selected.customModel, provider?.id, onReady]);
   return (
     <div className="my-3 grid gap-2" data-ui="generationService">
       {provider ? (
@@ -91,7 +91,7 @@ export function GenerationService({
           </p>
           {stale && (
             <div className="grid gap-1">
-              <p className="text-xs text-muted-foreground" role="status">
+              <p className="text-ui-body text-muted-foreground" role="status">
                 {pi.stale}
               </p>
               <Button variant="ghost" className="justify-start px-0" onClick={onConfigure}>
@@ -105,7 +105,7 @@ export function GenerationService({
         </>
       ) : (
         <>
-          <p className="text-xs text-muted-foreground">{ui.noService}</p>
+          <p className="text-ui-body text-muted-foreground">{ui.noService}</p>
           <Button variant="outline" onClick={onConfigure}>
             {ui.setup}
           </Button>

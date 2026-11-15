@@ -2,6 +2,12 @@ import type { UiLocale } from "./messages";
 
 const copy = {
   en: {
+    retiredGroup: "Retired lessons · {count}",
+    retired: "Retired · backup skipped",
+    queued: "Awaiting backup",
+    reconnect: "Reconnect Google account",
+    accountsLoading: "Reading Google accounts…",
+    accountsFailed: "Could not read Google accounts. Check the local service and retry.",
     automatic: "Automatically back up new lessons",
     request: "Back up to Google Drive",
     requestHint: "Uses the Google Drive account in settings",
@@ -30,6 +36,12 @@ const copy = {
     needsAttention: "Backup needs attention",
   },
   "zh-TW": {
+    retiredGroup: "舊版教材 · {count}",
+    retired: "舊版・略過備份",
+    queued: "待備份",
+    reconnect: "重新連結 Google 帳號",
+    accountsLoading: "正在讀取 Google 帳號…",
+    accountsFailed: "無法讀取 Google 帳號，請檢查本機服務後重試。",
     automatic: "自動備份新教材",
     request: "備份到 Google Drive",
     requestHint: "使用設定中的 Google Drive 帳號",
@@ -58,6 +70,12 @@ const copy = {
     needsAttention: "備份需要處理",
   },
   "zh-CN": {
+    retiredGroup: "旧版教材 · {count}",
+    retired: "旧版・跳过备份",
+    queued: "待备份",
+    reconnect: "重新连接 Google 账号",
+    accountsLoading: "正在读取 Google 账号…",
+    accountsFailed: "无法读取 Google 账号，请检查本地服务后重试。",
     automatic: "自动备份新教材",
     request: "备份到 Google Drive",
     requestHint: "使用设置中的 Google Drive 账号",
@@ -86,6 +104,13 @@ const copy = {
     needsAttention: "备份需要处理",
   },
   ja: {
+    retiredGroup: "旧形式の教材 · {count}",
+    retired: "旧形式・バックアップ対象外",
+    queued: "バックアップ待ち",
+    reconnect: "Google アカウントを再接続",
+    accountsLoading: "Google アカウントを読み込み中…",
+    accountsFailed:
+      "Google アカウントを読み込めません。ローカルサービスを確認して再試行してください。",
     automatic: "新しい教材を自動バックアップ",
     request: "Google Drive にバックアップ",
     requestHint: "設定の Google Drive アカウントを使用",
@@ -114,6 +139,12 @@ const copy = {
     needsAttention: "バックアップの確認が必要",
   },
   ko: {
+    retiredGroup: "이전 형식 교재 · {count}",
+    retired: "이전 형식 · 백업 제외",
+    queued: "백업 대기",
+    reconnect: "Google 계정 다시 연결",
+    accountsLoading: "Google 계정을 읽는 중…",
+    accountsFailed: "Google 계정을 읽을 수 없습니다. 로컬 서비스를 확인하고 다시 시도하세요.",
     automatic: "새 자료 자동 백업",
     request: "Google Drive에 백업",
     requestHint: "설정의 Google Drive 계정 사용",

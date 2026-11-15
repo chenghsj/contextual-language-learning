@@ -1,0 +1,35 @@
+--- prompts19/apps/local-host/src/generation/learning-points-rules.ts
++++ prompts20/apps/local-host/src/generation/learning-points-rules.ts
+@@ -229,6 +229,8 @@
+ 
+ Chunks, when enabled and useful, are meaningful nonoverlapping source spans in order. A chunk meaning explains that exact span IN THIS SENTENCE, not a dictionary entry for its isolated verb. Keep a predicate with its complement when separating them would change the contextual meaning; omit optional chunks if no reliable concise gloss fits. Points cite exact spans inside their assigned units and explain the complete construction. For point citations and reusable sourceForms in Latin-script words, quote the whole source word; explain a stem or affix within that quoted word instead of cutting a citation mid-word. Apostrophe/hyphen-separated components and separate cue spans may remain distinct; never extend outside the assigned source unit. Derive only the source form being taught; do not turn a local spelling change into an unconditional rule for every verb or pronoun. If generalizing a rule, preserve its applicability and essential exceptions. Preserve inflection, negation, particles and connectors when deriving a reusable frame. Distinguish source forms from dictionary forms and abstract patterns. Reuse an existing point ID only when its meaning and function apply; otherwise create a new point with a short local ID.
+ 
++GRAMMAR SCOPE CHECK: Separate the exact form used in this source from a productive rule. Explain why this form fits this instance before generalizing. State the construction and conditions under which a broader rule applies; different tenses or aspects can express related discourse functions. Identify a compound predicate's tense and aspect from the complete predicate, not only its auxiliary. Before using only, always or must, check whether a valid alternative form under the stated conditions would contradict that claim. Preserve essential alternatives and restrictions. The learner's level limits detail, not the truth of a rule: a simpler explanation must not turn the source's particular tense or form into the only possible choice. If the broader scope is uncertain or too complex for this level, explicitly explain this instance and omit the universal claim rather than inventing a complete grammar lesson. Apply the same scope to point explanations, reusable patterns and example explanations.
++
+ Create reusable items only for reliable expressions or frames worth reusing. Supply exactly the requested number of examples per new item: one situation and 2-3 natural dialogue lines with matching translations. Preserve the source's sense, construction and register in a new situation. Expression targets reproduce an exact source form; frame targets instantiate the pattern. targetLineIndex is zero-based and targetText is copied from that dialogue line. Clearly label examples as AI-created through origin:"ai".
+ 
+ EXAMPLE ROLE CHECK: Compose the dialogue, then describe its actual participants and action in situation. Treat each situation and its dialogue as one coherent conversation. The situation must name the same task that the question and answer discuss, not a different task that could happen nearby. Before returning it, track who asks, acts and receives each action. For every yes/no question, check exactly what an affirmative or negative reply confirms and whether the rest of that reply agrees with that actor and event; a short affirmative is not a generic acknowledgement that can reverse the roles. The target speaker's action and timing must match the situation as well as the preceding turn. Each example translation must preserve its own target-language line's grammatical actor, person/number, recipient and beneficiary. A plural recipient does not turn a singular actor into a group; a speaker's intention is not a collective proposal. Resolve an omitted subject from explicit verb agreement when available, and leave genuinely unresolved roles unspecified. Do not replace these relationships with a looser team-oriented paraphrase. Revise an incoherent example before returning it; correct grammar or a matching target substring alone is insufficient. These checks concern invented examples and must never supply missing roles or events to the actual source.
+--- prompts19/packages/core/src/schema.ts
++++ prompts20/packages/core/src/schema.ts
+@@ -315,7 +315,7 @@
+ export type LearningSceneV7 = z.infer<typeof LearningSceneV7Schema>;
+ export type SourceUtterance = z.infer<typeof SourceUtteranceSchema>;
+ export const LEARNING_POINTS_WORKFLOW_VERSION = "learning-points-v7-1";
+-export const LEARNING_POINTS_PROMPT_VERSION = "learning-points-prompts-19";
++export const LEARNING_POINTS_PROMPT_VERSION = "learning-points-prompts-20";
+ export const LANGUAGE_STRATEGY_VERSION = "learning-language-strategies-5";
+ export const QUALITY_STRATEGY_VERSION = "program-validation-3";
+ export const LEVEL_STRATEGY_VERSION = "learning-level-strategies-1";
+@@ -346,8 +346,10 @@
+     e.schemaVersion === "7" &&
+     e.levelStrategyVersion === LEVEL_STRATEGY_VERSION &&
+     ((e.languageStrategyVersion === "learning-language-strategies-5" &&
+-      e.qualityStrategyVersion === "program-validation-2" &&
+-      e.promptVersion === "learning-points-prompts-18") ||
++      ((e.qualityStrategyVersion === "program-validation-2" &&
++        e.promptVersion === "learning-points-prompts-18") ||
++        (e.qualityStrategyVersion === "program-validation-3" &&
++          e.promptVersion === "learning-points-prompts-19"))) ||
+       (e.languageStrategyVersion === "learning-language-strategies-4" &&
+         ((e.qualityStrategyVersion === "learning-quality-1" &&
+           ["learning-points-prompts-12", "learning-points-prompts-13"].includes(e.promptVersion)) ||

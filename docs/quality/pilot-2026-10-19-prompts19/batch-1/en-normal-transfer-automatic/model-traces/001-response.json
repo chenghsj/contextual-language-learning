@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":23}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":37}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":22}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":5}]}],\"learningValue\":\"日常對話中詢問對方動向、說明正準備做某事時被打斷，以及提出短暫等待請求的實用表達。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"學習「be about to + 原形動詞」表示「正準備／正要……」的用法與時態搭配。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c3\"],\"description\":\"掌握口語請求中「wait a minute」表示「稍等一下」的慣用語。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c4\"],\"description\":\"了解「Sure.」在回應他人請求時表示答應或同意的簡短日常用法。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T04:39:37.128Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 7350.770707999996,
+    "usage": {
+      "input": 2515,
+      "output": 652,
+      "reasoning": 393
+    }
+  }
+}

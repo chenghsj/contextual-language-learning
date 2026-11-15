@@ -6,6 +6,23 @@ import { translate, type UiLocale } from "./messages";
 import { playbackTimingMessages } from "./playback-timing";
 
 const locales: UiLocale[] = ["en", "zh-TW", "zh-CN", "ja", "ko"];
+test("system credential failures provide localized setup guidance", () => {
+  const linux =
+    "Linux Secret Service is unavailable or locked. Install secret-tool (libsecret-tools).";
+  for (const locale of locales) {
+    const feedback = piFeedback(locale, linux);
+    assert.match(feedback.message, /secret-tool/);
+    assert.equal(feedback.detail, linux);
+    for (const error of [
+      "macOS Keychain is unavailable or access was denied.",
+      "Windows DPAPI credential storage is unavailable.",
+    ]) {
+      const result = piFeedback(locale, error);
+      assert.equal(result.detail, error);
+      assert.notEqual(result.message, error);
+    }
+  }
+});
 test("playback timing confirmations and errors stay direct and follow the UI locale", () => {
   for (const sourceLocale of locales)
     for (const locale of locales) {

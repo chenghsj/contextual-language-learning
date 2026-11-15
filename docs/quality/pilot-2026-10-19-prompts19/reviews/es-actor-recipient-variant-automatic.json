@@ -1,0 +1,52 @@
+{
+  "case": "es-actor-recipient-variant-automatic",
+  "document": "batch-2/es-actor-recipient-variant-automatic/videos/es-actor-recipient-variant-automatic--28e6eb85f1301309/94ef950c-1075-49c4-87c9-996eccd3d5dd.json",
+  "documentHash": "521a19e9eb31fd429d7fed3ae06009ba8f4a3da9130e9da48b709b05d8a9b0e8",
+  "reviewer": "Same unblinded Codex source/editorial reviewer; not independent or native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "All source translations, contexts, unit meanings/chunks, points, source citations, invented examples and available written readings",
+      "result": "The source and example maintain the explicit singular asking actor and plural recipients. The invented office example supplies third-party supplier context, so its third-party translation is supported. A separate temporal rule is overgeneralized, and the actual source translation narrows an unresolved sender role."
+    }
+  ],
+  "targets": [
+    {
+      "target": "singular_asking_with_plural_recipient",
+      "result": "passed",
+      "path": "/reusableItems/0/examples/0/dialogue/1",
+      "reason": "voy a pedir que nos envíen is translated 我今天會請他們把報價單寄給我們; I remains the asking actor and we remain recipients. This targeted observation does not override the case-level grammar rejection."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "grammar_scope",
+      "path": "/points/1/explanation",
+      "quote": "子句動詞必須使用虛擬式現在時",
+      "description": "The rule covers any future, not-yet-realized cuando event and mandates present subjunctive without restricting itself to this simple-tense example. Future temporal clauses also take perfect subjunctive when completion before a later event matters. The RAE entry gives a future main clause followed by cuando hayan comenzado. Tenga is correct in the source; the generalized mandatory tense claim is not. A B1 simplification is a possible pedagogical motive, but this wording does not state that limit, so the same predeclared grammar-scope criterion rejects it.",
+      "references": [
+        {
+          "title": "RAE-ASALE: pretérito perfecto compuesto de subjuntivo",
+          "url": "https://www.rae.es/gtg/pret%C3%A9rito-perfecto-compuesto-de-subjuntivo",
+          "supports": "A future prospective use includes a cuando clause with hayan comenzado, contradicting a universal present-subjunctive-only requirement. Severity remains editorial judgment."
+        }
+      ]
+    },
+    {
+      "severity": "needs_review",
+      "type": "source_sender_reference",
+      "path": "/sections/0/translations/0/text",
+      "quote": "我會請他們把時間表寄給我們。",
+      "description": "Envíen can correspond to ellos/ellas or formal plural ustedes; no source speaker labels identify the subordinate sender. 他們 selects a third party. That may be a natural generic rendering, and the point itself lists both possibilities, so this is not called a definite actor error. An independent editor should decide whether the source-fidelity criterion instead requires neutral 對方 here.",
+      "references": [
+        {
+          "title": "RAE-ASALE: conjugación española",
+          "url": "https://www.rae.es/buen-uso-espa%C3%B1ol/conjugaci%C3%B3n-espa%C3%B1ola",
+          "supports": "The conjugation tables distinguish discourse person and show shared plural ustedes/ellos forms. They establish ambiguity, not the right translation or severity."
+        }
+      ]
+    }
+  ],
+  "boundary": "One fresh output per frozen case. Missing optional teaching targets/readings do not count as exercised. No stability/causal estimate, actual audio, installed Host, real Chrome/video or learning-effect acceptance."
+}

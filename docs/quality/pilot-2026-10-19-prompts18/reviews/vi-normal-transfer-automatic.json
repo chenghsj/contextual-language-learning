@@ -1,0 +1,23 @@
+{
+  "case": "vi-normal-transfer-automatic",
+  "document": "batch-1/vi-normal-transfer-automatic/videos/vi-normal-transfer-automatic--ba7640c6bc82068b/cf2ac4ab-b8e9-451f-9af1-aad1867f4c95.json",
+  "documentHash": "2378a06617a2d4f10cf592cb1f88bf88b735794207917fa296d80f6622e35b10",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The title describes remaining and waiting, adding no encounter. Gọi remains a call/contact possibility without asserting stopping someone or cancellation. Temporal intent stays imminent. The report, borrowed pen and restaurant examples each match their situation and dialogue."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "small_chunk_granularity",
+      "path": "/sections/0/utterances/1/chunks/0/meaning",
+      "quote": "我",
+      "description": "Several small chunks reconstruct pronoun/verb/connector entries at B1. The meanings are coherent; broader construction chunks could be easier to reuse."
+    }
+  ],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

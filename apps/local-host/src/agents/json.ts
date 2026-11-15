@@ -1,3 +1,5 @@
+export class AgentJsonError extends Error {}
+
 /**
  * Model output can contain a Markdown-wrapped JSON reply
  * even when the prompt requests raw JSON.
@@ -19,7 +21,7 @@ export function parseAgentJson(value: unknown, provider: string): unknown {
         /* Fall through to an actionable error. */
       }
     }
-    throw new Error(
+    throw new AgentJsonError(
       provider +
         " returned invalid lesson JSON. " +
         "The model must return one JSON object (a JSON code block is also supported). " +

@@ -1,0 +1,17 @@
+{
+  "test": {
+    "typescript": 848,
+    "node": 34,
+    "packageManager": 5,
+    "config": 1,
+    "failed": 0
+  },
+  "swiftJournal": 11,
+  "typecheck": "passed",
+  "extensionBuild": "passed",
+  "nativeBuild": "passed",
+  "independentReview": "no material findings",
+  "actualNative": "Samer removed; absent at 62-second readback; Nora and Helena retained",
+  "browserFixture": "deletion removes stale available-list status; Activity history retained; new waiting/cancel wording verified",
+  "realChromeClickThrough": "not completed; concurrent user interruption"
+}

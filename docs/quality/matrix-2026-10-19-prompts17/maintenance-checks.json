@@ -1,8 +1,8 @@
 {
-  "completedAt": "2026-10-19T01:31:47.801534+00:00",
+  "completedAt": "2026-10-19T02:22:10.666308+00:00",
   "reportDate": "2026-10-19",
   "timezone": "Asia/Taipei",
-  "scope": "Quality evidence/verifier only; product generation source unchanged. Raw inference artifacts are excluded from formatting and independently hash-verified.",
+  "scope": "Editorial reassessment and quality verifier only; initial review files, raw inference artifacts and product generation source unchanged.",
   "checks": [
     {
       "command": [
@@ -32,5 +32,7 @@
     }
   ],
   "offlineVerification": "source-verification.json",
-  "newInferenceCallsStartedByTheseChecks": 0
+  "newInferenceCallsStartedByTheseChecks": 0,
+  "verifierBoundaryChecks": "reassessment/verifier-boundary-checks.json",
+  "reviewScope": "Eight initially unaccepted cases; same unblinded Codex reviewer. Prior passes carried forward. No independent semantic certification."
 }

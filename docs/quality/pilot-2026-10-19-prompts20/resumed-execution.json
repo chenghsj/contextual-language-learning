@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-19T15:07:24.685162+00:00",
+  "approvalAttempt": 3,
+  "result": "approved_process_started",
+  "sourceUnchanged": true,
+  "preflightSourceVerification": "source-verification.json",
+  "originalBlockedStatus": "inference-status.json",
+  "originalReviewFailures": "inference-authorization-attempts.json",
+  "command": "node --import tsx apps/local-host/scripts/learning-points-quality.ts --trace-prompts --cases-file=docs/quality/pilot-2026-10-19-prompts20/cases.json --output=/Users/cheng/Desktop/immersive-language-learning/docs/quality/pilot-2026-10-19-prompts20/batch-1",
+  "caseRunsAlreadyStartedBeforeThisApproval": 0,
+  "note": "Original prepared-only records and their hashes are retained unchanged; this is the first started whole-case run for each case."
+}

@@ -9,14 +9,20 @@ import {
   GenerationInputEstimateSchema,
 } from "@contextual/core";
 import { lessonResources, resolvePiModel } from "../agents/pi";
-import { pointsCandidatePrompt, initialLearningPointsBudget } from "./learning-points-prompts";
+import { learningPointsPrompts, initialLearningPointsBudget } from "./learning-points-prompts";
 import { customNodePrompt, planCustomJob } from "./custom-pipeline";
 
 /** No inference or job creation: estimate known input without predicting model output. */
 export async function estimateGenerationInput(
   request: GenerationRequest | CustomGenerationRequest,
   runtime?: ModelRuntime,
+  strategy: "legacy" | "compact-scenes-1" = "legacy",
 ) {
+  const promptFactory = learningPointsPrompts();
+  const pointsCandidatePrompt =
+    strategy === "compact-scenes-1"
+      ? promptFactory.compactCandidatePrompt
+      : promptFactory.pointsCandidatePrompt;
   const resolved = await resolvePiModel(request.agent, runtime);
   const custom = "kind" in request;
   const prompts = custom
@@ -32,7 +38,7 @@ export async function estimateGenerationInput(
           pointsCandidatePrompt(
             request,
             cues.map(c => c.id),
-            initialLearningPointsBudget(resolved, request.agent.thinkingLevel).output,
+            initialLearningPointsBudget(resolved, resolved.agent.thinkingLevel).output,
           ),
         );
       })();

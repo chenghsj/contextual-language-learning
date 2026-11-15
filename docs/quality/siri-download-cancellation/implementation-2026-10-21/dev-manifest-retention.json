@@ -1,0 +1,7 @@
+{
+  "at": "2026-10-21T01:33:37.612Z",
+  "testPassed": true,
+  "runningDevManifestRetained": true,
+  "sha256": "a5282755ca7a1f511aecfacf1d3ba7206ca4acf3bf1f44679878f4483bdca35c",
+  "testOutput": "TAP version 13\n# Subtest: preview optimization cannot replace the running extension dependency cache\nok 1 - preview optimization cannot replace the running extension dependency cache\n  ---\n  duration_ms: 209.806792\n  type: 'test'\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 1\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 308.410583\n"
+}

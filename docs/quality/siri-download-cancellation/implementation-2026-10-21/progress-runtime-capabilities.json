@@ -1,0 +1,42 @@
+{
+  "os": "Version 27.0.1 (Build 26A434)",
+  "inspectionOnly": true,
+  "perVoiceProgressValidated": false,
+  "classes": [
+    {
+      "classMethods": [
+        {
+          "encoding": "Q32@0:8Q16Q24",
+          "selector": "coalesceDownloadStatus:withDownloadStatus:"
+        },
+        {
+          "encoding": "Q24@0:8Q16",
+          "selector": "precedenceOfStatus:"
+        }
+      ],
+      "instanceMethods": [
+        {
+          "encoding": "Q16@0:8",
+          "selector": "completedBytes"
+        },
+        {
+          "encoding": "d16@0:8",
+          "selector": "completedPercent"
+        },
+        {
+          "encoding": "Q16@0:8",
+          "selector": "downloadStatus"
+        },
+        {
+          "encoding": "@48@0:8Q16d24Q32Q40",
+          "selector": "initWithStatus:percent:completedBytes:totalBytes:"
+        },
+        {
+          "encoding": "Q16@0:8",
+          "selector": "totalBytes"
+        }
+      ],
+      "name": "UAFAssetSetStatus"
+    }
+  ]
+}

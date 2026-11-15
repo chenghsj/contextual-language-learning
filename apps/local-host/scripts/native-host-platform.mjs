@@ -210,6 +210,7 @@ export async function installNativeHost({
   const location = browserManifestLocation(platform, browser, home, env);
   await access(sourceEntry);
   const speechHelper = join(dirname(sourceEntry), "macos-speech");
+  const credentialHelper = join(dirname(sourceEntry), "macos-credentials");
   let hasSiri = false;
   if (platform === "darwin") {
     try {
@@ -227,6 +228,13 @@ export async function installNativeHost({
       if (error.code !== "ENOENT") throw error;
     }
     if (hasSiri) await access(speechHelper + "-siri.LICENSE");
+    try {
+      await access(credentialHelper);
+    } catch {
+      throw new Error(
+        "macOS Keychain helper not found. Rebuild or install the complete matching local service package.",
+      );
+    }
   }
   const base = installationDir(platform, home, env);
   // Immutable versions avoid replacing running Windows executables during updates.
@@ -239,6 +247,11 @@ export async function installNativeHost({
   const entry = join(root, "native-host.mjs");
   await (bundleKey ? copyImmutable : atomicCopy)(sourceEntry, entry, 0o600);
   if (platform === "darwin") {
+    await (bundleKey ? copyImmutable : atomicCopy)(
+      credentialHelper,
+      join(root, "macos-credentials"),
+      0o700,
+    );
     await (bundleKey ? copyImmutable : atomicCopy)(speechHelper, join(root, "macos-speech"), 0o700);
     await (bundleKey ? copyImmutable : atomicCopy)(
       speechHelper + ".swift",

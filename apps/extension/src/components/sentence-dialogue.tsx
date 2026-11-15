@@ -17,6 +17,7 @@ import {
   pronunciationSlice,
   findExpressionOccurrences,
   type LearningDocument,
+  type FavoriteReaderDocument,
   type SubtitlePronunciationSegment,
   type ExpressionOccurrence,
 } from "@contextual/core";
@@ -87,7 +88,7 @@ function Occurrences({
   onPlay,
   disabled,
 }: {
-  document: LearningDocument;
+  document: LearningDocument | FavoriteReaderDocument;
   focus: { expression: string; sourceCueIds: string[] };
   locale: UiLocale;
   onPlay: (occurrence: ExpressionOccurrence) => void;
@@ -108,10 +109,13 @@ function Occurrences({
   const range = document.analysisRange;
   return (
     <div className="grid min-w-0 gap-3" data-ui="expressionOccurrences">
-      <p className="text-xs font-medium wrap-anywhere" lang={document.profile.targetLanguage}>
+      <p
+        className="text-ui-source font-medium wrap-anywhere"
+        lang={document.profile.targetLanguage}
+      >
         {focus.expression} <Badge>{others.length}</Badge>
       </p>
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
+      <p className="text-ui-meta leading-relaxed text-muted-foreground">
         {copy.scope}
         {range
           ? ": " + formatLoopTimestamp(range.startMs) + " – " + formatLoopTimestamp(range.endMs)
@@ -133,7 +137,7 @@ function Occurrences({
             <Button
               size="sm"
               variant="ghost"
-              className="h-auto min-h-8 shrink-0 px-2 text-[11px] tabular-nums"
+              className="h-auto min-h-8 shrink-0 px-2 text-ui-label tabular-nums"
               disabled={disabled || match.startMs === null || match.endMs === null}
               aria-label={
                 copy.playOccurrence +
@@ -148,7 +152,7 @@ function Occurrences({
           </div>
           <Accordion type="single" collapsible>
             <AccordionItem value="context" className="border-0">
-              <AccordionTrigger className="py-2 text-[11px]">{copy.context}</AccordionTrigger>
+              <AccordionTrigger className="py-2 text-ui-label">{copy.context}</AccordionTrigger>
               <AccordionContent className="pb-1">
                 {match.contextCueIds.map(id => (
                   <p
@@ -174,7 +178,7 @@ function Occurrences({
 }
 
 type Props = {
-  document: LearningDocument;
+  document: LearningDocument | FavoriteReaderDocument;
   scene: LearningSceneV7;
   locale: UiLocale;
   playingCueId: string | null;
@@ -237,7 +241,10 @@ export function SentenceDialogue({
       d => d.sceneId === scene.id && d.action === "omitted",
     ) ?? [];
   const readingWarning = (
-    <p className="mt-1 text-[11px] text-muted-foreground" data-ui="pronunciationMissing">
+    <p
+      className="mt-1 text-ui-label text-muted-foreground leading-relaxed"
+      data-ui="pronunciationMissing"
+    >
       {pronunciationDiagnosticCopy(locale).missing}
     </p>
   );
@@ -367,7 +374,10 @@ export function SentenceDialogue({
               (word, i) =>
                 distinct(word.explanation) && (
                   <p key={i} className="mt-2">
-                    <strong lang={targetLanguage}>{word.surface}</strong> — {word.meaning}
+                    <strong className="font-semibold" lang={targetLanguage}>
+                      {word.surface}
+                    </strong>{" "}
+                    — {word.meaning}
                     <br />
                     {word.explanation}
                   </p>
@@ -407,7 +417,7 @@ export function SentenceDialogue({
                     className="mb-3"
                     data-scope={note.chunkIds?.length ? "chunk" : "sentence"}
                   >
-                    <strong>{note.title}</strong>
+                    <strong className="font-semibold">{note.title}</strong>
                     <div className="mt-1">
                       <ExplanationText text={note.explanation} terms={noteTerms(note.title)} />
                     </div>
@@ -420,7 +430,9 @@ export function SentenceDialogue({
             <AccordionItem value="examples">
               <AccordionTrigger className="py-2.5 text-xs">{copy.examples}</AccordionTrigger>
               <AccordionContent className="pb-3" data-ui="ai-examples">
-                <p className="mb-3 text-[11px] text-muted-foreground">{reader.aiExamples}</p>
+                <p className="mb-3 text-ui-label text-muted-foreground leading-relaxed">
+                  {reader.aiExamples}
+                </p>
                 <div className="grid gap-4">
                   {focusIndexes
                     .filter(i => scene.focusItems[i].examples.length > 0)
@@ -435,7 +447,7 @@ export function SentenceDialogue({
                         className="min-w-0 overflow-hidden rounded-md border border-border"
                       >
                         <h5
-                          className="border-b border-border bg-muted/50 px-3 py-2.5 text-xs font-semibold wrap-anywhere"
+                          className="border-b border-border bg-muted/50 px-3 py-2.5 text-ui-source font-semibold wrap-anywhere"
                           lang={targetLanguage}
                         >
                           {scene.focusItems[focusIndex].expression}
@@ -448,7 +460,7 @@ export function SentenceDialogue({
                               return (
                                 <div key={key} data-ui="example-dialogue" className="p-3">
                                   <div className="mb-3 flex items-start justify-between gap-2">
-                                    <p className="min-w-0 flex-1 pt-1.5 text-ui-label leading-relaxed text-muted-foreground wrap-anywhere">
+                                    <p className="min-w-0 flex-1 pt-1.5 text-ui-body text-muted-foreground wrap-anywhere">
                                       {example.situation}
                                     </p>
                                     <SpeechButton
@@ -634,7 +646,7 @@ export function SentenceDialogue({
     >
       <div
         ref={toolbarRef}
-        className="sticky -top-3 z-10 -mx-3 mb-2 grid gap-1 border-b border-border bg-card px-3 py-2"
+        className="sticky -top-3 z-10 -mx-3 mb-2 grid gap-1 border-b border-border bg-card px-3 py-2 [@media(max-height:400px)]:static"
         data-ui="dialogue-toolbar"
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
@@ -686,17 +698,17 @@ export function SentenceDialogue({
               data-source-group={group?.id}
               data-ui="sourceUtterance"
               className={
-                "grid min-w-0 grid-cols-[20px_minmax(0,1fr)_auto] gap-x-1 border-b border-border px-1 py-4 last:border-b-0 scroll-mt-[var(--dialogue-toolbar-height)] [&_ruby]:[ruby-align:start]"
+                "grid min-w-0 grid-cols-[20px_minmax(0,1fr)_auto] gap-x-1 gap-y-1 border-b border-border px-1 py-4 last:border-b-0 scroll-mt-[var(--dialogue-toolbar-height)] [&_ruby]:[ruby-align:start]"
               }
             >
               {group?.sourceCueIds[0] === firstId && (
                 <div
                   data-ui="analysis-source-header"
-                  className="col-span-3 flex min-h-8 min-w-0 items-center justify-between gap-2 pl-6"
+                  className="col-span-3 flex min-h-8 min-w-0 items-center justify-between gap-2"
                 >
                   <Button
                     variant="ghost"
-                    className="-ml-2 h-8 min-w-0 flex-1 justify-start gap-2 px-2 text-[11px] tabular-nums text-muted-foreground"
+                    className="h-8 min-w-0 flex-1 justify-start gap-2 rounded-md px-6 text-ui-label tabular-nums text-muted-foreground focus-visible:ring-inset focus-visible:ring-offset-0"
                     data-ui="analysis-toggle"
                     aria-label={
                       (openGroups[group.id] ? copy.hideAnalysis : copy.viewAnalysis) + " " + range
@@ -714,7 +726,7 @@ export function SentenceDialogue({
                       className={"size-3.5 " + (openGroups[group.id] ? "rotate-180" : "")}
                     />
                   </Button>
-                  <div className="shrink-0">
+                  <div className="shrink-0 empty:hidden">
                     <SpeechButton
                       size="icon"
                       className="size-8 [&_svg]:size-3.5"
@@ -776,7 +788,7 @@ export function SentenceDialogue({
                         if (isSourceTextSelection(event)) event.preventDefault();
                         else window.getSelection()?.removeAllRanges();
                       }}
-                      className="inline h-auto min-h-8 min-w-0 max-w-full rounded-sm p-0 text-left text-[15px] leading-8 whitespace-normal underline decoration-border underline-offset-4 hover:bg-muted/70 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[state=on]:decoration-primary data-[state=on]:decoration-2 motion-reduce:transition-none [box-decoration-break:clone]"
+                      className="inline h-auto min-h-8 min-w-0 max-w-full rounded-sm p-0 text-left text-ui-source whitespace-normal underline decoration-border underline-offset-4 hover:bg-muted/70 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[state=on]:decoration-primary data-[state=on]:decoration-2 motion-reduce:transition-none [box-decoration-break:clone]"
                     >
                       {annotatedText(
                         cue.originalText.slice(start, span.end),
@@ -827,7 +839,7 @@ export function SentenceDialogue({
                       <span
                         data-ui="sentence-number"
                         aria-hidden={group?.sourceCueIds.length === 1 ? true : undefined}
-                        className="flex h-8 items-center text-[11px] tabular-nums text-muted-foreground"
+                        className="flex h-8 items-center text-ui-meta tabular-nums text-muted-foreground"
                       >
                         {group?.sourceCueIds.length === 1
                           ? null

@@ -1,5 +1,6 @@
 node_modules/
 **/dist/
+**/.cloudflare/
 release/
 artifacts/
 coverage/
@@ -9,6 +10,12 @@ patches/
 release-assets/
 .codex/
 .agents/
+.impeccable/
+
+# Generated iOS bundles and fixtures must match their generators byte for byte.
+apps/ios/ContextualLearning/Resources/contract.js
+apps/ios/ContextualLearning/Resources/sample-lesson.json
+apps/ios/ContextualLearningTests/Fixtures/*.json
 
 # Preserve original inference evidence; offline verifiers check its byte hashes.
 docs/quality/pilot-*/conditions.json
@@ -25,3 +32,25 @@ docs/quality/matrix-*/**/report.json
 docs/quality/matrix-*/**/run-context.json
 docs/quality/matrix-*/**/jobs/
 docs/quality/matrix-*/**/videos/
+
+# Preserve focused prompts-18 input/output traces and infrastructure failures.
+docs/quality/pilot-2026-10-19-prompts18/batch-*/
+docs/quality/pilot-2026-10-19-prompts18/infrastructure-preflight/
+docs/quality/pilot-2026-10-19-prompts18/diagnosis-prompts17/
+
+# Preserve prompts-19 original generation requests, responses and jobs.
+docs/quality/pilot-2026-10-19-prompts19/batch-*/
+
+# Preserve prompts-20 original model and job artifacts.
+docs/quality/pilot-2026-10-19-prompts20/batch-*/
+docs/quality/pilot-2026-10-19-prompts20/prepared/
+
+# Previous AI acceptance judgments are immutable historical records.
+docs/quality/pilot-2026-10-19-prompts20/history/
+
+# Keep recorded model outputs and runtime observations in their original form.
+docs/quality/learning-points-learnability/**/*.json
+docs/quality/learning-points-learnability/**/lesson.md
+docs/quality/reader-standardization/**/*.json
+docs/quality/reader-standardization/**/videos/**/*.md
+docs/quality/siri-download-cancellation/**/*.json

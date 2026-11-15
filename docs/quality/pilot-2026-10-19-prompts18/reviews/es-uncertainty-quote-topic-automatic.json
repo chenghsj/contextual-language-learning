@@ -1,0 +1,23 @@
+{
+  "case": "es-uncertainty-quote-topic-automatic",
+  "document": "batch-1/es-uncertainty-quote-topic-automatic/videos/es-uncertainty-quote-topic-automatic--e7e2303510d77dee/34943d1e-4856-4c90-a6b0-bb7ad8ed09c1.json",
+  "documentHash": "ef0ba3e05553574e298ce239ea7754cfafbb9497c337ff8c739fc42973843500",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The context inventories the meeting question and quotation separately, without linking Maya to dijo. The omitted speaker is 某人; [???] is locally marked in the summary, translations and both affected meanings. Dime remains correctly unaccented; all three new examples have matching actions and translations."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "redundant_basic_reply_teaching",
+      "path": "/points/2/title",
+      "quote": "Todavía no",
+      "description": "The short translated reply receives its own core point and example at B1; meaning is correct but repeats transparent content."
+    }
+  ],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":9}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":15}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":15,\"end\":23}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":3}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":3,\"end\":17}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":6}]}],\"learningValue\":\"這段對話包含詢問事件是否發生的「有……嗎」句型、轉述他人言論的引用表達、使用「對了」轉換話題的口語銜接，以及詢問語意等實用日常表達。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\"],\"description\":\"「有＋動詞＋嗎」的句型，在台灣華語中常用於確認特定事件或動作是否發生。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c2\"],\"description\":\"「……，是這麼說的」的引用句式，用於向對方轉述第三者的話語內容。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c2\"],\"description\":\"話題標記「對了」，用於在對話中切換至新的話題或順帶提及新事項。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c3\"],\"description\":\"「……是什麼意思？」的實用疑問句型，用於詢問詞語、內容或訊息的含意。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:42:00.645Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 45425.52641699999,
+    "usage": {
+      "input": 2583,
+      "output": 7572,
+      "reasoning": 7207
+    }
+  }
+}

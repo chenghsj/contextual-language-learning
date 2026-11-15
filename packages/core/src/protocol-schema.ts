@@ -1,5 +1,14 @@
+import { LocalModelInputSchema } from "./local-model";
+import { SpeechDownloadOperationSchema } from "./speech-downloads";
+import {
+  FavoriteCollectionSchema,
+  FavoriteSetSchema,
+  FavoriteConfigureSchema,
+  FavoriteQuerySchema,
+} from "./favorites";
 import { CustomGenerationRequestSchema } from "./custom";
 import { z } from "zod";
+import { isPiProviderId } from "./pi-providers";
 import { SpeechInputSchema } from "./speech";
 import { AgentSettingsSchema, GenerationRequestSchema, PlaybackOverrideSchema } from "./schema";
 
@@ -9,6 +18,7 @@ export interface AgentModel {
   thinkingLevels?: import("./schema").ThinkingLevel[];
   disabled?: boolean;
   availability?: "listed" | "unknown";
+  custom?: boolean;
 }
 export type AgentModelSource = "sdk" | "unavailable";
 
@@ -22,11 +32,13 @@ export const PiEventSchema = z.object({
   message: z.string().max(20000),
   url: z.string().url().optional(),
 });
+const PiAuthMethodSchema = z.enum(["api_key", "oauth"]);
 export const PiProviderInfoSchema = z.object({
   id: z.string(),
   label: z.string(),
   connected: z.boolean(),
-  methods: z.array(z.enum(["api_key", "oauth"])),
+  credentialMethod: PiAuthMethodSchema.optional(),
+  methods: z.array(PiAuthMethodSchema),
   methodLabels: z
     .object({ api_key: z.string().optional(), oauth: z.string().optional() })
     .optional(),
@@ -35,6 +47,54 @@ export type PiPrompt = z.infer<typeof PiPromptSchema>;
 export type PiEvent = z.infer<typeof PiEventSchema>;
 
 export const HostRequestSchema = z.discriminatedUnion("type", [
+  SpeechDownloadOperationSchema.extend({
+    type: z.literal("startSpeechDownload"),
+    id: z.string().uuid(),
+  }),
+  SpeechDownloadOperationSchema.extend({
+    type: z.literal("cancelSpeechDownload"),
+    id: z.string().uuid(),
+  }),
+  z.object({
+    type: z.literal("inspectSpeechDownloads"),
+    id: z.string().uuid(),
+    operations: z.array(SpeechDownloadOperationSchema).min(1).max(32),
+  }),
+  z.object({
+    type: z.literal("favoriteStates"),
+    id: z.string().uuid(),
+    collection: FavoriteCollectionSchema,
+    documentId: z.string().uuid(),
+    sceneIds: z.array(z.string().uuid()).max(100),
+  }),
+  z.object({ type: z.literal("setFavorite"), id: z.string().uuid(), input: FavoriteSetSchema }),
+  z.object({
+    type: z.literal("listFavorites"),
+    id: z.string().uuid(),
+    collection: FavoriteCollectionSchema,
+    query: FavoriteQuerySchema,
+  }),
+  z.object({
+    type: z.literal("getFavorite"),
+    id: z.string().uuid(),
+    collection: FavoriteCollectionSchema,
+    key: z.string().regex(/^[a-f0-9]{64}$/),
+  }),
+  z.object({
+    type: z.literal("configureFavorites"),
+    id: z.string().uuid(),
+    change: FavoriteConfigureSchema,
+  }),
+  z.object({
+    type: z.literal("favoriteStatus"),
+    id: z.string().uuid(),
+    collection: FavoriteCollectionSchema,
+  }),
+  z.object({
+    type: z.literal("syncFavorites"),
+    id: z.string().uuid(),
+    collection: FavoriteCollectionSchema,
+  }),
   z.object({ type: z.literal("listSpeechVoices"), id: z.string().uuid() }),
   z.object({ type: z.literal("listSpeechVoiceCatalog"), id: z.string().uuid() }),
   z.object({
@@ -113,12 +173,15 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
     id: z.string().uuid(),
     documentId: z.string().uuid(),
   }),
+  z.object({ type: z.literal("getLocalModelConfig"), id: z.string().uuid() }),
+  LocalModelInputSchema.extend({ type: z.literal("setLocalModelConfig"), id: z.string().uuid() }),
+  LocalModelInputSchema.extend({ type: z.literal("testLocalModelConfig"), id: z.string().uuid() }),
   z.object({ type: z.literal("piProviders"), id: z.string().uuid() }),
   z.object({
     type: z.literal("piLogin"),
     id: z.string().uuid(),
     provider: z.string().max(40),
-    method: z.enum(["api_key", "oauth"]),
+    method: PiAuthMethodSchema,
   }),
   z.object({ type: z.literal("piLogout"), id: z.string().uuid(), provider: z.string().max(40) }),
   z.object({
@@ -139,6 +202,12 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
     type: z.literal("agentModels"),
     id: z.string().uuid(),
     settings: AgentSettingsSchema,
+  }),
+  z.object({
+    type: z.literal("discoverModels"),
+    id: z.string().uuid(),
+    provider: z.string().min(1).max(120).refine(isPiProviderId),
+    force: z.boolean().optional(),
   }),
   z.object({
     type: z.literal("generate"),
@@ -183,6 +252,7 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
     id: z.string().uuid(),
     documentId: z.string().uuid(),
   }),
+  z.object({ type: z.literal("getJobPreview"), id: z.string().uuid(), jobId: z.string().uuid() }),
   z.object({
     type: z.literal("savePlaybackRange"),
     id: z.string().uuid(),
@@ -215,6 +285,11 @@ export const HostRequestSchema = z.discriminatedUnion("type", [
     accountId: z.string().min(1).max(256),
   }),
   z.object({ type: z.literal("driveConnect"), id: z.string().uuid() }),
+  z.object({
+    type: z.literal("driveAuthCancel"),
+    id: z.string().uuid(),
+    loginId: z.string().uuid(),
+  }),
   z.object({ id: z.string().uuid(), type: z.literal("driveFolder"), accountId: z.string().min(1) }),
   z.object({
     type: z.literal("driveValidate"),
@@ -231,6 +306,7 @@ export interface AgentInfo {
   id: string;
   label: string;
   installed: boolean;
+  credentialMethod?: "api_key" | "oauth";
 }
 
 export type { HostMessage } from "./native-messaging";

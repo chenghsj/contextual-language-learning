@@ -60,9 +60,13 @@ export async function buildMacSiri() {
         "__info_plist",
         "-Xlinker",
         join(source, "Info.plist"),
-        ...["main.swift", "SiriAudioNormalizer.swift", "OneShotAudioInput.swift"].map(file =>
-          join(source, file),
-        ),
+        ...[
+          "main.swift",
+          "SiriAudioNormalizer.swift",
+          "OneShotAudioInput.swift",
+          "SiriDownloadJournal.swift",
+          "SiriDownloadOperations.swift",
+        ].map(file => join(source, file)),
         "-o",
         output,
       ],

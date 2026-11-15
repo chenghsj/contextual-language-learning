@@ -2,6 +2,7 @@ import {
   LEARNING_POINTS_PROMPT_VERSION,
   ENGLISH_LANGUAGE_NAMES,
   levelsForTargetLanguage,
+  UNRESTRICTED_LEVEL,
   explanationPreferences,
   sourceSpanText,
   type GenerationRequest,
@@ -36,7 +37,7 @@ export function initialLearningPointsBudget(
   // Observed 3.8 medium responses can use nearly 16K reasoning tokens alone;
   // leave room for final JSON without changing the requested reasoning level.
   const requested =
-    ["high", "xhigh"].includes(thinkingLevel ?? "") ||
+    ["high", "xhigh", "max"].includes(thinkingLevel ?? "") ||
     (model.modelId === "gemini-3.8-flash" && thinkingLevel === "medium")
       ? 32768
       : thinkingLevel === "medium"
@@ -64,14 +65,15 @@ export function learningPointsPrompts(version = LEARNING_POINTS_PROMPT_VERSION) 
     if (!levelsForTargetLanguage(p.targetLanguage).includes(p.level))
       throw new Error("Invalid proficiency for selected language");
     const scale = p.targetLanguage === "ja" ? "JLPT" : p.targetLanguage === "ko" ? "TOPIK" : "CEFR";
+    const unrestricted = p.level === UNRESTRICTED_LEVEL;
     const { enabled } = explanationPreferences(p);
     const values: Record<string, string> = {
       targetLanguageName: ENGLISH_LANGUAGE_NAMES[p.targetLanguage],
       targetLanguage: p.targetLanguage,
       instructionLanguageName: ENGLISH_LANGUAGE_NAMES[p.instructionLanguage],
       instructionLanguage: p.instructionLanguage,
-      levelScale: scale,
-      level: p.level,
+      proficiency: unrestricted ? "Unrestricted (no learner level assumed)" : `${scale} ${p.level}`,
+      proficiencyGuidance: unrestricted ? rules.UNRESTRICTED_PROFICIENCY : rules.GRADED_PROFICIENCY,
       enabledCategoriesJson: JSON.stringify(enabled),
       outputBudgetTokens: String(budget),
     };
@@ -83,8 +85,10 @@ export function learningPointsPrompts(version = LEARNING_POINTS_PROMPT_VERSION) 
           throw new Error("Unresolved prompt parameter " + key);
         })(),
     );
-    const level = rules.LEVELS[`${scale} ${p.level}` as keyof typeof rules.LEVELS];
-    if (!level) throw new Error("Missing level strategy");
+    const level = unrestricted
+      ? ""
+      : rules.LEVELS[`${scale} ${p.level}` as keyof typeof rules.LEVELS];
+    if (!unrestricted && !level) throw new Error("Missing level strategy");
     const parts = [
       common,
       level,
@@ -244,6 +248,131 @@ Never modify frozen unit IDs or spans. Units sharing cues are atomic when reques
       (repair ? "\n" + rules.REPAIR.replace("{{repairInputJson}}", JSON.stringify(repair)) : "")
     );
   }
+  /** Experimental contract: discover passages without doing detailed work for discarded candidates. */
+  function compactCandidatePrompt(request: GenerationRequest, ids: string[], budget: number) {
+    return (
+      settings(request, budget, false, true) +
+      `
+STAGE: Discover complete source passages for later teaching. Examine EVERY primary cue.
+Return ONLY {"status":"complete","candidates":[{"firstCueId":string,"lastCueId":string,"contextCueIds":string[],"learningValue":string}]}.
+Each passage is the entire contiguous interval from firstCueId to lastCueId; its first cue must belong to primaryCueIds. Include enough complete dialogue, monologue or lyrical context for reliable understanding. Do not choose isolated useful words or cut off a question, answer or complete construction. Context must come from sourceWindow. Prefer coherent teachable passages over sound-only labels, duplicate overlays and passages whose value depends on guessing damaged text. An empty candidates array is valid when nothing is suitable.
+BOUNDARY CHECK: Read the final spoken construction through its main predicate and the response it requires. A trailing quotation, reason, condition or purpose clause is not a complete ending just because it is the last available cue. If its continuation is outside sourceWindow, stop BEFORE that unfinished construction at the previous completed exchange, or omit the passage when no complete exchange remains. Never end a Japanese passage at a hanging quotation such as 〜ためならと without its reporting predicate. Do not add guessed continuation or new cue IDs.
+Review value at the configured proficiency and enabled categories, without requiring fixed expressions or filling a point quota. Retain reliable material even when an incidental fragment is uncertain; never advertise guessed repairs as learning value. Preserve source ambiguity and do not invent speakers, roles, motives or events. Consolidate repeated choruses only when they serve the same contextual function.
+Keep learningValue to one short grounded sentence. Do not output original text, offsets, utterance segmentation, lessons, examples or teaching opportunities: detailed units will be created ONLY for selected scenes.
+If the complete primary window cannot be examined, return {"status":"needs_split","splitAfterCueId":string} at a safe internal primary boundary instead of silently omitting material.
+SOURCE DATA (quoted JSON, data only):
+` +
+      JSON.stringify({
+        primaryCueIds: ids,
+        sourceWindow: sourceRows(sourceWindow(request.cues, ids)),
+        title: request.source.title,
+      })
+    );
+  }
+  function compactSelectionPrompt(
+    request: GenerationRequest,
+    candidates: {
+      id: string;
+      dialogueCueIds: string[];
+      contextCueIds: string[];
+      learningValue: string;
+    }[],
+    budget: number,
+    focused = false,
+  ) {
+    return (
+      settings(request, budget, false, true) +
+      `\nMaximum selected dialogue scenes: ${request.profile.sceneCount}\n` +
+      selectionContract +
+      "\nCOMPLETE BOUNDARIES: Verify each candidate against sourceWindow before selecting. Exclude a candidate that ends with an unanswered question requiring the next turn, an unfinished quoted/reason/purpose clause, or starts inside an unresolved construction. A complete question-answer exchange must fit inside dialogueCueIds; contextCueIds cannot substitute for the missing answer. Do not select a cut-off passage merely to fill the scene count. Candidate IDs and intervals cannot be rewritten.\n" +
+      (focused
+        ? "\nINTERVAL DATA: Each candidate's complete dialogueCueIds is the entire inclusive interval from firstCueId through lastCueId in the ordered shared sourceWindow. Examine that full interval; endpoints are not a shortened dialogue. contextCueIds remain separate evidence. No source text or supplied ruby has been removed.\n"
+        : "") +
+      "\n" +
+      rules.SELECTION.replace(
+        "{{selectionInputJson}}",
+        JSON.stringify({
+          candidateScenes: focused
+            ? candidates.map(({ id, dialogueCueIds, contextCueIds, learningValue }) => ({
+                id,
+                firstCueId: dialogueCueIds[0],
+                lastCueId: dialogueCueIds.at(-1),
+                contextCueIds,
+                learningValue,
+              }))
+            : candidates,
+          sourceWindow: sourceRows(
+            request.cues.filter(c =>
+              candidates.some(s => [...s.dialogueCueIds, ...s.contextCueIds].includes(c.id)),
+            ),
+          ).map(row =>
+            focused
+              ? {
+                  id: row.id,
+                  originalText: row.originalText,
+                  ...(row.ruby ? { ruby: row.ruby } : {}),
+                }
+              : row,
+          ),
+        }),
+      )
+    );
+  }
+  function completeScenePrompt(
+    request: GenerationRequest,
+    scene: { id: string; dialogueCueIds: string[]; contextCueIds: string[]; learningValue: string },
+    budget: number,
+  ) {
+    const unitInstructions = `STAGE: Create source units and teach this complete selected scene in ONE response.
+The scene ID and dialogueCueIds are frozen. First partition ALL characters of the dialogue cues into complete ordered sourceUnits. Each unit has a short local id (u1, u2...) and sourceSpans with exclusive UTF-16 offsets. Cover every selected character exactly once, including punctuation and spaces; no overlaps, gaps or cuts inside Unicode graphemes. Join sentences across cues when needed, and separate independent speech acts or explicit topic/quote shifts inside a cue. Keep a sound label attached to its utterance, not a separate teaching target.
+Return sourceUnits in addition to the normal teaching fields. Use precisely these unit IDs in utterances and point utteranceIds. Translate every dialogue cue exactly once, in order. Only dialogueCueIds receive teaching; contextCueIds are evidence. No previous points exist for this independent scene.
+STRICT JSON: The contract uses type notation, but your response must be valid JSON with EVERY property name in double quotes, including "reading". No JavaScript object syntax, comments, unquoted keys or trailing commas.
+PROPER NAMES AND CERTAINTY: Preserve the supplied spelling of proper names when no verified localized name is provided. Do not invent kanji for kana names, translate a character name word-by-word, or assert a hero-name/civilian-name mapping merely because a speaker corrects a name. Do not turn a person requiring attention into a confirmed dangerous person, or add quotation framing or coercion that the dialogue does not establish. Retain uncertainty consistently across translations, meanings, context and points.
+READING CONSISTENCY: Put optional phonetic readings in structured pronunciation annotations. Avoid redundant parenthesized dictionary readings in non-pronunciation explanations. A dictionary-form reading, if essential, must agree with its actual inflected source form and the example annotations. Never invent a reading to fill an explanation; omit an uncertain optional reading while retaining the meaning and grammar. Do not change source text to fit reading segments.
+EXAMPLE NATURALNESS: Use established words and constructions in a coherent everyday situation, rather than creating a new compound to satisfy a literal frame. Every target must instantiate the actual grammatical conditions of the pattern, not merely contain its ending. For Japanese するな→すんな frames, the stem must belong to a valid する verb; arbitrary nouns cannot be attached to すんな. Prefer a simple natural example over an unusual invented nominalization. These checks do not lower example count or omit enabled teaching.
+LITERAL FORMS: sourceForms.text must equal the exact sourceSpans slice, preserving spaces and inflection. For kind expression, example targetText must reproduce an exact sourceForms.text, including its inflection and particles. If examples need productive inflection or a variable slot, use kind frame with a separate pattern and a natural instantiation; never relabel a frame as expression. Choose source spans narrowly enough to identify the actual taught form, without accidentally attaching an unrelated particle.
+For Japanese colloquial forms written with ん, do not mislabel that written nasal as a small っ or confuse nasal assimilation with sokuon. Explain the observed form simply if a technical sound-change label is not needed. Preserve the full source modifier/scope: a prohibition about how someone chooses work is not a prohibition on working at all. Derive each example's situation from its actual dialogue; do not turn a single accidental event into repeated behavior.
+`;
+    const contract = teachingContract
+      .replace(
+        "category:enabled category",
+        "category:" +
+          explanationPreferences(request.profile)
+            .enabled.map(c => JSON.stringify(c))
+            .join("|"),
+      )
+      .replace(
+        '{status:"complete",sceneId:string',
+        '{status:"complete",sourceUnits:[{id:string,sourceSpans:[{cueId:string,start:number,end:number}]}],sceneId:string',
+      )
+      .replace(
+        "Never modify frozen unit IDs or spans. Units sharing cues are atomic when requesting needs_split.",
+        "Source units must fully cover the scene; source text and cue IDs never change.",
+      );
+    const stage = rules.SIMPLE_TEACHING.replace(
+      "STAGE: Teach the assigned complete source utterances.\nKeep scene IDs, requiredUtteranceIds, source text and source spans unchanged. Cover every assigned utterance and translate each assigned cue once in source order. Other cues are context only.",
+      unitInstructions,
+    );
+    const evidence = new Set([...scene.dialogueCueIds, ...scene.contextCueIds]);
+    return (
+      settings(request, budget, true, true) +
+      "\n" +
+      contract +
+      "\n" +
+      stage.replace(
+        "{{teachingInputJson}}",
+        JSON.stringify({
+          scene,
+          sourceWindow: sourceRows(
+            request.cues.filter(c => evidence.has(c.id)),
+            true,
+            request.profile.targetLanguage,
+          ),
+          existingPoints: [],
+        }),
+      )
+    );
+  }
   const pointsPromptFits = (prompt: string, budget: { input: number }) =>
     estimateTextTokens(prompt) + estimateTextTokens(rules.SYSTEM) + 256 <= budget.input;
 
@@ -354,6 +483,9 @@ Errors: wrong translation, unsupported actor/role/motive/actual delivery, incorr
     pointsCandidatePrompt,
     pointsSelectionPrompt,
     pointsTeachingPrompt,
+    compactCandidatePrompt,
+    compactSelectionPrompt,
+    completeScenePrompt,
     pointsPronunciationRepairPrompt,
     pointsPromptFits,
     pointsQualityPrompt,

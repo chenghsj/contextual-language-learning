@@ -1,3 +1,13 @@
+import { LocalModelStateSchema } from "./local-model";
+import { DiscoveredModelSchema } from "./custom-model";
+import { SpeechDownloadObservationSchema } from "./speech-downloads";
+import {
+  FavoriteCollectionSchema,
+  FavoriteSummarySchema,
+  FavoritePageSchema,
+  FavoriteSyncStatusSchema,
+  FavoriteSnapshotSchema,
+} from "./favorites";
 import { ExecutionMetadataSchema } from "./execution";
 import { GenerationInputEstimateSchema } from "./usage-estimate";
 import { CustomContentSummarySchema, CustomDriveSummarySchema } from "./custom";
@@ -18,7 +28,7 @@ import { PiPromptSchema, PiEventSchema, PiProviderInfoSchema } from "./protocol-
 import { JobSummarySchema } from "./jobs";
 
 /** Increment when the Native Messaging request or response contract changes incompatibly. */
-export const HOST_PROTOCOL_VERSION = 12;
+export const HOST_PROTOCOL_VERSION = 19;
 const id = z.string().min(1).max(100);
 const uuid = z.string().uuid();
 const text = z.string().max(20_000);
@@ -27,6 +37,7 @@ const agentInfo = z.object({
   id: z.string(),
   label: z.string(),
   installed: z.boolean(),
+  credentialMethod: z.enum(["api_key", "oauth"]).optional(),
 });
 const lesson = z.object({
   documentId: uuid,
@@ -69,6 +80,40 @@ const base = z.object({ id });
 
 /** Validate untrusted messages at the Extension boundary before reading their fields. */
 export const HostMessageSchema = z.discriminatedUnion("type", [
+  base.extend({
+    type: z.literal("speechDownloadObservations"),
+    observations: z.array(SpeechDownloadObservationSchema).max(32),
+  }),
+  base.extend({
+    type: z.literal("favoriteStates"),
+    collection: FavoriteCollectionSchema,
+    states: z.record(z.string(), z.boolean()),
+  }),
+  base.extend({
+    type: z.literal("favoriteChanged"),
+    collection: FavoriteCollectionSchema,
+    favorite: FavoriteSummarySchema.nullable(),
+  }),
+  base.extend({
+    type: z.literal("favorites"),
+    collection: FavoriteCollectionSchema,
+    page: FavoritePageSchema,
+  }),
+  base.extend({ type: z.literal("favoriteStatus"), status: FavoriteSyncStatusSchema }),
+  base.extend({
+    type: z.literal("favorite"),
+    collection: FavoriteCollectionSchema,
+    key: z.string().regex(/^[a-f0-9]{64}$/),
+    snapshot: FavoriteSnapshotSchema,
+  }),
+  base.extend({
+    type: z.literal("favoriteChunk"),
+    collection: FavoriteCollectionSchema,
+    key: z.string().regex(/^[a-f0-9]{64}$/),
+    index: z.number().int().min(0).max(79),
+    total: z.number().int().min(1).max(80),
+    dataBase64: z.string().max(349528),
+  }),
   base.extend({ type: z.literal("speechVoiceRemoved"), voiceId: z.string().min(1).max(256) }),
   base.extend({
     type: z.literal("speechVoiceFolder"),
@@ -112,7 +157,17 @@ export const HostMessageSchema = z.discriminatedUnion("type", [
     total: z.number().int().min(1).max(100),
     dataBase64: z.string().max(400000),
   }),
+  base.extend({ type: z.literal("localModelConfig"), ...LocalModelStateSchema.shape }),
+  base.extend({
+    type: z.literal("localModelTest"),
+    modelIds: z.array(z.string().max(120)).max(500),
+  }),
   base.extend({ type: z.literal("piProviders"), providers: z.array(PiProviderInfoSchema) }),
+  base.extend({
+    type: z.literal("discoveredModels"),
+    models: z.array(DiscoveredModelSchema).max(500),
+    source: z.enum(["account", "directory", "sdk"]),
+  }),
   base.extend({ type: z.literal("piAuthPrompt"), prompt: PiPromptSchema }),
   base.extend({ type: z.literal("piAuthEvent"), event: PiEventSchema }),
   base.extend({ type: z.literal("piAuthDone") }),
@@ -134,6 +189,7 @@ export const HostMessageSchema = z.discriminatedUnion("type", [
         thinkingLevels: z.array(ThinkingLevelSchema).optional(),
         disabled: z.boolean().optional(),
         availability: z.enum(["listed", "unknown"]).optional(),
+        custom: z.boolean().optional(),
       }),
     ),
     source: z.enum(["sdk", "unavailable"]),
@@ -195,6 +251,7 @@ export const HostMessageSchema = z.discriminatedUnion("type", [
     accounts: z.array(DriveAccountSchema),
     configured: z.boolean(),
   }),
+  base.extend({ type: z.literal("driveAuth"), url: z.string().url().max(8192) }),
   base.extend({ type: z.literal("driveConnected"), account: DriveAccountSchema }),
   base.extend({ type: z.literal("driveValidated"), accountId: account }),
   base.extend({ type: z.literal("driveDisconnected"), accountId: account }),

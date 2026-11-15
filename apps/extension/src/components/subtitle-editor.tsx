@@ -1,7 +1,13 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  TimingBoundaryField,
+  TimingPositionControl,
+  TimingRangeTimeline,
+} from "./timing-range-controls";
+import { timingControlsCopy } from "../i18n/timing-controls";
 import { useContentMotion } from "../hooks/use-content-motion";
 import { type SubtitleCue } from "@contextual/core";
-import { ArrowLeft, BookOpen, Minus, MoreHorizontal, Plus, Play, Square, X } from "lucide-react";
+import { ArrowLeft, BookOpen, MoreHorizontal, Play, Square, X } from "lucide-react";
 import type { UiLocale } from "../i18n/messages";
 import { createFlowCopy } from "../i18n/create-flow";
 import { analysisRangeCopy } from "../i18n/analysis-range";
@@ -13,6 +19,8 @@ import { DialogTitleBar } from "./dialog-title-bar";
 import type { SubtitleDraft } from "../lib/subtitle-draft";
 import { formatDisplayTime, parseDisplayTime } from "../lib/time-display";
 import { subtitleEditorCopy } from "../i18n/subtitle-editor";
+import { subtitleTimingCopy } from "../i18n/subtitle-timing";
+import { SubtitleTimingCorrection } from "./subtitle-timing-correction";
 import type { VideoAdapter } from "../video/types";
 import { isLoopWindow } from "../video/loop-window";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -80,7 +88,7 @@ function SubtitlePreviewRow({
                 aria-label={ux.subtitleText}
               >
                 <div className="flex shrink-0 items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold">{ux.subtitleText}</h3>
+                  <h3 className="text-ui-heading font-semibold">{ux.subtitleText}</h3>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -94,7 +102,7 @@ function SubtitlePreviewRow({
                 <div
                   tabIndex={0}
                   aria-label={ux.subtitleText}
-                  className="min-h-0 overflow-y-auto overscroll-contain text-sm leading-normal whitespace-pre-wrap wrap-anywhere"
+                  className="min-h-0 overflow-y-auto overscroll-contain text-ui-body whitespace-pre-wrap wrap-anywhere"
                 >
                   {text}
                 </div>
@@ -104,10 +112,7 @@ function SubtitlePreviewRow({
           {editControl}
         </div>
       </div>
-      <p
-        ref={preview}
-        className="line-clamp-3 text-sm leading-normal whitespace-pre-wrap wrap-anywhere"
-      >
+      <p ref={preview} className="line-clamp-3 text-ui-body whitespace-pre-wrap wrap-anywhere">
         {text}
       </p>
     </>
@@ -144,15 +149,18 @@ export function SubtitleEditor({
   const inputId = React.useId();
   const actionsTrigger = useRef<HTMLButtonElement>(null);
   const restoreRequested = useRef(false);
+  const correctionRequested = useRef(false);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [search, setSearch] = useState(""),
     [scroll, setScroll] = useState(0),
     [height, setHeight] = useState(500);
   const viewport = useRef<HTMLDivElement>(null);
-  useContentMotion(viewport, "subtitle-preview", { enter: true, entryOffset: 12, duration: 200 });
+  useContentMotion(viewport, "subtitle-preview", { enter: true, entryOffset: 12, duration: 280 });
   const searchInput = useRef<HTMLInputElement>(null);
   const editTrigger = useRef<HTMLButtonElement | null>(null);
+  const subtitleText = useRef<HTMLTextAreaElement>(null);
   const [editing, setEditing] = useState<SubtitleCue | null>(null),
     [text, setText] = useState(""),
     [error, setError] = useState("");
@@ -167,13 +175,20 @@ export function SubtitleEditor({
   );
   const [busy, setBusy] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  const [currentMs, setCurrentMs] = useState<number | null>(null);
+  const [playing, setPlaying] = useState(false);
   const busyRef = useRef(false);
   const mounted = useRef(true);
   const previewRef = useRef<{ adapter: VideoAdapter; url: string } | null>(null);
+  const inspectionRef = useRef<{ adapter: VideoAdapter; url: string } | null>(null);
   async function stopPreview() {
-    const active = previewRef.current;
+    const active = previewRef.current ?? inspectionRef.current;
     previewRef.current = null;
-    if (mounted.current) setPreviewing(false);
+    inspectionRef.current = null;
+    if (mounted.current) {
+      setPreviewing(false);
+      setPlaying(false);
+    }
     if (active) {
       try {
         await active.adapter.stopLoop?.(active.url);
@@ -190,17 +205,25 @@ export function SubtitleEditor({
     };
   }, [adapter, sourceUrl]);
   useEffect(() => {
-    if (!previewing || !adapter?.status || !sourceUrl) return;
+    if (!editing || !connected || !adapter?.status || !sourceUrl) return;
     let live = true;
     let polling = false;
-    const timer = window.setInterval(async () => {
+    const poll = async () => {
       if (polling || busyRef.current) return;
       polling = true;
       try {
         const state = await adapter.status!(sourceUrl);
-        if (live && state.playing === false) await transport(stopPreview);
+        if (!live) return;
+        setCurrentMs(
+          typeof state.currentMs === "number" && Number.isFinite(state.currentMs)
+            ? state.currentMs
+            : null,
+        );
+        setPlaying(state.playing === true);
+        if (previewRef.current && state.playing === false) await transport(stopPreview);
       } catch {
-        if (live)
+        if (live) setCurrentMs(null);
+        if (live && previewRef.current)
           await transport(async () => {
             await stopPreview();
             throw new Error("Video status unavailable");
@@ -208,12 +231,14 @@ export function SubtitleEditor({
       } finally {
         polling = false;
       }
-    }, 300);
+    };
+    void poll();
+    const timer = window.setInterval(poll, 300);
     return () => {
       live = false;
       window.clearInterval(timer);
     };
-  }, [previewing, adapter, sourceUrl, editCopy.unavailable]);
+  }, [editing?.id, connected, adapter, sourceUrl, editCopy.unavailable]);
   useEffect(() => {
     if (!connected) void stopPreview().catch(() => onPlaybackError?.(editCopy.unavailable));
   }, [connected]);
@@ -327,6 +352,10 @@ export function SubtitleEditor({
       if (typeof state.currentMs !== "number" || !Number.isFinite(state.currentMs))
         throw new Error("No position");
       const ms = Math.round(state.currentMs);
+      if (mounted.current) {
+        setCurrentMs(ms);
+        setPlaying(false);
+      }
       if (
         !validTimes(
           boundary === "start" ? ms : times.start.ms,
@@ -355,12 +384,16 @@ export function SubtitleEditor({
         setError(editCopy.previewRange);
         return;
       }
+      await stopPreview();
       const active = { adapter, url: sourceUrl };
       previewRef.current = active;
       try {
         await adapter.loop!(sourceUrl, { ...previewRange, repeats: 1, delaySeconds: 0 });
-        if (mounted.current && previewRef.current === active) setPreviewing(true);
-        else {
+        if (mounted.current && previewRef.current === active) {
+          setPreviewing(true);
+          setPlaying(true);
+          setCurrentMs(times.start.ms);
+        } else {
           await active.adapter.stopLoop?.(active.url);
           await active.adapter.pause?.(active.url);
         }
@@ -370,9 +403,35 @@ export function SubtitleEditor({
       }
     });
   }
+  function seekPosition(value: number) {
+    if (!connected || !adapter?.seek || !adapter.pause || !sourceUrl) return;
+    void transport(async () => {
+      await stopPreview();
+      const position = Math.max(0, Math.min(duration ?? 43_200_000, Math.round(value)));
+      await adapter.seek!(sourceUrl, position);
+      await adapter.pause!(sourceUrl);
+      if (mounted.current) {
+        setCurrentMs(position);
+        setPlaying(false);
+      }
+    });
+  }
+  function togglePosition() {
+    if (!connected || !adapter?.play || !adapter.pause || !sourceUrl) return;
+    void transport(async () => {
+      const wasPlaying = playing;
+      await stopPreview();
+      if (wasPlaying) await adapter.pause!(sourceUrl);
+      else {
+        inspectionRef.current = { adapter, url: sourceUrl };
+        await adapter.play!(sourceUrl);
+      }
+      if (mounted.current) setPlaying(!wasPlaying);
+    });
+  }
   function close() {
     if (busyRef.current) return;
-    if (previewRef.current) {
+    if (previewRef.current || inspectionRef.current) {
       void transport(async () => {
         await stopPreview();
         if (mounted.current) setEditing(null);
@@ -398,7 +457,7 @@ export function SubtitleEditor({
         <div className="flex shrink-0 items-center gap-1">
           <span
             role="status"
-            className={"text-xs " + (saveStatus === "failed" ? "text-destructive" : "")}
+            className={saveStatus === "failed" ? "text-ui-body text-destructive" : "text-ui-label"}
           >
             {saveStatus === "saving"
               ? ux.saving
@@ -426,6 +485,12 @@ export function SubtitleEditor({
               className="w-auto max-w-[calc(100vw-2rem)] p-1 data-[state=closed]:animate-none"
               aria-label={editCopy.actions}
               onCloseAutoFocus={event => {
+                if (correctionRequested.current) {
+                  event.preventDefault();
+                  correctionRequested.current = false;
+                  setCorrectionOpen(true);
+                  return;
+                }
                 if (restoreRequested.current) {
                   event.preventDefault();
                   restoreRequested.current = false;
@@ -433,6 +498,20 @@ export function SubtitleEditor({
                 }
               }}
             >
+              {adapter?.id === "youtube" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex h-auto min-h-9 w-full justify-start whitespace-normal text-left"
+                  disabled={!draft.snapshot.ready || !cues.some(cue => cue.startMs !== null)}
+                  onClick={() => {
+                    correctionRequested.current = true;
+                    setActionsOpen(false);
+                  }}
+                >
+                  {subtitleTimingCopy[locale].title}
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -510,6 +589,17 @@ export function SubtitleEditor({
           })}
         </ol>
       </div>
+      {correctionOpen && (
+        <SubtitleTimingCorrection
+          draft={draft}
+          locale={locale}
+          duration={duration}
+          onClose={() => {
+            setCorrectionOpen(false);
+          }}
+          onRestoreFocus={() => restoreFocusWithoutTooltip(actionsTrigger.current)}
+        />
+      )}
       <AlertDialog open={restoreOpen} onOpenChange={setRestoreOpen}>
         <AlertDialogContent
           onCloseAutoFocus={event => {
@@ -537,7 +627,12 @@ export function SubtitleEditor({
       >
         <DialogContent
           showCloseButton={false}
-          className="max-h-[90dvh] overflow-y-auto"
+          className="flex max-h-[calc(100dvh-1.5rem)] min-w-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-[480px]"
+          data-ui="subtitle-edit-dialog"
+          onOpenAutoFocus={event => {
+            event.preventDefault();
+            subtitleText.current?.focus({ preventScroll: true });
+          }}
           onCloseAutoFocus={event => {
             event.preventDefault();
             const target = editTrigger.current?.isConnected
@@ -546,122 +641,142 @@ export function SubtitleEditor({
             target?.focus({ preventScroll: true });
           }}
         >
-          <DialogHeader className="text-left">
+          <DialogHeader className="shrink-0 border-b border-border px-4 py-3 text-left">
             <DialogTitleBar closeLabel={ux.close} closeDisabled={busy}>
-              {ux.edit}
+              {timingControlsCopy[locale].title}
             </DialogTitleBar>
-            <DialogDescription className="sr-only">{ux.subtitleText}</DialogDescription>
+            <DialogDescription className="text-ui-body sr-only">
+              {ux.subtitleText}
+            </DialogDescription>
           </DialogHeader>
-          <label className="grid gap-1 text-xs">
-            {ux.subtitleText}
-            <Textarea
-              value={text}
-              maxLength={1500}
-              onChange={event => setText(event.target.value)}
-              disabled={busy}
-            />
-          </label>
-          {editing && editing.startMs !== null && (
-            <div className="grid gap-2">
-              {(["start", "end"] as const).map(boundary => (
-                <div
-                  key={boundary}
-                  role="group"
-                  aria-label={range[boundary]}
-                  className="grid gap-1"
-                >
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <label htmlFor={`${inputId}-${boundary}`}>{range[boundary]}</label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="min-h-10 px-2 text-xs whitespace-normal text-right"
-                      disabled={
+          <div
+            className="grid min-h-0 gap-4 overflow-y-auto overscroll-contain p-4"
+            data-ui="subtitle-edit-body"
+          >
+            <label className="grid gap-2 text-ui-label font-medium">
+              {ux.subtitleText}
+              <Textarea
+                ref={subtitleText}
+                className="min-h-20 resize-y font-normal"
+                rows={2}
+                value={text}
+                maxLength={1500}
+                onChange={event => setText(event.target.value)}
+                disabled={busy}
+              />
+            </label>
+            {editing && editing.startMs !== null && (
+              <div className="grid gap-4 border-t border-border pt-4">
+                <TimingPositionControl
+                  locale={locale}
+                  currentMs={currentMs}
+                  playing={playing}
+                  seekDisabled={
+                    busy ||
+                    !connected ||
+                    currentMs === null ||
+                    !adapter?.seek ||
+                    !adapter.pause ||
+                    !sourceUrl
+                  }
+                  toggleDisabled={
+                    busy || !connected || !adapter?.play || !adapter.pause || !sourceUrl
+                  }
+                  onSeek={delta => seekPosition(currentMs! + delta)}
+                  onToggle={togglePosition}
+                />
+                <TimingRangeTimeline
+                  locale={locale}
+                  labels={{ start: range.start, end: range.end }}
+                  startMs={times.start.ms}
+                  endMs={times.end.ms}
+                  currentMs={currentMs}
+                  duration={duration}
+                  minDuration={1}
+                  maxDuration={43_200_000}
+                  disabled={busy}
+                  onChange={setTime}
+                  onSeek={
+                    connected && adapter?.seek && adapter.pause && sourceUrl
+                      ? seekPosition
+                      : undefined
+                  }
+                />
+                <div className="grid gap-3 border-t border-border pt-3">
+                  {(["start", "end"] as const).map(boundary => (
+                    <TimingBoundaryField
+                      key={boundary}
+                      label={range[boundary]}
+                      htmlFor={`${inputId}-${boundary}`}
+                      captureLabel={editCopy.useCurrent}
+                      captureDisabled={
                         busy || !connected || !adapter?.status || !adapter.pause || !sourceUrl
                       }
-                      onClick={() => capture(boundary)}
+                      onCapture={() => capture(boundary)}
+                      nudgeDisabled={delta => busy || !canNudge(boundary, delta)}
+                      onNudge={delta => setTime(boundary, times[boundary].ms + delta)}
                     >
-                      {editCopy.useCurrent}
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-10 shrink-0"
-                      aria-label={`${range[boundary]} -0.1s`}
-                      disabled={busy || !canNudge(boundary, -100)}
-                      onClick={() => setTime(boundary, times[boundary].ms - 100)}
-                    >
-                      <Minus aria-hidden="true" />
-                    </Button>
-                    <Input
-                      id={`${inputId}-${boundary}`}
-                      className="h-10 text-center tabular-nums"
-                      value={times[boundary].text}
-                      disabled={busy}
-                      spellCheck={false}
-                      onChange={event => {
-                        const value = event.target.value;
-                        setTimingMode("manual");
-                        setTimes(current => ({
-                          ...current,
-                          [boundary]: { text: value, ms: parseDisplayTime(value) },
-                        }));
-                        setError("");
-                      }}
-                      onBlur={() => {
-                        if (Number.isFinite(times[boundary].ms))
+                      <Input
+                        id={`${inputId}-${boundary}`}
+                        className="h-9 min-w-0 flex-1 rounded-none border-0 bg-transparent px-1 text-center font-mono tabular-nums focus-visible:ring-inset"
+                        value={times[boundary].text}
+                        disabled={busy}
+                        spellCheck={false}
+                        onChange={event => {
+                          const value = event.target.value;
+                          setTimingMode("manual");
                           setTimes(current => ({
                             ...current,
-                            [boundary]: {
-                              ...current[boundary],
-                              text: formatDisplayTime(current[boundary].ms),
-                            },
+                            [boundary]: { text: value, ms: parseDisplayTime(value) },
                           }));
-                      }}
-                      onKeyDown={event => {
-                        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-                          event.preventDefault();
-                          const delta =
-                            (event.key === "ArrowUp" ? 100 : -100) * (event.shiftKey ? 10 : 1);
-                          if (canNudge(boundary, delta))
-                            setTime(boundary, times[boundary].ms + delta);
-                        }
-                      }}
-                      aria-invalid={error === editCopy.invalid}
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-10 shrink-0"
-                      aria-label={`${range[boundary]} +0.1s`}
-                      disabled={busy || !canNudge(boundary, 100)}
-                      onClick={() => setTime(boundary, times[boundary].ms + 100)}
-                    >
-                      <Plus aria-hidden="true" />
-                    </Button>
-                  </div>
+                          setError("");
+                        }}
+                        onBlur={() => {
+                          if (Number.isFinite(times[boundary].ms))
+                            setTimes(current => ({
+                              ...current,
+                              [boundary]: {
+                                ...current[boundary],
+                                text: formatDisplayTime(current[boundary].ms),
+                              },
+                            }));
+                        }}
+                        onKeyDown={event => {
+                          if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                            event.preventDefault();
+                            const delta =
+                              (event.key === "ArrowUp" ? 100 : -100) * (event.shiftKey ? 10 : 1);
+                            if (canNudge(boundary, delta))
+                              setTime(boundary, times[boundary].ms + delta);
+                          }
+                        }}
+                        aria-invalid={error === editCopy.invalid}
+                      />
+                    </TimingBoundaryField>
+                  ))}
+                  <p className="text-ui-label leading-relaxed text-muted-foreground">
+                    {timingControlsCopy[locale].step}
+                  </p>
                 </div>
-              ))}
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs text-muted-foreground">{editCopy.step}</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={
-                    busy ||
-                    timingMode === "reset" ||
-                    (timingMode === "preserve" && !draft.snapshot.timingOverrides[editing.id])
-                  }
-                  onClick={resetTiming}
-                >
-                  {editCopy.reset}
-                </Button>
+                {!connected && (
+                  <p className="text-ui-label text-muted-foreground">{ux.disconnected}</p>
+                )}
               </div>
+            )}
+            {error && (
+              <p className="text-ui-body text-destructive" role="alert">
+                {error}
+              </p>
+            )}
+          </div>
+          <footer
+            className="grid shrink-0 gap-3 border-t border-border bg-card px-4 py-3"
+            data-ui="subtitle-edit-footer"
+          >
+            {editing && editing.startMs !== null && (
               <Button
                 variant="secondary"
-                className="min-h-10"
+                className="w-full"
                 disabled={
                   busy ||
                   !connected ||
@@ -675,27 +790,39 @@ export function SubtitleEditor({
                 {previewing ? <Square aria-hidden="true" /> : <Play aria-hidden="true" />}
                 {previewing ? editCopy.stop : editCopy.preview}
               </Button>
-              {!connected && <p className="text-xs text-muted-foreground">{ux.disconnected}</p>}
+            )}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              {editing && editing.startMs !== null ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={
+                    busy ||
+                    timingMode === "reset" ||
+                    (timingMode === "preserve" && !draft.snapshot.timingOverrides[editing.id])
+                  }
+                  onClick={resetTiming}
+                >
+                  {editCopy.reset}
+                </Button>
+              ) : (
+                <span />
+              )}
+              <div className="flex items-center gap-2">
+                <Button variant="outline" disabled={busy} onClick={close}>
+                  {ux.cancel}
+                </Button>
+                <Button
+                  disabled={busy}
+                  onClick={() => {
+                    if (apply()) close();
+                  }}
+                >
+                  {ux.done}
+                </Button>
+              </div>
             </div>
-          )}
-          {error && (
-            <p className="text-xs text-destructive" role="alert">
-              {error}
-            </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" disabled={busy} onClick={close}>
-              {ux.cancel}
-            </Button>
-            <Button
-              disabled={busy}
-              onClick={() => {
-                if (apply()) close();
-              }}
-            >
-              {ux.done}
-            </Button>
-          </div>
+          </footer>
         </DialogContent>
       </Dialog>
     </section>

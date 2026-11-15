@@ -1,0 +1,96 @@
+{
+  "reviewBoundary": "Same unblinded AI editorial judgment; deterministic validity and trace presence do not certify semantic correctness. Case-level acceptance is distinct from a particular target observation.",
+  "counts": {
+    "requested": 6,
+    "generated": 6,
+    "structuralPassed": 6,
+    "fixedSourcePassed": 6,
+    "identityPassed": 6,
+    "coveragePassed": 6,
+    "semanticPassed": 4,
+    "semanticFailed": 1,
+    "semanticNeedsReview": 1,
+    "accepted": 4
+  },
+  "usage": {
+    "recordedCalls": 19,
+    "traceRequests": 19,
+    "traceResponses": 19,
+    "structuralRepairs": 1,
+    "callsWithoutUsage": 0,
+    "reportedTokens": {
+      "input": 66252,
+      "output": 81794,
+      "reasoning": 68802
+    },
+    "reasoningIncludedInOutput": true
+  },
+  "cases": [
+    {
+      "case": "fr-location-transfer-variant-automatic",
+      "group": "previously_rejected",
+      "generation": "generated",
+      "document": "batch-1/fr-location-transfer-variant-automatic/videos/fr-location-transfer-variant-automatic--93b824faf45a7df0/7431d121-cba6-48b5-8ef6-66cf948c45cb.json",
+      "documentHash": "25a4fe8bfff93790456581988870ce3b0a3914ae0387db56ab3befbad1d331b0",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/fr-location-transfer-variant-automatic.json"
+    },
+    {
+      "case": "es-report-transfer-variant-automatic",
+      "group": "previously_rejected",
+      "generation": "generated",
+      "document": "batch-1/es-report-transfer-variant-automatic/videos/es-report-transfer-variant-automatic--db5d62f0c446b74f/9cc29808-2758-48ae-88a7-7c0f91d25abe.json",
+      "documentHash": "4c870fd0a8e69efbfaa411e4dc859c0406fb318e926bd6eca4d7380dcce175e9",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/es-report-transfer-variant-automatic.json"
+    },
+    {
+      "case": "en-normal-transfer-automatic",
+      "group": "previously_accepted_control",
+      "generation": "generated",
+      "document": "batch-1/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/5e2c10db-71dd-45f2-b0be-9a4ddaf76ce1.json",
+      "documentHash": "f102acbfa6f1188ab59ad8dce29c7d996e1feb96d09868589a406a4d69df20fc",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/en-normal-transfer-automatic.json"
+    },
+    {
+      "case": "fr-citation-plural-variant-automatic",
+      "group": "new_authored_variant",
+      "generation": "generated",
+      "document": "batch-2/fr-citation-plural-variant-automatic/videos/fr-citation-plural-variant-automatic--0a9a27925ccf4b1d/9c113a42-7e7b-4742-a93d-81457138fb0b.json",
+      "documentHash": "5cc6775564bb20ea43a84598f050665eb1193e16b84ca0ce3846df114bf90fcd",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/fr-citation-plural-variant-automatic.json"
+    },
+    {
+      "case": "es-actor-recipient-variant-automatic",
+      "group": "new_authored_variant",
+      "generation": "generated",
+      "document": "batch-2/es-actor-recipient-variant-automatic/videos/es-actor-recipient-variant-automatic--28e6eb85f1301309/94ef950c-1075-49c4-87c9-996eccd3d5dd.json",
+      "documentHash": "521a19e9eb31fd429d7fed3ae06009ba8f4a3da9130e9da48b709b05d8a9b0e8",
+      "coverage": "passed",
+      "semantic": "failed",
+      "accepted": false,
+      "review": "reviews/es-actor-recipient-variant-automatic.json"
+    },
+    {
+      "case": "ja-normal-transfer-automatic",
+      "group": "previously_accepted_control",
+      "generation": "generated",
+      "document": "batch-2/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/d84dc3e7-952e-45d7-a24c-65b78c2d146b.json",
+      "documentHash": "0ad07dee2041e644aed189053910c39c458dae9cf07f8ec663c805cf070e0dcc",
+      "coverage": "passed",
+      "semantic": "needs_review",
+      "accepted": false,
+      "review": "reviews/ja-normal-transfer-automatic.json"
+    }
+  ]
+}

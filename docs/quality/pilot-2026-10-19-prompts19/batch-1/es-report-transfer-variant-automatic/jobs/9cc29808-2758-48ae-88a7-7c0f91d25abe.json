@@ -1,0 +1,1187 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-19",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-5",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-3",
+    "inputFingerprint": "5ec73bdd040c7c92976372764f1dea8adfb25aba9cf09558dfb081ab76815d3c",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T04:37:34.158Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 111955.908375,
+        "usage": {
+          "input": 2847,
+          "output": 15441,
+          "reasoning": 14991
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T04:37:41.364Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 7195.22991699999,
+        "usage": {
+          "input": 2624,
+          "output": 815,
+          "reasoning": 774
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T04:39:28.590Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 107209.96200000003,
+        "usage": {
+          "input": 4994,
+          "output": 15752,
+          "reasoning": 13584
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-19",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-5",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-3",
+      "inputFingerprint": "5ec73bdd040c7c92976372764f1dea8adfb25aba9cf09558dfb081ab76815d3c",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "9cc29808-2758-48ae-88a7-7c0f91d25abe",
+    "sourceTitle": "es-report-transfer-variant-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-19T04:35:41.070Z",
+    "updatedAt": "2026-10-19T04:39:28.629Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "9cc29808-2758-48ae-88a7-7c0f91d25abe"
+  },
+  "request": {
+    "id": "9cc29808-2758-48ae-88a7-7c0f91d25abe",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "es-report-transfer-variant-automatic"
+    },
+    "profile": {
+      "targetLanguage": "es",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "¿Leo habló del viaje?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "«Dime dónde esperar», dijo. Por cierto, ¿ya cenaste?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Todavía no. ¿Qué significa [???] aquí?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "La última palabra no se entiende."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "旅行談話、引述與字詞詢問",
+      "context": {
+        "text": "此段對話包含對 Leo 是否曾談及旅行的提問、對「告訴我該在哪裡等」這句話的引述、對是否已用晚餐的詢問、表示尚未用餐的回應、對此處「[???]」（原文不清處）含義的詢問，以及指出最後一個詞無法理解的陳述。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Leo 有提到那趟旅行嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「告訴我該在哪裡等」，（其）說道。順便問一下，你吃過晚飯了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡的「[???]」（原文不清處）是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "最後一個詞無法理解。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "67a041d6-a0fd-4fd4-982e-b3d500cbc611",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 21
+            }
+          ]
+        },
+        {
+          "id": "3fefd42a-896a-4f0a-92bd-1f0e0b791d37",
+          "meaning": "引述「告訴我該在哪裡等」；動詞 dijo 未明示主詞，語境中可能指涉前述的 Leo。",
+          "contextExplanation": "第三人稱單數動詞 dijo 的主詞在此省略，語境中可能延續前句的主詞 Leo，但語法上未絕對限定其身份。",
+          "contextCueIds": [
+            "c1"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c1_chk1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 1,
+                  "end": 5
+                }
+              ],
+              "meaning": "告訴我（肯定命令式）"
+            },
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c1_chk2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 6,
+                  "end": 19
+                }
+              ],
+              "meaning": "該在哪裡等"
+            },
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c1_chk3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 22,
+                  "end": 26
+                }
+              ],
+              "meaning": "說道（主詞省略，語境中可能指 Leo）"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 28
+            }
+          ]
+        },
+        {
+          "id": "d2dd4b43-be06-4e0f-a0dd-1e5ef9cef1b2",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c2_chk1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 28,
+                  "end": 38
+                }
+              ],
+              "meaning": "順便問一下、對了"
+            },
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c2_chk2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 40,
+                  "end": 52
+                }
+              ],
+              "meaning": "你吃過晚飯了嗎？"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 28,
+              "end": 52
+            }
+          ]
+        },
+        {
+          "id": "6da3e468-7640-4a49-8d7a-eac5f4c05af3",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c2"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c3_chk1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 10
+                }
+              ],
+              "meaning": "還沒"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 12
+            }
+          ]
+        },
+        {
+          "id": "4217dd6e-3010-4c59-9eeb-3553fe131360",
+          "meaning": "詢問此處「[???]」（原文不清處）是什麼意思。",
+          "contextExplanation": "句中包含未辨識的文字片段「[???]」（原文不清處）；所用詞「aquí」（這裡）僅指示位置，未具體說明媒介。",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 12,
+              "end": 38
+            }
+          ]
+        },
+        {
+          "id": "c776031a-0d90-4be2-aefd-de79e2511f90",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p4"
+          ],
+          "chunks": [
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c4_chk1",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 0,
+                  "end": 17
+                }
+              ],
+              "meaning": "最後一個詞"
+            },
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c4_chk2",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 18,
+                  "end": 32
+                }
+              ],
+              "meaning": "無法被理解／無法辨認"
+            }
+          ],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 33
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "67a041d6-a0fd-4fd4-982e-b3d500cbc611",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 21
+                  }
+                ]
+              },
+              {
+                "id": "3fefd42a-896a-4f0a-92bd-1f0e0b791d37",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 28
+                  }
+                ]
+              },
+              {
+                "id": "d2dd4b43-be06-4e0f-a0dd-1e5ef9cef1b2",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 28,
+                    "end": 52
+                  }
+                ]
+              },
+              {
+                "id": "6da3e468-7640-4a49-8d7a-eac5f4c05af3",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 12
+                  }
+                ]
+              },
+              {
+                "id": "4217dd6e-3010-4c59-9eeb-3553fe131360",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 12,
+                    "end": 38
+                  }
+                ]
+              },
+              {
+                "id": "c776031a-0d90-4be2-aefd-de79e2511f90",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 33
+                  }
+                ]
+              }
+            ],
+            "learningValue": "學習日常引述句中動詞 dijo 的人稱指涉、命令式代詞附著（dime）的重音與書寫規則、話題轉換片語（Por cierto）、簡短回應（Todavía no）及被動反映 se（se entiende）的表達方式。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c1",
+                  "c2"
+                ],
+                "description": "引述動詞 dijo 的第三人稱指涉（承接上文主詞 Leo，而非聽話者）與直接引語的搭配。"
+              },
+              {
+                "category": "pronunciation",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "命令式接附著代詞的重音與拼寫：di 加上 me 成為 dime，重音在倒數第二音節，依規則不加書寫重音符號。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "會話轉折片語「Por cierto」（順便一提、對了），用於自然帶出新話題。"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "常用時間回應「Todavía no」（還沒），對應上句帶有 ya 的完成狀態提問。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c4"
+                ],
+                "description": "「no se entiende」中被動反映／無人稱 se 的用法，表示「（字句）無法被理解、看不懂」。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "67a041d6-a0fd-4fd4-982e-b3d500cbc611",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 21
+              }
+            ]
+          },
+          {
+            "id": "3fefd42a-896a-4f0a-92bd-1f0e0b791d37",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 28
+              }
+            ]
+          },
+          {
+            "id": "d2dd4b43-be06-4e0f-a0dd-1e5ef9cef1b2",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 28,
+                "end": 52
+              }
+            ]
+          },
+          {
+            "id": "6da3e468-7640-4a49-8d7a-eac5f4c05af3",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 12
+              }
+            ]
+          },
+          {
+            "id": "4217dd6e-3010-4c59-9eeb-3553fe131360",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 12,
+                "end": 38
+              }
+            ]
+          },
+          {
+            "id": "c776031a-0d90-4be2-aefd-de79e2511f90",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 33
+              }
+            ]
+          }
+        ],
+        "learningValue": "學習日常引述句中動詞 dijo 的人稱指涉、命令式代詞附著（dime）的重音與書寫規則、話題轉換片語（Por cierto）、簡短回應（Todavía no）及被動反映 se（se entiende）的表達方式。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c1",
+              "c2"
+            ],
+            "description": "引述動詞 dijo 的第三人稱指涉（承接上文主詞 Leo，而非聽話者）與直接引語的搭配。"
+          },
+          {
+            "category": "pronunciation",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "命令式接附著代詞的重音與拼寫：di 加上 me 成為 dime，重音在倒數第二音節，依規則不加書寫重音符號。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "會話轉折片語「Por cierto」（順便一提、對了），用於自然帶出新話題。"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "常用時間回應「Todavía no」（還沒），對應上句帶有 ya 的完成狀態提問。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c4"
+            ],
+            "description": "「no se entiende」中被動反映／無人稱 se 的用法，表示「（字句）無法被理解、看不懂」。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "ee0a9883-e3c3-451d-9739-5790d842f5b1",
+        "utteranceIds": [
+          "67a041d6-a0fd-4fd4-982e-b3d500cbc611",
+          "3fefd42a-896a-4f0a-92bd-1f0e0b791d37",
+          "d2dd4b43-be06-4e0f-a0dd-1e5ef9cef1b2",
+          "6da3e468-7640-4a49-8d7a-eac5f4c05af3",
+          "4217dd6e-3010-4c59-9eeb-3553fe131360",
+          "c776031a-0d90-4be2-aefd-de79e2511f90"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "旅行談話、引述與字詞詢問",
+            "context": {
+              "text": "此段對話包含對 Leo 是否曾談及旅行的提問、對「告訴我該在哪裡等」這句話的引述、對是否已用晚餐的詢問、表示尚未用餐的回應、對此處「[???]」（原文不清處）含義的詢問，以及指出最後一個詞無法理解的陳述。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "Leo 有提到那趟旅行嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "「告訴我該在哪裡等」，（其）說道。順便問一下，你吃過晚飯了嗎？"
+              },
+              {
+                "cueId": "c3",
+                "text": "還沒。這裡的「[???]」（原文不清處）是什麼意思？"
+              },
+              {
+                "cueId": "c4",
+                "text": "最後一個詞無法理解。"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "67a041d6-a0fd-4fd4-982e-b3d500cbc611",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 21
+                  }
+                ]
+              },
+              {
+                "id": "3fefd42a-896a-4f0a-92bd-1f0e0b791d37",
+                "meaning": "引述「告訴我該在哪裡等」；動詞 dijo 未明示主詞，語境中可能指涉前述的 Leo。",
+                "contextExplanation": "第三人稱單數動詞 dijo 的主詞在此省略，語境中可能延續前句的主詞 Leo，但語法上未絕對限定其身份。",
+                "contextCueIds": [
+                  "c1"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c1_chk1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 1,
+                        "end": 5
+                      }
+                    ],
+                    "meaning": "告訴我（肯定命令式）"
+                  },
+                  {
+                    "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c1_chk2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 6,
+                        "end": 19
+                      }
+                    ],
+                    "meaning": "該在哪裡等"
+                  },
+                  {
+                    "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c1_chk3",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 22,
+                        "end": 26
+                      }
+                    ],
+                    "meaning": "說道（主詞省略，語境中可能指 Leo）"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 28
+                  }
+                ]
+              },
+              {
+                "id": "d2dd4b43-be06-4e0f-a0dd-1e5ef9cef1b2",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c2_chk1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 28,
+                        "end": 38
+                      }
+                    ],
+                    "meaning": "順便問一下、對了"
+                  },
+                  {
+                    "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c2_chk2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 40,
+                        "end": 52
+                      }
+                    ],
+                    "meaning": "你吃過晚飯了嗎？"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 28,
+                    "end": 52
+                  }
+                ]
+              },
+              {
+                "id": "6da3e468-7640-4a49-8d7a-eac5f4c05af3",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c2"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p3"
+                ],
+                "chunks": [
+                  {
+                    "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c3_chk1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 10
+                      }
+                    ],
+                    "meaning": "還沒"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 12
+                  }
+                ]
+              },
+              {
+                "id": "4217dd6e-3010-4c59-9eeb-3553fe131360",
+                "meaning": "詢問此處「[???]」（原文不清處）是什麼意思。",
+                "contextExplanation": "句中包含未辨識的文字片段「[???]」（原文不清處）；所用詞「aquí」（這裡）僅指示位置，未具體說明媒介。",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 12,
+                    "end": 38
+                  }
+                ]
+              },
+              {
+                "id": "c776031a-0d90-4be2-aefd-de79e2511f90",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p4"
+                ],
+                "chunks": [
+                  {
+                    "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c4_chk1",
+                    "spans": [
+                      {
+                        "cueId": "c4",
+                        "start": 0,
+                        "end": 17
+                      }
+                    ],
+                    "meaning": "最後一個詞"
+                  },
+                  {
+                    "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:c4_chk2",
+                    "spans": [
+                      {
+                        "cueId": "c4",
+                        "start": 18,
+                        "end": 32
+                      }
+                    ],
+                    "meaning": "無法被理解／無法辨認"
+                  }
+                ],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 33
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p1",
+              "utteranceIds": [
+                "3fefd42a-896a-4f0a-92bd-1f0e0b791d37"
+              ],
+              "category": "pronunciation",
+              "presentation": "core",
+              "title": "命令式接附著代詞的重音與拼寫（dime）",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "肯定命令式單音節動詞 di（decir 對 tú 的形式）後接間接受詞代詞 me，書寫上合為 dime。其重音仍保持在 di 上（/ˈdi.me/），屬於倒數第二音節重音（llana / paroxítona）且以母音結尾的詞，符合正字法一般重音規則，因此不加書寫重音符號（tilde）。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 1,
+                  "end": 5
+                }
+              ]
+            },
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p2",
+              "utteranceIds": [
+                "d2dd4b43-be06-4e0f-a0dd-1e5ef9cef1b2"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "Por cierto 用於話題轉換",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "Por cierto 為會話常用轉折片語，用於在對話中切換話題或順帶提及突發想到的事項，相當於「順便一提」、「對了」。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 28,
+                  "end": 38
+                }
+              ]
+            },
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p3",
+              "utteranceIds": [
+                "6da3e468-7640-4a49-8d7a-eac5f4c05af3"
+              ],
+              "category": "chunks",
+              "presentation": "core",
+              "title": "Todavía no 的簡短回應用法",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [
+                "c2"
+              ],
+              "explanation": "Todavía no 常用於簡短回應含有 ya（已經）的完成狀態問句，表示某事「尚未發生」或「還沒完成」。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 10
+                }
+              ]
+            },
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p4",
+              "utteranceIds": [
+                "c776031a-0d90-4be2-aefd-de79e2511f90"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "no se entiende 與被動反映 se",
+              "sourceCueIds": [
+                "c4"
+              ],
+              "contextCueIds": [],
+              "explanation": "動詞 entender 搭配代詞 se 構成被動反映結構（pasiva refleja），以第三人稱單數形式表達「某事無法被理解或辨認」，主詞為被理解的客體（此處為 la última palabra），省去具體的施事者。",
+              "sourceSpans": [
+                {
+                  "cueId": "c4",
+                  "start": 18,
+                  "end": 32
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:r1",
+              "pointIds": [
+                "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p2"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 28,
+                      "end": 38
+                    }
+                  ],
+                  "text": "Por cierto"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩人在討論明日行程，其中一人順便詢問對方是否已買好車票。",
+                  "dialogue": [
+                    {
+                      "text": "Mañana salimos temprano para la estación.",
+                      "translation": "我們明天一早就要出發去車站。"
+                    },
+                    {
+                      "text": "Por cierto, ¿ya compraste los billetes?",
+                      "translation": "順便問一下，你買好車票了嗎？"
+                    },
+                    {
+                      "text": "Sí, los compré por internet ayer.",
+                      "translation": "買好了，我昨天在網路上買的。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "Por cierto"
+                }
+              ]
+            },
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:r2",
+              "pointIds": [
+                "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p3"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 0,
+                      "end": 10
+                    }
+                  ],
+                  "text": "Todavía no"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "一人詢問對方是否已經吃過午餐，對方回答尚未用餐。",
+                  "dialogue": [
+                    {
+                      "text": "¿Ya almorzaste?",
+                      "translation": "你吃過午餐了嗎？"
+                    },
+                    {
+                      "text": "Todavía no. Voy a comer ahora.",
+                      "translation": "還沒。我現在正準備去吃。"
+                    },
+                    {
+                      "text": "Si quieres, vamos juntos.",
+                      "translation": "如果你想的話，我們一起去吧。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "Todavía no"
+                }
+              ]
+            },
+            {
+              "id": "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:r3",
+              "pointIds": [
+                "ee0a9883-e3c3-451d-9739-5790d842f5b1:s0:p4"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c4"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c4",
+                      "start": 18,
+                      "end": 32
+                    }
+                  ],
+                  "text": "no se entiende"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "一人請朋友看一則訊息，朋友指出其中的地址無法辨認。",
+                  "dialogue": [
+                    {
+                      "text": "¿Puedes leer la dirección en este mensaje?",
+                      "translation": "你能看懂這則訊息裡的地址嗎？"
+                    },
+                    {
+                      "text": "La verdad es que no se entiende.",
+                      "translation": "說實話，完全看不懂。"
+                    },
+                    {
+                      "text": "Está bien, voy a pedir que me la repitan.",
+                      "translation": "好吧，那我請對方再說一次。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "no se entiende"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

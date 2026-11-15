@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":26}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":35}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":29}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":4}]}],\"learningValue\":\"日常對話中解釋原因與提出請求的完整互動，包含過去時間點「正打算做某事」的時態搭配與口語請求句型。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"aller 未完成過去時（allais）接動詞原形表示「過去正打算做某事」，搭配 quand 與複合過去時（as appelé）表示被突發動作打斷\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c1\"],\"description\":\"encore là 表示「依然在這裡、還在」的常見副詞搭配\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c3\"],\"description\":\"使用「Tu peux + 動詞原形」提出日常請求，搭配 un instant 委婉表達「稍等片刻」\"}]}]}",
+  "call": {
+    "step": "window-0-repair",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:36:16.369Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 12275.871999999974,
+    "usage": {
+      "input": 2572,
+      "output": 1369,
+      "reasoning": 1091
+    }
+  }
+}

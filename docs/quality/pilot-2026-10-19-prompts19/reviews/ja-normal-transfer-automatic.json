@@ -1,0 +1,30 @@
+{
+  "case": "ja-normal-transfer-automatic",
+  "document": "batch-2/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/d84dc3e7-952e-45d7-a24c-65b78c2d146b.json",
+  "documentHash": "0ad07dee2041e644aed189053910c39c458dae9cf07f8ec663c805cf070e0dcc",
+  "reviewer": "Same unblinded Codex source/editorial reviewer; not independent or native-speaker certification",
+  "verdict": "needs_review",
+  "checks": [
+    {
+      "scope": "All source translations, contexts, unit meanings/chunks, points, source citations, invented examples and available written readings",
+      "result": "Source and examples preserve imminence, actors and requested action. Source hiragana readings and available example readings align with their written Japanese. One explanation can be read as inferring impact or interruption from the source call, so overall acceptance remains pending."
+    }
+  ],
+  "targets": [
+    {
+      "target": "japanese_control",
+      "result": "needs_review",
+      "reason": "Text/reading checks do not settle the temporal scope dispute."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "needs_review",
+      "type": "temporal_source_scope",
+      "path": "/points/0/explanation",
+      "quote": "說明原定動作在即將展開之際受到了影響或中斷",
+      "description": "The source states the call occurred just as departure was imminent, without stating an interrupted/cancelled departure. The preceding 常伴隨 can also be read as qualifying a typical teaching context rather than asserting a necessary consequence in this source; this is why the finding is pending, not a definite error. Compared with the French wording, this explanation has no explicit coincidence alternative and names this source call as its example. An independent editor should decide whether its scope is sufficiently qualified under the same timing-fidelity rule."
+    }
+  ],
+  "boundary": "One fresh output per frozen case. Missing optional teaching targets/readings do not count as exercised. No stability/causal estimate, actual audio, installed Host, real Chrome/video or learning-effect acceptance."
+}

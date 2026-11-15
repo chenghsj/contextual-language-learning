@@ -1,6 +1,15 @@
+import { useEffect, useState } from "react";
 import type { BackupSettings, DriveAccount, JobSummary } from "@contextual/core";
-import { ExternalLink, LoaderCircle } from "lucide-react";
+import {
+  Archive,
+  CircleCheck,
+  Clock3,
+  TriangleAlert,
+  ExternalLink,
+  LoaderCircle,
+} from "lucide-react";
 import { translate, type UiLocale } from "../i18n/messages";
+import { libraryNoticeCopy } from "../i18n/library-notice";
 import { backupSettingsCopy } from "../i18n/backup-settings";
 import { Button } from "./ui/button";
 import { ActionFeedbackButton } from "./action-feedback-button";
@@ -9,12 +18,16 @@ import { SelectField } from "./ui/select";
 import { Badge } from "./ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { IconTooltip } from "./icon-tooltip";
+import { isRetiredBackup } from "../lib/backup-feedback";
 
 export type DriveBackupSettingsProps = {
   locale: UiLocale;
   backup: BackupSettings;
   accounts: DriveAccount[];
-  configured: boolean;
+  configured: boolean | null;
+  accountsLoading?: boolean;
+  accountsError?: string;
+  onRetryAccounts?(): void;
   verified: boolean;
   accessChecking: boolean;
   busy: boolean;
@@ -28,6 +41,7 @@ export type DriveBackupSettingsProps = {
   onConnect(): void;
   onDisconnect(accountId: string): void;
   onRetryAccess(): void;
+  onReconnect?(): void;
   onOpenFolder(): void;
   onBackup(): void;
   onRetryFailed(): void;
@@ -38,6 +52,9 @@ export function DriveBackupSettings({
   backup,
   accounts,
   configured,
+  accountsLoading = false,
+  accountsError = "",
+  onRetryAccounts,
   verified,
   accessChecking,
   busy,
@@ -51,17 +68,28 @@ export function DriveBackupSettings({
   onConnect,
   onDisconnect,
   onRetryAccess,
+  onReconnect,
   onOpenFolder,
   onBackup,
   onRetryFailed,
 }: DriveBackupSettingsProps) {
   const ui = backupSettingsCopy(locale);
+  const notice = libraryNoticeCopy(locale);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const authExpired = /\binvalid_(?:grant|token)\b/i.test(error);
   const t = (key: Parameters<typeof translate>[1]) => translate(locale, key);
   const selected = backup.accountId ?? accounts[0]?.id;
+  useEffect(() => setDetailsOpen(false), [error, selected]);
   const activeFeedback = feedback?.accountId === selected ? feedback : null;
-  const records = selected ? jobs.filter(job => job.backup?.accountId === selected) : [];
+  const records = selected
+    ? jobs
+        .filter(job => job.backup?.accountId === selected)
+        .sort((a, b) => b.backup!.updatedAt.localeCompare(a.backup!.updatedAt))
+    : [];
+  const currentRecords = records.filter(job => !isRetiredBackup(job));
+  const retiredRecords = records.filter(isRetiredBackup);
   const pending = records.filter(job => ["pending", "uploading"].includes(job.backup!.status));
-  const failed = records.filter(job => job.backup?.status === "failed");
+  const failed = currentRecords.filter(job => job.backup?.status === "failed");
   const attention = records.some(job => ["conflict", "paused"].includes(job.backup!.status));
   const last = records
     .filter(job => job.backup?.status === "backed-up")
@@ -69,20 +97,6 @@ export function DriveBackupSettings({
     .sort()
     .at(-1);
   const working = !!phase || pending.length > 0;
-  function status(job: JobSummary) {
-    switch (job.backup!.status) {
-      case "backed-up":
-        return ui.saved;
-      case "failed":
-        return ui.needsAttention;
-      case "conflict":
-        return ui.conflict;
-      case "paused":
-        return ui.paused;
-      default:
-        return ui.uploading;
-    }
-  }
   return (
     <section data-ui="driveBackup" className="grid min-w-0 gap-4 border-t border-border pt-6">
       <header className="flex items-center justify-between gap-2">
@@ -128,24 +142,70 @@ export function DriveBackupSettings({
           <Switch
             checked={backup.enabled}
             aria-label={ui.automatic}
-            disabled={busy}
+            disabled={busy || accountsLoading || !!accountsError}
             onCheckedChange={onEnabled}
           />
         </label>
-        {accessChecking && (
+        {!accountsLoading && !accountsError && accessChecking && (
           <p role="status" className="text-xs text-muted-foreground">
             {t("driveAccessChecking")}
           </p>
         )}
-        {error && (
-          <p role="status" className="text-ui-body text-destructive wrap-anywhere">
-            {error}
+        {!accountsLoading && !accountsError && error && (
+          <div className="grid min-w-0 gap-1">
+            <p role="status" className="text-ui-body text-destructive wrap-anywhere">
+              {authExpired ? notice.authDescription : error}
+            </p>
+            {authExpired && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto min-h-0 justify-self-start px-0 py-1 text-xs text-muted-foreground"
+                  aria-expanded={detailsOpen}
+                  onClick={() => setDetailsOpen(value => !value)}
+                >
+                  {detailsOpen ? notice.hideDetails : notice.details}
+                </Button>
+                {detailsOpen && (
+                  <p className="text-xs text-muted-foreground wrap-anywhere">{error}</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
+        {!accountsLoading &&
+          !accountsError &&
+          !error &&
+          selected &&
+          !verified &&
+          !accessChecking && (
+            <p className="text-xs text-muted-foreground">{t("driveAccessNotVerified")}</p>
+          )}
+        {accountsLoading && (
+          <p role="status" className="text-xs text-muted-foreground">
+            {ui.accountsLoading}
           </p>
         )}
-        {!error && selected && !verified && !accessChecking && (
-          <p className="text-xs text-muted-foreground">{t("driveAccessNotVerified")}</p>
+        {!accountsLoading && accountsError && (
+          <div className="grid gap-2">
+            <p role="status" className="text-ui-body text-destructive wrap-anywhere">
+              {accountsError}
+            </p>
+            {onRetryAccounts && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-self-start"
+                disabled={busy}
+                onClick={onRetryAccounts}
+              >
+                {t("retryDriveAccess")}
+              </Button>
+            )}
+          </div>
         )}
-        {accounts.length === 0 && (
+        {accounts.length === 0 && !accountsLoading && !accountsError && (
           <Button
             variant="outline"
             size="sm"
@@ -156,20 +216,34 @@ export function DriveBackupSettings({
             {t("connectGoogle")}
           </Button>
         )}
-        {selected && !verified && !accessChecking && error && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="justify-self-start"
-            disabled={busy}
-            onClick={onRetryAccess}
-          >
-            {t("retryDriveAccess")}
-          </Button>
+        {!accountsLoading && !accountsError && selected && !verified && !accessChecking && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="justify-self-start"
+              disabled={busy}
+              onClick={onRetryAccess}
+            >
+              {t("retryDriveAccess")}
+            </Button>
+            {onReconnect && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={busy || !configured || accountsLoading || !!accountsError}
+                onClick={onReconnect}
+              >
+                {ui.reconnect}
+              </Button>
+            )}
+          </div>
         )}
-        {!configured && <p className="text-xs text-muted-foreground">{t("oauthFirst")}</p>}
+        {configured === false && !accountsLoading && !accountsError && (
+          <p className="text-ui-body text-muted-foreground">{t("oauthFirst")}</p>
+        )}
       </div>
-      {accounts.length > 0 && (
+      {accounts.length > 0 && (verified || working || last || failed.length > 0 || attention) && (
         <section
           data-ui="backupProgress"
           className="flex min-w-0 flex-wrap items-center justify-between gap-3"
@@ -178,7 +252,7 @@ export function DriveBackupSettings({
             <div
               role="status"
               aria-live="polite"
-              className="grid min-w-0 flex-1 basis-40 gap-1 text-xs leading-5 wrap-anywhere"
+              className="grid min-w-0 flex-1 basis-40 gap-1 text-ui-body wrap-anywhere"
             >
               {working ? (
                 <p className="flex items-center gap-2">
@@ -194,7 +268,7 @@ export function DriveBackupSettings({
                   </span>
                 </p>
               ) : last ? (
-                <p className="text-muted-foreground">
+                <p className="text-ui-label leading-relaxed text-muted-foreground">
                   {ui.lastBackup.replace("{time}", new Date(last).toLocaleString(locale))}
                 </p>
               ) : null}
@@ -203,34 +277,36 @@ export function DriveBackupSettings({
                   {ui.failed.replace("{count}", String(failed.length))}
                 </p>
               )}
-              {attention && <p className="text-destructive">{ui.needsAttention}</p>}
+              {attention && <p className="text-ui-body text-destructive">{ui.needsAttention}</p>}
             </div>
           )}
-          <div className="flex flex-wrap gap-2">
-            <ActionFeedbackButton
-              label={t("backupExisting")}
-              busyLabel={ui.buttonBusy}
-              successLabel={ui.buttonSuccess}
-              data-ui="backup-existing-button"
-              busy={!!phase && activeFeedback?.action === "backup"}
-              success={!!activeFeedback?.success && activeFeedback.action === "backup"}
-              disabled={busy || working || !verified}
-              onClick={onBackup}
-            />
-            {(failed.length > 0 ||
-              (activeFeedback?.action === "retry" && (!!phase || activeFeedback.success))) && (
+          {verified && (
+            <div className="flex flex-wrap gap-2">
               <ActionFeedbackButton
-                label={ui.retryFailed}
+                label={t("backupExisting")}
                 busyLabel={ui.buttonBusy}
                 successLabel={ui.buttonSuccess}
-                data-ui="backup-retry-button"
-                busy={!!phase && activeFeedback?.action === "retry"}
-                success={!!activeFeedback?.success && activeFeedback.action === "retry"}
-                disabled={busy || working || !verified || failed.length === 0}
-                onClick={onRetryFailed}
+                data-ui="backup-existing-button"
+                busy={!!phase && activeFeedback?.action === "backup"}
+                success={!!activeFeedback?.success && activeFeedback.action === "backup"}
+                disabled={busy || working || !verified}
+                onClick={onBackup}
               />
-            )}
-          </div>
+              {(failed.length > 0 ||
+                (activeFeedback?.action === "retry" && (!!phase || activeFeedback.success))) && (
+                <ActionFeedbackButton
+                  label={ui.retryFailed}
+                  busyLabel={ui.buttonBusy}
+                  successLabel={ui.buttonSuccess}
+                  data-ui="backup-retry-button"
+                  busy={!!phase && activeFeedback?.action === "retry"}
+                  success={!!activeFeedback?.success && activeFeedback.action === "retry"}
+                  disabled={busy || working || !verified || failed.length === 0}
+                  onClick={onRetryFailed}
+                />
+              )}
+            </div>
+          )}
         </section>
       )}
       {accounts.length > 0 && (
@@ -279,25 +355,115 @@ export function DriveBackupSettings({
           {records.length > 0 && (
             <AccordionItem value="history" className="border-0">
               <AccordionTrigger className="gap-2 py-2 text-xs text-muted-foreground hover:text-foreground">
-                {ui.history}
+                {ui.history} · {records.length}
               </AccordionTrigger>
               <AccordionContent className="pb-2">
-                <ul className="grid gap-2 pt-2 text-xs">
-                  {records.map(job => (
-                    <li key={job.id} className="grid min-w-0 gap-1">
-                      <span className="wrap-anywhere">{job.sourceTitle}</span>
-                      <span className="text-muted-foreground">{status(job)}</span>
-                      {job.backup?.error && (
-                        <p className="text-destructive wrap-anywhere">{job.backup.error}</p>
-                      )}
-                    </li>
+                <ul className="min-w-0" data-ui="backup-history-current">
+                  {currentRecords.map(job => (
+                    <BackupHistoryRow key={job.id} job={job} locale={locale} />
                   ))}
                 </ul>
+                {retiredRecords.length > 0 && (
+                  <Accordion type="multiple" className="mt-2">
+                    <AccordionItem value="retired" className="border-0">
+                      <AccordionTrigger className="gap-2 py-2 text-xs text-muted-foreground hover:text-foreground">
+                        {ui.retiredGroup.replace("{count}", String(retiredRecords.length))}
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-0">
+                        <ul className="min-w-0" data-ui="backup-history-retired">
+                          {retiredRecords.map(job => (
+                            <BackupHistoryRow key={job.id} job={job} locale={locale} />
+                          ))}
+                        </ul>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
               </AccordionContent>
             </AccordionItem>
           )}
         </Accordion>
       )}
     </section>
+  );
+}
+
+function BackupHistoryRow({ job, locale }: { job: JobSummary; locale: UiLocale }) {
+  const ui = backupSettingsCopy(locale),
+    notice = libraryNoticeCopy(locale);
+  const [expanded, setExpanded] = useState(false);
+  const retired = isRetiredBackup(job),
+    status = job.backup!.status;
+  const Icon = retired
+    ? Archive
+    : status === "backed-up"
+      ? CircleCheck
+      : status === "uploading"
+        ? LoaderCircle
+        : status === "pending"
+          ? Clock3
+          : TriangleAlert;
+  const label = retired
+    ? ui.retired
+    : status === "backed-up"
+      ? ui.saved
+      : status === "pending"
+        ? ui.queued
+        : status === "uploading"
+          ? ui.uploading
+          : status === "conflict"
+            ? ui.conflict
+            : status === "paused"
+              ? ui.paused
+              : ui.needsAttention;
+  const failed = !retired && ["failed", "conflict"].includes(status);
+  return (
+    <li
+      className="flex min-w-0 items-start gap-2.5 border-b border-border py-3 last:border-0"
+      data-ui="backup-history-row"
+    >
+      <Icon
+        aria-hidden="true"
+        className={
+          "mt-0.5 size-4 shrink-0 " +
+          (failed ? "text-destructive" : retired ? "text-muted-foreground" : "text-primary")
+        }
+      />
+      <div className="grid min-w-0 flex-1 gap-1">
+        <p
+          className="line-clamp-2 text-ui-heading font-semibold wrap-anywhere"
+          title={job.sourceTitle}
+        >
+          {job.sourceTitle}
+        </p>
+        <p
+          className={
+            failed
+              ? "text-ui-body text-destructive"
+              : "text-ui-label leading-relaxed text-muted-foreground"
+          }
+        >
+          {label}
+        </p>
+        {!retired && job.backup?.error && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto min-h-0 justify-self-start px-0 py-1 text-xs text-muted-foreground"
+              aria-expanded={expanded}
+              onClick={() => setExpanded(value => !value)}
+            >
+              {expanded ? notice.hideDetails : notice.details}
+            </Button>
+            {expanded && (
+              <p className="text-xs leading-5 text-muted-foreground wrap-anywhere">
+                {job.backup.error}
+              </p>
+            )}
+          </>
+        )}
+      </div>
+    </li>
   );
 }

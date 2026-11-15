@@ -11,8 +11,10 @@
     "fixedSourcePassed": 28,
     "identityPassed": 28,
     "coveragePassed": 27,
-    "semanticPassed": 21,
-    "accepted": 20
+    "semanticPassed": 22,
+    "accepted": 21,
+    "semanticFailed": 5,
+    "semanticNeedsReview": 1
   },
   "freshCases": 24,
   "reusedCases": 4,
@@ -180,9 +182,9 @@
       "coverage": "passed",
       "semantic": "failed",
       "accepted": false,
-      "review": "reviews/fr-normal-transfer-automatic.json",
+      "review": "reassessment/fr-normal-transfer-automatic.json",
       "errors": 1,
-      "warnings": 1,
+      "warnings": 2,
       "origin": "fresh_matrix_run"
     },
     {
@@ -365,10 +367,10 @@
       "fixedSource": "passed",
       "identity": "passed",
       "coverage": "passed",
-      "semantic": "failed",
-      "accepted": false,
-      "review": "reviews/th-uncertainty-quote-topic-automatic.json",
-      "errors": 1,
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reassessment/th-uncertainty-quote-topic-automatic.json",
+      "errors": 0,
       "warnings": 1,
       "origin": "fresh_matrix_run"
     },
@@ -501,12 +503,13 @@
       "fixedSource": "passed",
       "identity": "passed",
       "coverage": "passed",
-      "semantic": "failed",
+      "semantic": "needs_review",
       "accepted": false,
-      "review": "reviews/zh-CN-uncertainty-quote-topic-automatic.json",
-      "errors": 1,
+      "review": "reassessment/zh-CN-uncertainty-quote-topic-automatic.json",
+      "errors": 0,
       "warnings": 0,
-      "origin": "fresh_matrix_run"
+      "origin": "fresh_matrix_run",
+      "pendingIssues": 1
     }
   ],
   "limits": [
@@ -514,6 +517,13 @@
     "Failed model attempts may not be stored in execution.calls; recordedCalls is the observable count, not a guarantee of total HTTP/provider attempts.",
     "The runner does not preserve rejected intermediate candidate/teaching payloads or all successful-repair trigger details.",
     "Text-only AI editorial review; no audio, teacher/native-speaker certification or learning-effect measurement.",
-    "No installed Host update, personal Chrome/video acceptance, deployment or publication."
-  ]
+    "No installed Host update, personal Chrome/video acceptance, deployment or publication.",
+    "Reassessment changes editorial judgments only. Pending semantic findings remain unaccepted. Initial review files and acceptance snapshot are preserved; previously accepted cases were not independently re-reviewed."
+  ],
+  "reassessment": {
+    "record": "reassessment/decisions.json",
+    "scope": "The eight initially unaccepted cases only; previous passes are carried forward, not independently re-reviewed.",
+    "reviewerIndependence": "Same Codex reviewer, unblinded; reference-backed reassessment is not an independent second opinion.",
+    "qualityImprovementClaim": false
+  }
 }

@@ -3,6 +3,7 @@ import { notifyAnalysisComplete, notifyLessonOutcome } from "./native/analysis-n
 import { fetchNetflixCaptionText } from "./video/netflix-caption-fetch";
 import { validateNetflixCaptionSender } from "./video/netflix-caption-sender";
 import { installGenerationController } from "./native/generation-controller";
+import { installSpeechDownloadController } from "./native/speech-download-controller";
 
 chrome.runtime.onMessage.addListener((incoming: unknown, sender, respond) => {
   if (
@@ -63,8 +64,8 @@ void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((
 });
 
 // Long-running generation must belong to the worker, never to the Side Panel.
-if ("onConnect" in chrome.runtime)
-  installGenerationController(
+if ("onConnect" in chrome.runtime) {
+  const gateway = installGenerationController(
     chrome.runtime,
     (jobId, title, documentId, kind) => {
       void notifyAnalysisComplete(jobId, title, documentId, kind).catch(() => {
@@ -75,6 +76,8 @@ if ("onConnect" in chrome.runtime)
       void notifyLessonOutcome(jobId, title, outcome).catch(() => {});
     },
   );
+  installSpeechDownloadController(gateway);
+}
 
 // Cache the destination window before the click to keep sidePanel.open inside the user gesture.
 let notificationWindowId: number | undefined;

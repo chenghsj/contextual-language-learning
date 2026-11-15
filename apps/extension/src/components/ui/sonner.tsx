@@ -17,6 +17,12 @@ const Toaster = ({ theme = "system", toastOptions, ...props }: ToasterProps) => 
         cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
       },
       ...toastOptions,
+      style: {
+        fontFamily: "var(--font-sans)",
+        fontSize: "var(--text-ui-body)",
+        lineHeight: "var(--text-ui-body--line-height)",
+        ...toastOptions?.style,
+      },
     }}
     {...props}
   />

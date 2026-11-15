@@ -1,0 +1,30 @@
+{
+  "evidence": "saved_generation_records_verified",
+  "sourceDrift": ["apps/local-host/scripts/learning-points-quality.ts", "package.json"],
+  "recordedSourceMatchesWorkspace": false,
+  "observations": {
+    "generatedCases": 3,
+    "structurallyValidated": 3,
+    "completeSourceCoverage": 3,
+    "teachingTargetsExercised": 3,
+    "teachingTargetsNotExercised": 0,
+    "editorialNotes": 3
+  },
+  "contentQuality": "not_scored",
+  "editorialNotesBlockBrowserTesting": false,
+  "installedBrowserAcceptance": "not_performed",
+  "usage": {
+    "recordedCalls": 9,
+    "traceRequests": 9,
+    "traceResponses": 9,
+    "structuralRepairs": 0,
+    "callsWithoutUsage": 0,
+    "reportedTokens": {
+      "input": 29196,
+      "output": 26019,
+      "reasoning": 21248
+    },
+    "reasoningIncludedInOutput": true
+  },
+  "modelCallsStartedByVerifier": 0
+}

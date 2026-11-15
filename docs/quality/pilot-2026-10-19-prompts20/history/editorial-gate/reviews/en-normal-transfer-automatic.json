@@ -1,0 +1,32 @@
+{
+  "case": "en-normal-transfer-automatic",
+  "document": "batch-1/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/47e8d9c4-15e0-4d82-8f0b-004f4f159921.json",
+  "documentHash": "4acb74f72db1457091df7b6efd3a14e998d3afad1f5f85284ebf99c03232130c",
+  "reviewer": "Same unblinded Codex source/editorial reviewer; not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "All source translations, contexts/titles, units/chunks, points, source citations, patterns, invented examples and any available written readings",
+      "result": "All source turns and teaching citations are retained. Be about to is explained as imminent intention, without claiming an action already in progress or a necessarily interrupted departure. Still receives a qualified general pragmatic explanation rather than an assertion of the actor actual emotion. Both invented situations match their dialogue, actors and translations. No optional readings are supplied. Two nonblocking lexical-scope warnings remain."
+    }
+  ],
+  "targets": [],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "lexical_disambiguation",
+      "path": "/sections/0/translations/1/text",
+      "quote": "你打電話來的時候我正準備要走。",
+      "description": "Called is translated as a telephone call. That is a natural reading but the source also permits calling out; the medium is not explicitly established. This keeps the same nonblocking lexical ambiguity treatment as the preceding English controls."
+    },
+    {
+      "severity": "warning",
+      "type": "title_precision",
+      "path": "/sections/0/title",
+      "quote": "詢問滯留原由與請求稍候",
+      "description": "滯留 can suggest being delayed or unable to leave more strongly than still here establishes. It can also be read broadly as remaining, so this is a precision warning rather than a definite event error. A neutral title such as 詢問停留原因 would better preserve the source scope."
+    }
+  ],
+  "references": [],
+  "boundary": "One fresh output per frozen case. Target passed denotes actual teaching coverage; the case can still be pending or failed semantically. This does not resolve earlier disputed documents. No independent/native review, stability/causal estimate, audio, installed Host, real Chrome/video or learning-effect acceptance."
+}

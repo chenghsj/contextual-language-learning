@@ -1,0 +1,64 @@
+{
+  "case": "fr-normal-transfer-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-1/fr-normal-transfer-automatic/videos/fr-normal-transfer-automatic--f558dcaaa1b19fbd/8f7f9129-b094-45b8-9924-d4ce249a3306.json",
+  "documentHash": "4b7919081a52a878a42448c0afa40e3bb5fabdd341ba1df23382e4e6be9a8e6f",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "sentence meaning, timing and examples",
+      "result": "The complete translations retain the still-here question, imminent-departure timing and waiting request; Oui stays basic_only. The phone interpretation is plausible but not uniquely established by appeler; see the new non-blocking ambiguity warning. The invented examples have coherent roles and targets."
+    },
+    {
+      "scope": "contextual chunk meaning",
+      "result": "The first question is split into Pourquoi, es-tu and encore là. The es-tu chunk is glossed as 你是 although être is locative here; the correct whole-sentence translation does not repair that contextually incorrect local gloss."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "contextual_chunk_mistranslation",
+      "path": "/sections/0/utterances/0/chunks/1/meaning",
+      "quote": "你是",
+      "description": "In Pourquoi es-tu encore là ?, être expresses being/remain at a place. The isolated es-tu chunk is taught with the copular Chinese meaning 你是, which does not fit this source. Combined with the adjacent 還在這裡 gloss it gives an incorrect contextual construction.",
+      "suggestedDirection": "Keep es-tu encore là as a meaningful locative chunk with a contextual Chinese meaning, or supply a locative gloss rather than 是.",
+      "references": [
+        {
+          "title": "Dictionnaire de l’Académie française: être, 9e édition",
+          "url": "https://www.dictionnaire-academie.fr/article/A9E2986",
+          "checkedOn": "2026-10-19",
+          "supports": "III.A 列 être ici/là 的處所用法，支持在該來源語境中使用處所句意；是否以錯誤局部句意阻擋接受仍屬編輯判斷。"
+        }
+      ]
+    },
+    {
+      "severity": "warning",
+      "type": "overgeneralized_wording",
+      "path": "/points/0/explanation",
+      "quote": "突發動作",
+      "description": "The past-time construction need not involve a sudden event. Describe another event occurring at the relevant moment without making suddenness a required property; the main source timing explanation is otherwise correct."
+    },
+    {
+      "severity": "warning",
+      "type": "source_medium_ambiguity",
+      "path": "/sections/0/context/text",
+      "quote": "接到電話",
+      "description": "The context specifies a telephone call and the c2 translation uses 你打來. Appeler can also mean calling someone over; this text alone does not uniquely establish the medium. The phone reading remains a possible contextual interpretation, so this reassessment records a concern rather than claiming a proven mistranslation.",
+      "references": [
+        {
+          "title": "Dictionnaire de l’Académie française: appeler, 9e édition",
+          "url": "https://www.dictionnaire-academie.fr/article/A9A2203",
+          "checkedOn": "2026-10-19",
+          "supports": "II.1 同列呼喚與電話聯絡義；孤立的 appeler 未唯一確立電話媒介，也不能據此斷言電話解讀必錯。"
+        }
+      ]
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged.",
+  "reassessment": {
+    "originalReview": "reviews/fr-normal-transfer-automatic.json",
+    "disposition": "maintained_block",
+    "reason": "完整問題是處所用法。獨立可點選 chunk 的句意「你是」不符合該處語境，保留局部教學退件；不能僅因整句譯文正確就略過局部內容。另記電話媒介的非阻擋疑慮。",
+    "counterinterpretation": "若 chunk 僅被當成詞典式形態提示，be 的通用對應可被接受；目前欄位定義為 contextual meaning，採較嚴格的來源內句意要求。這個嚴重程度不是辭典直接認證。"
+  }
+}

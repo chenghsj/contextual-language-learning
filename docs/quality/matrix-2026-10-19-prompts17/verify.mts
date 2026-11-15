@@ -44,6 +44,38 @@ assert.equal(tree.status, 0);
 assert.equal(tree.stdout.trim(), context.sourceTree);
 assert.equal(acceptance.sourceCommit, context.sourceCommit);
 
+// Preserve initial judgments and make later editorial changes explicit.
+// These checks establish record consistency, not linguistic correctness.
+const reassessment = await json(new URL(acceptance.reassessment.record, folder));
+const initialAcceptanceUrl = new URL(reassessment.initialAcceptance, folder);
+assert.equal(await hash(initialAcceptanceUrl), reassessment.initialAcceptanceHash);
+const initialAcceptance = await json(initialAcceptanceUrl);
+assert.deepEqual(initialAcceptance.counts, reassessment.originalCounts);
+assert.equal(
+  await hash(new URL(reassessment.originalRubric, folder)),
+  reassessment.originalRubricHash,
+);
+const initiallyUnaccepted = initialAcceptance.cases.filter((c: any) => !c.accepted);
+assert.deepEqual(
+  new Set(reassessment.cases.map((c: any) => c.case)),
+  new Set(initiallyUnaccepted.map((c: any) => c.case)),
+);
+assert.equal(reassessment.cases.length, initiallyUnaccepted.length);
+for (const change of reassessment.cases) {
+  const original = initiallyUnaccepted.find((c: any) => c.case === change.case);
+  const current = acceptance.cases.find((c: any) => c.case === change.case);
+  assert.ok(original && current);
+  assert.equal(change.originalReview, original.review);
+  assert.equal(change.currentReview, current.review);
+  assert.equal(await hash(new URL(change.originalReview, folder)), change.originalReviewHash);
+  assert.equal(current.documentHash, original.documentHash);
+}
+for (const original of initialAcceptance.cases.filter((c: any) => c.accepted))
+  assert.deepEqual(
+    acceptance.cases.find((c: any) => c.case === original.case),
+    original,
+  );
+
 const baseline = new URL(context.baseline + "/", folder);
 const baselineContext = await json(new URL("run-context.json", baseline));
 const baselineAcceptance = await json(new URL("acceptance.json", baseline));
@@ -210,19 +242,27 @@ for (const batch of context.batches) {
     assert.equal(review.case, name);
     assert.equal(review.documentHash, check.documentHash);
     assert.equal(review.verdict, verdict.semantic);
-    for (const issue of review.issues)
+    for (const issue of review.issues) {
+      assert.ok(["error", "warning", "needs_review"].includes(issue.severity));
       assert.ok(
         (issue.paths ?? [issue.path]).some((path: string) =>
           JSON.stringify(at(document, path))?.includes(issue.quote),
         ),
         `Review quote absent: ${name}/${issue.quote}`,
       );
+    }
     assert.equal(verdict.errors, review.issues.filter((i: any) => i.severity === "error").length);
     assert.equal(
       verdict.warnings,
       review.issues.filter((i: any) => i.severity === "warning").length,
     );
-    if (document) assert.equal(review.verdict, verdict.errors ? "failed" : "passed");
+    const pendingIssues = review.issues.filter((i: any) => i.severity === "needs_review").length;
+    assert.equal(verdict.pendingIssues ?? 0, pendingIssues);
+    if (document)
+      assert.equal(
+        review.verdict,
+        verdict.errors ? "failed" : pendingIssues ? "needs_review" : "passed",
+      );
     assert.equal(
       verdict.accepted,
       !!document && check.coverage === "passed" && review.verdict === "passed",
@@ -287,6 +327,8 @@ const counts = {
   identityPassed: rows.filter(r => r.identity === "passed").length,
   coveragePassed: rows.filter(r => r.coverage === "passed").length,
   semanticPassed: rows.filter(r => r.semantic === "passed").length,
+  semanticFailed: rows.filter(r => r.semantic === "failed").length,
+  semanticNeedsReview: rows.filter(r => r.semantic === "needs_review").length,
   accepted: rows.filter(r => r.accepted).length,
 };
 assert.deepEqual(acceptance.counts, counts);
@@ -311,7 +353,9 @@ if (!historical)
 console.log(
   JSON.stringify(
     {
-      evidence: "verified",
+      evidence: "artifact_integrity_and_record_consistency_verified",
+      semanticEvaluation:
+        "Stored AI editorial judgments; not independently re-evaluated by this verifier",
       mode: historical ? "historical artifacts" : "current source and frozen artifacts",
       sourceDrift: drift,
       counts,

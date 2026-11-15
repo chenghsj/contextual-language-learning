@@ -1,0 +1,52 @@
+{
+  "sourceCommit": "939c401bbae44bbf8c1df3853dfabbe160ab8d74",
+  "promptVersion": "learning-points-prompts-17",
+  "scope": "Source-and-checkpoint reconstruction, not historical request capture. New run will capture actual arguments to generatePiText and returned text.",
+  "cases": [
+    {
+      "case": "es-uncertainty-quote-topic-automatic",
+      "compactTeaching": true,
+      "fullLanguageChecksIncluded": false,
+      "essentialLanguageChecksIncluded": false,
+      "generalSourceGroundingIncluded": true,
+      "exampleRoleCheckIncluded": true,
+      "findings": "Language-specific reporting/calling caution exists in LANGUAGE_CHECKS but is excluded by compact teaching. General source safeguards were included; omission alone does not prove causality."
+    },
+    {
+      "case": "fr-normal-transfer-automatic",
+      "compactTeaching": true,
+      "fullLanguageChecksIncluded": false,
+      "essentialLanguageChecksIncluded": false,
+      "generalSourceGroundingIncluded": true,
+      "exampleRoleCheckIncluded": true,
+      "findings": "General rules were included. Field-specific title/chunk/rule-scope instructions need clarification; observed non-compliance is not a missing transport rule."
+    },
+    {
+      "case": "it-uncertainty-quote-topic-automatic",
+      "compactTeaching": true,
+      "fullLanguageChecksIncluded": false,
+      "essentialLanguageChecksIncluded": false,
+      "generalSourceGroundingIncluded": true,
+      "exampleRoleCheckIncluded": true,
+      "findings": "General rules were included. Field-specific title/chunk/rule-scope instructions need clarification; observed non-compliance is not a missing transport rule."
+    },
+    {
+      "case": "vi-normal-transfer-automatic",
+      "compactTeaching": true,
+      "fullLanguageChecksIncluded": false,
+      "essentialLanguageChecksIncluded": false,
+      "generalSourceGroundingIncluded": true,
+      "exampleRoleCheckIncluded": true,
+      "findings": "Language-specific reporting/calling caution exists in LANGUAGE_CHECKS but is excluded by compact teaching. General source safeguards were included; omission alone does not prove causality."
+    },
+    {
+      "case": "zh-TW-uncertainty-quote-topic-automatic",
+      "compactTeaching": true,
+      "fullLanguageChecksIncluded": false,
+      "essentialLanguageChecksIncluded": false,
+      "generalSourceGroundingIncluded": true,
+      "exampleRoleCheckIncluded": true,
+      "findings": "General rules were included. Field-specific title/chunk/rule-scope instructions need clarification; observed non-compliance is not a missing transport rule."
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+IOS_BUNDLE_IDENTIFIER = dev.contextual.language-learning.reader
+GOOGLE_IOS_CLIENT_ID = UNCONFIGURED
+GOOGLE_IOS_REVERSED_CLIENT_ID = unconfigured-google-sign-in
+
+#include? "Local.xcconfig"

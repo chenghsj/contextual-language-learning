@@ -1,0 +1,36 @@
+{
+  "case": "es-report-transfer-variant-automatic",
+  "document": "batch-1/es-report-transfer-variant-automatic/videos/es-report-transfer-variant-automatic--db5d62f0c446b74f/9cc29808-2758-48ae-88a7-7c0f91d25abe.json",
+  "documentHash": "4c870fd0a8e69efbfaa411e4dc859c0406fb318e926bd6eca4d7380dcce175e9",
+  "reviewer": "Same unblinded Codex source/editorial reviewer; not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "All source translations, contexts, unit meanings/chunks, points, source citations, invented examples and available written readings",
+      "result": "The source preserves the unknown marker and leaves dijo subject unresolved or explicitly qualified as possibly Leo. Examples preserve singular voy as 我 and the plural vamos proposal as 我們. The former singular-actor-to-plural-asking mistranslation is absent. A plural recipient with singular asking actor is exercised by the separate new variant, not this output."
+    }
+  ],
+  "targets": [
+    {
+      "target": "example_singular_actor",
+      "result": "passed",
+      "path": "/reusableItems/2/examples/0/dialogue/2",
+      "reason": "voy a pedir is translated 那我請對方再說一次, preserving the asking actor."
+    },
+    {
+      "target": "singular_asking_with_plural_recipient",
+      "result": "not_exercised",
+      "reason": "No new example pairs singular asking with plural nos recipients here; the new actor-recipient variant does."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "level_economy",
+      "path": "/points/2/title",
+      "quote": "Todavía no 的簡短回應用法",
+      "description": "A separate point and reusable item for a basic short response may offer limited additional value at B1. It is accurate in this context and does not block acceptance."
+    }
+  ],
+  "boundary": "One fresh output per frozen case. Missing optional teaching targets/readings do not count as exercised. No stability/causal estimate, actual audio, installed Host, real Chrome/video or learning-effect acceptance."
+}

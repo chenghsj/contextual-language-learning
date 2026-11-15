@@ -36,7 +36,7 @@ export function SubtitleImport({
   const pasteId = useId();
   return (
     <div className="my-3 grid gap-3">
-      <p className="text-sm text-muted-foreground">{copy.hint}</p>
+      <p className="text-ui-body text-muted-foreground">{copy.hint}</p>
       <Input
         ref={fileInput}
         type="file"
@@ -61,7 +61,7 @@ export function SubtitleImport({
           </TabsTrigger>
         </TabsList>
         <TabsContent value="file" className="grid gap-3">
-          <p className="text-xs text-muted-foreground">{copy.fileHint}</p>
+          <p className="text-ui-label leading-relaxed text-muted-foreground">{copy.fileHint}</p>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"

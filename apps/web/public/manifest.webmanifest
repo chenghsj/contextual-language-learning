@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "Contextual Language Learning",
+  "short_name": "學習內容庫",
+  "description": "從 Google Drive 閱讀教材與收藏，觀看 YouTube 影片，並離線閱讀已下載內容。",
+  "lang": "zh-Hant",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf9f5",
+  "theme_color": "#c96442",
+  "categories": ["education"],
+  "icons": [
+    { "src": "/icons/icon192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    {
+      "src": "/icons/icon-maskable512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

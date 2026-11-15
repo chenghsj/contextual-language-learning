@@ -1,0 +1,25 @@
+{
+  "case": "zh-TW-uncertainty-quote-topic-automatic",
+  "document": "batch-1/zh-TW-uncertainty-quote-topic-automatic/videos/zh-TW-uncertainty-quote-topic-automatic--55559a73cb5cf209/16ce13fd-9171-4db9-be82-de31f755769b.json",
+  "documentHash": "50dee863017c8597fb74a868b3a801520dc69abe42c04169c54c0af64ca721a3",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "needs_review",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The former document-sending versus meeting-notification mismatch is absent. The new example confirms sending a meeting notice and the reply confirms that same act; other examples are coherent. ミオ and [???] keep their spelling and have no guessed reading. The quotation explanation raises the same generic-versus-specific reported-role question already left pending in the prompts-17 Simplified Chinese reassessment."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "needs_review",
+      "type": "reported_role_explanation_scope",
+      "path": "/points/1/explanation",
+      "quote": "轉述自他人的發言",
+      "description": "The explanation describes 是這麼說的 as reporting another person’s speech. The source leaves the reporting subject unexpressed; the construction can also occur in a self-report. This may be generic teaching shorthand rather than a concrete attribution. Apply the same pending treatment as the earlier Simplified Chinese dispute: independent editorial adjudication is needed before accepting, rather than calling it a proven new identity error.",
+      "counterinterpretation": "A generic reporting explanation may reasonably describe a quoted other person; a more neutral possible rewrite alone does not prove this wording wrong.",
+      "relatedPriorReview": "../../matrix-2026-10-19-prompts17/reassessment/zh-CN-uncertainty-quote-topic-automatic.json"
+    }
+  ],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

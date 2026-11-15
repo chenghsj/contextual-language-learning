@@ -1,0 +1,18 @@
+{
+  "baselineFiles": 498,
+  "preexistingFilesChangedWithinScope": [
+    ".prettierignore",
+    "apps/local-host/src/generation/learning-points-pipeline.test.ts",
+    "apps/local-host/src/generation/learning-points-rules.ts",
+    "apps/local-host/src/generation/new-workflow.test.ts",
+    "apps/local-host/src/storage/file.test.ts",
+    "docs/quality/README.md",
+    "docs/quality/pilot-2026-10-19-prompts19/README.md",
+    "packages/core/src/schema.ts"
+  ],
+  "unexpectedPreexistingChanges": [],
+  "newUntrackedOutsideEvidence": [],
+  "stagedFiles": [],
+  "frozenRuntimeTestAndPlanHashesMatch": true,
+  "scope": "Before-state SHA comparison of preexisting dirty/untracked files; only scoped implementation/tests and evidence indexes changed. No commits or installation."
+}

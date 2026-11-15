@@ -1,0 +1,156 @@
+{
+  "light": [
+    {
+      "gap": "8px",
+      "items": [
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 272
+        },
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 272
+        },
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 272
+        },
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 272
+        }
+      ],
+      "pageOverflow": false,
+      "viewport": {
+        "height": 320,
+        "width": 320
+      }
+    },
+    {
+      "gap": "8px",
+      "items": [
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 357
+        },
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 357
+        },
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 357
+        },
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 357
+        }
+      ],
+      "pageOverflow": false,
+      "viewport": {
+        "height": 760,
+        "width": 390
+      }
+    },
+    {
+      "gap": "8px",
+      "items": [
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 367
+        },
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 367
+        },
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 367
+        },
+        {
+          "height": 68.75,
+          "overflow": false,
+          "tag": "BUTTON",
+          "variant": "outline",
+          "width": 367
+        }
+      ],
+      "pageOverflow": false,
+      "viewport": {
+        "height": 760,
+        "width": 555
+      }
+    }
+  ],
+  "darkJapanese": {
+    "items": [
+      {
+        "height": 68.75,
+        "overflow": false,
+        "text": "一般言語・外観・通知・読み上げ",
+        "width": 287
+      },
+      {
+        "height": 68.75,
+        "overflow": false,
+        "text": "AI とモデルOpenAI · fixture-model",
+        "width": 287
+      },
+      {
+        "height": 88.25,
+        "overflow": false,
+        "text": "教材とバックアップローカル保存・Google Drive バックアップ",
+        "width": 287
+      },
+      {
+        "height": 68.75,
+        "overflow": false,
+        "text": "ローカルサービスNative Host・ローカル連携",
+        "width": 287
+      }
+    ],
+    "sheet": {
+      "height": 560,
+      "width": 320,
+      "x": 0,
+      "y": 0
+    },
+    "viewport": {
+      "height": 560,
+      "width": 320
+    }
+  }
+}

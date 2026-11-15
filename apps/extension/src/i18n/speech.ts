@@ -1,3 +1,4 @@
+import type { SearchableOption } from "../lib/searchable-options";
 import type { UiLocale } from "./messages";
 import { explanationLanguageName, learningLanguageOptions } from "./preferences";
 const copy = {
@@ -158,27 +159,38 @@ const copy = {
 } satisfies Record<UiLocale, Record<string, string>>;
 export const speechCopy = (locale: UiLocale) => copy[locale];
 /** Read-aloud languages include Chinese independently of the lesson generation profile. */
-export function speechLanguageOptions(locale: UiLocale) {
+export function speechLanguageOptions(locale: UiLocale): SearchableOption[] {
   const collator = new Intl.Collator(locale);
-  return [
-    ...learningLanguageOptions(locale).filter(
-      option => option.value !== "zh-TW" && option.value !== "zh-CN",
-    ),
-    { value: "zh-TW", label: explanationLanguageName("zh-TW", locale) },
-    { value: "zh-CN", label: explanationLanguageName("zh-CN", locale) },
-  ].sort((a, b) => collator.compare(a.label, b.label) || a.value.localeCompare(b.value));
+  return learningLanguageOptions(locale)
+    .map(option => ({
+      ...option,
+      label: explanationLanguageName(option.value, locale),
+    }))
+    .sort((a, b) => collator.compare(a.label, b.label) || a.value.localeCompare(b.value));
 }
 export const speechSamples: Record<string, string> = {
   "zh-TW": "我們一起學習新的事物吧。",
   "zh-CN": "我们一起学习新的事物吧。",
+  "zh-HK": "我哋一齊學啲新嘢啦。",
+  ar: "لنتعلم شيئًا جديدًا معًا.",
+  da: "Lad os lære noget nyt sammen.",
   en: "Let's learn something new together.",
   ja: "一緒に新しいことを学びましょう。",
   ko: "함께 새로운 것을 배워 봅시다.",
   es: "Aprendamos algo nuevo juntos.",
   fr: "Apprenons quelque chose de nouveau ensemble.",
+  fi: "Opitaan yhdessä jotain uutta.",
   de: "Lernen wir gemeinsam etwas Neues.",
   it: "Impariamo qualcosa di nuovo insieme.",
+  he: "בואו נלמד משהו חדש ביחד.",
+  kk: "Бірге жаңа нәрсе үйренейік.",
+  lt: "Mokykimės ko nors naujo kartu.",
+  nb: "La oss lære noe nytt sammen.",
+  nl: "Laten we samen iets nieuws leren.",
   pt: "Vamos aprender algo novo juntos.",
+  ru: "Давайте вместе узнаем что-нибудь новое.",
+  sv: "Låt oss lära oss något nytt tillsammans.",
+  tr: "Birlikte yeni bir şey öğrenelim.",
   id: "Mari belajar sesuatu yang baru bersama.",
   th: "มาเรียนรู้สิ่งใหม่ด้วยกัน",
   ms: "Mari belajar sesuatu yang baharu bersama.",

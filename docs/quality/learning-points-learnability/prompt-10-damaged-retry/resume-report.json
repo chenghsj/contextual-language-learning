@@ -1,0 +1,173 @@
+{
+  "case": "ja-damaged-negation-automatic",
+  "status": "generated",
+  "resumed": true,
+  "durationMs": 119486,
+  "id": "b18a9acc-247a-4b7a-8598-3e29aed2e660",
+  "execution": {
+    "workflowVersion": "learning-points-v6-3",
+    "promptVersion": "learning-points-prompts-10",
+    "schemaVersion": "6",
+    "languageStrategyVersion": "learning-language-strategies-3",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "inputFingerprint": "fb23ac43b2d961dba683d57f16c9a75ba893f279ed5877dd035146bb0ed8372e",
+    "provider": "antigravity",
+    "modelId": "gemini-3.7-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:59:10.430Z",
+        "usage": {
+          "input": 1876,
+          "output": 4522,
+          "reasoning": 4267
+        }
+      },
+      {
+        "step": "window-0-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:59:28.808Z",
+        "usage": {
+          "input": 1940,
+          "output": 2169,
+          "reasoning": 1895
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:59:31.688Z",
+        "usage": {
+          "input": 2058,
+          "output": 36,
+          "reasoning": 0
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T07:00:32.589Z",
+        "usage": {
+          "input": 5985,
+          "output": 8188,
+          "reasoning": 7861
+        }
+      },
+      {
+        "step": "s0-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T07:01:22.490Z",
+        "usage": {
+          "input": 6905,
+          "output": 8188,
+          "reasoning": 7864
+        }
+      },
+      {
+        "step": "s0-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T07:02:17.504Z",
+        "usage": {
+          "input": 5917,
+          "output": 8188,
+          "reasoning": 7864
+        }
+      },
+      {
+        "step": "s0-0-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T07:03:15.634Z",
+        "usage": {
+          "input": 6769,
+          "output": 8188,
+          "reasoning": 7617
+        }
+      },
+      {
+        "step": "s0-0-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T07:03:56.474Z",
+        "usage": {
+          "input": 5885,
+          "output": 5532,
+          "reasoning": 4393
+        }
+      },
+      {
+        "step": "s0-0-1",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T07:05:46.333Z",
+        "usage": {
+          "input": 2039,
+          "output": 7197,
+          "reasoning": 6275,
+          "cacheRead": 4524
+        }
+      },
+      {
+        "step": "s0-1",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T07:06:42.119Z",
+        "usage": {
+          "input": 7006,
+          "output": 7683,
+          "reasoning": 4696
+        }
+      },
+      {
+        "step": "s0-1-pronunciation-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T07:06:46.820Z",
+        "usage": {
+          "input": 2075,
+          "output": 446,
+          "reasoning": 414
+        }
+      }
+    ],
+    "pronunciationDiagnostics": [
+      {
+        "id": "s0-1:/pronunciations/1:all:empty_annotation",
+        "batchId": "s0-1",
+        "sceneId": "7304331b-cbc7-40de-9fd2-8ac728c330cc",
+        "path": "/pronunciations/1",
+        "cueId": "c4",
+        "code": "empty_annotation",
+        "action": "repaired"
+      }
+    ]
+  }
+}

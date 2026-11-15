@@ -38,12 +38,12 @@
 - `pnpm test`：**404 個主測試 + 7 個 Host／打包測試 + 5 個套件管理測試 = 416/416** 通過。涵蓋佇列持久化與標準／自訂共用執行、重複續跑不污染已排隊工作、取消、失敗後繼續、chunk 傳送不被新任務打斷、SDK 安全重試、草稿、原始字幕、通知 fallback、失效選項與既有資料。
 - `pnpm typecheck`、`pnpm format:check`、`pnpm build` 通過；保留既有 bundle size 警告。
 - `node apps/local-host/scripts/smoke-host.mjs` 對實際 production Host bundle 傳送 Native Messaging frames，使用隔離資料驗證 protocol 6、Pi catalog、V5/custom-v1 讀取、重複確認與文件操作。
-- `pnpm --filter @immersive/extension test:redesign-ui`：320／360／480px × Light／Dark，**6 組**通過。驗證手動開啟完成內容、生成新版本、閱讀不被替換、安全 Markdown、改名、匯出、Prompt 重用、刪除與四分類設定。
-- `pnpm --filter @immersive/extension test:ux-layout-ui`：320／417／640／900px × Light／Dark（高度 560px），另加 320／900px × Light／Dark（高度 320px、reduced-motion），**12 組**通過。覆蓋 Footer 和獨立捲動區邊界、字幕編輯與重取衝突、範本 CRUD、重載草稿、Sheet 寬度、焦點與無橫向溢出。
+- `pnpm --filter @contextual/extension test:redesign-ui`：320／360／480px × Light／Dark，**6 組**通過。驗證手動開啟完成內容、生成新版本、閱讀不被替換、安全 Markdown、改名、匯出、Prompt 重用、刪除與四分類設定。
+- `pnpm --filter @contextual/extension test:ux-layout-ui`：320／417／640／900px × Light／Dark（高度 560px），另加 320／900px × Light／Dark（高度 320px、reduced-motion），**12 組**通過。覆蓋 Footer 和獨立捲動區邊界、字幕編輯與重取衝突、範本 CRUD、重載草稿、Sheet 寬度、焦點與無橫向溢出。
 
 UI 使用實際 App 與 background controller，但影片、Host 回應與通知 API 是 fixture。Host／模型測試使用隔離資料與假 credentials。上述結果不等於已安裝 Side Panel、真實 Pi／Google 帳號、YouTube／Netflix 播放、Drive OAuth／上傳還原或 macOS 通知橫幅驗收。本輪沒有安裝／重載使用者的 Host、push 或發布。
 
 瀏覽器證據目錄（本機暫存，非可攜 artifact）：
 
-- `/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/immersive-redesign-ui-GvvUj8`
+- `/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/contextual-redesign-ui-GvvUj8`
 - `/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/cll-ux-layout-AUE4Zl`

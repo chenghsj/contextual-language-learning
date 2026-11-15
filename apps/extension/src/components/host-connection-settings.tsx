@@ -43,7 +43,7 @@ export function HostConnectionSettings({
       data-ui="hostConnection"
     >
       <div className="flex min-w-0 items-center justify-between gap-2">
-        <strong className="text-xs">{ui.title}</strong>
+        <strong className="text-ui-heading font-semibold">{ui.title}</strong>
         <span
           role="status"
           className={
@@ -63,10 +63,7 @@ export function HostConnectionSettings({
                 : ui.checking}
         </span>
       </div>
-      <Disclosure
-        className="min-w-0 [&_h3>button]:py-2 [&_h3>button]:text-xs"
-        title={<>{ui.name}</>}
-      >
+      <Disclosure className="min-w-0" triggerClassName="py-2" title={<>{ui.name}</>}>
         <p className="mt-2 leading-relaxed">{ui.help}</p>
       </Disclosure>
       {connected && compatible && (
@@ -75,24 +72,24 @@ export function HostConnectionSettings({
         </p>
       )}
       {connected && !versionMatches && (
-        <p className="text-xs text-destructive" role="status">
+        <p className="text-ui-body text-destructive" role="status">
           {ui.mismatch} {ui.version}: {version ?? "unknown"}
         </p>
       )}
       {connected && versionMatches && !protocolMatches && (
-        <p className="text-xs text-destructive" role="status">
+        <p className="text-ui-body text-destructive" role="status">
           {ui.protocolMismatch}
         </p>
       )}
       {connected && versionMatches && protocolMatches && !sdkMode && (
-        <p className="text-xs text-destructive" role="status">
+        <p className="text-ui-body text-destructive" role="status">
           {ui.unsupportedMode}
         </p>
       )}
       {checked && (!connected || !compatible) && (
         <div className="grid min-w-0 gap-3">
-          <strong className="text-xs">{ui.install}</strong>
-          <p className="text-xs leading-relaxed text-muted-foreground">
+          <strong className="text-ui-heading font-semibold">{ui.install}</strong>
+          <p className="text-ui-body text-muted-foreground">
             {downloadUrl ? ui.installerSteps : ui.localInstallerSteps}
           </p>
           {downloadUrl && (
@@ -100,13 +97,11 @@ export function HostConnectionSettings({
               {connected ? ui.downloadUpdate : ui.downloadInstaller}
             </Button>
           )}
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            {ui.installerAfterInstall}
-          </p>
+          <p className="text-ui-body text-muted-foreground">{ui.installerAfterInstall}</p>
         </div>
       )}
       {error && (
-        <p className="text-xs text-destructive break-all" role="status">
+        <p className="text-ui-body text-destructive break-all" role="status">
           {error}
         </p>
       )}
@@ -130,13 +125,14 @@ export function HostConnectionSettings({
         </p>
       )}
       <Disclosure
-        className="min-w-0 [&_h3>button]:py-2 [&_h3>button]:text-xs"
+        className="min-w-0"
+        triggerClassName="py-2"
         title={ui.uninstall}
         data-ui="hostUninstall"
       >
         <div className="grid min-w-0 gap-2 pt-2">
-          <p className="text-xs leading-relaxed">{ui.installerUninstall}</p>
-          <p className="text-xs leading-relaxed text-muted-foreground">{ui.uninstallEffects}</p>
+          <p className="text-ui-body">{ui.installerUninstall}</p>
+          <p className="text-ui-body text-muted-foreground">{ui.uninstallEffects}</p>
         </div>
       </Disclosure>
     </section>

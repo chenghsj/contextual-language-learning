@@ -1,0 +1,4 @@
+// Copy to Local.xcconfig after creating an iOS OAuth client for the bundle ID.
+IOS_BUNDLE_IDENTIFIER = dev.contextual.language-learning.reader
+GOOGLE_IOS_CLIENT_ID = REPLACE_WITH_IOS_CLIENT_ID
+GOOGLE_IOS_REVERSED_CLIENT_ID = REPLACE_WITH_REVERSED_IOS_CLIENT_ID

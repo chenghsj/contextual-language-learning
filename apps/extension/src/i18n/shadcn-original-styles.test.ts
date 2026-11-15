@@ -9,11 +9,13 @@ import test from "node:test";
  * Reference: integration commit 7b9249afa90dea8d5d2b525660c7dea26b9ecefc,
  * before the PR #69/#71 UI refactors. Hashes are derived from that commit's
  * className attributes and cva definitions, not unrelated protocol strings.
+ * Button motion intentionally uses transition-shadow; its other styles and variants
+ * retain the reference values.
  * A future intentional shadcn upgrade must be reviewed separately.
  */
 const originalStyleHashes = {
   "badge.tsx": "5607e8c5e08f644c2c9a0bbced126794f30287ba456900cc126fb0bd9022e3f6",
-  "button.tsx": "1ef753ce482bb4c3b327cd1082fcb4d5b28368521546f8f8159bd14e8adf4c66",
+  "button.tsx": "fecbfe6295b3e0c3b3d1f74d1f56396c5d4d071faa500aff2c906146b3331d9a",
   "card.tsx": "dbc4f91fba0284d9588e8f141109d5fcdc9a6650a0e5527069c2396a79a7ff39",
   "input.tsx": "4d50f69622595a1b94deca54cd6118d12904c116e19ed9172f3c535cd9eb4ffe",
   "select.tsx": "095b9c53f08dfc1281b4dfe8c6cca4344ce69044e2de9f8104ceeadf26a33c2f",
@@ -48,7 +50,10 @@ function styleHash(source: string): string {
 }
 
 test("style hashes ignore Select identifiers while detecting class and variant changes", async () => {
-  const select = await readFile(new URL("../components/ui/select.tsx", import.meta.url), "utf8");
+  const select = await readFile(
+    new URL("../../../../packages/ui/src/components/ui/select.tsx", import.meta.url),
+    "utf8",
+  );
   assert.equal(
     styleHash(select.replaceAll("__contextual_default_select_option__", "__renamed_option__")),
     styleHash(select),
@@ -57,7 +62,10 @@ test("style hashes ignore Select identifiers while detecting class and variant c
     styleHash(select.replace("flex h-9 w-full", "flex h-10 w-full")),
     styleHash(select),
   );
-  const button = await readFile(new URL("../components/ui/button.tsx", import.meta.url), "utf8");
+  const button = await readFile(
+    new URL("../../../../packages/ui/src/components/ui/button.tsx", import.meta.url),
+    "utf8",
+  );
   assert.notEqual(
     styleHash(button.replace('default: "h-9 px-4 py-2"', 'default: "h-10 px-4 py-2"')),
     styleHash(button),
@@ -66,7 +74,15 @@ test("style hashes ignore Select identifiers while detecting class and variant c
 
 test("all six shared shadcn wrappers retain their original styles and variants", async () => {
   for (const [file, expectedSha] of Object.entries(originalStyleHashes)) {
-    const source = await readFile(new URL("../components/ui/" + file, import.meta.url), "utf8");
+    const source = await readFile(
+      new URL(
+        file === "textarea.tsx"
+          ? "../components/ui/" + file
+          : "../../../../packages/ui/src/components/ui/" + file,
+        import.meta.url,
+      ),
+      "utf8",
+    );
     assert.equal(
       styleHash(source),
       expectedSha,

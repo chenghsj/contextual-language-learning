@@ -1,0 +1,49 @@
+{
+  "scope": "Frozen isolated runtime/dependencies and scoped tests; no model/installed browser acceptance.",
+  "regression": {
+    "command": "node --import tsx --test --test-concurrency=1 packages/core/src/*.test.ts apps/local-host/src/generation/*.test.ts apps/local-host/src/jobs/*.test.ts apps/local-host/src/storage/*.test.ts",
+    "tests": 207,
+    "passed": 207,
+    "failed": 0,
+    "log": "logs/regression.log"
+  },
+  "otherChecks": [
+    {
+      "name": "Three-workspace typecheck",
+      "log": "logs/typecheck.log",
+      "exitCode": 0
+    },
+    {
+      "name": "Quality runner and prepared/full verifier typecheck",
+      "log": "logs/tool-typecheck-complete.log",
+      "exitCode": 0
+    },
+    {
+      "name": "Extension and Host production build",
+      "log": "logs/build.log",
+      "exitCode": 0
+    },
+    {
+      "name": "Host stdio smoke in temporary home",
+      "log": "logs/host-smoke.log",
+      "exitCode": 0
+    },
+    {
+      "name": "Extension manifest and content assets",
+      "log": "logs/extension-assets.log",
+      "exitCode": 0
+    },
+    {
+      "name": "Historical prompts-19 read/record consistency",
+      "log": "logs/prompts19-historical.log",
+      "exitCode": 0
+    },
+    {
+      "name": "Three fixed requests preparation, no inference",
+      "log": "logs/prepare.log",
+      "exitCode": 0
+    }
+  ],
+  "buildNotes": "Existing large-bundle warnings remain. No personal Host installation or browser profile changed.",
+  "newModelCalls": 0
+}

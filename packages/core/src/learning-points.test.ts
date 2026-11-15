@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { pointsFixture } from "../test/learning-points-fixture";
 import {
   readLearningDocument,
+  currentLearningExecution,
+  readableLearningExecution,
   validateTeachingBatch,
   validateLearningDocumentV7,
   readerScene,
@@ -69,12 +71,17 @@ for (const legacy of [
   { promptVersion: "learning-points-prompts-14", qualityStrategyVersion: "program-validation-1" },
   { promptVersion: "learning-points-prompts-15", qualityStrategyVersion: "program-validation-2" },
   { promptVersion: "learning-points-prompts-16", qualityStrategyVersion: "program-validation-2" },
+  { promptVersion: "learning-points-prompts-17", qualityStrategyVersion: "program-validation-2" },
 ])
   test(`${legacy.promptVersion} documents remain readable without applying new teaching-only construction checks`, () => {
     const f = pointsFixture();
     f.document.profile.targetLanguage = "ja";
     f.document.profile.level = "N3";
-    Object.assign(f.document.execution!, legacy);
+    Object.assign(f.document.execution!, legacy, {
+      languageStrategyVersion: "learning-language-strategies-4",
+    });
+    assert.equal(currentLearningExecution(f.document.execution), false);
+    assert.equal(readableLearningExecution(f.document.execution), true);
     f.document.reusableItems[0].pattern = "[動詞て形省略い]てた？";
     const before = JSON.stringify(f.document);
     assert.deepEqual(readLearningDocument(f.document), f.document);
@@ -230,12 +237,12 @@ test("examples 1/2/3 keep exact count; source forms and frames have distinct tar
     );
   }
 });
-test("V4 checkpoints and protocol 11 retain version and counts", () => {
+test("V4 checkpoints and current protocol retain version and counts", () => {
   const { request, document } = pointsFixture();
   const job = createSceneJob({ ...request, outputSchemaVersion: 7 }, 1);
   assert.equal(job.schemaVersion, 5);
   assert.equal(JobSnapshotSchema.parse(job).schemaVersion, 5);
-  assert.equal(HOST_PROTOCOL_VERSION, 12);
+  assert.equal(HOST_PROTOCOL_VERSION, 19);
   const message = HostMessageSchema.parse({
     id: "library",
     type: "lessons",

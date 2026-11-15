@@ -1,0 +1,49 @@
+{
+  "sourceDirectory": "/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/cll-prompts18-h1qq1bzl/final-source",
+  "generationSnapshot": "run-context.json",
+  "scope": "Separate final-source verification: completed-lesson reading and explicit resumption of unfinished legacy checkpoints. The two model processes use the unchanged generation snapshot; fresh generation rules, prompts and stages are unchanged.",
+  "runtimeChanges": [
+    {
+      "path": "packages/core/src/schema.ts",
+      "generationHash": "ada6e3cc3d64e4a1c4e1580bcea9e653107335892b56a819a0d11cdb6e5c1d3e",
+      "finalHash": "6d4f181c576f7ebdc3ec69c0d9fe2b9819579a94c84f044a546b1bbecc146b66",
+      "reason": "Preserve completed language-strategy-4 lessons; upgrade only unfinished legacy work to current language/level identities while retaining the previous identity."
+    },
+    {
+      "path": "apps/local-host/src/jobs/manager.ts",
+      "generationHash": "82b253f14a57bb9fb1e4bd68415f0dd693e3243fa751ac65e26c805aef4c2a29",
+      "finalHash": "f5c154ae588493730a52d9271b1e837a930fda37920f2de7a0c405a16cd3fe03",
+      "reason": "Preserve completed language-strategy-4 lessons; upgrade only unfinished legacy work to current language/level identities while retaining the previous identity."
+    }
+  ],
+  "testChanges": [
+    "packages/core/src/learning-points.test.ts",
+    "apps/local-host/src/storage/file.test.ts",
+    "apps/local-host/src/generation/learning-points-pipeline.test.ts"
+  ],
+  "patch": "compatibility.patch",
+  "promptAndRulesUnchanged": true,
+  "checks": {
+    "regressionTests": {
+      "passed": 199,
+      "failed": 0,
+      "log": "logs/final-regression.log"
+    },
+    "typecheck": {
+      "exitCode": 0,
+      "log": "logs/final-typecheck.log"
+    },
+    "build": {
+      "exitCode": 0,
+      "log": "logs/final-build.log"
+    },
+    "hostSmoke": {
+      "exitCode": 0,
+      "log": "logs/final-host-smoke.log"
+    },
+    "extensionAssets": {
+      "exitCode": 0,
+      "log": "logs/final-extension-assets.log"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":34}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":40}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":33}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":4}]}],\"learningValue\":\"展示詢問原因、說明即將發生卻被中斷的動作（aller 的未完成過去時＋不定式），以及禮貌請求對方稍候的實用日常對話。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"「aller 的未完成過去時（j'allais）＋動詞原形」搭配「quand ＋ 複合過去時」，用來表達「正準備做某事時被突發事件打斷」。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c3\"],\"description\":\"動詞「patienter」在日常與服務場合中用來禮貌表示「請稍候」，比單純用「attendre」更具客氣語氣。\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\",\"c3\"],\"description\":\"比較疑問句的不同形式：主謂倒裝的「Pourquoi êtes-vous...」與語調上揚陳述句型的「Vous pouvez patienter...？」。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:36:31.471Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 8870.681249999994,
+    "usage": {
+      "input": 2516,
+      "output": 951,
+      "reasoning": 628
+    }
+  }
+}

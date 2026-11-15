@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":41}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":58}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":41}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":11}]}],\"learningValue\":\"展示指向未來的時間副詞子句中，虛擬式現在時（reciba）與虛擬式現在完成時（haya recibido）的體貌對比，以及協商確認的日常對話表達。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\",\"c2\"],\"description\":\"未來時間副詞子句中 cuando 後接虛擬式的用法，對比未完成體（reciba）與先時完成體（haya recibido）的語法意義\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c4\"],\"description\":\"口語中表達贊同或確認的慣用短語「De acuerdo」\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T15:08:22.952Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 11229.721292000002,
+    "usage": {
+      "input": 2704,
+      "output": 1177,
+      "reasoning": 925
+    }
+  }
+}

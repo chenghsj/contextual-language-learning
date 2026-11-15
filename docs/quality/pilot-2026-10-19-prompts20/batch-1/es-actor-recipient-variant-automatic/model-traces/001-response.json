@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":43}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":46}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":38}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":8}]}],\"learningValue\":\"這段對話展示日常協調與分工的常見句型，涵蓋「pedir que + 虛擬式」表達請求、「cuando + 虛擬式」引導將來時間子句，以及用「ir a + 原形動詞」說明打算進行的行動。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\"],\"description\":\"學習「pedir que + 虛擬現在式（envíen）」表達向他人提出請求的用法\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c3\"],\"description\":\"學習主要子句為未來式時，時間副詞子句以「cuando + 虛擬式（tenga）」表示尚未發生的將來時間\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c1\",\"c2\"],\"description\":\"學習「ir a + 原形動詞」（voy a pedir、vamos a revisar）表達近程計畫與分工協調\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T15:07:23.867Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 19921.337666,
+    "usage": {
+      "input": 2718,
+      "output": 2039,
+      "reasoning": 1729
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "previous": "prompts-19 frozen generation source",
+  "current": "prompts-20 frozen generation source",
+  "runtimeChanges": [
+    "apps/local-host/src/generation/learning-points-rules.ts",
+    "packages/core/src/schema.ts"
+  ],
+  "unchangedWorkflow": "learning-points-v7-1",
+  "unchangedQualityStrategy": "program-validation-3",
+  "unchangedLanguageStrategy": "learning-language-strategies-5",
+  "interpretation": "Shared teaching-scope instruction and execution-identity/read compatibility only. No new review/repair stage or deterministic grammar parser."
+}

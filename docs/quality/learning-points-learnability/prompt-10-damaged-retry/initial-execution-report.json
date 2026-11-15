@@ -1,0 +1,127 @@
+[
+  {
+    "case": "ja-damaged-negation-automatic",
+    "status": "failed",
+    "error": "AbortError: This operation was aborted",
+    "durationMs": 360045,
+    "execution": {
+      "workflowVersion": "learning-points-v6-3",
+      "promptVersion": "learning-points-prompts-10",
+      "schemaVersion": "6",
+      "languageStrategyVersion": "learning-language-strategies-3",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "inputFingerprint": "fb23ac43b2d961dba683d57f16c9a75ba893f279ed5877dd035146bb0ed8372e",
+      "provider": "antigravity",
+      "modelId": "gemini-3.7-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.7-flash",
+          "billing": "subscription",
+          "at": "2026-10-11T06:59:10.430Z",
+          "usage": {
+            "input": 1876,
+            "output": 4522,
+            "reasoning": 4267
+          }
+        },
+        {
+          "step": "window-0-repair",
+          "provider": "antigravity",
+          "modelId": "gemini-3.7-flash",
+          "billing": "subscription",
+          "at": "2026-10-11T06:59:28.808Z",
+          "usage": {
+            "input": 1940,
+            "output": 2169,
+            "reasoning": 1895
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.7-flash",
+          "billing": "subscription",
+          "at": "2026-10-11T06:59:31.688Z",
+          "usage": {
+            "input": 2058,
+            "output": 36,
+            "reasoning": 0
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.7-flash",
+          "billing": "subscription",
+          "at": "2026-10-11T07:00:32.589Z",
+          "usage": {
+            "input": 5985,
+            "output": 8188,
+            "reasoning": 7861
+          }
+        },
+        {
+          "step": "s0-repair",
+          "provider": "antigravity",
+          "modelId": "gemini-3.7-flash",
+          "billing": "subscription",
+          "at": "2026-10-11T07:01:22.490Z",
+          "usage": {
+            "input": 6905,
+            "output": 8188,
+            "reasoning": 7864
+          }
+        },
+        {
+          "step": "s0-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.7-flash",
+          "billing": "subscription",
+          "at": "2026-10-11T07:02:17.504Z",
+          "usage": {
+            "input": 5917,
+            "output": 8188,
+            "reasoning": 7864
+          }
+        },
+        {
+          "step": "s0-0-repair",
+          "provider": "antigravity",
+          "modelId": "gemini-3.7-flash",
+          "billing": "subscription",
+          "at": "2026-10-11T07:03:15.634Z",
+          "usage": {
+            "input": 6769,
+            "output": 8188,
+            "reasoning": 7617
+          }
+        },
+        {
+          "step": "s0-0-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.7-flash",
+          "billing": "subscription",
+          "at": "2026-10-11T07:03:56.474Z",
+          "usage": {
+            "input": 5885,
+            "output": 5532,
+            "reasoning": 4393
+          }
+        }
+      ],
+      "pronunciationDiagnostics": []
+    }
+  }
+]

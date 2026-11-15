@@ -1,0 +1,72 @@
+Browser tab: 6, Title: "Siri download task preview", URL: "http://127.0.0.1:5198/dev/siri-download-task-preview.html?locale=zh-TW".
+1 AXWebArea Siri download task preview, URL: 127.0.0.1:5198/dev/siri-download-task-preview.html?locale=zh-TW
+	2 container root
+		3 container
+			4 text Contextual Language Learning
+			5 checkbox Description: 活動, Value: 0, ID: header-activity
+			6 checkbox Description: 設定, Value: 1, ID: header-settings
+		7 container Fixture controls
+			8 button Start Aaron
+			9 button Start Nora
+			10 button Complete first
+			11 button Fail first
+			12 button Disconnect
+		13 container Siri 聲音
+			14 text 聲音語言
+			15 combo box (collapsed) Description: 聲音語言, Value: 英文（美國）, Secondary Actions: Expand
+				16 text 英文（美國）
+			17 button 重新整理 Siri 聲音
+			18 tab group
+				19 tab (selectable, settable, boolean) 已下載, Value: 0, ID: radix-_r_1r_-trigger-installed
+				20 tab (selected, settable, boolean) 可下載, Value: 1, ID: radix-_r_1r_-trigger-downloadable
+			21 container Description: 可下載, ID: radix-_r_1r_-content-downloadable
+				22 content list 可下載的 Siri 聲音
+					23 container Aaron
+						24 text Aaron
+						25 text 英文（美國）
+						26 text  · 150 MB
+						27 button 下載
+					28 container Nora
+						29 text Nora
+						30 text 英文（美國）
+						31 text  · 100 MB
+						32 button 下載
+		33 container
+			34 text Siri 聲音下載  · UI fixture
+
+The focused UI element is 20 tab (selected, settable, boolean) 可下載, Value: 1, ID: radix-_r_1r_-trigger-downloadable
+
+Browser tab: 6, Title: "Siri download task preview", URL: "http://127.0.0.1:5198/dev/siri-download-task-preview.html?locale=zh-TW".
+1 AXWebArea Siri download task preview, URL: 127.0.0.1:5198/dev/siri-download-task-preview.html?locale=zh-TW
+	2 container root
+		3 container
+			4 text Contextual Language Learning
+			5 checkbox Description: 活動, Value: 1, ID: header-activity
+			6 checkbox Description: 設定, Value: 0, ID: header-settings
+		7 container Fixture controls
+			8 button Start Aaron
+			9 button Start Nora
+			10 button Complete first
+			11 button Fail first
+			12 button Disconnect
+		35 container
+			36 combo box (collapsed) Description: 篩選任務, Value: 全部任務, Secondary Actions: Expand
+				37 text 全部任務
+			38 button 重新整理任務
+			39 heading 紀錄, Value: 3
+				40 text 紀錄
+			41 heading 今天, Value: 3
+				42 text 今天
+			43 heading Aaron 已下載 Siri 聲音下載 · 英文（美國）, Value: 3
+				44 button (collapsed) Aaron 已下載 Siri 聲音下載 · 英文（美國）, ID: radix-_r_25_, Secondary Actions: Expand
+					45 text Aaron
+					46 text 已下載
+					47 text Siri 聲音下載
+					48 text  · 
+					49 text 英文（美國）
+					50 image
+			51 button 清除已結束的下載紀錄
+		33 container
+			34 text Siri 聲音下載  · UI fixture
+
+The focused UI element is 5 checkbox Description: 活動, Value: 1, ID: header-activity

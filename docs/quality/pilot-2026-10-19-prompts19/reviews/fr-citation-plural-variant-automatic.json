@@ -1,0 +1,22 @@
+{
+  "case": "fr-citation-plural-variant-automatic",
+  "document": "batch-2/fr-citation-plural-variant-automatic/videos/fr-citation-plural-variant-automatic--0a9a27925ccf4b1d/9c113a42-7e7b-4742-a93d-81457138fb0b.json",
+  "documentHash": "5cc6775564bb20ea43a84598f050665eb1193e16b84ca0ce3846df114bf90fcd",
+  "reviewer": "Same unblinded Codex source/editorial reviewer; not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "All source translations, contexts, unit meanings/chunks, points, source citations, invented examples and available written readings",
+      "result": "Dossiers and complete inverted constructions are cited without clipping. Context remains an inventory of actual turns. Both invented examples match their situations, request actors and translations. Source clitic apostrophe forms remain intact; no optional source readings were supplied."
+    }
+  ],
+  "targets": [
+    {
+      "target": "complete_latin_citations",
+      "result": "passed",
+      "reason": "Les dossiers sont-ils and Pouvez-vous preserve full Latin components."
+    }
+  ],
+  "issues": [],
+  "boundary": "One fresh output per frozen case. Missing optional teaching targets/readings do not count as exercised. No stability/causal estimate, actual audio, installed Host, real Chrome/video or learning-effect acceptance."
+}

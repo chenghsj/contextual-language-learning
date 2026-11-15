@@ -1,0 +1,33 @@
+{
+  "provider": "antigravity",
+  "modelId": "gemini-3.8-flash",
+  "thinkingLevel": "medium",
+  "instructionLanguage": "zh-TW",
+  "contextualExampleCount": 1,
+  "timeoutMs": 600000,
+  "protocolVersion": 12,
+  "promptVersion": "learning-points-prompts-18",
+  "workflowVersion": "learning-points-v7-1",
+  "qualityStrategyVersion": "program-validation-2",
+  "casesHash": "57ac4f47d7c627e67783ac536ab7e241747136b89e2700621f2bea1c1657f4a7",
+  "generatorHashes": {
+    "learning-execution.ts": "6cd3b4581d0b7c848c64954fb65e0f13f657d435119be7d4d2a7a7e4d1d3def7",
+    "learning-candidates.ts": "a3ef7db0e4c1b75ef5362aedba447b9f1f6d4baac4033ce7df1031145e996b9c",
+    "learning-selection.ts": "a2f3e7bcae051cce14874e3ef1ca77d8b4882167a1e8152caea6a9e3226c904b",
+    "learning-teaching.ts": "e2bc12bb442b254cc0972e9c2921958696ce701b3ccfffccd3c4e00d21c0bea7",
+    "learning-points-pipeline.ts": "9c11fe33afee588967145848792ef5d3b01dfd777bfa778a46ec5ce7e70ed8ff"
+  },
+  "rulesHash": "144836c58f4827a795d3b3ef905aa1f4938cd92450040f147d815b63b11f02b3",
+  "promptsHash": "298e9700b241501f82f55e42b90b68b5f04d983eac0724ed02332a5e4e50a1c2",
+  "transportPatchHash": "bd0ff22846e5665562e5a6263fb5e3000284e942bf06523c104cbba39e94bdef",
+  "selectedCases": [
+    "es-uncertainty-quote-topic-automatic",
+    "fr-normal-transfer-automatic",
+    "it-uncertainty-quote-topic-automatic",
+    "vi-normal-transfer-automatic",
+    "zh-TW-uncertainty-quote-topic-automatic",
+    "en-normal-transfer-automatic"
+  ],
+  "casesFile": "case-definitions.json",
+  "tracePrompts": true
+}

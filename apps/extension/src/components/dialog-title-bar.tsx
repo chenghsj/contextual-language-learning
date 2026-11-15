@@ -19,7 +19,7 @@ export function DialogTitleBar({
 }) {
   return (
     <div data-slot="dialog-title-row" className="flex min-w-0 items-center justify-between gap-2">
-      <DialogTitle className="min-w-0 flex-1 text-sm leading-5 font-semibold wrap-anywhere">
+      <DialogTitle className="min-w-0 flex-1 text-ui-heading font-semibold wrap-anywhere">
         {children}
       </DialogTitle>
       <DialogClose asChild>

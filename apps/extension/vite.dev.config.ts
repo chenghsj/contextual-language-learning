@@ -28,6 +28,9 @@ export default defineConfig(({ command }) => {
     );
   }
   return {
+    // Preview/acceptance servers use vite.config.ts. Their dependency optimizer
+    // must not replace the React chunks still loaded by the running extension.
+    cacheDir: "node_modules/.vite-extension",
     plugins: [
       react(),
       tailwindcss(),

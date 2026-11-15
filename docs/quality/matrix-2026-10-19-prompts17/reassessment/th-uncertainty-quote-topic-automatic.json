@@ -1,0 +1,52 @@
+{
+  "case": "th-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-3/th-uncertainty-quote-topic-automatic/videos/th-uncertainty-quote-topic-automatic--0f303b4b10645ea6/8d858397-6d3c-45a6-8dcb-4fe76e0927f0.json",
+  "documentHash": "83b387bd41bf24848412f1910d3872ba80d7e792a694828262c6c5b960a7ffbe",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "source uncertainty and boundaries",
+      "result": "มายา is preserved in its source spelling and the summary does not identify the quotation as that person's speech. Both [???] fragments are locally marked unclear; no guessed repair, source reading or reusable target includes them. Quote/topic units are separate, and the deictic reference does not become writing or a screen."
+    },
+    {
+      "scope": "reliable constructions and examples",
+      "result": "The earlier claim that 他 necessarily asserts a masculine source participant is not established. The source contains a third-person reporting reference; the recorded output supplies no separate explicit male identity. The existing pronunciation-notation warning remains. This is a same-reviewer correction, not an independent linguistic certification."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "incomplete_tone_notation",
+      "path": "/reusableItems/0/examples/0/dialogue/0/pronunciation/0/reading",
+      "quote": "pʰuːt̚.tʰɯŋ",
+      "description": "Several long example transcriptions omit lexical tone marks even while other syllables are tone-marked. Verify and make the notation consistent, or omit optional uncertain readings. No actual audio or recording-specific tone contour was assessed."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged.",
+  "reassessment": {
+    "originalReview": "reviews/th-uncertainty-quote-topic-automatic.json",
+    "disposition": "withdrawn_block",
+    "reason": "撤回以「他說」字形直接推定新增男性身份的錯誤。泰文資料證明 เขา 不限定男女，並不能證明這個中文第三人稱譯法必然宣稱男性；中文辭典也保留泛指用法。原紀錄沒有指出其他明示男性的詞句。保留既有讀音標記警告，AI 編輯判定改為通過。",
+    "references": [
+      {
+        "title": "教育部重編國語辭典修訂本：他",
+        "url": "https://dict.revised.moe.edu.tw/dictView.jsp?ID=2423&q=1&word=%E4%BB%96",
+        "checkedOn": "2026-10-19",
+        "supports": "釋為你我以外的第三人，未將該字的所有用法限定為男性；不能單憑字形證明此譯文新增男性身份。"
+      },
+      {
+        "title": "漢典：他",
+        "url": "https://zdic.net/hant/%E4%BB%96",
+        "checkedOn": "2026-10-19",
+        "supports": "基本釋義列一般指男性，也有不分性別的泛指用法；這不代表每種具體語境都適合使用他。"
+      },
+      {
+        "title": "Thai With Grace: Third person pronouns in Thai",
+        "url": "https://thaiwithgrace.com/third-person-pronouns-in-thai/",
+        "checkedOn": "2026-10-19",
+        "supports": "เขา 可用於 he 或 she；此資料只證明泰文代詞的範圍，不能單獨決定中文譯法是否新增性別。"
+      }
+    ]
+  }
+}

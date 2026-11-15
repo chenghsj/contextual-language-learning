@@ -1,0 +1,810 @@
+{
+  "id": "53401031-999b-48de-b290-e796fca388a8",
+  "createdAt": "2026-10-11T17:03:48.557Z",
+  "source": {
+    "platform": "import",
+    "title": "ja-damaged-negation-automatic"
+  },
+  "profile": {
+    "targetLanguage": "ja",
+    "instructionLanguage": "zh-TW",
+    "level": "N3",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.7-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v6-4",
+    "promptVersion": "learning-points-prompts-11",
+    "schemaVersion": "6",
+    "languageStrategyVersion": "learning-language-strategies-3",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "inputFingerprint": "976c610f15125cc47ed34d6b79a8a8237102fe83617321fb9ca083162158ae7a",
+    "provider": "antigravity",
+    "modelId": "gemini-3.7-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T17:04:06.726Z",
+        "outputTokenBudget": 16384,
+        "stopReason": "stop",
+        "durationMs": 18165.800125,
+        "usage": {
+          "input": 2009,
+          "output": 2287,
+          "reasoning": 2038
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T17:04:09.681Z",
+        "outputTokenBudget": 16384,
+        "stopReason": "stop",
+        "durationMs": 2948.513083999991,
+        "usage": {
+          "input": 2166,
+          "output": 242,
+          "reasoning": 203
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T17:05:58.057Z",
+        "outputTokenBudget": 16384,
+        "stopReason": "stop",
+        "durationMs": 108365.005958,
+        "usage": {
+          "input": 6320,
+          "output": 16376,
+          "reasoning": 13861
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "ごめんね。きつい言い方して。"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "わかるよ。ヒカルの漫画読んでれば悪いないって。"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "それより前から気になることがある。"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "どうしたの？"
+    }
+  ],
+  "schemaVersion": 6,
+  "sections": [
+    {
+      "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "道歉與話題轉移",
+      "context": {
+        "text": "一人為自己先前說話嚴厲的語氣道歉，對方表示理解，隨後話題轉向另一件放在心上的事情。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "對不起。我剛才說話口氣太重了。"
+        },
+        {
+          "cueId": "c2",
+          "text": "我懂。只要有讀ヒカル的漫畫，……（「悪いないって」原文不明，後半意思無法確定）。"
+        },
+        {
+          "cueId": "c3",
+          "text": "比起那個，我從之前就有一件在在意的事。"
+        },
+        {
+          "cueId": "c4",
+          "text": "怎麼了嗎？"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "ごめんね",
+              "reading": "ごめんね"
+            },
+            {
+              "text": "。"
+            },
+            {
+              "text": "きつい",
+              "reading": "きつい"
+            },
+            {
+              "text": "言い方",
+              "reading": "いいかた"
+            },
+            {
+              "text": "して",
+              "reading": "して"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "わかるよ",
+              "reading": "わかるよ"
+            },
+            {
+              "text": "。"
+            },
+            {
+              "text": "ヒカル"
+            },
+            {
+              "text": "の",
+              "reading": "の"
+            },
+            {
+              "text": "漫画",
+              "reading": "まんが"
+            },
+            {
+              "text": "読んでれば",
+              "reading": "よんでれば"
+            },
+            {
+              "text": "悪いないって"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "それより",
+              "reading": "それより"
+            },
+            {
+              "text": "前",
+              "reading": "まえ"
+            },
+            {
+              "text": "から",
+              "reading": "から"
+            },
+            {
+              "text": "気になる",
+              "reading": "きになる"
+            },
+            {
+              "text": "こと",
+              "reading": "こと"
+            },
+            {
+              "text": "が",
+              "reading": "が"
+            },
+            {
+              "text": "ある",
+              "reading": "ある"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "どうしたの",
+              "reading": "どうしたの"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "14c25292-520e-4661-9c1a-21976f51cc99",
+          "meaning": "為自己剛才說話口氣太重而向對方道歉。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:c1_k1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 4
+                }
+              ],
+              "meaning": "對不起、抱歉"
+            },
+            {
+              "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:c1_k2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 5,
+                  "end": 13
+                }
+              ],
+              "meaning": "說話口氣太衝 / 太重"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ]
+        },
+        {
+          "id": "0e136eba-cad5-4736-a485-2bfc68f5f872",
+          "meaning": "表示理解對方的心情，並提到只要有讀ヒカル的漫畫……（後半「悪いないって」原文不明，具體意思無法確定）。",
+          "contextExplanation": "回應前一句對語氣嚴厲的道歉；後半句「悪いないって」原文不明，指涉無法確定。",
+          "contextCueIds": [
+            "c1"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p2"
+          ],
+          "cueIds": [
+            "c2"
+          ]
+        },
+        {
+          "id": "b84c3ee5-e912-49ca-8b5a-575c744c8be1",
+          "meaning": "轉換話題，表示自己從之前就有一件掛念在心的事。",
+          "contextExplanation": "以「それより」將焦點從剛才的道歉與安慰移開，轉向自身一直掛念的事。",
+          "contextCueIds": [
+            "c1",
+            "c2"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p3",
+            "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p4"
+          ],
+          "chunks": [
+            {
+              "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:c3_k1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 4
+                }
+              ],
+              "meaning": "比起那件事、先不說那個"
+            },
+            {
+              "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:c3_k2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 4,
+                  "end": 7
+                }
+              ],
+              "meaning": "從之前開始"
+            },
+            {
+              "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:c3_k3",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 7,
+                  "end": 16
+                }
+              ],
+              "meaning": "有在意思考／掛念的事"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ]
+        },
+        {
+          "id": "2ecd7262-71c1-43f6-9d48-659ff63ef87f",
+          "meaning": "詢問對方發生了什麼事或在在意什麼。",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c3"
+          ],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p1",
+      "utteranceIds": [
+        "14c25292-520e-4661-9c1a-21976f51cc99"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "「〜て」句尾補充道歉理由",
+      "sourceCueIds": [
+        "c1"
+      ],
+      "contextCueIds": [],
+      "explanation": "在口語道歉時，常在「ごめんね」之後用動詞「て形」作結，倒裝補充讓自己感到抱歉的具體行為。「きつい言い方して」即「きつい言い方をしてしまって（說了口氣很重的話）」的口語簡略說法，語氣自然坦誠。",
+      "sourceSpans": [
+        {
+          "cueId": "c1",
+          "start": 5,
+          "end": 13
+        }
+      ]
+    },
+    {
+      "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p2",
+      "utteranceIds": [
+        "0e136eba-cad5-4736-a485-2bfc68f5f872"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "「〜てれば／でれば」條件縮約形",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [
+        "c1"
+      ],
+      "explanation": "「読んでれば」是動詞持續假定形「読んでいれば（只要有在讀……）」在口語中省略「い」的縮約形式。本句中作為前半部的條件假設，而後半句「悪いないって」原文意思不明、無法確定具體文意，但此縮約規則本身為日語會話中非常普遍的形態變化。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 11,
+          "end": 16
+        }
+      ]
+    },
+    {
+      "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p3",
+      "utteranceIds": [
+        "b84c3ee5-e912-49ca-8b5a-575c744c8be1"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "「それより」轉換話題",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "用於對話中轉換話題或轉移焦點，相當於中文的「比起那個／先不說那個」。說話者藉此將對話從前述內容移開，帶出當前自己更關心或想優先討論的新事項。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 4
+        }
+      ]
+    },
+    {
+      "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p4",
+      "utteranceIds": [
+        "b84c3ee5-e912-49ca-8b5a-575c744c8be1"
+      ],
+      "category": "vocabulary",
+      "presentation": "core",
+      "title": "「気になる」放不下心、在意思考",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "由名詞「気（心思）」與動詞「なる」組成，表示某件事自然而然地縈繞在心頭，令人掛念、好奇或放不下心。此處「気になることがある」表示「有一件一直放在心上的事」。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 7,
+          "end": 11
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:r1",
+      "pointIds": [
+        "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p2"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "text": "読んでれば"
+        }
+      ],
+      "pattern": "[動詞て形]いれば（口語では「い」を省略）",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "向朋友說明只要看著地圖應用程式就不會迷路。",
+          "dialogue": [
+            {
+              "text": "この道、本当に合ってるのかな？",
+              "translation": "這條路真的沒走錯嗎？",
+              "pronunciation": [
+                {
+                  "text": "この",
+                  "reading": "この"
+                },
+                {
+                  "text": "道",
+                  "reading": "みち"
+                },
+                {
+                  "text": "、"
+                },
+                {
+                  "text": "本当に",
+                  "reading": "ほんとうに"
+                },
+                {
+                  "text": "合ってる",
+                  "reading": "あってる"
+                },
+                {
+                  "text": "の",
+                  "reading": "の"
+                },
+                {
+                  "text": "かな",
+                  "reading": "かな"
+                },
+                {
+                  "text": "？"
+                }
+              ]
+            },
+            {
+              "text": "地図を見てれば迷わないから大丈夫だよ。",
+              "translation": "只要看著地圖就不會迷路，放心吧。",
+              "pronunciation": [
+                {
+                  "text": "地図",
+                  "reading": "ちず"
+                },
+                {
+                  "text": "を",
+                  "reading": "を"
+                },
+                {
+                  "text": "見てれば",
+                  "reading": "みてれば"
+                },
+                {
+                  "text": "迷わない",
+                  "reading": "まよわない"
+                },
+                {
+                  "text": "から",
+                  "reading": "から"
+                },
+                {
+                  "text": "大丈夫",
+                  "reading": "だいじょうぶ"
+                },
+                {
+                  "text": "だ",
+                  "reading": "だ"
+                },
+                {
+                  "text": "よ",
+                  "reading": "よ"
+                },
+                {
+                  "text": "。"
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "見てれば"
+        }
+      ]
+    },
+    {
+      "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:r2",
+      "pointIds": [
+        "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p3"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "text": "それより"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在討論午餐時突然想起更緊急的工作進度。",
+          "dialogue": [
+            {
+              "text": "今日のお昼、何を食べに行こうか？",
+              "translation": "今天中午要去吃什麼呢？",
+              "pronunciation": [
+                {
+                  "text": "今日",
+                  "reading": "きょう"
+                },
+                {
+                  "text": "の",
+                  "reading": "の"
+                },
+                {
+                  "text": "お昼",
+                  "reading": "おひる"
+                },
+                {
+                  "text": "、"
+                },
+                {
+                  "text": "何",
+                  "reading": "なに"
+                },
+                {
+                  "text": "を",
+                  "reading": "を"
+                },
+                {
+                  "text": "食べに行こう",
+                  "reading": "たべにいこう"
+                },
+                {
+                  "text": "か",
+                  "reading": "か"
+                },
+                {
+                  "text": "？"
+                }
+              ]
+            },
+            {
+              "text": "それより、午後の会議の資料はもうできた？",
+              "translation": "比起那個，下午會議的資料已經做好了嗎？",
+              "pronunciation": [
+                {
+                  "text": "それより",
+                  "reading": "それより"
+                },
+                {
+                  "text": "、"
+                },
+                {
+                  "text": "午後",
+                  "reading": "ごご"
+                },
+                {
+                  "text": "の",
+                  "reading": "の"
+                },
+                {
+                  "text": "会議",
+                  "reading": "かいぎ"
+                },
+                {
+                  "text": "の",
+                  "reading": "の"
+                },
+                {
+                  "text": "資料",
+                  "reading": "しりょう"
+                },
+                {
+                  "text": "は",
+                  "reading": "わ"
+                },
+                {
+                  "text": "もう",
+                  "reading": "もう"
+                },
+                {
+                  "text": "できた",
+                  "reading": "できた"
+                },
+                {
+                  "text": "？"
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "それより"
+        }
+      ]
+    },
+    {
+      "id": "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:r3",
+      "pointIds": [
+        "1d8fb4e0-9890-40cd-a1a0-04c8515528af:s0:p4"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "text": "気になる"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "朋友看起來心神不寧，關切對方在想什麼。",
+          "dialogue": [
+            {
+              "text": "さっきからスマホばかり見ているね。",
+              "translation": "你從剛才開始就一直看著手機呢。",
+              "pronunciation": [
+                {
+                  "text": "さっき",
+                  "reading": "さっき"
+                },
+                {
+                  "text": "から",
+                  "reading": "から"
+                },
+                {
+                  "text": "スマホ",
+                  "reading": "すまほ"
+                },
+                {
+                  "text": "ばかり",
+                  "reading": "ばかり"
+                },
+                {
+                  "text": "見ている",
+                  "reading": "みている"
+                },
+                {
+                  "text": "ね",
+                  "reading": "ね"
+                },
+                {
+                  "text": "。"
+                }
+              ]
+            },
+            {
+              "text": "うん、さっき送ったメールの返信が気になるんだ。",
+              "translation": "嗯，我很在意剛剛寄出的郵件的回信。",
+              "pronunciation": [
+                {
+                  "text": "うん",
+                  "reading": "うん"
+                },
+                {
+                  "text": "、"
+                },
+                {
+                  "text": "さっき",
+                  "reading": "さっき"
+                },
+                {
+                  "text": "送った",
+                  "reading": "おくった"
+                },
+                {
+                  "text": "メール",
+                  "reading": "めーる"
+                },
+                {
+                  "text": "の",
+                  "reading": "の"
+                },
+                {
+                  "text": "返信",
+                  "reading": "へんしん"
+                },
+                {
+                  "text": "が",
+                  "reading": "が"
+                },
+                {
+                  "text": "気になる",
+                  "reading": "きになる"
+                },
+                {
+                  "text": "ん",
+                  "reading": "ん"
+                },
+                {
+                  "text": "だ",
+                  "reading": "だ"
+                },
+                {
+                  "text": "。"
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "気になる"
+        }
+      ]
+    }
+  ]
+}

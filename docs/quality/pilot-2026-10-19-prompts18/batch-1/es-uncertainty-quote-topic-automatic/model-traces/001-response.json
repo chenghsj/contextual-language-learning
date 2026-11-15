@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":26}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":22}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":22,\"end\":52}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":12}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":12,\"end\":38}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":27}]}],\"learningValue\":\"涵蓋引述轉述（dijo 與命令式附著代名詞 dime）、轉折話題片語（Por cierto）以及簡答回應（Todavía no）的日常對話。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"祈使句代名詞附著（di 加上 me 拼作 dime，不加重音符號）及引述動詞 dijo 的第三人稱用法。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c2\"],\"description\":\"常用轉折連接詞「Por cierto」（順帶一提、對了）在轉換話題時的用法。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c3\"],\"description\":\"使用「Todavía no」（還沒）作為簡短否定回應的日常用法。\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\"],\"description\":\"動詞 hablar 與前置詞 de 連用表達「談論某事」的用法。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:34:07.511Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 30524.925041999995,
+    "usage": {
+      "input": 2898,
+      "output": 4150,
+      "reasoning": 3793
+    }
+  }
+}

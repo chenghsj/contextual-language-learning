@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":23}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":37}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":22}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":5}]}],\"learningValue\":\"學習日常對話中詢問狀況、說明剛好正要離開的時態片語，以及請求稍候與答應的常見表達。\",\"opportunities\":[{\"category\":\"chunks\",\"sourceCueIds\":[\"c2\"],\"description\":\"學習「be about to + 動詞原形」表示「正要／剛好準備做某事」的時態與用法。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c3\"],\"description\":\"學習口語中請求對方稍候片刻的常見句型「wait a minute」。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c4\"],\"description\":\"學習以「Sure.」自然、簡短答應對方請求的口語用法。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:44:02.375Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 7548.285166999907,
+    "usage": {
+      "input": 2515,
+      "output": 872,
+      "reasoning": 613
+    }
+  }
+}

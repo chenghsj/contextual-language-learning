@@ -1,0 +1,31 @@
+{
+  "status": "generation_and_editorial_review_completed",
+  "at": "2026-10-19T15:12:48.855205+00:00",
+  "counts": {
+    "requested": 3,
+    "generated": 3,
+    "structuralPassed": 3,
+    "fixedSourcePassed": 3,
+    "identityPassed": 3,
+    "coveragePassed": 3,
+    "targetCoveragePassed": 3,
+    "semanticPassed": 2,
+    "semanticFailed": 0,
+    "semanticNeedsReview": 1,
+    "accepted": 2
+  },
+  "usage": {
+    "recordedCalls": 9,
+    "structuralRepairs": 0,
+    "reportedTokens": {
+      "input": 29196,
+      "output": 26019,
+      "reasoning": 21248
+    }
+  },
+  "originalPreflightStatus": "inference-status.json",
+  "approvedResumption": "resumed-execution.json",
+  "latestAcceptance": "acceptance.json",
+  "remaining": "New Spanish sender-reference judgment and earlier Spanish/Japanese/Chinese disputes remain independently pending. Chrome/video acceptance not performed.",
+  "boundary": "One fresh run for each case after third approval attempt succeeded. The first two failed before process creation and made zero model calls. No production/runtime or rubric changes during inference."
+}

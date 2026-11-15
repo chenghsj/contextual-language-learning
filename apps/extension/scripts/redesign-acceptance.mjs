@@ -8,7 +8,7 @@ import { createServer } from "vite";
 
 // Actual App and service worker; browser and Host responses are simulated by the dev fixture.
 const root = fileURLToPath(new URL("..", import.meta.url));
-const output = await mkdtemp(join(tmpdir(), "immersive-redesign-ui-"));
+const output = await mkdtemp(join(tmpdir(), "contextual-redesign-ui-"));
 const server = await createServer({
   root,
   configFile: join(root, "vite.config.ts"),
@@ -38,12 +38,12 @@ async function run() {
       );
       await range.getByRole("button", { name: "使用目前位置", exact: true }).first().click();
       await page.waitForFunction(
-        element => element.value === "00:00:05",
+        element => element.value === "00:05.0",
         await range.getByRole("textbox", { name: "開始", exact: true }).elementHandle(),
       );
       assert.equal(
         await range.getByRole("textbox", { name: "開始", exact: true }).inputValue(),
-        "00:00:05",
+        "00:05.0",
       );
       assert.equal(
         await page.getByRole("button", { name: "下一步", exact: true }).isDisabled(),
@@ -68,6 +68,10 @@ async function run() {
         .last()
         .click();
       await page.getByRole("heading", { name: "Acceptance notes" }).waitFor();
+      const customAction = async label => {
+        await page.locator("#custom-reader-options").click();
+        await page.getByRole("button", { name: label, exact: true }).click();
+      };
       assert.equal(await page.locator("article img").count(), 0);
       assert.equal(await page.locator('a[href^="javascript:"]').count(), 0);
       const generated = await page.evaluate(
@@ -76,20 +80,19 @@ async function run() {
       assert.equal(generated.cues.length, 20);
       assert.equal(generated.cues[0].startMs, 5000);
       assert.equal(generated.analysisRange.endMs, 15000);
-      await page.getByRole("button", { name: "重新生成", exact: true }).click();
-      const dialog = page.getByRole("dialog");
+      await customAction("重新生成");
+      const dialog = page.getByRole("dialog", { name: "重新生成", exact: true });
       await dialog.waitFor();
       assert.equal(await page.locator("article [role=dialog]").count(), 0);
       await page.screenshot({ path: `${output}/redesign-dialog-${width}-${theme}.png` });
       await page.keyboard.press("Escape");
-      await page.waitForFunction(() => document.activeElement?.textContent === "重新生成");
+      await dialog.waitFor({ state: "hidden" });
+      await page.waitForFunction(() => document.activeElement?.id === "custom-reader-options");
       assert.equal(
-        await page
-          .getByRole("button", { name: "重新生成", exact: true })
-          .evaluate(e => e === document.activeElement),
+        await page.locator("#custom-reader-options").evaluate(e => e === document.activeElement),
         true,
       );
-      await page.getByRole("button", { name: "重新生成", exact: true }).click();
+      await customAction("重新生成");
       await page.getByRole("dialog").getByRole("button", { name: "重新生成", exact: true }).click();
       await page.getByRole("dialog").waitFor({ state: "hidden" });
       await page.waitForFunction(
@@ -114,12 +117,12 @@ async function run() {
       assert.deepEqual(regenerated.cues, generated.cues);
       assert.equal(regenerated.agent.modelId, generated.agent.modelId);
       assert.equal(regenerated.prompt, generated.prompt);
-      await page.getByRole("button", { name: "改名", exact: true }).click();
+      await customAction("改名");
       await page.getByRole("textbox", { name: "改名", exact: true }).fill("Renamed notes");
-      await page.locator("form").getByRole("button", { name: "改名", exact: true }).click();
+      await page.locator("form").getByRole("button", { name: "儲存", exact: true }).click();
       await page.getByRole("heading", { name: "Renamed notes" }).waitFor();
       const download = page.waitForEvent("download");
-      await page.getByRole("button", { name: "匯出 Markdown", exact: true }).click();
+      await customAction("匯出 Markdown");
       assert.equal((await download).suggestedFilename(), "Renamed notes.md");
       await page.screenshot({ path: `${output}/redesign-viewer-${width}-${theme}.png` });
       assert.equal(
@@ -127,13 +130,19 @@ async function run() {
         true,
         "horizontal overflow",
       );
-      await page.locator("#header-activity").click();
-      await page.getByRole("button", { name: "執行詳情", exact: true }).first().click();
-      await page.getByRole("dialog", { name: "執行詳情", exact: true }).waitFor();
+      await customAction("活動");
+      const activityPanel = page.locator("#page-panel-activity");
+      await activityPanel.waitFor();
+      await activityPanel.locator('[data-ui="taskHistoryItem"] button').first().click();
+      await activityPanel.getByRole("button", { name: "執行詳情", exact: true }).first().click();
+      await page
+        .getByRole("dialog")
+        .getByRole("heading", { name: "執行詳情", exact: true })
+        .waitFor();
       assert.equal(await page.getByRole("dialog").count(), 1);
       await page.getByRole("button", { name: "活動", exact: true }).click();
       await page.getByRole("dialog").getByRole("button", { name: "關閉", exact: true }).click();
-      await page.getByRole("button", { name: "使用目前影片重用 Prompt", exact: true }).click();
+      await customAction("使用目前影片重用 Prompt");
       await page.getByRole("button", { name: "下一步", exact: true }).click();
       assert.equal(
         await page.getByRole("textbox", { name: "Prompt", exact: true }).inputValue(),
@@ -146,11 +155,25 @@ async function run() {
         .filter({ has: page.getByRole("heading", { name: "Renamed notes", exact: true }) })
         .getByRole("button", { name: "開啟教材", exact: true })
         .click();
-      await page.getByRole("button", { name: "本機刪除", exact: true }).click();
+      await customAction("本機刪除");
       await page.getByRole("dialog").getByRole("button", { name: "本機刪除", exact: true }).click();
-      await page.waitForTimeout(100);
+      await page.waitForFunction(() => window.acceptance.docs.size === 1);
       assert.equal(await page.evaluate(() => window.acceptance.docs.size), 1);
       assert.equal(await page.evaluate(() => window.acceptance.jobs.size), 2);
+      assert.equal(
+        await page.evaluate(() => {
+          const deleted = window.acceptance.commands
+            .filter(command => command.type === "deleteCustomDocument")
+            .at(-1);
+          return (
+            !!deleted &&
+            !window.acceptance.docs.has(deleted.documentId) &&
+            window.acceptance.jobs.has(deleted.documentId)
+          );
+        }),
+        true,
+        "deleting local content preserves its task history",
+      );
       await page.locator("#header-settings").click();
       for (const category of ["一般", "AI 與模型", "教材與備份", "本機服務"]) {
         await page.getByRole("button", { name: new RegExp("^" + category) }).click();

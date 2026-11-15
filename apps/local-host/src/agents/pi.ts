@@ -16,6 +16,7 @@ import {
   PI_PROVIDER_IDS,
   piProviderDefinition,
   isPiProviderId,
+  modelCatalogSource,
   type AgentSettings,
   type ExecutionCall,
   type GenerationActivity,
@@ -24,36 +25,75 @@ import {
 import { appConfigRoot } from "../platform/paths";
 import { configurePiProviders } from "./provider-registry";
 import { billingKind } from "./billing";
+import { effectiveThinkingLevel } from "./thinking";
+import { selectedPiModel } from "./custom-model";
+import { discoverAccountAntigravityModels } from "./antigravity-catalog";
+import { publicModelCatalog } from "./public-model-catalog";
 import { parseAgentJson } from "./json";
+import {
+  localModelSnapshot,
+  registerLocalModel,
+  localModelState,
+  saveLocalModelConfig,
+  removeLocalModelConfig,
+  testLocalModelConfig,
+} from "./local-model";
+import type { LocalModelInput } from "@contextual/core";
+import { createSecureCredentialStore } from "./credentials";
+import type { CredentialStore } from "@earendil-works/pi-ai";
 
 export const piRoot = () => join(appConfigRoot(), "pi");
 export function runtimeCache<T>(create: (root: string) => Promise<T>) {
   const pending = new Map<string, Promise<T>>();
-  return (root: string) => {
+  const get = (root: string) => {
     const key = resolve(root);
     let value = pending.get(key);
     if (!value) {
       value = create(key).catch(error => {
-        pending.delete(key);
+        if (pending.get(key) === value) pending.delete(key);
         throw error;
       });
       pending.set(key, value);
     }
     return value;
   };
+  return Object.assign(get, { clear: (root: string) => pending.delete(resolve(root)) });
 }
-const sharedRuntime = runtimeCache(async (root: string): Promise<ModelRuntime> => {
+async function newPiRuntime(root: string, credentials: CredentialStore): Promise<ModelRuntime> {
   const runtime = await ModelRuntime.create({
-    authPath: join(root, "auth.json"),
+    credentials,
     modelsPath: null,
     modelsStorePath: join(root, "models-cache.json"),
     refreshOnCreate: false,
   });
   configurePiProviders(runtime, root);
+  // Invalid local settings must not prevent other providers from connecting.
+  const local = await localModelSnapshot(root, credentials).catch(() => null);
+  if (local?.config) {
+    registerLocalModel(runtime, local.config);
+    // Snapshot authentication so edits cannot send a replacement key to an old endpoint.
+    await runtime.setRuntimeApiKey("local", local.apiKey || "local");
+  }
   await runtime.refresh({ allowNetwork: false });
   return runtime;
-});
-export const createPiRuntime = (root = piRoot()) => sharedRuntime(root);
+}
+const sharedRuntime = runtimeCache(root => newPiRuntime(root, createSecureCredentialStore(root)));
+export const createPiRuntime = (root = piRoot(), credentials?: CredentialStore) =>
+  credentials ? newPiRuntime(root, credentials) : sharedRuntime(root);
+export async function getLocalPiConfig() {
+  const root = piRoot();
+  return localModelState(root, createSecureCredentialStore(root));
+}
+export async function setLocalPiConfig(input: LocalModelInput) {
+  const root = piRoot();
+  const result = await saveLocalModelConfig(input, root, createSecureCredentialStore(root));
+  sharedRuntime.clear(root);
+  return result;
+}
+export async function testLocalPiConfig(input: LocalModelInput) {
+  const root = piRoot();
+  return testLocalModelConfig(input, root, createSecureCredentialStore(root));
+}
 export function assertPiProvider(provider: string): void {
   if (!isPiProviderId(provider))
     throw new Error(
@@ -86,9 +126,18 @@ export function lessonResources(
 export async function piProviders(inputRuntime?: ModelRuntime): Promise<PiProviderInfo[]> {
   const runtime = inputRuntime ?? (await createPiRuntime());
   const credentials = await runtime.listCredentials();
-  return PI_PROVIDER_IDS.flatMap(id => {
+  return PI_PROVIDER_IDS.flatMap<PiProviderInfo>(id => {
     const provider = runtime.getProvider(id);
     if (!provider) return [];
+    if (id === "local")
+      return [
+        {
+          id,
+          label: provider.name,
+          connected: runtime.getModels(id).length > 0,
+          methods: [],
+        },
+      ];
     const credential = credentials.find(item => item.providerId === id);
     const methodLabels = {
       ...(provider.auth.oauth ? { oauth: provider.auth.oauth.name } : {}),
@@ -100,6 +149,7 @@ export async function piProviders(inputRuntime?: ModelRuntime): Promise<PiProvid
         label: (credential && methodLabels[credential.type]) ?? provider.name,
         methodLabels,
         connected: !!credential,
+        credentialMethod: credential?.type,
         methods: [
           ...(provider.auth.oauth ? ["oauth" as const] : []),
           ...(provider.auth.apiKey?.login ? ["api_key" as const] : []),
@@ -132,6 +182,7 @@ export async function loginPi(
   interaction: AuthInteraction,
 ): Promise<void> {
   assertPiProvider(provider);
+  if (provider === "local") throw new Error("Use the local model connection settings.");
   await mkdir(piRoot(), { recursive: true, mode: 0o700 });
   const runtime = await createPiRuntime();
   const deviceId = method === "oauth" ? await piDeviceId() : undefined;
@@ -140,9 +191,38 @@ export async function loginPi(
 }
 export async function logoutPi(provider: string): Promise<void> {
   assertPiProvider(provider);
+  if (provider === "local") {
+    const root = piRoot();
+    await removeLocalModelConfig(root, createSecureCredentialStore(root));
+    sharedRuntime.clear(root);
+    return;
+  }
   const runtime = await createPiRuntime();
   await runtime.logout(provider);
   await runtime.refresh({ allowNetwork: false });
+}
+export async function discoverPiModels(
+  provider: string,
+  inputRuntime?: ModelRuntime,
+  force = false,
+) {
+  assertPiProvider(provider);
+  const runtime = inputRuntime ?? (await createPiRuntime());
+  const credential = await runtime.checkAuth(provider);
+  if (!credential) throw new Error("Connect this AI provider in settings before finding models.");
+  if (provider === "openai" && credential.type === "oauth")
+    return { models: [], source: "sdk" as const };
+  if (provider === "antigravity") {
+    const auth = await runtime.getAuth(provider);
+    if (!auth?.auth.apiKey)
+      throw new Error("Connect this AI provider in settings before finding models.");
+    return {
+      models: await discoverAccountAntigravityModels(auth.auth.apiKey, AbortSignal.timeout(30_000)),
+      source: "account" as const,
+    };
+  }
+  if (!modelCatalogSource(provider)?.directoryId) return { models: [], source: "sdk" as const };
+  return { models: await publicModelCatalog(provider, force), source: "directory" as const };
 }
 export async function piModels(settings: AgentSettings, inputRuntime?: ModelRuntime) {
   assertPiProvider(settings.provider);
@@ -165,14 +245,23 @@ export async function piModels(settings: AgentSettings, inputRuntime?: ModelRunt
   // SDK authentication/provider filters define the candidates. A missing catalog
   // entry or a different client's supported models cannot prove inference denial.
   const models = await runtime.getAvailable(settings.provider);
-  if (refreshError && !models.length) throw refreshError;
+  const selected = settings.customModel
+    ? await selectedPiModel(settings, models, runtime)
+    : undefined;
+  const listed =
+    selected && !models.some(model => model.id === selected.id) ? [...models, selected] : models;
+  if (refreshError && !listed.length) throw refreshError;
   return {
-    models: models.map(model => ({
+    models: listed.map(model => ({
       id: model.id,
       label: model.name,
       thinkingLevels: getSupportedThinkingLevels(model),
+      ...(!models.includes(model) ? { custom: true } : {}),
       ...(settings.provider === "antigravity"
-        ? { availability: refreshed ? ("listed" as const) : ("unknown" as const) }
+        ? {
+            availability:
+              refreshed && models.includes(model) ? ("listed" as const) : ("unknown" as const),
+          }
         : {}),
     })),
     source: "sdk" as const,
@@ -185,9 +274,7 @@ export async function resolvePiModel(settings: AgentSettings, inputRuntime?: Mod
   if (piProviderDefinition(settings.provider)?.modelCatalog === "dynamic")
     await piModels(settings, runtime);
   const available = await runtime.getAvailable(settings.provider);
-  const model = settings.modelId
-    ? available.find(model => model.id === settings.modelId)
-    : available[0];
+  const model = await selectedPiModel(settings, available, runtime);
   if (!model)
     throw new Error("The selected model is unavailable. Refresh the provider and choose a model.");
   if (settings.thinkingLevel && !getSupportedThinkingLevels(model).includes(settings.thinkingLevel))
@@ -195,7 +282,12 @@ export async function resolvePiModel(settings: AgentSettings, inputRuntime?: Mod
       "The selected reasoning level is unavailable for this model. Choose a supported level.",
     );
   return {
-    agent: { ...settings, modelId: model.id },
+    agent: {
+      ...settings,
+      modelId: model.id,
+      thinkingLevel: effectiveThinkingLevel(model, settings.thinkingLevel),
+    },
+    modelId: model.id,
     model,
     billing: billingKind(settings.provider, runtime.isUsingSubscription(settings.provider)),
     contextWindow: model.contextWindow,
@@ -268,9 +360,7 @@ async function generatePiTextAttempt(
     throw new Error("Connect this AI provider in settings before generating.");
   }
   const available = await runtime.getAvailable(settings.provider, { signal });
-  const model = settings.modelId
-    ? available.find(model => model.id === settings.modelId)
-    : available[0];
+  const model = await selectedPiModel(settings, available, runtime);
   if (!model)
     throw new Error("The selected model is unavailable. Refresh the provider and choose a model.");
   if (settings.thinkingLevel && !getSupportedThinkingLevels(model).includes(settings.thinkingLevel))
@@ -286,7 +376,7 @@ async function generatePiTextAttempt(
     model: options.maxOutputTokens
       ? { ...model, maxTokens: Math.min(model.maxTokens, options.maxOutputTokens) }
       : model,
-    thinkingLevel: settings.thinkingLevel,
+    thinkingLevel: effectiveThinkingLevel(model, settings.thinkingLevel),
     tools: [],
     noTools: "all",
     resourceLoader: lessonResources(options.format, options.systemPrompt),
@@ -294,6 +384,8 @@ async function generatePiTextAttempt(
     settingsManager: SettingsManager.inMemory({
       compaction: { enabled: false },
       retry: { enabled: false },
+      // Preserve per-call warming instead of the SDK's new idle warming default.
+      cacheWarming: "streaming",
     }),
   });
   if (
@@ -370,6 +462,7 @@ async function generatePiTextAttempt(
         step: options.step ?? "generation",
         provider: settings.provider,
         modelId: model.id,
+        effectiveThinkingLevel: effectiveThinkingLevel(model, settings.thinkingLevel),
         billing,
         at: new Date().toISOString(),
         outputTokenBudget: Math.min(model.maxTokens, options.maxOutputTokens ?? model.maxTokens),

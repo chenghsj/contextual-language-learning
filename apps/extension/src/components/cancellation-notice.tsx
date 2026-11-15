@@ -24,7 +24,7 @@ export function CancellationNotice({
             key={jobId}
             data-ui="cancellationStatus"
             role="status"
-            className="flex shrink-0 items-center justify-between gap-2 py-2 text-xs"
+            className="flex shrink-0 items-center justify-between gap-2 py-2 text-ui-body"
           >
             <p className="min-w-0 wrap-anywhere">
               {title && <span className="font-medium">{title} · </span>}

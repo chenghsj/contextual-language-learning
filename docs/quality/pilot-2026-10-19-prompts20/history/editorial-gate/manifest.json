@@ -1,0 +1,20 @@
+{
+  "scope": "Unmodified previous AI case-acceptance judgments and obsolete gate implementation; historical only. Relative artifact paths in these files resolve against the original prompts-20 pilot root. Do not execute archived scripts.",
+  "files": {
+    "README.md": "62dc39ca390d404c2d552d4e408bfd98d713487d8cae21a92f71793d7a4e8703",
+    "acceptance.json": "a6b6709702c2916e12845265020f7f8d72172f78f5f18842a82b76d3248dfd60",
+    "check-verifier.py": "8353e0cb05c5ed37fe5dea782440c4eeb9afd77481936ca0fe65118f5d78b07d",
+    "completion-worktree-preservation.json": "bcda871f11a74c5b5ace71bbf21b57ceead36ba6dc363a5cfc10dec94669391d",
+    "generation-verification.json": "1a897a8c5c7b781c7767a9041fc15d36523dd5d9c81d4dd60f18888c7edb5ecc",
+    "pending-editorial-review.md": "fce7557040c918663ebb49b315a7520434241b070db26166ab67966dc3784aa0",
+    "reviews/en-normal-transfer-automatic.json": "d8b70ace6fd114c586e8844a44639c761b018a321f74c9bc3035a8f6b504c221",
+    "reviews/es-actor-recipient-variant-automatic.json": "1aa2f81ce91c4af2ebe33dc0a5a2b73e9a16b5b81b4e6fc936227ae77947a2bb",
+    "reviews/es-temporal-aspect-contrast-automatic.json": "ab6ce5001c84bd9ccbef992d5bce6ddd09f66223ff4b744cc500110d84fa505d",
+    "run-result.json": "5f96c8845a748fefafe922cea1a5cd19a810576072bb70d8659a2dc55b1ebda4",
+    "source-verification.json": "8dcb4d84987e6d3c35c867d30ce447d2af8ed7d89d1275181b984d5c1755b62c",
+    "verifier-boundary-checks-generation.json": "de223ead5554d84ba0f7adb4a8302dc3ccaee735e2c564185683436c5e42aea8",
+    "verifier-boundary-checks.json": "bf1b5539c582732dce0ae5888fe1d4d46996e4604e5998411f75a47c9f95043b",
+    "verify.mts": "7113df0ffa3117b8485c4a0bd10a9f7c34f10f058f88cb898b5122954de2419f",
+    "worktree-preservation.json": "ed332971397aa6a1af5c12ccdc492dd845f02c0a012af0d1bef5e7a8fa29942f"
+  }
+}

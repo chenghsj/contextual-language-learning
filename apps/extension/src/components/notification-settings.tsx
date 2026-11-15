@@ -71,7 +71,7 @@ export function NotificationSettings({
       className="grid min-w-0 gap-3 border-t border-border pt-4"
       aria-labelledby="notification-heading"
     >
-      <h3 id="notification-heading" className="text-sm font-semibold">
+      <h3 id="notification-heading" className="text-ui-heading font-semibold">
         {ui.notifications}
       </h3>
       {[
@@ -95,7 +95,10 @@ export function NotificationSettings({
             <label htmlFor={item.id} className="text-xs font-semibold">
               {item.label}
             </label>
-            <p id={item.id + "-hint"} className="mt-1 text-xs text-muted-foreground">
+            <p
+              id={item.id + "-hint"}
+              className="mt-1 text-ui-label leading-relaxed text-muted-foreground"
+            >
               {item.hint}
             </p>
           </div>
@@ -108,7 +111,7 @@ export function NotificationSettings({
         </div>
       ))}
       {(completed || attention) && permission !== "granted" && (
-        <p role="status" className="text-xs text-destructive">
+        <p role="status" className="text-ui-body text-destructive">
           {permission === "denied" ? ui.denied : ui.permissionUnknown}
         </p>
       )}
@@ -127,9 +130,9 @@ export function NotificationSettings({
           {ui.help}
         </Button>
       </div>
-      {help && <p className="text-xs leading-relaxed text-muted-foreground">{ui.permissionHelp}</p>}
+      {help && <p className="text-ui-body text-muted-foreground">{ui.permissionHelp}</p>}
       {status && !status.success && (
-        <p role="status" className="text-xs text-destructive">
+        <p role="status" className="text-ui-body text-destructive">
           {status.message}
         </p>
       )}

@@ -1,6 +1,18 @@
+import { SceneFavoriteButton } from "./scene-favorite-button";
+import { favoritesCopy } from "../i18n/favorites";
+import { learningLevelLabel } from "../i18n/learning-settings";
+import type { PreferencesStorage } from "../lib/preferences-store";
 import { getPreferencesStore } from "../lib/preferences-store";
 import { useContentMotion } from "../hooks/use-content-motion";
 import { IconTooltipContent } from "./icon-tooltip";
+import {
+  TimingBoundaryField,
+  TimingPositionControl,
+  TimingRangeTimeline,
+  TimingTimeInput,
+} from "./timing-range-controls";
+import { timingControlsCopy } from "../i18n/timing-controls";
+import { subtitleEditorCopy } from "../i18n/subtitle-editor";
 import { PlaybackTimeline } from "./playback-timeline";
 import { readStudyProgress, recordSceneVisit, studyProgressKey } from "../lib/study-progress";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -16,13 +28,14 @@ import {
   WholeWord,
   SkipBack,
   SkipForward,
-  X,
 } from "lucide-react";
 import {
   subtitlePronunciationSegments,
   type SubtitlePronunciationSegment,
   readerScene,
   type LearningDocument,
+  type FavoriteReaderDocument,
+  type FavoriteIdentity,
   type SubtitleCue,
   type ExpressionOccurrence,
 } from "@contextual/core";
@@ -32,12 +45,7 @@ import { unifiedPlayerMessages } from "../i18n/unified-player";
 import { pronunciationCopy } from "../i18n/pronunciation";
 import { playbackTimingMessages } from "../i18n/playback-timing";
 import { playingCueAt } from "../video/cue-follow";
-import {
-  adjustLoopBoundary,
-  formatLoopTimestamp,
-  isLoopWindow,
-  type LoopWindow,
-} from "../video/loop-window";
+import { adjustLoopBoundary, isLoopWindow, type LoopWindow } from "../video/loop-window";
 import {
   cuePlaybackWindow,
   effectiveCueWindow,
@@ -64,14 +72,16 @@ import {
   type PronunciationMode,
 } from "./pronunciation";
 
-type ContextualDocument = LearningDocument;
 type Repeat = "2" | "3" | "5" | "infinite";
 type Props = {
+  readerStorage?: PreferencesStorage;
+  favoriteControl?: (scene: LearningDocument["sections"][number]) => React.ReactNode;
+  onOpenVideo?: () => Promise<void>;
+  canEditTiming?: boolean;
   fullscreen?: boolean;
   onBack?: () => void;
   backLabel?: string;
   menuActions?: { label: string; onSelect: () => void }[];
-  document: ContextualDocument;
   adapter: VideoAdapter;
   locale: UiLocale;
   repeat: Repeat;
@@ -86,9 +96,22 @@ type Props = {
   setPlaybackRate: (rate: number) => void;
   onError: (message: string) => void;
   onNotice: (message: string) => void;
-  onSaveRange: (cueId: string, range: LoopWindow | null) => Promise<void>;
-  onSaveSceneRange: (sceneId: string, range: LoopWindow | null) => Promise<void>;
-};
+} & (
+  | {
+      mode?: "lesson";
+      document: LearningDocument;
+      favoriteOrigin?: never;
+      onSaveRange?: (cueId: string, range: LoopWindow | null) => Promise<void>;
+      onSaveSceneRange?: (sceneId: string, range: LoopWindow | null) => Promise<void>;
+    }
+  | {
+      mode: "favorite";
+      document: FavoriteReaderDocument;
+      favoriteOrigin: FavoriteIdentity;
+      onSaveRange?: never;
+      onSaveSceneRange?: never;
+    }
+);
 
 type PlaybackTarget =
   | { type: "scene"; sceneId: string }
@@ -102,6 +125,12 @@ type PlaybackTarget =
 
 /** Scene navigation and one player frame the independently scrolling lesson. */
 export function ContextualSceneReader({
+  readerStorage,
+  favoriteControl,
+  onOpenVideo,
+  canEditTiming = true,
+  mode = "lesson",
+  favoriteOrigin,
   fullscreen = false,
   onBack,
   backLabel,
@@ -122,7 +151,8 @@ export function ContextualSceneReader({
   const targetLanguage = document.profile.targetLanguage;
   const speech = useSystemSpeech();
   const phonetics = pronunciationCopy(locale, targetLanguage);
-  const preferencesStore = () => getPreferencesStore(chrome.storage.local, locale);
+  const storage = () => readerStorage ?? chrome.storage.local;
+  const preferencesStore = () => getPreferencesStore(storage(), locale);
   const [pronunciationMode, setPronunciationMode] = useState<PronunciationMode>(() =>
     defaultPronunciationMode(targetLanguage),
   );
@@ -141,7 +171,14 @@ export function ContextualSceneReader({
       ),
     [defaultPlaybackCues, document.playbackOverrides],
   );
-  const [sceneIndex, setSceneIndex] = useState(0);
+  const [selectedSceneId, setSelectedSceneId] = useState(document.sections[0].id);
+  const sceneIndex = Math.max(
+    0,
+    document.sections.findIndex(s => s.id === selectedSceneId),
+  );
+  const setSceneIndex = (index: number) =>
+    setSelectedSceneId(document.sections[index]?.id ?? document.sections[0].id);
+  const [progressReady, setProgressReady] = useState(false);
   const scene = document.sections[sceneIndex] ?? document.sections[0];
   useEffect(() => {
     const scope = document.id + ":" + scene.id;
@@ -171,10 +208,23 @@ export function ContextualSceneReader({
   const [videoTooltipVisible, setVideoTooltipVisible] = useState(false);
   const videoTooltipId = React.useId();
   const contentRef = useRef<HTMLDivElement>(null);
+  const timingHeadingRef = useRef<HTMLHeadingElement>(null);
+  const readingScroll = useRef(0);
+  const wasEditing = useRef(false);
+  useEffect(() => {
+    if (editing) {
+      contentRef.current?.scrollTo?.({ top: 0 });
+      timingHeadingRef.current?.focus({ preventScroll: true });
+    } else if (wasEditing.current) {
+      contentRef.current?.scrollTo?.({ top: readingScroll.current });
+      window.document.getElementById("reader-options")?.focus({ preventScroll: true });
+    }
+    wasEditing.current = editing;
+  }, [editing]);
   const sceneMotionRef = useRef<HTMLDivElement>(null);
   useContentMotion(sceneMotionRef, scene?.id ?? "empty", {
-    duration: 160,
-    entryDuration: 180,
+    duration: 240,
+    entryDuration: 240,
     enter: true,
   });
   const managedRef = useRef(false);
@@ -303,7 +353,7 @@ export function ContextualSceneReader({
                         ? "ko-Latn"
                         : "zh-Latn"
                   }
-                  className="text-[11px] text-muted-foreground [overflow-wrap:anywhere]"
+                  className="text-[10px] text-muted-foreground [overflow-wrap:anywhere]"
                 >
                   （{part.reading}）
                 </span>
@@ -335,7 +385,7 @@ export function ContextualSceneReader({
                   Array.from(piece.reading).length > Array.from(piece.text).length * 2 + 1 ? (
                     <span key={`${index}-${pieceIndex}`}>
                       {piece.text}
-                      <span className="text-[11px] text-muted-foreground">（{piece.reading}）</span>
+                      <span className="text-[10px] text-muted-foreground">（{piece.reading}）</span>
                     </span>
                   ) : (
                     <ruby
@@ -382,8 +432,8 @@ export function ContextualSceneReader({
 
   useEffect(() => {
     let live = true;
-    void chrome.storage.local
-      .get(progressKey)
+    void storage()
+      .get([progressKey])
       .then(saved => {
         const restored = readStudyProgress(
           saved[progressKey],
@@ -402,12 +452,15 @@ export function ContextualSceneReader({
             id ?? document.sections[0].id,
             document.sections.map(scene => scene.id),
           );
-          void chrome.storage.local
+          void storage()
             .set({ [progressKey]: studyProgressRef.current })
             .catch(() => undefined);
         }
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => {
+        if (live) setProgressReady(true);
+      });
     return () => {
       live = false;
     };
@@ -601,7 +654,7 @@ export function ContextualSceneReader({
         next.id,
         document.sections.map(scene => scene.id),
       );
-      void chrome.storage.local
+      void storage()
         .set({ [progressKey]: studyProgressRef.current })
         .catch(() => undefined);
     });
@@ -722,6 +775,7 @@ export function ContextualSceneReader({
       setLoop(false);
       setDraft({ ...range });
       setDraftReset(false);
+      readingScroll.current = contentRef.current?.scrollTop ?? 0;
       setEditing(true);
       setOptionsOpen(false);
     });
@@ -792,6 +846,7 @@ export function ContextualSceneReader({
   }
 
   function saveTiming(next: LoopWindow | null): void {
+    if (!onSaveRange || !onSaveSceneRange) return;
     void command(async () => {
       await stopManaged();
       if (sourceUrl && adapter.pause) await adapter.pause(sourceUrl);
@@ -818,6 +873,9 @@ export function ContextualSceneReader({
       : !!document.playbackOverrides?.[target.sentenceId];
 
   function playerOptions(timingControls = true): React.ReactNode {
+    timingControls =
+      timingControls && mode !== "favorite" && canEditTiming && !!onSaveRange && !!onSaveSceneRange;
+    if (!timingControls && menuActions.length === 0) return null;
     return (
       <Popover open={optionsOpen} onOpenChange={setOptionsOpen}>
         <PopoverTrigger asChild>
@@ -894,324 +952,308 @@ export function ContextualSceneReader({
       }
       data-ui="unifiedReader"
     >
-      <header data-ui="reader-header" className="shrink-0 border-b border-border px-3 py-2">
-        <div className="mx-auto flex w-full min-w-0 max-w-[720px] items-center gap-2">
-          {onBack && (
+      {editing ? (
+        <header className="shrink-0 border-b border-border px-3 py-3" data-ui="timing-header">
+          <div className="mx-auto flex w-full min-w-0 max-w-[640px] items-start gap-2">
             <Button
-              size="icon"
               variant="ghost"
-              className="size-8 shrink-0 [&_svg]:size-3.5"
-              aria-label={backLabel}
-              title={backLabel}
-              onClick={onBack}
+              size="icon"
+              className="size-8 shrink-0"
+              aria-label={copy.cancelTiming}
+              disabled={busy}
+              onClick={closeTiming}
             >
               <ArrowLeft aria-hidden="true" />
             </Button>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="m-0 text-[11px] text-muted-foreground">
-              {targetLanguage.toUpperCase()} · {document.profile.level}
-            </p>
-            <strong className="block truncate text-xs" title={document.source.title}>
-              {document.source.title}
-            </strong>
+            <div className="min-w-0 flex-1">
+              <h2
+                ref={timingHeadingRef}
+                tabIndex={-1}
+                className="text-ui-heading font-semibold outline-none"
+              >
+                {ui.adjust}
+              </h2>
+              <p className="mt-1 text-ui-body wrap-anywhere">{targetTitle}</p>
+            </div>
           </div>
-          <Popover
-            open={pronunciationOpen}
-            onOpenChange={open => {
-              setPronunciationOpen(open);
-              setPronunciationTooltipVisible(false);
-            }}
-          >
-            <span
-              className="relative inline-flex shrink-0"
-              onMouseEnter={() => {
-                if (!pronunciationOpen) setPronunciationTooltipVisible(true);
-              }}
-              onMouseLeave={() => setPronunciationTooltipVisible(false)}
-              onFocus={() => {
-                if (!pronunciationOpen) setPronunciationTooltipVisible(true);
-              }}
-              onBlur={() => setPronunciationTooltipVisible(false)}
-              onKeyDown={event => {
-                if (event.key === "Escape") setPronunciationTooltipVisible(false);
+        </header>
+      ) : (
+        <header data-ui="reader-header" className="shrink-0 border-b border-border px-3 py-2">
+          <div className="mx-auto flex w-full min-w-0 max-w-[720px] items-center gap-2">
+            {onBack && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-8 shrink-0 [&_svg]:size-3.5"
+                aria-label={backLabel}
+                title={backLabel}
+                onClick={onBack}
+              >
+                <ArrowLeft aria-hidden="true" />
+              </Button>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="m-0 text-ui-meta text-muted-foreground">
+                {mode === "favorite"
+                  ? favoritesCopy(locale).readonly
+                  : targetLanguage.toUpperCase() +
+                    " · " +
+                    learningLevelLabel(locale, document.profile.level)}
+              </p>
+              <strong
+                className="block truncate text-ui-heading font-semibold"
+                title={document.source.title}
+              >
+                {document.source.title}
+              </strong>
+            </div>
+            {favoriteControl ? (
+              favoriteControl(scene)
+            ) : (
+              <SceneFavoriteButton
+                sceneTitle={scene.title}
+                documentId={favoriteOrigin?.documentId ?? document.id}
+                sceneId={favoriteOrigin?.sceneId ?? scene.id}
+                sceneIds={
+                  favoriteOrigin
+                    ? [favoriteOrigin.sceneId]
+                    : document.sections.map(section => section.id)
+                }
+                locale={locale}
+                ready={progressReady}
+              />
+            )}
+            <Popover
+              open={pronunciationOpen}
+              onOpenChange={open => {
+                setPronunciationOpen(open);
+                setPronunciationTooltipVisible(false);
               }}
             >
-              <PopoverTrigger asChild>
+              <span
+                className="relative inline-flex shrink-0"
+                onMouseEnter={() => {
+                  if (!pronunciationOpen) setPronunciationTooltipVisible(true);
+                }}
+                onMouseLeave={() => setPronunciationTooltipVisible(false)}
+                onFocus={() => {
+                  if (!pronunciationOpen) setPronunciationTooltipVisible(true);
+                }}
+                onBlur={() => setPronunciationTooltipVisible(false)}
+                onKeyDown={event => {
+                  if (event.key === "Escape") setPronunciationTooltipVisible(false);
+                }}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="[&_svg]:size-3.5 size-8"
+                    aria-label={phonetics.title}
+                    aria-describedby={
+                      pronunciationTooltipVisible ? pronunciationTooltipId : undefined
+                    }
+                  >
+                    <WholeWord aria-hidden="true" />
+                  </Button>
+                </PopoverTrigger>
+                {pronunciationTooltipVisible && (
+                  <IconTooltipContent id={pronunciationTooltipId}>
+                    {phonetics.title}
+                  </IconTooltipContent>
+                )}
+              </span>
+              <PopoverContent align="end" className="w-64 max-w-[calc(100vw-24px)] p-3">
+                <p className="mb-2 text-xs font-semibold">{phonetics.title}</p>
+                <ToggleGroup
+                  type="single"
+                  variant="default"
+                  size="sm"
+                  value={pronunciationMode}
+                  className="grid grid-flow-col auto-cols-fr gap-1 rounded-lg bg-muted p-1"
+                  aria-label={phonetics.title}
+                  onValueChange={mode => {
+                    if (mode) choosePronunciation(mode as PronunciationMode);
+                  }}
+                >
+                  {pronunciationModes(targetLanguage).map(mode => (
+                    <ToggleGroupItem
+                      key={mode}
+                      value={mode}
+                      className="h-7 min-w-0 rounded-md px-2 text-xs font-medium data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-xs"
+                    >
+                      {phonetics.option(mode)}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+                {pronunciationMode !== "off" && !hasSceneReading && (
+                  <p
+                    className="mt-2 text-ui-label leading-relaxed text-muted-foreground"
+                    role="status"
+                  >
+                    {phonetics.unavailable}
+                  </p>
+                )}
+              </PopoverContent>
+            </Popover>
+            {sourceUrl && adapter.id !== "import" && (
+              <span
+                className="relative inline-flex shrink-0"
+                onMouseEnter={() => setVideoTooltipVisible(true)}
+                onMouseLeave={() => setVideoTooltipVisible(false)}
+                onFocus={() => setVideoTooltipVisible(true)}
+                onBlur={() => setVideoTooltipVisible(false)}
+                onKeyDown={event => {
+                  if (event.key === "Escape") setVideoTooltipVisible(false);
+                }}
+              >
                 <Button
                   size="icon"
                   variant="ghost"
                   className="[&_svg]:size-3.5 size-8"
-                  aria-label={phonetics.title}
-                  aria-describedby={
-                    pronunciationTooltipVisible ? pronunciationTooltipId : undefined
+                  aria-label={copy.video}
+                  aria-describedby={videoTooltipVisible ? videoTooltipId : undefined}
+                  disabled={busy}
+                  onClick={() =>
+                    void command(async () => {
+                      setVideoTooltipVisible(false);
+                      await (onOpenVideo ? onOpenVideo() : openOrFocusVideoTab(adapter, sourceUrl));
+                      recheck();
+                    })
                   }
                 >
-                  <WholeWord aria-hidden="true" />
+                  <ExternalLink aria-hidden="true" />
                 </Button>
-              </PopoverTrigger>
-              {pronunciationTooltipVisible && (
-                <IconTooltipContent id={pronunciationTooltipId}>
-                  {phonetics.title}
-                </IconTooltipContent>
-              )}
-            </span>
-            <PopoverContent align="end" className="w-64 max-w-[calc(100vw-24px)] p-3">
-              <p className="mb-2 text-xs font-semibold">{phonetics.title}</p>
-              <ToggleGroup
-                type="single"
-                variant="default"
-                size="sm"
-                value={pronunciationMode}
-                className="grid grid-flow-col auto-cols-fr gap-1 rounded-lg bg-muted p-1"
-                aria-label={phonetics.title}
-                onValueChange={mode => {
-                  if (mode) choosePronunciation(mode as PronunciationMode);
-                }}
-              >
-                {pronunciationModes(targetLanguage).map(mode => (
-                  <ToggleGroupItem
-                    key={mode}
-                    value={mode}
-                    className="h-7 min-w-0 rounded-md px-2 text-xs font-medium data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-xs"
-                  >
-                    {phonetics.option(mode)}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-              {pronunciationMode !== "off" && !hasSceneReading && (
-                <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground" role="status">
-                  {phonetics.unavailable}
-                </p>
-              )}
-            </PopoverContent>
-          </Popover>
-          {sourceUrl && adapter.id !== "import" && (
-            <span
-              className="relative inline-flex shrink-0"
-              onMouseEnter={() => setVideoTooltipVisible(true)}
-              onMouseLeave={() => setVideoTooltipVisible(false)}
-              onFocus={() => setVideoTooltipVisible(true)}
-              onBlur={() => setVideoTooltipVisible(false)}
-              onKeyDown={event => {
-                if (event.key === "Escape") setVideoTooltipVisible(false);
-              }}
+                {videoTooltipVisible && (
+                  <IconTooltipContent id={videoTooltipId}>{copy.video}</IconTooltipContent>
+                )}
+              </span>
+            )}
+          </div>
+          <nav
+            className="mx-auto mt-2 grid w-full max-w-[720px] grid-cols-[32px_minmax(0,1fr)_32px] items-center gap-2"
+            aria-label={copy.chooseScene}
+          >
+            <Button
+              size="icon"
+              variant="ghost"
+              className="[&_svg]:size-3.5 size-8"
+              aria-label={copy.previousScene}
+              disabled={busy || editing || sceneIndex === 0}
+              onClick={() => chooseScene(sceneIndex - 1)}
             >
-              <Button
-                size="icon"
-                variant="ghost"
-                className="[&_svg]:size-3.5 size-8"
-                aria-label={copy.video}
-                aria-describedby={videoTooltipVisible ? videoTooltipId : undefined}
-                disabled={busy}
-                onClick={() =>
-                  void command(async () => {
-                    setVideoTooltipVisible(false);
-                    await openOrFocusVideoTab(adapter, sourceUrl);
-                    recheck();
-                  })
-                }
-              >
-                <ExternalLink aria-hidden="true" />
-              </Button>
-              {videoTooltipVisible && (
-                <IconTooltipContent id={videoTooltipId}>{copy.video}</IconTooltipContent>
-              )}
-            </span>
-          )}
-        </div>
-        <nav
-          className="mx-auto mt-2 grid w-full max-w-[720px] grid-cols-[32px_minmax(0,1fr)_32px] items-center gap-2"
-          aria-label={copy.chooseScene}
-        >
-          <Button
-            size="icon"
-            variant="ghost"
-            className="[&_svg]:size-3.5 size-8"
-            aria-label={copy.previousScene}
-            disabled={busy || editing || sceneIndex === 0}
-            onClick={() => chooseScene(sceneIndex - 1)}
-          >
-            <ChevronLeft aria-hidden="true" />
-          </Button>
-          <SelectField
-            className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-            id="contextual-scene-picker"
-            ariaLabel={copy.chooseScene}
-            value={String(sceneIndex)}
-            disabled={busy || editing}
-            onValueChange={value => chooseScene(Number(value))}
-            options={document.sections.map((item, index) => ({
-              value: String(index),
-              label: `${index + 1} / ${document.sections.length} · ${item.title}`,
-            }))}
-          />
-          <Button
-            size="icon"
-            variant="ghost"
-            className="[&_svg]:size-3.5 size-8"
-            aria-label={copy.nextScene}
-            disabled={busy || editing || sceneIndex === document.sections.length - 1}
-            onClick={() => chooseScene(sceneIndex + 1)}
-          >
-            <ChevronRight aria-hidden="true" />
-          </Button>
-        </nav>
-      </header>
+              <ChevronLeft aria-hidden="true" />
+            </Button>
+            <SelectField
+              className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
+              id="contextual-scene-picker"
+              ariaLabel={copy.chooseScene}
+              value={String(sceneIndex)}
+              disabled={busy || editing}
+              onValueChange={value => chooseScene(Number(value))}
+              options={document.sections.map((item, index) => ({
+                value: String(index),
+                label: `${index + 1} / ${document.sections.length} · ${item.title}`,
+              }))}
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              className="[&_svg]:size-3.5 size-8"
+              aria-label={copy.nextScene}
+              disabled={busy || editing || sceneIndex === document.sections.length - 1}
+              onClick={() => chooseScene(sceneIndex + 1)}
+            >
+              <ChevronRight aria-hidden="true" />
+            </Button>
+          </nav>
+        </header>
+      )}
 
       <div
         ref={contentRef}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 @min-[774px]/reader:[scrollbar-gutter:stable_both-edges]"
         data-ui="lessonContent"
       >
-        <div ref={sceneMotionRef} className="mx-auto w-full min-w-0 max-w-[720px]">
+        <div
+          ref={sceneMotionRef}
+          className={"mx-auto w-full min-w-0 " + (editing ? "max-w-[640px]" : "max-w-[720px]")}
+        >
           {editing && draft ? (
-            <section aria-label={ui.adjust} className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">{ui.adjust}</h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="[&_svg]:size-3.5 size-8"
-                  aria-label={copy.cancelTiming}
-                  disabled={busy}
-                  onClick={closeTiming}
-                >
-                  <X aria-hidden="true" />
-                </Button>
-              </div>
-              <p className="text-sm wrap-anywhere">{targetTitle}</p>
-              <p className="text-xs text-muted-foreground">{ui.help}</p>
-              <div className="rounded-lg bg-muted/50 p-2 text-center">
-                <span className="text-[11px] text-muted-foreground">{ui.current}</span>
-                <p className="mt-1 font-mono text-base tabular-nums">
-                  {currentMs === null ? "—" : formatLoopTimestamp(currentMs)}
+            <section aria-label={ui.adjust} className="grid gap-4" data-ui="reader-timing-editor">
+              <TimingPositionControl
+                locale={locale}
+                currentMs={currentMs}
+                playing={playing}
+                seekDisabled={busy || needsReload || currentMs === null || !adapter.seek}
+                toggleDisabled={busy || needsReload || !adapter.play || !adapter.pause}
+                onSeek={delta => jump(currentMs! + delta)}
+                onToggle={togglePlayback}
+              />
+              <TimingRangeTimeline
+                locale={locale}
+                startMs={draft.startMs}
+                endMs={draft.endMs}
+                currentMs={currentMs}
+                disabled={busy}
+                onSeek={needsReload || !adapter.seek ? undefined : jump}
+                onChange={(boundary, value) => {
+                  setDraft({ ...draft, [boundary === "start" ? "startMs" : "endMs"]: value });
+                  setDraftReset(false);
+                  setStatus("");
+                }}
+              />
+              <div className="grid gap-3 border-t border-border pt-3">
+                {(["startMs", "endMs"] as const).map(boundary => (
+                  <TimingBoundaryField
+                    key={boundary}
+                    label={boundary === "startMs" ? ui.start : ui.end}
+                    htmlFor={`reader-timing-${boundary}`}
+                    captureLabel={boundary === "startMs" ? ui.setStart : ui.setEnd}
+                    captureDisabled={
+                      busy || needsReload || currentMs === null || !adapter.pause || !adapter.status
+                    }
+                    onCapture={() => markBoundary(boundary === "startMs" ? "start" : "end")}
+                    nudgeDisabled={delta =>
+                      busy || !isLoopWindow({ ...draft, [boundary]: draft[boundary] + delta })
+                    }
+                    onNudge={delta => nudgeTiming(boundary, delta)}
+                    preview={{
+                      label: boundary === "startMs" ? ui.previewStart : ui.previewEnd,
+                      disabled: busy || needsReload || !adapter.loop || !isLoopWindow(draft),
+                      onClick: () => previewBoundary(boundary),
+                    }}
+                  >
+                    <TimingTimeInput
+                      id={`reader-timing-${boundary}`}
+                      milliseconds={draft[boundary]}
+                      disabled={busy}
+                      aria-invalid={!isLoopWindow(draft)}
+                      onChange={value => {
+                        setDraft({ ...draft, [boundary]: value });
+                        setDraftReset(false);
+                        setStatus("");
+                      }}
+                      onKeyDown={event => {
+                        if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+                        event.preventDefault();
+                        nudgeTiming(
+                          boundary,
+                          (event.key === "ArrowUp" ? 100 : -100) * (event.shiftKey ? 10 : 1),
+                        );
+                      }}
+                    />
+                  </TimingBoundaryField>
+                ))}
+                <p className="text-ui-label leading-relaxed text-muted-foreground">
+                  {timingControlsCopy[locale].step}
                 </p>
-                <div className="mt-2 flex justify-center gap-3">
-                  <Button
-                    variant="outline"
-                    className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-                    disabled={busy || needsReload || currentMs === null || !adapter.seek}
-                    onClick={() => jump(currentMs! - 1000)}
-                    aria-label={ui.back}
-                  >
-                    −1s
-                  </Button>
-                  <Button
-                    size="icon"
-                    className="[&_svg]:size-3.5 size-8"
-                    aria-label={playing ? ui.pause : ui.play}
-                    disabled={busy || needsReload || !adapter.play || !adapter.pause}
-                    onClick={togglePlayback}
-                  >
-                    {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-                    disabled={busy || needsReload || currentMs === null || !adapter.seek}
-                    onClick={() => jump(currentMs! + 1000)}
-                    aria-label={ui.forward}
-                  >
-                    +1s
-                  </Button>
-                </div>
               </div>
-              {(["startMs", "endMs"] as const).map(boundary => (
-                <div
-                  key={boundary}
-                  role="group"
-                  aria-label={boundary === "startMs" ? ui.start : ui.end}
-                  className="grid min-w-0"
-                >
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <p className="flex items-center gap-2">
-                      <span className="font-semibold">
-                        {boundary === "startMs" ? ui.start : ui.end}
-                      </span>
-                      <span className="tabular-nums text-muted-foreground">
-                        {formatLoopTimestamp(draft[boundary])}
-                      </span>
-                    </p>
-                    <Button
-                      variant="ghost"
-                      className="[&_svg]:size-3.5 h-8 min-h-8 shrink-0 px-2 text-xs"
-                      disabled={busy || needsReload || !adapter.loop}
-                      onClick={() => previewBoundary(boundary)}
-                    >
-                      <Play aria-hidden="true" />
-                      {boundary === "startMs" ? ui.previewStart : ui.previewEnd}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-[1fr_1fr_auto] gap-1">
-                    {[-100, 100].map(delta => (
-                      <Button
-                        key={delta}
-                        variant="outline"
-                        className="h-8 min-h-8 px-2 text-xs"
-                        aria-label={`${boundary === "startMs" ? ui.start : ui.end} ${delta > 0 ? "+" : "-"}0.1s`}
-                        disabled={busy}
-                        onClick={() => nudgeTiming(boundary, delta)}
-                      >
-                        {delta > 0 ? "+" : "−"}0.1s
-                      </Button>
-                    ))}
-                    <Button
-                      variant="outline"
-                      className="h-8 min-h-8 shrink-0 px-3 text-xs"
-                      disabled={
-                        busy ||
-                        needsReload ||
-                        currentMs === null ||
-                        !adapter.pause ||
-                        !adapter.status
-                      }
-                      onClick={() => markBoundary(boundary === "startMs" ? "start" : "end")}
-                    >
-                      {boundary === "startMs" ? ui.setStart : ui.setEnd}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              <Button
-                variant="secondary"
-                className="[&_svg]:size-3.5 h-9 min-h-9 px-3 text-xs"
-                disabled={busy || needsReload || !adapter.loop}
-                onClick={previewTiming}
-              >
-                <Play aria-hidden="true" />
-                {ui.preview}
-              </Button>
-              {status && (
-                <p role="status" className="text-xs text-destructive">
-                  {status}
+              {(status || !isLoopWindow(draft)) && (
+                <p role="status" className="text-ui-body text-destructive">
+                  {status || ui.invalidRange}
                 </p>
               )}
-              <div className="flex justify-between gap-2">
-                <Button
-                  variant="ghost"
-                  className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-                  disabled={busy}
-                  onClick={() => {
-                    const original =
-                      target.type === "sentence" ? resetSentenceRange : defaultSceneRange;
-                    if (original) {
-                      setDraft(original);
-                      setDraftReset(true);
-                      setStatus("");
-                    }
-                  }}
-                >
-                  {ui.reset}
-                </Button>
-                <Button
-                  className="[&_svg]:size-3.5 h-8 min-h-8 px-2 text-xs"
-                  disabled={busy}
-                  onClick={() => saveTiming(draftReset ? null : draft)}
-                >
-                  {copy.saveTiming}
-                </Button>
-              </div>
             </section>
           ) : (
             <>
@@ -1272,7 +1314,57 @@ export function ContextualSceneReader({
         </div>
       </div>
 
-      {editing ? null : sourceUrl && adapter.id !== "import" && adapter.loop ? (
+      {editing && draft ? (
+        <footer
+          className="shrink-0 border-t border-border bg-card px-3 py-3"
+          data-ui="timing-footer"
+        >
+          <div className="mx-auto grid w-full min-w-0 max-w-[640px] gap-3">
+            <Button
+              variant="secondary"
+              className="w-full"
+              disabled={busy || needsReload || !adapter.loop || !isLoopWindow(draft)}
+              onClick={managedRef.current && playing ? togglePlayback : previewTiming}
+            >
+              {managedRef.current && playing ? (
+                <Pause aria-hidden="true" />
+              ) : (
+                <Play aria-hidden="true" />
+              )}
+              {managedRef.current && playing ? subtitleEditorCopy[locale].stop : ui.preview}
+            </Button>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onClick={() => {
+                  const original =
+                    target.type === "sentence" ? resetSentenceRange : defaultSceneRange;
+                  if (original) {
+                    setDraft(original);
+                    setDraftReset(true);
+                    setStatus("");
+                  }
+                }}
+              >
+                {ui.reset}
+              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" disabled={busy} onClick={closeTiming}>
+                  {copy.cancelTiming}
+                </Button>
+                <Button
+                  disabled={busy || !isLoopWindow(draft)}
+                  onClick={() => saveTiming(draftReset ? null : draft)}
+                >
+                  {copy.saveTiming}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </footer>
+      ) : sourceUrl && adapter.id !== "import" && adapter.loop ? (
         <footer
           className="shrink-0 border-t border-border bg-card px-3 py-2"
           role="region"
@@ -1301,13 +1393,13 @@ export function ContextualSceneReader({
                 )}
               </span>
               <span
-                className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground"
+                className="min-w-0 flex-1 truncate text-ui-meta text-muted-foreground"
                 title={targetTitle}
               >
                 {target.type === "sentence" ? targetTitle : playing ? ui.playing : ui.ready}
               </span>
               {target.type === "sentence" && playing && (
-                <span className="shrink-0 text-[11px] text-muted-foreground">{ui.playing}</span>
+                <span className="shrink-0 text-ui-meta text-muted-foreground">{ui.playing}</span>
               )}
             </div>
 
@@ -1395,7 +1487,7 @@ export function ContextualSceneReader({
                 data-ui="player-utilities"
               >
                 <SelectField
-                  className="h-8 min-h-8 w-14 gap-1 px-1 text-[11px] [&_svg]:size-2.5 @min-[360px]:w-20 @min-[360px]:px-2 @min-[360px]:text-xs @min-[360px]:[&_svg]:size-3.5"
+                  className="h-8 min-h-8 w-14 gap-1 px-1 text-ui-label [&_svg]:size-2.5 @min-[360px]:w-20 @min-[360px]:px-2 @min-[360px]:[&_svg]:size-3.5"
                   ariaLabel={copy.speed}
                   value={String(playbackRate)}
                   disabled={busy || needsReload || !adapter.setPlaybackRate}

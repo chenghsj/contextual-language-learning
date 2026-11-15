@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":21}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":28}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":28,\"end\":52}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":12}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":12,\"end\":38}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":33}]}],\"learningValue\":\"學習日常引述句中動詞 dijo 的人稱指涉、命令式代詞附著（dime）的重音與書寫規則、話題轉換片語（Por cierto）、簡短回應（Todavía no）及被動反映 se（se entiende）的表達方式。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\",\"c2\"],\"description\":\"引述動詞 dijo 的第三人稱指涉（承接上文主詞 Leo，而非聽話者）與直接引語的搭配。\"},{\"category\":\"pronunciation\",\"sourceCueIds\":[\"c2\"],\"description\":\"命令式接附著代詞的重音與拼寫：di 加上 me 成為 dime，重音在倒數第二音節，依規則不加書寫重音符號。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c2\"],\"description\":\"會話轉折片語「Por cierto」（順便一提、對了），用於自然帶出新話題。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c3\"],\"description\":\"常用時間回應「Todavía no」（還沒），對應上句帶有 ya 的完成狀態提問。\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c4\"],\"description\":\"「no se entiende」中被動反映／無人稱 se 的用法，表示「（字句）無法被理解、看不懂」。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T04:37:34.158Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 111955.908375,
+    "usage": {
+      "input": 2847,
+      "output": 15441,
+      "reasoning": 14991
+    }
+  }
+}

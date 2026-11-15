@@ -1,26 +1,27 @@
-# 本輪未接受案例與後續修正方向
+# 固定輸出的退件、撤回與待複核
 
-以下是本輪固定輸出的證據，原始教材未經人工修正。七組有內容問題；法文不確定情境另因風險覆蓋不足未接受。16 項非阻擋警告完整保存在各份審查 JSON，沒有拿警告取代錯誤判定。
+初審未接受八組；2026-10-19 對這八組作同一審查者的事後複核，保留五組退件、撤回一組、改列一組待複核，另一組仍屬固定測試覆蓋不足。目前接受 21／28 組，並非生成品質變好；原始輸出與初審檔案均未改寫。完整反面解讀、來源與判定修訂見 [複核紀錄](./reassessment/README.md) 及 [逐案決策](./reassessment/decisions.json)。
 
-## 來源忠實度須涵蓋全部欄位
+## 保留的五組退件
 
-1. **西文不確定情境：摘要將引述者連到 Maya。** `/sections/0/context/text` 寫「對其話語的引述」，其中「其」接回前面提及的 Maya；來源 `dijo` 省略主語，未確立兩者為同一人。摘要應列出引述的請求，不指派未明說話者。[逐項證據](./reviews/es-uncertainty-quote-topic-automatic.json)
-2. **越文一般對話：標題新增「臨時遇見」。** `/sections/0/title` 加入偶遇／會面事件，來源只描述仍在此處、正要離開時被呼叫及等待請求。應讓標題也遵守與摘要相同的來源界線。[逐項證據](./reviews/vi-normal-transfer-automatic.json)
-3. **泰文不確定情境：未保留來源性別的不確定性。** 翻譯、句意與 chunk 寫「他說」；`เขา` 本身不確立性別。在本次嚴格來源準則下，應在受影響欄位採用「對方說」等中性引述，不從名字或相鄰回合補性別。此用法另對照了 [Thai With Grace 的原始教學說明](https://thaiwithgrace.com/third-person-pronouns-in-thai/)。[逐項證據](./reviews/th-uncertainty-quote-topic-automatic.json)
-4. **簡中不確定情境：摘要保持中性，教學點卻補了引述角色。** `/points/0/explanation` 說「在此處……對方的原話」；原文「是这么说的」未明示引述者，也可能轉述自己或其他人的發言。應說明引用功能，保留角色未明，而非只在摘要遵守來源規則。[逐項證據](./reviews/zh-CN-uncertainty-quote-topic-automatic.json)
+1. **西文不確定情境：摘要指涉，依據是產品契約。** `context.text` 的「對其話語的引述」將引述連到 Maya。自然對話中這可能是合理解讀，但目前 prompts-17 明定無說話者標籤的摘要不可用代詞連結不同回合。因此保留契約退件，不能說成該西文解讀在語言上不可能。[原始審查](./reviews/es-uncertainty-quote-topic-automatic.json)
+2. **法文一般對話：局部句意，依據包含辭典及編輯判斷。** `Pourquoi es-tu encore là ?` 是處所用法，可獨立點選的 `es-tu` 卻提供「你是」作為此處句意。[法蘭西學院 être 條目](https://www.dictionnaire-academie.fr/article/A9E2986) 支持處所義；是否以此阻擋接受仍是按 contextual meaning 欄位定義作出的編輯判斷。若它只提供詞典式形態提示，嚴重程度可以不同，須明確區分。另將摘要的「接到電話」列為非阻擋疑慮：[appeler 條目](https://www.dictionnaire-academie.fr/article/A9A2203) 同列呼喚與電話聯絡義，支持媒介尚未唯一確立，而非證明電話解讀必錯。[目前審查](./reassessment/fr-normal-transfer-automatic.json)
+3. **義文不確定情境：規則範圍，依據是可檢查的反例。** `di’ + mi → dimmi` 本身正確，但說明將單音節命令式接代詞一概寫成字首子音雙寫為 `-mm-`，沒有把範圍限定為本例的 `mi`。[Treccani 文法條目](<https://www.treccani.it/enciclopedia/pronomi-personali_(La-grammatica-italiana)/>) 列出 `gli` 結合形式的例外。退件原因是寫成一般規則，不是要求 B1 的單一例子列出所有文法例外。[原始審查](./reviews/it-uncertainty-quote-topic-automatic.json)
+4. **越文一般對話：標題情節，依據是來源忠實度契約。** 「臨時遇見」可以是合理的場景猜測，但來源只確立仍在此處、正打算離開時被呼叫及請求等待，未確立偶遇事件。保留來源契約退件，不能說成越文語法錯誤。[原始審查](./reviews/vi-normal-transfer-automatic.json)
+5. **繁中不確定情境：例句內部不一致，直接可比對。** 情境寫確認是否「寄送文件」，問答卻只確認是否「通知大家明天的集合時間」。同一辦公室可以發生兩件事，仍不足以讓情境準確描述這組問答。保留與同一動作契約不符的退件。[原始審查](./reviews/zh-TW-uncertainty-quote-topic-automatic.json)
 
-這四組涉及標題、摘要、翻譯、句意、chunk 及教學點。後續應檢查規則是否真正進入每個實際生成欄位，並以新的獨立輸出驗收；不能只讓一個欄位的附註補救另一欄位的確定斷言。
+這五組的證據類型不同，均應附帶其來源、契約或編輯判斷界線；不能一律稱為經獨立認證的語言錯誤。
 
-## 局部教學與新例句須各自正確
+## 撤回的退件
 
-5. **法文一般對話：局部 chunk 的句意不符合來源。** `Pourquoi es-tu encore là ?` 中的 `être` 是處所用法，`/sections/0/utterances/0/chunks/1/meaning` 卻將 `es-tu` 教成「你是」。整句翻譯正確，仍未修正局部「你是／還在這裡」的不當組合。應保留可獨立理解的處所構造，或改用符合此處語境的局部句意。[逐項證據](./reviews/fr-normal-transfer-automatic.json)
-6. **繁中不確定情境：情境與例句動作不同。** 第一組例句的 `situation` 寫確認是否「寄送文件」，實際問答卻確認是否「通知大家明天的集合時間」。應讓情境與對話詢問／回答同一項動作。[逐項證據](./reviews/zh-TW-uncertainty-quote-topic-automatic.json)
-7. **義文不確定情境：正確的 `dimmi` 被擴張為過度全面的構詞規則。** `/points/0/explanation` 說單音節命令式接代名詞時，代名詞字首子音會雙寫，未保留 `gli` 例外，例如 `digli`、`diglielo`。正確的來源及新例句不能證明這項無條件規則成立。應只解釋本例的 `mi`，或清楚限定規則及例外；例外另對照 [Treccani 文法條目](https://www.treccani.it/enciclopedia/pronomi-personali_%28La-grammatica-italiana%29/)。[逐項證據](./reviews/it-uncertainty-quote-topic-automatic.json)
+**泰文不確定情境：「他說」不構成足夠的男性身份證據。** 原審查只引用中文「他」的字形推定新增男性身份。[泰文教學資料](https://thaiwithgrace.com/third-person-pronouns-in-thai/) 只能證明 `เขา` 可指 he 或 she；中文 [教育部辭典](https://dict.revised.moe.edu.tw/dictView.jsp?ID=2423&q=1&word=%E4%BB%96) 釋為第三人稱，[漢典](https://zdic.net/hant/%E4%BB%96) 也記錄不分性別的泛指用法，不能單憑字形證明這裡新增男性。撤回阻擋判定，保留原有讀音標記警告，改列 AI 編輯接受。這不表示所有語境都適合使用「他」。[修訂審查](./reassessment/th-uncertainty-quote-topic-automatic.json)
 
-後續驗收需同時對照完整譯文、局部 chunk、解釋規則、抽象模板、情境及例句角色；字串引用正確或一個正確例句不足以取代這些檢查。
+## 待複核，不計入接受
 
-## 覆蓋不足須與語言錯誤分開處理
+**簡中不確定情境：「對方的原話」的作用範圍。** 原審查把「對方」直接認定為目前聽者，證據不足；它也可能只是一般轉述說明中的另一人。不過「在此處」「確實」仍可能把來源未明的角色說得過窄。改列 `needs_review`，保留未接受狀態，等待獨立編輯確認是具體角色斷言還是一般教學說明。存在更中性的改寫方式，本身不能證明原文錯誤。[修訂審查](./reassessment/zh-CN-uncertainty-quote-topic-automatic.json)
 
-8. **法文不確定情境：未選到不明片段。** 生成的學習 sections 只有 `c1`、`c2`，`c3`、`c4` 仍留在原始 `cues`，但 `[???]` 未出現在被選中的 utterances。程式結構合法、已生成內容未發現阻擋語言問題，固定案例的風險覆蓋仍未通過。[逐項證據](./reviews/fr-uncertainty-quote-topic-automatic.json)
+## 測試覆蓋不足，沒有新增語言退件
 
-這個結果需要確認驗收是否要求候選選擇保留該風險，或另設可固定教學範圍的品質測試。不能為提高數字而略過覆蓋條件，也不能據此推論產品刪除了原始字幕。修正來源忠實度與局部教學之後，應針對上述七組內容問題及這組覆蓋不足重新建立獨立驗收紀錄，再決定是否需要擴大重驗。
+**法文不確定情境：未選到不明片段。** sections 只有 `c1`、`c2`，`c3`、`c4` 仍完整保存在原始 cues。這次未測到 `[???]` 的處理，因此固定風險覆蓋未通過。候選選擇可以只選有學習價值的段落；這個覆蓋結果不是字幕遺失或產品選擇功能故障的證據。後續須以固定教學範圍或新的案例確保真的測到該風險，不能直接降低原條件使數字通過。[原始審查](./reviews/fr-uncertainty-quote-topic-automatic.json)
+
+17 項非阻擋警告保存在目前審查 JSON。本輪未修改 prompt、教材或來源案例，未增加模型生成，也沒有教師／母語者、真實音訊、已安裝 Host 或 Chrome／影片驗收。

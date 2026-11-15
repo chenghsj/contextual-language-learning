@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 4,
+  "execution": {
+    "workflowVersion": "learning-points-v6-3",
+    "promptVersion": "learning-points-prompts-10",
+    "schemaVersion": "6",
+    "languageStrategyVersion": "learning-language-strategies-3",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "inputFingerprint": "144ed13591652277c0e3cea69a08dae816354380fe572666863c4814eee80e63",
+    "provider": "antigravity",
+    "modelId": "gemini-3.7-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:54:30.687Z",
+        "usage": {
+          "input": 1876,
+          "output": 4541,
+          "reasoning": 4219
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:54:34.595Z",
+        "usage": {
+          "input": 2100,
+          "output": 293,
+          "reasoning": 255
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:54:58.856Z",
+        "usage": {
+          "input": 6021,
+          "output": 3570,
+          "reasoning": 0
+        }
+      },
+      {
+        "step": "s0-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:55:48.128Z",
+        "usage": {
+          "input": 7002,
+          "output": 8188,
+          "reasoning": 7864
+        }
+      },
+      {
+        "step": "s0-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:56:40.198Z",
+        "usage": {
+          "input": 5955,
+          "output": 8188,
+          "reasoning": 7861
+        }
+      }
+    ]
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v6-3",
+      "promptVersion": "learning-points-prompts-10",
+      "schemaVersion": "6",
+      "languageStrategyVersion": "learning-language-strategies-3",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "inputFingerprint": "144ed13591652277c0e3cea69a08dae816354380fe572666863c4814eee80e63",
+      "provider": "antigravity",
+      "modelId": "gemini-3.7-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "49509c01-970a-4d44-871e-2ddf09a405f1",
+    "sourceTitle": "ja-damaged-negation-automatic",
+    "provider": "antigravity",
+    "status": "waiting",
+    "completed": 2,
+    "total": 4,
+    "phase": "creating",
+    "createdAt": "2026-10-11T06:53:58.315Z",
+    "updatedAt": "2026-10-11T06:56:58.340Z",
+    "pronunciationMissingCount": 0
+  },
+  "request": {
+    "id": "49509c01-970a-4d44-871e-2ddf09a405f1",
+    "outputSchemaVersion": 6,
+    "source": {
+      "platform": "import",
+      "title": "ja-damaged-negation-automatic"
+    },
+    "profile": {
+      "targetLanguage": "ja",
+      "instructionLanguage": "zh-TW",
+      "level": "N3",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.7-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "ごめんね。きつい言い方して。"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "わかるよ。ヒカルの漫画読んでれば悪いないって。"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "それより前から気になることがある。"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "どうしたの？"
+      }
+    ]
+  },
+  "sections": [],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "ae2055da-b31c-408d-8a5f-4ec92eb49703",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "17ba0781-6acc-4172-8310-ac5f2205cecf",
+                "cueIds": [
+                  "c1"
+                ]
+              },
+              {
+                "id": "18a31867-0cae-4067-802d-e8aac2bbbc11",
+                "cueIds": [
+                  "c2"
+                ]
+              },
+              {
+                "id": "67aea4c0-9629-4ab3-9add-18e14be7c2c3",
+                "cueIds": [
+                  "c3"
+                ]
+              },
+              {
+                "id": "e1e815b9-f206-4a91-860d-866ad53ed7e7",
+                "cueIds": [
+                  "c4"
+                ]
+              }
+            ],
+            "learningValue": "學習日常對話中的道歉倒裝句型、口語縮約假定表現、轉換話題的接續詞以及關心對方的口語問句。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "句尾以「〜て」倒裝補充說明道歉的具體原因"
+              },
+              {
+                "category": "vocabulary",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "形容詞「きつい」修飾「言い方」，表示說話語氣嚴厲、不留情面"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "口語中將「〜ていれば」縮約為「〜てれば」（読んでいれば→読んでれば）表示假定條件"
+              },
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "「それより」在會話中用於切換話題，將注意力從剛才談論的事轉移至新話題"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "慣用語「気になる」，表示在心裡介意或掛念某件事"
+              },
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c4"
+                ],
+                "description": "「どうしたの？」用於察覺對方異狀時，主動詢問並關心對方的日常口語說法"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "ae2055da-b31c-408d-8a5f-4ec92eb49703",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "17ba0781-6acc-4172-8310-ac5f2205cecf",
+            "cueIds": [
+              "c1"
+            ]
+          },
+          {
+            "id": "18a31867-0cae-4067-802d-e8aac2bbbc11",
+            "cueIds": [
+              "c2"
+            ]
+          },
+          {
+            "id": "67aea4c0-9629-4ab3-9add-18e14be7c2c3",
+            "cueIds": [
+              "c3"
+            ]
+          },
+          {
+            "id": "e1e815b9-f206-4a91-860d-866ad53ed7e7",
+            "cueIds": [
+              "c4"
+            ]
+          }
+        ],
+        "learningValue": "學習日常對話中的道歉倒裝句型、口語縮約假定表現、轉換話題的接續詞以及關心對方的口語問句。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "句尾以「〜て」倒裝補充說明道歉的具體原因"
+          },
+          {
+            "category": "vocabulary",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "形容詞「きつい」修飾「言い方」，表示說話語氣嚴厲、不留情面"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "口語中將「〜ていれば」縮約為「〜てれば」（読んでいれば→読んでれば）表示假定條件"
+          },
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "「それより」在會話中用於切換話題，將注意力從剛才談論的事轉移至新話題"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "慣用語「気になる」，表示在心裡介意或掛念某件事"
+          },
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c4"
+            ],
+            "description": "「どうしたの？」用於察覺對方異狀時，主動詢問並關心對方的日常口語說法"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0-0",
+        "sceneId": "ae2055da-b31c-408d-8a5f-4ec92eb49703",
+        "utteranceIds": [
+          "17ba0781-6acc-4172-8310-ac5f2205cecf",
+          "18a31867-0cae-4067-802d-e8aac2bbbc11"
+        ],
+        "repairAttempted": true,
+        "lastIssue": {
+          "code": "truncated_output",
+          "path": "batch",
+          "description": "Error: truncated_output: model reached output limit",
+          "outputTokenBudget": 8192
+        }
+      },
+      {
+        "id": "s0-1",
+        "sceneId": "ae2055da-b31c-408d-8a5f-4ec92eb49703",
+        "utteranceIds": [
+          "67aea4c0-9629-4ab3-9add-18e14be7c2c3",
+          "e1e815b9-f206-4a91-860d-866ad53ed7e7"
+        ]
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "os": "macOS 27.0.1 (26A434), arm64",
+  "baselineInstalledCount": 5,
+  "finalInstalledCount": 7,
+  "addedInstalledVoiceIds": [
+    "siri:com.apple.speech.synthesis.voice.custom.siri.hattori.premium",
+    "siri:com.apple.speech.synthesis.voice.custom.siri.hiro.premium"
+  ],
+  "missingInstalledVoiceIds": [],
+  "cancellationGate": "NOT VERIFIED",
+  "productIntegration": "NOT STARTED",
+  "resourcesDeleted": false
+}

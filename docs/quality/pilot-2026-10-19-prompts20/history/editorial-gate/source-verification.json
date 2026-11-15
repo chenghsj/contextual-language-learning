@@ -1,0 +1,10 @@
+{
+  "evidence": "frozen_inputs_and_engineering_records_verified",
+  "mode": "prepared_only",
+  "sourceDrift": [],
+  "preparedCases": 3,
+  "generatedCases": 0,
+  "semanticAcceptance": "not_evaluated",
+  "independentPendingReview": "not_performed",
+  "modelCallsStartedByVerifier": 0
+}

@@ -6,6 +6,20 @@ import { playbackTimingMessages } from "./playback-timing";
 import { needsVideoReaderReload } from "../video/reader-health";
 
 const copy = {
+  secureCredentials: [
+    "System credential storage is unavailable. Unlock it or update the local service, then retry. Credentials are not saved as plaintext.",
+    "系統憑證庫無法使用。請解鎖憑證庫或更新本機服務後重試；憑證不會改存明文。",
+    "系统凭据库不可用。请解锁凭据库或更新本地服务后重试；凭据不会改存明文。",
+    "システムの資格情報ストアを利用できません。ロックを解除するかローカルサービスを更新して再試行してください。平文では保存されません。",
+    "시스템 자격 증명 저장소를 사용할 수 없습니다. 잠금을 해제하거나 로컬 서비스를 업데이트한 후 다시 시도하세요. 자격 증명은 일반 텍스트로 저장되지 않습니다.",
+  ],
+  linuxCredentials: [
+    "Set up Linux Secret Service: install secret-tool (libsecret-tools), start GNOME Keyring or another compatible service, and unlock it before retrying.",
+    "請設定 Linux 憑證庫：安裝 secret-tool（libsecret-tools），啟動並解鎖 GNOME Keyring 或其他相容的 Secret Service，再重試。",
+    "请设置 Linux 凭据库：安装 secret-tool（libsecret-tools），启动并解锁 GNOME Keyring 或其他兼容的 Secret Service，再重试。",
+    "Linux の secret-tool（libsecret-tools）をインストールし、GNOME Keyring などの Secret Service を起動してロックを解除してから再試行してください。",
+    "Linux에서 secret-tool(libsecret-tools)을 설치하고 GNOME Keyring 등 호환 Secret Service를 시작한 후 잠금을 해제하고 다시 시도하세요.",
+  ],
   retired: [
     "This lesson version is no longer supported. Generate a new lesson.",
     "此教材版本已停止支援，請重新生成",
@@ -219,6 +233,14 @@ export function piFeedback(
   context: PiFeedbackContext = "error",
 ): { message: string; detail?: string } {
   if (!raw) return { message: "" };
+  if (/Linux Secret Service/.test(raw))
+    return { message: piFeedbackCopy(locale, "linuxCredentials"), detail: raw };
+  if (
+    /Keychain|DPAPI|system AI credential|secure migration|AI credentials (?:are invalid|could not)|credential storage (?:command|lock)/i.test(
+      raw,
+    )
+  )
+    return { message: piFeedbackCopy(locale, "secureCredentials"), detail: raw };
   if (/^(?:Error: )?This operation was aborted\.?$/.test(raw)) {
     return {
       message: messages[locale][context === "generation" ? "generationCancelled" : "jobCancelled"],

@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":9}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":19}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":9}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":3}]}],\"learningValue\":\"透過日常簡短對話，掌握「〜ところだった」（正準備要做某事時被中斷）的時態情態句型，以及口語中以「〜てくれる？」提出委婉請求的用法。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"學習「動詞辭書形＋ところだった」表示過去某個時間點「正打算／剛要去做某事」的語法結構。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c3\"],\"description\":\"學習以「動詞て形＋くれる？」在平輩或親近關係中提出日常請求的口語表現。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T04:39:02.499Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 9972.982166000002,
+    "usage": {
+      "input": 4120,
+      "output": 1176,
+      "reasoning": 925
+    }
+  }
+}

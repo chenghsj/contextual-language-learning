@@ -44,6 +44,7 @@ export function useSubtitleDraft(language: LearningLanguage, locale: UiLocale) {
     state.raw,
     state.originalRaw,
     state.timingOverrides,
+    state.timingPreviewVersion,
     state.captionSource,
     state.title,
     state.sourceUrl,

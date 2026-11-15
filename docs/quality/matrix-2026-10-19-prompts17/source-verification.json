@@ -1,5 +1,6 @@
 {
-  "evidence": "verified",
+  "evidence": "artifact_integrity_and_record_consistency_verified",
+  "semanticEvaluation": "Stored AI editorial judgments; not independently re-evaluated by this verifier",
   "mode": "current source and frozen artifacts",
   "sourceDrift": [],
   "counts": {
@@ -9,8 +10,10 @@
     "fixedSourcePassed": 28,
     "identityPassed": 28,
     "coveragePassed": 27,
-    "semanticPassed": 21,
-    "accepted": 20
+    "semanticPassed": 22,
+    "semanticFailed": 5,
+    "semanticNeedsReview": 1,
+    "accepted": 21
   },
   "recordedCalls": 88,
   "incompleteCallAccounting": [],

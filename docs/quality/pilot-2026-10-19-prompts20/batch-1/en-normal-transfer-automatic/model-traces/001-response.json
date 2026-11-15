@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":23}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":37}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":22}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":5}]}],\"learningValue\":\"學習日常詢問原由、用「be about to」描述正要進行某事，以及請求他人稍等與回應的實用對話表達。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"學習「was about to + 原形動詞」表示過去特定時刻正準備做某事的結構。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c3\"],\"description\":\"掌握口語中請求對方稍候片刻的常用片語「wait a minute」。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c1\"],\"description\":\"理解在疑問句中使用「still」表達對狀況仍在持續感到好奇或意外的語氣。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T15:09:34.261Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 13158.52687500001,
+    "usage": {
+      "input": 2515,
+      "output": 1263,
+      "reasoning": 1007
+    }
+  }
+}

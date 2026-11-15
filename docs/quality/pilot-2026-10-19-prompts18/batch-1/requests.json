@@ -1,0 +1,332 @@
+[
+  {
+    "id": "34943d1e-4856-4c90-a6b0-bb7ad8ed09c1",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "es-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "es",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "¿Maya habló de la reunión?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“Dime la hora”, dijo. Por cierto, ¿ya comiste? [???]"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Todavía no. ¿Qué significa [???] aquí?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "El subtítulo no está claro."
+      }
+    ]
+  },
+  {
+    "id": "3948789b-d739-4f15-9f7e-c049b185f0c3",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "fr-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "fr",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Pourquoi es-tu encore là ?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "J’allais partir quand tu as appelé."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Tu peux attendre un instant ?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Oui."
+      }
+    ]
+  },
+  {
+    "id": "26c95e1b-5662-4e2d-929b-7ed695d90fa8",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "it-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "it",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Maya ha parlato della riunione?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "“Dimmi l’ora”, ha detto. A proposito, hai già mangiato?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Non ancora. Che cosa significa [???] qui?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Il sottotitolo non è chiaro."
+      }
+    ]
+  },
+  {
+    "id": "cf2ac4ab-b8e9-451f-9af1-aad1867f4c95",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "vi-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "vi",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Sao bạn vẫn còn ở đây?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Tôi đang định đi thì bạn gọi."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Bạn chờ một chút được không?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Được."
+      }
+    ]
+  },
+  {
+    "id": "16ce13fd-9171-4db9-be82-de31f755769b",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "zh-TW-uncertainty-quote-topic-automatic"
+    },
+    "profile": {
+      "targetLanguage": "zh-TW",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "ミオ有提到聚會嗎？"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "「請告訴我時間」，是這麼說的。對了，吃飯了嗎？"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "還沒。這裡的[???]是什麼意思？"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "字幕不清楚。"
+      }
+    ]
+  },
+  {
+    "id": "4686a30b-b645-4eba-a01a-3e2616dba3c6",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "en-normal-transfer-automatic"
+    },
+    "profile": {
+      "targetLanguage": "en",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Why are you still here?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "I was about to leave when you called."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Can you wait a minute?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Sure."
+      }
+    ]
+  }
+]

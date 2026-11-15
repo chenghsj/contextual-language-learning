@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-21T01:33:41.678Z",
+  "helper": "/Users/cheng/Library/Application Support/Contextual Language Learning/native-host/macos-speech-siri",
+  "input": {
+    "action": "inspectSpeechDownloads",
+    "operations": [
+      {
+        "operationId": "d5897e10-f892-4d06-a817-f3b836696cc1",
+        "voiceId": "siri:com.apple.speech.synthesis.voice.custom.siri.axel.premium"
+      }
+    ]
+  },
+  "result": {
+    "speechDownloadObservations": [
+      {
+        "resource": "absent",
+        "ordering": "settled",
+        "subscription": "absent",
+        "shared": false,
+        "voiceId": "siri:com.apple.speech.synthesis.voice.custom.siri.axel.premium",
+        "operationId": "d5897e10-f892-4d06-a817-f3b836696cc1",
+        "cancelFenced": true
+      }
+    ]
+  }
+}

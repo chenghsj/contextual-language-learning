@@ -54,7 +54,10 @@ export async function teachBatches(execution: LearningExecution): Promise<void> 
             outputTokenBudget: previousBudget,
           }
         : batch.lastIssue;
-    let batchBudget = learningPointsBudget(capacity, batch.outputTokenBudget ?? budget.output);
+    let batchBudget = learningPointsBudget(
+      capacity,
+      Math.max(batch.outputTokenBudget ?? 0, budget.output),
+    );
     const expandOutputBudget = async (repair?: Parameters<typeof pointsTeachingPrompt>[3]) => {
       const next = learningPointsBudget(capacity, batchBudget.output * 2);
       if (

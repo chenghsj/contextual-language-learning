@@ -1,12 +1,17 @@
 import { CustomChunkAssembler } from "./custom-chunks";
+import { FavoriteChunkAssembler, sameFavoriteCollection } from "./favorite-chunks";
 import {
   BackgroundGenerationStateSchema,
   HostMessageSchema,
   HostRequestSchema,
   readLearningDocument,
+  parseFavoriteSnapshot,
+  type FavoriteCollection,
+  type FavoriteSnapshot,
   type HostRequest,
   type HostMessage,
   type LearningDocument,
+  type JobSummary,
 } from "@contextual/core";
 import {
   GENERATION_CONTROLLER_PORT,
@@ -63,6 +68,12 @@ export function openHostStream(
 }
 
 const responseTypes = {
+  favoriteStates: "favoriteStates",
+  setFavorite: "favoriteChanged",
+  listFavorites: "favorites",
+  configureFavorites: "favoriteStatus",
+  favoriteStatus: "favoriteStatus",
+  syncFavorites: "favoriteStatus",
   estimateGeneration: "generationEstimate",
   health: "health",
   checkCustomDuplicates: "duplicates",
@@ -73,6 +84,10 @@ const responseTypes = {
   renameCustomDocument: "customDocumentChanged",
   deleteCustomDocument: "customDocumentChanged",
   agentModels: "agentModels",
+  discoverModels: "discoveredModels",
+  getLocalModelConfig: "localModelConfig",
+  setLocalModelConfig: "localModelConfig",
+  testLocalModelConfig: "localModelTest",
   piProviders: "piProviders",
   piLogout: "piProviders",
   listEndedJobs: "jobs",
@@ -153,6 +168,50 @@ export function request<R extends RequestInput>(
 export function request(input: RequestInput, runtime: typeof chrome.runtime = chrome.runtime) {
   return nativeOnce({ ...input, id: crypto.randomUUID() }, runtime);
 }
+export function getFavorite(
+  collection: FavoriteCollection,
+  key: string,
+  runtime: typeof chrome.runtime = chrome.runtime,
+): Promise<FavoriteSnapshot> {
+  return new Promise((resolve, reject) => {
+    const id = crypto.randomUUID();
+    const chunks = new FavoriteChunkAssembler(collection, key);
+    const stream = openHostStream(
+      message => {
+        if (message.type === "generationState" || message.id !== id) return;
+        try {
+          if (message.type === "error") throw new Error(message.message);
+          let snapshot: FavoriteSnapshot | null;
+          if (message.type === "favorite") {
+            if (message.key !== key || !sameFavoriteCollection(message.collection, collection))
+              throw new Error("Favorite identity mismatch");
+            snapshot = parseFavoriteSnapshot(message.snapshot);
+          } else if (message.type === "favoriteChunk") {
+            snapshot = chunks.push(message);
+            if (!snapshot && message.index === message.total - 1)
+              throw new Error("Missing favorite chunks");
+          } else throw new Error("Unexpected Host favorite response");
+          if (snapshot) {
+            stream.close();
+            resolve(snapshot);
+          }
+        } catch (error) {
+          stream.close();
+          reject(error);
+        }
+      },
+      reject,
+      runtime,
+    );
+    try {
+      stream.send({ id, type: "getFavorite", collection, key });
+    } catch (error) {
+      stream.close();
+      reject(error);
+    }
+  });
+}
+
 export function getDocument(
   documentId: string,
   runtime: typeof chrome.runtime = chrome.runtime,
@@ -186,6 +245,81 @@ export function getDocument(
     );
     try {
       stream.send({ type: "getDocument", id, documentId });
+    } catch (error) {
+      stream.close();
+      reject(error);
+    }
+  });
+}
+
+export type JobPreviewInfo = {
+  jobId: string;
+  revision: number;
+  selectedSceneCount: number;
+  readySceneIds: string[];
+  status: JobSummary["status"];
+};
+export function getJobPreview(
+  jobId: string,
+  runtime: typeof chrome.runtime = chrome.runtime,
+): Promise<{ info: JobPreviewInfo; document: LearningDocument }> {
+  return new Promise((resolve, reject) => {
+    const id = crypto.randomUUID(),
+      chunks = new DocumentChunkAssembler();
+    let info: JobPreviewInfo | undefined;
+    const stream = openHostStream(
+      message => {
+        if (message.type === "generationState" || message.id !== id) return;
+        try {
+          if (message.type === "error") throw new Error(message.message);
+          if (message.type === "job") {
+            const job = message.job;
+            if (
+              info ||
+              job.id !== jobId ||
+              job.previewRevision === undefined ||
+              job.selectedSceneCount === undefined ||
+              !job.readySceneIds?.length
+            )
+              throw new Error("Preview identity mismatch");
+            info = {
+              jobId: job.id,
+              revision: job.previewRevision,
+              selectedSceneCount: job.selectedSceneCount,
+              readySceneIds: job.readySceneIds,
+              status: job.status,
+            };
+            return;
+          }
+          const document =
+            message.type === "result"
+              ? readLearningDocument(message.document)
+              : message.type === "documentChunk"
+                ? chunks.push(message)
+                : null;
+          if (document) {
+            if (
+              !info ||
+              document.id !== jobId ||
+              JSON.stringify(document.sections.map(s => s.id)) !==
+                JSON.stringify(info.readySceneIds)
+            )
+              throw new Error("Preview content differs from its revision");
+            stream.close();
+            resolve({ info, document });
+          } else if (message.type === "documentChunk" && message.index === message.total - 1)
+            throw new Error("Missing preview chunks");
+          else if (message.type !== "documentChunk") throw new Error("Unexpected preview response");
+        } catch (error) {
+          stream.close();
+          reject(error);
+        }
+      },
+      reject,
+      runtime,
+    );
+    try {
+      stream.send({ id, type: "getJobPreview", jobId });
     } catch (error) {
       stream.close();
       reject(error);

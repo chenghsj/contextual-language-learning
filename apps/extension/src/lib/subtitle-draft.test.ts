@@ -331,3 +331,129 @@ test("an unavailable video reader and page reload preserve existing subtitles wi
     assert.equal(fetches, 1, "restoring the cached transcript must not retrieve subtitles again");
   }
 });
+
+test("batch timing correction is atomic, retains ruby/text/source, and persists exact playback overrides", () => {
+  const draft = new SubtitleDraft("ja", "zh-TW", adapters());
+  draft.importText(
+    "1\n00:00:01.000 --> 00:00:02.000\n<ruby>赤福<rt>あかふく</rt></ruby>\n\n2\n00:00:03.000 --> 00:00:04.000\nHello",
+  );
+  draft.editCue("cue-2", { originalText: "Edited text", startMs: 3000, endMs: 4100 });
+  const before = draft.snapshot;
+  let updates = 0;
+  const unsubscribe = draft.subscribe(() => updates++);
+  draft.applyTimingCorrections(
+    [
+      { id: "cue-1", startMs: 1101, endMs: 2102 },
+      { id: "cue-2", startMs: 3103, endMs: 4204 },
+    ],
+    before,
+    5000,
+  );
+  assert.equal(updates, 2, "subscribe plus a single batch publication");
+  unsubscribe();
+  assert.equal(draft.snapshot.originalRaw, before.originalRaw);
+  assert.equal(draft.snapshot.cues[1].originalText, "Edited text");
+  assert.deepEqual(draft.snapshot.cues[0].ruby, before.cues[0].ruby);
+  assert.deepEqual(parseSubtitles(draft.snapshot.raw), draft.snapshot.cues);
+  const restored = new SubtitleDraft("ja", "zh-TW", adapters());
+  restored.hydrateSaved(structuredClone(draft.exportSaved()));
+  assert.deepEqual(restored.snapshot.timingOverrides, draft.snapshot.timingOverrides);
+  assert.equal(restored.playbackCueMap().get("cue-1")!.startMs, 1101);
+  assert.equal(restored.playbackCueMap().get("cue-2")!.endMs, 4204);
+  restored.restoreOriginal();
+  assert.deepEqual(restored.snapshot.timingOverrides, {});
+  assert.equal(restored.snapshot.cues[0].startMs, 1000);
+});
+
+test("invalid or stale batches cannot partially apply, including unknown and duplicate cue IDs", () => {
+  const draft = new SubtitleDraft("en", "en", adapters());
+  draft.importText(caption);
+  const before = draft.snapshot;
+  const good = { id: "cue-1", startMs: 1234, endMs: 2345 };
+  for (const bad of [
+    { ...good, id: "missing" },
+    { ...good, startMs: -1 },
+    { ...good, endMs: 1234 },
+    { ...good, endMs: 3001 },
+    { ...good, startMs: NaN },
+    { ...good, startMs: 1.2 },
+    { ...good, endMs: Infinity },
+    good,
+  ]) {
+    assert.throws(() => draft.applyTimingCorrections([good, bad], before, 3000));
+    assert.equal(draft.snapshot, before);
+  }
+  draft.editCue("cue-1", { originalText: "Newer edit", startMs: 1000, endMs: 2000 });
+  const edited = draft.snapshot;
+  assert.throws(() => draft.applyTimingCorrections([good], before, 3000), /STALE_TIMING/);
+  assert.equal(draft.snapshot, edited);
+  draft.setLanguage("ja");
+  assert.throws(() => draft.applyTimingCorrections([good], draft.snapshot));
+});
+
+test("pending calibration survives focus metadata, saved draft reload and remains bound to unchanged subtitles", () => {
+  const draft = new SubtitleDraft("en", "en", adapters());
+  draft.setSource(url);
+  draft.importText(caption);
+  const before = draft.snapshot;
+  draft.setTitle("Updated window title");
+  const changes = [{ id: "cue-1", startMs: 1101, endMs: 2202 }];
+  const inputs = {
+    mode: "offset" as const,
+    offset: "0.101",
+    anchors: {
+      subtitleFirst: "00:01",
+      audioFirst: "00:02",
+      subtitleLast: "00:11",
+      audioLast: "00:13",
+    },
+  };
+  draft.saveTimingPreview(changes, before, inputs);
+  assert.deepEqual(draft.timingPreview()?.changes, changes);
+  draft.setTitle("Another focus update");
+  assert.equal(draft.timingPreview()?.snapshot, draft.snapshot);
+  const restored = new SubtitleDraft("en", "en", adapters());
+  restored.hydrateSaved(structuredClone(draft.exportSaved()));
+  const preview = restored.timingPreview()!;
+  assert.deepEqual(preview.changes, changes);
+  assert.deepEqual(preview.inputs, inputs);
+  restored.applyTimingCorrections(preview.changes, preview.snapshot);
+  assert.equal(restored.snapshot.cues[0].startMs, 1101);
+  assert.equal(restored.timingPreview(), null);
+  const again = new SubtitleDraft("en", "en", adapters());
+  again.hydrateSaved(structuredClone(restored.exportSaved()));
+  assert.equal(again.snapshot.cues[0].startMs, 1101);
+  assert.equal(again.timingPreview(), null);
+});
+test("pending calibration cannot cross subtitle edits, source identity or language", () => {
+  const draft = new SubtitleDraft("en", "en", adapters());
+  draft.setSource(url);
+  draft.importText(caption);
+  const before = draft.snapshot;
+  draft.saveTimingPreview([{ id: "cue-1", startMs: 1100, endMs: 2100 }], before);
+  draft.setLanguage("ja");
+  assert.equal(draft.timingPreview(), null);
+  draft.setLanguage("en");
+  assert.ok(draft.timingPreview());
+  draft.setSource(other);
+  assert.equal(draft.timingPreview(), null);
+  draft.setSource(url);
+  assert.ok(draft.timingPreview());
+  draft.editCue("cue-1", { originalText: "New subtitle", startMs: 1000, endMs: 2000 });
+  assert.equal(draft.timingPreview(), null);
+  assert.throws(() => draft.saveTimingPreview([], before), /STALE_TIMING/);
+});
+
+test("removed audio-mode proposals are discarded without changing subtitle times", () => {
+  const draft = new SubtitleDraft("en", "en", adapters());
+  draft.setSource(url);
+  draft.importText(caption);
+  draft.saveTimingPreview([{ id: "cue-1", startMs: 1100, endMs: 2100 }], draft.snapshot);
+  const saved = structuredClone(draft.exportSaved());
+  for (const [, preview] of saved.timingPreviews!) preview.algorithmVersion = 2;
+  const restored = new SubtitleDraft("en", "en", adapters());
+  restored.hydrateSaved(saved);
+  assert.equal(restored.timingPreview(), null);
+  assert.equal(restored.snapshot.cues[0].startMs, 1000);
+  assert.equal(restored.snapshot.cues[0].endMs, 2000);
+});

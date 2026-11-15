@@ -4,6 +4,7 @@ import { JSDOM } from "jsdom";
 import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { LearningProfile } from "@contextual/core";
+import { UNRESTRICTED_LEVEL } from "@contextual/core";
 import { useCreateFlow, type CreateFlow, type CreateFlowOptions } from "../hooks/use-create-flow";
 import type { DraftStorage } from "./draft-db";
 import { draftRevision, type CreateDraft } from "./create-draft";
@@ -275,6 +276,30 @@ test("Quick Create preserves a video's own draft and adapts last settings for a 
     assert.equal(view.profile.targetLanguage, "ja");
     assert.notEqual(view.profile.level, "B1");
     assert.equal(view.flow.state.analysisSelection.startMs, 1000);
+  } finally {
+    await view.close();
+  }
+});
+
+test("Quick Create carries unrestricted last settings into another learning language", async () => {
+  const storage = new MemoryDrafts();
+  storage.values.set(
+    "last-create-settings",
+    saved({
+      mode: "standard",
+      profile: { ...profile, level: UNRESTRICTED_LEVEL },
+    }),
+  );
+  const view = await render(storage);
+  try {
+    await view.profileTo({ ...profile, targetLanguage: "ja", level: "N4" });
+    await act(async () => view.flow.quickCreate());
+    assert.equal(view.profile.targetLanguage, "ja");
+    assert.equal(view.profile.level, UNRESTRICTED_LEVEL);
+    await act(async () => assert.deepEqual(view.flow.submit(available), { status: "started" }));
+    const request = view.requests[0];
+    assert.ok("profile" in request);
+    assert.equal(request.profile.level, UNRESTRICTED_LEVEL);
   } finally {
     await view.close();
   }

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../../../packages/ui/src";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -61,7 +62,7 @@
   --font-sans: Outfit, "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: Geist Mono, ui-monospace, monospace;
-  --radius: 1rem;
+  --radius: 0.625rem;
   --shadow-x: 0;
   --shadow-y: 1px;
   --shadow-blur: 3px;
@@ -107,10 +108,10 @@
   animation: app-accordion-up var(--motion-exit) var(--motion-ease);
 }
 [data-slot="sheet-overlay"][data-state="open"] {
-  animation-duration: 240ms;
+  animation-duration: 320ms;
 }
 [data-slot="sheet-overlay"][data-state="closed"] {
-  animation-duration: 180ms;
+  animation-duration: 240ms;
 }
 
 /* Respect app preference for third-party motion without touching positioning transforms. */
@@ -234,7 +235,7 @@ html[data-motion="reduced"] .sonner-loading-wrapper[data-visible="false"] {
   --font-sans: Outfit, "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: Geist Mono, ui-monospace, monospace;
-  --radius: 1rem;
+  --radius: 0.625rem;
   --shadow-x: 0;
   --shadow-y: 1px;
   --shadow-blur: 3px;

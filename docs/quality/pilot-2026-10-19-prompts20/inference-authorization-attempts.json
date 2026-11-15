@@ -1,0 +1,20 @@
+{
+  "attempts": [
+    {
+      "at": "2026-10-19T05:06:35.463296+00:00",
+      "result": "not_executed",
+      "reason": "Automatic approval review failed: Selected model is at capacity. The action was not executed because automatic approval review could not be completed. This is a review failure, not a determination that the action is unsafe.",
+      "requestedAction": "Run the frozen 3-case quality command with existing Antigravity login and required credential lock/network access.",
+      "newModelCalls": 0
+    },
+    {
+      "at": "2026-10-19T05:07:32.992414+00:00",
+      "result": "not_executed",
+      "reason": "Automatic approval review failed: Selected model is at capacity. The action was not executed because automatic approval review could not be completed. This is a review failure, not a determination that the action is unsafe.",
+      "requestedAction": "Run the frozen 3-case quality command with existing Antigravity login and required credential lock/network access.",
+      "newModelCalls": 0,
+      "note": "One retry through the same required approval process; same capacity failure before process creation."
+    }
+  ],
+  "boundary": "Approval-review infrastructure failure before process creation, not a content generation failure or model-client call."
+}

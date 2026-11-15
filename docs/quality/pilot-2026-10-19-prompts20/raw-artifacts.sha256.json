@@ -1,0 +1,27 @@
+{
+  "scope": "Original frozen pre-inference inputs, approval-review failures before execution, source identity, pending-review packet and completed engineering logs. No generation outputs exist.",
+  "files": {
+    "browser-acceptance.json": "928ea436e0972c1123ef6d1b1b2d7852a0c857616891a3f5e93997bccf1633d1",
+    "cases.json": "1098c4455ae16f47cc8808ac7a4c3d7ad29b1c1d3a2c719b847796d308874782",
+    "engineering-checks.json": "d0a1e270803581b4dd80c1e7e0f11d803825c1490f347c2e01e9dd38e81ca06b",
+    "implementation.patch": "11a3003459f1021df8341ab4b9541c70396025793959598050ab62f1f54532db",
+    "inference-authorization-attempts.json": "85b57cf942834c549130f8623e21e533cb55ffb23b755b11c2727ef09602e3e9",
+    "inference-status.json": "efc17186566deece1f08bd5c032ee80b37dec0183c04a41bef8b1b4136fb4bae",
+    "logs/build.log": "dc04207bded9af3ef2a2fd189ed5268595a95da34efea19441d3cf65aebaf4c0",
+    "logs/extension-assets.log": "e3f14737f00cade95ed3f6b14294ce8cf6e11ba6db340f5aa2a2548953f59abf",
+    "logs/host-smoke.log": "f6bb59c63a87bf09f669541f0f26da27e8ffd54715da61a51a439ef84961753a",
+    "logs/prepare.log": "d3ef1c1ac3074c78d987da74ebbaa9266d45b7b183b6c1466344d658bf3508e8",
+    "logs/prompts19-historical.log": "193f361a8cec2e6793cfb7dc0f819ef9cc511d8423519727e476b07356b07df5",
+    "logs/regression.log": "9aa00582750b1be93e7ad408177e5fece98ada0a39343be3a62e26141501f984",
+    "logs/tool-typecheck-complete.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/tool-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/typecheck.log": "f135ce1c2d2f22d56f28783bc9c9ed37e0a86f1cb6691f38e2021b3ddd2b38b5",
+    "pending-review-packet.json": "55129d31400210c816becea9f046dd98df6add5ff332891af86d247458dba4cc",
+    "plan.json": "a3484343c8f3527ec8523adcf3365b0704a60de1fd1c1c612e8ed3097538f680",
+    "prepared/case-definitions.json": "1098c4455ae16f47cc8808ac7a4c3d7ad29b1c1d3a2c719b847796d308874782",
+    "prepared/conditions.json": "5b9acb07c3adbc2dbb1b7d3ce7a14fdfb27c84e9ee590fc728812496e2d8fdce",
+    "prepared/requests.json": "99d0296528c4321afab3c1aa883a8b296c7d0ac1071fb3f090ebebb8a5c7e09e",
+    "run-context.json": "6938dc565b82bab52fe7a6fd8110f1760dc67f76e88ac6a39b3e38ff140d3a06",
+    "source-comparison.json": "4498378ad742fa46cd7fced974c1a4a1ac0d48ea9114dad238098d361b7dc44e"
+  }
+}

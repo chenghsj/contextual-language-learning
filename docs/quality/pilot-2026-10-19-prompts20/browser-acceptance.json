@@ -1,0 +1,7 @@
+{
+  "status": "not_executed",
+  "attempt": "chrome_devtools.list_pages",
+  "result": "Browser is already running for the chrome-devtools-mcp profile; tool cannot connect.",
+  "actions": "No browser processes stopped, no profile changed, no installed Host updated.",
+  "boundary": "This is connection availability only, not product acceptance. Installed Host/Chrome/video acceptance remains separate from isolated build and text generation."
+}

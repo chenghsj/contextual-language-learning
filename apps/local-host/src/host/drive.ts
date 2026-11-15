@@ -18,6 +18,12 @@ import { resumePendingBackups } from "../storage/backup";
 import { createDocumentSync } from "../storage/document-sync";
 import type { HostDispatcherDeps } from "./context";
 
+const googleLogins = new Map<string, AbortController>();
+export function interruptDriveLogins() {
+  for (const controller of googleLogins.values()) controller.abort();
+  googleLogins.clear();
+}
+
 /** Drive account, restore and backup scheduling operations. */
 export async function handleDriveRequest(
   request: HostRequest,
@@ -74,8 +80,25 @@ export async function handleDriveRequest(
       await disconnectGoogleAccount(request.accountId);
       reply({ id: request.id, type: "driveDisconnected", accountId: request.accountId });
       return true;
-    case "driveConnect":
-      reply({ id: request.id, type: "driveConnected", account: await connectGoogleAccount() });
+    case "driveConnect": {
+      const controller = new AbortController();
+      googleLogins.set(request.id, controller);
+      try {
+        const account = await connectGoogleAccount({
+          signal: controller.signal,
+          onAuthorization: url => reply({ id: request.id, type: "driveAuth", url }),
+        });
+        reply({ id: request.id, type: "driveConnected", account });
+      } catch (error) {
+        if (controller.signal.aborted) throw new Error("Google authorization was declined");
+        throw error;
+      } finally {
+        googleLogins.delete(request.id);
+      }
+      return true;
+    }
+    case "driveAuthCancel":
+      googleLogins.get(request.loginId)?.abort();
       return true;
     case "driveFolder":
       reply({

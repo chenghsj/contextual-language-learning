@@ -1,4 +1,12 @@
+import { rememberCustomModelId } from "./lib/custom-models";
+import { FavoritesLibrary } from "./components/favorites-library";
+import { getFavoritesStore } from "./lib/favorites-store";
+import { sameFavoriteCollection } from "./native/favorite-chunks";
+import { favoritesCopy } from "./i18n/favorites";
 import { ContextualSceneReader } from "./components/contextual-scene-reader";
+import { getJobPreview, type JobPreviewInfo } from "./native/host-client";
+import { createPreviewSession } from "./native/preview-session";
+import { generationPreviewCopy } from "./i18n/generation-preview";
 import { VideoLibrary } from "./components/video-library";
 import { NOTIFICATION_ROUTE_KEY } from "./native/notification-navigation";
 import { wasOperationCancelled } from "./lib/operation-cancellation";
@@ -11,8 +19,15 @@ import { connectDriveAndVerify } from "./lib/drive-connection";
 import { useJobHistoryRefresh } from "./hooks/use-job-history-refresh";
 import { VideoMetadataButton } from "./components/video-metadata-button";
 import { ActionFeedbackButton } from "./components/action-feedback-button";
-import { backupFeedbackResult } from "./lib/backup-feedback";
+import { backupFeedbackResult, isRetiredBackup } from "./lib/backup-feedback";
 import { SystemSpeechProvider } from "./components/system-speech";
+import {
+  SpeechDownloadsProvider,
+  useSpeechDownloads,
+  useSpeechDownloadSnapshot,
+} from "./components/speech-downloads-provider";
+import { isSpeechDownloadActive, type SpeechDownloadTask } from "@contextual/core";
+import { speechDownloadTaskText } from "./i18n/speech-download-task";
 import { speechDownloadCopy } from "./i18n/speech-downloads";
 import { RequestBackupSwitch } from "./components/request-backup-switch";
 import { RequestFolderSelection } from "./components/request-folder-selection";
@@ -22,7 +37,7 @@ import { RequestModelSelection } from "./components/request-model-selection";
 import { GenerationEstimate } from "./components/generation-estimate";
 import { createFlowCopy } from "./i18n/create-flow";
 import { Sheet, SheetContent, SheetTitle, SheetTitleRow } from "./components/ui/sheet";
-import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/ui/tabs";
 import { cleanVideoTitle } from "./video/metadata";
 import { subtitleLayoutCopy } from "./i18n/subtitle-layout";
 import { useSubtitleDraft } from "./hooks/use-subtitle-draft";
@@ -68,6 +83,12 @@ import { Disclosure } from "./components/disclosure";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   withSentenceTiming,
+  favoriteReaderDocument,
+  customFavoriteReaderDocument,
+  type CustomFavoriteSnapshot,
+  type FavoriteSnapshot,
+  type FavoriteSummary,
+  type FavoriteReaderDocument,
   CustomGenerationRequestSchema,
   type CustomDocument,
   type CustomContentSummary,
@@ -77,8 +98,8 @@ import {
   HOST_PROTOCOL_VERSION,
   LEARNING_LANGUAGES,
   type LearningLanguage,
-  EXPLANATION_LANGUAGES,
   levelsForTargetLanguage,
+  UNRESTRICTED_LEVEL,
   defaultLevelForTargetLanguage,
   type AgentInfo,
   type AgentModel,
@@ -110,6 +131,7 @@ import {
 import { getActiveWindowTab, openOrFocusVideoTab } from "./video/tab";
 import {
   getDocument,
+  getFavorite,
   getCustomResource,
   nativeOnce as sendHostRequest,
   type OnceRequest,
@@ -140,7 +162,7 @@ import { Badge } from "./components/ui/badge";
 import { NoticeViewport } from "./components/notice-viewport";
 import { toast } from "sonner";
 import { SettingInfo } from "./components/setting-info";
-import { learningSettingsCopy, levelHint } from "./i18n/learning-settings";
+import { learningSettingsCopy, levelHint, learningLevelLabel } from "./i18n/learning-settings";
 import { agentModelPreferenceKey, savedAgentModel } from "./i18n/agent-model-preferences";
 import { translate, type MessageKey, type MessageParams } from "./i18n/messages";
 import {
@@ -194,9 +216,11 @@ const DEFAULT_AGENT: AgentSettings = { provider: "", modelId: "" };
 export default function App() {
   const [store] = useState(() => getPreferencesStore(chrome.storage.local, getBrowserLocale()));
   return (
-    <SystemSpeechProvider store={store}>
-      <AppContent />
-    </SystemSpeechProvider>
+    <SpeechDownloadsProvider>
+      <SystemSpeechProvider store={store}>
+        <AppContent />
+      </SystemSpeechProvider>
+    </SpeechDownloadsProvider>
   );
 }
 
@@ -207,6 +231,12 @@ function AppContent() {
     "general" | "ai" | "storage" | "advanced" | "speech-resources" | null
   >(null);
   const [speechSettingsLanguage, setSpeechSettingsLanguage] = useState<string | null>(null);
+  const [speechTargetVoice, setSpeechTargetVoice] = useState<{
+    id: string;
+    tab: "installed" | "downloadable";
+  } | null>(null);
+  const speechDownloads = useSpeechDownloads();
+  const downloadSnapshot = useSpeechDownloadSnapshot();
   const speechManagerHeading = useRef<HTMLHeadingElement>(null);
   const speechSettingsScroll = useRef(0);
   const [speechManageFocus, setSpeechManageFocus] = useState(false);
@@ -235,6 +265,20 @@ function AppContent() {
   const ux = createFlowCopy(uiLocale);
   const localeRef = useRef(uiLocale);
   localeRef.current = uiLocale;
+  useEffect(
+    () =>
+      speechDownloads.subscribeNotices(task => {
+        if (task.progress.status === "completed")
+          toast.success(
+            speechDownloadTaskText(localeRef.current, "noticeCompleted", { name: task.voice.name }),
+          );
+        if (task.progress.status === "failed")
+          toast.error(
+            speechDownloadTaskText(localeRef.current, "noticeFailed", { name: task.voice.name }),
+          );
+      }),
+    [speechDownloads],
+  );
   const pageRef = useRef(page);
   pageRef.current = page;
   const overlay = page === "settings" || page === "activity";
@@ -267,8 +311,9 @@ function AppContent() {
   const [explanationLanguageMode, setExplanationLanguageMode] = useState<"auto" | "custom">("auto");
   const [agent, setAgent] = useState<AgentSettings>(DEFAULT_AGENT);
   const [providerSettings, setProviderSettings] = useState<
-    Record<string, Pick<AgentSettings, "modelId" | "thinkingLevel">>
+    Record<string, Pick<AgentSettings, "modelId" | "thinkingLevel" | "customModel">>
   >({});
+  const [customModels, setCustomModels] = useState<Record<string, string[]>>({});
   const [agentModelPreferences, setAgentModelPreferences] = useState<Record<string, string>>({});
   const [modelOptions, setModelOptions] = useState<AgentModel[]>([]);
   const modelCatalogProviderRef = useRef("");
@@ -287,6 +332,67 @@ function AppContent() {
   const [hostCheckSuccess, setHostCheckSuccess] = useState(false);
   const [agentCatalog, setAgentCatalog] = useState<AgentInfo[]>([]);
   const [document, setDocument] = useState<LearningDocument | null>(null);
+  const [previewInfo, setPreviewInfo] = useState<JobPreviewInfo | null>(null);
+  const previewRef = useRef<JobPreviewInfo | null>(null);
+  const previewConnectionRef = useRef<string | undefined>(undefined);
+  const notifiedPreviewJobs = useRef(new Set<string>());
+  const previewSession = useMemo(
+    () =>
+      createPreviewSession({
+        load: getJobPreview,
+        onSnapshot: ({ info, document }) => {
+          const opening = previewRef.current?.jobId !== info.jobId;
+          const active = info.status === "completed" ? null : info;
+          previewRef.current = active;
+          setPreviewInfo(active);
+          setFavoriteReader(null);
+          setDocument(document);
+          if (opening) setPage("lesson");
+        },
+        onError: error => setError(String(error)),
+      }),
+    [],
+  );
+  useEffect(() => {
+    if (basePage !== "lesson" && previewRef.current) {
+      previewSession.close();
+      previewRef.current = null;
+      setPreviewInfo(null);
+    }
+  }, [basePage, previewSession]);
+  useEffect(() => () => previewSession.close(), [previewSession]);
+  const [libraryView, setLibraryView] = useState<"all" | "favorites">("all");
+  const [favoriteReader, setFavoriteReader] = useState<{
+    document: FavoriteReaderDocument;
+    origin: FavoriteSnapshot["origin"];
+  } | null>(null);
+  const [customFavoriteReader, setCustomFavoriteReader] = useState<CustomFavoriteSnapshot | null>(
+    null,
+  );
+  const favoritesStore = getFavoritesStore();
+  useEffect(() => favoritesStore.connect(), [favoritesStore]);
+  async function openFavorite(summary: FavoriteSummary) {
+    const collection = favoritesStore.getSnapshot().collection;
+    const snapshot = await getFavorite(collection, summary.key);
+    if (!sameFavoriteCollection(collection, favoritesStore.getSnapshot().collection)) return;
+    if (snapshot.snapshotVersion === 2) {
+      setFavoriteReader(null);
+      setCustomFavoriteReader(snapshot);
+      setPage("custom");
+      return;
+    }
+    setCustomFavoriteReader(null);
+    const progressId =
+      "favorite:" +
+      (collection.kind === "local" ? "local" : collection.accountId) +
+      ":" +
+      summary.key;
+    setFavoriteReader({
+      document: favoriteReaderDocument(snapshot, progressId),
+      origin: snapshot.origin,
+    });
+    setPage("lesson");
+  }
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -320,8 +426,11 @@ function AppContent() {
   const [driveFolderUrl, setDriveFolderUrl] = useState<string | null>(null);
   const [driveConnectError, setDriveConnectError] = useState("");
   const [driveAccounts, setDriveAccounts] = useState<DriveAccount[]>([]);
-  const [driveConfigured, setDriveConfigured] = useState(false);
+  const [driveConfigured, setDriveConfigured] = useState<boolean | null>(null);
   const [driveAccountsLoaded, setDriveAccountsLoaded] = useState(false);
+  const [driveAccountsLoading, setDriveAccountsLoading] = useState(true);
+  const [driveAccountsError, setDriveAccountsError] = useState("");
+  const driveAccountsRequest = useRef(false);
   const [driveAccess, setDriveAccess] = useState<{
     accountId: string;
     status: "checking" | "verified" | "failed";
@@ -509,7 +618,9 @@ function AppContent() {
     requestBackup,
   } = createFlow.state;
   const { generationAgent, analysisDurationMs, estimatePayload } = createFlow;
-  const readerAdapter = getVideoAdapter(document?.source.url);
+  const readerAdapter = getVideoAdapter(
+    favoriteReader?.document.source.url ?? document?.source.url,
+  );
   const selectedDriveId = backup.accountId ?? driveAccounts[0]?.id;
   const driveAccessVerified =
     !!selectedDriveId &&
@@ -536,12 +647,15 @@ function AppContent() {
     };
   }, [hostReady, selectedDriveId, backupStatus]);
   const backupJobs = jobs.filter(job => job.backup?.accountId === selectedDriveId);
-  const backupFailed = backupJobs.filter(job => job.backup?.status === "failed");
+  const backupFailed = backupJobs.filter(
+    job => job.backup?.status === "failed" && !isRetiredBackup(job),
+  );
   function applyPreferences(saved: ReturnType<typeof preferencesStore.current>) {
     setProfile(contextualGenerationProfile(saved.profile));
     setExplanationLanguageMode(saved.explanationLanguageMode);
     setAgent(saved.agent ?? DEFAULT_AGENT);
     setProviderSettings(saved.providerSettings);
+    setCustomModels(saved.customModels ?? {});
     setAgentModelPreferences(saved.agentModelPreferences);
     setDestination(saved.destination);
     setBackup(saved.backup);
@@ -609,6 +723,10 @@ function AppContent() {
     const unsubscribe = generationSession.subscribe(event => {
       if (event.type === "state") {
         setConnection(event.state.connection);
+        const nextConnection = event.state.connection?.status;
+        if (nextConnection === "ready" && previewConnectionRef.current !== "ready")
+          previewSession.reconnect();
+        previewConnectionRef.current = nextConnection;
         setCancellations(event.state.cancellations ?? {});
         onJobsConnectionStatus(event.state.connection?.status);
         setChecking(event.state.checking);
@@ -710,6 +828,7 @@ function AppContent() {
         profile,
         agent: isPiProviderId(agent.provider) ? agent : null,
         providerSettings,
+        customModels,
         agentModelPreferences,
         destination,
         backup,
@@ -744,6 +863,7 @@ function AppContent() {
     profile,
     agent,
     providerSettings,
+    customModels,
     agentModelPreferences,
     destination,
     backup,
@@ -779,20 +899,36 @@ function AppContent() {
   }
 
   async function refreshDriveAccounts(): Promise<void> {
+    if (driveAccountsRequest.current) return;
+    driveAccountsRequest.current = true;
+    setDriveAccountsLoading(true);
+    setDriveAccountsLoaded(false);
+    setDriveAccountsError("");
     try {
       const response = await nativeOnce({ id: crypto.randomUUID(), type: "driveAccounts" });
       if (response.type !== "driveAccounts") throw new Error("Unexpected Drive accounts response");
       setDriveAccounts(response.accounts);
       setDriveConfigured(response.configured);
-      // Account choice no longer changes the local lesson destination.
-    } catch {
-      // Local-only use does not require a connected Host or a Google account.
-      setDriveAccounts([]);
-      setDriveConfigured(false);
-    } finally {
       setDriveAccountsLoaded(true);
+      // Account choice no longer changes the local lesson destination.
+    } catch (cause) {
+      setDriveConfigured(null);
+      setDriveAccountsError(
+        cause instanceof Error ? cause.message : backupSettingsCopy(uiLocale).accountsFailed,
+      );
+    } finally {
+      driveAccountsRequest.current = false;
+      setDriveAccountsLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (hostReady) void refreshDriveAccounts();
+  }, [hostReady]);
+
+  useEffect(() => {
+    if (settingsSection === "storage") void refreshDriveAccounts();
+  }, [settingsSection]);
 
   // A remembered OAuth identity is not evidence of current Drive API access.
   // Revalidate the selected account after restore, account switching and panel reopen.
@@ -1014,13 +1150,29 @@ function AppContent() {
     createFlow.dismissDuplicate();
   }
 
+  function rememberCustomModel(provider: string, modelId: string): void {
+    setCustomModels(previous => rememberCustomModelId(previous, provider, modelId));
+  }
+
   function updateAgent(next: AgentSettings): void {
-    next = { provider: next.provider, modelId: next.modelId, thinkingLevel: next.thinkingLevel };
+    next = {
+      provider: next.provider,
+      modelId: next.modelId,
+      thinkingLevel: next.thinkingLevel,
+      customModel: next.customModel || undefined,
+    };
     setAgent(next);
+    if (next.customModel && next.modelId) {
+      rememberCustomModel(next.provider, next.modelId);
+    }
     createFlow.edit({ requestAgent: null });
     setProviderSettings(previous => ({
       ...previous,
-      [next.provider]: { modelId: next.modelId, thinkingLevel: next.thinkingLevel },
+      [next.provider]: {
+        modelId: next.modelId,
+        thinkingLevel: next.thinkingLevel,
+        customModel: next.customModel,
+      },
     }));
     setAgentModelPreferences(previous => ({
       ...previous,
@@ -1028,13 +1180,20 @@ function AppContent() {
     }));
   }
 
-  function selectAgent(provider: string): void {
+  function selectAgent(provider: string, modelId?: string): void {
     if (!isPiProviderId(provider)) return;
     const previous = providerSettings[provider];
+    const selectedId =
+      modelId ?? savedAgentModel(provider, agentModelPreferences, previous?.modelId ?? "");
+    if (modelId !== undefined) setModelRefreshVersion(current => current + 1);
     updateAgent({
       provider,
-      thinkingLevel: previous?.thinkingLevel,
-      modelId: savedAgentModel(provider, agentModelPreferences, previous?.modelId ?? ""),
+      thinkingLevel: modelId !== undefined ? undefined : previous?.thinkingLevel,
+      modelId: selectedId,
+      customModel:
+        (modelId === undefined &&
+          (previous?.customModel || customModels[provider]?.includes(selectedId))) ||
+        undefined,
     });
   }
 
@@ -1173,6 +1332,10 @@ function AppContent() {
   function showDocument(raw: unknown): void {
     const parsed = LearningDocumentSchema.safeParse(raw);
     if (!parsed.success) throw new Error("Host returned an invalid learning document.");
+    previewSession.close();
+    previewRef.current = null;
+    setPreviewInfo(null);
+    setFavoriteReader(null);
     setDocument(parsed.data);
     setPage("lesson");
     setProgress(t("statusSaved"));
@@ -1241,6 +1404,26 @@ function AppContent() {
   }
 
   function updateJob(summary: JobSummary): void {
+    previewSession.update(summary);
+    if (
+      summary.id === lastJobIdRef.current &&
+      summary.status === "running" &&
+      summary.readySceneIds?.length &&
+      !notifiedPreviewJobs.current.has(summary.id)
+    ) {
+      notifiedPreviewJobs.current.add(summary.id);
+      const copy = generationPreviewCopy[localeRef.current];
+      toast.info(
+        copy.ready(
+          summary.readySceneIds.length,
+          summary.selectedSceneCount ?? summary.readySceneIds.length,
+        ),
+        {
+          id: `preview:${summary.id}`,
+          action: { label: copy.open, onClick: () => previewSession.open(summary.id) },
+        },
+      );
+    }
     setJobs(previous =>
       [summary, ...previous.filter(job => job.id !== summary.id)].sort((a, b) =>
         b.updatedAt.localeCompare(a.updatedAt),
@@ -1308,6 +1491,17 @@ function AppContent() {
       case "draft":
         break;
     }
+  }
+
+  function viewDownloadedVoice(task: SpeechDownloadTask): void {
+    const tab = task.progress.status === "completed" ? "installed" : "downloadable";
+    setSpeechSettingsLanguage(task.voice.language);
+    setSpeechTargetVoice({ id: task.voice.id, tab });
+    setSettingsSection("speech-resources");
+    setPage("settings");
+    window.requestAnimationFrame(() =>
+      speechManagerHeading.current?.focus({ preventScroll: true }),
+    );
   }
 
   function openActivity(): void {
@@ -1537,6 +1731,8 @@ function AppContent() {
       const message = await nativeOnce({ id: crypto.randomUUID(), type: "listJobs" });
       if (message.type !== "jobs") throw new Error("Unexpected job history response");
       setJobs(message.jobs);
+      const activePreview = message.jobs.find(job => job.id === previewRef.current?.jobId);
+      if (activePreview) previewSession.update(activePreview);
       const current = message.jobs.find(job => job.id === lastJobIdRef.current);
       if (current) updateJob(current);
     },
@@ -1568,7 +1764,7 @@ function AppContent() {
   }, [hydrated, hostReady]);
 
   useEffect(() => {
-    if (!hydrated || !hostReady || new URLSearchParams(window.location.search).has("web")) return;
+    if (!hydrated || !hostReady) return;
     let live = true;
     const navigate = async (value: unknown) => {
       if (!live || !value || typeof value !== "object") return;
@@ -1601,13 +1797,6 @@ function AppContent() {
       chrome.storage.onChanged.removeListener(changed);
     };
   }, [hydrated, hostReady]);
-  function openWebReader(id?: string) {
-    void chrome.tabs.create({
-      url: chrome.runtime.getURL(
-        "sidepanel.html?" + (id ? "lesson=" + encodeURIComponent(id) + "&" : "") + "web=1",
-      ),
-    });
-  }
   function openSavedDocument(documentId: string): void {
     const kind = jobs.find(job => job.documentId === documentId || job.id === documentId)?.kind;
     if (kind === "custom" || localCustom.some(doc => doc.documentId === documentId)) {
@@ -1625,6 +1814,7 @@ function AppContent() {
   }
 
   async function openCustomDocument(documentId: string) {
+    setCustomFavoriteReader(null);
     setStorageBusy(true);
     try {
       setCustomDocument(await getCustomResource("document", documentId));
@@ -1767,7 +1957,10 @@ function AppContent() {
     setProfile(current => ({
       ...current,
       targetLanguage: language,
-      level: defaultLevelForTargetLanguage(language),
+      level:
+        current.level === UNRESTRICTED_LEVEL
+          ? current.level
+          : defaultLevelForTargetLanguage(language),
     }));
   }
 
@@ -1775,11 +1968,13 @@ function AppContent() {
 
   const runningCount = jobs.filter(job => job.status === "running").length;
   const queuedCount = jobs.filter(job => job.status === "queued").length;
+  const downloadActiveCount = downloadSnapshot.tasks.filter(isSpeechDownloadActive).length;
   const readerExpanded =
-    (basePage === "lesson" && !!document) || (basePage === "custom" && !!customDocument);
+    (basePage === "lesson" && (!!document || !!favoriteReader)) ||
+    (basePage === "custom" && (!!customDocument || !!customFavoriteReader));
   const libraryMotionRef = useRef<HTMLElement>(null);
   const sheetMotionRef = useRef<HTMLDivElement>(null);
-  useContentMotion(libraryMotionRef, "library", { active: basePage === "lessons", duration: 180 });
+  useContentMotion(libraryMotionRef, "library", { active: basePage === "lessons", duration: 240 });
   const sheetDepth =
     sheetPage.current === "activity"
       ? executionDetails
@@ -1796,13 +1991,11 @@ function AppContent() {
     {
       active: overlay,
       depth: sheetDepth,
-      duration: 200,
+      duration: 280,
       directional: true,
       activate: false,
     },
   );
-  const readerDocumentId =
-    basePage === "lesson" ? document?.id : basePage === "custom" ? customDocument?.id : undefined;
   useEffect(() => {
     if (page === "lessons") void loadLessons();
   }, [page, backup.accountId, driveAccounts.length]);
@@ -1825,7 +2018,7 @@ function AppContent() {
       {!readerExpanded && (
         <header
           data-ui="app-header"
-          className="shrink-0 flex items-center justify-between gap-2 py-2.5 [&>div]:flex [&>div]:min-w-0 [&>div]:items-center [&>div]:gap-2 [&_strong]:min-w-0 [&_strong]:text-xs [&_strong]:leading-[1.25] [&_strong]:wrap-anywhere"
+          className="shrink-0 flex items-center justify-between gap-2 py-2.5 [&>div]:flex [&>div]:min-w-0 [&>div]:items-center [&>div]:gap-2 [&_strong]:min-w-0 [&_strong]:text-xs [&_strong]:font-semibold [&_strong]:leading-[1.25] [&_strong]:wrap-anywhere"
         >
           <div>
             <img
@@ -1840,7 +2033,7 @@ function AppContent() {
             page={page}
             runningCount={runningCount}
             queuedCount={queuedCount}
-            onOpenWebReader={() => openWebReader(readerDocumentId)}
+            downloadActiveCount={downloadActiveCount}
             onActivity={openActivity}
             onSettings={() => {
               if (page === "create" || page === "lessons" || page === "lesson" || page === "custom")
@@ -1875,7 +2068,7 @@ function AppContent() {
       />
       {connection && ["reconnecting", "failed", "incompatible"].includes(connection.status) && (
         <div
-          className="flex shrink-0 items-center justify-between gap-2 py-2 text-xs"
+          className="flex shrink-0 items-center justify-between gap-2 py-2 text-ui-body"
           role="status"
         >
           <span>
@@ -1954,12 +2147,12 @@ function AppContent() {
           <PageSection framed hidden={createStep !== 0}>
             <h2>{flow.video}</h2>
             <div className="min-w-0 border-b border-border pb-4">
-              <strong className="block text-sm wrap-anywhere">
+              <strong className="block text-ui-heading font-semibold wrap-anywhere">
                 {title ||
                   cleanVideoTitle(activeVideo?.title) ||
                   (activeVideo ? flow.videoTitlePending : flow.videoEmpty)}
               </strong>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-ui-body text-muted-foreground">
                 {!activeVideo
                   ? flow.videoEntryHint
                   : getVideoAdapter(sourceUrl || activeVideo.url).id === "import"
@@ -2044,7 +2237,7 @@ function AppContent() {
               data-state={subtitleState}
               className="mt-4 grid min-w-0 gap-2"
             >
-              <h3 className="text-sm font-semibold">{subtitleLayout.heading}</h3>
+              <h3 className="text-ui-heading font-semibold">{subtitleLayout.heading}</h3>
               <div
                 className="relative mt-1 grid min-w-0 gap-2 [&_[data-slot=select-trigger]]:min-w-0 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=input]]:min-w-0 [&_[data-slot=input]]:w-full"
                 data-ui="settingField"
@@ -2080,7 +2273,7 @@ function AppContent() {
               {(subtitleState !== "idle" || subtitleReaderBlocked || selectedSubtitleKind) && (
                 <div
                   role={subtitleState === "error" ? "alert" : "status"}
-                  className="grid gap-1.5 text-sm wrap-anywhere"
+                  className="grid gap-1.5 text-ui-body wrap-anywhere"
                 >
                   <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     {(subtitleState !== "idle" || subtitleReaderBlocked) && (
@@ -2137,7 +2330,7 @@ function AppContent() {
                     (subtitleState === "error" ||
                       subtitleTone === "missing" ||
                       subtitleTone === "error") && (
-                      <p className="text-xs leading-relaxed text-muted-foreground">
+                      <p className="text-ui-body text-muted-foreground">
                         {subtitleRecoveryCopy
                           ? subtitleRecoveryCopy
                           : subtitleMessage(subtitleUi.languageNotReady, {
@@ -2241,10 +2434,7 @@ function AppContent() {
               title={<>{subtitleLayout.importAction}</>}
             >
               {subtitlePlatform !== "netflix" && subtitlePlatform !== "youtube" && (
-                <p
-                  className="my-[7px_12px] text-xs leading-[1.55] text-muted-foreground"
-                  data-ui="hint"
-                >
+                <p className="my-2 text-ui-body text-muted-foreground" data-ui="hint">
                   {t("subtitleHint")}
                 </p>
               )}
@@ -2336,11 +2526,12 @@ function AppContent() {
                   <SettingInfo
                     label={t("level")}
                     infoLabel={settingsCopy.infoLabel}
-                    explanation={levelHint(settingsCopy, profile.targetLanguage)}
+                    explanation={levelHint(settingsCopy, profile.targetLanguage, profile.level)}
                     items={levelOptions.map(value => {
                       const info = settingsCopy.levels[profile.targetLanguage][value];
                       return {
                         value,
+                        valueLabel: value === UNRESTRICTED_LEVEL ? "" : value,
                         label: info?.label ?? value,
                         description: info?.description ?? "",
                       };
@@ -2355,9 +2546,11 @@ function AppContent() {
                   options={levelOptions.map(level => ({
                     value: level,
                     label:
-                      level +
-                      " · " +
-                      (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
+                      level === UNRESTRICTED_LEVEL
+                        ? learningLevelLabel(uiLocale, level)
+                        : level +
+                          " · " +
+                          (settingsCopy.levels[profile.targetLanguage][level]?.label ?? level),
                   }))}
                 />
               </div>
@@ -2420,7 +2613,7 @@ function AppContent() {
                     explanation={settingsCopy.fieldHints.instructionLanguage}
                   />
                 </div>
-                <SelectField
+                <SearchableSelectField
                   id="learning-explanation-language"
                   ariaLabel={t("instructionLanguage")}
                   value={
@@ -2440,11 +2633,12 @@ function AppContent() {
                   }}
                   options={[
                     { value: "__auto__", label: t("explanationAuto") },
-                    ...EXPLANATION_LANGUAGES.map(value => ({
-                      value,
-                      label: explanationLanguageName(value, uiLocale),
+                    ...learningLanguageOptions(uiLocale).map(option => ({
+                      ...option,
+                      label: explanationLanguageName(option.value, uiLocale),
                     })),
                   ]}
+                  copy={LEARNING_LANGUAGE_SEARCH_COPY[uiLocale]}
                 />
               </div>
             </Disclosure>
@@ -2457,7 +2651,7 @@ function AppContent() {
               data-ui="confirmation-summary"
             >
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-xs font-semibold">{flow.video}</h3>
+                <h3 className="text-ui-heading font-semibold">{flow.video}</h3>
                 <Button size="sm" variant="ghost" onClick={() => createFlow.goTo(0)}>
                   {ux.edit}
                 </Button>
@@ -2487,10 +2681,10 @@ function AppContent() {
               </div>
               <div className="flex min-w-0 items-center justify-between gap-2">
                 <div className="grid min-w-0 gap-1">
-                  <h3 className="text-xs font-semibold">{ux.contentSettings}</h3>
+                  <h3 className="text-ui-heading font-semibold">{ux.contentSettings}</h3>
                   <p>
                     {contentMode === "standard"
-                      ? customUi.standard + " · " + profile.level
+                      ? customUi.standard + " · " + learningLevelLabel(uiLocale, profile.level)
                       : customUi.markdown}
                   </p>
                 </div>
@@ -2500,7 +2694,7 @@ function AppContent() {
               </div>
               {contentMode === "standard" && (
                 <p
-                  className="text-xs leading-5 text-muted-foreground wrap-anywhere"
+                  className="text-ui-body text-muted-foreground wrap-anywhere"
                   data-ui="confirmation-content-hint"
                 >
                   {t("lessonContentSummary", { scenes: profile.sceneCount, examples: 1 })}
@@ -2520,7 +2714,7 @@ function AppContent() {
                 <DialogTitleBar closeLabel={t("cancelNoGeneration")}>
                   {t("duplicateFound", { count: duplicateWarning?.matches.length ?? 0 })}
                 </DialogTitleBar>
-                <DialogDescription className="text-xs">
+                <DialogDescription className="text-ui-body">
                   {t("duplicateNewVersion")}
                 </DialogDescription>
                 {duplicateWarning?.matches.map(match => (
@@ -2528,7 +2722,7 @@ function AppContent() {
                     className="mb-2 min-w-0 max-w-full rounded-[var(--radius)] border border-border p-3 text-ui-body wrap-anywhere [&_p]:mt-2 [&_p]:text-ui-label [&_p]:text-muted-foreground"
                     key={match.documentId}
                   >
-                    <strong>{match.title}</strong>
+                    <strong className="font-semibold">{match.title}</strong>
                     <p>
                       {new Date(match.createdAt).toLocaleString(uiLocale)}
                       {match.jobStatus &&
@@ -2580,6 +2774,8 @@ function AppContent() {
             </Dialog>
             <RequestModelSelection
               locale={uiLocale}
+              customModels={customModels[generationAgent.provider] ?? []}
+              onCustomModel={modelId => rememberCustomModel(generationAgent.provider, modelId)}
               selected={generationAgent}
               providers={agentCatalog}
               available={hostReady && !checking}
@@ -2595,7 +2791,7 @@ function AppContent() {
               className="mt-4 grid min-w-0 gap-2 border-t border-border pt-4"
               data-ui="requestStorage"
             >
-              <h3 className="text-xs font-semibold">{t("storageLocation")}</h3>
+              <h3 className="text-ui-heading font-semibold">{t("storageLocation")}</h3>
               <RequestFolderSelection
                 locale={uiLocale}
                 directory={requestDestination?.directory ?? destination.directory}
@@ -2648,33 +2844,57 @@ function AppContent() {
           className="mx-auto w-full min-w-0 max-w-[640px]"
           hidden={basePage !== "lessons"}
         >
-          <VideoLibrary
-            localCustom={localCustom}
-            cloudCustom={cloudCustom}
-            onOpenCustom={openCustomDocument}
-            onRestoreCustom={restoreCustom}
-            onCreate={() => {
-              createFlow.goTo(0);
-              setPage("create");
-            }}
-            localLessons={localLessons}
-            cloudLessons={cloudLessons}
-            driveAccounts={driveAccounts}
-            driveConfigured={driveConfigured}
-            lessonsBusy={lessonsBusy}
-            catalogError={catalogError}
-            catalogErrorAccountId={catalogErrorAccountId}
-            restoreBusy={restoreBusy}
-            generating={generating}
-            storageBusy={storageBusy}
-            uiLocale={uiLocale}
-            t={t}
-            onRefresh={loadLessons}
-            onConnectDrive={accountId => connectDrive("library", accountId)}
-            onOpen={openSavedDocument}
-            onRestore={restoreLesson}
-            onDeleteLocal={deleteLocalDocument}
-          />
+          <Tabs
+            value={libraryView}
+            onValueChange={view => setLibraryView(view === "favorites" ? "favorites" : "all")}
+            className="pt-3"
+          >
+            <div className="px-3">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="all">{favoritesCopy(uiLocale).lessons}</TabsTrigger>
+                <TabsTrigger value="favorites">{favoritesCopy(uiLocale).title}</TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent value="favorites" className="mt-0">
+              <FavoritesLibrary
+                locale={uiLocale}
+                defaultAccountId={selectedDriveId}
+                active={basePage === "lessons"}
+                accounts={driveAccounts}
+                onOpen={openFavorite}
+                onConnect={accountId => connectDrive("library", accountId)}
+              />
+            </TabsContent>
+            <TabsContent value="all" className="mt-0 p-3">
+              <VideoLibrary
+                localCustom={localCustom}
+                cloudCustom={cloudCustom}
+                onOpenCustom={openCustomDocument}
+                onRestoreCustom={restoreCustom}
+                onCreate={() => {
+                  createFlow.goTo(0);
+                  setPage("create");
+                }}
+                localLessons={localLessons}
+                cloudLessons={cloudLessons}
+                driveAccounts={driveAccounts}
+                driveConfigured={driveConfigured === true}
+                lessonsBusy={lessonsBusy}
+                catalogError={catalogError}
+                catalogErrorAccountId={catalogErrorAccountId}
+                restoreBusy={restoreBusy}
+                generating={generating}
+                storageBusy={storageBusy}
+                uiLocale={uiLocale}
+                t={t}
+                onRefresh={loadLessons}
+                onConnectDrive={accountId => connectDrive("library", accountId)}
+                onOpen={openSavedDocument}
+                onRestore={restoreLesson}
+                onDeleteLocal={deleteLocalDocument}
+              />
+            </TabsContent>
+          </Tabs>
         </main>
 
         <Sheet
@@ -2689,9 +2909,16 @@ function AppContent() {
             closeLabel={ux.close}
             showCloseButton={false}
             aria-describedby={undefined}
-            className="w-full max-w-[400px] gap-0 overflow-hidden sm:max-w-[400px] outline-none data-[state=open]:duration-[240ms] data-[state=closed]:duration-[180ms]"
+            className="w-full max-w-[400px] gap-0 overflow-hidden sm:max-w-[400px] outline-none data-[state=open]:duration-[320ms] data-[state=closed]:duration-[240ms]"
             onInteractOutside={event => {
               if (event.target instanceof Element && event.target.closest("[data-sonner-toaster]"))
+                event.preventDefault();
+            }}
+            onEscapeKeyDown={event => {
+              if (
+                event.target instanceof Element &&
+                event.target.closest('[data-ui="customModel"][data-editing="true"]')
+              )
                 event.preventDefault();
             }}
             onCloseAutoFocus={event => {
@@ -2824,10 +3051,12 @@ function AppContent() {
                       onResume={jobId => runGeneration({ type: "resume", jobId })}
                       onCancel={job => generationSession.cancelJob(job.id, job.kind ?? "standard")}
                       onOpen={openSavedDocument}
+                      onOpenPreview={id => previewSession.open(id)}
                       onRetryPublication={retryPublication}
                       onRetryBackup={retryBackup}
                       onListEnded={listEndedJobs}
                       onDeleteRecords={deleteJobRecords}
+                      onViewVoice={viewDownloadedVoice}
                     />
                   </div>
                 </main>
@@ -2878,6 +3107,7 @@ function AppContent() {
                         <SiriVoiceManagerPage
                           locale={uiLocale}
                           defaultLanguage={speechSettingsLanguage ?? profile.targetLanguage}
+                          focusVoice={speechTargetVoice}
                         />
                       </DeferredView>
                     </PageSection>
@@ -2936,6 +3166,7 @@ function AppContent() {
                           onManageVoices={language => {
                             setSpeechManageFocus(false);
                             setSpeechSettingsLanguage(language);
+                            setSpeechTargetVoice(null);
                             speechSettingsScroll.current =
                               window.document.querySelector('[data-ui="sheet-scroll"]')
                                 ?.scrollTop ?? 0;
@@ -2969,6 +3200,16 @@ function AppContent() {
                           id="settings"
                           provider={agent.provider}
                           modelId={agent.modelId}
+                          customModel={agent.customModel}
+                          customModels={customModels[agent.provider] ?? []}
+                          onRemoveCustomModel={modelId =>
+                            setCustomModels(previous => ({
+                              ...previous,
+                              [agent.provider]: (previous[agent.provider] ?? []).filter(
+                                id => id !== modelId,
+                              ),
+                            }))
+                          }
                           providers={agentCatalog}
                           models={modelOptions}
                           available={hostReady && !generating}
@@ -2976,8 +3217,13 @@ function AppContent() {
                           notice={modelNotice}
                           warning={modelWarning}
                           onProvider={selectAgent}
-                          onModel={modelId =>
-                            updateAgent({ ...agent, modelId, thinkingLevel: undefined })
+                          onModel={(modelId, customModel) =>
+                            updateAgent({
+                              ...agent,
+                              modelId,
+                              customModel,
+                              thinkingLevel: undefined,
+                            })
                           }
                           thinkingLevel={agent.thinkingLevel}
                           onThinking={thinkingLevel => updateAgent({ ...agent, thinkingLevel })}
@@ -3035,7 +3281,7 @@ function AppContent() {
                               {t("useDefaultFolder")}
                             </Button>
                           )}
-                          <p className="text-xs leading-5 text-muted-foreground" data-ui="hint">
+                          <p className="text-ui-body text-muted-foreground" data-ui="hint">
                             {t("localAlways")}
                           </p>
                         </div>
@@ -3046,6 +3292,9 @@ function AppContent() {
                           backup={backup}
                           accounts={driveAccounts}
                           configured={driveConfigured}
+                          accountsLoading={driveAccountsLoading}
+                          accountsError={driveAccountsError}
+                          onRetryAccounts={() => void refreshDriveAccounts()}
                           verified={driveAccessVerified}
                           accessChecking={
                             driveAccess?.accountId === selectedDriveId &&
@@ -3066,6 +3315,7 @@ function AppContent() {
                           onConnect={() => void connectDrive()}
                           onDisconnect={accountId => void disconnectDrive(accountId)}
                           onRetryAccess={() => void enableBackup()}
+                          onReconnect={() => void connectDrive("backup", selectedDriveId)}
                           onOpenFolder={() =>
                             driveFolderUrl && void chrome.tabs.create({ url: driveFolderUrl })
                           }
@@ -3098,7 +3348,32 @@ function AppContent() {
             </div>
           </SheetContent>
         </Sheet>
-        {basePage === "custom" && customDocument && (
+        {basePage === "custom" && customFavoriteReader && (
+          <main
+            className="flex min-h-0 flex-1 flex-col"
+            aria-label={customFavoriteReader.document.title}
+          >
+            <DeferredView
+              locale={uiLocale}
+              onBack={backToLibrary}
+              backLabel={favoritesCopy(uiLocale).back}
+            >
+              <CustomViewer
+                key={"favorite:" + customFavoriteReader.document.id}
+                mode="favorite"
+                document={customFavoriteReaderDocument(customFavoriteReader)}
+                locale={uiLocale}
+                busy={false}
+                backLabel={favoritesCopy(uiLocale).back}
+                onBack={() => {
+                  setLibraryView("favorites");
+                  backToLibrary();
+                }}
+              />
+            </DeferredView>
+          </main>
+        )}
+        {basePage === "custom" && customDocument && !customFavoriteReader && (
           <main className="flex min-h-0 flex-1 flex-col" aria-label={customDocument.title}>
             <DeferredView locale={uiLocale} onBack={backToLibrary} backLabel={flow.backLibrary}>
               <CustomViewer
@@ -3118,7 +3393,6 @@ function AppContent() {
                       setPage("settings");
                     },
                   },
-                  { label: ux.web, onSelect: () => openWebReader(customDocument.id) },
                 ]}
                 onRename={title => customMutation("renameCustomDocument", title)}
                 onDelete={() => customMutation("deleteCustomDocument")}
@@ -3157,7 +3431,7 @@ function AppContent() {
           <DialogContent showCloseButton={false}>
             <DialogHeader className="text-left">
               <DialogTitleBar closeLabel={ux.cancel}>{ux.conflict}</DialogTitleBar>
-              <DialogDescription className="text-xs">
+              <DialogDescription className="text-ui-body">
                 {ux.keepEdits} / {ux.useNew}
               </DialogDescription>
             </DialogHeader>
@@ -3174,27 +3448,22 @@ function AppContent() {
           <main
             className="flex min-h-0 flex-1 flex-col"
             id="page-panel-lessons"
-            aria-label={document?.source.title ?? t("lessonLibrary")}
+            aria-label={
+              favoriteReader?.document.source.title ?? document?.source.title ?? t("lessonLibrary")
+            }
           >
-            {document ? (
+            {favoriteReader ? (
               <ContextualSceneReader
-                key={document.id}
+                key={favoriteReader.document.id}
+                mode="favorite"
                 fullscreen
-                backLabel={flow.backLibrary}
-                onBack={backToLibrary}
-                menuActions={[
-                  { label: layout.activity, onSelect: openActivity },
-                  {
-                    label: t("settings"),
-                    onSelect: () => {
-                      setReturnPage("lesson");
-                      setSettingsSection(null);
-                      setPage("settings");
-                    },
-                  },
-                  { label: ux.web, onSelect: () => openWebReader(document.id) },
-                ]}
-                document={document}
+                favoriteOrigin={favoriteReader.origin}
+                backLabel={favoritesCopy(uiLocale).back}
+                onBack={() => {
+                  setLibraryView("favorites");
+                  backToLibrary();
+                }}
+                document={favoriteReader.document}
                 adapter={readerAdapter}
                 locale={uiLocale}
                 repeat={repeat}
@@ -3207,13 +3476,96 @@ function AppContent() {
                 setSceneDelay={setSceneDelay}
                 playbackRate={playbackRate}
                 setPlaybackRate={setPlaybackRate}
-                onError={setError}
-                onNotice={setNotice}
-                onSaveRange={(cueId, range) => saveDocumentPlaybackRange(document.id, cueId, range)}
-                onSaveSceneRange={(sceneId, range) =>
-                  saveDocumentScenePlaybackRange(document.id, sceneId, range)
+                onError={() =>
+                  toast.error(favoritesCopy(uiLocale).error, {
+                    id: "favorites-reader",
+                    position: "bottom-center",
+                    duration: 2500,
+                    closeButton: true,
+                  })
+                }
+                onNotice={message =>
+                  toast.info(message, {
+                    id: "favorites-reader",
+                    position: "bottom-center",
+                    duration: 2500,
+                    closeButton: true,
+                  })
                 }
               />
+            ) : document ? (
+              <>
+                {previewInfo && (
+                  <div
+                    data-ui="generationPreview"
+                    role="status"
+                    aria-live="polite"
+                    className="border-b bg-card px-3 py-2 text-ui-body"
+                  >
+                    <div className="mx-auto flex max-w-[720px] flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <span className="font-medium tabular-nums">
+                          {generationPreviewCopy[uiLocale].ready(
+                            previewInfo.readySceneIds.length,
+                            previewInfo.selectedSceneCount,
+                          )}
+                        </span>{" "}
+                        {["running", "queued"].includes(previewInfo.status)
+                          ? generationPreviewCopy[uiLocale].working
+                          : generationPreviewCopy[uiLocale].unfinished}
+                        <p className="m-0">{generationPreviewCopy[uiLocale].readOnly}</p>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={openActivity}>
+                        {generationPreviewCopy[uiLocale].activity}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <ContextualSceneReader
+                  key={document.id}
+                  fullscreen
+                  backLabel={flow.backLibrary}
+                  onBack={backToLibrary}
+                  menuActions={[
+                    { label: layout.activity, onSelect: openActivity },
+                    {
+                      label: t("settings"),
+                      onSelect: () => {
+                        setReturnPage("lesson");
+                        setSettingsSection(null);
+                        setPage("settings");
+                      },
+                    },
+                  ]}
+                  document={document}
+                  favoriteControl={previewInfo ? () => null : undefined}
+                  adapter={readerAdapter}
+                  locale={uiLocale}
+                  repeat={repeat}
+                  setRepeat={setRepeat}
+                  delay={delay}
+                  setDelay={setDelay}
+                  sceneRepeat={sceneRepeat}
+                  setSceneRepeat={setSceneRepeat}
+                  sceneDelay={sceneDelay}
+                  setSceneDelay={setSceneDelay}
+                  playbackRate={playbackRate}
+                  setPlaybackRate={setPlaybackRate}
+                  onError={setError}
+                  onNotice={setNotice}
+                  onSaveRange={
+                    previewInfo
+                      ? undefined
+                      : (cueId, range) => saveDocumentPlaybackRange(document.id, cueId, range)
+                  }
+                  onSaveSceneRange={
+                    previewInfo
+                      ? undefined
+                      : (sceneId, range) =>
+                          saveDocumentScenePlaybackRange(document.id, sceneId, range)
+                  }
+                />
+              </>
             ) : (
               <AppPanel>
                 <h2>{t("emptyHeading")}</h2>

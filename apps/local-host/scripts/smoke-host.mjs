@@ -134,41 +134,53 @@ const deadline = setTimeout(() => {
 try {
   const health = await send({ type: "health", id: randomUUID() });
   assert.equal(health.type, "health");
-  assert.equal(await readFile(join(currentConfig, "pi", "auth.json"), "utf8"), "{}\n");
-  await access(join(legacyConfig, "pi", "auth.json"));
+  // Empty historical auth files may be removed by the secure-storage migration.
+  for (const config of [currentConfig, legacyConfig]) {
+    try {
+      assert.deepEqual(JSON.parse(await readFile(join(config, "pi", "auth.json"), "utf8")), {});
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
   await access(join(legacyLibrary, existingId + ".json"));
   await assert.rejects(access(join(library, existingId + ".json")), { code: "ENOENT" });
   assert.equal(health.agentMode, "pi-sdk");
-  assert.equal(health.protocolVersion, 12);
+  assert.equal(health.protocolVersion, 19);
   assert.ok(health.agents.some(entry => entry.id === "openai"));
   assert.ok(
     health.agents.every(entry =>
       Object.keys(entry).every(key => ["id", "label", "installed"].includes(key)),
     ),
   );
-  const providers = await send({ type: "piProviders", id: randomUUID() });
-  assert.equal(providers.type, "piProviders");
-  assert.deepEqual(providers.providers.find(entry => entry.id === "openai")?.methodLabels, {
-    oauth: "OpenAI (ChatGPT subscription)",
-    api_key: "OpenAI API key",
-  });
-  assert.equal(
-    providers.providers.length,
-    43,
-    "Host exposes all bundled providers plus Antigravity",
-  );
-  assert.deepEqual(
-    providers.providers.map(provider => provider.id),
-    health.agents.map(agent => agent.id),
-  );
-  assert.deepEqual(providers.providers.find(entry => entry.id === "antigravity")?.methods, [
-    "oauth",
-  ]);
-  assert.ok(providers.providers.every(entry => !entry.connected));
   const agent = { provider: "openai", modelId: "" };
-  const models = await send({ type: "agentModels", id: randomUUID(), settings: agent });
-  assert.equal(models.source, "sdk");
-  assert.deepEqual(models.models, [], "Disconnected providers expose no SDK-available models");
+  const providers = await send({ type: "piProviders", id: randomUUID() });
+  if (providers.type === "error") {
+    assert.match(providers.message, /credential|Keychain|Secret Service/i);
+    // Headless Linux has no unlocked desktop secret service. Validate fail-closed
+    // behavior while the rest of the Host smoke continues without AI credentials.
+  } else {
+    assert.equal(providers.type, "piProviders");
+    assert.deepEqual(providers.providers.find(entry => entry.id === "openai")?.methodLabels, {
+      oauth: "OpenAI (ChatGPT subscription)",
+      api_key: "OpenAI API key",
+    });
+    assert.equal(
+      providers.providers.length,
+      43,
+      "Host exposes all bundled providers plus Antigravity",
+    );
+    assert.deepEqual(
+      providers.providers.map(provider => provider.id),
+      health.agents.map(agent => agent.id),
+    );
+    assert.deepEqual(providers.providers.find(entry => entry.id === "antigravity")?.methods, [
+      "oauth",
+    ]);
+    assert.ok(providers.providers.every(entry => !entry.connected));
+    const models = await send({ type: "agentModels", id: randomUUID(), settings: agent });
+    assert.equal(models.source, "sdk");
+    assert.deepEqual(models.models, [], "Disconnected providers expose no SDK-available models");
+  }
   const legacyModel = await send({ type: "agentModels", id: randomUUID(), settings: legacyAgent });
   assert.equal(legacyModel.type, "error");
   assert.ok(legacyModel.message.length);
@@ -402,7 +414,7 @@ try {
     null,
   );
   process.stdout.write(
-    "Native Host protocol 12, current-only library/read/calibration, custom-v1 read/rename/delete, old data isolation and duplicate confirmation OK\n",
+    "Native Host protocol 19, current-only library/read/calibration, custom-v1 read/rename/delete, old data isolation and duplicate confirmation OK\n",
   );
 } finally {
   clearTimeout(deadline);

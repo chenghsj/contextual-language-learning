@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   defaultLevelForTargetLanguage,
+  UNRESTRICTED_LEVEL,
   isPiProviderId,
   selectAnalysisCues,
   subtitleDuration,
@@ -326,6 +327,7 @@ export function useCreateFlow(options: CreateFlowOptions, storage: DraftStorage 
         ...lastSettings.profile,
         targetLanguage: profile.targetLanguage,
         level:
+          lastSettings.profile.level === UNRESTRICTED_LEVEL ||
           lastSettings.profile.targetLanguage === profile.targetLanguage
             ? lastSettings.profile.level
             : defaultLevelForTargetLanguage(profile.targetLanguage),

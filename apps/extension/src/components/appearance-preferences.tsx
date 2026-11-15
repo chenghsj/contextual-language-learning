@@ -61,7 +61,10 @@ export function AppearancePreferences({
             <SelectItem value="ko">{nativeLanguageName("ko")}</SelectItem>
           </SelectContent>
         </Select>
-        <p id="ui-language-hint" className="mt-2 text-xs text-muted-foreground">
+        <p
+          id="ui-language-hint"
+          className="mt-2 text-ui-label leading-relaxed text-muted-foreground"
+        >
           {t("uiLanguageHint")}
         </p>
       </div>

@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":28}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":29}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":27}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":5}]}],\"learningValue\":\"掌握日常辦公室對話中詢問原因、說明時間巧合及請求等待的常見句型與時間副詞用法。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"學習「đang định... thì...」表示正打算做某事時恰好發生另一件事的句型結構。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c1\"],\"description\":\"理解「vẫn còn」表示狀態持續「仍然、還在」的搭配用法。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c3\"],\"description\":\"學習句尾「được không?」用於禮貌提出請求或徵詢同意的日常表達方式。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:39:47.369Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 8720.190457999997,
+    "usage": {
+      "input": 2631,
+      "output": 1066,
+      "reasoning": 809
+    }
+  }
+}

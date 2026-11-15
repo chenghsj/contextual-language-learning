@@ -4,6 +4,10 @@ import { release } from "node:os";
 import { z } from "zod";
 import {
   SystemVoiceSchema,
+  SpeechDownloadOperationSchema,
+  SpeechDownloadObservationSchema,
+  type SpeechDownloadOperation,
+  type SpeechDownloadObservation,
   normalizeSystemVoices,
   findSystemVoice,
   type SystemVoice,
@@ -38,7 +42,16 @@ export class SiriSpeechBackend {
   private start(action: string, input: object = {}, timeout = 30_000): SpeechProcess {
     return this.run(this.helper, [], JSON.stringify({ action, ...input }), timeout);
   }
-  async catalog(): Promise<SpeechVoiceCatalog> {
+  private catalogRequest?: Promise<SpeechVoiceCatalog>;
+  catalog(): Promise<SpeechVoiceCatalog> {
+    if (!this.catalogRequest) {
+      this.catalogRequest = this.readCatalog().finally(() => {
+        this.catalogRequest = undefined;
+      });
+    }
+    return this.catalogRequest;
+  }
+  private async readCatalog(): Promise<SpeechVoiceCatalog> {
     if (!(await this.available())) return { available: false, voices: [] };
     try {
       const output = await this.start("catalog").completion;
@@ -58,6 +71,47 @@ export class SiriSpeechBackend {
     } catch {
       return { available: false, voices: [] };
     }
+  }
+  async startDownload(operation: SpeechDownloadOperation): Promise<SpeechDownloadObservation[]> {
+    return this.downloadOperation("startSpeechDownload", [operation]);
+  }
+  async cancelDownload(operation: SpeechDownloadOperation): Promise<SpeechDownloadObservation[]> {
+    return this.downloadOperation("cancelSpeechDownload", [operation]);
+  }
+  async inspectDownloads(
+    operations: SpeechDownloadOperation[],
+  ): Promise<SpeechDownloadObservation[]> {
+    return this.downloadOperation("inspectSpeechDownloads", operations);
+  }
+  private async downloadOperation(
+    action: "startSpeechDownload" | "cancelSpeechDownload" | "inspectSpeechDownloads",
+    raw: SpeechDownloadOperation[],
+  ): Promise<SpeechDownloadObservation[]> {
+    const operations = z.array(SpeechDownloadOperationSchema).min(1).max(32).parse(raw);
+    if (
+      new Set(operations.map(operation => operation.operationId.toLowerCase())).size !==
+      operations.length
+    )
+      throw new Error("Duplicate Siri download operation.");
+    if (!(await this.available()))
+      throw new Error("Siri voice downloads are unavailable on this Mac.");
+    const input = action === "inspectSpeechDownloads" ? { operations } : operations[0];
+    const result = z
+      .object({
+        speechDownloadObservations: z.array(SpeechDownloadObservationSchema).min(1).max(32),
+      })
+      .parse(JSON.parse(await this.start(action, input, 60_000).completion));
+    const observations = result.speechDownloadObservations;
+    if (
+      observations.length !== operations.length ||
+      observations.some(
+        (observation, index) =>
+          observation.operationId !== operations[index].operationId ||
+          observation.voiceId !== operations[index].voiceId,
+      )
+    )
+      throw new Error("Invalid Siri download observation identity.");
+    return observations;
   }
   async installed(): Promise<SystemVoice[]> {
     return (await this.catalog()).voices.filter(voice => voice.installed === true);
@@ -135,7 +189,10 @@ export class SiriSpeechBackend {
     );
     if (voice.id !== voiceId || voice.engine !== "siri")
       throw new Error("Invalid Siri installation response.");
-    return { voiceId, status: voice.installed === true ? "installed" : "not-installed" };
+    return {
+      voiceId,
+      status: voice.installed === true ? "installed" : "not-installed",
+    };
   }
   speak(input: SpeechInput): SpeechProcess {
     return this.start(

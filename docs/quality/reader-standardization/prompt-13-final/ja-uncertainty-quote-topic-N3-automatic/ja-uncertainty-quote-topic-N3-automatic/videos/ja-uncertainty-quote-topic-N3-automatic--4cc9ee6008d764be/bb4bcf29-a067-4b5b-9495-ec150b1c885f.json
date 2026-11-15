@@ -1,0 +1,966 @@
+{
+  "id": "bb4bcf29-a067-4b5b-9495-ec150b1c885f",
+  "createdAt": "2026-10-13T17:33:40.854Z",
+  "source": {
+    "platform": "import",
+    "title": "ja-uncertainty-quote-topic-N3-automatic"
+  },
+  "profile": {
+    "targetLanguage": "ja",
+    "instructionLanguage": "zh-TW",
+    "level": "N3",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-13",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-4",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "learning-quality-1",
+    "inputFingerprint": "b85a8b3662ea3b385487f6ea890c762df58064faf24c1538f1d5577c0094b38a",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "qualityReports": [
+      {
+        "batchId": "s0",
+        "sceneId": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27",
+        "draftHash": "c2460790732620db2e3f19028a2b04007a11a768f325e1f51df72ae6e10a6c58",
+        "reviewIssues": [
+          {
+            "severity": "error",
+            "type": "unsupported_inference",
+            "path": "/translations/1/text",
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 22
+              }
+            ],
+            "description": "在未標明說話者與主語的情況下，譯文補入了第二人稱代詞「你」（「你吃過了嗎？」），違反無明確證據時不可在翻譯中補入我／你／他的規則；且在引用單元中加入了「說了」，導入了原文未表達的報告行為。"
+          },
+          {
+            "severity": "warning",
+            "type": "redundancy",
+            "path": "/utterances/5/chunks",
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 11
+              }
+            ],
+            "description": "當 decision 為 basic_only 且翻譯已足夠理解時，不應包含 chunks，應保持為空。"
+          }
+        ],
+        "reviewed": true,
+        "repaired": true,
+        "issues": [
+          {
+            "severity": "warning",
+            "type": "redundancy",
+            "path": "/utterances/5/chunks",
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 11
+              }
+            ],
+            "description": "當 decision 為 basic_only 且翻譯已足夠理解時，不應包含 chunks，應保持為空。"
+          }
+        ]
+      }
+    ],
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-13T17:33:59.429Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 18126.914042,
+        "usage": {
+          "input": 4294,
+          "output": 2659,
+          "reasoning": 2347
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-13T17:34:03.811Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 4366.935416,
+        "usage": {
+          "input": 4086,
+          "output": 381,
+          "reasoning": 342
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-13T17:35:41.839Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 98008.66325,
+        "usage": {
+          "input": 8119,
+          "output": 16347,
+          "reasoning": 13499
+        }
+      },
+      {
+        "step": "s0-quality-review",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-13T17:36:44.105Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 62227.250709,
+        "usage": {
+          "input": 7848,
+          "output": 9670,
+          "reasoning": 9487
+        }
+      },
+      {
+        "step": "s0-quality-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-13T17:37:14.110Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 29977.630875000003,
+        "usage": {
+          "input": 7028,
+          "output": 3682,
+          "reasoning": 3621
+        }
+      },
+      {
+        "step": "s0-quality-recheck",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-13T17:37:38.851Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 24713.12387500002,
+        "usage": {
+          "input": 7847,
+          "output": 3256,
+          "reasoning": 3252
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "ミオ、集まりのことを話してた？"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "「時間を教えて」って。ところで、もう食べた？"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "まだ。ここにある「悪いない」って何？"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "字幕がよくわからない。"
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "關於聚會的詢問與字幕疑問",
+      "context": {
+        "text": "這段對話包含關於聚會的詢問、對要求告知時間的引用、切換話題詢問是否已用餐、簡短否定的回答、針對此處『悪いない』（原文意思不明）的提問，以及對字幕不太理解的說明。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "ミオ，有在聊聚會的事嗎？（「ミオ」可為呼格稱呼對方，或作為話題指稱第三者）"
+        },
+        {
+          "cueId": "c2",
+          "text": "「請告訴時間」。（引用發話者未指明）話說回來，已經吃過了嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。這裡的「悪いない」（原文意思不明）是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不太看得懂。"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "ミオ",
+              "reading": "みお"
+            },
+            {
+              "text": "、"
+            },
+            {
+              "text": "集まり",
+              "reading": "あつまり"
+            },
+            {
+              "text": "の"
+            },
+            {
+              "text": "こと",
+              "reading": "こと"
+            },
+            {
+              "text": "を"
+            },
+            {
+              "text": "話してた",
+              "reading": "はなしてた"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "「"
+            },
+            {
+              "text": "時間",
+              "reading": "じかん"
+            },
+            {
+              "text": "を"
+            },
+            {
+              "text": "教えて",
+              "reading": "おしえて"
+            },
+            {
+              "text": "」"
+            },
+            {
+              "text": "って"
+            },
+            {
+              "text": "。"
+            },
+            {
+              "text": "ところで",
+              "reading": "ところで"
+            },
+            {
+              "text": "、"
+            },
+            {
+              "text": "もう",
+              "reading": "もう"
+            },
+            {
+              "text": "食べた",
+              "reading": "たべた"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "まだ",
+              "reading": "まだ"
+            },
+            {
+              "text": "。"
+            },
+            {
+              "text": "ここ",
+              "reading": "ここ"
+            },
+            {
+              "text": "に"
+            },
+            {
+              "text": "ある",
+              "reading": "ある"
+            },
+            {
+              "text": "「"
+            },
+            {
+              "text": "悪いない"
+            },
+            {
+              "text": "」"
+            },
+            {
+              "text": "って"
+            },
+            {
+              "text": "何",
+              "reading": "なに"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "字幕",
+              "reading": "じまく"
+            },
+            {
+              "text": "が"
+            },
+            {
+              "text": "よく",
+              "reading": "よく"
+            },
+            {
+              "text": "わからない",
+              "reading": "わからない"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "a995540d-5b1c-4246-9c5d-4cf086bef334",
+          "meaning": "詢問是否在談論聚會的事；句首「ミオ」可為稱呼呼格，亦可為省略助詞的主題，主語未指明。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c1_ch1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 3
+                }
+              ],
+              "meaning": "ミオ（角色未標明，可為呼格或話題）"
+            },
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c1_ch2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 3,
+                  "end": 10
+                }
+              ],
+              "meaning": "關於聚會的事"
+            },
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c1_ch3",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 10,
+                  "end": 15
+                }
+              ],
+              "meaning": "有在談論嗎？"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 15
+            }
+          ]
+        },
+        {
+          "id": "fc1dee3d-600c-478a-b6fd-78bf59a14ba2",
+          "meaning": "引用要求告知時間的內容；引用之發話者在原文中未指明。",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c1"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c2_ch1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 8
+                }
+              ],
+              "meaning": "「請告訴時間」"
+            },
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c2_ch2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 8,
+                  "end": 11
+                }
+              ],
+              "meaning": "（引用話語，發話者未指明）"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 11
+            }
+          ]
+        },
+        {
+          "id": "d5cc0ed0-59fb-4a54-a448-01e12d28085c",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c2_ch3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 11,
+                  "end": 16
+                }
+              ],
+              "meaning": "話說回來"
+            },
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c2_ch4",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 16,
+                  "end": 22
+                }
+              ],
+              "meaning": "已經吃過了嗎？"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 11,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "7663b2cc-2a20-4612-918a-988837b5b4bf",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c2"
+          ],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "id": "452b330a-7e9e-4831-8c8d-d66ac013b1aa",
+          "meaning": "詢問此處出現的「悪いない」（原文意思不明）是什麼意思。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:p4"
+          ],
+          "chunks": [
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c3_ch1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 3,
+                  "end": 8
+                }
+              ],
+              "meaning": "這裡的"
+            },
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c3_ch2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 8,
+                  "end": 14
+                }
+              ],
+              "meaning": "「悪いない」（原文意思不明）"
+            },
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c3_ch3",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 14,
+                  "end": 18
+                }
+              ],
+              "meaning": "是什麼意思？"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 3,
+              "end": 18
+            }
+          ]
+        },
+        {
+          "id": "f2ac2746-d4f1-42b1-ba6b-11a128f61011",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c3"
+          ],
+          "decision": "basic_only",
+          "pointIds": [],
+          "chunks": [
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c4_ch1",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 0,
+                  "end": 3
+                }
+              ],
+              "meaning": "字幕"
+            },
+            {
+              "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:c4_ch2",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 3,
+                  "end": 11
+                }
+              ],
+              "meaning": "不太懂"
+            }
+          ],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 11
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:p1",
+      "utteranceIds": [
+        "a995540d-5b1c-4246-9c5d-4cf086bef334"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "「話してた」口語持續體縮約",
+      "sourceCueIds": [
+        "c1"
+      ],
+      "contextCueIds": [],
+      "explanation": "在此表示過去某段時間「正在談論」或「有在談過」。此形式為「話していた」在口語中省略「い」的縮約形（「ていた」縮約為「てた」），常見於日常非正式對話。",
+      "sourceSpans": [
+        {
+          "cueId": "c1",
+          "start": 10,
+          "end": 14
+        }
+      ]
+    },
+    {
+      "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:p2",
+      "utteranceIds": [
+        "fc1dee3d-600c-478a-b6fd-78bf59a14ba2"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "「って」口語引用與後續省略",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [
+        "c1"
+      ],
+      "explanation": "口語中用於引用話語內容，相當於「〜と言っていた／と言っている」。此處直接在引用句「時間を教えて」後接「って」並省略後續動詞，引用之發話者在原文中未指明。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 8,
+          "end": 10
+        }
+      ]
+    },
+    {
+      "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:p3",
+      "utteranceIds": [
+        "d5cc0ed0-59fb-4a54-a448-01e12d28085c"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "「ところで」切換話題",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "用於轉換話題或引出新的疑問，相當於中文的「話說回來」、「順便問一下」。接續於前一段談話之後，開啟與前文無直接關聯的新問題。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 11,
+          "end": 15
+        }
+      ]
+    },
+    {
+      "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:p4",
+      "utteranceIds": [
+        "452b330a-7e9e-4831-8c8d-d66ac013b1aa"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "「〜って何？」詢問事物或詞義",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "用於針對不理解的詞語或事物提出疑問，相當於「〜というのは何ですか」。由口語引用/主題標記「って」加上疑問詞「何」構成。此處所引用的「悪いない」為意思不明確的原文片段。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 14,
+          "end": 18
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:r1",
+      "pointIds": [
+        "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 10,
+              "end": 14
+            }
+          ],
+          "text": "話してた"
+        }
+      ],
+      "pattern": "[動詞て形]た（口語では「い」を省略）",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "向朋友詢問剛才在做什麼。",
+          "dialogue": [
+            {
+              "text": "さっき部屋で何してたの？",
+              "translation": "剛才在房間裡做什麼？",
+              "pronunciation": [
+                {
+                  "text": "さっき",
+                  "reading": "さっき"
+                },
+                {
+                  "text": "部屋",
+                  "reading": "へや"
+                },
+                {
+                  "text": "で"
+                },
+                {
+                  "text": "何",
+                  "reading": "なに"
+                },
+                {
+                  "text": "してた",
+                  "reading": "してた"
+                },
+                {
+                  "text": "の"
+                },
+                {
+                  "text": "？"
+                }
+              ]
+            },
+            {
+              "text": "明日の試験の本を読んでたよ。",
+              "translation": "在讀明天考試的書。",
+              "pronunciation": [
+                {
+                  "text": "明日",
+                  "reading": "あした"
+                },
+                {
+                  "text": "の"
+                },
+                {
+                  "text": "試験",
+                  "reading": "しけん"
+                },
+                {
+                  "text": "の"
+                },
+                {
+                  "text": "本",
+                  "reading": "ほん"
+                },
+                {
+                  "text": "を"
+                },
+                {
+                  "text": "読んでた",
+                  "reading": "よんでた"
+                },
+                {
+                  "text": "よ"
+                },
+                {
+                  "text": "。"
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "読んでた"
+        }
+      ]
+    },
+    {
+      "id": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:r2",
+      "pointIds": [
+        "a0d90ed5-5d6e-4505-b854-b8c9fede6d27:s0:p3"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 11,
+              "end": 15
+            }
+          ],
+          "text": "ところで"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "討論完準備工作後，順便轉換話題詢問假期的安排。",
+          "dialogue": [
+            {
+              "text": "準備は全部終わったよ。",
+              "translation": "準備都全部完成了。",
+              "pronunciation": [
+                {
+                  "text": "準備",
+                  "reading": "じゅんび"
+                },
+                {
+                  "text": "は",
+                  "reading": "わ"
+                },
+                {
+                  "text": "全部",
+                  "reading": "ぜんぶ"
+                },
+                {
+                  "text": "終わった",
+                  "reading": "おわった"
+                },
+                {
+                  "text": "よ"
+                },
+                {
+                  "text": "。"
+                }
+              ]
+            },
+            {
+              "text": "ありがとう。ところで、今週末は予定ある？",
+              "translation": "謝謝。話說回來，這個週末有安排嗎？",
+              "pronunciation": [
+                {
+                  "text": "ありがとう",
+                  "reading": "ありがとう"
+                },
+                {
+                  "text": "。"
+                },
+                {
+                  "text": "ところで",
+                  "reading": "ところで"
+                },
+                {
+                  "text": "、"
+                },
+                {
+                  "text": "今週末",
+                  "reading": "こんしゅうまつ"
+                },
+                {
+                  "text": "は",
+                  "reading": "わ"
+                },
+                {
+                  "text": "予定",
+                  "reading": "よてい"
+                },
+                {
+                  "text": "ある",
+                  "reading": "ある"
+                },
+                {
+                  "text": "？"
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "ところで"
+        }
+      ]
+    }
+  ]
+}

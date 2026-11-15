@@ -1,0 +1,1006 @@
+{
+  "id": "86484d76-3296-4747-ad4a-102333c2315c",
+  "createdAt": "2026-10-11T16:55:21.075Z",
+  "source": {
+    "platform": "import",
+    "title": "ja-learnability-contractions-automatic"
+  },
+  "profile": {
+    "targetLanguage": "ja",
+    "instructionLanguage": "zh-TW",
+    "level": "N3",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.7-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v6-4",
+    "promptVersion": "learning-points-prompts-11",
+    "schemaVersion": "6",
+    "languageStrategyVersion": "learning-language-strategies-3",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "inputFingerprint": "6ff368dc7613d4084e1c170b7ff7c53ebc9376e542e2cfa4694fe39286c36b81",
+    "provider": "antigravity",
+    "modelId": "gemini-3.7-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T16:55:30.723Z",
+        "outputTokenBudget": 16384,
+        "stopReason": "stop",
+        "durationMs": 9625.054541000001,
+        "usage": {
+          "input": 1896,
+          "output": 926,
+          "reasoning": 640
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T16:55:35.157Z",
+        "outputTokenBudget": 16384,
+        "stopReason": "stop",
+        "durationMs": 4416.753083,
+        "usage": {
+          "input": 2091,
+          "output": 358,
+          "reasoning": 318
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T16:55:56.797Z",
+        "outputTokenBudget": 16384,
+        "stopReason": "stop",
+        "durationMs": 21628.983292,
+        "usage": {
+          "input": 6186,
+          "output": 3583,
+          "reasoning": 0
+        }
+      },
+      {
+        "step": "s0-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T16:57:20.924Z",
+        "outputTokenBudget": 16384,
+        "stopReason": "stop",
+        "durationMs": 84110.30570900001,
+        "usage": {
+          "input": 6431,
+          "output": 14700,
+          "reasoning": 10036
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "最近、漫画を描いてるの？"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "ノートにネタを書いてたら、前よりもっと漫画を描きたくなっちゃって。"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "そうなんだ。私もあの漫画が気になる。"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "時間があるときに読んでれば、だんだん話がわかってくるよ。"
+    }
+  ],
+  "schemaVersion": 6,
+  "sections": [
+    {
+      "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "交流漫畫創作與閱讀心得",
+      "context": {
+        "text": "兩人在日常對話中談論創作漫畫的靈感與進度，並分享閱讀作品時的感受與建議。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "最近在畫漫畫嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "在筆記本上寫點子的時候，變得比之前更想畫漫畫了。"
+        },
+        {
+          "cueId": "c3",
+          "text": "這樣啊。我也對那部漫畫蠻感興趣的。"
+        },
+        {
+          "cueId": "c4",
+          "text": "有時間的時候讀一讀的話，漸漸就會看懂內容了喔。"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "最近",
+              "reading": "さいきん"
+            },
+            {
+              "text": "、"
+            },
+            {
+              "text": "漫画",
+              "reading": "まんが"
+            },
+            {
+              "text": "を",
+              "reading": "を"
+            },
+            {
+              "text": "描いてる",
+              "reading": "かいてる"
+            },
+            {
+              "text": "の",
+              "reading": "の"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "ノート",
+              "reading": "のーと"
+            },
+            {
+              "text": "に",
+              "reading": "に"
+            },
+            {
+              "text": "ネタ",
+              "reading": "ねた"
+            },
+            {
+              "text": "を",
+              "reading": "を"
+            },
+            {
+              "text": "書いてたら",
+              "reading": "かいてたら"
+            },
+            {
+              "text": "、"
+            },
+            {
+              "text": "前",
+              "reading": "まえ"
+            },
+            {
+              "text": "より",
+              "reading": "より"
+            },
+            {
+              "text": "もっと",
+              "reading": "もっと"
+            },
+            {
+              "text": "漫画",
+              "reading": "まんが"
+            },
+            {
+              "text": "を",
+              "reading": "を"
+            },
+            {
+              "text": "描きたくなっちゃって",
+              "reading": "かきたくなっちゃって"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "そうなんだ",
+              "reading": "そうなんだ"
+            },
+            {
+              "text": "。"
+            },
+            {
+              "text": "私",
+              "reading": "わたし"
+            },
+            {
+              "text": "も",
+              "reading": "も"
+            },
+            {
+              "text": "あの",
+              "reading": "あの"
+            },
+            {
+              "text": "漫画",
+              "reading": "まんが"
+            },
+            {
+              "text": "が",
+              "reading": "が"
+            },
+            {
+              "text": "気になる",
+              "reading": "きになる"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "時間",
+              "reading": "じかん"
+            },
+            {
+              "text": "が",
+              "reading": "が"
+            },
+            {
+              "text": "ある",
+              "reading": "ある"
+            },
+            {
+              "text": "とき",
+              "reading": "とき"
+            },
+            {
+              "text": "に",
+              "reading": "に"
+            },
+            {
+              "text": "読んでれば",
+              "reading": "よんでれば"
+            },
+            {
+              "text": "、"
+            },
+            {
+              "text": "だんだん",
+              "reading": "だんだん"
+            },
+            {
+              "text": "話",
+              "reading": "はなし"
+            },
+            {
+              "text": "が",
+              "reading": "が"
+            },
+            {
+              "text": "わかってくる",
+              "reading": "わかってくる"
+            },
+            {
+              "text": "よ",
+              "reading": "よ"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "a21d6e49-b6af-4d2c-a240-8d57c5aebcb8",
+          "meaning": "詢問對方最近是否正在畫漫畫。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "chunks": [
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c1_k1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 3
+                }
+              ],
+              "meaning": "最近"
+            },
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c1_k2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 3,
+                  "end": 10
+                }
+              ],
+              "meaning": "在畫漫畫"
+            },
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c1_k3",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 10,
+                  "end": 12
+                }
+              ],
+              "meaning": "嗎（口語疑問）"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ]
+        },
+        {
+          "id": "56d4d028-a4a3-450c-bfb0-a68af2b61cac",
+          "meaning": "說明自己在筆記上記下點子後，變得比之前更加想動手畫漫畫。",
+          "contextExplanation": "回應前一句關於最近是否在畫漫畫的提問，解釋自己創作慾望變強的契機。",
+          "contextCueIds": [
+            "c1"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p1",
+            "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c2_k1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 7
+                }
+              ],
+              "meaning": "在筆記本上記下點子"
+            },
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c2_k2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 7,
+                  "end": 12
+                }
+              ],
+              "meaning": "之後／的過程中"
+            },
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c2_k3",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 13,
+                  "end": 19
+                }
+              ],
+              "meaning": "比之前更加"
+            },
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c2_k4",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 19,
+                  "end": 32
+                }
+              ],
+              "meaning": "變得不由得想畫漫畫"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ]
+        },
+        {
+          "id": "06484bf0-ba3c-454b-908e-6d7cf6159653",
+          "meaning": "表示理解對方的情況，並表達自己也對對方所說的漫畫感到好奇與感興趣。",
+          "contextExplanation": "針對對方分享創作熱情的回應，表達共鳴與好奇心。",
+          "contextCueIds": [
+            "c2"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c3_k1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 5
+                }
+              ],
+              "meaning": "原來是這樣啊"
+            },
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c3_k2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 6,
+                  "end": 8
+                }
+              ],
+              "meaning": "我也"
+            },
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c3_k3",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 8,
+                  "end": 17
+                }
+              ],
+              "meaning": "很在意／好奇那部漫畫"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ]
+        },
+        {
+          "id": "d4069618-5a1b-4eb4-8df2-bc62238843d7",
+          "meaning": "告訴對方只要有空持續閱讀，慢慢就會理解漫畫的故事內容。",
+          "contextExplanation": "回應對方對該漫畫的好奇，給予輕鬆閱讀的建議。",
+          "contextCueIds": [
+            "c3"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p4"
+          ],
+          "chunks": [
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c4_k1",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 0,
+                  "end": 8
+                }
+              ],
+              "meaning": "有時間的時候"
+            },
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c4_k2",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 8,
+                  "end": 13
+                }
+              ],
+              "meaning": "只要讀下去"
+            },
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c4_k3",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 14,
+                  "end": 18
+                }
+              ],
+              "meaning": "漸漸地"
+            },
+            {
+              "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:c4_k4",
+              "spans": [
+                {
+                  "cueId": "c4",
+                  "start": 18,
+                  "end": 26
+                }
+              ],
+              "meaning": "就能看懂故事內容"
+            }
+          ],
+          "cueIds": [
+            "c4"
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p1",
+      "utteranceIds": [
+        "56d4d028-a4a3-450c-bfb0-a68af2b61cac"
+      ],
+      "category": "vocabulary",
+      "presentation": "core",
+      "title": "ネタ：題材、素材、點子",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [
+        "c1"
+      ],
+      "explanation": "指創作或談話時所用的「題材、素材」或「點子、靈感」。在此處指畫漫畫時構思的情節或主題點子，常與動詞「書く」「考える」「探す」搭配使用。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 4,
+          "end": 6
+        }
+      ]
+    },
+    {
+      "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p2",
+      "utteranceIds": [
+        "56d4d028-a4a3-450c-bfb0-a68af2b61cac"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "〜ちゃって（〜てしまって）：不由自主、不知不覺就……",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [
+        "c1"
+      ],
+      "explanation": "為「〜てしまって」在口語中的常見縮約形（「〜てしまう」縮略為「〜ちゃう」）。此處接在動詞連用形「描きたく（想畫）」後面，表示隨著靈感湧現，不由自主地產生強烈創作慾望的心情。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 28,
+          "end": 32
+        }
+      ]
+    },
+    {
+      "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p3",
+      "utteranceIds": [
+        "06484bf0-ba3c-454b-908e-6d7cf6159653"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "〜が気になる：在乎、感興趣、放不下心",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [
+        "c2"
+      ],
+      "explanation": "表示某事物引起了自己的注意力，使人在意、好奇或感興趣。此處表示對方所畫的那部漫畫引起了說話者的好奇心，讓人想要多加了解。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 8,
+          "end": 17
+        }
+      ]
+    },
+    {
+      "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p4",
+      "utteranceIds": [
+        "d4069618-5a1b-4eb4-8df2-bc62238843d7"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "〜てれば／〜でれば（〜ていれば）：只要一直處於某動作或狀態",
+      "sourceCueIds": [
+        "c4"
+      ],
+      "contextCueIds": [
+        "c3"
+      ],
+      "explanation": "為「[動詞て形]いれば」在口語中省略「い」的縮約形式。動詞「読む」的て形為「読んで」，加上「いれば」後口語縮約為「読んでれば」。在此表示「只要抽空持續讀下去」的假定條件。",
+      "sourceSpans": [
+        {
+          "cueId": "c4",
+          "start": 8,
+          "end": 13
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:r1",
+      "pointIds": [
+        "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p1"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "text": "ネタ"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "兩人正在討論影片企劃，其中一人提到自己已經先記下了想拍的內容點子。",
+          "dialogue": [
+            {
+              "text": "次の動画、どんなテーマにする？",
+              "translation": "下一支影片要做什麼主題呢？",
+              "pronunciation": [
+                {
+                  "text": "次の",
+                  "reading": "つぎの"
+                },
+                {
+                  "text": "動画",
+                  "reading": "どうが"
+                },
+                {
+                  "text": "、"
+                },
+                {
+                  "text": "どんな",
+                  "reading": "どんな"
+                },
+                {
+                  "text": "テーマ",
+                  "reading": "てーま"
+                },
+                {
+                  "text": "に",
+                  "reading": "に"
+                },
+                {
+                  "text": "する",
+                  "reading": "する"
+                },
+                {
+                  "text": "？"
+                }
+              ]
+            },
+            {
+              "text": "スマホに面白いネタをメモしてあるから、あとで見せるね。",
+              "translation": "我把有趣的點子記在手機裡了，等等給你看喔。",
+              "pronunciation": [
+                {
+                  "text": "スマホ",
+                  "reading": "すまほ"
+                },
+                {
+                  "text": "に",
+                  "reading": "に"
+                },
+                {
+                  "text": "面白い",
+                  "reading": "おもしろい"
+                },
+                {
+                  "text": "ネタ",
+                  "reading": "ねた"
+                },
+                {
+                  "text": "を",
+                  "reading": "を"
+                },
+                {
+                  "text": "メモしてある",
+                  "reading": "めもしてある"
+                },
+                {
+                  "text": "から",
+                  "reading": "から"
+                },
+                {
+                  "text": "、"
+                },
+                {
+                  "text": "あとで",
+                  "reading": "あとで"
+                },
+                {
+                  "text": "見せる",
+                  "reading": "みせる"
+                },
+                {
+                  "text": "ね",
+                  "reading": "ね"
+                },
+                {
+                  "text": "。"
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "ネタ"
+        }
+      ]
+    },
+    {
+      "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:r2",
+      "pointIds": [
+        "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p3"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "text": "あの漫画が気になる"
+        }
+      ],
+      "pattern": "[名詞]が気になる",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "朋友向自己推薦了一家新開的咖啡廳，表示很想去吃看看。",
+          "dialogue": [
+            {
+              "text": "駅前に新しいカフェができたらしいよ。",
+              "translation": "聽說車站前開了一家新咖啡廳喔。",
+              "pronunciation": [
+                {
+                  "text": "駅前",
+                  "reading": "えきまえ"
+                },
+                {
+                  "text": "に",
+                  "reading": "に"
+                },
+                {
+                  "text": "新しい",
+                  "reading": "あたらしい"
+                },
+                {
+                  "text": "カフェ",
+                  "reading": "かふぇ"
+                },
+                {
+                  "text": "が",
+                  "reading": "が"
+                },
+                {
+                  "text": "できたらしい",
+                  "reading": "できたらしい"
+                },
+                {
+                  "text": "よ",
+                  "reading": "よ"
+                },
+                {
+                  "text": "。"
+                }
+              ]
+            },
+            {
+              "text": "看板のケーキが気になるから、今度一緒に行ってみよう。",
+              "translation": "我很在意招牌上的蛋糕，下次一起去看看吧。",
+              "pronunciation": [
+                {
+                  "text": "看板",
+                  "reading": "かんばん"
+                },
+                {
+                  "text": "の",
+                  "reading": "の"
+                },
+                {
+                  "text": "ケーキ",
+                  "reading": "けーき"
+                },
+                {
+                  "text": "が",
+                  "reading": "が"
+                },
+                {
+                  "text": "気になる",
+                  "reading": "きになる"
+                },
+                {
+                  "text": "から",
+                  "reading": "から"
+                },
+                {
+                  "text": "、"
+                },
+                {
+                  "text": "今度",
+                  "reading": "こんど"
+                },
+                {
+                  "text": "一緒に",
+                  "reading": "いっしょに"
+                },
+                {
+                  "text": "行ってみよう",
+                  "reading": "いってみよう"
+                },
+                {
+                  "text": "。"
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "ケーキが気になる"
+        }
+      ]
+    },
+    {
+      "id": "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:r3",
+      "pointIds": [
+        "5d11643c-e77a-4c38-92b0-f4fa2037ed4b:s0:p4"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c4"
+          ],
+          "text": "読んでれば"
+        }
+      ],
+      "pattern": "[動詞て形]いれば（口語では「い」を省略）",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "前輩指導後輩學習新軟體，鼓勵後輩只要每天持續操作就會熟練。",
+          "dialogue": [
+            {
+              "text": "この操作、少し難しくて覚えられるか不安です。",
+              "translation": "這個操作有點難，我擔心記不記住。",
+              "pronunciation": [
+                {
+                  "text": "この",
+                  "reading": "この"
+                },
+                {
+                  "text": "操作",
+                  "reading": "そうさ"
+                },
+                {
+                  "text": "、"
+                },
+                {
+                  "text": "少し",
+                  "reading": "すこし"
+                },
+                {
+                  "text": "難しくて",
+                  "reading": "むずかしくて"
+                },
+                {
+                  "text": "覚えられる",
+                  "reading": "おぼえられる"
+                },
+                {
+                  "text": "か",
+                  "reading": "か"
+                },
+                {
+                  "text": "不安です",
+                  "reading": "ふあんです"
+                },
+                {
+                  "text": "。"
+                }
+              ]
+            },
+            {
+              "text": "毎日使ってれば、すぐに慣れるから大丈夫だよ。",
+              "translation": "只要每天都用，很快就會習慣的，別擔心。",
+              "pronunciation": [
+                {
+                  "text": "毎日",
+                  "reading": "まいにち"
+                },
+                {
+                  "text": "使ってれば",
+                  "reading": "つかってれば"
+                },
+                {
+                  "text": "、"
+                },
+                {
+                  "text": "すぐに",
+                  "reading": "すぐに"
+                },
+                {
+                  "text": "慣れる",
+                  "reading": "なれる"
+                },
+                {
+                  "text": "から",
+                  "reading": "から"
+                },
+                {
+                  "text": "大丈夫だよ",
+                  "reading": "だいじょうぶだよ"
+                },
+                {
+                  "text": "。"
+                }
+              ]
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "使ってれば"
+        }
+      ]
+    }
+  ]
+}

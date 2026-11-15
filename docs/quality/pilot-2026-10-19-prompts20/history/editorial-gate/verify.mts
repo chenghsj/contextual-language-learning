@@ -1,0 +1,351 @@
+/** Offline provenance/coverage/record verification; never starts inference or rejudges language. */
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFile, readdir } from "node:fs/promises";
+import { isDeepStrictEqual } from "node:util";
+import {
+  GenerationRequestSchema,
+  validateLearningDocumentV7,
+  LEARNING_POINTS_PROMPT_VERSION,
+  LANGUAGE_STRATEGY_VERSION,
+  QUALITY_STRATEGY_VERSION,
+} from "../../../packages/core/src/index.ts";
+const folder = new URL("./", import.meta.url),
+  root = new URL("../../../", folder);
+const json = async (url: URL): Promise<any> => JSON.parse(await readFile(url, "utf8"));
+const hash = async (url: URL) =>
+  createHash("sha256")
+    .update(await readFile(url))
+    .digest("hex");
+const context = await json(new URL("run-context.json", folder));
+const finalHashes = { ...context.hashes, ...context.verificationTestHashes };
+const plan = await json(new URL("plan.json", folder));
+const cases = await json(new URL("cases.json", folder));
+const manifest = await json(new URL("raw-artifacts.sha256.json", folder));
+for (const [path, expected] of Object.entries(manifest.files))
+  assert.equal(await hash(new URL(path, folder)), expected, `Artifact changed: ${path}`);
+for (const [path, expected] of Object.entries(context.planHashes))
+  assert.equal(await hash(new URL(path, folder)), expected, `Frozen plan changed: ${path}`);
+const drift: string[] = [];
+for (const [path, expected] of Object.entries(finalHashes))
+  if ((await hash(new URL(path, root))) !== expected) drift.push(path);
+if (!process.argv.includes("--historical")) {
+  assert.deepEqual(drift, [], "Source changed; historical mode checks stored records only");
+  assert.equal(LEARNING_POINTS_PROMPT_VERSION, context.promptVersion);
+  assert.equal(LANGUAGE_STRATEGY_VERSION, context.languageStrategyVersion);
+  assert.equal(QUALITY_STRATEGY_VERSION, context.qualityStrategyVersion);
+}
+assert.equal(plan.beforeInference, true);
+assert.equal(context.newInferenceCallsAtFreeze, 0);
+assert.equal(plan.caseCount, 3);
+assert.equal(cases.length, 3);
+if (process.argv.includes("--prepared")) {
+  const conditions = await json(new URL("prepared/conditions.json", folder));
+  const requests = await json(new URL("prepared/requests.json", folder));
+  assert.equal(requests.length, 3);
+  assert.equal(new Set(requests.map((r: any) => r.id)).size, 3);
+  assert.equal(conditions.casesHash, context.planHashes["cases.json"]);
+  assert.equal(conditions.promptVersion, context.promptVersion);
+  assert.equal(conditions.qualityStrategyVersion, context.qualityStrategyVersion);
+  assert.equal(conditions.provider, plan.execution.provider);
+  assert.equal(conditions.modelId, plan.execution.modelId);
+  assert.equal(
+    conditions.rulesHash,
+    context.hashes["apps/local-host/src/generation/learning-points-rules.ts"],
+  );
+  assert.equal(
+    conditions.promptsHash,
+    context.hashes["apps/local-host/src/generation/learning-points-prompts.ts"],
+  );
+  assert.deepEqual(
+    conditions.selectedCases,
+    cases.map((c: any) => `${c.language}-${c.name}-automatic`),
+  );
+  for (const source of cases) {
+    const request = GenerationRequestSchema.parse(
+      requests.find((r: any) => r.source.title === `${source.language}-${source.name}-automatic`),
+    );
+    assert.deepEqual(
+      request.cues.map(c => c.originalText),
+      source.lines,
+    );
+    assert.equal(request.profile.targetLanguage, source.language);
+    assert.equal(request.profile.level, source.level);
+    assert.equal(request.profile.instructionLanguage, conditions.instructionLanguage);
+    assert.equal(request.profile.contextualExampleCount, conditions.contextualExampleCount);
+    assert.equal(request.agent.provider, conditions.provider);
+    assert.equal(request.agent.modelId, conditions.modelId);
+  }
+  const status = await json(new URL("inference-status.json", folder));
+  assert.equal(status.status, "blocked_before_inference");
+  assert.equal(status.modelCalls, 0);
+  assert.equal(status.generatedCases, 0);
+  const attempts = await json(new URL("inference-authorization-attempts.json", folder));
+  assert.equal(attempts.attempts.length, 2);
+  assert.ok(
+    attempts.attempts.every((a: any) => a.result === "not_executed" && a.newModelCalls === 0),
+  );
+  const pending = await json(new URL("pending-review-packet.json", folder));
+  assert.equal(pending.independentReviewPerformed, false);
+  for (const item of pending.items) {
+    assert.equal(await hash(new URL(item.priorReview, root)), item.priorReviewHash);
+    assert.equal(await hash(new URL(item.priorDocument, root)), item.priorDocumentHash);
+  }
+  console.log(
+    JSON.stringify(
+      {
+        evidence: "frozen_inputs_and_engineering_records_verified",
+        mode: "historical_prepared_inputs_only",
+        sourceDrift: drift,
+        preparedCases: 3,
+        generatedCasesAtPreparation: 0,
+        semanticAcceptance: "not_evaluated_by_this_mode",
+        independentPendingReview: "not_performed",
+        modelCallsStartedByVerifier: 0,
+      },
+      null,
+      2,
+    ),
+  );
+  process.exit(0);
+}
+assert.ok(
+  (await readdir(folder)).includes("acceptance.json"),
+  "No inference acceptance exists; --prepared verifies inputs only and cannot certify generated quality",
+);
+const acceptance = await json(new URL("acceptance.json", folder));
+assert.equal(acceptance.cases.length, 3);
+// The preflight manifest stays immutable. Resumed inference has its own manifest.
+const generationManifest = await json(new URL("generation-artifacts.sha256.json", folder));
+for (const [path, expected] of Object.entries(generationManifest.files))
+  assert.equal(await hash(new URL(path, folder)), expected, `Generation artifact changed: ${path}`);
+const captured = (path: string) =>
+  assert.ok(Object.hasOwn(generationManifest.files, path), `Unfrozen generation artifact: ${path}`);
+const plannedNames = new Set(cases.map((c: any) => `${c.language}-${c.name}-automatic`));
+assert.equal(plannedNames.size, 3);
+const seen = new Set<string>();
+let generated = 0,
+  coveragePassed = 0,
+  targetCoveragePassed = 0,
+  semanticPassed = 0,
+  semanticFailed = 0,
+  semanticNeedsReview = 0,
+  accepted = 0,
+  recordedCalls = 0,
+  traceRequests = 0,
+  traceResponses = 0,
+  structuralRepairs = 0,
+  callsWithoutUsage = 0;
+const usage: Record<string, number> = {};
+const at = (value: any, pointer: string) =>
+  pointer
+    .split("/")
+    .slice(1)
+    .reduce(
+      (v, k) => v?.[Array.isArray(v) ? Number(k) : k.replaceAll("~1", "/").replaceAll("~0", "~")],
+      value,
+    );
+for (const batch of ["batch-1"]) {
+  for (const name of ["conditions.json", "requests.json", "report.json", "case-definitions.json"])
+    captured(`${batch}/${name}`);
+  const conditions = await json(new URL(batch + "/conditions.json", folder));
+  assert.equal(conditions.casesHash, await hash(new URL("cases.json", folder)));
+  assert.equal(conditions.tracePrompts, true);
+  assert.equal(conditions.provider, plan.execution.provider);
+  assert.equal(conditions.modelId, plan.execution.modelId);
+  assert.equal(conditions.thinkingLevel, plan.execution.thinkingLevel);
+  assert.equal(conditions.promptVersion, context.promptVersion);
+  assert.equal(
+    conditions.rulesHash,
+    context.hashes["apps/local-host/src/generation/learning-points-rules.ts"],
+  );
+  assert.equal(
+    conditions.promptsHash,
+    context.hashes["apps/local-host/src/generation/learning-points-prompts.ts"],
+  );
+  const requests = await json(new URL(batch + "/requests.json", folder));
+  const report = await json(new URL(batch + "/report.json", folder));
+  assert.equal(report.length, 3);
+  assert.equal(requests.length, 3);
+  for (const row of report) {
+    assert.ok(plannedNames.has(row.case));
+    assert.ok(!seen.has(row.case));
+    seen.add(row.case);
+    const request = GenerationRequestSchema.parse(
+      requests.find((r: any) => r.source.title === row.case),
+    );
+    const source = cases.find((c: any) => `${c.language}-${c.name}-automatic` === row.case);
+    assert.deepEqual(
+      request.cues.map(c => c.originalText),
+      source.lines,
+    );
+    assert.equal(request.profile.targetLanguage, source.language);
+    assert.equal(request.profile.level, source.level);
+    assert.equal(request.profile.instructionLanguage, conditions.instructionLanguage);
+    assert.equal(request.profile.contextualExampleCount, conditions.contextualExampleCount);
+    assert.equal(request.cues.length, 4);
+    const decision = acceptance.cases.find((c: any) => c.case === row.case);
+    assert.equal(decision.group, source.group);
+    assert.equal(decision.generation, row.status);
+    let doc: any;
+    if (row.status === "generated") {
+      generated++;
+      captured(decision.document);
+      captured(`${batch}/${row.case}/jobs/${request.id}.json`);
+      const path = new URL(decision.document, folder);
+      assert.equal(await hash(path), decision.documentHash);
+      doc = validateLearningDocumentV7(await json(path));
+      assert.equal(doc.id, request.id);
+      assert.deepEqual(doc.cues, request.cues);
+      assert.deepEqual(doc.profile, request.profile);
+      assert.deepEqual(doc.execution, row.execution);
+      assert.equal(doc.execution.promptVersion, context.promptVersion);
+      assert.equal(doc.execution.languageStrategyVersion, context.languageStrategyVersion);
+      assert.equal(doc.execution.qualityStrategyVersion, context.qualityStrategyVersion);
+      assert.equal(doc.execution.provider, plan.execution.provider);
+      assert.equal(doc.execution.modelId, plan.execution.modelId);
+      const job = await json(new URL(`${batch}/${row.case}/jobs/${request.id}.json`, folder));
+      assert.deepEqual(job.request, request);
+      assert.deepEqual(job.execution, row.execution);
+      const units = doc.sections.flatMap((s: any) => s.utterances);
+      const selected = new Set(units.flatMap((u: any) => u.cueIds));
+      const covered = request.cues.every(c => selected.has(c.id));
+      assert.equal(decision.coverage, covered ? "passed" : "not_exercised");
+      if (covered) coveragePassed++;
+      const review = await json(new URL(decision.review, folder));
+      assert.equal(review.case, row.case);
+      assert.equal(review.documentHash, decision.documentHash);
+      for (const issue of review.issues) {
+        assert.ok(["error", "warning", "needs_review"].includes(issue.severity));
+        assert.ok(
+          (issue.paths ?? [issue.path]).some((path: string) =>
+            JSON.stringify(at(doc, path))?.includes(issue.quote),
+          ),
+          `Missing review quote: ${row.case}`,
+        );
+      }
+      const errors = review.issues.filter((i: any) => i.severity === "error").length;
+      const pending = review.issues.filter((i: any) => i.severity === "needs_review").length;
+      const verdict = errors ? "failed" : pending ? "needs_review" : "passed";
+      assert.equal(review.verdict, verdict);
+      assert.equal(decision.semantic, verdict);
+      const required = plan.requiredTeachingTargets[row.case];
+      assert.ok(Array.isArray(required));
+      assert.deepEqual(review.targets.map((t: any) => t.id).sort(), [...required].sort());
+      for (const target of review.targets) {
+        assert.ok(["passed", "failed", "needs_review", "not_exercised"].includes(target.result));
+        if (target.result === "passed") {
+          assert.ok(
+            target.path.startsWith("/points/") || target.path.startsWith("/reusableItems/"),
+          );
+          assert.ok(JSON.stringify(at(doc, target.path))?.includes(target.quote));
+          const teaching = /^\/points\/(\d+)\/explanation$/.exec(target.teachingPath ?? "");
+          assert.ok(teaching, "Covered target must identify its actual point explanation");
+          assert.ok(at(doc, target.teachingPath)?.trim());
+          const item = /^\/reusableItems\/(\d+)\//.exec(target.path);
+          if (item)
+            assert.ok(
+              doc.reusableItems[Number(item[1])].pointIds.includes(
+                doc.points[Number(teaching[1])].id,
+              ),
+              "Target source form must link to its teaching point",
+            );
+        }
+      }
+      const targetsCovered = review.targets.every((t: any) => t.result === "passed");
+      assert.equal(decision.targetCoverage, targetsCovered ? "passed" : "not_exercised");
+      targetCoveragePassed += Number(targetsCovered);
+      assert.equal(decision.accepted, covered && targetsCovered && verdict === "passed");
+      semanticPassed += Number(verdict === "passed");
+      semanticFailed += Number(verdict === "failed");
+      semanticNeedsReview += Number(verdict === "needs_review");
+      accepted += Number(decision.accepted);
+    } else {
+      assert.equal(decision.accepted, false);
+      assert.equal(decision.semantic, "generation_failed");
+    }
+    for (const call of row.execution?.calls ?? []) {
+      recordedCalls++;
+      structuralRepairs += Number(call.step.endsWith("-repair"));
+      assert.equal(call.provider, conditions.provider);
+      assert.equal(call.modelId, conditions.modelId);
+      if (!call.usage) callsWithoutUsage++;
+      for (const [k, v] of Object.entries(call.usage ?? {}))
+        if (typeof v === "number") usage[k] = (usage[k] ?? 0) + v;
+    }
+    const traceFolder = new URL(`${batch}/${row.case}/model-traces/`, folder);
+    const names = await readdir(traceFolder);
+    for (const name of names) captured(`${batch}/${row.case}/model-traces/${name}`);
+    if (row.status === "generated")
+      assert.equal(
+        names.filter(n => n.endsWith("-response.json")).length,
+        row.execution.calls.length,
+        "Every saved call must have one captured response",
+      );
+    for (const name of names.filter(n => n.endsWith("-request.json"))) {
+      traceRequests++;
+      const trace = await json(new URL(name, traceFolder));
+      assert.equal(trace.agent.provider, conditions.provider);
+      assert.equal(trace.agent.modelId, conditions.modelId);
+      assert.ok(trace.systemPrompt);
+      assert.ok(trace.prompt);
+      const response = name.replace("-request.json", "-response.json");
+      const error = name.replace("-request.json", "-error.json");
+      assert.ok(
+        names.includes(response) || names.includes(error),
+        "Unfinished captured model request",
+      );
+      if (names.includes(response)) {
+        traceResponses++;
+        const value = await json(new URL(response, traceFolder));
+        assert.equal(typeof value.text, "string");
+        assert.ok(
+          (row.execution?.calls ?? []).some((call: any) => isDeepStrictEqual(call, value.call)),
+          "Trace call not in saved execution",
+        );
+      }
+    }
+  }
+}
+assert.deepEqual(seen, plannedNames);
+const counts = {
+  requested: 3,
+  generated,
+  structuralPassed: generated,
+  fixedSourcePassed: generated,
+  identityPassed: generated,
+  coveragePassed,
+  targetCoveragePassed,
+  semanticPassed,
+  semanticFailed,
+  semanticNeedsReview,
+  accepted,
+};
+assert.deepEqual(acceptance.counts, counts);
+assert.deepEqual(acceptance.usage, {
+  recordedCalls,
+  traceRequests,
+  traceResponses,
+  structuralRepairs,
+  callsWithoutUsage,
+  reportedTokens: usage,
+  reasoningIncludedInOutput: true,
+});
+console.log(
+  JSON.stringify(
+    {
+      evidence: "artifact_integrity_and_record_consistency_verified",
+      semanticEvaluation:
+        "Stored same-reviewer AI judgments; not an independent language re-evaluation",
+      mode: process.argv.includes("--historical")
+        ? "historical"
+        : "same frozen generation, compatibility and build snapshot",
+      sourceDrift: drift,
+      counts,
+      usage: acceptance.usage,
+      modelCallsStartedByVerifier: 0,
+    },
+    null,
+    2,
+  ),
+);

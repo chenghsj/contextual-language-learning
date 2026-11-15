@@ -154,6 +154,33 @@ test("a truncated or trailing-error paid stream is not reported as success or au
   }
 });
 
+test("a transport failure before response headers does not replay generation at another endpoint", async () => {
+  const root = await mkdtemp(join(tmpdir(), "cll-transport-wire-"));
+  const originalFetch = globalThis.fetch;
+  let posts = 0;
+  globalThis.fetch = async (_url, init) => {
+    if (init?.method === "HEAD") return new Response("", { status: 200 });
+    posts++;
+    throw new Error("Synthetic transport failure before response headers");
+  };
+  try {
+    const id = Object.keys(getCurrentAntigravityRouting()).find(id => id.startsWith("gemini-"))!;
+    const result = await withAntigravityAccountDirectory(root, () =>
+      streamAntigravity({ ...model, id }, context, {
+        jsonOutput: true,
+        apiKey: JSON.stringify({ token: "offline-test-token", projectId: "offline-project" }),
+        signal: AbortSignal.timeout(5000),
+      }).result(),
+    );
+    assert.equal(posts, 1);
+    assert.equal(result.stopReason, "error");
+    assert.match(result.errorMessage!, /Synthetic transport failure before response headers/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 import { sanitizeText } from "pi-antigravity/src/utils/util.js";
 test("source emoji and combining characters survive upstream sanitization", () => {
   const source = "日文 👩‍👩‍👧‍👧 e\u0301 😄";

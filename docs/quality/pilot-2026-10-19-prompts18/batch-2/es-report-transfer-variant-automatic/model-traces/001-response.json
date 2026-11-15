@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":21}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":28}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":28,\"end\":52}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":12}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":12,\"end\":38}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":33}]}],\"learningValue\":\"掌握轉述他人話語時的動詞人稱（dijo）與代名詞接語規則（dime），學習轉換話題的常用片語（Por cierto），以及運用無人稱／被動 se（se entiende）表達事物無法被理解或辨識。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"分析轉述動詞「dijo」為第三人稱單數（指稱 Leo）而非當前聽者，並辨析命令式接續單一代名詞「dime」時依規則不需標記重音符號。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c2\"],\"description\":\"學習日常生活對話中用於切換話題的常用片語「Por cierto」（對了、順便問一下）。\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c4\"],\"description\":\"理解「se entiende」中被動／無人稱 se 的結構，掌握其在否定句中表示「看不清、無法被理解」的用法。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:34:31.159Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 55389.870583,
+    "usage": {
+      "input": 2847,
+      "output": 7957,
+      "reasoning": 7582
+    }
+  }
+}

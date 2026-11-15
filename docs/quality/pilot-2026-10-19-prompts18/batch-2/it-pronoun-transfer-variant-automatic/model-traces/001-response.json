@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":23}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":9}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":9,\"end\":24}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":27}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":8}]}],\"learningValue\":\"這段對話涵蓋日常吩咐、詢問需求與具體請求，包含義大利語常見的命令式結合附著代名詞（Digli、Dammi）以及動詞 servire 的需求句型。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\"],\"description\":\"命令式複合代名詞「Digli」（di' + gli）的構詞，以及「dire a qcn di + 原形動詞」轉達要求的句型。\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"動詞「servire」搭配間接受詞代名詞表示「需要」的用法（Ti serve altro?）。\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c3\"],\"description\":\"單音節命令式接附著代名詞產生子音雙寫的「Dammi」（da' + mi），以及搭配「per favore」表達請求。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:38:30.573Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 15932.911542000016,
+    "usage": {
+      "input": 2477,
+      "output": 2520,
+      "reasoning": 2193
+    }
+  }
+}

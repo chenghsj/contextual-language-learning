@@ -1,0 +1,256 @@
+{
+  "id": "ce85031e-9c66-4f23-88a0-d73bb2cec4c8",
+  "schemaValidated": true,
+  "checkpointConsistent": true,
+  "sourceCuesUnchanged": true,
+  "sharedGreetingPoint": true,
+  "basicAcknowledgementWithoutFiller": true,
+  "scenes": [
+    {
+      "id": "7635e2a9-6b89-40ca-9cae-f26472631a41",
+      "title": "決定參加文化祭與創作漫畫的熱情",
+      "cueIds": [
+        "cue-14",
+        "cue-15",
+        "cue-16",
+        "cue-17",
+        "cue-18"
+      ],
+      "source": [
+        {
+          "id": "cue-14",
+          "startMs": 71680,
+          "endMs": 73479,
+          "originalText": "出たいです。"
+        },
+        {
+          "id": "cue-15",
+          "startMs": 72119,
+          "endMs": 76479,
+          "originalText": "出たぞ。"
+        },
+        {
+          "id": "cue-16",
+          "startMs": 73479,
+          "endMs": 76479,
+          "originalText": "先生からもらったノートにたくさんネタを書いてたら前よりもっと漫画書きたくなっちゃって。"
+        },
+        {
+          "id": "cue-17",
+          "startMs": 80320,
+          "endMs": 84079,
+          "originalText": "では申請しましょう。"
+        },
+        {
+          "id": "cue-18",
+          "startMs": 82320,
+          "endMs": 85360,
+          "originalText": "やった。[叫び声]"
+        }
+      ],
+      "timeBounds": [
+        71680,
+        85360
+      ],
+      "basicOnly": [
+        [
+          "cue-14"
+        ],
+        [
+          "cue-15"
+        ],
+        [
+          "cue-18"
+        ]
+      ],
+      "pointCount": 4,
+      "sourceAndTimingValid": true,
+      "readerPreview": "Verified using actual lesson data and simulated playback; actual video playback not verified"
+    },
+    {
+      "id": "0e2b3b9e-2f52-4954-9373-b88847be7469",
+      "title": "稱謂的抱怨與看扁",
+      "cueIds": [
+        "cue-65",
+        "cue-66",
+        "cue-67",
+        "cue-68"
+      ],
+      "source": [
+        {
+          "id": "cue-65",
+          "startMs": 278960,
+          "endMs": 281960,
+          "originalText": "ちょっと待て。それより前から気になることがある。"
+        },
+        {
+          "id": "cue-66",
+          "startMs": 282919,
+          "endMs": 285919,
+          "originalText": "なんで俺だけ苗字で呼び捨てなの?さっちゃんと呼べ。"
+        },
+        {
+          "id": "cue-67",
+          "startMs": 289513,
+          "endMs": 293880,
+          "originalText": "[叫び声]"
+        },
+        {
+          "id": "cue-68",
+          "startMs": 290880,
+          "endMs": 293880,
+          "originalText": "うーん。ちょっと下に見てるのかな?"
+        }
+      ],
+      "timeBounds": [
+        278960,
+        293880
+      ],
+      "basicOnly": [
+        [
+          "cue-67"
+        ]
+      ],
+      "pointCount": 4,
+      "sourceAndTimingValid": true,
+      "readerPreview": "Verified using actual lesson data and simulated playback; actual video playback not verified"
+    },
+    {
+      "id": "edbd433e-06f5-46d6-bdd0-661dbec2176a",
+      "title": "回家問候與晚餐對話",
+      "cueIds": [
+        "cue-117",
+        "cue-118",
+        "cue-119",
+        "cue-120",
+        "cue-121",
+        "cue-122",
+        "cue-123"
+      ],
+      "source": [
+        {
+          "id": "cue-117",
+          "startMs": 500879,
+          "endMs": 504159,
+          "originalText": "ただいま。"
+        },
+        {
+          "id": "cue-118",
+          "startMs": 502800,
+          "endMs": 504960,
+          "originalText": "お帰り。"
+        },
+        {
+          "id": "cue-119",
+          "startMs": 504159,
+          "endMs": 506360,
+          "originalText": "うん。"
+        },
+        {
+          "id": "cue-120",
+          "startMs": 504960,
+          "endMs": 509360,
+          "originalText": "ご飯食べる?"
+        },
+        {
+          "id": "cue-121",
+          "startMs": 506360,
+          "endMs": 509360,
+          "originalText": "うん。食べてきた。"
+        },
+        {
+          "id": "cue-122",
+          "startMs": 510080,
+          "endMs": 513080,
+          "originalText": "そう。お友達。"
+        },
+        {
+          "id": "cue-123",
+          "startMs": 514240,
+          "endMs": 517240,
+          "originalText": "そうかな?向こうはそう言ってた。"
+        }
+      ],
+      "timeBounds": [
+        500879,
+        517240
+      ],
+      "basicOnly": [
+        [
+          "cue-119"
+        ],
+        [
+          "cue-120"
+        ],
+        [
+          "cue-122"
+        ]
+      ],
+      "pointCount": 4,
+      "sourceAndTimingValid": true,
+      "readerPreview": "Verified using actual lesson data and simulated playback; actual video playback not verified"
+    },
+    {
+      "id": "0f770be6-5706-4c90-8063-31e53a967535",
+      "title": "稱讚、合群與修行的打算",
+      "cueIds": [
+        "cue-280",
+        "cue-281",
+        "cue-282",
+        "cue-283",
+        "cue-284",
+        "cue-285"
+      ],
+      "source": [
+        {
+          "id": "cue-280",
+          "startMs": 1245960,
+          "endMs": 1251880,
+          "originalText": "どう似合う?"
+        },
+        {
+          "id": "cue-281",
+          "startMs": 1248880,
+          "endMs": 1251880,
+          "originalText": "似合う似合う。似合いすぎ。ヒカるん最近付き合いいいよな。"
+        },
+        {
+          "id": "cue-282",
+          "startMs": 1254320,
+          "endMs": 1258679,
+          "originalText": "うん。"
+        },
+        {
+          "id": "cue-283",
+          "startMs": 1255799,
+          "endMs": 1259320,
+          "originalText": "うん。ちょっと修行のつもり。"
+        },
+        {
+          "id": "cue-284",
+          "startMs": 1258679,
+          "endMs": 1262320,
+          "originalText": "お、"
+        },
+        {
+          "id": "cue-285",
+          "startMs": 1259320,
+          "endMs": 1262320,
+          "originalText": "また漫画読んでね。"
+        }
+      ],
+      "timeBounds": [
+        1245960,
+        1262320
+      ],
+      "basicOnly": [
+        [
+          "cue-284"
+        ]
+      ],
+      "pointCount": 5,
+      "sourceAndTimingValid": true,
+      "readerPreview": "Verified using actual lesson data and simulated playback; actual video playback not verified"
+    }
+  ]
+}

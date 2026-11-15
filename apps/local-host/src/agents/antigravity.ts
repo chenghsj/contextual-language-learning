@@ -54,9 +54,13 @@ export function registerAntigravity(runtime: ModelRuntime, root: string): void {
       refreshToken: refreshAntigravityToken,
       getApiKey,
     },
-    streamSimple: (model, context, options) =>
-      withAntigravityAccountDirectory(accountDirectory, () =>
-        streamAntigravity(model, context, options),
-      ),
+    streamSimple: (model, context, options) => {
+      const reasoning = options?.reasoning;
+      if (reasoning === "max")
+        throw new Error("The selected reasoning level is unavailable for Antigravity.");
+      return withAntigravityAccountDirectory(accountDirectory, () =>
+        streamAntigravity(model, context, { ...options, reasoning }),
+      );
+    },
   });
 }

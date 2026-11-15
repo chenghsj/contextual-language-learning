@@ -1,0 +1,36 @@
+{
+  "evidence": "artifact_integrity_and_record_consistency_verified",
+  "semanticEvaluation": "Stored same-reviewer AI judgments; not an independent language re-evaluation",
+  "mode": "frozen generation snapshot plus separately checked completed-lesson compatibility change",
+  "generationToFinalRuntimeChanges": [
+    "packages/core/src/schema.ts",
+    "apps/local-host/src/jobs/manager.ts"
+  ],
+  "sourceDrift": [],
+  "counts": {
+    "requested": 12,
+    "generated": 12,
+    "structuralPassed": 12,
+    "fixedSourcePassed": 12,
+    "identityPassed": 12,
+    "coveragePassed": 12,
+    "semanticPassed": 9,
+    "semanticFailed": 2,
+    "semanticNeedsReview": 1,
+    "accepted": 9
+  },
+  "usage": {
+    "recordedCalls": 37,
+    "traceRequests": 37,
+    "traceResponses": 37,
+    "structuralRepairs": 1,
+    "callsWithoutUsage": 0,
+    "reportedTokens": {
+      "input": 120627,
+      "output": 179482,
+      "reasoning": 150083
+    },
+    "reasoningIncludedInOutput": true
+  },
+  "modelCallsStartedByVerifier": 0
+}

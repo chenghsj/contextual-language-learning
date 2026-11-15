@@ -1,0 +1,32 @@
+{
+  "evidence": "artifact_integrity_and_record_consistency_verified",
+  "semanticEvaluation": "Stored same-reviewer AI judgments; not an independent language re-evaluation",
+  "mode": "same frozen generation, compatibility and build snapshot",
+  "sourceDrift": [],
+  "counts": {
+    "requested": 6,
+    "generated": 6,
+    "structuralPassed": 6,
+    "fixedSourcePassed": 6,
+    "identityPassed": 6,
+    "coveragePassed": 6,
+    "semanticPassed": 4,
+    "semanticFailed": 1,
+    "semanticNeedsReview": 1,
+    "accepted": 4
+  },
+  "usage": {
+    "recordedCalls": 19,
+    "traceRequests": 19,
+    "traceResponses": 19,
+    "structuralRepairs": 1,
+    "callsWithoutUsage": 0,
+    "reportedTokens": {
+      "input": 66252,
+      "output": 81794,
+      "reasoning": 68802
+    },
+    "reasoningIncludedInOutput": true
+  },
+  "modelCallsStartedByVerifier": 0
+}

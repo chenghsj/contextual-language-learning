@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowImportingTsExtensions": true
+  },
+  "files": ["../../../apps/local-host/scripts/learning-points-quality.ts", "./verify.mts"],
+  "include": []
+}

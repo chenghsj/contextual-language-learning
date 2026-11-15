@@ -27,7 +27,10 @@ test("Google callback does not claim connection succeeded before token storage f
   assert.match(oauth, /session.finish\("success"\)/);
   assert.match(oauth, /session.finish\("error"\)/);
   assert.match(app, /error=\{driveConnectError\}/);
-  assert.match(backupUi, /error && <p role="status" className="[^"]+">/);
+  assert.match(
+    backupUi,
+    /role="status" className="[^"]+">\s*\{authExpired \? notice.authDescription : error\}/,
+  );
 });
 
 test("saved Google identity is revalidated against the real Drive API before backup is presented as active", () => {
@@ -39,5 +42,8 @@ test("saved Google identity is revalidated against the real Drive API before bac
   assert.match(backupUi, /disabled=\{busy \|\| working \|\| !verified\}/);
   assert.match(backupUi, /t\("retryDriveAccess"\)/);
   assert.match(app, /error=\{driveConnectError\}/);
-  assert.match(backupUi, /error && <p role="status" className="[^"]+">/);
+  assert.match(
+    backupUi,
+    /role="status" className="[^"]+">\s*\{authExpired \? notice.authDescription : error\}/,
+  );
 });

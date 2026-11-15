@@ -1,4 +1,5 @@
 import { GenerationQueue } from "../jobs/queue";
+import { createFavoriteHandler } from "./favorites";
 import { accessTokenFor } from "../drive/oauth";
 import { createCustomPublication } from "../storage/custom-backup";
 import { getCustomDriveDocument, listCustomDriveDocuments } from "../drive/api";
@@ -21,7 +22,9 @@ export function createHostDispatcher({
   reply,
   hostVersion,
   customManager,
+  favorites,
 }: HostDispatcherDeps) {
+  const handleFavorites = favorites ? createFavoriteHandler(favorites, reply) : undefined;
   const queue = new GenerationQueue();
   const speech = createSpeechHandler(reply);
   const {
@@ -69,6 +72,7 @@ export function createHostDispatcher({
     const request = parsed.data;
     let customBackupCount = 0;
     try {
+      if (handleFavorites && (await handleFavorites(request))) return;
       if (await speech.handle(request)) return;
       if (request.type === "getJobExecution") {
         const job = await custom.deps.repository.getJob(request.jobId);

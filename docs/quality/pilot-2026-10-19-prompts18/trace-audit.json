@@ -1,0 +1,89 @@
+{
+  "boundary": "Actual generatePiText client arguments, not HTTP payload capture. Marker presence verifies delivery, not model compliance.",
+  "cases": [
+    {
+      "case": "es-uncertainty-quote-topic-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": "SPANISH REPORTED ROLES",
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    },
+    {
+      "case": "fr-normal-transfer-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": "FRENCH CONTEXTUAL MEANING",
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "window-0-repair", "selection", "s0"]
+    },
+    {
+      "case": "it-uncertainty-quote-topic-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": "ITALIAN PRONOUN ATTACHMENT",
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    },
+    {
+      "case": "vi-normal-transfer-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": "VIETNAMESE CALLING",
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    },
+    {
+      "case": "zh-TW-uncertainty-quote-topic-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": null,
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    },
+    {
+      "case": "en-normal-transfer-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": null,
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    },
+    {
+      "case": "es-report-transfer-variant-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": "SPANISH REPORTED ROLES",
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    },
+    {
+      "case": "fr-location-transfer-variant-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": "FRENCH CONTEXTUAL MEANING",
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    },
+    {
+      "case": "it-pronoun-transfer-variant-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": "ITALIAN PRONOUN ATTACHMENT",
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    },
+    {
+      "case": "vi-heading-transfer-variant-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": "VIETNAMESE CALLING",
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    },
+    {
+      "case": "zh-TW-example-action-transfer-variant-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": null,
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    },
+    {
+      "case": "ja-normal-transfer-automatic",
+      "teachingClientCalls": 1,
+      "compactLanguageMarker": "JAPANESE FRAME CHECK",
+      "commonFieldChecksPresent": true,
+      "recordedSteps": ["window-0", "selection", "s0"]
+    }
+  ]
+}

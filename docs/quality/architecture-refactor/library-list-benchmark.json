@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-17",
+  "method": "Same machine, small synthetic fixtures, three reads per count, limit 50. Other regression processes may affect timings.",
+  "scope": "Temporary directories only, no user data, no AI calls. Measures elapsed time, not memory or real browser latency.",
+  "before": {
+    "synthetic": true,
+    "layout": "one document per video folder",
+    "rows": [
+      {
+        "count": 10,
+        "kind": "jobs",
+        "limit": 50,
+        "elapsedMs": [2.6, 6, 6.4],
+        "fixtureBytes": 1491
+      },
+      {
+        "count": 10,
+        "kind": "documents",
+        "limit": 50,
+        "elapsedMs": [16.8, 6.5, 7.6],
+        "fixtureBytes": 4449
+      },
+      {
+        "count": 50,
+        "kind": "jobs",
+        "limit": 50,
+        "elapsedMs": [4.2, 5.3, 2.6],
+        "fixtureBytes": 1491
+      },
+      {
+        "count": 50,
+        "kind": "documents",
+        "limit": 50,
+        "elapsedMs": [51, 39.2, 44.5],
+        "fixtureBytes": 4449
+      },
+      {
+        "count": 100,
+        "kind": "jobs",
+        "limit": 50,
+        "elapsedMs": [4.3, 5.9, 10.8],
+        "fixtureBytes": 1491
+      },
+      {
+        "count": 100,
+        "kind": "documents",
+        "limit": 50,
+        "elapsedMs": [128.4, 238.5, 127.8],
+        "fixtureBytes": 4449
+      }
+    ]
+  },
+  "after": {
+    "synthetic": true,
+    "layout": "one document per video folder",
+    "rows": [
+      {
+        "count": 10,
+        "kind": "jobs",
+        "limit": 50,
+        "elapsedMs": [4.8, 3.6, 2.8],
+        "fixtureBytes": 1491
+      },
+      {
+        "count": 10,
+        "kind": "documents",
+        "limit": 50,
+        "elapsedMs": [11.1, 5.2, 6.1],
+        "fixtureBytes": 4449
+      },
+      {
+        "count": 50,
+        "kind": "jobs",
+        "limit": 50,
+        "elapsedMs": [2.8, 2.2, 2.5],
+        "fixtureBytes": 1491
+      },
+      {
+        "count": 50,
+        "kind": "documents",
+        "limit": 50,
+        "elapsedMs": [18.2, 20, 20.2],
+        "fixtureBytes": 4449
+      },
+      {
+        "count": 100,
+        "kind": "jobs",
+        "limit": 50,
+        "elapsedMs": [3.9, 4.1, 4.8],
+        "fixtureBytes": 1491
+      },
+      {
+        "count": 100,
+        "kind": "documents",
+        "limit": 50,
+        "elapsedMs": [32.3, 31.3, 30.6],
+        "fixtureBytes": 4449
+      }
+    ]
+  }
+}

@@ -46,7 +46,7 @@ test("task actions show pending state and status badges never wrap vertically", 
   assert.match(pending, /aria-busy="true"/);
   const picker = await readSource(new URL("../components/ai-model-selection.tsx", import.meta.url));
   assert.match(picker, /aria-busy=\{busy\}/);
-  assert.match(history, /<Badge className="shrink-0 whitespace-nowrap text-\[11px\] leading-4">/);
+  assert.match(history, /<Badge className="shrink-0 whitespace-nowrap text-ui-meta leading-4">/);
   assert.match(
     history,
     /<span className="line-clamp-2 min-w-0 break-words text-ui-heading font-semibold" title=\{job\.sourceTitle\}\s*>\{job\.sourceTitle\}<\/span>/,

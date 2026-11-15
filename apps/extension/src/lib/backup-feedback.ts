@@ -1,4 +1,9 @@
-import type { JobSummary } from "@contextual/core";
+import { RETIRED_LESSON_MESSAGE, type JobSummary } from "@contextual/core";
+
+export function isRetiredBackup(job: JobSummary): boolean {
+  return job.backup?.status === "failed" && !!job.backup.error?.includes(RETIRED_LESSON_MESSAGE);
+}
+
 /** A successful request is not proof of completion: inspect every targeted record. */
 export function backupFeedbackResult(
   jobs: JobSummary[],

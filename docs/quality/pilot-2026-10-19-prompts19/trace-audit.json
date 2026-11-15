@@ -1,0 +1,76 @@
+{
+  "boundary": "Actual generatePiText client arguments, not provider HTTP payload capture or SDK internal-attempt accounting. Marker presence proves delivery, not compliance.",
+  "cases": [
+    {
+      "case": "fr-location-transfer-variant-automatic",
+      "steps": ["window-0", "selection", "s0"],
+      "teachingClientRequests": [
+        {
+          "step": "s0",
+          "citationRulePresent": true,
+          "actorRulePresent": true
+        }
+      ]
+    },
+    {
+      "case": "es-report-transfer-variant-automatic",
+      "steps": ["window-0", "selection", "s0"],
+      "teachingClientRequests": [
+        {
+          "step": "s0",
+          "citationRulePresent": true,
+          "actorRulePresent": true
+        }
+      ]
+    },
+    {
+      "case": "en-normal-transfer-automatic",
+      "steps": ["window-0", "selection", "s0"],
+      "teachingClientRequests": [
+        {
+          "step": "s0",
+          "citationRulePresent": true,
+          "actorRulePresent": true
+        }
+      ]
+    },
+    {
+      "case": "fr-citation-plural-variant-automatic",
+      "steps": ["window-0", "selection", "s0", "s0-repair"],
+      "teachingClientRequests": [
+        {
+          "step": "s0",
+          "citationRulePresent": true,
+          "actorRulePresent": true
+        },
+        {
+          "step": "s0-repair",
+          "citationRulePresent": true,
+          "actorRulePresent": true
+        }
+      ]
+    },
+    {
+      "case": "es-actor-recipient-variant-automatic",
+      "steps": ["window-0", "selection", "s0"],
+      "teachingClientRequests": [
+        {
+          "step": "s0",
+          "citationRulePresent": true,
+          "actorRulePresent": true
+        }
+      ]
+    },
+    {
+      "case": "ja-normal-transfer-automatic",
+      "steps": ["window-0", "selection", "s0"],
+      "teachingClientRequests": [
+        {
+          "step": "s0",
+          "citationRulePresent": true,
+          "actorRulePresent": true
+        }
+      ]
+    }
+  ]
+}

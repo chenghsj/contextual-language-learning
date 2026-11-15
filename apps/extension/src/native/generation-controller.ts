@@ -7,10 +7,17 @@ import {
   type BackgroundGenerationState,
 } from "@contextual/core";
 
+import { createDriveAuthorizationTabs, type AuthorizationTabs } from "./drive-authorization-tabs";
+
 export const GENERATION_CONTROLLER_PORT = "contextual:background-generation";
 const HOST_NAME = "dev.contextual.language_learning";
 
 type ForwardedRequest = HostRequest;
+
+export interface BackgroundHostGateway {
+  request(request: HostRequest): Promise<HostMessage>;
+  retain(): () => void;
+}
 
 export type GenerationControllerState = BackgroundGenerationState;
 
@@ -34,7 +41,8 @@ export function installGenerationController(
     set: (callback: () => void, delay: number) => setTimeout(callback, delay),
     clear: (timer: ReturnType<typeof setTimeout>) => clearTimeout(timer),
   },
-): void {
+  authorizationTabs: AuthorizationTabs | undefined = globalThis.chrome?.tabs,
+): BackgroundHostGateway {
   const clients = new Set<chrome.runtime.Port>();
   const pending = new Map<string, ForwardedRequest["type"]>();
   const catalogTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -69,7 +77,20 @@ export function installGenerationController(
       ),
     );
   }
+  const workerPending = new Map<
+    string,
+    {
+      resolve(message: HostMessage): void;
+      reject(error: Error): void;
+      timer: ReturnType<typeof setTimeout>;
+    }
+  >();
+  let leases = 0;
   const authOwners = new Map<string, chrome.runtime.Port>();
+  const googleTabs = createDriveAuthorizationTabs(authorizationTabs, loginId => {
+    if (ready && pending.get(loginId) === "driveConnect")
+      host?.postMessage({ id: crypto.randomUUID(), type: "driveAuthCancel", loginId });
+  });
   const healthChecks = new Map<
     string,
     { client: chrome.runtime.Port; timer: ReturnType<typeof setTimeout> }
@@ -95,7 +116,10 @@ export function installGenerationController(
         reconnectBlocked = !compatible;
         // Settings checks and the retry banner share this worker state. Publish
         // recovery before returning health, so success cannot leave a stale failure.
-        connection = { status: compatible ? "ready" : "incompatible", attempt: 0 };
+        connection = {
+          status: compatible ? "ready" : "incompatible",
+          attempt: 0,
+        };
         broadcast(state());
       }
       if (clients.has(client)) client.postMessage(message);
@@ -157,7 +181,7 @@ export function installGenerationController(
   let reconnectBlocked = false;
   let recoveryQueryId = "";
   function scheduleReconnect() {
-    if (!clients.size || reconnectBlocked || reconnectTimer) return;
+    if ((!clients.size && !leases) || reconnectBlocked || reconnectTimer) return;
     if (reconnectAttempt >= 3) {
       connection = { status: "failed", attempt: 3 };
       broadcast(state());
@@ -168,7 +192,7 @@ export function installGenerationController(
     broadcast(state());
     reconnectTimer = reconnectTimers.set(() => {
       reconnectTimer = undefined;
-      if (!clients.size) return;
+      if (!clients.size && !leases) return;
       try {
         const native = connectHost(true);
         native.postMessage({ id: handshakeId, type: "health", includeAgents: false });
@@ -200,7 +224,12 @@ export function installGenerationController(
         : null,
       queue: [...runs.values()]
         .filter(run => run.requestId !== active?.requestId && run.summary?.status !== "cancelled")
-        .map(({ requestId, jobId, kind, summary }) => ({ requestId, jobId, kind, summary })),
+        .map(({ requestId, jobId, kind, summary }) => ({
+          requestId,
+          jobId,
+          kind,
+          summary,
+        })),
       ...(connection ? { connection } : {}),
     };
   }
@@ -216,7 +245,7 @@ export function installGenerationController(
   }
 
   function disconnectIdleHost(): void {
-    if (active || pending.size || clients.size || !host) return;
+    if (active || pending.size || workerPending.size || clients.size || leases || !host) return;
     const idle = host;
     host = null;
     ready = false;
@@ -244,7 +273,9 @@ export function installGenerationController(
         const reason =
           "Native Host returned an invalid response. Update the Host and resume from task history.";
         for (const id of pending.keys()) broadcast({ id, type: "error", message: reason });
+        failWorkerPending(reason);
         for (const run of runs.values()) notifyAttention("interrupted", run);
+        googleTabs.finishAll();
         clearPending();
         runs.clear();
         active = null;
@@ -277,6 +308,10 @@ export function installGenerationController(
               });
           }
           for (const run of runs.values()) notifyAttention("interrupted", run);
+          failWorkerPending(
+            "Native Host is incompatible. Reinstall the current Host and reload the extension.",
+          );
+          googleTabs.finishAll();
           clearPending();
           authOwners.clear();
           outbox = [];
@@ -316,6 +351,20 @@ export function installGenerationController(
         native.disconnect();
         return;
       }
+      if (message.type === "driveAuth") {
+        if (pending.get(message.id) === "driveConnect" && authOwners.has(message.id))
+          googleTabs.start(message.id, message.url);
+        return;
+      }
+      const worker = workerPending.get(message.id);
+      if (worker) {
+        workerPending.delete(message.id);
+        clearTimeout(worker.timer);
+        if (message.type === "error") worker.reject(new Error(message.message));
+        else worker.resolve(message);
+        disconnectIdleHost();
+        return;
+      }
       if (message.id === recoveryQueryId && message.type === "jobs") {
         clearTimeout(handshakeTimer);
         reconnectAttempt = 0;
@@ -348,11 +397,17 @@ export function installGenerationController(
               ? message.type === "backupsFinished"
               : type === "piLogin"
                 ? message.type === "piAuthDone"
-                : type === "getDocument" || type === "getCustomDocument" || type === "getCustomJob"
-                  ? message.type === "result" ||
-                    ((message.type === "documentChunk" || message.type === "customChunk") &&
-                      message.index === message.total - 1)
-                  : true));
+                : type === "getFavorite"
+                  ? message.type === "favorite" ||
+                    (message.type === "favoriteChunk" && message.index === message.total - 1)
+                  : type === "getDocument" ||
+                      type === "getJobPreview" ||
+                      type === "getCustomDocument" ||
+                      type === "getCustomJob"
+                    ? message.type === "result" ||
+                      ((message.type === "documentChunk" || message.type === "customChunk") &&
+                        message.index === message.total - 1)
+                    : true));
       if (run) {
         if (message.type === "result") run.documentId = message.document.id;
         if (message.type === "documentChunk") run.documentId = message.documentId;
@@ -393,6 +448,7 @@ export function installGenerationController(
         forgetPending(message.id);
         speechOwners.delete(message.id);
         authOwners.delete(message.id);
+        googleTabs.finish(message.id);
         runs.delete(message.id);
         selectActive();
       }
@@ -406,6 +462,7 @@ export function installGenerationController(
       ready = false;
       clearTimeout(handshakeTimer);
       outbox = [];
+      failWorkerPending(runtime.lastError?.message ?? "Native Host connection ended.");
       authOwners.clear();
       speechOwners.clear();
       const reason =
@@ -418,6 +475,7 @@ export function installGenerationController(
         broadcast({ id: active.requestId, type: "error", message: reason });
       }
       for (const run of runs.values()) notifyAttention("interrupted", run);
+      googleTabs.finishAll();
       clearPending();
       runs.clear();
       active = null;
@@ -464,10 +522,27 @@ export function installGenerationController(
           ? raw.id
           : "invalid-request";
       if (!checked.success) {
-        client.postMessage({ id, type: "error", message: "Invalid Host request." });
+        client.postMessage({
+          id,
+          type: "error",
+          message: "Invalid Host request.",
+        });
         return;
       }
       const request = checked.data;
+      if (
+        request.type === "startSpeechDownload" ||
+        request.type === "cancelSpeechDownload" ||
+        request.type === "inspectSpeechDownloads" ||
+        request.type === "installSpeechVoice"
+      ) {
+        client.postMessage({
+          id: request.id,
+          type: "error",
+          message: "Speech downloads are managed by the background download service.",
+        });
+        return;
+      }
       if (
         request.type === "stopSpeech" &&
         speechOwners.has(request.speechId) &&
@@ -486,7 +561,11 @@ export function installGenerationController(
         request.id === request.loginId &&
         pending.get(request.id) === "piLogin" &&
         authOwners.get(request.loginId) === client;
-      if ((pending.has(request.id) && !ownedLoginAnswer) || healthChecks.has(request.id)) {
+      if (
+        (pending.has(request.id) && !ownedLoginAnswer) ||
+        workerPending.has(request.id) ||
+        healthChecks.has(request.id)
+      ) {
         client.postMessage({
           id: request.id,
           type: "error",
@@ -499,7 +578,9 @@ export function installGenerationController(
         return;
       }
       if (
-        (request.type === "piAuthAnswer" || request.type === "piAuthCancel") &&
+        (request.type === "piAuthAnswer" ||
+          request.type === "piAuthCancel" ||
+          request.type === "driveAuthCancel") &&
         authOwners.get(request.loginId) !== client
       ) {
         client.postMessage({
@@ -565,11 +646,16 @@ export function installGenerationController(
           const run = [...runs.values()].find(run => run.jobId === request.jobId);
           if (run) run.cancelling = true;
         }
-        if (request.type !== "piAuthAnswer" && request.type !== "piAuthCancel") {
+        if (
+          request.type !== "piAuthAnswer" &&
+          request.type !== "piAuthCancel" &&
+          request.type !== "driveAuthCancel"
+        ) {
           pending.set(request.id, request.type);
           limitCatalogWait(request);
         }
-        if (request.type === "piLogin") authOwners.set(request.id, client);
+        if (request.type === "piLogin" || request.type === "driveConnect")
+          authOwners.set(request.id, client);
         if (request.type === "speak") speechOwners.set(request.id, client);
         if (ready) native.postMessage(request);
         else {
@@ -602,7 +688,12 @@ export function installGenerationController(
       for (const [id, owner] of speechOwners) {
         if (owner !== client) continue;
         speechOwners.delete(id);
-        if (ready) host?.postMessage({ id: crypto.randomUUID(), type: "stopSpeech", speechId: id });
+        if (ready)
+          host?.postMessage({
+            id: crypto.randomUUID(),
+            type: "stopSpeech",
+            speechId: id,
+          });
         else {
           outbox = outbox.filter(request => request.id !== id);
           forgetPending(id);
@@ -613,20 +704,74 @@ export function installGenerationController(
         clearTimeout(check.timer);
         healthChecks.delete(id);
       }
-      if (!clients.size && reconnectTimer) {
+      if (!clients.size && !leases && reconnectTimer) {
         reconnectTimers.clear(reconnectTimer);
         reconnectTimer = undefined;
       }
       for (const [id, owner] of authOwners) {
         if (owner !== client) continue;
+        const googleLogin = pending.get(id) === "driveConnect";
+        googleTabs.finish(id);
         authOwners.delete(id);
         outbox = outbox.filter(request => request.id !== id);
         forgetPending(id);
         if (ready)
-          host?.postMessage({ id: crypto.randomUUID(), type: "piAuthCancel", loginId: id });
+          host?.postMessage({
+            id: crypto.randomUUID(),
+            type: googleLogin ? "driveAuthCancel" : "piAuthCancel",
+            loginId: id,
+          });
       }
       // The Native Host remains connected while any Agent request is active.
       disconnectIdleHost();
     });
   });
+  function failWorkerPending(reason: string) {
+    for (const worker of workerPending.values()) {
+      clearTimeout(worker.timer);
+      worker.reject(new Error(reason));
+    }
+    workerPending.clear();
+  }
+  return {
+    request(request) {
+      const checked = HostRequestSchema.parse(request);
+      if (workerPending.has(checked.id) || pending.has(checked.id))
+        return Promise.reject(new Error("Host request ID is already in use."));
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          const worker = workerPending.get(checked.id);
+          if (!worker) return;
+          workerPending.delete(checked.id);
+          reject(new Error("Native Host request timed out."));
+          disconnectIdleHost();
+        }, 60_000);
+        workerPending.set(checked.id, { resolve, reject, timer });
+        try {
+          const native = connectHost();
+          if (ready) native.postMessage(checked);
+          else {
+            const startHandshake = outbox.length === 0;
+            outbox.push(checked);
+            if (startHandshake)
+              native.postMessage({ id: handshakeId, type: "health", includeAgents: false });
+          }
+        } catch (error) {
+          workerPending.delete(checked.id);
+          clearTimeout(timer);
+          reject(error instanceof Error ? error : new Error(String(error)));
+        }
+      });
+    },
+    retain() {
+      leases++;
+      let released = false;
+      return () => {
+        if (released) return;
+        released = true;
+        leases--;
+        disconnectIdleHost();
+      };
+    },
+  };
 }

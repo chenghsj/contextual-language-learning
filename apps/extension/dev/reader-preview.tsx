@@ -1,12 +1,24 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ContextualSceneReader } from "../src/components/contextual-scene-reader";
-import { withSentenceTiming, type LearningDocument } from "@contextual/core";
 import { SystemSpeechProvider } from "../src/components/system-speech";
 import { SpeechController } from "../src/native/speech-controller";
-import { withinCueV7Fixture, crossCueV7Fixture } from "./reader-v7-fixture";
+import {
+  withSentenceTiming,
+  validateLearningDocumentV7,
+  type LearningDocument,
+} from "@contextual/core";
 import type { VideoAdapter } from "../src/video/types";
+import { messages, type UiLocale } from "../src/i18n/messages";
+import {
+  v7Fixture,
+  withinCueV7Fixture,
+  crossCueV7Fixture,
+  readingGapV7Fixture,
+  longReadingV7Fixture,
+} from "./reader-v7-fixture";
 import { document as fixture } from "./reader-fixture";
+import { chineseLearningFixture } from "../../../packages/core/test/chinese-learning-fixture";
 import "../src/styles.css";
 
 const saved = new Map<string, unknown>();
@@ -23,11 +35,7 @@ Object.assign(window, {
 });
 let currentMs = 1000,
   playing = false;
-let active: {
-  startMs: number;
-  endMs: number;
-  repeats: number | "infinite";
-} | null = null;
+let active: { startMs: number; endMs: number; repeats: number | "infinite" } | null = null;
 setInterval(() => {
   if (!playing) return;
   currentMs += 100;
@@ -66,39 +74,62 @@ const adapter: VideoAdapter = {
   setPlaybackRate: async () => undefined,
 };
 function Preview() {
+  const localeParam = new URLSearchParams(location.search).get("locale");
+  const previewLocale: UiLocale =
+    localeParam && localeParam in messages ? (localeParam as UiLocale) : "zh-TW";
   const params = new URLSearchParams(location.search);
   const [doc, setDoc] = useState<LearningDocument>(() =>
-    params.has("multi")
-      ? withinCueV7Fixture()
-      : params.has("cross")
-        ? crossCueV7Fixture()
-        : {
-            ...fixture,
-            sections: [
-              fixture.sections[0],
-              {
-                ...fixture.sections[0],
-                id: "00000000-0000-4000-8000-000000000003",
-                title: "Making plans",
-              },
-            ],
-          },
+    params.has("chinese")
+      ? chineseLearningFixture(params.get("chinese") === "zh-CN" ? "zh-CN" : "zh-TW").document
+      : params.has("multi")
+        ? withinCueV7Fixture()
+        : params.has("cross")
+          ? crossCueV7Fixture()
+          : params.has("gaps")
+            ? readingGapV7Fixture()
+            : params.has("long")
+              ? longReadingV7Fixture(params.get("long") === "ko" ? "ko" : "ja")
+              : v7Fixture,
   );
   const [rate, setRate] = useState(1);
-  const [notice, setNotice] = useState(
-    new URLSearchParams(location.search).has("episode")
-      ? "舊版完整教材預覽已封存，目前顯示合成測試資料。"
-      : "",
-  );
+  const [notice, setNotice] = useState("");
+  const episode = params.get("episode");
+  useEffect(() => {
+    if (episode !== "N3" && episode !== "N1") return;
+    const controller = new AbortController();
+    const manifestUrl = new URL("../../../docs/quality/v7/full/requests.json", import.meta.url);
+    void (async () => {
+      const response = await fetch(manifestUrl, { signal: controller.signal });
+      if (!response.ok) throw new Error("無法讀取完整教材驗收請求");
+      const manifest = await response.json();
+      const entry = manifest.find((e: any) => e.request.profile.level === episode);
+      if (!entry) throw new Error("找不到該程度的驗收請求");
+      const result = await fetch(new URL(`${episode}-${entry.request.id}.json`, manifestUrl), {
+        signal: controller.signal,
+      });
+      if (!result.ok) throw new Error("完整教材草稿尚未生成");
+      setDoc(validateLearningDocumentV7(await result.json()));
+    })().catch(error => {
+      if (!controller.signal.aborted) setNotice(String(error));
+    });
+    return () => controller.abort();
+  }, [episode]);
   return (
-    <div className="mx-auto flex h-dvh max-w-[480px] flex-col bg-background p-3 text-foreground">
+    <div
+      className={
+        "mx-auto flex h-dvh flex-col bg-background p-3 text-foreground " +
+        (new URLSearchParams(location.search).has("wide") ? "max-w-none" : "max-w-[480px]")
+      }
+    >
       <p className="shrink-0 pb-2 text-xs text-muted-foreground">
-        閱讀驗收預覽 · 合成資料與模擬播放
+        V7 閱讀驗收預覽 · {episode ? "完整草稿與模擬播放" : "合成資料與模擬播放"}
+        {params.get("speech") === "mock" && " · 模擬朗讀（不發聲）"}
       </p>
       <ContextualSceneReader
+        key={doc.id}
         document={doc}
         adapter={adapter}
-        locale="zh-TW"
+        locale={previewLocale}
         repeat="2"
         setRepeat={() => {}}
         delay={0}
@@ -146,11 +177,7 @@ const mockSpeech =
                 })),
               });
             else if (request.type === "speak")
-              onMessage({
-                id: request.id,
-                type: "speechFinished",
-                status: "completed",
-              });
+              onMessage({ id: request.id, type: "speechFinished", status: "completed" });
             else if ("id" in request) onMessage({ id: request.id, type: "speechStopped" });
           });
         },

@@ -1,0 +1,8 @@
+{
+  "startedAt": "2026-10-21T06:53:10.337379+00:00",
+  "endedAt": "2026-10-21T06:53:12.533348+00:00",
+  "voiceId": "siri:com.apple.speech.synthesis.voice.custom.siri.samer.premium",
+  "exitCode": 0,
+  "stdout": "{\"voiceId\":\"siri:com.apple.speech.synthesis.voice.custom.siri.samer.premium\",\"status\":\"removed\"}",
+  "stderr": ""
+}

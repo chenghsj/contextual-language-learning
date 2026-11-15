@@ -1,0 +1,30 @@
+{
+  "scope": "Prepared-only evidence in temporary copies; no language acceptance or model calls",
+  "checks": [
+    {
+      "name": "Unmodified evidence passes",
+      "exitCode": 0,
+      "expectedResult": true,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Changed prepared request is rejected",
+      "exitCode": 1,
+      "expectedResult": false,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Changed frozen plan is rejected",
+      "exitCode": 1,
+      "expectedResult": false,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Unrun generation cannot pass full acceptance verification",
+      "exitCode": 1,
+      "expectedResult": false,
+      "matchedExpectation": true
+    }
+  ],
+  "newInferenceCalls": 0
+}

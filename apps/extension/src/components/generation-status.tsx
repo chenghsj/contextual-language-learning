@@ -58,7 +58,7 @@ export function GenerationStatus({
       aria-label={attention ? layout.needsAttention : generationTitle}
       aria-live="polite"
     >
-      <h2 className="flex items-center gap-2 text-sm font-semibold">
+      <h2 className="flex items-center gap-2 text-ui-heading font-semibold">
         {attention && <AlertCircle className="size-4" aria-hidden="true" />}
         {attention
           ? job.status === "failed"
@@ -66,7 +66,7 @@ export function GenerationStatus({
             : layout.interrupted
           : generationTitle}
       </h2>
-      <p className="text-sm wrap-anywhere">{job?.sourceTitle || title}</p>
+      <p className="text-ui-body wrap-anywhere">{job?.sourceTitle || title}</p>
       {!compact && phase >= 0 && (
         <ol className="grid gap-3 text-xs">
           {phases.map((name, index) => {
@@ -101,7 +101,7 @@ export function GenerationStatus({
       ) : (
         <>
           <Progress value={0} aria-label={translate(locale, "generationProgressLabel")} />
-          <p className="text-xs text-muted-foreground">{progress}</p>
+          <p className="text-ui-body text-muted-foreground">{progress}</p>
         </>
       )}
       {!compact && (

@@ -13,7 +13,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  macos-speech:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node apps/local-host/scripts/build-macos-speech.mjs
+      - run: node apps/local-host/scripts/build-macos-siri.mjs
+      - run: node apps/local-host/scripts/build-macos-credentials.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-speech
+          path: |
+            apps/local-host/dist/macos-speech*
+            apps/local-host/dist/macos-credentials
+          if-no-files-found: error
+
   check:
+    needs: macos-speech
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,10 +63,22 @@ jobs:
           node scripts/uninstall-host.mjs --browser chromium
           test ! -e "$HOME/.config/chromium/NativeMessagingHosts/dev.contextual.language_learning.json"
           test ! -e "$HOME/.local/share/contextual-language-learning/native-host"
+      - name: Download macOS speech helper
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-speech
+          path: apps/local-host/dist
       - name: Package and verify release archives
+        env:
+          CLL_SETUP_MODE: local
+          CLL_CHROME_EXTENSION_ID: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          CLL_EDGE_EXTENSION_ID: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          CLL_CHROMIUM_EXTENSION_ID: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         run: |
+          sudo apt-get update && sudo apt-get install -y mono-mcs libmono-system-windows-forms4.0-cil desktop-file-utils
           pnpm package:release
           (cd release-assets && sha256sum -c SHA256SUMS)
+          node apps/extension/scripts/host-setup-acceptance.mjs
       - name: Upload downloadable preview packages
         uses: actions/upload-artifact@v4
         with:
@@ -72,6 +103,12 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Probe experimental local Narrator backend (synthesis requires installed compatible voices)
+        run: node --import tsx apps/local-host/scripts/windows-narrator-smoke.ts
+      - name: Build local graphical setup ZIP
+        run: node scripts/package-host-setup.mjs --extension-id aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      - name: Exercise packaged Windows setup
+        run: node apps/extension/scripts/host-setup-acceptance.mjs
       - run: node apps/local-host/scripts/smoke-host.mjs
       - name: Register and exercise real Windows Native Host executable
         shell: pwsh
@@ -105,6 +142,10 @@ jobs:
           node-version: 22
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm build
+      - name: Build local graphical setup ZIP
+        run: node scripts/package-host-setup.mjs --extension-id aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      - name: Exercise packaged macOS setup
+        run: node apps/extension/scripts/host-setup-acceptance.mjs
       - name: Register and exercise macOS Native Host launcher
         run: |
           node scripts/install-host.mjs aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --browser edge

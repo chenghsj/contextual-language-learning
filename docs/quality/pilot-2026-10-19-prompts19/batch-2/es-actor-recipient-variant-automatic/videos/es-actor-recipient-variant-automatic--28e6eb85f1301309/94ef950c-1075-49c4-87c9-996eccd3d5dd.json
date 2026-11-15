@@ -1,0 +1,450 @@
+{
+  "id": "94ef950c-1075-49c4-87c9-996eccd3d5dd",
+  "createdAt": "2026-10-19T04:37:18.847Z",
+  "source": {
+    "platform": "import",
+    "title": "es-actor-recipient-variant-automatic"
+  },
+  "profile": {
+    "targetLanguage": "es",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-19",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-5",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-3",
+    "inputFingerprint": "6ff71cf8833fa66be4f2af145783c64507ec9242cc63308acc82727ae723d9dc",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T04:37:36.750Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 16695.545500000007,
+        "usage": {
+          "input": 2718,
+          "output": 1852,
+          "reasoning": 1524
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T04:37:39.529Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 2767.9559169999993,
+        "usage": {
+          "input": 2438,
+          "output": 199,
+          "reasoning": 164
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T04:38:51.337Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 71792.20091700001,
+        "usage": {
+          "input": 4779,
+          "output": 11751,
+          "reasoning": 10347
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Yo voy a pedir que nos envíen los horarios."
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "Perfecto. Nosotros vamos a revisar las fechas."
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Te avisaré cuando tenga una respuesta."
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "Gracias."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "0093ea89-edca-444d-abfa-5a20ebe037b9",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "索取時程表與確認後續通知",
+      "context": {
+        "text": "這段對話包含提出索取時程表、提議檢查日期、承諾獲得回覆時予以通知，以及表示感謝。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "我會請他們把時間表寄給我們。"
+        },
+        {
+          "cueId": "c2",
+          "text": "太好了。我們來確認日期。"
+        },
+        {
+          "cueId": "c3",
+          "text": "我收到回覆時會通知你。"
+        },
+        {
+          "cueId": "c4",
+          "text": "謝謝。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "93d11f28-b272-4ee8-a0ee-ff892eabecb6",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:chk1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 14
+                }
+              ],
+              "meaning": "我打算要求／我會請求"
+            },
+            {
+              "id": "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:chk2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 15,
+                  "end": 29
+                }
+              ],
+              "meaning": "把……寄給我們"
+            },
+            {
+              "id": "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:chk3",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 30,
+                  "end": 42
+                }
+              ],
+              "meaning": "時間表"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 43
+            }
+          ]
+        },
+        {
+          "id": "66886e0d-f8bc-4f2c-9d09-62580a46c68b",
+          "meaning": "太好了。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 10
+            }
+          ]
+        },
+        {
+          "id": "78d477c0-e8e2-4de8-98ff-c335c85c4985",
+          "meaning": "我們來檢查日期。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 10,
+              "end": 46
+            }
+          ]
+        },
+        {
+          "id": "25bf7007-f222-4d0c-9e08-b6e041a5d733",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:chk4",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 10
+                }
+              ],
+              "meaning": "我會通知你"
+            },
+            {
+              "id": "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:chk5",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 11,
+                  "end": 37
+                }
+              ],
+              "meaning": "當我收到回覆時"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 38
+            }
+          ]
+        },
+        {
+          "id": "fa3480a9-de08-4102-b799-16f1d7cb3576",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 8
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:p1",
+      "utteranceIds": [
+        "93d11f28-b272-4ee8-a0ee-ff892eabecb6"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "pedir que + 虛擬式表達請求他人行動",
+      "sourceCueIds": [
+        "c1"
+      ],
+      "contextCueIds": [],
+      "explanation": "動詞「pedir」表示「要求、請求」。當請求他人執行特定行動時，需使用「pedir que + 虛擬式從屬子句」。句中「nos envíen」為動詞「enviar」對應第三人稱複數（ellos / ellas / Uds.）的虛擬式現在時形式，間接受詞代名詞「nos」（我們）依規則置於變位動詞之前。",
+      "sourceSpans": [
+        {
+          "cueId": "c1",
+          "start": 9,
+          "end": 29
+        }
+      ]
+    },
+    {
+      "id": "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:p2",
+      "utteranceIds": [
+        "25bf7007-f222-4d0c-9e08-b6e041a5d733"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "cuando + 虛擬式表示未來的時間點",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "連詞「cuando」（當……時）引導的時間子句，若指涉「尚未發生、屬於未來的事件」，子句動詞必須使用虛擬式現在時。句中的「tenga」是「tener」的第一人稱單數虛擬式現在時，表達「等我有（回覆）的時候」；主要子句則搭配簡單未來式「avisaré」，表示該未來條件達成時將採取的動作。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 11,
+          "end": 23
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:r1",
+      "pointIds": [
+        "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 9,
+              "end": 29
+            }
+          ],
+          "text": "pedir que nos envíen"
+        }
+      ],
+      "pattern": "pedir que + [代名詞] + [虛擬式動詞]",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "在辦公室籌辦活動時，一人詢問供應商報價，另一人說明處理方式。",
+          "dialogue": [
+            {
+              "text": "¿Ya tenemos los precios del servicio de transporte?",
+              "translation": "我們拿到交通服務的報價了嗎？"
+            },
+            {
+              "text": "Todavía no, voy a pedir que nos envíen la cotización hoy.",
+              "translation": "還沒，我今天會請他們把報價單寄給我們。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "pedir que nos envíen"
+        }
+      ]
+    },
+    {
+      "id": "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:r2",
+      "pointIds": [
+        "0093ea89-edca-444d-abfa-5a20ebe037b9:s0:p2"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 11,
+              "end": 23
+            }
+          ],
+          "text": "cuando tenga"
+        }
+      ],
+      "pattern": "cuando + [虛擬式動詞]",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "兩位同事確認報告進度，一人詢問開始撰寫的時間，另一人說明前提條件。",
+          "dialogue": [
+            {
+              "text": "¿Cuándo empezarás a redactar el informe final?",
+              "translation": "你什麼時候要開始撰寫期末報告？"
+            },
+            {
+              "text": "Lo redactaré cuando tenga todos los resultados del análisis.",
+              "translation": "等我拿到所有分析結果時，我就會撰寫。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "cuando tenga"
+        }
+      ]
+    }
+  ]
+}

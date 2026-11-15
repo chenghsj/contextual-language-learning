@@ -1,7 +1,16 @@
 import { randomUUID } from "node:crypto";
 import { HOST_PROTOCOL_VERSION, type HostRequest, type HostMessage } from "@contextual/core";
 import { getAgentCatalog } from "../agents";
-import { loginPi, logoutPi, piModels, piProviders } from "../agents/pi";
+import {
+  getLocalPiConfig,
+  setLocalPiConfig,
+  testLocalPiConfig,
+  loginPi,
+  logoutPi,
+  piModels,
+  discoverPiModels,
+  piProviders,
+} from "../agents/pi";
 import type { HostDispatcherDeps } from "./context";
 import { estimateGenerationInput } from "../generation/input-estimate";
 
@@ -43,6 +52,23 @@ export async function handleAgentRequest(
       });
       return true;
     }
+    case "getLocalModelConfig":
+      reply({ id: request.id, type: "localModelConfig", ...(await getLocalPiConfig()) });
+      return true;
+    case "setLocalModelConfig":
+      reply({
+        id: request.id,
+        type: "localModelConfig",
+        ...(await setLocalPiConfig({ config: request.config, apiKey: request.apiKey })),
+      });
+      return true;
+    case "testLocalModelConfig":
+      reply({
+        id: request.id,
+        type: "localModelTest",
+        ...(await testLocalPiConfig({ config: request.config, apiKey: request.apiKey })),
+      });
+      return true;
     case "piProviders":
       reply({ id: request.id, type: "piProviders", providers: await piProviders() });
       return true;
@@ -52,6 +78,13 @@ export async function handleAgentRequest(
       return true;
     case "agentModels":
       reply({ id: request.id, type: "agentModels", ...(await piModels(request.settings)) });
+      return true;
+    case "discoverModels":
+      reply({
+        id: request.id,
+        type: "discoveredModels",
+        ...(await discoverPiModels(request.provider, undefined, request.force)),
+      });
       return true;
     case "piAuthAnswer": {
       const login = logins.get(request.loginId);

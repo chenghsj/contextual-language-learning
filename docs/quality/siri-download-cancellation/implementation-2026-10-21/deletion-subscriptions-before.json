@@ -1,0 +1,14 @@
+[
+  {
+    "assetKey" : "de-DE:natural:undefined:Helena:undefined:0",
+    "clientId" : "dev.contextual.language_learning.siri-download.21e5090d-6807-485b-a9fe-607718685de7"
+  },
+  {
+    "assetKey" : "ar-SA:neural:undefined:Samer:undefined:0",
+    "clientId" : "dev.contextual.language_learning.siri-download.9ae96d11-389c-49bf-b42c-61e2f66452f8"
+  },
+  {
+    "assetKey" : "en-US:natural:undefined:Nora:undefined:0",
+    "clientId" : "dev.contextual.language_learning.siri-download.b0dfb44d-5d15-427d-b4b3-713a4a276ea8"
+  }
+]

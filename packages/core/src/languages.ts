@@ -37,10 +37,13 @@ export const CEFR_LANGUAGES = [
 export const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 export const JLPT_LEVELS = ["N5", "N4", "N3", "N2", "N1"] as const;
 export const TOPIK_LEVELS = ["1", "2", "3", "4", "5", "6"] as const;
+/** Source-led teaching without an assumed learner proficiency or exam ceiling. */
+export const UNRESTRICTED_LEVEL = "unrestricted";
 
 /** CEFR languages share levels; Japanese and Korean retain their own scales. */
 export function levelsForTargetLanguage(language: LearningLanguage): readonly string[] {
-  return language === "ja" ? JLPT_LEVELS : language === "ko" ? TOPIK_LEVELS : CEFR_LEVELS;
+  const graded = language === "ja" ? JLPT_LEVELS : language === "ko" ? TOPIK_LEVELS : CEFR_LEVELS;
+  return [...graded, UNRESTRICTED_LEVEL];
 }
 
 export function defaultLevelForTargetLanguage(language: LearningLanguage): string {

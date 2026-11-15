@@ -3,6 +3,7 @@ import { explanationPreferences } from "./explanations";
 import { findExpressionOccurrences } from "./expression-occurrences";
 import { subtitlePronunciationSegments } from "./subtitle-ruby";
 import { readerPresentation } from "./reader-model";
+import { UNRESTRICTED_LEVEL } from "./languages";
 
 function safeMarkdown(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/([*_[\]#<>])/g, "\\$1");
@@ -36,7 +37,7 @@ function learningPointsMarkdown(doc: import("./schema").LearningDocumentV7): str
   const parts = [
     "# " + safeMarkdown(doc.source.title),
     "",
-    `V7 · ${doc.profile.targetLanguage} · ${doc.profile.level}`,
+    `V7 · ${doc.profile.targetLanguage} · ${doc.profile.level === UNRESTRICTED_LEVEL ? "Unrestricted" : doc.profile.level}`,
     `Teaching language: ${doc.profile.instructionLanguage}`,
     "",
   ];

@@ -163,10 +163,22 @@ export function driveApiError(status: number, body: unknown, operation: string):
   const label = ["驗證 Drive 權限", "列出雲端教材", "讀取雲端教材", "備份教材"].includes(operation)
     ? operation
     : "Google Drive 操作";
-  return new Error(label + "失敗（HTTP " + status + "，" + reason + "）。" + hint);
+  return new DriveRequestError(
+    status,
+    label + "失敗（HTTP " + status + "，" + reason + "）。" + hint,
+  );
 }
 
-async function googleFetch(
+export class DriveRequestError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+export async function googleFetch(
   accountId: string,
   url: string,
   init: RequestInit = {},
@@ -252,7 +264,7 @@ export async function existingDriveFolder(accountId: string): Promise<string | n
     : null;
 }
 
-async function appFolder(accountId: string): Promise<string> {
+export async function appFolder(accountId: string): Promise<string> {
   const folders = await listFiles(
     accountId,
     "name = '" + FOLDER_NAME + "' and mimeType = '" + FOLDER_TYPE + "' and trashed = false",

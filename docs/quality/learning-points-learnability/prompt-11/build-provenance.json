@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-11T17:40:02.565Z",
+  "workspace": "/Users/cheng/Desktop/immersive-language-learning",
+  "branch": "codex/core-redesign",
+  "head": "21969bc52c1ca59bf2779a8749c03b62a77650b4",
+  "extensionBuild": {
+    "directory": "/Users/cheng/Desktop/immersive-language-learning/apps/extension/dist-dev",
+    "name": "Contextual Language Learning (Dev)",
+    "version": "0.1.0",
+    "manifestHash": "eb4de5c3845d15488ee4609a21b5c64461e29630a7127d9fe6608898e649bd21",
+    "chromeDevId": "agkdfdbgkoeooffhfkonpdkgfeldjifi",
+    "loadedSourceVerified": false
+  },
+  "host": {
+    "built": "/Users/cheng/Desktop/immersive-language-learning/apps/local-host/dist/native-host.mjs",
+    "bundleHash": "31be81956a3232450558efae53eb4c3a5f8831b5d5ab00013d3bda97d3914a0b",
+    "installedVerification": "installed-host.json"
+  },
+  "boundary": "Dev build rebuilt; Chrome loaded source/reload/connectNative not verified. Browser internal-page policy rejected, and OS denied read-only Chrome metadata access with EPERM."
+}

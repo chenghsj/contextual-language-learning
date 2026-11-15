@@ -1,0 +1,950 @@
+{
+  "cancellationGate": "INCONCLUSIVE",
+  "classes": [
+    {
+      "classMethods": [
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "_validateCatalogDownloadOptions:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "cancelCatalogDownload:then:"
+        },
+        {
+          "encoding": "v40@0:8@16@24@?32",
+          "selector": "cancelCatalogDownload:withPurpose:then:"
+        },
+        {
+          "encoding": "q32@0:8@16@24",
+          "selector": "cancelCatalogDownloadSync:withPurpose:"
+        },
+        {
+          "encoding": "v40@0:8@16@24@?32",
+          "selector": "startCatalogDownload:options:completionWithError:"
+        },
+        {
+          "encoding": "v40@0:8@16@24@?32",
+          "selector": "startCatalogDownload:options:then:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "startCatalogDownload:then:"
+        },
+        {
+          "encoding": "q40@0:8@16@24^@32",
+          "selector": "startCatalogDownloadSync:options:error:"
+        }
+      ],
+      "instanceMethods": [
+        {
+          "encoding": "q24@0:8@16",
+          "selector": "_commonAssetDownloadPreflight:"
+        },
+        {
+          "encoding": "v40@0:8q16@24@?32",
+          "selector": "_invokeClientDownloadCompletionAlreadyOnQueue:asset:completionBlockWithError:"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "attachProgressCallBack:"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "cancelDownload:"
+        },
+        {
+          "encoding": "q16@0:8",
+          "selector": "cancelDownloadSync"
+        },
+        {
+          "encoding": "v40@0:8@16@24@?32",
+          "selector": "commonAssetDownload:options:then:"
+        },
+        {
+          "encoding": "q32@0:8@16@24",
+          "selector": "commonAssetDownloadSync:options:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "configDownload:completion:"
+        },
+        {
+          "encoding": "q24@0:8@16",
+          "selector": "configDownloadSync:"
+        },
+        {
+          "encoding": "v40@0:8q16@24@?32",
+          "selector": "invokeClientDownloadCompletion:asset:completionBlockWithError:"
+        },
+        {
+          "encoding": "B16@0:8",
+          "selector": "nonUserInitiatedDownloadsAllowed"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "startDownload:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "startDownload:completionWithError:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "startDownload:then:"
+        },
+        {
+          "encoding": "q32@0:8@16^@24",
+          "selector": "startDownloadSync:error:"
+        },
+        {
+          "encoding": "B16@0:8",
+          "selector": "wasDownloadable"
+        }
+      ],
+      "name": "MAAsset"
+    },
+    {
+      "classMethods": [
+        {
+          "encoding": "v28@0:8B16@?20",
+          "selector": "_relinquishStatusIsSynchronous:completion:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "cancelActivityForSelector:completion:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "cancelActivityForSelectorSync:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "eliminateAllForAssetType:completion:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "eliminateAllForAssetTypeSync:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "eliminateAllForSelector:completion:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "eliminateAllForSelectorSync:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "eliminatePromotedNeverLockedForSelector:completion:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "eliminatePromotedNeverLockedForSelectorSync:"
+        },
+        {
+          "encoding": "v40@0:8@16@24@?32",
+          "selector": "endAllPreviousLocksOfReason:forAssetSelector:completion:"
+        },
+        {
+          "encoding": "v48@0:8@16@24@32@?40",
+          "selector": "endAllPreviousLocksOfReason:forClientName:forAssetSelector:completion:"
+        },
+        {
+          "encoding": "@32@0:8@16@24",
+          "selector": "endAllPreviousLocksOfReasonSync:forAssetSelector:"
+        },
+        {
+          "encoding": "@40@0:8@16@24@32",
+          "selector": "endAllPreviousLocksOfReasonSync:forClientName:forAssetSelector:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "endAllPreviousLocksOfSelector:completion:"
+        },
+        {
+          "encoding": "v40@0:8@16@24@?32",
+          "selector": "endAllPreviousLocksOfSelector:forClientName:completion:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "endAllPreviousLocksOfSelectorSync:"
+        },
+        {
+          "encoding": "@32@0:8@16@24",
+          "selector": "endAllPreviousLocksOfSelectorSync:forClientName:"
+        },
+        {
+          "encoding": "v48@0:8@16@24q32@?40",
+          "selector": "endPreviousLocksOfReason:forAssetSelector:removingLockCount:completion:"
+        },
+        {
+          "encoding": "v56@0:8@16@24@32q40@?48",
+          "selector": "endPreviousLocksOfReason:forClientName:forAssetSelector:removingLockCount:completion:"
+        },
+        {
+          "encoding": "@40@0:8@16@24q32",
+          "selector": "endPreviousLocksOfReasonSync:forAssetSelector:removingLockCount:"
+        },
+        {
+          "encoding": "@48@0:8@16@24@32q40",
+          "selector": "endPreviousLocksOfReasonSync:forClientName:forAssetSelector:removingLockCount:"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "stageCancelOperation:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "stageCancelOperationSync"
+        },
+        {
+          "encoding": "v40@0:8q16@?24@?32",
+          "selector": "stageDownloadAll:reportingProgress:completion:"
+        },
+        {
+          "encoding": "Q48@0:8q16^q24^@32@?40",
+          "selector": "stageDownloadAllSync:assetsSuccessfullyStaged:error:reportingProgress:"
+        },
+        {
+          "encoding": "v52@0:8@16B24q28@?36@?44",
+          "selector": "stageDownloadGroups:awaitingAllGroups:withStagingTimeout:reportingProgress:completion:"
+        },
+        {
+          "encoding": "@60@0:8@16B24q28^@36^@44@?52",
+          "selector": "stageDownloadGroupsSync:awaitingAllGroups:withStagingTimeout:byGroupAssetsStaged:error:reportingProgress:"
+        },
+        {
+          "encoding": "q24@0:8^@16",
+          "selector": "suspendResumeStatusForSoftwareUpdateSyncWithReturnStatusErrorPtr:"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "suspendResumeStatusForSoftwareUpdateWithCompletion:"
+        }
+      ],
+      "instanceMethods": [
+        {
+          "encoding": "v28@0:8B16@?20",
+          "selector": "_cancelActivityForSelectorIsSynchronous:completion:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "_cancelActivityForSelectorSync"
+        },
+        {
+          "encoding": "v44@0:8@16@24B32@?36",
+          "selector": "_continueLockUsage:withUsagePolicy:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v28@0:8B16@?20",
+          "selector": "_currentStatusIsSynchronous:completion:"
+        },
+        {
+          "encoding": "v28@0:8B16@?20",
+          "selector": "_eliminateAllForAssetTypeIsSynchronous:completion:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "_eliminateAllForAssetTypeSync"
+        },
+        {
+          "encoding": "v28@0:8B16@?20",
+          "selector": "_eliminateAllForSelectorIsSynchronous:completion:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "_eliminateAllForSelectorSync"
+        },
+        {
+          "encoding": "v28@0:8B16@?20",
+          "selector": "_eliminatePromotedNeverLockedForSelectorIsSynchronous:completion:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "_eliminatePromotedNeverLockedForSelectorSync"
+        },
+        {
+          "encoding": "v36@0:8@16B24@?28",
+          "selector": "_endAllPreviousLocksOfReason:isSynchronous:completion:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "_endAllPreviousLocksOfReasonSync:"
+        },
+        {
+          "encoding": "v36@0:8@16B24@?28",
+          "selector": "_endLockUsage:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v44@0:8@16q24B32@?36",
+          "selector": "_endPreviousLocksOfReason:removingLockCount:isSynchronous:completion:"
+        },
+        {
+          "encoding": "@32@0:8@16q24",
+          "selector": "_endPreviousLocksOfReasonSync:removingLockCount:"
+        },
+        {
+          "encoding": "v52@0:8q16@24@32B40@?44",
+          "selector": "_failedCancelActivity:withResponseError:description:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v52@0:8q16@24@32B40@?44",
+          "selector": "_failedContinueLockUsage:withResponseError:description:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v52@0:8q16@24@32B40@?44",
+          "selector": "_failedCurrentStatus:withResponseError:description:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v52@0:8q16@24@32B40@?44",
+          "selector": "_failedEliminate:withResponseError:description:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v52@0:8q16@24@32B40@?44",
+          "selector": "_failedEndLockUsage:withResponseError:description:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v52@0:8q16@24@32B40@?44",
+          "selector": "_failedLockContent:withResponseError:description:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v52@0:8q16@24@32B40@?44",
+          "selector": "_failedMapLockedContent:withResponseError:description:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v52@0:8q16@24@32B40@?44",
+          "selector": "_failedStageCancelOperation:withResponseError:description:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v52@0:8q16@24@32B40@?44",
+          "selector": "_failedStageDownloadGroups:withResponseError:description:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v60@0:8@16@24q32@?40B48@?52",
+          "selector": "_lockContent:withUsagePolicy:withTimeout:reportingProgress:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v40@0:8@16@24@?32",
+          "selector": "_lockContentStatusProgress:lockForUseError:progressBlock:"
+        },
+        {
+          "encoding": "v36@0:8@16B24@?28",
+          "selector": "_mapLockedContent:isSynchronous:completion:"
+        },
+        {
+          "encoding": "@24@0:8@?16",
+          "selector": "_newProxyObjectForLockProgressBlock:"
+        },
+        {
+          "encoding": "@24@0:8@?16",
+          "selector": "_newProxyObjectForStageProgressBlock:"
+        },
+        {
+          "encoding": "v28@0:8B16@?20",
+          "selector": "_stageCancelOperationIsSynchronous:completion:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "_stageCancelOperationSync"
+        },
+        {
+          "encoding": "v56@0:8@16B24q28@?36B44@?48",
+          "selector": "_stageDownloadGroups:awaitingAllGroups:withStagingTimeout:reportingProgress:isSynchronous:completion:"
+        },
+        {
+          "encoding": "@60@0:8@16B24q28^@36^@44@?52",
+          "selector": "_stageDownloadGroupsSync:awaitingAllGroups:withStagingTimeout:byGroupAssetsStaged:error:reportingProgress:"
+        },
+        {
+          "encoding": "v40@0:8@16@24@?32",
+          "selector": "_stageDownloadStatusProgress:stageProgressError:progressBlock:"
+        },
+        {
+          "encoding": "v28@0:8B16@?20",
+          "selector": "_successCancelActivityIsSynchronous:completion:"
+        },
+        {
+          "encoding": "v36@0:8@16B24@?28",
+          "selector": "_successContinueLockUsage:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v36@0:8@16B24@?28",
+          "selector": "_successCurrentStatus:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v28@0:8B16@?20",
+          "selector": "_successEliminateIsSynchronous:completion:"
+        },
+        {
+          "encoding": "v36@0:8@16B24@?28",
+          "selector": "_successEndLockUsage:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v60@0:8@16@24@32@40B48@?52",
+          "selector": "_successLockContent:dueToDesire:sandboxExtension:sandboxExtensionPath:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v44@0:8@16@24B32@?36",
+          "selector": "_successMapLockedContent:dueToDesire:isSynchronous:completion:"
+        },
+        {
+          "encoding": "v28@0:8B16@?20",
+          "selector": "_successStageCancelOperationIsSynchronous:completion:"
+        },
+        {
+          "encoding": "v36@0:8@16B24@?28",
+          "selector": "_successStageDownloadGroups:isSynchronous:completion:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "contentLockedReason"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "contentLockedSelector"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "continueLockUsage:completion:"
+        },
+        {
+          "encoding": "v40@0:8@16@24@?32",
+          "selector": "continueLockUsage:withUsagePolicy:completion:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "continueLockUsageSync:"
+        },
+        {
+          "encoding": "@32@0:8@16@24",
+          "selector": "continueLockUsageSync:withUsagePolicy:"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "currentStatus:"
+        },
+        {
+          "encoding": "@24@0:8^@16",
+          "selector": "currentStatusSync:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "endLockUsage:completion:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "endLockUsageSync:"
+        },
+        {
+          "encoding": "v40@0:8@16q24@?32",
+          "selector": "lockContent:withTimeout:completion:"
+        },
+        {
+          "encoding": "v48@0:8@16q24@?32@?40",
+          "selector": "lockContent:withTimeout:reportingProgress:completion:"
+        },
+        {
+          "encoding": "v48@0:8@16@24q32@?40",
+          "selector": "lockContent:withUsagePolicy:withTimeout:completion:"
+        },
+        {
+          "encoding": "v56@0:8@16@24q32@?40@?48",
+          "selector": "lockContent:withUsagePolicy:withTimeout:reportingProgress:completion:"
+        },
+        {
+          "encoding": "@56@0:8@16q24^@32^@40^@48",
+          "selector": "lockContentSync:withTimeout:lockedAssetSelector:newerInProgress:error:"
+        },
+        {
+          "encoding": "@64@0:8@16q24^@32^@40^@48@?56",
+          "selector": "lockContentSync:withTimeout:lockedAssetSelector:newerInProgress:error:reportingProgress:"
+        },
+        {
+          "encoding": "@64@0:8@16@24q32^@40^@48^@56",
+          "selector": "lockContentSync:withUsagePolicy:withTimeout:lockedAssetSelector:newerInProgress:error:"
+        },
+        {
+          "encoding": "@72@0:8@16@24q32^@40^@48^@56@?64",
+          "selector": "lockContentSync:withUsagePolicy:withTimeout:lockedAssetSelector:newerInProgress:error:reportingProgress:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "lockedInfoInstance"
+        },
+        {
+          "encoding": "i16@0:8",
+          "selector": "locksOfContent"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "mapLockedContent:completion:"
+        },
+        {
+          "encoding": "@32@0:8@16^@24",
+          "selector": "mapLockedContentSync:error:"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "setContentLockedReason:"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "setContentLockedSelector:"
+        },
+        {
+          "encoding": "v20@0:8i16",
+          "selector": "setLocksOfContent:"
+        }
+      ],
+      "name": "MAAutoAsset"
+    },
+    {
+      "classMethods": [
+        {
+          "encoding": "@16@0:8",
+          "selector": "afSharedSession"
+        }
+      ],
+      "instanceMethods": [
+        {
+          "encoding": "v16@0:8",
+          "selector": ".cxx_destruct"
+        },
+        {
+          "encoding": "v28@0:8f16@?20",
+          "selector": "adjustRate:didFinish:"
+        },
+        {
+          "encoding": "v36@0:8f16d20@?28",
+          "selector": "adjustVolume:rampTime:didFinish:"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "cancelWithRequest:"
+        },
+        {
+          "encoding": "v16@0:8",
+          "selector": "clearDeviceCache"
+        },
+        {
+          "encoding": "v16@0:8",
+          "selector": "dealloc"
+        },
+        {
+          "encoding": "v32@0:8Q16@24",
+          "selector": "didGenerateAudioWithRequestId:audio:"
+        },
+        {
+          "encoding": "v32@0:8Q16@24",
+          "selector": "didGenerateWordTimingsWithRequestId:wordTimingInfo:"
+        },
+        {
+          "encoding": "v32@0:8Q16@24",
+          "selector": "didReportInstrumentWithRequestId:instrumentationMetrics:"
+        },
+        {
+          "encoding": "v24@0:8Q16",
+          "selector": "didStartSpeakingWithRequestId:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "downloadedVoicesMatching:reply:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "estimateDurationWithRequest:didFinish:"
+        },
+        {
+          "encoding": "v32@0:8Q16@24",
+          "selector": "event:eventData:"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "forwardWithStreamObject:"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "getAudioPower:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "getSynthesisVoiceMatching:reply:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "init"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "initWithAccessoryId:"
+        },
+        {
+          "encoding": "v32@0:8Q16@24",
+          "selector": "internalEvent:internalEventData:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "isANEModelCompiledMatching:reply:"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "isSpeaking:"
+        },
+        {
+          "encoding": "B16@0:8",
+          "selector": "keepActive"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "pauseWithRequest:"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "pingWithReply:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "prewarmWithRequest:didFinish:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "queryPhaticCapabilityWithVoice:reply:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "queryWordTimingSupportWithVoice:reply:"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "resumeWithRequest:"
+        },
+        {
+          "encoding": "v32@0:8@16q24",
+          "selector": "resumeWithRequest:strategy:"
+        },
+        {
+          "encoding": "v20@0:8B16",
+          "selector": "setKeepActive:"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "signalWithInlineStreaming:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "speakWithAudioRequest:didFinish:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "speakWithPreviewRequest:didFinish:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "speakWithSpeechRequest:didFinish:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "subscribeWithVoices:reply:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "subscribedVoicesWithClientId:reply:"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "subscribedVoicesWithReply:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "synthesizeWithRequest:didFinish:"
+        },
+        {
+          "encoding": "v32@0:8@16@?24",
+          "selector": "textToPhonemeWithRequest:didFinish:"
+        }
+      ],
+      "name": "SiriTTSDaemonSession"
+    },
+    {
+      "classMethods": [],
+      "instanceMethods": [
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "cancelDownloadingThen:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "downloadSize"
+        },
+        {
+          "encoding": "v40@0:8Q16@?24@?32",
+          "selector": "downloadWithOptions:progress:then:"
+        },
+        {
+          "encoding": "B16@0:8",
+          "selector": "downloading"
+        }
+      ],
+      "name": "SiriTTSService.TTSAssetProxyAsset"
+    },
+    {
+      "classMethods": [],
+      "instanceMethods": [
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "cancelDownloadingThen:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "downloadSize"
+        },
+        {
+          "encoding": "v40@0:8Q16@?24@?32",
+          "selector": "downloadWithOptions:progress:then:"
+        },
+        {
+          "encoding": "B16@0:8",
+          "selector": "downloading"
+        }
+      ],
+      "name": "SiriTTSService.TTSAssetUAFAsset"
+    },
+    {
+      "classMethods": [
+        {
+          "encoding": "@16@0:8",
+          "selector": "NewAssetNotification"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "assistantVoiceMaps"
+        },
+        {
+          "encoding": "@32@0:8@16@24",
+          "selector": "bestAssetOfTypes:matching:"
+        },
+        {
+          "encoding": "@32@0:8@16@24",
+          "selector": "describeServer:forType:"
+        },
+        {
+          "encoding": "@32@0:8@16@24",
+          "selector": "describeServer:source:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "getServerForType:"
+        },
+        {
+          "encoding": "@32@0:8@16@24",
+          "selector": "getServerForType:source:"
+        },
+        {
+          "encoding": "B40@0:8@16@24@32",
+          "selector": "handleProxyEvent:reply:connection:"
+        },
+        {
+          "encoding": "@32@0:8@16@24",
+          "selector": "listAssetsOfTypes:matching:"
+        },
+        {
+          "encoding": "B32@0:8@16@24",
+          "selector": "setServer:forType:"
+        },
+        {
+          "encoding": "B40@0:8@16@24@32",
+          "selector": "setServer:forType:source:"
+        },
+        {
+          "encoding": "v16@0:8",
+          "selector": "waitForCatalogUpdates"
+        }
+      ],
+      "instanceMethods": [
+        {
+          "encoding": "v16@0:8",
+          "selector": ".cxx_destruct"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "age"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "assetSource"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "assetType"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "attributes"
+        },
+        {
+          "encoding": "q16@0:8",
+          "selector": "brand"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "bundle"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "cancelDownloadingThen:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "description"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "diskSize"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "downloadSize"
+        },
+        {
+          "encoding": "v40@0:8Q16@?24@?32",
+          "selector": "downloadWithOptions:progress:then:"
+        },
+        {
+          "encoding": "v44@0:8@16B24@?28@?36",
+          "selector": "downloadWithReservation:useBattery:progress:then:"
+        },
+        {
+          "encoding": "B16@0:8",
+          "selector": "downloading"
+        },
+        {
+          "encoding": "q16@0:8",
+          "selector": "gender"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "identifier"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "init"
+        },
+        {
+          "encoding": "B24@0:8@16",
+          "selector": "isNewer:"
+        },
+        {
+          "encoding": "B24@0:8@16",
+          "selector": "isOlder:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "legacyAssetWithBundle:"
+        },
+        {
+          "encoding": "B16@0:8",
+          "selector": "locallyAvailable"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "name"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "primaryLanguage"
+        },
+        {
+          "encoding": "v16@0:8",
+          "selector": "purge"
+        },
+        {
+          "encoding": "q16@0:8",
+          "selector": "purgeCondition"
+        },
+        {
+          "encoding": "v20@0:8B16",
+          "selector": "purgeImmediately:"
+        },
+        {
+          "encoding": "v24@0:8@?16",
+          "selector": "purgeThen:"
+        },
+        {
+          "encoding": "B16@0:8",
+          "selector": "purgeable"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "quality"
+        },
+        {
+          "encoding": "@20@0:8B16",
+          "selector": "relatedAssetsWithOnlyAvailable:"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "setAge:"
+        },
+        {
+          "encoding": "v24@0:8q16",
+          "selector": "setBrand:"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "setBundle:"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "setDiskSize:"
+        },
+        {
+          "encoding": "v24@0:8@16",
+          "selector": "setDownloadSize:"
+        },
+        {
+          "encoding": "v24@0:8q16",
+          "selector": "setPurgeCondition:"
+        },
+        {
+          "encoding": "@24@0:8@16",
+          "selector": "siriVoiceSimilarInLanguage:"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "supportedLanguages"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "technology"
+        },
+        {
+          "encoding": "@16@0:8",
+          "selector": "versionDescription"
+        },
+        {
+          "encoding": "q16@0:8",
+          "selector": "versionNumber"
+        }
+      ],
+      "name": "TTSAsset"
+    }
+  ],
+  "frameworks": [
+    {
+      "loaded": true,
+      "name": "SiriTTSService"
+    },
+    {
+      "loaded": true,
+      "name": "MobileAsset"
+    },
+    {
+      "loaded": true,
+      "name": "TextToSpeech"
+    }
+  ],
+  "inspectionOnly": true,
+  "os": "Version 27.0.1 (Build 26A434)",
+  "reason": "Runtime method presence does not prove a download can be cancelled or its result verified."
+}

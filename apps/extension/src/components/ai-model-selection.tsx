@@ -1,5 +1,6 @@
-import React from "react";
-import type { AgentInfo, AgentModel, ThinkingLevel } from "@contextual/core";
+import { localModelCopy } from "../i18n/local-model";
+import React, { useState } from "react";
+import { type AgentInfo, type AgentModel, type ThinkingLevel } from "@contextual/core";
 import type { UiLocale } from "../i18n/messages";
 import { thinkingCopy } from "../i18n/thinking";
 import { piCopy } from "../i18n/pi";
@@ -10,6 +11,11 @@ import { Button } from "./ui/button";
 import { RefreshCw } from "lucide-react";
 import { IconTooltip } from "./icon-tooltip";
 import { modelAvailabilityCopy } from "../i18n/model-availability";
+import { modelSearchCopy } from "../i18n/custom-model";
+import { selectedCustomModel } from "../lib/custom-models";
+import { ModelIdSettings } from "./model-id-settings";
+import { useModelDirectory } from "../hooks/use-model-directory";
+import { searchableModelOptions } from "../lib/model-options";
 
 export function AiModelSelection({
   locale,
@@ -28,6 +34,9 @@ export function AiModelSelection({
   thinkingLevel,
   onThinking,
   request = false,
+  customModel = false,
+  customModels = [],
+  onRemoveCustomModel,
 }: {
   locale: UiLocale;
   id: string;
@@ -40,11 +49,14 @@ export function AiModelSelection({
   notice: string;
   warning?: string;
   onProvider: (id: string) => void;
-  onModel: (id: string) => void;
+  onModel: (id: string, custom?: boolean) => void;
   onRefresh: () => void;
   thinkingLevel?: ThinkingLevel;
   onThinking?: (level: ThinkingLevel | undefined) => void;
   request?: boolean;
+  customModel?: boolean;
+  customModels?: string[];
+  onRemoveCustomModel?: (id: string) => void;
 }) {
   const ui = piCopy[locale];
   const availabilityCopy = modelAvailabilityCopy[locale];
@@ -52,7 +64,26 @@ export function AiModelSelection({
   const selected = connected.some(item => item.id === provider);
   const thinking = thinkingCopy[locale];
   const usable = models.filter(item => !item.disabled);
-  const currentModel = modelId ? models.find(item => item.id === modelId) : usable[0];
+  const currentModel = modelId ? selectedCustomModel({ modelId, customModel }, models) : usable[0];
+  const copy = modelSearchCopy[locale];
+  const [directoryRefresh, setDirectoryRefresh] = useState(0);
+  const credentialMethod = connected.find(item => item.id === provider)?.credentialMethod;
+  const directory = useModelDirectory(
+    provider,
+    available && selected,
+    directoryRefresh,
+    credentialMethod,
+  );
+  const customIds = [...new Set([...customModels, ...(customModel && modelId ? [modelId] : [])])];
+  const choices = searchableModelOptions(models, directory.models, customIds);
+  function chooseModel(value: string) {
+    const known = models.find(model => model.id === value);
+    onModel(value, !!value && (!known || !!known.custom));
+  }
+  function refreshModels() {
+    setDirectoryRefresh(value => value + 1);
+    onRefresh();
+  }
   const levels = currentModel?.thinkingLevels ?? [];
   const missing = !!modelId && !currentModel;
   const stale = !!modelId && (!currentModel || currentModel.disabled);
@@ -83,7 +114,10 @@ export function AiModelSelection({
                     },
                   ]
                 : []),
-              ...connected.map(item => ({ value: item.id, label: item.label })),
+              ...connected.map(item => ({
+                value: item.id,
+                label: item.id === "local" ? localModelCopy[locale].title : item.label,
+              })),
             ]}
           />
         </div>
@@ -103,7 +137,7 @@ export function AiModelSelection({
                   disabled={!available || busy}
                   aria-label={busy ? ui.loading : ui.refresh}
                   aria-busy={busy}
-                  onClick={onRefresh}
+                  onClick={refreshModels}
                 >
                   <RefreshCw
                     aria-hidden="true"
@@ -115,35 +149,67 @@ export function AiModelSelection({
               </IconTooltip>
             )}
           </div>
-          <SelectField
+          <SearchableSelectField
             id={`${id}-model`}
             ariaLabel={ui.model}
             value={modelId}
-            disabled={!available || busy || !models.length || !!notice}
-            onValueChange={onModel}
+            disabled={!available || busy || !choices.length}
+            onValueChange={chooseModel}
+            copy={{ search: copy.search, empty: copy.empty, placeholder: ui.choose }}
             options={[
               { value: "", label: ui.automatic, disabled: !usable.length },
-              ...(missing
+              ...(missing && !choices.some(model => model.id === modelId)
                 ? [
                     {
                       value: modelId,
-                      label:
-                        notice || warning
-                          ? modelId
-                          : `${modelId} · ${availabilityCopy.unavailable}`,
+                      label: warning ? modelId : `${modelId} · ${availabilityCopy.unavailable}`,
                       disabled: true,
                     },
                   ]
                 : []),
-              ...models.map(item => ({
+              ...choices.map(item => ({
                 value: item.id,
                 label: item.disabled
                   ? `${item.label} · ${availabilityCopy.unavailable}`
                   : item.label,
+                keywords: [item.id],
                 disabled: item.disabled,
+                description: item.custom ? copy.unverified : undefined,
               })),
             ]}
           />
+          {directory.state === "loading" && (
+            <p role="status" className="text-xs text-muted-foreground">
+              {copy.loading}
+            </p>
+          )}
+          {directory.state === "error" && (
+            <p role="status" className="text-ui-body text-muted-foreground">
+              {copy.failed}
+            </p>
+          )}
+          {customModel && (
+            <p role="status" className="text-ui-label leading-relaxed text-muted-foreground">
+              {directory.source === "account" &&
+              directory.models.some(model => model.id === modelId)
+                ? copy.accountHint
+                : copy.directoryHint}
+            </p>
+          )}
+          {provider !== "local" && (
+            <ModelIdSettings
+              key={provider}
+              id={id}
+              locale={locale}
+              provider={provider}
+              credentialMethod={credentialMethod}
+              modelId={modelId}
+              customIds={customIds}
+              disabled={!available || busy}
+              onSelect={chooseModel}
+              onRemove={onRemoveCustomModel}
+            />
+          )}
           {onThinking && (levels.some(level => level !== "off") || !!thinkingLevel) && (
             <div className="grid gap-1.5">
               <label htmlFor={`${id}-thinking`} className="text-xs font-semibold">
@@ -168,7 +234,7 @@ export function AiModelSelection({
             </div>
           )}
           {stale && !busy && !notice && !warning && (
-            <p className="text-xs text-muted-foreground" role="status">
+            <p className="text-ui-body text-muted-foreground" role="status">
               {ui.stale}
             </p>
           )}
@@ -177,6 +243,7 @@ export function AiModelSelection({
             !notice &&
             (!stale || !!warning) &&
             (currentModel || !!warning) &&
+            !customModel &&
             provider === "antigravity" && (
               <p
                 className="text-xs text-muted-foreground"
@@ -189,7 +256,7 @@ export function AiModelSelection({
               </p>
             )}
           {available && !busy && !notice && !usable.length && (
-            <p className="text-xs text-muted-foreground" role="status">
+            <p className="text-ui-body text-muted-foreground" role="status">
               {ui.noChatModels}
             </p>
           )}
@@ -205,7 +272,7 @@ export function AiModelSelection({
               disabled={!available || busy}
               aria-busy={busy}
               aria-live="polite"
-              onClick={onRefresh}
+              onClick={refreshModels}
             >
               {busy && (
                 <span
@@ -219,7 +286,7 @@ export function AiModelSelection({
         </div>
       )}
       {!selected && (
-        <p className="text-xs text-muted-foreground" role="status">
+        <p className="text-ui-body text-muted-foreground" role="status">
           {ui.empty}
         </p>
       )}

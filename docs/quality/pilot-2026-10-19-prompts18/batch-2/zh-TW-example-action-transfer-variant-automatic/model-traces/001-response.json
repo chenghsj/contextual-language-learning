@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":14}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":10}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":13}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":2}]}],\"learningValue\":\"討論更改會議時間與地點的日常工作對話，包含台灣華語常見的詢問句型與即時行動表達。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\"],\"description\":\"「你有……嗎？」在台灣華語中常用來詢問某動作是否已完成或發生。\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"「正要……」表示事情或動作即將在此刻進行。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c3\"],\"description\":\"使用「那請先……也……」在得知對方進度後順勢補充說明新的變更事項。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:40:52.361Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 11302.381041000015,
+    "usage": {
+      "input": 2463,
+      "output": 1066,
+      "reasoning": 817
+    }
+  }
+}

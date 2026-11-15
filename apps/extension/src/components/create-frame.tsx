@@ -42,8 +42,8 @@ export function CreateFrame({
   useContentMotion(formScroll, `${createStep}:${subtitlePreview}`, {
     active: active && !subtitlePreview,
     depth: createStep + (subtitlePreview ? 0.5 : 0),
-    entryDuration: 180,
-    duration: 200,
+    entryDuration: 240,
+    duration: 280,
     directional: true,
   });
   return (
@@ -74,7 +74,7 @@ export function CreateFrame({
                 <span
                   aria-hidden="true"
                   className={
-                    "flex size-5 shrink-0 items-center justify-center rounded-full border text-[11px] tabular-nums " +
+                    "flex size-5 shrink-0 items-center justify-center rounded-full border text-ui-meta tabular-nums " +
                     (createStep === index
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border text-muted-foreground")

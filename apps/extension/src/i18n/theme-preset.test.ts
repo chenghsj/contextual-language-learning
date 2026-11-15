@@ -8,10 +8,14 @@ import { JSDOM } from "jsdom";
 import { ActionFeedbackButton } from "../components/action-feedback-button";
 
 const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
-const button = await readSource(new URL("../components/ui/button.tsx", import.meta.url));
+const button = await readSource(
+  new URL("../../../../packages/ui/src/components/ui/button.tsx", import.meta.url),
+);
 const app = await readSource(new URL("../App.tsx", import.meta.url));
 const sonner = await readSource(new URL("../components/ui/sonner.tsx", import.meta.url));
-const card = await readSource(new URL("../components/ui/card.tsx", import.meta.url));
+const card = await readSource(
+  new URL("../../../../packages/ui/src/components/ui/card.tsx", import.meta.url),
+);
 const info = await readSource(new URL("../components/setting-info.tsx", import.meta.url));
 const contextual = await readSource(
   new URL("../components/contextual-scene-reader.tsx", import.meta.url),
@@ -82,11 +86,12 @@ test("the warm OKLCH theme covers light and dark semantic tokens", () => {
   assert.match(dark["sidebar-primary"], /^oklch\(0\.3250? 0 0\)$/);
   assert.equal(dark["chart-1"], light["chart-1"], "the user-supplied dark preset repeats chart-1");
   assert.equal(effectiveDark["chart-1"], light["chart-1"]);
-  assert.equal(light.radius, "1rem");
+  assert.equal(light.radius, "0.625rem");
 });
 
-test("cards, tooltips and compact player use warm rounded Tailwind utilities", () => {
-  assert.equal(light.radius, "1rem");
+test("cards, tooltips and compact player use compact rounded Tailwind utilities", () => {
+  assert.equal(light.radius, "0.625rem");
+  assert.equal(effectiveDark.radius, light.radius);
   for (const [token, expected] of [
     ["sm", "calc(var(--radius) - 4px)"],
     ["md", "calc(var(--radius) - 2px)"],

@@ -1,6 +1,7 @@
 import { build } from "esbuild";
 import { buildMacSpeech } from "./build-macos-speech.mjs";
 import { buildMacSiri } from "./build-macos-siri.mjs";
+import { buildMacCredentials } from "./build-macos-credentials.mjs";
 import { piBundlePlugin, piRequireBanner } from "./pi-bundle.mjs";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -39,3 +40,4 @@ await build({
 });
 await buildMacSpeech();
 await buildMacSiri();
+await buildMacCredentials();

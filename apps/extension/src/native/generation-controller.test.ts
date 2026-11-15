@@ -1,8 +1,42 @@
-import { HOST_PROTOCOL_VERSION } from "@contextual/core";
+import { HOST_PROTOCOL_VERSION, SpeechDownloadIdSchema } from "@contextual/core";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
 import { GENERATION_CONTROLLER_PORT, installGenerationController } from "./generation-controller";
+
+test("favorite chunks keep the Host request alive until its final chunk", () => {
+  const app = setup();
+  const panel = app.connectPanel();
+  const id = randomUUID();
+  const collection = { kind: "local" } as const;
+  const key = "1".repeat(64);
+  panel.onMessage.fire({ id, type: "getFavorite", collection, key });
+  app.native.onMessage.fire({
+    id,
+    type: "favoriteChunk",
+    collection,
+    key,
+    index: 0,
+    total: 2,
+    dataBase64: "e30=",
+  });
+  panel.disconnect();
+  assert.equal(
+    app.native.disconnected,
+    false,
+    "incomplete favorites retain their request even after a panel closes",
+  );
+  app.native.onMessage.fire({
+    id,
+    type: "favoriteChunk",
+    collection,
+    key,
+    index: 1,
+    total: 2,
+    dataBase64: "e30=",
+  });
+  assert.equal(app.native.disconnected, true);
+});
 
 test("speech has a panel owner, stops on panel closure, and does not interrupt generation", () => {
   const app = setup();
@@ -108,6 +142,7 @@ function setup(
   onCompleted: (jobId: string, title: string, documentId?: string) => void = () => {},
   onAttention: (jobId: string, title: string, outcome: "interrupted" | "failed") => void = () => {},
   automaticHandshake = true,
+  authorizationTabs?: import("./drive-authorization-tabs").AuthorizationTabs,
 ) {
   const id = "contextual-extension-test";
   const onConnect = emitter<ReturnType<typeof fakePort>>();
@@ -161,7 +196,7 @@ function setup(
       return native;
     },
   } as unknown as typeof chrome.runtime;
-  installGenerationController(runtime, onCompleted, onAttention);
+  installGenerationController(runtime, onCompleted, onAttention, undefined, authorizationTabs);
   return {
     native,
     probes,
@@ -936,6 +971,140 @@ test("the login owner can submit its prompt using the active login ID without by
   );
   owner.disconnect();
   observer.disconnect();
+});
+
+test("worker download replies stay private, and a lease retains the shared Host", async () => {
+  const id = "contextual-extension-test";
+  const onConnect = emitter<ReturnType<typeof fakePort>>();
+  const native = fakePort("native", id);
+  const runtime = {
+    id,
+    getManifest: () => ({ version: "0.1.0" }),
+    onConnect,
+    connectNative: () => native,
+  } as unknown as typeof chrome.runtime;
+  const gateway = installGenerationController(runtime);
+  const panel = fakePort(GENERATION_CONTROLLER_PORT);
+  onConnect.fire(panel);
+  const release = gateway.retain();
+  const requestId = randomUUID(),
+    operationId = SpeechDownloadIdSchema.parse(randomUUID());
+  const reply = gateway.request({
+    type: "cancelSpeechDownload",
+    id: requestId,
+    operationId,
+    voiceId: "siri.en.test",
+  });
+  const health = native.sent[0] as { id: string };
+  native.onMessage.fire({
+    type: "health",
+    id: health.id,
+    installed: {},
+    agents: [],
+    protocolVersion: HOST_PROTOCOL_VERSION,
+    version: "0.1.0",
+    agentMode: "pi-sdk",
+  });
+  assert.equal((native.sent.at(-1) as { type: string }).type, "cancelSpeechDownload");
+  native.onMessage.fire({
+    type: "speechDownloadObservations",
+    id: requestId,
+    observations: [
+      {
+        operationId,
+        voiceId: "siri.en.test",
+        resource: "absent",
+        subscription: "absent",
+        ordering: "settled",
+        cancelFenced: true,
+        shared: false,
+      },
+    ],
+  });
+  assert.equal((await reply).type, "speechDownloadObservations");
+  assert.equal(
+    panel.sent.some(item => (item as { id?: string }).id === requestId),
+    false,
+  );
+  panel.disconnect();
+  assert.equal(native.disconnected, false);
+  release();
+  assert.equal(native.disconnected, true);
+});
+
+test("generation panel cannot submit legacy or worker-owned downloads", () => {
+  const app = setup();
+  const panel = app.connectPanel();
+  for (const type of [
+    "installSpeechVoice",
+    "startSpeechDownload",
+    "cancelSpeechDownload",
+    "inspectSpeechDownloads",
+  ] as const) {
+    const id = randomUUID();
+    panel.onMessage.fire(
+      type === "installSpeechVoice"
+        ? { type, id, voiceId: "siri.en.test" }
+        : type === "inspectSpeechDownloads"
+          ? {
+              type,
+              id,
+              operations: [{ operationId: randomUUID(), voiceId: "siri.en.test" }],
+            }
+          : { type, id, operationId: randomUUID(), voiceId: "siri.en.test" },
+    );
+    assert.equal((panel.sent.at(-1) as { type: string }).type, "error");
+  }
+  assert.equal(app.connections, 0);
+});
+
+test("Google OAuth tab closure cancels its Host wait and preserves active generation", async () => {
+  let closed!: (id: number) => void;
+  const tabs = {
+    onRemoved: {
+      addListener: (listener: (id: number) => void) => {
+        closed = listener;
+      },
+    },
+    create: async () => ({ id: 42 }),
+    remove: async () => {},
+  } as unknown as import("./drive-authorization-tabs").AuthorizationTabs;
+  const app = setup(undefined, undefined, true, tabs),
+    panel = app.connectPanel();
+  const generation = randomUUID(),
+    login = randomUUID();
+  panel.onMessage.fire({ id: generation, type: "resume", jobId: generation });
+  panel.onMessage.fire({ id: login, type: "driveConnect" });
+  app.native.onMessage.fire({
+    id: login,
+    type: "driveAuth",
+    url: "https://accounts.google.com/o/oauth2/v2/auth?state=synthetic",
+  });
+  await Promise.resolve();
+  closed(42);
+  assert.ok(
+    app.native.sent.some(
+      message =>
+        (message as { type: string; loginId?: string }).type === "driveAuthCancel" &&
+        (message as { loginId?: string }).loginId === login,
+    ),
+  );
+  app.native.onMessage.fire({
+    id: login,
+    type: "error",
+    message: "Google authorization was declined",
+  });
+  assert.ok(
+    panel.sent.some(
+      message =>
+        (message as { id?: string; type: string }).id === login &&
+        (message as { type: string }).type === "error",
+    ),
+  );
+  panel.disconnect();
+  assert.equal(app.native.disconnected, false, "generation survives OAuth cancellation");
+  app.native.onMessage.fire({ id: generation, type: "generationSettled" });
+  assert.equal(app.native.disconnected, true);
 });
 
 test("silent catalog requests fail in bounded time without interrupting generation", context => {

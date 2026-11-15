@@ -101,7 +101,13 @@ test("compatible completed V7 lessons remain readable across prompt changes with
   const root = await mkdtemp(join(tmpdir(), "cll-readable-v7-"));
   try {
     const { storage, document } = await completedLesson(root);
-    for (const promptVersion of ["learning-points-prompts-12", "learning-points-prompts-13"]) {
+    for (const promptVersion of [
+      "learning-points-prompts-12",
+      "learning-points-prompts-13",
+      "learning-points-prompts-17",
+      "learning-points-prompts-18",
+      "learning-points-prompts-19",
+    ]) {
       const id = randomUUID(),
         folder = join(root, "videos", promptVersion);
       const old = {
@@ -110,7 +116,18 @@ test("compatible completed V7 lessons remain readable across prompt changes with
         execution: {
           ...document.execution!,
           promptVersion,
-          qualityStrategyVersion: "learning-quality-1",
+          qualityStrategyVersion:
+            promptVersion === "learning-points-prompts-19"
+              ? "program-validation-3"
+              : ["learning-points-prompts-17", "learning-points-prompts-18"].includes(promptVersion)
+                ? "program-validation-2"
+                : "learning-quality-1",
+          languageStrategyVersion: [
+            "learning-points-prompts-18",
+            "learning-points-prompts-19",
+          ].includes(promptVersion)
+            ? "learning-language-strategies-5"
+            : "learning-language-strategies-4",
         },
       };
       const text = JSON.stringify(old);
@@ -140,6 +157,7 @@ test("legacy resume after canonical save finalizes the existing lesson without r
           .digest("hex"),
         promptVersion: "learning-points-prompts-13",
         qualityStrategyVersion: "learning-quality-1",
+        languageStrategyVersion: "learning-language-strategies-4",
       },
     };
     const path = (await findVideoDocument(root, document.id))!;

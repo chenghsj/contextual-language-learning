@@ -20,7 +20,9 @@ test("standard selectors use Radix and the learning-language selector uses searc
     assert.doesNotMatch(source, /<NativeSelect\b|<select\b|<option\b/);
     assert.match(source, /<SelectField\b/);
   }
-  const component = await readSource(new URL("../components/ui/select.tsx", import.meta.url));
+  const component = await readSource(
+    new URL("../../../../packages/ui/src/components/ui/select.tsx", import.meta.url),
+  );
   assert.doesNotMatch(component, /export function NativeSelect|<select\b/);
   assert.match(component, /SelectPrimitive\.Portal/);
   const app = await readSource(new URL("../App.tsx", import.meta.url));

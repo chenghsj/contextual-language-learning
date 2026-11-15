@@ -1,0 +1,51 @@
+{
+  "completedAt": "2026-10-19T03:22:00.677963+00:00",
+  "scope": "Prompts-18 frozen generation and separately checked final-source compatibility; no installed-host/browser acceptance.",
+  "checks": [
+    {
+      "command": "node --import tsx --test --test-concurrency=1 packages/core/src/*.test.ts apps/local-host/src/generation/*.test.ts apps/local-host/src/jobs/*.test.ts apps/local-host/src/storage/*.test.ts",
+      "cwd": "final-source snapshot",
+      "exitCode": 0,
+      "tests": 199,
+      "log": "logs/final-regression.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "cwd": "final-source snapshot",
+      "exitCode": 0,
+      "log": "logs/final-typecheck.log"
+    },
+    {
+      "command": "pnpm build",
+      "cwd": "final-source snapshot",
+      "exitCode": 0,
+      "log": "logs/final-build.log"
+    },
+    {
+      "command": "node apps/local-host/scripts/smoke-host.mjs",
+      "cwd": "final-source snapshot",
+      "exitCode": 0,
+      "log": "logs/final-host-smoke.log"
+    },
+    {
+      "command": "node apps/extension/scripts/check-build.mjs",
+      "cwd": "final-source snapshot",
+      "exitCode": 0,
+      "log": "logs/final-extension-assets.log"
+    },
+    {
+      "command": "pnpm exec tsc -p docs/quality/pilot-2026-10-19-prompts18/tsconfig.json --noEmit",
+      "cwd": "workspace",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 docs/quality/pilot-2026-10-19-prompts18/check-verifier.py",
+      "cwd": "workspace",
+      "exitCode": 0,
+      "report": "verifier-boundary-checks.json"
+    }
+  ],
+  "sourceVerification": "source-verification.json",
+  "newModelCalls": 37,
+  "modelCallsStartedByOfflineChecks": 0
+}

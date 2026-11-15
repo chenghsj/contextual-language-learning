@@ -1,0 +1,1417 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-18",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-5",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "7f95c4de5a150efb82a7db15bf8a4f0a692bc4a63129410dd12135d684f45759",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:40:52.361Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 11302.381041000015,
+        "usage": {
+          "input": 2463,
+          "output": 1066,
+          "reasoning": 817
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:40:55.519Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 3153.685125000018,
+        "usage": {
+          "input": 2237,
+          "output": 337,
+          "reasoning": 297
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:41:23.756Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 28232.978375000006,
+        "usage": {
+          "input": 4471,
+          "output": 4871,
+          "reasoning": 944
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-18",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-5",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "7f95c4de5a150efb82a7db15bf8a4f0a692bc4a63129410dd12135d684f45759",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "79947a4c-c433-4888-8446-48cd81e9a72d",
+    "sourceTitle": "zh-TW-example-action-transfer-variant-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-19T02:40:39.791Z",
+    "updatedAt": "2026-10-19T02:41:23.790Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "79947a4c-c433-4888-8446-48cd81e9a72d"
+  },
+  "request": {
+    "id": "79947a4c-c433-4888-8446-48cd81e9a72d",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "zh-TW-example-action-transfer-variant-automatic"
+    },
+    "profile": {
+      "targetLanguage": "zh-TW",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "你有通知大家新的開會時間嗎？"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "還沒，我正要傳訊息。"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "那請先告訴大家地點也改了。"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "好。"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "555d3d90-6667-4654-8ed4-d514280ac827",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "開會時間與地點變更通知",
+      "context": {
+        "text": "本段對話包含詢問開會時間是否已通知、說明正準備發送訊息、提出優先順帶告知地點變更的請求，以及確認答應。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "你有通知大家新的開會時間了嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "還沒，我正要傳訊息。"
+        },
+        {
+          "cueId": "c3",
+          "text": "那請先告訴大家地點也改了。"
+        },
+        {
+          "cueId": "c4",
+          "text": "好。"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "你",
+              "reading": "ㄋㄧˇ"
+            },
+            {
+              "text": "有",
+              "reading": "ㄧㄡˇ"
+            },
+            {
+              "text": "通知",
+              "reading": "ㄊㄨㄥ ㄓ"
+            },
+            {
+              "text": "大家",
+              "reading": "ㄉㄚˋ ㄐㄧㄚ"
+            },
+            {
+              "text": "新的",
+              "reading": "ㄒㄧㄣ ˙ㄉㄜ"
+            },
+            {
+              "text": "開會",
+              "reading": "ㄎㄞ ㄏㄨㄟˋ"
+            },
+            {
+              "text": "時間",
+              "reading": "ㄕˊ ㄐㄧㄢ"
+            },
+            {
+              "text": "嗎",
+              "reading": "˙ㄇㄚ"
+            },
+            {
+              "text": "？"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "還沒",
+              "reading": "ㄏㄞˊ ㄇㄟˊ"
+            },
+            {
+              "text": "，"
+            },
+            {
+              "text": "我",
+              "reading": "ㄨㄛˇ"
+            },
+            {
+              "text": "正要",
+              "reading": "ㄓㄥˋ ㄧㄠˋ"
+            },
+            {
+              "text": "傳",
+              "reading": "ㄔㄨㄢˊ"
+            },
+            {
+              "text": "訊息",
+              "reading": "ㄒㄩㄣˋ ㄒㄧˊ"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "那",
+              "reading": "ㄋㄚˋ"
+            },
+            {
+              "text": "請",
+              "reading": "ㄑㄧㄥˇ"
+            },
+            {
+              "text": "先",
+              "reading": "ㄒㄧㄢ"
+            },
+            {
+              "text": "告訴",
+              "reading": "ㄍㄠˋ ㄙㄨˋ"
+            },
+            {
+              "text": "大家",
+              "reading": "ㄉㄚˋ ㄐㄧㄚ"
+            },
+            {
+              "text": "地點",
+              "reading": "ㄉㄧˋ ㄉㄧㄢˇ"
+            },
+            {
+              "text": "也",
+              "reading": "ㄧㄝˇ"
+            },
+            {
+              "text": "改",
+              "reading": "ㄍㄞˇ"
+            },
+            {
+              "text": "了",
+              "reading": "˙ㄌㄜ"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "好",
+              "reading": "ㄏㄠˇ"
+            },
+            {
+              "text": "。"
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "a303746a-1dd2-4f46-8e6e-cfe90d6b2ff8",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "555d3d90-6667-4654-8ed4-d514280ac827:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c1_ch1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 6
+                }
+              ],
+              "meaning": "是否有向眾人告知"
+            },
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c1_ch2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 6,
+                  "end": 14
+                }
+              ],
+              "meaning": "變更後的會議時間嗎"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 14
+            }
+          ]
+        },
+        {
+          "id": "edc7175e-ddaf-4c1c-9e5f-346fca7fa460",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "555d3d90-6667-4654-8ed4-d514280ac827:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c2_ch1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 3
+                }
+              ],
+              "meaning": "尚未完成"
+            },
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c2_ch2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 3,
+                  "end": 10
+                }
+              ],
+              "meaning": "此刻正打算發送文字訊息"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 10
+            }
+          ]
+        },
+        {
+          "id": "089d1612-a873-4dee-9e86-c3770110de43",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [
+            "c2"
+          ],
+          "decision": "explained",
+          "pointIds": [
+            "555d3d90-6667-4654-8ed4-d514280ac827:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c3_ch1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 7
+                }
+              ],
+              "meaning": "既然如此，請優先向眾人說明"
+            },
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c3_ch2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 7,
+                  "end": 13
+                }
+              ],
+              "meaning": "開會地點同樣有所變更"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 13
+            }
+          ]
+        },
+        {
+          "id": "caffa152-388d-4e35-ab90-515f01d51389",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "555d3d90-6667-4654-8ed4-d514280ac827",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "a303746a-1dd2-4f46-8e6e-cfe90d6b2ff8",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 14
+                  }
+                ]
+              },
+              {
+                "id": "edc7175e-ddaf-4c1c-9e5f-346fca7fa460",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 10
+                  }
+                ]
+              },
+              {
+                "id": "089d1612-a873-4dee-9e86-c3770110de43",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 13
+                  }
+                ]
+              },
+              {
+                "id": "caffa152-388d-4e35-ab90-515f01d51389",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 2
+                  }
+                ]
+              }
+            ],
+            "learningValue": "討論更改會議時間與地點的日常工作對話，包含台灣華語常見的詢問句型與即時行動表達。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "「你有……嗎？」在台灣華語中常用來詢問某動作是否已完成或發生。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "「正要……」表示事情或動作即將在此刻進行。"
+              },
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "使用「那請先……也……」在得知對方進度後順勢補充說明新的變更事項。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "555d3d90-6667-4654-8ed4-d514280ac827",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "a303746a-1dd2-4f46-8e6e-cfe90d6b2ff8",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 14
+              }
+            ]
+          },
+          {
+            "id": "edc7175e-ddaf-4c1c-9e5f-346fca7fa460",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 10
+              }
+            ]
+          },
+          {
+            "id": "089d1612-a873-4dee-9e86-c3770110de43",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 13
+              }
+            ]
+          },
+          {
+            "id": "caffa152-388d-4e35-ab90-515f01d51389",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 2
+              }
+            ]
+          }
+        ],
+        "learningValue": "討論更改會議時間與地點的日常工作對話，包含台灣華語常見的詢問句型與即時行動表達。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "「你有……嗎？」在台灣華語中常用來詢問某動作是否已完成或發生。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "「正要……」表示事情或動作即將在此刻進行。"
+          },
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "使用「那請先……也……」在得知對方進度後順勢補充說明新的變更事項。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "555d3d90-6667-4654-8ed4-d514280ac827",
+        "utteranceIds": [
+          "a303746a-1dd2-4f46-8e6e-cfe90d6b2ff8",
+          "edc7175e-ddaf-4c1c-9e5f-346fca7fa460",
+          "089d1612-a873-4dee-9e86-c3770110de43",
+          "caffa152-388d-4e35-ab90-515f01d51389"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "555d3d90-6667-4654-8ed4-d514280ac827",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "開會時間與地點變更通知",
+            "context": {
+              "text": "本段對話包含詢問開會時間是否已通知、說明正準備發送訊息、提出優先順帶告知地點變更的請求，以及確認答應。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "你有通知大家新的開會時間了嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "還沒，我正要傳訊息。"
+              },
+              {
+                "cueId": "c3",
+                "text": "那請先告訴大家地點也改了。"
+              },
+              {
+                "cueId": "c4",
+                "text": "好。"
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "你",
+                    "reading": "ㄋㄧˇ"
+                  },
+                  {
+                    "text": "有",
+                    "reading": "ㄧㄡˇ"
+                  },
+                  {
+                    "text": "通知",
+                    "reading": "ㄊㄨㄥ ㄓ"
+                  },
+                  {
+                    "text": "大家",
+                    "reading": "ㄉㄚˋ ㄐㄧㄚ"
+                  },
+                  {
+                    "text": "新的",
+                    "reading": "ㄒㄧㄣ ˙ㄉㄜ"
+                  },
+                  {
+                    "text": "開會",
+                    "reading": "ㄎㄞ ㄏㄨㄟˋ"
+                  },
+                  {
+                    "text": "時間",
+                    "reading": "ㄕˊ ㄐㄧㄢ"
+                  },
+                  {
+                    "text": "嗎",
+                    "reading": "˙ㄇㄚ"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "還沒",
+                    "reading": "ㄏㄞˊ ㄇㄟˊ"
+                  },
+                  {
+                    "text": "，"
+                  },
+                  {
+                    "text": "我",
+                    "reading": "ㄨㄛˇ"
+                  },
+                  {
+                    "text": "正要",
+                    "reading": "ㄓㄥˋ ㄧㄠˋ"
+                  },
+                  {
+                    "text": "傳",
+                    "reading": "ㄔㄨㄢˊ"
+                  },
+                  {
+                    "text": "訊息",
+                    "reading": "ㄒㄩㄣˋ ㄒㄧˊ"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "那",
+                    "reading": "ㄋㄚˋ"
+                  },
+                  {
+                    "text": "請",
+                    "reading": "ㄑㄧㄥˇ"
+                  },
+                  {
+                    "text": "先",
+                    "reading": "ㄒㄧㄢ"
+                  },
+                  {
+                    "text": "告訴",
+                    "reading": "ㄍㄠˋ ㄙㄨˋ"
+                  },
+                  {
+                    "text": "大家",
+                    "reading": "ㄉㄚˋ ㄐㄧㄚ"
+                  },
+                  {
+                    "text": "地點",
+                    "reading": "ㄉㄧˋ ㄉㄧㄢˇ"
+                  },
+                  {
+                    "text": "也",
+                    "reading": "ㄧㄝˇ"
+                  },
+                  {
+                    "text": "改",
+                    "reading": "ㄍㄞˇ"
+                  },
+                  {
+                    "text": "了",
+                    "reading": "˙ㄌㄜ"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "好",
+                    "reading": "ㄏㄠˇ"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              }
+            ],
+            "utterances": [
+              {
+                "id": "a303746a-1dd2-4f46-8e6e-cfe90d6b2ff8",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "555d3d90-6667-4654-8ed4-d514280ac827:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c1_ch1",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 0,
+                        "end": 6
+                      }
+                    ],
+                    "meaning": "是否有向眾人告知"
+                  },
+                  {
+                    "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c1_ch2",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 6,
+                        "end": 14
+                      }
+                    ],
+                    "meaning": "變更後的會議時間嗎"
+                  }
+                ],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 14
+                  }
+                ]
+              },
+              {
+                "id": "edc7175e-ddaf-4c1c-9e5f-346fca7fa460",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "555d3d90-6667-4654-8ed4-d514280ac827:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c2_ch1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 3
+                      }
+                    ],
+                    "meaning": "尚未完成"
+                  },
+                  {
+                    "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c2_ch2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 3,
+                        "end": 10
+                      }
+                    ],
+                    "meaning": "此刻正打算發送文字訊息"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 10
+                  }
+                ]
+              },
+              {
+                "id": "089d1612-a873-4dee-9e86-c3770110de43",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c2"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "555d3d90-6667-4654-8ed4-d514280ac827:s0:p3"
+                ],
+                "chunks": [
+                  {
+                    "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c3_ch1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 7
+                      }
+                    ],
+                    "meaning": "既然如此，請優先向眾人說明"
+                  },
+                  {
+                    "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:c3_ch2",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 7,
+                        "end": 13
+                      }
+                    ],
+                    "meaning": "開會地點同樣有所變更"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 13
+                  }
+                ]
+              },
+              {
+                "id": "caffa152-388d-4e35-ab90-515f01d51389",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 2
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:p1",
+              "utteranceIds": [
+                "a303746a-1dd2-4f46-8e6e-cfe90d6b2ff8"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "「有……嗎？」詢問動作是否完成",
+              "sourceCueIds": [
+                "c1"
+              ],
+              "contextCueIds": [],
+              "explanation": "在台灣華語中，常在動詞前加上「有」，構成「你有……嗎？」句型，用來確認某件事情或動作是否已經發生或完成。相當於標準語法中的「你……了嗎？」。",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 1,
+                  "end": 2
+                },
+                {
+                  "cueId": "c1",
+                  "start": 12,
+                  "end": 13
+                }
+              ]
+            },
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:p2",
+              "utteranceIds": [
+                "edc7175e-ddaf-4c1c-9e5f-346fca7fa460"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "「正要……」表示即將進行某動作",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "「正要」後面接動詞，表示說話者在此刻剛好打算、正準備採取某個行動，強調時機的緊接性。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 4,
+                  "end": 6
+                }
+              ]
+            },
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:p3",
+              "utteranceIds": [
+                "089d1612-a873-4dee-9e86-c3770110de43"
+              ],
+              "category": "usage",
+              "presentation": "core",
+              "title": "「那請先……」順應當前情況提出優先請求",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [
+                "c2"
+              ],
+              "explanation": "「那」在此作為承接連詞，表示「既然如此」；結合「請先……」，用在得知對方尚未行動時，及時指引對方在執行時優先加入某項新的處理內容。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 3
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:r1",
+              "pointIds": [
+                "555d3d90-6667-4654-8ed4-d514280ac827:s0:p1"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c1"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c1",
+                      "start": 0,
+                      "end": 2
+                    },
+                    {
+                      "cueId": "c1",
+                      "start": 12,
+                      "end": 14
+                    }
+                  ],
+                  "text": "你有 嗎？"
+                }
+              ],
+              "pattern": "你有 + [動詞片語] + 嗎？",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "同事在辦公室詢問對方是否已經寄出報表。",
+                  "dialogue": [
+                    {
+                      "text": "你有寄出這星期的報表嗎？",
+                      "translation": "你有寄出這星期的報表了嗎？",
+                      "pronunciation": [
+                        {
+                          "text": "你",
+                          "reading": "ㄋㄧˇ"
+                        },
+                        {
+                          "text": "有",
+                          "reading": "ㄧㄡˇ"
+                        },
+                        {
+                          "text": "寄出",
+                          "reading": "ㄐㄧˋ ㄔㄨ"
+                        },
+                        {
+                          "text": "這",
+                          "reading": "ㄓㄜˋ"
+                        },
+                        {
+                          "text": "星期",
+                          "reading": "ㄒㄧㄥ ㄑㄧˊ"
+                        },
+                        {
+                          "text": "的",
+                          "reading": "˙ㄉㄜ"
+                        },
+                        {
+                          "text": "報表",
+                          "reading": "ㄅㄠˋ ㄅㄧㄠˇ"
+                        },
+                        {
+                          "text": "嗎",
+                          "reading": "˙ㄇㄚ"
+                        },
+                        {
+                          "text": "？"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "我早上就寄給主管了。",
+                      "translation": "我早上就寄給主管了。",
+                      "pronunciation": [
+                        {
+                          "text": "我",
+                          "reading": "ㄨㄛˇ"
+                        },
+                        {
+                          "text": "早上",
+                          "reading": "ㄗㄠˇ ㄕㄤˋ"
+                        },
+                        {
+                          "text": "就",
+                          "reading": "ㄐㄧㄡˋ"
+                        },
+                        {
+                          "text": "寄給",
+                          "reading": "ㄐㄧˋ ㄍㄟˇ"
+                        },
+                        {
+                          "text": "主管",
+                          "reading": "ㄓㄨˇ ㄍㄨㄢˇ"
+                        },
+                        {
+                          "text": "了",
+                          "reading": "˙ㄌㄜ"
+                        },
+                        {
+                          "text": "。"
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "你有寄出這星期的報表嗎？"
+                }
+              ]
+            },
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:r2",
+              "pointIds": [
+                "555d3d90-6667-4654-8ed4-d514280ac827:s0:p2"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 3,
+                      "end": 6
+                    }
+                  ],
+                  "text": "我正要"
+                }
+              ],
+              "pattern": "我正要 + [動詞片語]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩人在辦公室，一人問是否要去吃午餐，另一人表示正準備出發。",
+                  "dialogue": [
+                    {
+                      "text": "你要去吃午餐了嗎？",
+                      "translation": "你要去吃午餐了嗎？",
+                      "pronunciation": [
+                        {
+                          "text": "你",
+                          "reading": "ㄋㄧˇ"
+                        },
+                        {
+                          "text": "要",
+                          "reading": "ㄧㄠˋ"
+                        },
+                        {
+                          "text": "去",
+                          "reading": "ㄑㄩˋ"
+                        },
+                        {
+                          "text": "吃",
+                          "reading": "ㄔ"
+                        },
+                        {
+                          "text": "午餐",
+                          "reading": "ㄨˇ ㄘㄢ"
+                        },
+                        {
+                          "text": "了",
+                          "reading": "˙ㄌㄜ"
+                        },
+                        {
+                          "text": "嗎",
+                          "reading": "˙ㄇㄚ"
+                        },
+                        {
+                          "text": "？"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "對，我正要出門買便當。",
+                      "translation": "對，我正要出門買便當。",
+                      "pronunciation": [
+                        {
+                          "text": "對",
+                          "reading": "ㄉㄨㄟˋ"
+                        },
+                        {
+                          "text": "，"
+                        },
+                        {
+                          "text": "我",
+                          "reading": "ㄨㄛˇ"
+                        },
+                        {
+                          "text": "正要",
+                          "reading": "ㄓㄥˋ ㄧㄠˋ"
+                        },
+                        {
+                          "text": "出門",
+                          "reading": "ㄔㄨ ㄇㄣˊ"
+                        },
+                        {
+                          "text": "買",
+                          "reading": "ㄇㄞˇ"
+                        },
+                        {
+                          "text": "便當",
+                          "reading": "ㄅㄧㄢˋ ㄉㄤ"
+                        },
+                        {
+                          "text": "。"
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "我正要出門買便當"
+                }
+              ]
+            },
+            {
+              "id": "555d3d90-6667-4654-8ed4-d514280ac827:s0:r3",
+              "pointIds": [
+                "555d3d90-6667-4654-8ed4-d514280ac827:s0:p3"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 0,
+                      "end": 3
+                    }
+                  ],
+                  "text": "那請先"
+                }
+              ],
+              "pattern": "那請先 + [動詞片語]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "店員向主管回報還沒印製宣傳單，主管請其先確認內容。",
+                  "dialogue": [
+                    {
+                      "text": "傳單還沒印，我準備去印了。",
+                      "translation": "傳單還沒印，我準備去印了。",
+                      "pronunciation": [
+                        {
+                          "text": "傳單",
+                          "reading": "ㄔㄨㄢˊ ㄉㄢ"
+                        },
+                        {
+                          "text": "還沒",
+                          "reading": "ㄏㄞˊ ㄇㄟˊ"
+                        },
+                        {
+                          "text": "印",
+                          "reading": "ㄧㄣˋ"
+                        },
+                        {
+                          "text": "，"
+                        },
+                        {
+                          "text": "我",
+                          "reading": "ㄨㄛˇ"
+                        },
+                        {
+                          "text": "準備",
+                          "reading": "ㄓㄨㄣˇ ㄅㄟˋ"
+                        },
+                        {
+                          "text": "去",
+                          "reading": "ㄑㄩˋ"
+                        },
+                        {
+                          "text": "印",
+                          "reading": "ㄧㄣˋ"
+                        },
+                        {
+                          "text": "了",
+                          "reading": "˙ㄌㄜ"
+                        },
+                        {
+                          "text": "。"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "那請先檢查電話號碼對不對。",
+                      "translation": "那請先檢查電話號碼對不對。",
+                      "pronunciation": [
+                        {
+                          "text": "那",
+                          "reading": "ㄋㄚˋ"
+                        },
+                        {
+                          "text": "請",
+                          "reading": "ㄑㄧㄥˇ"
+                        },
+                        {
+                          "text": "先",
+                          "reading": "ㄒㄧㄢ"
+                        },
+                        {
+                          "text": "檢查",
+                          "reading": "ㄐㄧㄢˇ ㄔㄚˊ"
+                        },
+                        {
+                          "text": "電話",
+                          "reading": "ㄉㄧㄢˋ ㄏㄨㄚˋ"
+                        },
+                        {
+                          "text": "號碼",
+                          "reading": "ㄏㄠˋ ㄇㄚˇ"
+                        },
+                        {
+                          "text": "對不對",
+                          "reading": "ㄉㄨㄟˋ ㄅㄨˊ ㄉㄨㄟˋ"
+                        },
+                        {
+                          "text": "。"
+                        }
+                      ]
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "那請先檢查電話號碼對不對。"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

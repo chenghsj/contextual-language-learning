@@ -1,0 +1,228 @@
+[
+  {
+    "system": "no-preference",
+    "preference": "full",
+    "expected": "full",
+    "sheet": {
+      "name": "enter",
+      "duration": "0.32s"
+    },
+    "navigation": [
+      {
+        "duration": 280,
+        "frames": [
+          {
+            "opacity": "0.8",
+            "transform": "translateX(12px)"
+          },
+          {
+            "opacity": "1",
+            "transform": "translateX(0px)"
+          }
+        ]
+      }
+    ],
+    "afterSystemChange": "full"
+  },
+  {
+    "system": "no-preference",
+    "preference": "reduced",
+    "expected": "reduced",
+    "sheet": {
+      "name": "none",
+      "duration": "1e-05s"
+    },
+    "navigation": [],
+    "afterSystemChange": "reduced"
+  },
+  {
+    "system": "no-preference",
+    "preference": "system",
+    "expected": "full",
+    "sheet": {
+      "name": "enter",
+      "duration": "0.32s"
+    },
+    "navigation": [
+      {
+        "duration": 280,
+        "frames": [
+          {
+            "opacity": "0.8",
+            "transform": "translateX(12px)"
+          },
+          {
+            "opacity": "1",
+            "transform": "translateX(0px)"
+          }
+        ]
+      }
+    ],
+    "afterSystemChange": "full"
+  },
+  {
+    "system": "reduce",
+    "preference": "full",
+    "expected": "full",
+    "sheet": {
+      "name": "enter",
+      "duration": "0.32s"
+    },
+    "navigation": [
+      {
+        "duration": 280,
+        "frames": [
+          {
+            "opacity": "0.8",
+            "transform": "translateX(12px)"
+          },
+          {
+            "opacity": "1",
+            "transform": "translateX(0px)"
+          }
+        ]
+      }
+    ],
+    "afterSystemChange": "full"
+  },
+  {
+    "system": "reduce",
+    "preference": "reduced",
+    "expected": "reduced",
+    "sheet": {
+      "name": "none",
+      "duration": "1e-05s"
+    },
+    "navigation": [],
+    "afterSystemChange": "reduced"
+  },
+  {
+    "system": "reduce",
+    "preference": "system",
+    "expected": "full",
+    "sheet": {
+      "name": "enter",
+      "duration": "0.32s"
+    },
+    "navigation": [
+      {
+        "duration": 280,
+        "frames": [
+          {
+            "opacity": "0.8",
+            "transform": "translateX(12px)"
+          },
+          {
+            "opacity": "1",
+            "transform": "translateX(0px)"
+          }
+        ]
+      }
+    ],
+    "afterSystemChange": "full"
+  },
+  {
+    "reducedDialog": {
+      "x": 16,
+      "y": 28,
+      "width": 288,
+      "height": 504,
+      "animation": "none"
+    }
+  },
+  {
+    "persistence": "reduced survives reload",
+    "rollback": "one failure, committed choice restored",
+    "draft": "preserved",
+    "scene": [
+      {
+        "duration": 240,
+        "frames": [
+          {
+            "opacity": "0.8",
+            "transform": "translateX(0px)"
+          },
+          {
+            "opacity": "1",
+            "transform": "translateX(0px)"
+          }
+        ]
+      }
+    ],
+    "accordion": {
+      "name": "app-accordion-down",
+      "duration": "0.18s"
+    },
+    "popover": {
+      "name": "enter",
+      "duration": "0.15s"
+    },
+    "reducedPopover": {
+      "duration": "1e-05s"
+    }
+  },
+  {
+    "viewport": {
+      "width": 555,
+      "height": 760
+    },
+    "preference": "full",
+    "theme": "light",
+    "locale": "zh-TW",
+    "metrics": {
+      "x": 155,
+      "y": 0,
+      "width": 400,
+      "height": 760,
+      "overflow": false
+    }
+  },
+  {
+    "viewport": {
+      "width": 900,
+      "height": 760
+    },
+    "preference": "full",
+    "theme": "dark",
+    "locale": "zh-TW",
+    "metrics": {
+      "x": 500,
+      "y": 0,
+      "width": 400,
+      "height": 760,
+      "overflow": false
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 320
+    },
+    "preference": "reduced",
+    "theme": "dark",
+    "locale": "zh-TW",
+    "metrics": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 320,
+      "overflow": false
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 560
+    },
+    "preference": "reduced",
+    "theme": "dark",
+    "locale": "ja",
+    "metrics": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 560,
+      "overflow": false
+    }
+  }
+]

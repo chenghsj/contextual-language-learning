@@ -25,6 +25,8 @@ struct NormalizedPCMChunk {
 }
 struct Input: Decodable {
     let action: String
+    let operationId: String?
+    let operations: [SiriDownloadOperation]?
     let voiceId: String?
     let text: String?
     let rate: Float?
@@ -227,6 +229,9 @@ func localVersions() -> [String: Int]? {
     return result
 }
 func catalog() throws -> [CatalogVoice] {
+    try SiriDownloadJournal().withLock("catalog") { try readCatalog() }
+}
+func readCatalog() throws -> [CatalogVoice] {
     var handles: [UnsafeMutableRawPointer] = []
     defer { handles.forEach { dlclose($0) } }
     for framework in ["SiriTTSService", "TextToSpeech"] {
@@ -353,11 +358,8 @@ do {
         try emit(["removalSupported": assetRemovalSupported]); exit(0)
     }
     if input.action == "removeResource" {
-        guard let voiceId = input.voiceId,
-              let row = try catalog().first(where: { "siri:" + $0.identifier == voiceId }) else {
-            throw CLIError("The selected Siri voice is unavailable.")
-        }
-        let removed = try removeResource(row)
+        guard let voiceId = input.voiceId else { throw CLIError("Missing Siri voice identity.") }
+        let removed = try removeSpeechResource(voiceId: voiceId)
         try emit(["voiceId": voiceId, "status": removed ? "removed" : "not-removed"])
         exit(0)
     }
@@ -367,6 +369,25 @@ do {
             throw CLIError("The selected Siri voice is unavailable.")
         }
         try emit(ResourceFolder(voiceId: voiceId, directory: try resourceFolder(row)))
+        exit(0)
+    }
+    if ["startSpeechDownload", "cancelSpeechDownload", "inspectSpeechDownloads"].contains(input.action) {
+        let operations: [SiriDownloadOperation]
+        if input.action == "inspectSpeechDownloads", let batch = input.operations {
+            operations = batch
+        } else if let operationId = input.operationId, let voiceId = input.voiceId,
+                  input.action != "inspectSpeechDownloads" {
+            operations = [SiriDownloadOperation(operationId: operationId, voiceId: voiceId)]
+        } else { throw CLIError("Invalid Siri download operation.") }
+        let observations: SiriDownloadObservations
+        if input.action == "startSpeechDownload" {
+            observations = try SiriDownloadJournal().withLock("resource-changes") {
+                try speechDownloadObservations(action: input.action, operations: operations)
+            }
+        } else {
+            observations = try speechDownloadObservations(action: input.action, operations: operations)
+        }
+        try emit(observations)
         exit(0)
     }
     let session = DaemonSession()
@@ -382,28 +403,33 @@ do {
         try emit(row.info(native)); exit(0)
     }
     if input.action == "install" {
-        if row.resourceAvailable {
-            try emit(["status": "installed"]); exit(0)
+        try SiriDownloadJournal().withLock("resource-changes") {
+            guard let row = try catalog().first(where: { $0.identifier == row.identifier }) else {
+                throw CLIError("The selected Siri voice is unavailable.")
+            }
+            if row.resourceAvailable {
+                try emit(["status": "installed"]); exit(0)
+            }
+            guard Bundle.main.bundleIdentifier != nil else {
+                try emit(DownloadFailure(reason: "missing-client-identity")); exit(0)
+            }
+            let done = DispatchSemaphore(value: 0)
+            var failure: Error?
+            session.subscribe(voices: [try row.subscription()]) { failure = $0; done.signal() }
+            guard done.wait(timeout: .now() + 15) == .success else {
+                try emit(DownloadFailure(reason: "request-timed-out")); exit(0)
+            }
+            if let failure {
+                let error = failure as NSError
+                // Transport only bounded diagnostic identifiers, not arbitrary error
+                // descriptions containing paths, request data or system details.
+                let domain = error.domain.range(of: "^[A-Za-z0-9._-]{1,100}$",
+                    options: .regularExpression) != nil ? error.domain : nil
+                try emit(DownloadFailure(reason: "download-rejected", domain: domain,
+                    code: error.code)); exit(0)
+            }
+            try emit(["status": "requested"]); exit(0)
         }
-        guard Bundle.main.bundleIdentifier != nil else {
-            try emit(DownloadFailure(reason: "missing-client-identity")); exit(0)
-        }
-        let done = DispatchSemaphore(value: 0)
-        var failure: Error?
-        session.subscribe(voices: [try row.subscription()]) { failure = $0; done.signal() }
-        guard done.wait(timeout: .now() + 15) == .success else {
-            try emit(DownloadFailure(reason: "request-timed-out")); exit(0)
-        }
-        if let failure {
-            let error = failure as NSError
-            // Transport only bounded diagnostic identifiers, not arbitrary error
-            // descriptions containing paths, request data or system details.
-            let domain = error.domain.range(of: "^[A-Za-z0-9._-]{1,100}$",
-                options: .regularExpression) != nil ? error.domain : nil
-            try emit(DownloadFailure(reason: "download-rejected", domain: domain,
-                code: error.code)); exit(0)
-        }
-        try emit(["status": "requested"]); exit(0)
     }
     guard ["speak", "render"].contains(input.action), row.info(native).installed,
           let text = input.text, !text.isEmpty, text.count <= 6000,

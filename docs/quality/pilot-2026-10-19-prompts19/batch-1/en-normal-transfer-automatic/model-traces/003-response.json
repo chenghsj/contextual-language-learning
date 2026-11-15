@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"sceneId\":\"cda55804-4527-4792-ba17-c9bf254471e4\",\"title\":\"詢問停留原因與等待請求\",\"context\":{\"text\":\"對話包含詢問對方為何仍在現場、提及接獲來電時正準備離開的說明、請求稍作等待，以及簡短答應。\",\"evidenceCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"]},\"translations\":[{\"cueId\":\"c1\",\"text\":\"你怎麼還在這裡？\"},{\"cueId\":\"c2\",\"text\":\"你打來的時候我正準備要走。\"},{\"cueId\":\"c3\",\"text\":\"你能等一下嗎？\"},{\"cueId\":\"c4\",\"text\":\"好的。\"}],\"utterances\":[{\"id\":\"33e9989d-b3db-4644-a2b8-a129ffa04dcf\",\"meaning\":\"\",\"contextExplanation\":\"\",\"contextCueIds\":[],\"decision\":\"basic_only\",\"pointIds\":[]},{\"id\":\"f86e2fdb-b8c0-474a-bf49-6f85d2fcdd1f\",\"meaning\":\"\",\"contextExplanation\":\"\",\"contextCueIds\":[],\"decision\":\"explained\",\"pointIds\":[\"p1\"],\"chunks\":[{\"id\":\"chk1\",\"spans\":[{\"cueId\":\"c2\",\"start\":2,\"end\":20}],\"meaning\":\"正準備要離開\"},{\"id\":\"chk2\",\"spans\":[{\"cueId\":\"c2\",\"start\":21,\"end\":36}],\"meaning\":\"當你打電話來的時候\"}]},{\"id\":\"a4cc90bf-da41-49ab-9449-dd7997350aaf\",\"meaning\":\"\",\"contextExplanation\":\"\",\"contextCueIds\":[],\"decision\":\"basic_only\",\"pointIds\":[]},{\"id\":\"a4f4e3c2-07e5-4502-9059-28787bd0755e\",\"meaning\":\"\",\"contextExplanation\":\"\",\"contextCueIds\":[],\"decision\":\"basic_only\",\"pointIds\":[]}],\"points\":[{\"id\":\"p1\",\"utteranceIds\":[\"f86e2fdb-b8c0-474a-bf49-6f85d2fcdd1f\"],\"category\":\"grammar\",\"presentation\":\"core\",\"title\":\"be about to + 原形動詞\",\"sourceCueIds\":[\"c2\"],\"contextCueIds\":[],\"explanation\":\"「be about to + 原形動詞」表示即將或正打算做某事。此處使用過去式「was about to leave」，表示在過去某一特定時間點（接獲對方來電之際）原本正要進行離開的動作。\",\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":2,\"end\":20}]}],\"reusableItems\":[{\"id\":\"r1\",\"pointIds\":[\"p1\"],\"kind\":\"frame\",\"sourceForms\":[{\"cueIds\":[\"c2\"],\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":2,\"end\":20}],\"text\":\"was about to leave\"}],\"pattern\":\"be about to [verb]\",\"examples\":[{\"origin\":\"ai\",\"situation\":\"一名員工抵達辦公室並為遲到致歉，同事表示自己剛好正打算打電話詢問。\",\"dialogue\":[{\"text\":\"Sorry I'm late, my train was delayed.\",\"translation\":\"抱歉我遲到了，我的火車誤點了。\"},{\"text\":\"No problem, I was about to call you.\",\"translation\":\"沒關係，我剛才正打算打給你。\"}],\"targetLineIndex\":1,\"targetText\":\"was about to call\"}]}]}",
+  "call": {
+    "step": "s0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T04:40:31.340Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 50842.59275000001,
+    "usage": {
+      "input": 4549,
+      "output": 6994,
+      "reasoning": 6201
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { customContentCopy } from "../i18n/custom-content";
+import { learningLevelLabel } from "../i18n/learning-settings";
 import type { CustomContentSummary, CustomDriveSummary } from "@contextual/core";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ListChecks, LoaderCircle, RefreshCw, Trash2 } from "lucide-react";
@@ -312,9 +313,11 @@ export function VideoLibrary({
       Boolean(lesson.local),
       grouped,
       <>
-        <h3 className="text-sm font-semibold leading-snug wrap-anywhere">{lesson.title}</h3>
+        <h3 className="text-ui-heading font-semibold wrap-anywhere">{lesson.title}</h3>
         <p className="text-xs text-muted-foreground">
-          {[languageName, content?.level].filter(Boolean).join(" · ")}
+          {[languageName, content?.level && learningLevelLabel(uiLocale, content.level)]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
         {content?.sceneCount !== undefined && (
           <p className="text-xs text-muted-foreground">
@@ -377,7 +380,7 @@ export function VideoLibrary({
       Boolean(item.local),
       grouped,
       <>
-        <h3 className="text-sm font-semibold leading-snug wrap-anywhere">{content.title}</h3>
+        <h3 className="text-ui-heading font-semibold wrap-anywhere">{content.title}</h3>
         {!grouped && !sameTitle && content.sourceTitle && (
           <p className="text-xs text-muted-foreground wrap-anywhere">{content.sourceTitle}</p>
         )}
@@ -419,7 +422,12 @@ export function VideoLibrary({
   return (
     <section className="grid min-w-0 gap-3" aria-labelledby="library-heading">
       <div data-ui="library-header" className="flex min-w-0 items-center justify-between gap-2">
-        <h2 ref={heading} tabIndex={-1} id="library-heading" className="text-sm font-semibold">
+        <h2
+          ref={heading}
+          tabIndex={-1}
+          id="library-heading"
+          className="text-ui-heading font-semibold"
+        >
           {t("lessonLibrary")}
         </h2>
         <div className="flex shrink-0 items-center gap-1">
@@ -601,7 +609,7 @@ export function VideoLibrary({
         </div>
       )}
       {!lessonsBusy && !catalogError && !groups.length && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-ui-body text-muted-foreground">
           {t(
             search.trim() || language !== "all" || contentType !== "all"
               ? "lessonSearchEmpty"
@@ -679,9 +687,9 @@ export function VideoLibrary({
             <p className="text-xs leading-relaxed text-muted-foreground">{deleteUi.kept}</p>
           </AlertDialogHeader>
           {deleteError && (
-            <div role="alert" className="grid gap-2 text-sm text-destructive">
+            <div role="alert" className="grid gap-2 text-ui-body text-destructive">
               <p>{deleteError}</p>
-              <ul className="max-h-32 space-y-2 overflow-y-auto text-xs wrap-anywhere">
+              <ul className="max-h-32 space-y-2 overflow-y-auto text-ui-body wrap-anywhere">
                 {deleteFailures.map((failure, index) => (
                   <li key={index} className="grid gap-1">
                     <span className="font-medium">{failure.title}</span>

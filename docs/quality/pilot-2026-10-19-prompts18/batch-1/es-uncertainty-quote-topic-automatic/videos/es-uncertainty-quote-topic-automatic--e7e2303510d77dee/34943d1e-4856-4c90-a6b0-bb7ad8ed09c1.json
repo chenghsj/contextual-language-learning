@@ -1,0 +1,474 @@
+{
+  "id": "34943d1e-4856-4c90-a6b0-bb7ad8ed09c1",
+  "createdAt": "2026-10-19T02:33:33.726Z",
+  "source": {
+    "platform": "import",
+    "title": "es-uncertainty-quote-topic-automatic"
+  },
+  "profile": {
+    "targetLanguage": "es",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-18",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-5",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "955fed79bc959242677209d5ee16c1f1e3e4502cb52679b84fde9aa2b26d7fd6",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:34:07.511Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 30524.925041999995,
+        "usage": {
+          "input": 2898,
+          "output": 4150,
+          "reasoning": 3793
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:34:15.777Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 8248.470209,
+        "usage": {
+          "input": 2548,
+          "output": 843,
+          "reasoning": 802
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:35:54.341Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 98543.5895,
+        "usage": {
+          "input": 4785,
+          "output": 14481,
+          "reasoning": 12909
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "¿Maya habló de la reunión?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "“Dime la hora”, dijo. Por cierto, ¿ya comiste? [???]"
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Todavía no. ¿Qué significa [???] aquí?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "El subtítulo no está claro."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "6c5c3a5b-b621-4127-97ff-a253f2e362f5",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "關於會議與字幕內容的討論",
+      "context": {
+        "text": "對話包含詢問 Maya 是否提及會議、引述某人要求告知時間、轉折詢問是否已用餐並附帶來源不明片段〔來源不明內容：[???]〕、簡答尚未用餐、詢問該來源不明片段〔來源不明內容：[???]〕在此處的含意，以及說明字幕不清楚。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "Maya 有提到會議的事嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "「告訴我時間，」某人說。順帶一提，你吃了嗎？〔來源不明內容：[???]〕"
+        },
+        {
+          "cueId": "c3",
+          "text": "還沒。〔來源不明內容：[???]〕在這裡是什麼意思？"
+        },
+        {
+          "cueId": "c4",
+          "text": "字幕不清楚。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "34f7018a-6721-4c23-8116-d9dfa3b4fdb1",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 26
+            }
+          ]
+        },
+        {
+          "id": "7a9e5e1a-c1e7-4140-bfcc-f6a35a0235cd",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:p1"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 22
+            }
+          ]
+        },
+        {
+          "id": "01b15a63-ac6f-4f19-95a0-428bce28e9f7",
+          "meaning": "詢問是否已經用餐，句末包含來源不明片段〔來源不明內容：[???]〕。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:p2"
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 22,
+              "end": 52
+            }
+          ]
+        },
+        {
+          "id": "a969c103-b82b-4d55-8f42-17a1bb43c1f9",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:p3"
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 12
+            }
+          ]
+        },
+        {
+          "id": "535ede43-a239-4cce-b5a4-2a19680f14d6",
+          "meaning": "詢問來源不明片段〔來源不明內容：[???]〕在此處的意思。",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 12,
+              "end": 38
+            }
+          ]
+        },
+        {
+          "id": "87ba78e8-5a58-4e90-99c4-a076df050608",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 27
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:p1",
+      "utteranceIds": [
+        "7a9e5e1a-c1e7-4140-bfcc-f6a35a0235cd"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "肯定命令式代名詞附著：Dime",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "在肯定命令句中，受詞代名詞必須直接附著在動詞詞尾。動詞 decir 的非正式第二人稱（tú）肯定命令式為不規則單音節 di，加上第一人稱間接受詞代名詞 me 形成 dime（告訴我）。由於重音落在倒數第二音節（di-）且以母音結尾，符合自然重音規則，因此不需書寫重音符號。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 1,
+          "end": 5
+        }
+      ]
+    },
+    {
+      "id": "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:p2",
+      "utteranceIds": [
+        "01b15a63-ac6f-4f19-95a0-428bce28e9f7"
+      ],
+      "category": "chunks",
+      "presentation": "core",
+      "title": "轉折語句型：Por cierto",
+      "sourceCueIds": [
+        "c2"
+      ],
+      "contextCueIds": [],
+      "explanation": "在對話中用於轉換話題或帶出順帶想到的事情，意思相當於中文的「順帶一提」或「對了」。通常置於句首，其後常接逗號。",
+      "sourceSpans": [
+        {
+          "cueId": "c2",
+          "start": 22,
+          "end": 32
+        }
+      ]
+    },
+    {
+      "id": "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:p3",
+      "utteranceIds": [
+        "a969c103-b82b-4d55-8f42-17a1bb43c1f9"
+      ],
+      "category": "usage",
+      "presentation": "core",
+      "title": "簡短否定回答：Todavía no",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "用於回答某事是否已經發生的簡略否定句，表示「還沒」或「尚未」，可省去重複後方的動詞與受詞。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 10
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:r1",
+      "pointIds": [
+        "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:p1"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 1,
+              "end": 5
+            }
+          ],
+          "text": "Dime"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "一人想請教問題，另一人示意請對方說。",
+          "dialogue": [
+            {
+              "text": "Tengo una pregunta sobre la tarea.",
+              "translation": "我對作業有一個問題。"
+            },
+            {
+              "text": "Dime, ¿qué duda tienes?",
+              "translation": "請說，你有什麼疑問？"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Dime"
+        }
+      ]
+    },
+    {
+      "id": "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:r2",
+      "pointIds": [
+        "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:p2"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 22,
+              "end": 32
+            }
+          ],
+          "text": "Por cierto"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "兩人在討論工作進度時，其中一人順帶想起並詢問辦公室鑰匙的事。",
+          "dialogue": [
+            {
+              "text": "Ya terminé de revisar los informes.",
+              "translation": "我已經檢查完報告了。"
+            },
+            {
+              "text": "Excelente. Por cierto, ¿tienes las llaves de la oficina?",
+              "translation": "太好了。順帶一提，你有辦公室的鑰匙嗎？"
+            },
+            {
+              "text": "Sí, están aquí en mi escritorio.",
+              "translation": "有的，就在我桌上。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Por cierto"
+        }
+      ]
+    },
+    {
+      "id": "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:r3",
+      "pointIds": [
+        "6c5c3a5b-b621-4127-97ff-a253f2e362f5:s0:p3"
+      ],
+      "kind": "expression",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 10
+            }
+          ],
+          "text": "Todavía no"
+        }
+      ],
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "一人詢問另一人是否已經寄出活動邀請函，另一人簡答尚未寄出。",
+          "dialogue": [
+            {
+              "text": "¿Enviaste las invitaciones para la fiesta?",
+              "translation": "你寄出派對的邀請函了嗎？"
+            },
+            {
+              "text": "Todavía no. Las enviaré esta tarde.",
+              "translation": "還沒。我今天下午會寄。"
+            }
+          ],
+          "targetLineIndex": 1,
+          "targetText": "Todavía no"
+        }
+      ]
+    }
+  ]
+}

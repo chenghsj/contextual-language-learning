@@ -32,7 +32,7 @@ export function IconTooltipContent({
         (side === "top" ? "left-0 bottom-full pb-1" : "right-0 top-full pt-1")
       }
     >
-      <span className="block w-max max-w-[min(240px,80vw)] rounded-md bg-foreground px-2 py-1 text-[11px] font-normal text-background shadow-sm">
+      <span className="block w-max max-w-[min(240px,80vw)] rounded-md bg-foreground px-2 py-1 text-ui-label font-normal text-background shadow-sm">
         {children}
       </span>
     </span>

@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":9}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":19}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":9}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":3}]}],\"learningValue\":\"學習日常對話中說明當下狀態、使用「〜ところだった」表達「正要……之際」，以及用「〜てくれる？」提出請求的口語表達。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"「出かけるところだった」中「[動詞辞書形]＋ところだった」表示正打算做某事、即將進行該動作的時點。\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c3\"],\"description\":\"「待ってくれる？」為「[動詞て形]＋くれる」句型省略疑問助詞「か」，用於親近對話中請求對方為自己做某事。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:41:32.186Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 7583.542916000006,
+    "usage": {
+      "input": 4120,
+      "output": 958,
+      "reasoning": 702
+    }
+  }
+}

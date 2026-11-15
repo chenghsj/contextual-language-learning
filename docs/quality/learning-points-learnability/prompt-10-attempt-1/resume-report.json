@@ -1,0 +1,89 @@
+{
+  "case": "ja-damaged-negation-automatic",
+  "status": "failed",
+  "resumed": true,
+  "durationMs": 4,
+  "error": "Error: Saved input differs from frozen execution snapshot",
+  "execution": {
+    "workflowVersion": "learning-points-v6-3",
+    "promptVersion": "learning-points-prompts-10",
+    "schemaVersion": "6",
+    "languageStrategyVersion": "learning-language-strategies-3",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "inputFingerprint": "144ed13591652277c0e3cea69a08dae816354380fe572666863c4814eee80e63",
+    "provider": "antigravity",
+    "modelId": "gemini-3.7-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:54:30.687Z",
+        "usage": {
+          "input": 1876,
+          "output": 4541,
+          "reasoning": 4219
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:54:34.595Z",
+        "usage": {
+          "input": 2100,
+          "output": 293,
+          "reasoning": 255
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:54:58.856Z",
+        "usage": {
+          "input": 6021,
+          "output": 3570,
+          "reasoning": 0
+        }
+      },
+      {
+        "step": "s0-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:55:48.128Z",
+        "usage": {
+          "input": 7002,
+          "output": 8188,
+          "reasoning": 7864
+        }
+      },
+      {
+        "step": "s0-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.7-flash",
+        "billing": "subscription",
+        "at": "2026-10-11T06:56:40.198Z",
+        "usage": {
+          "input": 5955,
+          "output": 8188,
+          "reasoning": 7861
+        }
+      }
+    ]
+  }
+}

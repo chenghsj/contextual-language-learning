@@ -1,0 +1,34 @@
+{
+  "case": "fr-location-transfer-variant-automatic",
+  "document": "batch-1/fr-location-transfer-variant-automatic/videos/fr-location-transfer-variant-automatic--93b824faf45a7df0/7431d121-cba6-48b5-8ef6-66cf948c45cb.json",
+  "documentHash": "25a4fe8bfff93790456581988870ce3b0a3914ae0387db56ab3befbad1d331b0",
+  "reviewer": "Same unblinded Codex source/editorial reviewer; not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "All source translations, contexts, unit meanings/chunks, points, source citations, invented examples and available written readings",
+      "result": "All source turns remain separate and source-grounded; appeler retains telephone/calling alternatives. Complete Latin words appear in every point/form citation. The generated examples preserve actors and tasks. The old dehors citation is absent, so that exact generative target is not exercised."
+    }
+  ],
+  "targets": [
+    {
+      "target": "complete_latin_citations",
+      "result": "passed"
+    },
+    {
+      "target": "old_dehors_point_boundary",
+      "result": "not_exercised",
+      "reason": "The new document does not cite dehors in a point/form. The exact old 31/32 boundary is covered separately by the deterministic regression test."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "temporal_scope_precision",
+      "path": "/points/0/explanation",
+      "quote": "被另一突發事件打斷或恰好重合",
+      "description": "The explanation mentions interruption as well as coincidence. Its explicit alternative avoids asserting necessary interruption, so this is not rejected. Prefer stating the timing relation first and qualifying any interruption as a contextual possibility; the subtitles do not establish cancellation."
+    }
+  ],
+  "boundary": "One fresh output per frozen case. Missing optional teaching targets/readings do not count as exercised. No stability/causal estimate, actual audio, installed Host, real Chrome/video or learning-effect acceptance."
+}

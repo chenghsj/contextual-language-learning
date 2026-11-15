@@ -61,15 +61,15 @@ export function LibraryErrorNotice({
     >
       <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
       <div className="min-w-0 flex-1">
-        <h3 id={titleId} className="text-sm font-medium leading-5">
+        <h3 id={titleId} className="text-ui-heading font-semibold">
           {authExpired ? ui.authTitle : ui.title}
         </h3>
         {account && (
-          <p className="mt-1 text-sm leading-5 wrap-anywhere" data-ui="library-error-account">
+          <p className="mt-1 text-ui-body wrap-anywhere" data-ui="library-error-account">
             {ui.account.replace("{account}", account.email ?? account.id)}
           </p>
         )}
-        <p className="mt-1 text-xs leading-5 text-foreground/80">
+        <p className="mt-1 text-ui-body text-foreground/80">
           {authExpired ? ui.authDescription : ui.description}
           {hasLocalContent && <> {ui.localAvailable}</>}
         </p>
@@ -106,7 +106,7 @@ export function LibraryErrorNotice({
           </Button>
         </div>
         {(reconnectError || accountMismatch) && (
-          <p role="status" className="mt-2 text-xs leading-5 wrap-anywhere">
+          <p role="status" className="mt-2 text-ui-body wrap-anywhere">
             {accountMismatch
               ? ui.accountMismatch
                   .replace("{actual}", accountMismatch.actual.email)

@@ -2,8 +2,39 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
 import { document } from "../../dev/reader-fixture";
-import { getDocument, request } from "./host-client";
+import { getDocument, getJobPreview, request } from "./host-client";
 import { testRuntime } from "./test-runtime";
+test("a partial reader binds metadata to the document and requires explicit preview info", async () => {
+  const app = testRuntime(),
+    pending = getJobPreview(document.id, app.runtime),
+    port = app.ports[0];
+  const id = port.sent[0].id;
+  port.receive({
+    id,
+    type: "job",
+    job: {
+      id: document.id,
+      sourceTitle: "Preview",
+      provider: "openai",
+      createdAt: document.createdAt,
+      updatedAt: document.createdAt,
+      completed: 1,
+      total: 4,
+      previewRevision: 2,
+      selectedSceneCount: 4,
+      readySceneIds: document.sections.map(s => s.id),
+      status: "running",
+    },
+  });
+  assert.equal(port.closed, false);
+  port.receive({ id, type: "result", document });
+  assert.equal((await pending).info.revision, 2);
+  assert.equal(port.closed, true);
+  const invalid = getJobPreview(document.id, app.runtime),
+    other = app.ports[1];
+  other.receive({ id: other.sent[0].id, type: "result", document });
+  await assert.rejects(invalid, /revision/);
+});
 
 test("typed requests filter IDs, use declared replies and close after success or failure", async () => {
   const app = testRuntime();

@@ -1,0 +1,195 @@
+Window: "擴充功能", App: Google Chrome.
+0 標準視窗 擴充功能 - 已固定 - Google Chrome - Shawn, URL: chrome://extensions/, Secondary Actions: Raise
+	1 container 擴充功能 - 已固定 - Google Chrome - Shawn, URL: chrome://extensions/
+		2 container
+			3 工具列
+				4 按鈕 (disabled) 返回
+				5 按鈕 (disabled) 往前
+				6 按鈕 重新載入
+				7 container
+					8 彈出式按鈕 Chrome
+					9 文字欄位 (settable) 網址與搜尋列, Value: chrome://extensions, Placeholder: 問問 Google 或輸入網址
+					10 按鈕 將此分頁加入書籤
+				11 container
+					12 彈出式按鈕 開啟 Stream Danmaku 設定
+					13 彈出式按鈕 開啟 Contextual Language Learning
+					14 彈出式按鈕 Shortcut Override
+					15 彈出式按鈕 擴充功能
+					16 按鈕 關閉側邊面板
+				17 按鈕 Shawn
+				18 彈出式按鈕 Chrome
+			19 container
+				20 捲動區
+					21 HTML 內容 擴充功能, URL: chrome://extensions/
+						22 container
+							23 標題 擴充功能, Value: 1
+								24 文字 擴充功能
+							25 搜尋文字欄位 (settable) 搜尋擴充功能
+							26 文字 開發人員模式
+							27 切換 開發人員模式, Value: on
+							28 container
+								29 按鈕 載入未封裝項目
+								30 按鈕 封裝擴充功能
+								31 按鈕 更新, Help: 立即更新擴充功能
+						32 container
+							33 container
+								34 選單 Secondary Actions: Cancel
+									35 我的擴充功能
+										36 文字 我的擴充功能
+									37 鍵盤快速鍵
+										38 文字 鍵盤快速鍵
+								39 文字 想使用 AI 程式設計代理建構擴充功能嗎？請安裝 
+								40 link Chrome Extensions和 Chrome Web Store skill, Value: developer.chrome.com/docs/extensions/ai/build-with-ai?utm_source=ext_sidebar&hl=zh-TW#modern_web_guidance
+								41 文字 ，讓程式設計代理掌握最新的 API 更新資訊與最佳做法。
+								42 container
+									43 文字 前往 
+									44 link Chrome 線上應用程式商店, Value: chromewebstore.google.com/category/extensions?utm_source=ext_sidebar&hl=zh-TW
+									45 文字  探索更多擴充功能和主題
+							46 container (showing 0-100 of 101 items)
+								47 標題 所有擴充功能 將新的擴充功能固定到工具列 將新的擴充功能固定到工具列, Value: 2
+									48 text 所有擴充功能 將新的擴充功能固定到工具列
+									49 切換 將新的擴充功能固定到工具列, Value: on
+								50 影像 未封裝擴充功能
+								51 標題 Contextual Language Learning, Value: 3
+									52 文字 Contextual Language Learning
+								53 text 0.1.0 使用 AI 從影片字幕建立學習內容：情境教材、摘要、詞彙與自訂 Prompt，並回到影片練習。 ID：jomemfmpgjbfcdajpkcgicannlehmijm
+								54 按鈕 詳細資料
+								55 按鈕 移除
+								56 切換 關閉, Value: off
+								57 影像 未封裝擴充功能
+								58 標題 Contextual Language Learning (Dev), Value: 3
+									59 文字 Contextual Language Learning (Dev)
+								60 text 0.1.0 使用 AI 從影片字幕建立學習內容：情境教材、摘要、詞彙與自訂 Prompt，並回到影片練習。 ID：agkdfdbgkoeooffhfkonpdkgfeldjifi 偵錯頁面
+								61 連結 Service Worker,, Help: Service Worker
+									62 文字 Service Worker,
+								63 連結  還有 1 個畫面…
+									64 文字 還有 1 個畫面…
+								65 按鈕 詳細資料
+								66 按鈕 移除
+								67 按鈕 錯誤
+								68 按鈕 重新載入
+								69 切換 開啟，擴充功能已啟用, Value: on
+								70 影像 未封裝擴充功能
+								71 標題 Shortcut Override for Netflix, Value: 3
+									72 文字 Shortcut Override for Netflix
+								73 text 0.6.4 自訂 Netflix 播放快捷鍵。非官方擴充功能，與 Netflix 無關。 ID：glnfldecggfgnjjhclkbcikogdonigcf 偵錯頁面
+								74 連結 Service Worker (無法使用)
+									75 文字 Service Worker (無法使用)
+								76 按鈕 詳細資料
+								77 按鈕 移除
+								78 按鈕 重新載入
+								79 切換 開啟，擴充功能已啟用, Value: on
+								80 影像 未封裝擴充功能
+								81 標題 Stream Danmaku, Value: 3
+									82 文字 Stream Danmaku
+								83 text 1.6.5 在 Netflix 觀看時間同步彈幕，並從側邊欄瀏覽留言。 ID：kdiacdhfefjobidmfgjfnemcihgkejhc 偵錯頁面
+								84 連結 Service Worker (無法使用)
+									85 文字 Service Worker (無法使用)
+								86 按鈕 詳細資料
+								87 按鈕 移除
+								88 按鈕 重新載入
+								89 切換 開啟，擴充功能已啟用, Value: on
+								90 影像 未封裝擴充功能
+								91 標題 影片倍速快捷鍵, Value: 3
+									92 文字 影片倍速快捷鍵
+								93 text 0.3.4 使用自訂快捷鍵，在各個網站上控制 HTML5 影片播放速度。 ID：ggibejoplhgbnofhndphfnpildhelkno
+								94 按鈕 詳細資料
+								95 按鈕 移除
+								96 切換 關閉, Value: off
+								97 影像 由第三方新增
+								98 標題 Adobe Acrobat：PDF 編輯、轉換、簽署工具, Value: 3
+									99 文字 Adobe Acrobat：PDF 編輯、轉換、簽署工具
+								100 text 26.10.1.0 使用 Adobe Acrobat PDF 工具在 Google Chrome 中完成更多工作。檢視、填寫、加註、簽署，以及嘗試轉換和壓縮等工具。 ID：efaidnbmnnnibpcajpcglclefindmkaj 偵錯頁面
+								101 連結 Service Worker,, Help: Service Worker
+									102 文字 Service Worker,
+								103 連結  還有 1 個畫面…
+									104 文字 還有 1 個畫面…
+								105 按鈕 詳細資料
+								106 按鈕 移除
+								107 切換 開啟，擴充功能已啟用, Value: on
+								108 標題 ChatGPT, Value: 3
+									109 文字 ChatGPT
+								110 text 1.26.1015.10801 Control your browser with ChatGPT. ID：hehggadaopoacecdllhhajmbjkdcmajg 偵錯頁面
+								111 連結 Service Worker
+									112 文字 Service Worker
+								113 按鈕 詳細資料
+								114 按鈕 移除
+								115 切換 開啟，擴充功能已啟用, Value: on
+								116 標題 Google 文件離線版, Value: 3
+									117 文字 Google 文件離線版
+								118 text 1.111.1 即使在離線狀態下，也能編輯、建立及瀏覽文件、試算表和簡報。 ID：ghbmnnjooekpmoecnnnilnnbdlolhkhi 偵錯頁面
+								119 連結 Service Worker (無法使用)
+									120 文字 Service Worker (無法使用)
+								121 按鈕 詳細資料
+								122 按鈕 移除
+								123 切換 開啟，擴充功能已啟用, Value: on
+								124 標題 Language Reactor, Value: 3
+									125 文字 Language Reactor
+								126 text 6.0.1 透過觀看您正在學習的語言的電影和影集，有效且愉快地提升您的語言能力。 ID：hoombieeljmmljlkjmnheibnpciblicm
+								127 按鈕 詳細資料
+								128 按鈕 移除
+								129 切換 關閉, Value: off
+								130 影像 由第三方新增
+								131 標題 雲端硬碟應用程式啟動器 (由 Google 提供), Value: 3
+									132 文字 雲端硬碟應用程式啟動器 (由 Google 提供)
+								133 text 3.10 使用電腦上安裝的相容應用程式直接開啟瀏覽器中的雲端硬碟檔案。 ID：lmjegmlicamnimmfhcmpkclmigmmcbeh 偵錯頁面
+								134 連結 Service Worker (無法使用)
+									135 文字 Service Worker (無法使用)
+								136 按鈕 詳細資料
+								137 按鈕 移除
+			138 捲動區
+				139 HTML 內容 AI-powered Contextual Language Learning, URL: chrome-extension://agkdfdbgkoeooffhfkonpdkgfeldjifi/sidepanel.html
+					140 container
+						141 container
+							142 container 通知
+							143 container 建立內容
+								144 按鈕 使用目前影片
+						145 container 活動
+							146 container
+								147 標題 活動, Value: 2
+									148 文字 活動
+								149 按鈕 關閉
+							150 container 活動
+								151 container
+									152 下拉式方塊 (settable) 篩選任務, Value: 全部任務
+										153 文字 全部任務
+									154 按鈕 重新整理任務
+									155 標題 紀錄, Value: 3
+										156 文字 紀錄
+									157 標題 今天, Value: 3
+										158 文字 今天
+									159 標題 en-US-G 已取消下載申請 Siri 聲音下載 · 英文（美國）, Value: 3
+										160 按鈕 en-US-G 已取消下載申請 Siri 聲音下載 · 英文（美國）
+									161 標題 en-US-G 已取消下載申請 Siri 聲音下載 · 英文（美國）, Value: 3
+										162 按鈕 en-US-G 已取消下載申請 Siri 聲音下載 · 英文（美國）
+									163 標題 Nora 已下載 Siri 聲音下載 · 英文（美國）, Value: 3
+										164 按鈕 Nora 已下載 Siri 聲音下載 · 英文（美國）
+									165 按鈕 顯示其餘 6 筆
+									166 按鈕 清除已結束的下載紀錄
+									167 按鈕 清除所有已結束紀錄
+			168 滑桿 側邊面板大小調整控點 (可拖曳), Secondary Actions: Decrement, Increment
+			169 container
+				170 文字 Contextual Language Learning (Dev)
+				171 註記框 從工具列中取消固定, Value: 1
+				172 按鈕 關閉側邊面板
+			173 彈出式按鈕 分頁搜尋
+			174 container
+				175 標籤頁群組
+					176 標籤頁 (selected, settable, boolean) 擴充功能 - 已固定, Value: on
+			177 按鈕 新分頁
+	178 關閉按鈕
+	179 全螢幕按鈕 Help: 此按鈕也有可縮放視窗的動作, Secondary Actions: 縮放視窗
+	180 縮到最小按鈕
+181 menu bar
+	182 Chrome
+	183 檔案
+	184 編輯
+	185 顯示方式
+	186 瀏覽記錄
+	187 書籤
+	188 設定檔
+	189 分頁
+	190 視窗
+	191 輔助說明
+
+The focused UI element is 25 搜尋文字欄位 (settable) 搜尋擴充功能

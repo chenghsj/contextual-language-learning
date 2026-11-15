@@ -35,7 +35,7 @@ async function assertSheetMotion(page, state, reduced) {
     assert.equal(styles.name, "none");
   } else {
     assert.equal(styles.name, state === "open" ? "enter" : "exit");
-    assert.equal(styles.duration, state === "open" ? "0.5s" : "0.3s");
+    assert.equal(styles.duration, state === "open" ? "0.32s" : "0.24s");
     assert.equal(styles.direction, "100%");
     const overlay = await page
       .locator(`[data-slot="sheet-overlay"][data-state="${state}"]`)
@@ -96,7 +96,7 @@ try {
       await page.getByRole("dialog").getByRole("button", { name: "完成", exact: true }).click();
       await editor.getByRole("textbox", { name: "搜尋字幕", exact: true }).fill("Edited caption");
       assert.equal(await editor.locator("ol li").count(), 1);
-      await editor.getByRole("button", { name: "← 影片", exact: true }).click();
+      await editor.getByRole("button", { name: "返回影片", exact: true }).click();
       await page.getByRole("button", { name: "重新取得", exact: true }).click();
       await page
         .getByRole("dialog")
@@ -107,7 +107,7 @@ try {
       await page.locator('[data-ui="subtitleState"][data-state="ready"]').waitFor();
       await page.getByRole("button", { name: "預覽字幕", exact: true }).click();
       assert.match(await editor.innerText(), /Edited caption retained on reopen/);
-      await editor.getByRole("button", { name: "← 影片", exact: true }).click();
+      await editor.getByRole("button", { name: "返回影片", exact: true }).click();
       await page.getByRole("button", { name: "下一步", exact: true }).click();
       await page.getByRole("tab", { name: "自訂 Markdown", exact: true }).click();
       await page
@@ -119,16 +119,25 @@ try {
         await page.getByRole("textbox", { name: "Prompt", exact: true }).inputValue(),
         "Test retained prompt.",
       );
+      await page.getByRole("button", { name: "新增範本", exact: true }).click();
+      let templateDialog = page.getByRole("dialog");
+      await templateDialog.getByRole("textbox", { name: "名稱", exact: true }).fill("UX template");
+      await templateDialog.getByRole("button", { name: "儲存範本", exact: true }).click();
+      await templateDialog.waitFor({ state: "detached" });
       await page.getByRole("button", { name: "範本管理", exact: true }).click();
-      await page.getByRole("textbox", { name: "名稱", exact: true }).fill("UX template");
-      await page.getByRole("button", { name: "儲存為新範本", exact: true }).click();
-      await page.getByRole("textbox", { name: "名稱", exact: true }).fill("Renamed UX template");
-      await page.getByRole("button", { name: "完成", exact: true }).click();
-      await page.getByRole("status").filter({ hasText: "已儲存" }).waitFor();
+      await page.getByRole("button", { name: "修改 · UX template", exact: true }).click();
+      templateDialog = page.getByRole("dialog");
+      await templateDialog
+        .getByRole("textbox", { name: "名稱", exact: true })
+        .fill("Renamed UX template");
+      await templateDialog.getByRole("button", { name: "儲存變更", exact: true }).click();
+      await templateDialog.waitFor({ state: "detached" });
       await page.waitForTimeout(350);
       await page.reload();
       await page.waitForFunction(
-        () => document.querySelector('[aria-current="step"]')?.textContent === "設定",
+        () =>
+          document.querySelector('[aria-current="step"] [data-ui="create-step-label"]')
+            ?.textContent === "設定",
       );
       assert.equal(
         await page.getByRole("textbox", { name: "Prompt", exact: true }).inputValue(),
@@ -137,7 +146,9 @@ try {
       await page.getByRole("combobox", { name: "範本", exact: true }).click();
       await page.getByRole("option", { name: "Renamed UX template", exact: true }).click();
       await page.getByRole("button", { name: "範本管理", exact: true }).click();
-      await page.getByRole("button", { name: "刪除", exact: true }).click();
+      await page.getByRole("button", { name: "刪除 · Renamed UX template", exact: true }).click();
+      await page.getByRole("dialog").getByRole("button", { name: "刪除", exact: true }).click();
+      await page.getByRole("dialog").waitFor({ state: "detached" });
       assert.equal(
         await page.getByRole("textbox", { name: "Prompt", exact: true }).inputValue(),
         "Test retained prompt.",
@@ -158,6 +169,7 @@ try {
       await assertSheetMotion(page, "open", height === 320);
       assert.equal(Math.round((await sheet.boundingBox()).width), Math.min(width, 400));
       await sheet.getByRole("button", { name: /^AI 與模型/ }).click();
+      await sheet.getByRole("button", { name: "帳號登入", exact: true }).click();
       await sheet.getByRole("button", { name: /OpenAI/ }).click();
       const row = sheet
         .locator("[data-ui=piSettings] section")
@@ -175,7 +187,10 @@ try {
         await page.locator("#header-settings").evaluate(el => el === document.activeElement),
         true,
       );
-      assert.equal(await wizard.locator("[aria-current=step]").innerText(), "建立");
+      assert.equal(
+        await wizard.locator("[aria-current=step] [data-ui=create-step-label]").innerText(),
+        "建立",
+      );
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
         true,
@@ -187,7 +202,10 @@ try {
       assert.equal(Math.round((await sheet.boundingBox()).width), Math.min(width, 400));
       await sheet.getByRole("button", { name: "關閉", exact: true }).click();
       await assertSheetMotion(page, "closed", height === 320);
-      assert.equal(await wizard.locator("[aria-current=step]").innerText(), "建立");
+      assert.equal(
+        await wizard.locator("[aria-current=step] [data-ui=create-step-label]").innerText(),
+        "建立",
+      );
       assert.deepEqual(errors, []);
       await page.close();
       console.log("PASS layout", width, height, theme);

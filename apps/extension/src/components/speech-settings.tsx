@@ -2,6 +2,7 @@ import React, { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { readAloudVoicesForLanguage, findSystemVoice, type SpeechSettings } from "@contextual/core";
 import type { UiLocale } from "../i18n/messages";
 import { speechCopy, speechLanguageOptions, speechSamples } from "../i18n/speech";
+import { LEARNING_LANGUAGE_SEARCH_COPY } from "../i18n/preferences";
 import { windowsNarratorCopy, windowsNarratorHelpUrl } from "../i18n/windows-narrator";
 import { useSystemSpeech, SpeechButton, SpeechStatus } from "./system-speech";
 import { SearchableSelectField } from "./searchable-select-field";
@@ -111,9 +112,9 @@ function ConnectedSpeechSettings({
       {heading}
       {isNarrator ? (
         <div className="grid min-w-0 gap-2" data-ui="windows-narrator-experimental">
-          <p className="text-ui-label font-medium">{narrator.title}</p>
-          <p className="text-ui-label leading-relaxed text-muted-foreground">{narrator.hint}</p>
-          <p className="text-ui-label leading-relaxed">{narrator.setup}</p>
+          <p className="text-ui-heading font-semibold">{narrator.title}</p>
+          <p className="text-ui-body text-muted-foreground">{narrator.hint}</p>
+          <p className="text-ui-body">{narrator.setup}</p>
           <a
             href={windowsNarratorHelpUrl}
             target="_blank"
@@ -124,7 +125,7 @@ function ConnectedSpeechSettings({
           </a>
         </div>
       ) : (
-        <p className="text-ui-label leading-relaxed text-muted-foreground">{copy.hint}</p>
+        <p className="text-ui-body text-muted-foreground">{copy.hint}</p>
       )}
       <div className="grid gap-1">
         <label htmlFor={scope + "-language"} className="text-xs">
@@ -132,7 +133,7 @@ function ConnectedSpeechSettings({
         </label>
         <div className="flex min-w-0 items-center gap-2">
           <div className="min-w-0 flex-1">
-            <SelectField
+            <SearchableSelectField
               id={scope + "-language"}
               ariaLabel={copy.language}
               value={language}
@@ -141,6 +142,7 @@ function ConnectedSpeechSettings({
                 setLanguage(value);
               }}
               options={speechLanguageOptions(locale)}
+              copy={LEARNING_LANGUAGE_SEARCH_COPY[locale]}
             />
           </div>
           {refreshButton}

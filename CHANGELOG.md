@@ -5,6 +5,7 @@ Notable user-facing changes to AI-powered Contextual Language Learning are recor
 ## [Unreleased]
 
 - Rename the product to AI-powered Contextual Language Learning and update its video-based, contextual-learning descriptions across extension metadata, UI and documentation.
+- Use Contextual Language Learning in Drive sign-in pages, Native Host descriptions, release titles and download filenames; migrate local data to the new folders while retaining recovery copies, read legacy Drive metadata and copy existing Keychain credentials on use. Reinstall the local service for the new Native Host registration.
 
 - Add user-triggered YouTube subtitle acquisition from the current watch player's available caption tracks and keep the Side Panel source in sync as active tabs change; preserve manual import as a fallback.
 

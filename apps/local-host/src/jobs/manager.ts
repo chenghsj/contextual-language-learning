@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { resolvePiModel } from "../agents/pi";
+import { BUDGET_STRATEGY_VERSION } from "../agents/thinking";
 import {
   GenerationRequestSchema,
   ExecutionIdentitySchema,
@@ -10,8 +11,10 @@ import {
   LANGUAGE_STRATEGY_VERSION,
   LEVEL_STRATEGY_VERSION,
   QUALITY_STRATEGY_VERSION,
+  COMPACT_QUALITY_STRATEGY_VERSION,
   createSceneJob,
   transitionJob,
+  compactProgress,
   type GenerationRequest,
   type JobSummary,
   type LearningDocument,
@@ -120,7 +123,7 @@ export class JobManager {
         this.deps.generateSection || this.deps.generateCandidates || this.deps.generateSelection;
       const resolved = injected
         ? { agent: request.agent, contextWindow: 128000, maxOutputTokens: 8192 }
-        : await resolvePiModel(request.agent);
+        : await (this.deps.resolveModel ?? resolvePiModel)(request.agent);
       job.execution = {
         workflowVersion: LEARNING_POINTS_WORKFLOW_VERSION,
         promptVersion: LEARNING_POINTS_PROMPT_VERSION,
@@ -137,10 +140,61 @@ export class JobManager {
         modelId: resolved.agent.modelId,
         contextWindow: resolved.contextWindow,
         maxOutputTokens: resolved.maxOutputTokens,
+        ...(resolved.agent.thinkingLevel !== undefined
+          ? {
+              effectiveThinkingLevel: resolved.agent.thinkingLevel,
+              budgetStrategyVersion: BUDGET_STRATEGY_VERSION,
+              effectiveSettingsFromCall: 0,
+            }
+          : {}),
         chunkPlan: chunkCues(request.cues).map(chunk => chunk.map(cue => cue.id)),
         calls: [],
       };
       job.summary.execution = job.execution;
+      // This gate applies only at creation; recovery always uses the saved execution.
+      if (
+        this.deps.generationStrategy === "compact-scenes-1" &&
+        (this.deps.compactAgentFilter?.(request.agent) ?? true)
+      ) {
+        job.execution.generationStrategyVersion = "compact-scenes-1";
+        job.execution.compactQualityVersion = COMPACT_QUALITY_STRATEGY_VERSION;
+        if (
+          (this.deps.compactAutomaticReasoning || this.deps.compactAutomaticSelectionReasoning) &&
+          request.agent.thinkingLevel === undefined
+        ) {
+          const light = await (this.deps.resolveModel ?? resolvePiModel)({
+            ...request.agent,
+            thinkingLevel: "low",
+          });
+          if (
+            light.agent.provider !== resolved.agent.provider ||
+            light.agent.modelId !== resolved.agent.modelId
+          )
+            throw new Error("Light-stage model differs from the frozen execution");
+          if (light.agent.thinkingLevel === undefined)
+            throw new Error("Light-stage reasoning was not resolved");
+          job.execution.compactReasoningPolicy = {
+            version: this.deps.compactAutomaticSelectionReasoning
+              ? "light-selection-1"
+              : "light-candidates-1",
+            candidate: this.deps.compactAutomaticReasoning
+              ? light.agent.thinkingLevel
+              : (resolved.agent.thinkingLevel ?? light.agent.thinkingLevel),
+            selection: this.deps.compactAutomaticSelectionReasoning
+              ? light.agent.thinkingLevel
+              : (resolved.agent.thinkingLevel ?? light.agent.thinkingLevel),
+          };
+        }
+        job.compactPlan = {
+          revision: 0,
+          windows: job.learningPlan.candidateWindows.map(w => ({ id: w.id, cueIds: w.cueIds })),
+        };
+        job.summary = {
+          ...job.summary,
+          execution: job.execution,
+          ...compactProgress(job.compactPlan, request.profile.sceneCount),
+        };
+      }
     }
     job.summary.ownerPid = process.pid;
     await this.storage.jobs.create(job);
@@ -210,6 +264,7 @@ export class JobManager {
         );
       if (job.execution && !readableLearningExecution(job.execution))
         throw new Error("Unsupported saved execution version; checkpoint is preserved.");
+      let resumedThinking: import("@contextual/core").ThinkingLevel | undefined;
       if (job.execution) {
         if (
           createHash("sha256").update(JSON.stringify(job.request)).digest("hex") !==
@@ -222,11 +277,14 @@ export class JobManager {
                 contextWindow: job.execution.contextWindow,
                 maxOutputTokens: job.execution.maxOutputTokens,
               }
-            : await resolvePiModel({
+            : await (this.deps.resolveModel ?? resolvePiModel)({
                 ...job.request.agent,
                 provider: job.execution.provider,
                 modelId: job.execution.modelId,
+                thinkingLevel:
+                  job.execution.effectiveThinkingLevel ?? job.request.agent.thinkingLevel,
               });
+        if ("agent" in pinned) resumedThinking = pinned.agent.thinkingLevel;
         if (
           pinned.contextWindow !== job.execution.contextWindow ||
           pinned.maxOutputTokens !== job.execution.maxOutputTokens ||
@@ -239,6 +297,23 @@ export class JobManager {
       }
       if (!["queued", "waiting", "failed", "cancelled"].includes(job.summary.status)) {
         throw new Error("This job cannot be resumed from status: " + job.summary.status);
+      }
+      if (
+        job.execution &&
+        job.execution.effectiveThinkingLevel === undefined &&
+        resumedThinking !== undefined
+      ) {
+        job.execution = {
+          ...job.execution,
+          effectiveThinkingLevel: resumedThinking,
+          budgetStrategyVersion: BUDGET_STRATEGY_VERSION,
+          effectiveSettingsFromCall: job.execution.calls.length,
+        };
+        await this.storage.jobs.update(jobId, current => ({
+          ...current,
+          execution: job.execution,
+          summary: { ...current.summary, execution: job.execution },
+        }));
       }
       // An explicit resume upgrades only unfinished work. Keep completed results and
       // paid call history, and record the previous identity instead of relabelling it.
@@ -279,6 +354,8 @@ export class JobManager {
             ...current.execution,
             previousExecution: ExecutionIdentitySchema.parse(current.execution),
             promptVersion: LEARNING_POINTS_PROMPT_VERSION,
+            languageStrategyVersion: LANGUAGE_STRATEGY_VERSION,
+            levelStrategyVersion: LEVEL_STRATEGY_VERSION,
             qualityStrategyVersion: QUALITY_STRATEGY_VERSION,
           };
           return {

@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-13",
+  "timezone": "Asia/Taipei",
+  "packageVersion": "0.10.0",
+  "packageIntegrity": "sha512-tY8NFT38Iq7KtNnfFEoI34+y7tW1BZRk+LxqGEeAYsINmaVrXRub9GgcZV8EMbK5xBALCCoLNDq775yi4uCtQA==",
+  "patch": "patches/pi-antigravity@0.10.0.patch",
+  "patchHash": "bd0ff22846e5665562e5a6263fb5e3000284e942bf06523c104cbba39e94bdef",
+  "protocolVersion": 12,
+  "nodeVersion": "22.20.0",
+  "packageManager": "pnpm@9.15.4 (frozen-lockfile verified)",
+  "extensionId": "agkdfdbgkoeooffhfkonpdkgfeldjifi",
+  "installedBundleHash": "9157232ada79f2c72d3fbcd0df529acc34d08a9c4387b8226ec442754ab40895",
+  "catalog": {
+    "source": "sdk",
+    "models": [
+      {
+        "id": "gemini-3.8-flash",
+        "label": "Gemini 3.8 Flash (Antigravity)",
+        "thinkingLevels": ["low", "medium", "high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gemini-3.7-flash",
+        "label": "Gemini 3.7 Flash (Antigravity)",
+        "thinkingLevels": ["low", "medium", "high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gemini-3.6-flash",
+        "label": "Gemini 3.6 Flash (Antigravity)",
+        "thinkingLevels": ["low", "medium", "high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gemini-3.5-flash",
+        "label": "Gemini 3.5 Flash (Antigravity)",
+        "thinkingLevels": ["low", "medium", "high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gemini-3.5-flash-lite",
+        "label": "Gemini 3.5 Flash Lite (Antigravity)",
+        "thinkingLevels": ["high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gemini-3.1-flash-lite",
+        "label": "Gemini 3.1 Flash Lite (Antigravity)",
+        "thinkingLevels": ["high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gemini-3-flash",
+        "label": "Gemini 3 Flash (Antigravity)",
+        "thinkingLevels": ["high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gemini-2.5-flash",
+        "label": "Gemini 3.5 Flash Lite (Antigravity)",
+        "thinkingLevels": ["high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gemini-2.5-flash-lite",
+        "label": "Gemini 3.5 Flash Lite (Antigravity)",
+        "thinkingLevels": ["high"],
+        "availability": "listed"
+      },
+      {
+        "id": "claude-opus-5-5",
+        "label": "Claude Opus 5.5 (Antigravity)",
+        "thinkingLevels": ["low", "medium", "high"],
+        "availability": "listed"
+      },
+      {
+        "id": "claude-sonnet-5-5",
+        "label": "Claude Sonnet 5.5 (Antigravity)",
+        "thinkingLevels": ["low", "medium", "high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gemini-3.1-pro",
+        "label": "Gemini 3.1 Pro (Antigravity)",
+        "thinkingLevels": ["low", "high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gemini-2.5-pro",
+        "label": "Gemini 2.5 Pro (Antigravity)",
+        "thinkingLevels": ["high"],
+        "availability": "listed"
+      },
+      {
+        "id": "gpt-oss-120b",
+        "label": "Gpt-Oss 120b (Antigravity)",
+        "thinkingLevels": ["medium"],
+        "availability": "listed"
+      }
+    ]
+  },
+  "evidenceBoundary": "Authenticated catalog lookup and installed stdio smoke; no paid inference, no actual Chrome acceptance."
+}

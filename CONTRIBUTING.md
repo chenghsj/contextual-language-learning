@@ -7,8 +7,8 @@ Contributions to AI-powered Contextual Language Learning are welcome. Start with
 Requirements: Node.js 22+, pnpm 9, Chromium-based browser. The Native Messaging installer supports macOS, Windows and Linux; Windows additionally requires Windows PowerShell 5.1 and .NET Framework, while Linux folder selection needs zenity or kdialog. Connect a supported Pi provider only when manually testing AI generation.
 
 ```sh
-git clone https://github.com/chenghsj/immersive-language-learning.git
-cd immersive-language-learning
+git clone https://github.com/chenghsj/contextual-language-learning.git
+cd contextual-language-learning
 corepack enable
 corepack prepare pnpm@9.15.4 --activate
 pnpm install
@@ -21,6 +21,8 @@ pnpm package:release
 Use a branch based on current `main` for each contribution. npm/yarn installs are blocked by `preinstall` because this is a pnpm workspace. The Extension is in apps/extension, Host in apps/local-host, and V4 lesson, job and Native Messaging contracts plus subtitle utilities are in packages/core. Load apps/extension/dist with chrome://extensions > Developer mode > Load unpacked. See README for your OS Host installer and the --browser option for Edge/Chromium. Do not commit generated dist/, release-assets/, npm/yarn lockfiles, credentials, OAuth tokens, downloaded videos or imported subtitles.
 
 ## Interface components
+
+Read [the product-wide UI standards](DESIGN.md) before changing any screen. They cover typography roles, spacing, page layouts, control sizes and the migration status across Create, Library, readers, Settings, Activity, editors and overlays. Reuse typography tokens in `apps/extension/src/styles.css`; document justified exceptions instead of inventing page-specific sizes.
 
 Use the project's shadcn `new-york` components for shared controls. Keep their default styles and variants intact; usage-level sizing and layout may adapt to the Side Panel. Use Popover + Command for searchable choices, Alert for persistent field feedback, and Sonner for transient notifications. Do not add custom modal pickers, hover colors, popup positioning, or toast appearance. Preserve the existing semantic light/dark theme tokens.
 

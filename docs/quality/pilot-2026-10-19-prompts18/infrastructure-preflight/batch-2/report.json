@@ -1,0 +1,38 @@
+[
+  {
+    "case": "es-report-transfer-variant-automatic",
+    "status": "failed",
+    "error": "ModelsError: Credential store read failed for antigravity: EPERM: operation not permitted, mkdir '/Users/cheng/Library/Application Support/Contextual Language Learning/pi/auth.json.lock'",
+    "durationMs": 13
+  },
+  {
+    "case": "fr-location-transfer-variant-automatic",
+    "status": "failed",
+    "error": "ModelsError: Credential store read failed for antigravity: EPERM: operation not permitted, mkdir '/Users/cheng/Library/Application Support/Contextual Language Learning/pi/auth.json.lock'",
+    "durationMs": 1
+  },
+  {
+    "case": "it-pronoun-transfer-variant-automatic",
+    "status": "failed",
+    "error": "ModelsError: Credential store read failed for antigravity: EPERM: operation not permitted, mkdir '/Users/cheng/Library/Application Support/Contextual Language Learning/pi/auth.json.lock'",
+    "durationMs": 1
+  },
+  {
+    "case": "vi-heading-transfer-variant-automatic",
+    "status": "failed",
+    "error": "ModelsError: Credential store read failed for antigravity: EPERM: operation not permitted, mkdir '/Users/cheng/Library/Application Support/Contextual Language Learning/pi/auth.json.lock'",
+    "durationMs": 3
+  },
+  {
+    "case": "zh-TW-example-action-transfer-variant-automatic",
+    "status": "failed",
+    "error": "ModelsError: Credential store read failed for antigravity: EPERM: operation not permitted, mkdir '/Users/cheng/Library/Application Support/Contextual Language Learning/pi/auth.json.lock'",
+    "durationMs": 1
+  },
+  {
+    "case": "ja-normal-transfer-automatic",
+    "status": "failed",
+    "error": "ModelsError: Credential store read failed for antigravity: EPERM: operation not permitted, mkdir '/Users/cheng/Library/Application Support/Contextual Language Learning/pi/auth.json.lock'",
+    "durationMs": 1
+  }
+]

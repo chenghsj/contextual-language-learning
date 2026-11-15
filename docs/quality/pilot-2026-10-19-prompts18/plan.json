@@ -1,0 +1,66 @@
+{
+  "createdAt": "2026-10-19T02:30:09.635Z",
+  "beforeInference": true,
+  "caseCount": 12,
+  "groups": {
+    "previouslyRejected": 5,
+    "newAuthoredVariants": 5,
+    "controls": 2
+  },
+  "source": "Five known failures, five newly authored variants, two accepted controls. Variants are designed by the same reviewer; not a held-out or blind benchmark.",
+  "execution": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium",
+    "wholeCaseRuns": 1,
+    "maxConcurrentCases": 2,
+    "timeoutMs": 600000,
+    "fallback": false
+  },
+  "criteria": [
+    {
+      "id": "structure_identity_source",
+      "method": "deterministic",
+      "rule": "Validate document schema, exact original cues/profile, pinned versions/provider/model and request identity."
+    },
+    {
+      "id": "coverage",
+      "method": "deterministic",
+      "rule": "Require all four cue IDs selected for these focused checks. If selection omits the target, report not exercised; do not label the output a semantic success."
+    },
+    {
+      "id": "source_contract",
+      "method": "editorial",
+      "rule": "Titles and contexts contain only supported topics/events; unlabelled reports do not establish identity across turns. Ordinary contextual possibilities are not impossible language; evaluate against the explicit product contract."
+    },
+    {
+      "id": "contextual_chunks",
+      "method": "editorial",
+      "rule": "When optional chunks are emitted, their meaning must fit this source. A complete correct translation does not override an incorrect clickable gloss. Omission of optional chunks is allowed and reported as not exercising that optional feature."
+    },
+    {
+      "id": "rule_scope",
+      "method": "editorial",
+      "rule": "Teach the local source construction. If a rule is generalized, state essential limits; Italian gli attachment must not acquire a doubled g and mi must not become a universal -mm- rule. Not every lesson must teach morphology."
+    },
+    {
+      "id": "example_action",
+      "method": "editorial",
+      "rule": "Each invented situation describes the actors/actions/time in its own dialogue; yes/no responses and target utterance stay consistent."
+    },
+    {
+      "id": "uncertainty",
+      "method": "editorial",
+      "rule": "Preserve exact unknown fragments with local uncertainty markers; do not teach unknown text or invent a reading. Do not require Chinese 他 to assert male identity."
+    }
+  ],
+  "verdicts": ["passed", "failed", "needs_review", "not_exercised", "generation_failed"],
+  "acceptance": "Generated, structure/identity/source/coverage passed and no blocking or pending editorial finding. Score is a fixed-case editorial result, not general correctness.",
+  "stoppingRule": "No whole-case reruns or mid-run source changes to improve the result. Preserve failures; internal canonical structural repairs remain observable.",
+  "limits": [
+    "Same unblinded Codex reviewer; sources support specific linguistic facts, not independent certification.",
+    "No prior prompts-17 acceptances will be pooled with prompts-18 to claim a full 28-case pass.",
+    "Simplified Chinese dispute remains pending outside this set. French unclear-source candidate selection is a separate coverage design issue.",
+    "No installed Host update or personal Chrome, real video, audio or learning-effect acceptance."
+  ]
+}

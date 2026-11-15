@@ -1,0 +1,827 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-20",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-5",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-3",
+    "inputFingerprint": "9fe9c685a352bb4fc7a680c9764b2dc2ca01236741d16f83d03a686011ef06bf",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T15:07:23.867Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 19921.337666,
+        "usage": {
+          "input": 2718,
+          "output": 2039,
+          "reasoning": 1729
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T15:07:29.296Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 5412.959290999999,
+        "usage": {
+          "input": 2373,
+          "output": 289,
+          "reasoning": 248
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T15:08:09.995Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 40682.41183299999,
+        "usage": {
+          "input": 4857,
+          "output": 5201,
+          "reasoning": 3979
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-20",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-5",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-3",
+      "inputFingerprint": "9fe9c685a352bb4fc7a680c9764b2dc2ca01236741d16f83d03a686011ef06bf",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "eb3b3318-7da8-4e71-aabd-0f4907534111",
+    "sourceTitle": "es-actor-recipient-variant-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-19T15:07:02.139Z",
+    "updatedAt": "2026-10-19T15:08:10.034Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "eb3b3318-7da8-4e71-aabd-0f4907534111"
+  },
+  "request": {
+    "id": "eb3b3318-7da8-4e71-aabd-0f4907534111",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "es-actor-recipient-variant-automatic"
+    },
+    "profile": {
+      "targetLanguage": "es",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Yo voy a pedir que nos envíen los horarios."
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Perfecto. Nosotros vamos a revisar las fechas."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Te avisaré cuando tenga una respuesta."
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Gracias."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "89c950a8-9ee9-4873-8852-c099b018572a",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "工作事項的分工與後續聯絡",
+      "context": {
+        "text": "對話包含說明將索取時間表、表示會審核日期、承諾取得回覆後主動通知，以及表達感謝。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "我會請他們把時間表寄給我們。"
+        },
+        {
+          "cueId": "c2",
+          "text": "太好了。我們會審查日期。"
+        },
+        {
+          "cueId": "c3",
+          "text": "等我收到回覆時會通知你。"
+        },
+        {
+          "cueId": "c4",
+          "text": "謝謝。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "ef61639c-a51b-43d0-9fbc-ba650cd27ccf",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "89c950a8-9ee9-4873-8852-c099b018572a:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:c1_k1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 9,
+                  "end": 29
+                }
+              ],
+              "meaning": "請他們寄給我們"
+            },
+            {
+              "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:c1_k2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 30,
+                  "end": 42
+                }
+              ],
+              "meaning": "時間表"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 43
+            }
+          ]
+        },
+        {
+          "id": "9d6e6d69-60e4-4fea-9ca9-ea7f6b3855f6",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 46
+            }
+          ]
+        },
+        {
+          "id": "9d854915-10f5-4b43-96b4-3998756fb6e4",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "89c950a8-9ee9-4873-8852-c099b018572a:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:c3_k1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 10
+                }
+              ],
+              "meaning": "我會通知你"
+            },
+            {
+              "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:c3_k2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 11,
+                  "end": 37
+                }
+              ],
+              "meaning": "等我有回覆的時候"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 38
+            }
+          ]
+        },
+        {
+          "id": "f6789be8-1546-4499-907e-c9f696e63fad",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 8
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "89c950a8-9ee9-4873-8852-c099b018572a",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "ef61639c-a51b-43d0-9fbc-ba650cd27ccf",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 43
+                  }
+                ]
+              },
+              {
+                "id": "9d6e6d69-60e4-4fea-9ca9-ea7f6b3855f6",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 46
+                  }
+                ]
+              },
+              {
+                "id": "9d854915-10f5-4b43-96b4-3998756fb6e4",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 38
+                  }
+                ]
+              },
+              {
+                "id": "f6789be8-1546-4499-907e-c9f696e63fad",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 8
+                  }
+                ]
+              }
+            ],
+            "learningValue": "這段對話展示日常協調與分工的常見句型，涵蓋「pedir que + 虛擬式」表達請求、「cuando + 虛擬式」引導將來時間子句，以及用「ir a + 原形動詞」說明打算進行的行動。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "學習「pedir que + 虛擬現在式（envíen）」表達向他人提出請求的用法"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "學習主要子句為未來式時，時間副詞子句以「cuando + 虛擬式（tenga）」表示尚未發生的將來時間"
+              },
+              {
+                "category": "chunks",
+                "sourceCueIds": [
+                  "c1",
+                  "c2"
+                ],
+                "description": "學習「ir a + 原形動詞」（voy a pedir、vamos a revisar）表達近程計畫與分工協調"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "89c950a8-9ee9-4873-8852-c099b018572a",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "ef61639c-a51b-43d0-9fbc-ba650cd27ccf",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 43
+              }
+            ]
+          },
+          {
+            "id": "9d6e6d69-60e4-4fea-9ca9-ea7f6b3855f6",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 46
+              }
+            ]
+          },
+          {
+            "id": "9d854915-10f5-4b43-96b4-3998756fb6e4",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 38
+              }
+            ]
+          },
+          {
+            "id": "f6789be8-1546-4499-907e-c9f696e63fad",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 8
+              }
+            ]
+          }
+        ],
+        "learningValue": "這段對話展示日常協調與分工的常見句型，涵蓋「pedir que + 虛擬式」表達請求、「cuando + 虛擬式」引導將來時間子句，以及用「ir a + 原形動詞」說明打算進行的行動。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "學習「pedir que + 虛擬現在式（envíen）」表達向他人提出請求的用法"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "學習主要子句為未來式時，時間副詞子句以「cuando + 虛擬式（tenga）」表示尚未發生的將來時間"
+          },
+          {
+            "category": "chunks",
+            "sourceCueIds": [
+              "c1",
+              "c2"
+            ],
+            "description": "學習「ir a + 原形動詞」（voy a pedir、vamos a revisar）表達近程計畫與分工協調"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "89c950a8-9ee9-4873-8852-c099b018572a",
+        "utteranceIds": [
+          "ef61639c-a51b-43d0-9fbc-ba650cd27ccf",
+          "9d6e6d69-60e4-4fea-9ca9-ea7f6b3855f6",
+          "9d854915-10f5-4b43-96b4-3998756fb6e4",
+          "f6789be8-1546-4499-907e-c9f696e63fad"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "89c950a8-9ee9-4873-8852-c099b018572a",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "工作事項的分工與後續聯絡",
+            "context": {
+              "text": "對話包含說明將索取時間表、表示會審核日期、承諾取得回覆後主動通知，以及表達感謝。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "我會請他們把時間表寄給我們。"
+              },
+              {
+                "cueId": "c2",
+                "text": "太好了。我們會審查日期。"
+              },
+              {
+                "cueId": "c3",
+                "text": "等我收到回覆時會通知你。"
+              },
+              {
+                "cueId": "c4",
+                "text": "謝謝。"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "ef61639c-a51b-43d0-9fbc-ba650cd27ccf",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "89c950a8-9ee9-4873-8852-c099b018572a:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:c1_k1",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 9,
+                        "end": 29
+                      }
+                    ],
+                    "meaning": "請他們寄給我們"
+                  },
+                  {
+                    "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:c1_k2",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 30,
+                        "end": 42
+                      }
+                    ],
+                    "meaning": "時間表"
+                  }
+                ],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 43
+                  }
+                ]
+              },
+              {
+                "id": "9d6e6d69-60e4-4fea-9ca9-ea7f6b3855f6",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 46
+                  }
+                ]
+              },
+              {
+                "id": "9d854915-10f5-4b43-96b4-3998756fb6e4",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "89c950a8-9ee9-4873-8852-c099b018572a:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:c3_k1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 10
+                      }
+                    ],
+                    "meaning": "我會通知你"
+                  },
+                  {
+                    "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:c3_k2",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 11,
+                        "end": 37
+                      }
+                    ],
+                    "meaning": "等我有回覆的時候"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 38
+                  }
+                ]
+              },
+              {
+                "id": "f6789be8-1546-4499-907e-c9f696e63fad",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 8
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:p1",
+              "utteranceIds": [
+                "ef61639c-a51b-43d0-9fbc-ba650cd27ccf"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "pedir que 後接虛擬式表示請求",
+              "sourceCueIds": [
+                "c1"
+              ],
+              "contextCueIds": [],
+              "explanation": "動詞 pedir（請求、要求）用於要求他人做某事時，後接連接詞 que 引導的名詞子句，子句動詞必須使用虛擬式。句中子句主詞為第三人稱複數，因此動詞 enviar 變位為現在虛擬式 envíen。",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 9,
+                  "end": 29
+                }
+              ]
+            },
+            {
+              "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:p2",
+              "utteranceIds": [
+                "9d854915-10f5-4b43-96b4-3998756fb6e4"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "cuando 接虛擬式表示將來的時間副詞子句",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [],
+              "explanation": "主要子句表達未來的動作（Te avisaré）時，連接詞 cuando 引導的時間副詞子句指涉尚未發生、未確定的將來事件，子句動詞須使用虛擬式（tenga），不可使用直陳式現在式或未來式。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 11,
+                  "end": 23
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:r1",
+              "pointIds": [
+                "89c950a8-9ee9-4873-8852-c099b018572a:s0:p1"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c1"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c1",
+                      "start": 9,
+                      "end": 29
+                    }
+                  ],
+                  "text": "pedir que nos envíen"
+                }
+              ],
+              "pattern": "pedir que + [subjuntivo]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "同事之間討論向廠商索取報價單。",
+                  "dialogue": [
+                    {
+                      "text": "¿Hablaste con el proveedor sobre los precios?",
+                      "translation": "你跟廠商談過價格了嗎？"
+                    },
+                    {
+                      "text": "Todavía no, pero voy a pedir que nos manden el presupuesto hoy mismo.",
+                      "translation": "還沒，但我會請他們今天就把預算報價單寄給我們。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "pedir que nos manden"
+                }
+              ]
+            },
+            {
+              "id": "89c950a8-9ee9-4873-8852-c099b018572a:s0:r2",
+              "pointIds": [
+                "89c950a8-9ee9-4873-8852-c099b018572a:s0:p2"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 11,
+                      "end": 23
+                    }
+                  ],
+                  "text": "cuando tenga"
+                }
+              ],
+              "pattern": "cuando + [subjuntivo]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩人在討論專案報告的審核進度。",
+                  "dialogue": [
+                    {
+                      "text": "¿Cuándo podremos revisar el informe final?",
+                      "translation": "我們什麼時候能審查最終報告？"
+                    },
+                    {
+                      "text": "Lo revisaremos cuando el director apruebe el borrador.",
+                      "translation": "等主管核准草案後，我們就會審查。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "cuando el director apruebe"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

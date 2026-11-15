@@ -1,0 +1,156 @@
+{
+  "version": "editorial-reassessment-1",
+  "date": "2026-10-19",
+  "initialEvidenceCommit": "ece1cde59949017152b4255a689236c8b8dc4a4f",
+  "reviewer": "Same Codex reviewer; unblinded, not independent expert review",
+  "scope": "Eight initially unaccepted cases; fixed original outputs, no new generation or prompt change. Previously accepted cases carried forward.",
+  "initialAcceptance": "reassessment/initial-acceptance.json",
+  "initialAcceptanceHash": "d3268fb0ae1e5bf6656830026c8e013a29c72201ca9053f8e517d0d26b8e3aef",
+  "originalRubric": "review-rubric.md",
+  "originalRubricHash": "18ae0205ab4ee1c58b01578257fccb453be116f7bfed4c8ee74b8cfc598f7f98",
+  "originalCounts": {
+    "requested": 28,
+    "generated": 28,
+    "structuralPassed": 28,
+    "fixedSourcePassed": 28,
+    "identityPassed": 28,
+    "coveragePassed": 27,
+    "semanticPassed": 21,
+    "accepted": 20
+  },
+  "cases": [
+    {
+      "case": "es-uncertainty-quote-topic-automatic",
+      "originalReview": "reviews/es-uncertainty-quote-topic-automatic.json",
+      "originalReviewHash": "7384a1d16642d26678bbb2c55b78c66df7e513fb1e78168ddaa9ec42926dd96c",
+      "currentReview": "reviews/es-uncertainty-quote-topic-automatic.json",
+      "disposition": "maintained_block",
+      "basis": "source_contract",
+      "reason": "來源 dijo 可依上下文理解，但沒有說話者標籤。摘要「對其話語的引述」將引述連到 Maya，違反 prompts-17 已明定的中性摘要契約。保留契約退件；不宣稱 Maya 的解讀在自然西文對話中不可能。",
+      "counterinterpretation": "若一般語境允許省略主語承接前文，該解讀可能合理；這裡的阻擋依據是目前產品明定不連結無標籤回合的摘要契約。",
+      "references": []
+    },
+    {
+      "case": "fr-normal-transfer-automatic",
+      "originalReview": "reviews/fr-normal-transfer-automatic.json",
+      "originalReviewHash": "55e64c178fa8ce13dc91e30120b502250ca19451b814fe21edc8eeaf2963fbcd",
+      "currentReview": "reassessment/fr-normal-transfer-automatic.json",
+      "disposition": "maintained_block",
+      "basis": "dictionary_supported_contextual_judgment",
+      "reason": "完整問題是處所用法。獨立可點選 chunk 的句意「你是」不符合該處語境，保留局部教學退件；不能僅因整句譯文正確就略過局部內容。另記電話媒介的非阻擋疑慮。",
+      "counterinterpretation": "若 chunk 僅被當成詞典式形態提示，be 的通用對應可被接受；目前欄位定義為 contextual meaning，採較嚴格的來源內句意要求。這個嚴重程度不是辭典直接認證。",
+      "references": [
+        {
+          "title": "Dictionnaire de l’Académie française: être, 9e édition",
+          "url": "https://www.dictionnaire-academie.fr/article/A9E2986",
+          "checkedOn": "2026-10-19",
+          "supports": "III.A 列 être ici/là 的處所用法，支持在該來源語境中使用處所句意；是否以錯誤局部句意阻擋接受仍屬編輯判斷。"
+        },
+        {
+          "title": "Dictionnaire de l’Académie française: appeler, 9e édition",
+          "url": "https://www.dictionnaire-academie.fr/article/A9A2203",
+          "checkedOn": "2026-10-19",
+          "supports": "II.1 同列呼喚與電話聯絡義；孤立的 appeler 未唯一確立電話媒介，也不能據此斷言電話解讀必錯。"
+        }
+      ]
+    },
+    {
+      "case": "fr-uncertainty-quote-topic-automatic",
+      "originalReview": "reviews/fr-uncertainty-quote-topic-automatic.json",
+      "originalReviewHash": "35774114f0b7d3de42d9b2dbbc7603433ab945ada8e8a699fcd802a69c9d0e37",
+      "currentReview": "reviews/fr-uncertainty-quote-topic-automatic.json",
+      "disposition": "coverage_only",
+      "basis": "fixed_test_coverage",
+      "reason": "c3/c4 完整保留於 cues，但沒有進入選出的教學 sections，因此未測到不明片段處理。保留固定測試覆蓋失敗，不新增語言錯誤。",
+      "counterinterpretation": "候選選擇本來可以只選有學習價值的段落。此結果揭露測試未覆蓋風險，不能直接當成候選選擇功能故障或字幕遺失。",
+      "references": []
+    },
+    {
+      "case": "it-uncertainty-quote-topic-automatic",
+      "originalReview": "reviews/it-uncertainty-quote-topic-automatic.json",
+      "originalReviewHash": "49706a6d9a4a6de4c9a8141e8473f1045f1aae1a05508ee266293f02c927c86d",
+      "currentReview": "reviews/it-uncertainty-quote-topic-automatic.json",
+      "disposition": "maintained_block",
+      "basis": "reference_supported_rule_scope",
+      "reason": "局部 di’ + mi → dimmi 正確；完整解釋卻把「單音節強讀動詞命令式在接附代名詞時」寫成不限代詞的規則，甚至一律寫為 -mm-。Treccani 的 gli 例外反駁這個一般化範圍，保留教學規則退件。",
+      "counterinterpretation": "B1 的單一 dimmi 例子不需要列出所有例外；如果只描述這個 mi 的結合即可接受。阻擋的是寫成普遍規則，不是因為沒有列出完整文法表。",
+      "references": [
+        {
+          "title": "Treccani: Pronomi personali",
+          "url": "https://www.treccani.it/enciclopedia/pronomi-personali_(La-grammatica-italiana)/",
+          "checkedOn": "2026-10-19",
+          "supports": "短命令式結合代詞的字首子音雙寫規則有例外，條目對照 dimmelo 與 diglielo。這支持規則須限縮；阻擋嚴重程度仍屬編輯判斷。"
+        }
+      ]
+    },
+    {
+      "case": "th-uncertainty-quote-topic-automatic",
+      "originalReview": "reviews/th-uncertainty-quote-topic-automatic.json",
+      "originalReviewHash": "7b788569cd5d4973ad8ac49f260f149bc86f3a9c4d9b40d5a1c25204091491fd",
+      "currentReview": "reassessment/th-uncertainty-quote-topic-automatic.json",
+      "disposition": "withdrawn_block",
+      "basis": "insufficient_original_inference",
+      "reason": "撤回以「他說」字形直接推定新增男性身份的錯誤。泰文資料證明 เขา 不限定男女，並不能證明這個中文第三人稱譯法必然宣稱男性；中文辭典也保留泛指用法。原紀錄沒有指出其他明示男性的詞句。保留既有讀音標記警告，AI 編輯判定改為通過。",
+      "counterinterpretation": "可偏好更明確的中性文案，但偏好不等於實質翻譯錯誤；本次撤回不認證所有語境下的他都沒有性別暗示。",
+      "references": [
+        {
+          "title": "教育部重編國語辭典修訂本：他",
+          "url": "https://dict.revised.moe.edu.tw/dictView.jsp?ID=2423&q=1&word=%E4%BB%96",
+          "checkedOn": "2026-10-19",
+          "supports": "釋為你我以外的第三人，未將該字的所有用法限定為男性；不能單憑字形證明此譯文新增男性身份。"
+        },
+        {
+          "title": "漢典：他",
+          "url": "https://zdic.net/hant/%E4%BB%96",
+          "checkedOn": "2026-10-19",
+          "supports": "基本釋義列一般指男性，也有不分性別的泛指用法；這不代表每種具體語境都適合使用他。"
+        },
+        {
+          "title": "Thai With Grace: Third person pronouns in Thai",
+          "url": "https://thaiwithgrace.com/third-person-pronouns-in-thai/",
+          "checkedOn": "2026-10-19",
+          "supports": "เขา 可用於 he 或 she；此資料只證明泰文代詞的範圍，不能單獨決定中文譯法是否新增性別。"
+        }
+      ]
+    },
+    {
+      "case": "vi-normal-transfer-automatic",
+      "originalReview": "reviews/vi-normal-transfer-automatic.json",
+      "originalReviewHash": "03ab11a30a74b0d3a3579af4bf53a27d44f6452102c42e59963e927f60ccb538",
+      "currentReview": "reviews/vi-normal-transfer-automatic.json",
+      "disposition": "maintained_block",
+      "basis": "source_contract",
+      "reason": "標題「臨時遇見」新增偶遇事件，四句來源只確立仍在此處、正打算離開時被呼叫與等待請求。保留來源忠實度契約退件，不將其說成越文語法錯誤。",
+      "counterinterpretation": "臨時遇見可被當成合理的場景概括，但目前來源契約不允許把未確立的場景事件當成標題事實。",
+      "references": []
+    },
+    {
+      "case": "zh-TW-uncertainty-quote-topic-automatic",
+      "originalReview": "reviews/zh-TW-uncertainty-quote-topic-automatic.json",
+      "originalReviewHash": "e88e9ce99995470bab948a11ceccda340ace58a894f69639b3514436bd87372e",
+      "currentReview": "reviews/zh-TW-uncertainty-quote-topic-automatic.json",
+      "disposition": "maintained_block",
+      "basis": "direct_internal_mismatch",
+      "reason": "situation 問的是寄送文件，兩句 dialogue 問答的卻是通知集合時間，沒有文件寄送內容；與同一例句應圍繞同一動作的明定契約不一致，保留退件。",
+      "counterinterpretation": "兩件事可以發生在同一辦公室，但這不足以讓「確認寄送文件」準確描述該問答。",
+      "references": []
+    },
+    {
+      "case": "zh-CN-uncertainty-quote-topic-automatic",
+      "originalReview": "reviews/zh-CN-uncertainty-quote-topic-automatic.json",
+      "originalReviewHash": "d2151132cbcf0ee23a0361f2b838cb754ea492e19e48e6470591029603de3d2f",
+      "currentReview": "reassessment/zh-CN-uncertainty-quote-topic-automatic.json",
+      "disposition": "pending",
+      "basis": "ambiguous_editorial_scope",
+      "reason": "初審把「對方」直接解讀為當下聽者，判斷過強。它可能只是泛稱引述中的另一人；另一方面「在此處」「確實」也可能把原文未明的引述角色說得過窄。尚無足夠依據在這輪判為確定錯誤或直接通過，改列待複核。",
+      "counterinterpretation": "需要獨立編輯確認：這是一般轉述功能說明，還是把未明角色當成具體來源事實。保留待複核，不因 error 數為零而自動接受。",
+      "references": []
+    }
+  ],
+  "limits": [
+    "External references support the specific lexical/rule claims described, not every severity or verdict.",
+    "Source-contract rejection is distinct from proof of unnatural or impossible language.",
+    "No blind review, independent second reviewer, native-speaker certification, audio, installed extension/video or learning-effect measurement.",
+    "No score increase can be attributed to the generator: only review classifications changed."
+  ]
+}

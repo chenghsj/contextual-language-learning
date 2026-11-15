@@ -83,6 +83,27 @@ test("compact teaching and structural repair retain source-fidelity and Japanese
   }
 });
 
+test("compact teaching and its repair receive essential non-Japanese source checks", () => {
+  const checks = {
+    es: /SPANISH REPORTED ROLES:.*omitted subject/,
+    fr: /FRENCH CONTEXTUAL MEANING:.*place complement/,
+    it: /ITALIAN PRONOUN ATTACHMENT:.*digli\/diglielo/,
+    vi: /VIETNAMESE CALLING:.*chance encounter/,
+  } as const;
+  for (const targetLanguage of Object.keys(checks) as Array<keyof typeof checks>) {
+    const f = pointsFixture();
+    f.request.profile.targetLanguage = targetLanguage;
+    f.request.profile.level = "B1";
+    for (const repair of [undefined, { previousOutput: {}, issues: [] }]) {
+      const prompt = pointsTeachingPrompt(f.request, f.input, 8192, repair);
+      assert.match(prompt, checks[targetLanguage]);
+      assert.match(prompt, /Both title and context.text are source assertions/);
+      assert.match(prompt, /A chunk meaning explains that exact span IN THIS SENTENCE/);
+      assert.match(prompt, /situation must name the same task/);
+    }
+  }
+});
+
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -338,5 +359,18 @@ test("a validated candidate response racing cancellation is retained and not reg
     assert.equal(dispatched.filter(s => s === "w0").length, 1);
   } finally {
     await rm(h.root, { recursive: true, force: true });
+  }
+});
+
+test("teaching and repair preserve translation actors, complete citations and qualified grammar scope", () => {
+  const f = pointsFixture();
+  for (const repair of [undefined, { previousOutput: {}, issues: [] }]) {
+    const prompt = pointsTeachingPrompt(f.request, f.input, 8192, repair);
+    assert.match(prompt, /plural recipient does not turn a singular actor into a group/);
+    assert.match(prompt, /sourceForms in Latin-script words, quote the whole source word/);
+    assert.match(prompt, /GRAMMAR SCOPE CHECK/);
+    assert.match(prompt, /valid alternative form under the stated conditions/);
+    assert.match(prompt, /from the complete predicate, not only its auxiliary/);
+    assert.match(prompt, /explicitly explain this instance and omit the universal claim/);
   }
 });

@@ -1,4 +1,5 @@
 import type { HostRequest, LearningDocument } from "@contextual/core";
+import { compactDocument } from "@contextual/core";
 import { sourceKey } from "../duplicates";
 import { createDocumentSync } from "../storage/document-sync";
 import type { HostDispatcherDeps } from "./context";
@@ -14,6 +15,20 @@ export async function handleLessonRequest(
       await createDocumentSync(storage).deleteLocal(request.documentId);
       reply({ id: request.id, type: "localLessonDeleted", documentId: request.documentId });
       return true;
+    case "getJobPreview": {
+      const job = await storage.jobs.get(request.jobId);
+      if (!job?.compactPlan) throw new Error("This task has no partial scene results");
+      const document = compactDocument(
+        job.request,
+        job.execution,
+        job.summary.createdAt,
+        job.compactPlan,
+      );
+      if (!document) throw new Error("No complete scene is ready yet");
+      reply({ id: request.id, type: "job", job: job.summary });
+      deliverDocument(request.id, document);
+      return true;
+    }
     case "listEndedJobs": {
       const jobs = await storage.jobs.list(Number.MAX_SAFE_INTEGER);
       reply({

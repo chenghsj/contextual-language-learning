@@ -1,0 +1,18 @@
+{
+  "text": "{\"selectedCandidateIds\":[\"1f91a1e4-80bc-471e-8d0e-3df958e05237\"]}",
+  "call": {
+    "step": "selection",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:36:19.675Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 3290.474082999979,
+    "usage": {
+      "input": 2214,
+      "output": 266,
+      "reasoning": 226
+    }
+  }
+}

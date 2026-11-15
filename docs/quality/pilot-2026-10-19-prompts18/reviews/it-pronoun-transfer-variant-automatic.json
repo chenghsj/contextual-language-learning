@@ -1,0 +1,15 @@
+{
+  "case": "it-pronoun-transfer-variant-automatic",
+  "document": "batch-2/it-pronoun-transfer-variant-automatic/videos/it-pronoun-transfer-variant-automatic--33166c80b65f497e/fce649f8-0c49-4b67-8d6b-10d841f16431.json",
+  "documentHash": "5484d4b2ccdb4dc44ff8b8c64956f30831170016579deb454196ac254c11acfc",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The novel Digli/Dammi source actually exercises both gli and mi: explanations distinguish digli from forbidden diggli and limit -mmi to mi. Digli di + infinitive and servire roles are explained coherently. Examples retain the recipient, request and object roles; both Va bene replies stay basic_only."
+    }
+  ],
+  "issues": [],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

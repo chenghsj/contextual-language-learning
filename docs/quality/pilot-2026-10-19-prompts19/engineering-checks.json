@@ -1,0 +1,45 @@
+{
+  "scope": "Same isolated runtime/dependencies as generation, with scoped test overlays; no installed Host or browser acceptance.",
+  "snapshot": "/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/cll-prompts19-c484ptos/source",
+  "regression": {
+    "command": "node --import tsx --test --test-concurrency=1 packages/core/src/*.test.ts apps/local-host/src/generation/*.test.ts apps/local-host/src/jobs/*.test.ts apps/local-host/src/storage/*.test.ts",
+    "tests": 206,
+    "passed": 206,
+    "failed": 0,
+    "log": "logs/frozen-source-regression.log"
+  },
+  "otherChecks": [
+    {
+      "name": "Workspace typecheck",
+      "log": "logs/typecheck-final.log",
+      "exitCode": 0
+    },
+    {
+      "name": "Extension and Native Host build",
+      "log": "logs/build-final.log",
+      "exitCode": 0,
+      "notes": "Existing large bundle warnings remain. Final build and generated outputs use the unchanged frozen source."
+    },
+    {
+      "name": "Host stdio smoke with isolated temporary home",
+      "log": "logs/host-smoke-final.log",
+      "exitCode": 0
+    },
+    {
+      "name": "Extension manifest/content assets",
+      "log": "logs/extension-assets-final.log",
+      "exitCode": 0
+    },
+    {
+      "name": "Historical prompts-18 records under current reader",
+      "log": "logs/prompts18-historical.log",
+      "exitCode": 0
+    },
+    {
+      "name": "Quality runner and offline verifier typecheck",
+      "log": "logs/tool-typecheck-complete.log",
+      "exitCode": 0
+    }
+  ],
+  "failedCheckHistory": "logs/regression.log (four precedence failures), logs/regression-final.log (one new test fixture inconsistency); fixed before inference, retained as diagnostic history."
+}

@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":43}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":10}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":10,\"end\":46}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":38}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":8}]}],\"learningValue\":\"這段對話展示了安排事務與分工時的實用句型，包含請求他人行動時的「pedir que + 虛擬式」，以及指涉未來時間點時「cuando + 虛擬式」的典型文法結構。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\"],\"description\":\"動詞「pedir que」後接虛擬式（envíen）表示要求他人執行某事。\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c3\"],\"description\":\"時間副詞「cuando」引導指涉未來的子句時，需搭配虛擬式（tenga），主要子句則使用未來式（avisaré）。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c1\",\"c2\"],\"description\":\"運用「ir a + 原形動詞」（voy a pedir / vamos a revisar）表達個人或團隊接下來打算進行的分工行動。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T04:37:36.750Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 16695.545500000007,
+    "usage": {
+      "input": 2718,
+      "output": 1852,
+      "reasoning": 1524
+    }
+  }
+}

@@ -1,0 +1,1325 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-18",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-5",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "c4f3499053138c75481fe70df8e0e541cc3107060dab9467e0150d0ffce1ea13",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:38:30.573Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 15932.911542000016,
+        "usage": {
+          "input": 2477,
+          "output": 2520,
+          "reasoning": 2193
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:38:33.755Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 3171.840666999982,
+        "usage": {
+          "input": 2300,
+          "output": 253,
+          "reasoning": 214
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:39:34.354Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 60584.203750000044,
+        "usage": {
+          "input": 4648,
+          "output": 10553,
+          "reasoning": 8425
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-18",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-5",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "c4f3499053138c75481fe70df8e0e541cc3107060dab9467e0150d0ffce1ea13",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "fce649f8-0c49-4b67-8d6b-10d841f16431",
+    "sourceTitle": "it-pronoun-transfer-variant-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-19T02:38:13.207Z",
+    "updatedAt": "2026-10-19T02:39:34.386Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "fce649f8-0c49-4b67-8d6b-10d841f16431"
+  },
+  "request": {
+    "id": "fce649f8-0c49-4b67-8d6b-10d841f16431",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "it-pronoun-transfer-variant-automatic"
+    },
+    "profile": {
+      "targetLanguage": "it",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Digli di aspettare qui."
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "Va bene. Ti serve altro?"
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Dammi il libro, per favore."
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Va bene."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "9b7d23bc-3a2e-45d3-9449-837afe947894",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "指示與索取物品",
+      "context": {
+        "text": "對話包含要求轉達訊息、確認回應、詢問是否有其他需求、索取書籍的請求，以及相應的確認回應。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "叫他在這裡等。"
+        },
+        {
+          "cueId": "c2",
+          "text": "好的。你還需要別的嗎？"
+        },
+        {
+          "cueId": "c3",
+          "text": "請把書給我。"
+        },
+        {
+          "cueId": "c4",
+          "text": "好的。"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "Digli",
+              "reading": "/ˈdiʎ.ʎi/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "di",
+              "reading": "/di/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "aspettare",
+              "reading": "/as.petˈta.re/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "qui",
+              "reading": "/kwi/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "Va",
+              "reading": "/va/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "bene",
+              "reading": "/ˈbɛ.ne/"
+            },
+            {
+              "text": "."
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "Ti",
+              "reading": "/ti/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "serve",
+              "reading": "/ˈsɛr.ve/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "altro",
+              "reading": "/ˈal.tro/"
+            },
+            {
+              "text": "?"
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "Dammi",
+              "reading": "/ˈdam.mi/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "il",
+              "reading": "/il/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "libro",
+              "reading": "/ˈli.bro/"
+            },
+            {
+              "text": ","
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "per",
+              "reading": "/per/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "favore",
+              "reading": "/faˈvo.re/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "Va",
+              "reading": "/va/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "bene",
+              "reading": "/ˈbɛ.ne/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "7564665d-317a-4e41-b490-be53b1d50a9b",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 5
+                }
+              ],
+              "meaning": "叫他 / 告訴他"
+            },
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 6,
+                  "end": 18
+                }
+              ],
+              "meaning": "去等 / 等候"
+            },
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch3",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 19,
+                  "end": 22
+                }
+              ],
+              "meaning": "在這裡"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 23
+            }
+          ]
+        },
+        {
+          "id": "ed873994-3b47-4170-aca3-e0753f60d70d",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "id": "2fd9dd8b-aa03-4a71-ad92-5aad085624ed",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch4",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 9,
+                  "end": 17
+                }
+              ],
+              "meaning": "你需要"
+            },
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch5",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 18,
+                  "end": 23
+                }
+              ],
+              "meaning": "其他東西"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 9,
+              "end": 24
+            }
+          ]
+        },
+        {
+          "id": "e4a8cedc-e2aa-403c-9e77-763ee78aeaa3",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch6",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 5
+                }
+              ],
+              "meaning": "給我"
+            },
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch7",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 6,
+                  "end": 14
+                }
+              ],
+              "meaning": "那本書"
+            },
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch8",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 16,
+                  "end": 26
+                }
+              ],
+              "meaning": "請 / 麻煩你"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 27
+            }
+          ]
+        },
+        {
+          "id": "f57b75cb-3bdc-43b0-8c48-f03ac3f553ad",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 8
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "9b7d23bc-3a2e-45d3-9449-837afe947894",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "7564665d-317a-4e41-b490-be53b1d50a9b",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 23
+                  }
+                ]
+              },
+              {
+                "id": "ed873994-3b47-4170-aca3-e0753f60d70d",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              },
+              {
+                "id": "2fd9dd8b-aa03-4a71-ad92-5aad085624ed",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 9,
+                    "end": 24
+                  }
+                ]
+              },
+              {
+                "id": "e4a8cedc-e2aa-403c-9e77-763ee78aeaa3",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 27
+                  }
+                ]
+              },
+              {
+                "id": "f57b75cb-3bdc-43b0-8c48-f03ac3f553ad",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 8
+                  }
+                ]
+              }
+            ],
+            "learningValue": "這段對話涵蓋日常吩咐、詢問需求與具體請求，包含義大利語常見的命令式結合附著代名詞（Digli、Dammi）以及動詞 servire 的需求句型。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "description": "命令式複合代名詞「Digli」（di' + gli）的構詞，以及「dire a qcn di + 原形動詞」轉達要求的句型。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "動詞「servire」搭配間接受詞代名詞表示「需要」的用法（Ti serve altro?）。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "單音節命令式接附著代名詞產生子音雙寫的「Dammi」（da' + mi），以及搭配「per favore」表達請求。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "9b7d23bc-3a2e-45d3-9449-837afe947894",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "7564665d-317a-4e41-b490-be53b1d50a9b",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 23
+              }
+            ]
+          },
+          {
+            "id": "ed873994-3b47-4170-aca3-e0753f60d70d",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 9
+              }
+            ]
+          },
+          {
+            "id": "2fd9dd8b-aa03-4a71-ad92-5aad085624ed",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 9,
+                "end": 24
+              }
+            ]
+          },
+          {
+            "id": "e4a8cedc-e2aa-403c-9e77-763ee78aeaa3",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 27
+              }
+            ]
+          },
+          {
+            "id": "f57b75cb-3bdc-43b0-8c48-f03ac3f553ad",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 8
+              }
+            ]
+          }
+        ],
+        "learningValue": "這段對話涵蓋日常吩咐、詢問需求與具體請求，包含義大利語常見的命令式結合附著代名詞（Digli、Dammi）以及動詞 servire 的需求句型。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c1"
+            ],
+            "description": "命令式複合代名詞「Digli」（di' + gli）的構詞，以及「dire a qcn di + 原形動詞」轉達要求的句型。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "動詞「servire」搭配間接受詞代名詞表示「需要」的用法（Ti serve altro?）。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "單音節命令式接附著代名詞產生子音雙寫的「Dammi」（da' + mi），以及搭配「per favore」表達請求。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "9b7d23bc-3a2e-45d3-9449-837afe947894",
+        "utteranceIds": [
+          "7564665d-317a-4e41-b490-be53b1d50a9b",
+          "ed873994-3b47-4170-aca3-e0753f60d70d",
+          "2fd9dd8b-aa03-4a71-ad92-5aad085624ed",
+          "e4a8cedc-e2aa-403c-9e77-763ee78aeaa3",
+          "f57b75cb-3bdc-43b0-8c48-f03ac3f553ad"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "9b7d23bc-3a2e-45d3-9449-837afe947894",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "指示與索取物品",
+            "context": {
+              "text": "對話包含要求轉達訊息、確認回應、詢問是否有其他需求、索取書籍的請求，以及相應的確認回應。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "叫他在這裡等。"
+              },
+              {
+                "cueId": "c2",
+                "text": "好的。你還需要別的嗎？"
+              },
+              {
+                "cueId": "c3",
+                "text": "請把書給我。"
+              },
+              {
+                "cueId": "c4",
+                "text": "好的。"
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "Digli",
+                    "reading": "/ˈdiʎ.ʎi/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "di",
+                    "reading": "/di/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "aspettare",
+                    "reading": "/as.petˈta.re/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "qui",
+                    "reading": "/kwi/"
+                  },
+                  {
+                    "text": "."
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "Va",
+                    "reading": "/va/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "bene",
+                    "reading": "/ˈbɛ.ne/"
+                  },
+                  {
+                    "text": "."
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "Ti",
+                    "reading": "/ti/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "serve",
+                    "reading": "/ˈsɛr.ve/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "altro",
+                    "reading": "/ˈal.tro/"
+                  },
+                  {
+                    "text": "?"
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "Dammi",
+                    "reading": "/ˈdam.mi/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "il",
+                    "reading": "/il/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "libro",
+                    "reading": "/ˈli.bro/"
+                  },
+                  {
+                    "text": ","
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "per",
+                    "reading": "/per/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "favore",
+                    "reading": "/faˈvo.re/"
+                  },
+                  {
+                    "text": "."
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "Va",
+                    "reading": "/va/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "bene",
+                    "reading": "/ˈbɛ.ne/"
+                  },
+                  {
+                    "text": "."
+                  }
+                ]
+              }
+            ],
+            "utterances": [
+              {
+                "id": "7564665d-317a-4e41-b490-be53b1d50a9b",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch1",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 0,
+                        "end": 5
+                      }
+                    ],
+                    "meaning": "叫他 / 告訴他"
+                  },
+                  {
+                    "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch2",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 6,
+                        "end": 18
+                      }
+                    ],
+                    "meaning": "去等 / 等候"
+                  },
+                  {
+                    "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch3",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 19,
+                        "end": 22
+                      }
+                    ],
+                    "meaning": "在這裡"
+                  }
+                ],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 23
+                  }
+                ]
+              },
+              {
+                "id": "ed873994-3b47-4170-aca3-e0753f60d70d",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 9
+                  }
+                ]
+              },
+              {
+                "id": "2fd9dd8b-aa03-4a71-ad92-5aad085624ed",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch4",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 9,
+                        "end": 17
+                      }
+                    ],
+                    "meaning": "你需要"
+                  },
+                  {
+                    "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch5",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 18,
+                        "end": 23
+                      }
+                    ],
+                    "meaning": "其他東西"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 9,
+                    "end": 24
+                  }
+                ]
+              },
+              {
+                "id": "e4a8cedc-e2aa-403c-9e77-763ee78aeaa3",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p3"
+                ],
+                "chunks": [
+                  {
+                    "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch6",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 5
+                      }
+                    ],
+                    "meaning": "給我"
+                  },
+                  {
+                    "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch7",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 6,
+                        "end": 14
+                      }
+                    ],
+                    "meaning": "那本書"
+                  },
+                  {
+                    "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:ch8",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 16,
+                        "end": 26
+                      }
+                    ],
+                    "meaning": "請 / 麻煩你"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 27
+                  }
+                ]
+              },
+              {
+                "id": "f57b75cb-3bdc-43b0-8c48-f03ac3f553ad",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 8
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p1",
+              "utteranceIds": [
+                "7564665d-317a-4e41-b490-be53b1d50a9b"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "命令式 Digli 與「dire di + 原形動詞」",
+              "sourceCueIds": [
+                "c1"
+              ],
+              "contextCueIds": [],
+              "explanation": "「Digli」由動詞 dire 的第二人稱單數命令式 di' 加上第三人稱陽性間接受詞代名詞 gli（給他）複合而成。義大利語中，單音節短命令式附加代名詞通常會雙寫代名詞首字，但 gli 與以 gli 開頭的組合例外不雙寫（寫作 digli，而非 diggli）。搭配「di + 原形動詞」時，用於轉達要求或命令某人做某事，此處「Digli di aspettare qui」即「叫他在這裡等」。",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 18
+                }
+              ]
+            },
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p2",
+              "utteranceIds": [
+                "2fd9dd8b-aa03-4a71-ad92-5aad085624ed"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "動詞 servire 表示「需要」",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "動詞 servire 在此表示「需要」。此句型的文法主詞是被需要的東西（句中單數代名詞 altro 為主詞，動詞配合使用單數形式 serve），需要者則以間接受詞代名詞表示（ti 即 a te，對你而言）。因此「Ti serve altro?」字面意思為「其他東西對你而言有需要嗎？」，日常即用來詢問「你還需要別的嗎？」。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 9,
+                  "end": 24
+                }
+              ]
+            },
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p3",
+              "utteranceIds": [
+                "e4a8cedc-e2aa-403c-9e77-763ee78aeaa3"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "命令式 Dammi 的子音雙寫",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [],
+              "explanation": "「Dammi」由動詞 dare 的第二人稱單數命令式 da' 加上第一人稱單數代名詞 mi 構成。單音節短命令式後接代名詞 mi 時，代名詞首字母 m 雙寫為 -mmi，意為「給我」。句尾加上「per favore」（請、麻煩你）可使祈使語氣更加客氣禮貌。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 5
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:r1",
+              "pointIds": [
+                "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p1"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c1"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c1",
+                      "start": 0,
+                      "end": 18
+                    }
+                  ],
+                  "text": "Digli di aspettare"
+                }
+              ],
+              "pattern": "Digli di [verbo all'infinito]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "同事告知客戶已經抵達，主管指示讓客戶先在會議室就座。",
+                  "dialogue": [
+                    {
+                      "text": "È arrivato il signor Rossi per l'appuntamento.",
+                      "translation": "羅西先生來赴約了，人已經到了。"
+                    },
+                    {
+                      "text": "Perfetto, digli di accomodarsi in sala riunioni.",
+                      "translation": "太好了，叫他先在會議室就座。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "digli di accomodarsi"
+                }
+              ]
+            },
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:r2",
+              "pointIds": [
+                "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p2"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 9,
+                      "end": 24
+                    }
+                  ],
+                  "text": "Ti serve altro?"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "朋友在書桌前準備考試，另一人幫忙拿來筆記本後，詢問對方是否還需要其他東西。",
+                  "dialogue": [
+                    {
+                      "text": "Ecco il quaderno che cercavi. Ti serve altro?",
+                      "translation": "這是你在找的筆記本。你還需要別的嗎？"
+                    },
+                    {
+                      "text": "No, grazie, ho tutto quello che mi serve.",
+                      "translation": "不用了，謝謝，我需要的東西都有了。"
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "Ti serve altro?"
+                }
+              ]
+            },
+            {
+              "id": "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:r3",
+              "pointIds": [
+                "9b7d23bc-3a2e-45d3-9449-837afe947894:s0:p3"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 0,
+                      "end": 5
+                    }
+                  ],
+                  "text": "Dammi"
+                }
+              ],
+              "pattern": "Dammi [sostantivo/oggetto]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "兩人正在整理剛買回來的食材，一人請另一人把購物袋遞給自己。",
+                  "dialogue": [
+                    {
+                      "text": "Dammi la borsa della spesa, per favore.",
+                      "translation": "麻煩把購物袋給我。"
+                    },
+                    {
+                      "text": "Eccola, attento che è pesante.",
+                      "translation": "給你，小心有點重。"
+                    }
+                  ],
+                  "targetLineIndex": 0,
+                  "targetText": "Dammi la borsa della spesa"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

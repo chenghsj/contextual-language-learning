@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":42}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":29}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":41}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":9}]}],\"learningValue\":\"這段對話展示了標準法語中禮貌詢問與請求的句型結構，包含名詞主詞的倒裝疑問句、代名詞承接與日常肯定回應。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\"],\"description\":\"名詞主詞的複合倒裝疑問句結構（Les dossiers sont-ils...）\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c3\"],\"description\":\"使用動詞 pouvoir 進行倒裝的禮貌請求句型（Pouvez-vous me donner...）\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c4\"],\"description\":\"日常口語中表示同意與肯定的常用短語「Bien sûr」\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T04:35:42.680Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 7442.582041000001,
+    "usage": {
+      "input": 2571,
+      "output": 909,
+      "reasoning": 648
+    }
+  }
+}

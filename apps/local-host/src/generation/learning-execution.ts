@@ -46,7 +46,13 @@ export async function createLearningExecution(
   let job = requireV5(await deps.storage.jobs.get(jobId));
   assertRunning(signal, job);
   const capacity = job.execution ?? { contextWindow: 128000, maxOutputTokens: 8192 };
-  const budget = initialLearningPointsBudget(capacity, job.request.agent.thinkingLevel);
+  const agent = {
+    ...job.request.agent,
+    ...(job.execution?.effectiveThinkingLevel !== undefined
+      ? { thinkingLevel: job.execution.effectiveThinkingLevel }
+      : {}),
+  };
+  const budget = initialLearningPointsBudget(capacity, agent.thinkingLevel);
   const prompts = learningPointsPrompts(job.execution?.promptVersion);
   const { system, pointsPromptFits } = prompts;
   const candidatesController = new AbortController();
@@ -85,11 +91,11 @@ export async function createLearningExecution(
         : kind === "selection"
           ? (deps.generateSelection ?? deps.generateSection)
           : deps.generateSection;
-    if (injected) return injected(job.request.agent, prompt, callSignal);
+    if (injected) return injected(agent, prompt, callSignal);
     if (!job.execution) throw new Error("V7 model identity must be pinned before generation");
     const execution = job.execution;
     const response = await (deps.generateText ?? generatePiText)(
-      { ...job.request.agent, provider: execution.provider, modelId: execution.modelId },
+      { ...agent, provider: execution.provider, modelId: execution.modelId },
       prompt,
       callSignal,
       {

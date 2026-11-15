@@ -1,0 +1,1183 @@
+{
+  "schemaVersion": 5,
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-18",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-5",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-2",
+    "inputFingerprint": "c4f29170081f71c32f377969493717da2c65296d8312a27127429d5166a3ab0d",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:36:31.471Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 8870.681249999994,
+        "usage": {
+          "input": 2516,
+          "output": 951,
+          "reasoning": 628
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:36:34.677Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 3194.5540000000037,
+        "usage": {
+          "input": 2255,
+          "output": 229,
+          "reasoning": 190
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T02:38:13.170Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 98479.950625,
+        "usage": {
+          "input": 4539,
+          "output": 14684,
+          "reasoning": 11389
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "summary": {
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-18",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-5",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "program-validation-2",
+      "inputFingerprint": "c4f29170081f71c32f377969493717da2c65296d8312a27127429d5166a3ab0d",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536
+    },
+    "id": "f24551de-5fe6-4eca-ab1c-770b727b67d6",
+    "sourceTitle": "fr-location-transfer-variant-automatic",
+    "provider": "antigravity",
+    "status": "completed",
+    "completed": 3,
+    "total": 3,
+    "phase": "saving",
+    "createdAt": "2026-10-19T02:36:21.478Z",
+    "updatedAt": "2026-10-19T02:38:13.205Z",
+    "pronunciationMissingCount": 0,
+    "documentId": "f24551de-5fe6-4eca-ab1c-770b727b67d6"
+  },
+  "request": {
+    "id": "f24551de-5fe6-4eca-ab1c-770b727b67d6",
+    "outputSchemaVersion": 7,
+    "source": {
+      "platform": "import",
+      "title": "fr-location-transfer-variant-automatic"
+    },
+    "profile": {
+      "targetLanguage": "fr",
+      "instructionLanguage": "zh-TW",
+      "level": "B1",
+      "sceneCount": 2,
+      "contextualExampleCount": 1,
+      "enabledExplanations": [
+        "vocabulary",
+        "grammar",
+        "chunks",
+        "usage",
+        "pronunciation",
+        "culture"
+      ],
+      "emphasizedExplanations": []
+    },
+    "agent": {
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "thinkingLevel": "medium"
+    },
+    "cues": [
+      {
+        "id": "c1",
+        "startMs": 0,
+        "endMs": 2800,
+        "originalText": "Pourquoi êtes-vous encore dehors ?"
+      },
+      {
+        "id": "c2",
+        "startMs": 3000,
+        "endMs": 5800,
+        "originalText": "J’allais rentrer quand vous avez appelé."
+      },
+      {
+        "id": "c3",
+        "startMs": 6000,
+        "endMs": 8800,
+        "originalText": "Vous pouvez patienter un moment ?"
+      },
+      {
+        "id": "c4",
+        "startMs": 9000,
+        "endMs": 11800,
+        "originalText": "Oui."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "在外停留的詢問與請求稍候",
+      "context": {
+        "text": "這段對話包含對在外停留原因的詢問、接聽呼叫時正打算回去的說明、請求稍候片刻的提問，以及簡短的肯定答覆。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "您為什麼還在外面？"
+        },
+        {
+          "cueId": "c2",
+          "text": "您打來（或叫我）時，我正打算回去。"
+        },
+        {
+          "cueId": "c3",
+          "text": "您可以稍等一下嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "好的。"
+        }
+      ],
+      "pronunciations": [
+        {
+          "cueId": "c1",
+          "segments": [
+            {
+              "text": "Pourquoi",
+              "reading": "/puʁ.kwa/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "êtes-vous",
+              "reading": "/ɛt.vu/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "encore",
+              "reading": "/ɑ̃.kɔʁ/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "dehors",
+              "reading": "/də.ɔʁ/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "?"
+            }
+          ]
+        },
+        {
+          "cueId": "c2",
+          "segments": [
+            {
+              "text": "J’allais",
+              "reading": "/ʒa.lɛ/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "rentrer",
+              "reading": "/ʁɑ̃.tʁe/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "quand",
+              "reading": "/kɑ̃/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "vous",
+              "reading": "/vu/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "avez",
+              "reading": "/a.ve/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "appelé",
+              "reading": "/a.ple/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        },
+        {
+          "cueId": "c3",
+          "segments": [
+            {
+              "text": "Vous",
+              "reading": "/vu/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "pouvez",
+              "reading": "/pu.ve/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "patienter",
+              "reading": "/pa.sjɑ̃.te/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "un",
+              "reading": "/œ̃/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "moment",
+              "reading": "/mɔ.mɑ̃/"
+            },
+            {
+              "text": " "
+            },
+            {
+              "text": "?"
+            }
+          ]
+        },
+        {
+          "cueId": "c4",
+          "segments": [
+            {
+              "text": "Oui",
+              "reading": "/wi/"
+            },
+            {
+              "text": "."
+            }
+          ]
+        }
+      ],
+      "utterances": [
+        {
+          "id": "f55aec71-bb13-4e0b-8111-a51f96207f0e",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c1_chk1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 18
+                }
+              ],
+              "meaning": "您為什麼……"
+            },
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c1_chk2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 19,
+                  "end": 32
+                }
+              ],
+              "meaning": "還在外面"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 34
+            }
+          ]
+        },
+        {
+          "id": "60c62831-b4be-4689-8f63-76ff02cffa13",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c2_chk1",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 16
+                }
+              ],
+              "meaning": "我正打算回去"
+            },
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c2_chk2",
+              "spans": [
+                {
+                  "cueId": "c2",
+                  "start": 17,
+                  "end": 39
+                }
+              ],
+              "meaning": "當您打電話（或叫我）時"
+            }
+          ],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 40
+            }
+          ]
+        },
+        {
+          "id": "733205d2-c5eb-4e9e-9113-ac31c7b48a2c",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p3"
+          ],
+          "chunks": [
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c3_chk1",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 11
+                }
+              ],
+              "meaning": "您可以……嗎"
+            },
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c3_chk2",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 12,
+                  "end": 31
+                }
+              ],
+              "meaning": "稍候片刻"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 33
+            }
+          ]
+        },
+        {
+          "id": "479ecff6-39b7-4d74-b633-cf1fdcf08423",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "learningPlan": {
+    "candidateWindows": [
+      {
+        "id": "window-0",
+        "cueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "candidates": [
+          {
+            "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88",
+            "dialogueCueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "utterances": [
+              {
+                "id": "f55aec71-bb13-4e0b-8111-a51f96207f0e",
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 34
+                  }
+                ]
+              },
+              {
+                "id": "60c62831-b4be-4689-8f63-76ff02cffa13",
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 40
+                  }
+                ]
+              },
+              {
+                "id": "733205d2-c5eb-4e9e-9113-ac31c7b48a2c",
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 33
+                  }
+                ]
+              },
+              {
+                "id": "479ecff6-39b7-4d74-b633-cf1fdcf08423",
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 4
+                  }
+                ]
+              }
+            ],
+            "learningValue": "展示詢問原因、說明即將發生卻被中斷的動作（aller 的未完成過去時＋不定式），以及禮貌請求對方稍候的實用日常對話。",
+            "opportunities": [
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "description": "「aller 的未完成過去時（j'allais）＋動詞原形」搭配「quand ＋ 複合過去時」，用來表達「正準備做某事時被突發事件打斷」。"
+              },
+              {
+                "category": "usage",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "description": "動詞「patienter」在日常與服務場合中用來禮貌表示「請稍候」，比單純用「attendre」更具客氣語氣。"
+              },
+              {
+                "category": "grammar",
+                "sourceCueIds": [
+                  "c1",
+                  "c3"
+                ],
+                "description": "比較疑問句的不同形式：主謂倒裝的「Pourquoi êtes-vous...」與語調上揚陳述句型的「Vous pouvez patienter...？」。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selected": [
+      {
+        "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88",
+        "dialogueCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ],
+        "contextCueIds": [],
+        "utterances": [
+          {
+            "id": "f55aec71-bb13-4e0b-8111-a51f96207f0e",
+            "cueIds": [
+              "c1"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c1",
+                "start": 0,
+                "end": 34
+              }
+            ]
+          },
+          {
+            "id": "60c62831-b4be-4689-8f63-76ff02cffa13",
+            "cueIds": [
+              "c2"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 40
+              }
+            ]
+          },
+          {
+            "id": "733205d2-c5eb-4e9e-9113-ac31c7b48a2c",
+            "cueIds": [
+              "c3"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c3",
+                "start": 0,
+                "end": 33
+              }
+            ]
+          },
+          {
+            "id": "479ecff6-39b7-4d74-b633-cf1fdcf08423",
+            "cueIds": [
+              "c4"
+            ],
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 4
+              }
+            ]
+          }
+        ],
+        "learningValue": "展示詢問原因、說明即將發生卻被中斷的動作（aller 的未完成過去時＋不定式），以及禮貌請求對方稍候的實用日常對話。",
+        "opportunities": [
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c2"
+            ],
+            "description": "「aller 的未完成過去時（j'allais）＋動詞原形」搭配「quand ＋ 複合過去時」，用來表達「正準備做某事時被突發事件打斷」。"
+          },
+          {
+            "category": "usage",
+            "sourceCueIds": [
+              "c3"
+            ],
+            "description": "動詞「patienter」在日常與服務場合中用來禮貌表示「請稍候」，比單純用「attendre」更具客氣語氣。"
+          },
+          {
+            "category": "grammar",
+            "sourceCueIds": [
+              "c1",
+              "c3"
+            ],
+            "description": "比較疑問句的不同形式：主謂倒裝的「Pourquoi êtes-vous...」與語調上揚陳述句型的「Vous pouvez patienter...？」。"
+          }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "id": "s0",
+        "sceneId": "aeda7ab9-0e39-4f93-8929-7f8442616e88",
+        "utteranceIds": [
+          "f55aec71-bb13-4e0b-8111-a51f96207f0e",
+          "60c62831-b4be-4689-8f63-76ff02cffa13",
+          "733205d2-c5eb-4e9e-9113-ac31c7b48a2c",
+          "479ecff6-39b7-4d74-b633-cf1fdcf08423"
+        ],
+        "pronunciationDiagnostics": [],
+        "result": {
+          "section": {
+            "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88",
+            "cueIds": [
+              "c1",
+              "c2",
+              "c3",
+              "c4"
+            ],
+            "contextCueIds": [],
+            "startMs": 0,
+            "endMs": 11800,
+            "title": "在外停留的詢問與請求稍候",
+            "context": {
+              "text": "這段對話包含對在外停留原因的詢問、接聽呼叫時正打算回去的說明、請求稍候片刻的提問，以及簡短的肯定答覆。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "您為什麼還在外面？"
+              },
+              {
+                "cueId": "c2",
+                "text": "您打來（或叫我）時，我正打算回去。"
+              },
+              {
+                "cueId": "c3",
+                "text": "您可以稍等一下嗎？"
+              },
+              {
+                "cueId": "c4",
+                "text": "好的。"
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "Pourquoi",
+                    "reading": "/puʁ.kwa/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "êtes-vous",
+                    "reading": "/ɛt.vu/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "encore",
+                    "reading": "/ɑ̃.kɔʁ/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "dehors",
+                    "reading": "/də.ɔʁ/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "?"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "J’allais",
+                    "reading": "/ʒa.lɛ/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "rentrer",
+                    "reading": "/ʁɑ̃.tʁe/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "quand",
+                    "reading": "/kɑ̃/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "vous",
+                    "reading": "/vu/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "avez",
+                    "reading": "/a.ve/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "appelé",
+                    "reading": "/a.ple/"
+                  },
+                  {
+                    "text": "."
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "Vous",
+                    "reading": "/vu/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "pouvez",
+                    "reading": "/pu.ve/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "patienter",
+                    "reading": "/pa.sjɑ̃.te/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "un",
+                    "reading": "/œ̃/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "moment",
+                    "reading": "/mɔ.mɑ̃/"
+                  },
+                  {
+                    "text": " "
+                  },
+                  {
+                    "text": "?"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "Oui",
+                    "reading": "/wi/"
+                  },
+                  {
+                    "text": "."
+                  }
+                ]
+              }
+            ],
+            "utterances": [
+              {
+                "id": "f55aec71-bb13-4e0b-8111-a51f96207f0e",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c1_chk1",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 0,
+                        "end": 18
+                      }
+                    ],
+                    "meaning": "您為什麼……"
+                  },
+                  {
+                    "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c1_chk2",
+                    "spans": [
+                      {
+                        "cueId": "c1",
+                        "start": 19,
+                        "end": 32
+                      }
+                    ],
+                    "meaning": "還在外面"
+                  }
+                ],
+                "cueIds": [
+                  "c1"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 0,
+                    "end": 34
+                  }
+                ]
+              },
+              {
+                "id": "60c62831-b4be-4689-8f63-76ff02cffa13",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c2_chk1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 16
+                      }
+                    ],
+                    "meaning": "我正打算回去"
+                  },
+                  {
+                    "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c2_chk2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 17,
+                        "end": 39
+                      }
+                    ],
+                    "meaning": "當您打電話（或叫我）時"
+                  }
+                ],
+                "cueIds": [
+                  "c2"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 40
+                  }
+                ]
+              },
+              {
+                "id": "733205d2-c5eb-4e9e-9113-ac31c7b48a2c",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p3"
+                ],
+                "chunks": [
+                  {
+                    "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c3_chk1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 11
+                      }
+                    ],
+                    "meaning": "您可以……嗎"
+                  },
+                  {
+                    "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:c3_chk2",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 12,
+                        "end": 31
+                      }
+                    ],
+                    "meaning": "稍候片刻"
+                  }
+                ],
+                "cueIds": [
+                  "c3"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 33
+                  }
+                ]
+              },
+              {
+                "id": "479ecff6-39b7-4d74-b633-cf1fdcf08423",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": [],
+                "cueIds": [
+                  "c4"
+                ],
+                "sourceSpans": [
+                  {
+                    "cueId": "c4",
+                    "start": 0,
+                    "end": 4
+                  }
+                ]
+              }
+            ]
+          },
+          "points": [
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p1",
+              "utteranceIds": [
+                "f55aec71-bb13-4e0b-8111-a51f96207f0e"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "主謂倒裝疑問句與 être 表示位置",
+              "sourceCueIds": [
+                "c1"
+              ],
+              "contextCueIds": [],
+              "explanation": "句中「Pourquoi êtes-vous...」採用標準法語的疑問倒裝結構，將動詞（êtes）置於代詞主詞（vous）之前並以連字號連接。此處「êtes」後接方位副詞「dehors」（在外面），表達「身處某地」的所在位置，而非表語性質。",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 31
+                }
+              ]
+            },
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p2",
+              "utteranceIds": [
+                "60c62831-b4be-4689-8f63-76ff02cffa13"
+              ],
+              "category": "grammar",
+              "presentation": "core",
+              "title": "aller 未完成過去時表過去打算：J’allais rentrer",
+              "sourceCueIds": [
+                "c2"
+              ],
+              "contextCueIds": [],
+              "explanation": "「aller 的未完成過去時（j'allais）＋動詞原形（rentrer）」用來表示過去某個參照時刻「正打算／即將做某事」。此處搭配「quand ＋ 複合過去時（avez appelé）」，表達在對方打電話或呼叫的當下，正巧有回去的打算，指出兩件事在時間點上的重合。動詞 appeler 在此可指打電話或開口呼叫，語境未限定具體方式。",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 16
+                }
+              ]
+            },
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p3",
+              "utteranceIds": [
+                "733205d2-c5eb-4e9e-9113-ac31c7b48a2c"
+              ],
+              "category": "usage",
+              "presentation": "core",
+              "title": "patienter 表示禮貌請對方稍候",
+              "sourceCueIds": [
+                "c3"
+              ],
+              "contextCueIds": [],
+              "explanation": "動詞「patienter」意為「耐心等候、稍候」，在日常接待、電話或較客氣的溝通中常取代一般動詞「attendre」，語氣更為委婉禮貌。「Vous pouvez patienter un moment ?」是以陳述句語序加上問號（口語語調上揚）表達委婉請求。",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 12,
+                  "end": 31
+                }
+              ]
+            }
+          ],
+          "reusableItems": [
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:r1",
+              "pointIds": [
+                "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p2"
+              ],
+              "kind": "frame",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c2"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c2",
+                      "start": 0,
+                      "end": 16
+                    }
+                  ],
+                  "text": "J’allais rentrer"
+                }
+              ],
+              "pattern": "aller (à l'imparfait) + [infinitif]",
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "同事詢問對方是否要一起去吃午餐，對方表示剛好正打算出發。",
+                  "dialogue": [
+                    {
+                      "text": "Tu viens déjeuner avec nous à la cafétéria ?",
+                      "translation": "你要和我們一起去員工餐廳吃午餐嗎？"
+                    },
+                    {
+                      "text": "Avec plaisir, j'allais partir justement !",
+                      "translation": "好啊，我正好正打算出發呢！"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "j'allais partir"
+                }
+              ]
+            },
+            {
+              "id": "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:r2",
+              "pointIds": [
+                "aeda7ab9-0e39-4f93-8929-7f8442616e88:s0:p3"
+              ],
+              "kind": "expression",
+              "sourceForms": [
+                {
+                  "cueIds": [
+                    "c3"
+                  ],
+                  "sourceSpans": [
+                    {
+                      "cueId": "c3",
+                      "start": 12,
+                      "end": 31
+                    }
+                  ],
+                  "text": "patienter un moment"
+                }
+              ],
+              "examples": [
+                {
+                  "origin": "ai",
+                  "situation": "接待人員在轉接主管電話前，請來電者稍候片刻。",
+                  "dialogue": [
+                    {
+                      "text": "Bonjour, je voudrais parler à la directrice, s'il vous plaît.",
+                      "translation": "您好，我想和經理通話，麻煩您。"
+                    },
+                    {
+                      "text": "Bien sûr, veuillez patienter un moment, je vous la passe.",
+                      "translation": "好的，請您稍候片刻，我這就為您轉接。"
+                    },
+                    {
+                      "text": "Merci beaucoup.",
+                      "translation": "非常感謝。"
+                    }
+                  ],
+                  "targetLineIndex": 1,
+                  "targetText": "patienter un moment"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "selectionRepairs": [],
+    "selectionGroups": []
+  }
+}

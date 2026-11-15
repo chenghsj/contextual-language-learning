@@ -7,7 +7,7 @@ import {
   isCompatibleHostHealth,
 } from "./native-messaging";
 
-test("provider messages preserve SDK authentication names and accept older Hosts", () => {
+test("provider messages preserve the saved authentication method and accept older Hosts", () => {
   const provider = {
     id: "openai",
     label: "OpenAI",
@@ -17,6 +17,8 @@ test("provider messages preserve SDK authentication names and accept older Hosts
   for (const extra of [
     {},
     { methodLabels: { oauth: "OpenAI (ChatGPT subscription)", api_key: "OpenAI API key" } },
+    { connected: true, credentialMethod: "oauth" },
+    { connected: true, credentialMethod: "api_key" },
   ]) {
     const message = {
       id: randomUUID(),

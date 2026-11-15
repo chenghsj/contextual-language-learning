@@ -131,7 +131,12 @@ export function learningLanguageOptions(locale: UiLocale) {
   return LEARNING_LANGUAGES.map(language => ({
     value: language,
     label: learningLanguageName(language, locale),
-    keywords: Object.values(LEARNING_LANGUAGE_LABELS).map(names => names[language]),
+    keywords: [
+      ...Object.values(LEARNING_LANGUAGE_LABELS).map(names => names[language]),
+      ...(language === "zh-TW" || language === "zh-CN"
+        ? Object.values(CHINESE_EXPLANATION_LABELS).map(names => names[language])
+        : []),
+    ],
   })).sort((a, b) => collator.compare(a.label, b.label) || a.value.localeCompare(b.value));
 }
 export function explanationLanguageName(language: ExplanationLanguage, locale: UiLocale): string {

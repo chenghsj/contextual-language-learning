@@ -273,6 +273,8 @@ test("a missing macOS speech resource fails before modifying the existing regist
     await writeFile(join(sourceRoot, "macos-speech.swift"), "source");
     await writeFile(join(sourceRoot, "macos-speech-siri"), "Siri helper");
     await assert.rejects(installNativeHost(options), { code: "ENOENT" });
+    await writeFile(join(sourceRoot, "macos-speech-siri.LICENSE"), "Siri license");
+    await assert.rejects(installNativeHost(options), /Keychain helper not found/);
     assert.equal(await readFile(location.path, "utf8"), "keep registration");
   } finally {
     await rm(home, { recursive: true, force: true });
@@ -298,6 +300,7 @@ for (const platform of ["darwin", "linux", "win32"]) {
         await mkdir(join(sourceRoot, "scripts"), { recursive: true });
         await writeFile(sourceEntry, 'process.stdout.write("launcher-ok");\n');
         await writeFile(join(sourceRoot, "dist/macos-speech"), "speech helper fixture");
+        await writeFile(join(sourceRoot, "dist/macos-credentials"), "credential helper fixture");
         await writeFile(join(sourceRoot, "dist/macos-speech.swift"), "speech helper fixture");
         await writeFile(join(sourceRoot, "dist/macos-speech-siri"), "Siri helper fixture");
         await writeFile(join(sourceRoot, "dist/macos-speech-siri.LICENSE"), "Siri license fixture");
@@ -340,6 +343,10 @@ for (const platform of ["darwin", "linux", "win32"]) {
         );
         if (platform === "darwin") {
           assert.equal(await readFile(join(root, "macos-speech"), "utf8"), "speech helper fixture");
+          assert.equal(
+            await readFile(join(root, "macos-credentials"), "utf8"),
+            "credential helper fixture",
+          );
           assert.equal(
             await readFile(join(root, "macos-speech-siri"), "utf8"),
             "Siri helper fixture",

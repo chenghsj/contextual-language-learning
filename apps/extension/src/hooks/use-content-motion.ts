@@ -17,7 +17,7 @@ export function useContentMotion(
   {
     active = true,
     depth = 0,
-    duration = 180,
+    duration = 240,
     enter = false,
     activate = true,
     directional = false,
@@ -68,7 +68,7 @@ export function useContentMotion(
       element,
       controller,
       moved ? (back ? -12 : 12) : entryOffset,
-      back ? 160 : last?.active ? duration : entryDuration,
+      back ? 240 : last?.active ? duration : entryDuration,
     );
   });
   useLayoutEffect(

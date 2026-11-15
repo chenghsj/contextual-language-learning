@@ -1,0 +1,231 @@
+[
+  {
+    "case": "ja-uncertainty-quote-topic-N3-automatic",
+    "status": "generated",
+    "durationMs": 238047,
+    "id": "bb4bcf29-a067-4b5b-9495-ec150b1c885f",
+    "scenes": 1,
+    "utterances": 6,
+    "points": 4,
+    "reusableItems": 2,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-13",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "learning-quality-1",
+      "inputFingerprint": "b85a8b3662ea3b385487f6ea890c762df58064faf24c1538f1d5577c0094b38a",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "qualityReports": [
+        {
+          "batchId": "s0",
+          "sceneId": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27",
+          "draftHash": "c2460790732620db2e3f19028a2b04007a11a768f325e1f51df72ae6e10a6c58",
+          "reviewIssues": [
+            {
+              "severity": "error",
+              "type": "unsupported_inference",
+              "path": "/translations/1/text",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 22
+                }
+              ],
+              "description": "在未標明說話者與主語的情況下，譯文補入了第二人稱代詞「你」（「你吃過了嗎？」），違反無明確證據時不可在翻譯中補入我／你／他的規則；且在引用單元中加入了「說了」，導入了原文未表達的報告行為。"
+            },
+            {
+              "severity": "warning",
+              "type": "redundancy",
+              "path": "/utterances/5/chunks",
+              "sourceSpans": [
+                {
+                  "cueId": "c4",
+                  "start": 0,
+                  "end": 11
+                }
+              ],
+              "description": "當 decision 為 basic_only 且翻譯已足夠理解時，不應包含 chunks，應保持為空。"
+            }
+          ],
+          "reviewed": true,
+          "repaired": true,
+          "issues": [
+            {
+              "severity": "warning",
+              "type": "redundancy",
+              "path": "/utterances/5/chunks",
+              "sourceSpans": [
+                {
+                  "cueId": "c4",
+                  "start": 0,
+                  "end": 11
+                }
+              ],
+              "description": "當 decision 為 basic_only 且翻譯已足夠理解時，不應包含 chunks，應保持為空。"
+            }
+          ]
+        }
+      ],
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:33:59.429Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 18126.914042,
+          "usage": {
+            "input": 4294,
+            "output": 2659,
+            "reasoning": 2347
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:34:03.811Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 4366.935416,
+          "usage": {
+            "input": 4086,
+            "output": 381,
+            "reasoning": 342
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:35:41.839Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 98008.66325,
+          "usage": {
+            "input": 8119,
+            "output": 16347,
+            "reasoning": 13499
+          }
+        },
+        {
+          "step": "s0-quality-review",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:36:44.105Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 62227.250709,
+          "usage": {
+            "input": 7848,
+            "output": 9670,
+            "reasoning": 9487
+          }
+        },
+        {
+          "step": "s0-quality-repair",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:37:14.110Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 29977.630875000003,
+          "usage": {
+            "input": 7028,
+            "output": 3682,
+            "reasoning": 3621
+          }
+        },
+        {
+          "step": "s0-quality-recheck",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:37:38.851Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 24713.12387500002,
+          "usage": {
+            "input": 7847,
+            "output": 3256,
+            "reasoning": 3252
+          }
+        }
+      ],
+      "pronunciationDiagnostics": []
+    },
+    "semanticAcceptance": "pending manual review; structure/model review are insufficient",
+    "quality": [
+      {
+        "batchId": "s0",
+        "sceneId": "a0d90ed5-5d6e-4505-b854-b8c9fede6d27",
+        "draftHash": "c2460790732620db2e3f19028a2b04007a11a768f325e1f51df72ae6e10a6c58",
+        "reviewIssues": [
+          {
+            "severity": "error",
+            "type": "unsupported_inference",
+            "path": "/translations/1/text",
+            "sourceSpans": [
+              {
+                "cueId": "c2",
+                "start": 0,
+                "end": 22
+              }
+            ],
+            "description": "在未標明說話者與主語的情況下，譯文補入了第二人稱代詞「你」（「你吃過了嗎？」），違反無明確證據時不可在翻譯中補入我／你／他的規則；且在引用單元中加入了「說了」，導入了原文未表達的報告行為。"
+          },
+          {
+            "severity": "warning",
+            "type": "redundancy",
+            "path": "/utterances/5/chunks",
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 11
+              }
+            ],
+            "description": "當 decision 為 basic_only 且翻譯已足夠理解時，不應包含 chunks，應保持為空。"
+          }
+        ],
+        "reviewed": true,
+        "repaired": true,
+        "issues": [
+          {
+            "severity": "warning",
+            "type": "redundancy",
+            "path": "/utterances/5/chunks",
+            "sourceSpans": [
+              {
+                "cueId": "c4",
+                "start": 0,
+                "end": 11
+              }
+            ],
+            "description": "當 decision 為 basic_only 且翻譯已足夠理解時，不應包含 chunks，應保持為空。"
+          }
+        ]
+      }
+    ]
+  }
+]

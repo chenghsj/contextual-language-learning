@@ -1,0 +1,31 @@
+{
+  "scope": "Verifier behavior only. Temporary copies were mutated; original evidence was not modified. No inference.",
+  "command": ["node", "--import", "tsx", "docs/quality/matrix-2026-10-19-prompts17/verify.mts"],
+  "checks": [
+    {
+      "name": "Unmodified copied evidence verifies",
+      "expected": "exit 0",
+      "exitCode": 0,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Pending case cannot be marked accepted",
+      "expected": "assertion rejects mutated records",
+      "exitCode": 1,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Pending finding cannot be relabelled passed by verdict alone",
+      "expected": "assertion rejects mutated records",
+      "exitCode": 1,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Unrecognized issue severity is rejected",
+      "expected": "assertion rejects mutated records",
+      "exitCode": 1,
+      "matchedExpectation": true
+    }
+  ],
+  "newInferenceCalls": 0
+}

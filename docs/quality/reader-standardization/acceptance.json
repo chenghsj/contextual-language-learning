@@ -1,0 +1,232 @@
+{
+  "checkedAt": "2026-10-14T00:34:54.467Z",
+  "promptVersion": "learning-points-prompts-13",
+  "protocolVersion": 12,
+  "tests": {
+    "passed": 119,
+    "failed": 0
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "preview": {
+    "passed": 8,
+    "widths": [
+      320,
+      480
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "data": "synthetic, simulated video adapter"
+  },
+  "provider": "antigravity",
+  "modelId": "gemini-3.8-flash",
+  "thinkingLevel": "medium",
+  "rulesHash": "14f061d5aacae8a5b61b1ec3b7ff64033e1978a0550cd9dcf85009c846b59ae5",
+  "promptsHash": "58254853a61872543bc0021a5b04ff914684147c2a75e0535a645b1737fe5f1a",
+  "cases": [
+    {
+      "case": "ja-normal-transfer-N1-automatic",
+      "id": "b5f81f58-33e7-4d56-94f1-a0a12a1e6d58",
+      "level": "N1",
+      "documentPath": "prompt-13-final/ja-normal-transfer-N1-automatic/ja-normal-transfer-N1-automatic/videos/ja-normal-transfer-N1-automatic--b56358d4b4a9a9eb/b5f81f58-33e7-4d56-94f1-a0a12a1e6d58.json",
+      "storagePath": "prompt-13-final/ja-normal-transfer-N1-automatic/ja-normal-transfer-N1-automatic",
+      "documentHash": "4e1773ced7aacc887d71fd59f30a9e51a7d3ffe8726fd29672024a5989b29606",
+      "structural": "passed",
+      "semantic": "passed",
+      "reviewScope": "Fixed-source coverage, reaction omission, sound-label grouping, source uncertainty, unspecified roles, valid reusable construction and examples; not a claim of exhaustive linguistic or learning-outcome validation.",
+      "notes": [
+        "うん。 and やった。[叫び声] remain complete with translation; both have empty basics and no points/chunks.",
+        "Reliable request and temporal forms remain teachable."
+      ],
+      "warnings": [
+        "Some general intonation wording and form-first explanations remain broader than the preferred concise style."
+      ]
+    },
+    {
+      "case": "ja-normal-transfer-N3-automatic",
+      "id": "a6c10164-dd96-447e-a089-37b6e020d04f",
+      "level": "N3",
+      "documentPath": "prompt-13-final/ja-normal-transfer-N3-automatic/ja-normal-transfer-N3-automatic/videos/ja-normal-transfer-N3-automatic--b56358d4b4a9a9eb/a6c10164-dd96-447e-a089-37b6e020d04f.json",
+      "storagePath": "prompt-13-final/ja-normal-transfer-N3-automatic/ja-normal-transfer-N3-automatic",
+      "documentHash": "5d17f05f62ecf1d6fe021a1e2254f9d4a113a01f9352333639755f6930cb5ad5",
+      "structural": "passed",
+      "semantic": "passed",
+      "reviewScope": "Fixed-source coverage, reaction omission, sound-label grouping, source uncertainty, unspecified roles, valid reusable construction and examples; not a claim of exhaustive linguistic or learning-outcome validation.",
+      "notes": [
+        "うん。 and やった。[叫び声] remain complete with translation; both have empty basics and no points/chunks.",
+        "Reliable request and temporal forms remain teachable."
+      ],
+      "warnings": [
+        "Some general intonation wording and form-first explanations remain broader than the preferred concise style."
+      ]
+    },
+    {
+      "case": "ja-uncertainty-quote-topic-N1-automatic",
+      "id": "0bff08cc-f2a5-41c8-b70c-8514393f3fa1",
+      "level": "N1",
+      "documentPath": "prompt-13-final/ja-uncertainty-quote-topic-N1-automatic/ja-uncertainty-quote-topic-N1-automatic/videos/ja-uncertainty-quote-topic-N1-automatic--4cc9ee6008d764be/0bff08cc-f2a5-41c8-b70c-8514393f3fa1.json",
+      "storagePath": "prompt-13-final/ja-uncertainty-quote-topic-N1-automatic/ja-uncertainty-quote-topic-N1-automatic",
+      "documentHash": "d4106b4dcb3f6b5821ca365afdc8169c2dc4c6fad4cfe3cb5ab82704da33db44",
+      "structural": "passed",
+      "semantic": "passed",
+      "reviewScope": "Fixed-source coverage, reaction omission, sound-label grouping, source uncertainty, unspecified roles, valid reusable construction and examples; not a claim of exhaustive linguistic or learning-outcome validation.",
+      "notes": [
+        "Unclear 悪いない stays explicit without guessed meaning or reading; independent quotation/topic constructions remain teachable.",
+        "Scene summary lists speech acts without joining unlabelled turns; ここにある stays 這裡的 rather than 這裡寫的."
+      ],
+      "warnings": [
+        "Some basic-only subtitle-comprehension wording still has low-value chunks; quotation/meaning clarifications remain longer than necessary."
+      ]
+    },
+    {
+      "case": "ja-uncertainty-quote-topic-N3-automatic",
+      "id": "bb4bcf29-a067-4b5b-9495-ec150b1c885f",
+      "level": "N3",
+      "documentPath": "prompt-13-final/ja-uncertainty-quote-topic-N3-automatic/ja-uncertainty-quote-topic-N3-automatic/videos/ja-uncertainty-quote-topic-N3-automatic--4cc9ee6008d764be/bb4bcf29-a067-4b5b-9495-ec150b1c885f.json",
+      "storagePath": "prompt-13-final/ja-uncertainty-quote-topic-N3-automatic/ja-uncertainty-quote-topic-N3-automatic",
+      "documentHash": "fc665487ac736fcfbaaf3c6eaa07f586e4fcb4f3db8d4ee824e2114f1b89c952",
+      "structural": "passed",
+      "semantic": "passed",
+      "reviewScope": "Fixed-source coverage, reaction omission, sound-label grouping, source uncertainty, unspecified roles, valid reusable construction and examples; not a claim of exhaustive linguistic or learning-outcome validation.",
+      "notes": [
+        "Unclear 悪いない stays explicit without guessed meaning or reading; independent quotation/topic constructions remain teachable.",
+        "Scene summary lists speech acts without joining unlabelled turns; ここにある stays 這裡的 rather than 這裡寫的."
+      ],
+      "warnings": [
+        "Some basic-only subtitle-comprehension wording still has low-value chunks; quotation/meaning clarifications remain longer than necessary."
+      ]
+    }
+  ],
+  "retiredIds": [
+    "7211a949-285f-4655-95ab-11617cc4908a",
+    "68f7ac84-5d9c-4a25-97d7-51d0792881c6"
+  ],
+  "attempts": [
+    {
+      "folder": "prompt-13",
+      "case": "ja-normal-transfer-N1-automatic",
+      "status": "failed",
+      "error": "ModelsError: Credential store read failed for antigravity: EPERM: operation not permitted, mkdir '/Users/cheng/Library/Application Support/Contextual Language Learning/pi/auth.json.lock'",
+      "modelCalls": 0,
+      "durationMs": 11
+    },
+    {
+      "folder": "prompt-13",
+      "case": "ja-uncertainty-quote-topic-N1-automatic",
+      "status": "failed",
+      "error": "ModelsError: Credential store read failed for antigravity: EPERM: operation not permitted, mkdir '/Users/cheng/Library/Application Support/Contextual Language Learning/pi/auth.json.lock'",
+      "modelCalls": 0,
+      "durationMs": 1
+    },
+    {
+      "folder": "prompt-13",
+      "case": "ja-normal-transfer-N3-automatic",
+      "status": "failed",
+      "error": "ModelsError: Credential store read failed for antigravity: EPERM: operation not permitted, mkdir '/Users/cheng/Library/Application Support/Contextual Language Learning/pi/auth.json.lock'",
+      "modelCalls": 0,
+      "durationMs": 0
+    },
+    {
+      "folder": "prompt-13",
+      "case": "ja-uncertainty-quote-topic-N3-automatic",
+      "status": "failed",
+      "error": "ModelsError: Credential store read failed for antigravity: EPERM: operation not permitted, mkdir '/Users/cheng/Library/Application Support/Contextual Language Learning/pi/auth.json.lock'",
+      "modelCalls": 0,
+      "durationMs": 0
+    },
+    {
+      "folder": "prompt-13-live",
+      "case": "ja-normal-transfer-N1-automatic",
+      "status": "failed",
+      "error": "Error: Quality blocked: Major issues remain after one repair",
+      "modelCalls": 6,
+      "durationMs": 186113
+    },
+    {
+      "folder": "prompt-13-live",
+      "case": "ja-uncertainty-quote-topic-N1-automatic",
+      "status": "generated",
+      "modelCalls": 4,
+      "durationMs": 251626
+    },
+    {
+      "folder": "prompt-13-live",
+      "case": "ja-normal-transfer-N3-automatic",
+      "status": "generated",
+      "modelCalls": 4,
+      "durationMs": 115633
+    },
+    {
+      "folder": "prompt-13-live",
+      "case": "ja-uncertainty-quote-topic-N3-automatic",
+      "status": "failed",
+      "error": "Error: Invalid quality review: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"array\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Array must contain at least 1 element(s)\",\n    \"path\": [\n      \"issues\",\n      3,\n      \"sourceSpans\"\n    ]\n  }\n]",
+      "modelCalls": 4,
+      "durationMs": 137066
+    },
+    {
+      "folder": "prompt-13-retry",
+      "case": "ja-normal-transfer-N1-automatic",
+      "status": "generated",
+      "modelCalls": 4,
+      "durationMs": 84972
+    },
+    {
+      "folder": "prompt-13-retry-uncertainty",
+      "case": "ja-uncertainty-quote-topic-N3-automatic",
+      "status": "failed",
+      "error": "Error: Quality blocked: Major issues remain after one repair",
+      "modelCalls": 7,
+      "durationMs": 334369
+    },
+    {
+      "folder": "prompt-13-final/ja-normal-transfer-N1-automatic",
+      "case": "ja-normal-transfer-N1-automatic",
+      "status": "generated",
+      "modelCalls": 4,
+      "durationMs": 154839
+    },
+    {
+      "folder": "prompt-13-final/ja-normal-transfer-N3-automatic",
+      "case": "ja-normal-transfer-N3-automatic",
+      "status": "generated",
+      "modelCalls": 4,
+      "durationMs": 160336
+    },
+    {
+      "folder": "prompt-13-final/ja-uncertainty-quote-topic-N1-automatic",
+      "case": "ja-uncertainty-quote-topic-N1-automatic",
+      "status": "generated",
+      "modelCalls": 4,
+      "durationMs": 242538
+    },
+    {
+      "folder": "prompt-13-final/ja-uncertainty-quote-topic-N3-automatic",
+      "case": "ja-uncertainty-quote-topic-N3-automatic",
+      "status": "generated",
+      "modelCalls": 6,
+      "durationMs": 238047
+    }
+  ],
+  "totalRecordedModelCalls": 47,
+  "installedExtension": "pending manual reload; browser URL policy blocks chrome://extensions; no bypass attempted",
+  "realVideoPlayback": "pending manual acceptance with matching real source; these short samples are import fixtures",
+  "installedHost": {
+    "status": "passed",
+    "protocolVersion": 12,
+    "bundleHash": "6caec3b64d445e98d2f93f952294c47c8b0839c217063f47e684f2848d75cd7b",
+    "acceptedDocumentsReadBack": 4,
+    "retiredIdsRejected": [
+      "7211a949-285f-4655-95ab-11617cc4908a",
+      "68f7ac84-5d9c-4a25-97d7-51d0792881c6"
+    ]
+  },
+  "localPublication": {
+    "status": "passed",
+    "acceptedCount": 4,
+    "driveBackup": false,
+    "preExistingFileHashesUnchanged": 7
+  }
+}

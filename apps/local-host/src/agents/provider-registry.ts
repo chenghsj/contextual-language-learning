@@ -1,9 +1,11 @@
 import { PI_PROVIDER_REGISTRY, type PiProviderAdapter } from "@contextual/core";
 import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
+import { registerLocalModel } from "./local-model";
 import { registerAntigravity } from "./antigravity";
 
 type ConfigureProvider = (runtime: ModelRuntime, root: string) => void;
 const adapters: Record<PiProviderAdapter, ConfigureProvider> = {
+  local: runtime => registerLocalModel(runtime),
   builtin: () => {}, // SDK built-ins are already registered by ModelRuntime.create().
   antigravity: registerAntigravity,
 };

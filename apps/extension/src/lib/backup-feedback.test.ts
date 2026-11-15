@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { JobSummary } from "@contextual/core";
-import { backupFeedbackResult } from "./backup-feedback";
+import { RETIRED_LESSON_MESSAGE } from "@contextual/core";
+import { backupFeedbackResult, isRetiredBackup } from "./backup-feedback";
 
 function job(
   id: string,
@@ -41,4 +42,20 @@ test("backup success requires completed records for every requested job in the s
     status: "failed",
     failed: 1,
   });
+});
+
+test("only explicitly retired backup failures are excluded from retry candidates", () => {
+  const retired = job("old", "failed");
+  retired.backup!.error = "Cannot load document: " + RETIRED_LESSON_MESSAGE;
+  const network = job("network", "failed");
+  network.backup!.error = "Network unavailable";
+  const records = [retired, network, job("saved", "backed-up")];
+  assert.equal(isRetiredBackup(retired), true);
+  assert.equal(isRetiredBackup(network), false);
+  assert.deepEqual(
+    records
+      .filter(record => record.backup?.status === "failed" && !isRetiredBackup(record))
+      .map(record => record.id),
+    ["network"],
+  );
 });

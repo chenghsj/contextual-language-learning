@@ -12,7 +12,7 @@ import {
   YOUTUBE_CAPTION_FETCH_ATTEMPT_MS,
 } from "../video/youtube-captions";
 
-// MAIN world: access only the active watch player's public caption-track metadata.
+// MAIN world: access the active watch player's subtitle metadata and caption requests.
 // Runs a caption request only when the Side Panel explicitly asks for it.
 (() => {
   const REQUEST = "contextual-learning:youtube:caption-request";

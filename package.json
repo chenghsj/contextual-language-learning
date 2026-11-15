@@ -7,16 +7,21 @@
     "preinstall": "node scripts/enforce-pnpm.cjs",
     "dev": "pnpm --filter @contextual/extension dev",
     "dev:preview": "pnpm --filter @contextual/extension dev:preview",
-    "build": "pnpm --filter @contextual/extension build && pnpm --filter @contextual/local-host build",
-    "typecheck": "tsc -p packages/core/tsconfig.json --noEmit && tsc -p apps/local-host/tsconfig.json --noEmit && tsc -p apps/extension/tsconfig.json --noEmit",
-    "test": "node --import tsx --test --test-concurrency=1 packages/core/src/*.test.ts apps/local-host/src/*.test.ts apps/local-host/src/agents/*.test.ts apps/local-host/src/drive/*.test.ts apps/local-host/src/generation/*.test.ts apps/local-host/src/jobs/*.test.ts apps/local-host/src/storage/*.test.ts apps/local-host/src/platform/*.test.ts apps/extension/src/*.test.ts apps/extension/src/lib/*.test.ts apps/extension/src/video/*.test.ts apps/extension/src/native/*.test.ts apps/extension/src/i18n/*.test.ts apps/extension/src/i18n/*.test.tsx && node --test apps/local-host/scripts/native-host-platform.test.mjs apps/local-host/scripts/pi-bundle.test.mjs scripts/host-entrypoints.test.mjs scripts/host-setup.test.mjs && pnpm test:package-manager",
+    "build": "pnpm --filter @contextual/extension build && pnpm --filter @contextual/local-host build && pnpm --filter @contextual/web build",
+    "typecheck": "tsc -p packages/core/tsconfig.json --noEmit && tsc -p apps/local-host/tsconfig.json --noEmit && tsc -p apps/extension/tsconfig.json --noEmit && tsc -p apps/web/tsconfig.json --noEmit",
+    "test": "node --import tsx --test --test-concurrency=1 packages/core/src/*.test.ts apps/local-host/src/*.test.ts apps/local-host/src/agents/*.test.ts apps/local-host/src/drive/*.test.ts apps/local-host/src/generation/*.test.ts apps/local-host/src/jobs/*.test.ts apps/local-host/src/storage/*.test.ts apps/local-host/src/platform/*.test.ts apps/extension/src/*.test.ts apps/extension/src/lib/*.test.ts apps/extension/src/components/activity-items.test.ts apps/extension/src/video/*.test.ts apps/extension/src/native/*.test.ts apps/extension/src/i18n/*.test.ts apps/extension/src/i18n/*.test.tsx apps/web/src/*.test.ts && node --test apps/local-host/scripts/siri-download-journal.test.mjs apps/local-host/scripts/native-host-platform.test.mjs apps/local-host/scripts/pi-bundle.test.mjs scripts/host-entrypoints.test.mjs scripts/host-setup.test.mjs && pnpm test:package-manager && pnpm test:dev-config",
     "host:install": "node scripts/install-host.mjs",
     "host:uninstall": "node scripts/uninstall-host.mjs",
     "package:release": "node scripts/package-release.mjs",
     "package:host-setup": "node scripts/package-host-setup.mjs",
     "test:package-manager": "node --test scripts/enforce-pnpm.test.cjs",
+    "test:dev-config": "node --test apps/extension/scripts/vite-config.test.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "web:dev": "pnpm --filter @contextual/web dev",
+    "web:build": "pnpm --filter @contextual/web build",
+    "web:test": "pnpm --filter @contextual/web test",
+    "web:deploy": "pnpm web:build && node apps/web/scripts/build-cloudflare.mjs && cd apps/web && cf deploy --prebuilt"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
@@ -26,7 +31,7 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "pi-antigravity@0.10.0": "patches/pi-antigravity@0.10.0.patch"
+      "pi-antigravity@0.14.0": "patches/pi-antigravity@0.14.0.patch"
     }
   }
 }

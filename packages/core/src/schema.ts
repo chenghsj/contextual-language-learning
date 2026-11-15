@@ -4,6 +4,8 @@ import { z } from "zod";
 import { isPiProviderId } from "./pi-providers";
 import { LEARNING_LANGUAGES, EXPLANATION_LANGUAGES } from "./languages";
 import { ExplanationTypeSchema, SourceSpanSchema, SentenceChunkSchema } from "./explanations";
+import { ThinkingLevelSchema } from "./thinking";
+import { CustomModelIdSchema } from "./custom-model";
 
 export const SubtitleRubySchema = z.object({
   start: z.number().int().nonnegative(),
@@ -57,16 +59,7 @@ export const LearningProfileSchema = z.object({
 });
 export type LearningProfile = z.infer<typeof LearningProfileSchema>;
 
-export const ThinkingLevelSchema = z.enum([
-  "off",
-  "minimal",
-  "low",
-  "medium",
-  "high",
-  "xhigh",
-  "max",
-]);
-export type ThinkingLevel = z.infer<typeof ThinkingLevelSchema>;
+export { ThinkingLevelSchema, type ThinkingLevel } from "./thinking";
 
 export const AgentSettingsSchema = z
   .object({
@@ -75,8 +68,21 @@ export const AgentSettingsSchema = z
       .refine((value): boolean => isPiProviderId(value), "Unsupported Pi provider"),
     modelId: z.string().max(120),
     thinkingLevel: ThinkingLevelSchema.optional(),
+    /** Explicit user selection; absent for normal catalog models. */
+    customModel: z.boolean().optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    value => {
+      if (!value.customModel) return true;
+      const parsed = CustomModelIdSchema.safeParse(value.modelId);
+      return parsed.success && parsed.data === value.modelId;
+    },
+    {
+      message: "A custom model requires a valid model ID.",
+      path: ["modelId"],
+    },
+  );
 export type AgentSettings = z.infer<typeof AgentSettingsSchema>;
 
 export const DestinationSchema = z.discriminatedUnion("kind", [
@@ -315,9 +321,9 @@ export type ReusableItem = z.infer<typeof ReusableItemSchema>;
 export type LearningSceneV7 = z.infer<typeof LearningSceneV7Schema>;
 export type SourceUtterance = z.infer<typeof SourceUtteranceSchema>;
 export const LEARNING_POINTS_WORKFLOW_VERSION = "learning-points-v7-1";
-export const LEARNING_POINTS_PROMPT_VERSION = "learning-points-prompts-17";
-export const LANGUAGE_STRATEGY_VERSION = "learning-language-strategies-4";
-export const QUALITY_STRATEGY_VERSION = "program-validation-2";
+export const LEARNING_POINTS_PROMPT_VERSION = "learning-points-prompts-20";
+export const LANGUAGE_STRATEGY_VERSION = "learning-language-strategies-5";
+export const QUALITY_STRATEGY_VERSION = "program-validation-3";
 export const LEVEL_STRATEGY_VERSION = "learning-level-strategies-1";
 
 export const RETIRED_LESSON_MESSAGE = "此教材版本已停止支援，請重新生成";
@@ -344,13 +350,22 @@ export function readableLearningExecution(value: unknown): boolean {
   return (
     e.workflowVersion === LEARNING_POINTS_WORKFLOW_VERSION &&
     e.schemaVersion === "7" &&
-    e.languageStrategyVersion === LANGUAGE_STRATEGY_VERSION &&
     e.levelStrategyVersion === LEVEL_STRATEGY_VERSION &&
-    ((e.qualityStrategyVersion === "learning-quality-1" &&
-      ["learning-points-prompts-12", "learning-points-prompts-13"].includes(e.promptVersion)) ||
-      (e.qualityStrategyVersion === "program-validation-1" &&
-        e.promptVersion === "learning-points-prompts-14") ||
-      (e.qualityStrategyVersion === "program-validation-2" &&
-        ["learning-points-prompts-15", "learning-points-prompts-16"].includes(e.promptVersion)))
+    ((e.languageStrategyVersion === "learning-language-strategies-5" &&
+      ((e.qualityStrategyVersion === "program-validation-2" &&
+        e.promptVersion === "learning-points-prompts-18") ||
+        (e.qualityStrategyVersion === "program-validation-3" &&
+          e.promptVersion === "learning-points-prompts-19"))) ||
+      (e.languageStrategyVersion === "learning-language-strategies-4" &&
+        ((e.qualityStrategyVersion === "learning-quality-1" &&
+          ["learning-points-prompts-12", "learning-points-prompts-13"].includes(e.promptVersion)) ||
+          (e.qualityStrategyVersion === "program-validation-1" &&
+            e.promptVersion === "learning-points-prompts-14") ||
+          (e.qualityStrategyVersion === "program-validation-2" &&
+            [
+              "learning-points-prompts-15",
+              "learning-points-prompts-16",
+              "learning-points-prompts-17",
+            ].includes(e.promptVersion)))))
   );
 }

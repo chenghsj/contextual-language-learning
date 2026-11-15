@@ -1,0 +1,74 @@
+[
+  {
+    "language": "fr",
+    "level": "B1",
+    "name": "location-transfer-variant",
+    "group": "previously_rejected",
+    "lines": [
+      "Pourquoi êtes-vous encore dehors ?",
+      "J’allais rentrer quand vous avez appelé.",
+      "Vous pouvez patienter un moment ?",
+      "Oui."
+    ]
+  },
+  {
+    "language": "es",
+    "level": "B1",
+    "name": "report-transfer-variant",
+    "group": "previously_rejected",
+    "lines": [
+      "¿Leo habló del viaje?",
+      "«Dime dónde esperar», dijo. Por cierto, ¿ya cenaste?",
+      "Todavía no. ¿Qué significa [???] aquí?",
+      "La última palabra no se entiende."
+    ]
+  },
+  {
+    "language": "fr",
+    "level": "B1",
+    "name": "citation-plural-variant",
+    "group": "new_authored_variant",
+    "lines": [
+      "Les dossiers sont-ils encore disponibles ?",
+      "Oui, ils sont dans l’armoire.",
+      "Pouvez-vous me donner les deux premiers ?",
+      "Bien sûr."
+    ]
+  },
+  {
+    "language": "es",
+    "level": "B1",
+    "name": "actor-recipient-variant",
+    "group": "new_authored_variant",
+    "lines": [
+      "Yo voy a pedir que nos envíen los horarios.",
+      "Perfecto. Nosotros vamos a revisar las fechas.",
+      "Te avisaré cuando tenga una respuesta.",
+      "Gracias."
+    ]
+  },
+  {
+    "language": "en",
+    "level": "B1",
+    "name": "normal-transfer",
+    "lines": [
+      "Why are you still here?",
+      "I was about to leave when you called.",
+      "Can you wait a minute?",
+      "Sure."
+    ],
+    "group": "previously_accepted_control"
+  },
+  {
+    "language": "ja",
+    "level": "N3",
+    "name": "normal-transfer",
+    "lines": [
+      "まだここにいるの？",
+      "電話が来たとき、出かけるところだった。",
+      "少し待ってくれる？",
+      "うん。"
+    ],
+    "group": "previously_accepted_control"
+  }
+]

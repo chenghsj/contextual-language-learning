@@ -1,0 +1,14 @@
+{
+  "status": "blocked_before_inference",
+  "plannedCases": 3,
+  "startedCases": 0,
+  "generatedCases": 0,
+  "modelCalls": 0,
+  "cause": "Automatic approval review model capacity failure on two required escalation attempts; neither command executed.",
+  "approvalRiskDecision": "No unsafe determination was made; the approval check could not complete. Do not bypass it.",
+  "preparedInputs": "prepared/requests.json",
+  "resumeSource": "run-context.json",
+  "nextAction": "Wait for approval review availability or user guidance, then submit the unchanged frozen command through the required approval process.",
+  "browserAcceptance": "Not executed; Chrome tool also reports its browser profile already running.",
+  "boundary": "No new model-semantic acceptance. Engineering success and valid prepared inputs do not establish generated quality."
+}

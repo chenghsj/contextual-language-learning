@@ -1,0 +1,34 @@
+{
+  "case": "fr-location-transfer-variant-automatic",
+  "document": "batch-2/fr-location-transfer-variant-automatic/videos/fr-location-transfer-variant-automatic--93b824faf45a7df0/f24551de-5fe6-4eca-ab1c-770b727b67d6.json",
+  "documentHash": "5763db5ea0acc5b5567c21273c2cea3da7f8fec9adab2042deaa5d544b1ddc92",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The novel vous/dehors source retains a locative explanation and qualifies appeler as phone/calling out. Examples match their situations. A newly discovered source-citation boundary cuts the final s off dehors; the correct explanation does not repair the displayed source citation."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "incomplete_source_citation",
+      "path": "/points/0/sourceSpans/0/end",
+      "quote": "31",
+      "description": "The c1 citation spans [0,31), yielding Pourquoi êtes-vous encore dehor. The reliable word dehors ends at UTF-16 offset 32, so the displayed source quote cuts inside a word. This is an additional source-citation defect found during the full review, not a newly asserted error in French grammar or a change to the fixed input.",
+      "derivedSlice": "Pourquoi êtes-vous encore dehor",
+      "fullWord": "dehors",
+      "requiredWordEnd": 32,
+      "discovery": "Additional finding under source-citation fidelity; not the originally targeted location-gloss failure."
+    },
+    {
+      "severity": "warning",
+      "type": "unqualified_general_intonation",
+      "path": "/points/2/explanation",
+      "quote": "口語語調上揚",
+      "description": "Describe rising intonation as a possible general realization, not an obligatory property. No recording-specific delivery was available or checked."
+    }
+  ],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

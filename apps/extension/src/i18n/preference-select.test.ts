@@ -155,7 +155,9 @@ test("shadcn Select renders an accessible, keyboard-controlled combobox", () => 
 });
 
 test("Radix popup and trigger follow the warm theme without an unstyled native dropdown", async () => {
-  const select = await readSource(new URL("../components/ui/select.tsx", import.meta.url));
+  const select = await readSource(
+    new URL("../../../../packages/ui/src/components/ui/select.tsx", import.meta.url),
+  );
   const css = await readFile(new URL("../styles.css", import.meta.url), "utf8");
   assert.match(select, /SelectPrimitive\.Root/);
   assert.match(select, /SelectPrimitive\.Portal/);

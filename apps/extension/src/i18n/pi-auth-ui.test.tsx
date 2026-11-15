@@ -213,6 +213,11 @@ test("connected services are immediately visible and new connections stay collap
       "false",
     );
     assert.equal(container.querySelector('[role="tablist"]'), null);
+    assert.match(
+      container.querySelector('[data-ui="pi-connected-services"] button[aria-expanded]')!
+        .textContent!,
+      /已設定 · 使用中/,
+    );
     assert.equal(
       container.querySelectorAll('[data-ui="pi-connected-services"] button[aria-expanded]').length,
       1,

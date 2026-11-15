@@ -7,7 +7,10 @@ import type { AgentSettings } from "@contextual/core";
 import { RequestModelSelection } from "../components/request-model-selection";
 
 test("request readiness follows the current catalog and reasoning, retaining controls during refresh", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "https://example.test" });
+  const dom = new JSDOM('<div id="root"></div>', {
+    url: "https://example.test",
+    pretendToBeVisual: true,
+  });
   const replies: ((failed?: boolean, warning?: string) => void)[] = [];
   const originals = new Map<string, PropertyDescriptor | undefined>();
   const globals = {
@@ -21,6 +24,8 @@ test("request readiness follows the current catalog and reasoning, retaining con
     Event: dom.window.Event,
     DocumentFragment: dom.window.DocumentFragment,
     getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
+    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
+    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
     IS_REACT_ACT_ENVIRONMENT: true,
     chrome: {
       runtime: {
@@ -34,7 +39,13 @@ test("request readiness follows the current catalog and reasoning, retaining con
             },
             onDisconnect: { addListener() {} },
             disconnect() {},
-            postMessage: (request: { id: string }) =>
+            postMessage: (request: { id: string; type: string }) => {
+              if (request.type === "discoverModels") {
+                queueMicrotask(() =>
+                  receive({ id: request.id, type: "discoveredModels", models: [], source: "sdk" }),
+                );
+                return;
+              }
               replies.push((failed, warning) =>
                 receive(
                   failed
@@ -56,7 +67,8 @@ test("request readiness follows the current catalog and reasoning, retaining con
                         ...(warning ? { warning } : {}),
                       },
                 ),
-              ),
+              );
+            },
           };
         },
       },
@@ -121,6 +133,10 @@ test("request readiness follows the current catalog and reasoning, retaining con
     selected = { ...selected, modelId: "missing", thinkingLevel: undefined };
     await act(async () => render());
     assert.equal(ready, false, "a stale model cannot enable creation");
+    selected = { ...selected, customModel: true };
+    await act(async () => render());
+    assert.equal(ready, true, "an explicit custom ID can be used before the catalog knows it");
+    selected = { ...selected, customModel: undefined };
     selected = { ...selected, modelId: "", thinkingLevel: "low" };
     await act(async () => render());
     assert.equal(ready, true, "automatic selection validates the first available model");

@@ -7,6 +7,12 @@ import {
   pronunciationMissingCount,
 } from "./execution";
 import { z } from "zod";
+import {
+  CompactPlanSchema,
+  compactCheckpointIssues,
+  compactProgress,
+  compactDocument,
+} from "./compact-plan";
 import { ExplanationTypeSchema } from "./explanations";
 import { validateLearningDocumentV7 } from "./learning-points";
 import { chunkCues } from "./subtitles";
@@ -63,6 +69,9 @@ export const JobSummarySchema = z.object({
   error: z.string().optional(),
   pronunciationMissingCount: z.number().int().nonnegative().optional(),
   documentId: z.string().uuid().optional(),
+  readySceneIds: z.array(z.string().uuid()).max(6).optional(),
+  previewRevision: z.number().int().nonnegative().optional(),
+  selectedSceneCount: z.number().int().min(1).max(6).optional(),
   ownerPid: z.number().int().positive().optional(),
   publication: z
     .object({
@@ -163,6 +172,7 @@ export const JobSnapshotV5Schema = z
       "V5 job requires V7 request",
     ),
     sections: z.array(LearningSceneV7Schema).max(6),
+    compactPlan: CompactPlanSchema.optional(),
     learningPlan: z.object({
       candidateWindows: z.array(
         z.object({
@@ -187,6 +197,39 @@ export const JobSnapshotV5Schema = z
     }),
   })
   .superRefine((job, ctx) => {
+    if (job.compactPlan) {
+      const issue = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
+      if (
+        job.summary.id !== job.request.id ||
+        job.execution?.generationStrategyVersion !== "compact-scenes-1"
+      )
+        issue("Compact job identity mismatch");
+      for (const message of compactCheckpointIssues(job.compactPlan, job.request, job.execution))
+        issue(message);
+      const progress = compactProgress(job.compactPlan, job.request.profile.sceneCount);
+      if (
+        job.summary.completed !== progress.completed ||
+        job.summary.total !== progress.total ||
+        job.summary.previewRevision !== progress.previewRevision ||
+        JSON.stringify(job.summary.readySceneIds) !== JSON.stringify(progress.readySceneIds) ||
+        job.summary.pronunciationMissingCount !== progress.pronunciationMissingCount
+      )
+        issue("Compact checkpoint progress mismatch");
+      if (
+        job.summary.status === "completed" &&
+        (progress.completed !== progress.total ||
+          job.summary.documentId !== job.summary.id ||
+          (job.execution?.compactQualityVersion &&
+            !job.compactPlan.reconciliation?.qualityAccepted))
+      )
+        issue("Incomplete compact job cannot be completed");
+      try {
+        compactDocument(job.request, job.execution, job.summary.createdAt, job.compactPlan);
+      } catch (e) {
+        issue(String(e));
+      }
+      return;
+    }
     if (
       job.summary.id !== job.request.id ||
       new Set(job.learningPlan.batches.map(b => b.id)).size !== job.learningPlan.batches.length

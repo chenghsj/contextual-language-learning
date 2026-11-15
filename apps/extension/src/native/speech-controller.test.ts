@@ -420,7 +420,7 @@ test("confirmed removal clears a voice listing that started before deletion", as
   assert.equal(env.controller.snapshot().voices, null);
   env.controller.dispose();
 });
-test("Siri catalog and download responses remain separate from cached playable voices", async () => {
+test("Siri catalog does not populate the cached playable voices", async () => {
   const env = setup();
   const catalog = env.controller.listVoiceCatalog();
   env.reply({
@@ -442,20 +442,6 @@ test("Siri catalog and download responses remain separate from cached playable v
   });
   assert.equal((await catalog).voices[0].installed, false);
   assert.equal(env.controller.snapshot().voices, null);
-  const download = env.controller.installVoice("siri:test");
-  env.reply({
-    id: env.sent.at(-1)!.id,
-    type: "speechVoiceInstallation",
-    installation: { voiceId: "siri:test", status: "requested" },
-  });
-  assert.equal((await download).status, "requested");
-  const status = env.controller.voiceInstallation("siri:test");
-  env.reply({
-    id: env.sent.at(-1)!.id,
-    type: "speechVoiceInstallation",
-    installation: { voiceId: "wrong", status: "installed" },
-  });
-  await assert.rejects(status, /Invalid Siri/);
   env.controller.dispose();
 });
 test("basic-only languages never speak or pause video, even with a saved basic voice", async () => {

@@ -1,0 +1,17 @@
+export const languageNames: Record<string, string> = {
+  en: "英語",
+  ja: "日語",
+  ko: "韓語",
+  es: "西班牙語",
+  fr: "法語",
+  de: "德語",
+  it: "義大利語",
+  pt: "葡萄牙語",
+  id: "印尼語",
+  th: "泰語",
+  ms: "馬來語",
+  vi: "越南語",
+  "zh-TW": "繁體中文",
+  "zh-CN": "簡體中文",
+  unspecified: "未指定語言",
+};

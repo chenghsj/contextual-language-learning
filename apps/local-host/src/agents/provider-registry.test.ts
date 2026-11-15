@@ -9,7 +9,7 @@ import {
   piProviderDefinition,
   isPiProviderId,
 } from "@contextual/core";
-import { createPiRuntime } from "./pi";
+import { createTestPiRuntime as createPiRuntime } from "./credentials-test-support";
 import { antigravityChatModels } from "./antigravity";
 import { withAntigravityAccountDirectory, listAccounts } from "pi-antigravity/src/auth/accounts.js";
 import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
@@ -92,14 +92,17 @@ test("connected service labels follow the saved SDK authentication method", asyn
       ],
       [{ type: "api_key", key: "synthetic" }, "OpenAI API key"],
     ] as const) {
+      const caseRoot = join(root, label);
+      await mkdir(caseRoot);
       await writeFile(
-        join(root, "auth.json"),
+        join(caseRoot, "auth.json"),
         JSON.stringify(credential ? { openai: credential } : {}),
       );
-      const runtime = await createPiRuntime(root);
+      const runtime = await createPiRuntime(caseRoot);
       const provider = (await piProviders(runtime)).find(item => item.id === "openai")!;
       assert.equal(provider.label, label);
       assert.equal(provider.connected, !!credential);
+      assert.equal(provider.credentialMethod, credential?.type);
       if (credential) assert.equal(provider.label, provider.methodLabels?.[credential.type]);
     }
   } finally {

@@ -1,0 +1,16 @@
+{
+  "verified": true,
+  "target": {
+    "operationId": "d5897e10-f892-4d06-a817-f3b836696cc1",
+    "voiceId": "siri:com.apple.speech.synthesis.voice.custom.siri.axel.premium"
+  },
+  "control": {
+    "operationId": "0bcf62fc-2653-4867-9088-0b91176e5e61",
+    "voiceId": "siri:com.apple.speech.synthesis.voice.custom.siri.else.premium"
+  },
+  "lateStartFenced": true,
+  "repeatedCancel": true,
+  "parallelControlInstalled": true,
+  "existingAssetsRetained": true,
+  "scope": "actual helper only; extension UI and packaging are separate checks"
+}

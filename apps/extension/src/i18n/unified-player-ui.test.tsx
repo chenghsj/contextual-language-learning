@@ -200,7 +200,7 @@ test("one player changes target; timing captures the stopped clock, previews the
     await click(button("Loop"));
     assert.equal(button("Loop").getAttribute("aria-pressed"), "false");
     assert.equal(button("Loop").getAttribute("data-state"), "off");
-    assert.equal(container.querySelector('footer [role="status"]'), null);
+    assert.equal(container.querySelectorAll('footer [role="status"]').length, 0);
     await click(button("Loop"));
     assert.equal(loops.at(-1)?.startMs, 3100, "enabling loop preserves its full original range");
     await click(button("Previous scene", container.querySelector("nav")!));
@@ -221,9 +221,14 @@ test("one player changes target; timing captures the stopped clock, previews the
     await click(button("Adjust timing"));
     assert.equal(saves.length, 0);
     assert.equal(playing, false, "opening timing pauses the video");
-    assert.equal(container.querySelector("footer"), null, "editing has only one player");
-    assert.equal(button("Next scene", container.querySelector("nav")!).disabled, true);
-    assert.equal(container.querySelector('[aria-label="End +0.5s"]'), null);
+    assert.equal(
+      container.querySelectorAll('[data-ui="unifiedPlayer"]').length,
+      0,
+      "editing replaces the normal player with timing controls",
+    );
+    assert.equal(container.querySelectorAll('[data-ui="timing-footer"]').length, 1);
+    assert.equal(container.querySelectorAll("nav").length, 0, "editing hides scene navigation");
+    assert.equal(container.querySelectorAll('[aria-label="End +0.5s"]').length, 0);
     await click(button("Play", container.querySelector("section")!));
     assert.equal(normalPlays, 1, "timing play uses native play, not the selected range");
     currentMs = 2809;
@@ -250,6 +255,8 @@ test("one player changes target; timing captures the stopped clock, previews the
     await click(button("Test end"));
     assert.equal(loops.at(-1)?.startMs, 5200);
     assert.equal(loops.at(-1)?.endMs, 7200);
+    await click(button("Stop preview"));
+    assert.equal(playing, false, "the timing footer can stop a boundary preview");
     await click(button("Preview range"));
     assert.deepEqual(loops.at(-1), {
       startMs: 2700,
@@ -261,13 +268,16 @@ test("one player changes target; timing captures the stopped clock, previews the
     assert.equal(saves.length, 0, "auditioning never writes lesson data");
     await click(button("Done"));
     assert.deepEqual(saves, [{ id: "cue-2", range: { startMs: 2700, endMs: 6200 } }]);
-    assert.ok(container.querySelector("footer"), "Done restores the normal player");
+    assert.ok(
+      container.querySelector('[data-ui="unifiedPlayer"]'),
+      "Done restores the normal player",
+    );
     await click(button("Playback options"));
     await click(button("Adjust timing"));
     currentMs = 5300;
     await click(button("Set start here"));
     await click(button("Start +0.1s"));
-    assert.ok(container.querySelector('section [role="status"]'), "too-short edits are rejected");
+    assert.equal(button("Start +0.1s").disabled, true, "too-short edits are disabled");
     await click(button("Preview range"));
     assert.equal(loops.at(-1)?.startMs, 5300, "invalid fine-tuning leaves the draft intact");
     assert.equal(loops.at(-1)?.endMs, 5600, "YouTube uses the next source cue's start");

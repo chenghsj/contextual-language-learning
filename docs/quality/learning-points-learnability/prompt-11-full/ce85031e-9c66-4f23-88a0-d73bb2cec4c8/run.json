@@ -1,0 +1,12 @@
+{
+  "id": "ce85031e-9c66-4f23-88a0-d73bb2cec4c8",
+  "startedAt": "2026-10-11T17:10:23.903Z",
+  "promptVersion": "learning-points-prompts-11",
+  "timeoutMs": 5400000,
+  "originalHashes": {
+    "job": "9245f7c556349d8647921f0cb4b2a0391cb7802e1f671ffc490aa7938634c465",
+    "document": "b435200fb97490c76f96b97368c1a932ee86314811f8bc48e140a81638403523"
+  },
+  "sourceCueHash": "7edb0170a25ba95fdbec9577351af0db077c81b73f92993b3f22037ad8388fc7",
+  "resume": false
+}

@@ -57,6 +57,7 @@ test(
     await writeFile(join(root, "runtime/node"), "bundled runtime fixture");
     await writeFile(join(root, "dist/native-host.mjs"), "host fixture");
     await writeFile(join(root, "dist/macos-speech"), "speech helper fixture");
+    await writeFile(join(root, "dist/macos-credentials"), "credential helper fixture");
     await writeFile(join(root, "dist/macos-speech.swift"), "speech helper fixture");
     await writeFile(join(root, "dist/macos-speech-siri"), "Siri helper fixture");
     await writeFile(join(root, "dist/macos-speech-siri.LICENSE"), "Siri license fixture");

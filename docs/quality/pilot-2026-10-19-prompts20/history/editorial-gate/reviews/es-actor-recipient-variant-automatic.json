@@ -1,0 +1,41 @@
+{
+  "case": "es-actor-recipient-variant-automatic",
+  "document": "batch-1/es-actor-recipient-variant-automatic/videos/es-actor-recipient-variant-automatic--28e6eb85f1301309/eb3b3318-7da8-4e71-aabd-0f4907534111.json",
+  "documentHash": "df761686d62bb599070647129004deafc00e6093defcacaf7ebc957a156da472",
+  "reviewer": "Same unblinded Codex source/editorial reviewer; not independent or native-speaker certification",
+  "verdict": "needs_review",
+  "checks": [
+    {
+      "scope": "All source translations, contexts/titles, units/chunks, points, source citations, patterns, invented examples and any available written readings",
+      "result": "The required cuando tenga construction is actually cited and taught. The point now requires subjunctive mood under a future temporal-clause condition and identifies tenga as the instance, without requiring present subjunctive as the only tense. Source and examples preserve the singular asking actor, plural recipients and timing. However the actual source sender is rendered as 他們 in both translation and a chunk, so the same earlier sender-reference question remains pending."
+    }
+  ],
+  "targets": [
+    {
+      "id": "cuando_tenga",
+      "result": "passed",
+      "path": "/reusableItems/1/sourceForms/0/text",
+      "quote": "cuando tenga",
+      "teachingPath": "/points/1/explanation",
+      "reason": "The exact construction is quoted and explained; scope uses 虛擬式 without the previous present-tense-only requirement. This target result denotes coverage, not overall case acceptance."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "needs_review",
+      "type": "source_sender_reference",
+      "path": "/sections/0/translations/0/text",
+      "quote": "我會請他們把時間表寄給我們。",
+      "description": "The source envíen has morphology shared by ellos/ellas and formal plural ustedes; the subtitles do not establish the subordinate sender identity. 他們 selects a third party, whereas neutral 對方 would preserve the unresolved role. A third-party reading may still be natural generic translation. The new explanation calls the subject third-person plural, which by itself can describe the grammatical agreement used with ustedes and does not independently settle discourse person. This is the same editorial ambiguity kept pending in prompts-19, not a new definite error. An independent language editor should decide the acceptable translation scope.",
+      "references": [
+        {
+          "title": "RAE-ASALE: conjugación española",
+          "url": "https://www.rae.es/buen-uso-espa%C3%B1ol/conjugaci%C3%B3n-espa%C3%B1ola",
+          "supports": "Shared plural ustedes/ellos forms support the grammatical ambiguity; the table does not decide this translation or its severity."
+        }
+      ]
+    }
+  ],
+  "references": [],
+  "boundary": "One fresh output per frozen case. Target passed denotes actual teaching coverage; the case can still be pending or failed semantically. This does not resolve earlier disputed documents. No independent/native review, stability/causal estimate, audio, installed Host, real Chrome/video or learning-effect acceptance."
+}

@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":31}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":25}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":25,\"end\":55}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":12}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":12,\"end\":41}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":28}]}],\"learningValue\":\"此對話涵蓋引述他人說法、使用「A proposito」切換話題，以及針對「hai già ...」問句以「Non ancora」回應的實用互動模式。\",\"opportunities\":[{\"category\":\"chunks\",\"sourceCueIds\":[\"c2\"],\"description\":\"以「A proposito」自然切換談話主題的口語用法\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"命令式結合代名詞並連寫雙寫輔音的「Dimmi」（di' + mi）\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c2\",\"c3\"],\"description\":\"回應「hai già mangiato?」時以副詞「Non ancora」簡潔作答的模式\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:38:14.368Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 32425.776249999995,
+    "usage": {
+      "input": 2751,
+      "output": 5188,
+      "reasoning": 4880
+    }
+  }
+}

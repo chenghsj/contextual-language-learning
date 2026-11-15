@@ -41,7 +41,7 @@ export function AlertDialogTitle(props: React.ComponentProps<typeof AlertDialogP
   return (
     <AlertDialogPrimitive.Title
       {...props}
-      className={cn("text-sm font-semibold", props.className)}
+      className={cn("text-ui-heading font-semibold", props.className)}
     />
   );
 }
@@ -52,7 +52,7 @@ export function AlertDialogDescription(
   return (
     <AlertDialogPrimitive.Description
       {...props}
-      className={cn("text-xs leading-relaxed text-muted-foreground", props.className)}
+      className={cn("text-ui-body text-muted-foreground", props.className)}
     />
   );
 }

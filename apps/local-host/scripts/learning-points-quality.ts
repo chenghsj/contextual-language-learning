@@ -13,9 +13,31 @@ import {
   type GenerationRequest,
 } from "@contextual/core";
 import { JobManager } from "../src/jobs/manager";
+import { generatePiText } from "../src/agents/pi";
 import { localStoragePorts } from "../src/storage/file";
 import { qualityV7Cases as authoredCases } from "./quality-v7-cases";
 const reactionAcceptance = process.argv.includes("--reaction-acceptance");
+const casesFile = process.argv.find(a => a.startsWith("--cases-file="))?.slice(13);
+if (casesFile && reactionAcceptance) throw new Error("Choose one case source");
+const caseBytes = casesFile ? await readFile(casesFile) : undefined;
+const customCases: typeof authoredCases | undefined = caseBytes
+  ? JSON.parse(caseBytes.toString("utf8"))
+  : undefined;
+if (
+  casesFile &&
+  (!Array.isArray(customCases) ||
+    !customCases.length ||
+    customCases.some(
+      c =>
+        !c ||
+        typeof c.name !== "string" ||
+        !/^[a-z0-9-]+$/.test(c.name) ||
+        !Array.isArray(c.lines) ||
+        !c.lines.length ||
+        c.lines.some(line => typeof line !== "string" || !line.trim()),
+    ))
+)
+  throw new Error("Invalid authored quality cases");
 const cases = reactionAcceptance
   ? ["N1", "N3"].flatMap(level =>
       authoredCases
@@ -27,7 +49,10 @@ const cases = reactionAcceptance
           lines: c.name === "normal-transfer" ? [...c.lines, "やった。[叫び声]"] : c.lines,
         })),
     )
-  : authoredCases;
+  : (customCases ?? authoredCases);
+if (new Set(cases.map(c => `${c.language}-${c.name}`)).size !== cases.length)
+  throw new Error("Duplicate quality case");
+const tracePrompts = process.argv.includes("--trace-prompts");
 // This runner exercises the canonical automatic strategy, once per fixed source.
 const filter = process.argv.find(a => a.startsWith("--case="))?.slice(7);
 const languages = process.argv
@@ -67,9 +92,11 @@ console.log(
     provider: "antigravity",
     modelId: "gemini-3.8-flash",
     thinkingLevel: "medium",
-    source: reactionAcceptance
-      ? "Four N1/N3 reaction and uncertainty acceptance samples"
-      : "28 fixed authored V7 dialogues",
+    source: casesFile
+      ? "Explicit authored cases file"
+      : reactionAcceptance
+        ? "Four N1/N3 reaction and uncertainty acceptance samples"
+        : "28 fixed authored V7 dialogues",
     caseCount,
   }),
 );
@@ -85,7 +112,7 @@ const conditions = {
   workflowVersion: LEARNING_POINTS_WORKFLOW_VERSION,
   qualityStrategyVersion: QUALITY_STRATEGY_VERSION,
   casesHash: createHash("sha256")
-    .update(await readFile(new URL("./quality-v7-cases.ts", import.meta.url)))
+    .update(caseBytes ?? (await readFile(new URL("./quality-v7-cases.ts", import.meta.url))))
     .digest("hex"),
   generatorHashes: Object.fromEntries(
     await Promise.all(
@@ -113,11 +140,14 @@ const conditions = {
     .digest("hex"),
   transportPatchHash: createHash("sha256")
     .update(
-      await readFile(new URL("../../../patches/pi-antigravity@0.10.0.patch", import.meta.url)),
+      await readFile(new URL("../../../patches/pi-antigravity@0.14.0.patch", import.meta.url)),
     )
     .digest("hex"),
   selectedCases: runnableCases.map(c => `${c.language}-${c.name}-automatic`),
+  ...(casesFile ? { casesFile: "case-definitions.json" } : {}),
+  tracePrompts,
 };
+if (caseBytes) await writeFile(join(output, "case-definitions.json"), caseBytes, { flag: "wx" });
 await writeFile(join(output, "conditions.json"), JSON.stringify(conditions, null, 2), {
   flag: "wx",
 });
@@ -158,8 +188,54 @@ for (const [index, source] of runnableCases.entries()) {
   await mkdir(folder);
   const request: GenerationRequest = requests[index];
   let lastStatus = "";
-  const storage = localStoragePorts(folder),
-    manager = new JobManager({ storage }, (_id, j) => {
+  const storage = localStoragePorts(folder);
+  let traceIndex = 0;
+  if (tracePrompts) await mkdir(join(folder, "model-traces"));
+  const tracedGenerate: typeof generatePiText = async (agent, prompt, signal, options) => {
+    const trace = join(folder, "model-traces", String(++traceIndex).padStart(3, "0"));
+    await writeFile(
+      trace + "-request.json",
+      JSON.stringify(
+        {
+          agent,
+          prompt,
+          systemPrompt: options?.systemPrompt,
+          step: options?.step,
+          maxOutputTokens: options?.maxOutputTokens,
+          boundary:
+            "Arguments supplied to generatePiText, not a capture of the provider HTTP wire format or internal retry attempts.",
+        },
+        null,
+        2,
+      ),
+      { flag: "wx" },
+    );
+    try {
+      const response = await generatePiText(agent, prompt, signal, options);
+      await writeFile(
+        trace + "-response.json",
+        JSON.stringify(
+          {
+            text: response.text,
+            incomplete: response.incomplete,
+            call: response.call,
+          },
+          null,
+          2,
+        ),
+        { flag: "wx" },
+      );
+      return response;
+    } catch (error) {
+      await writeFile(trace + "-error.json", JSON.stringify({ error: String(error) }), {
+        flag: "wx",
+      });
+      throw error;
+    }
+  };
+  const manager = new JobManager(
+    { storage, ...(tracePrompts ? { generateText: tracedGenerate } : {}) },
+    (_id, j) => {
       const state = JSON.stringify({
         case: name,
         phase: j.phase,
@@ -171,7 +247,8 @@ for (const [index, source] of runnableCases.entries()) {
         lastStatus = state;
         console.log(state);
       }
-    });
+    },
+  );
   const start = Date.now();
   try {
     const doc = await manager.start(request.id, request, AbortSignal.timeout(timeoutMs));
@@ -186,8 +263,7 @@ for (const [index, source] of runnableCases.entries()) {
       points: doc.points.length,
       reusableItems: doc.reusableItems.length,
       execution: doc.execution,
-      semanticAcceptance:
-        "pending independent review; generation and program validation are not semantic acceptance",
+      contentAssessment: "not_evaluated",
     };
     report.push(result);
     console.log(JSON.stringify(result));

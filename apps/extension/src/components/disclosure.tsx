@@ -6,11 +6,13 @@ export function Disclosure({
   title,
   children,
   defaultOpen = false,
+  triggerClassName,
   ...props
 }: {
   title: React.ReactNode;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  triggerClassName?: string;
 } & Omit<React.HTMLAttributes<HTMLDivElement>, "title" | "defaultValue" | "dir">) {
   return (
     <Accordion
@@ -20,7 +22,7 @@ export function Disclosure({
       {...props}
     >
       <AccordionItem value="content">
-        <AccordionTrigger>{title}</AccordionTrigger>
+        <AccordionTrigger className={triggerClassName}>{title}</AccordionTrigger>
         <AccordionContent>{children}</AccordionContent>
       </AccordionItem>
     </Accordion>

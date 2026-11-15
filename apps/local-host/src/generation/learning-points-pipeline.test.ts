@@ -27,8 +27,10 @@ import {
   LEVEL_STRATEGY_VERSION,
   QUALITY_STRATEGY_VERSION,
   levelsForTargetLanguage,
+  UNRESTRICTED_LEVEL,
   prepareTeachingBatch,
   readLearningDocument,
+  learningDocumentToMarkdown,
   type LearningCandidate,
 } from "@contextual/core";
 function teachingData(prompt: string) {
@@ -244,7 +246,7 @@ test("malformed Japanese contraction template receives the existing single struc
   }
 });
 
-test("14 languages and 17 level strategies; Detailed never changes candidate/selection input", () => {
+test("14 languages, 17 graded strategies and unrestricted; Detailed never changes candidate input", () => {
   const f = pointsFixture();
   const levels = new Set<string>();
   for (const language of LEARNING_LANGUAGES)
@@ -273,14 +275,86 @@ test("14 languages and 17 level strategies; Detailed never changes candidate/sel
         ),
         prompt,
       );
-      levels.add((language === "ja" ? "JLPT" : language === "ko" ? "TOPIK" : "CEFR") + level);
+      levels.add(
+        level === UNRESTRICTED_LEVEL
+          ? level
+          : (language === "ja" ? "JLPT" : language === "ko" ? "TOPIK" : "CEFR") + level,
+      );
     }
-  assert.equal(levels.size, 17);
+  assert.equal(levels.size, 18);
   assert.deepEqual(learningPointsBudget({ contextWindow: 32768, maxOutputTokens: 32000 }), {
     output: 8192,
     input: 23552,
   });
   assert.throws(() => learningPointsBudget({ contextWindow: 2000, maxOutputTokens: 1000 }));
+});
+
+test("unrestricted selection, teaching and repair use source-led support without an exam level", () => {
+  const f = pointsFixture();
+  for (const targetLanguage of LEARNING_LANGUAGES) {
+    const request = {
+      ...f.request,
+      profile: { ...f.request.profile, targetLanguage, level: UNRESTRICTED_LEVEL },
+    };
+    const prompts = [
+      pointsCandidatePrompt(
+        request,
+        request.cues.map(c => c.id),
+        4096,
+      ),
+      pointsSelectionPrompt(request, [f.input.scene], 4096),
+      pointsTeachingPrompt(request, f.input, 4096),
+      pointsTeachingPrompt(request, f.input, 4096, { previousOutput: f.raw, issues: [] }),
+    ];
+    for (const prompt of prompts) {
+      assert.match(prompt, /Learner proficiency: Unrestricted \(no learner level assumed\)/);
+      assert.match(prompt, /allowing mixed difficulty/);
+      assert.match(prompt, /in plain language/);
+      assert.match(prompt, /without a fixed proficiency cap/);
+      assert.match(
+        prompt,
+        /Keep configured scene maximum, enabled categories, explanation depth, example count and output budget unchanged/,
+      );
+      assert.doesNotMatch(prompt, /Learner proficiency: (?:CEFR|JLPT|TOPIK)|\{\{\w+\}\}/);
+    }
+    assert.match(prompts[1], /Maximum selected dialogue scenes: 2/);
+    assert.match(prompts[2], /Examples per reusable item: 1/);
+    const detailed = { ...request, profile: { ...request.profile, emphasizedExplanations: [] } };
+    assert.equal(pointsSelectionPrompt(detailed, [f.input.scene], 4096), prompts[1]);
+  }
+  assert.throws(
+    () =>
+      pointsCandidatePrompt(
+        {
+          ...f.request,
+          profile: { ...f.request.profile, targetLanguage: "ja", level: "B1" },
+        },
+        [],
+        4096,
+      ),
+    /Invalid proficiency/,
+  );
+});
+
+test("unrestricted generation preserves its profile through the pipeline, storage and export", async () => {
+  const root = await mkdtemp(join(tmpdir(), "cll-unrestricted-pipeline-"));
+  try {
+    const f = pointsFixture();
+    f.request.profile.level = UNRESTRICTED_LEVEL;
+    const storage = localStoragePorts(root);
+    const document = await new JobManager({ storage, ...generators(f) }, () => {}).start(
+      f.request.id,
+      f.request,
+    );
+    assert.equal(document.profile.level, UNRESTRICTED_LEVEL);
+    assert.equal(document.profile.sceneCount, f.request.profile.sceneCount);
+    assert.deepEqual(document.cues, f.request.cues);
+    const saved = readLearningDocument(await storage.documents.get(document.id));
+    assert.equal(saved.profile.level, UNRESTRICTED_LEVEL);
+    assert.match(learningDocumentToMarkdown(document), /V7 · en · Unrestricted/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("truncated teaching output splits immediately without a same-budget repair or lost utterances", async () => {
@@ -939,6 +1013,9 @@ test("retired prompt versions cannot enter a new pipeline", () => {
     "learning-points-prompts-14",
     "learning-points-prompts-15",
     "learning-points-prompts-16",
+    "learning-points-prompts-17",
+    "learning-points-prompts-18",
+    "learning-points-prompts-19",
   ]) {
     assert.equal(supportsLearningPointsPromptVersion(version), false);
     assert.throws(() => learningPointsPrompts(version), /Unsupported/);
@@ -1028,6 +1105,9 @@ for (const legacy of [
   { promptVersion: "learning-points-prompts-14", qualityStrategyVersion: "program-validation-1" },
   { promptVersion: "learning-points-prompts-15", qualityStrategyVersion: "program-validation-2" },
   { promptVersion: "learning-points-prompts-16", qualityStrategyVersion: "program-validation-2" },
+  { promptVersion: "learning-points-prompts-17", qualityStrategyVersion: "program-validation-2" },
+  { promptVersion: "learning-points-prompts-18", qualityStrategyVersion: "program-validation-2" },
+  { promptVersion: "learning-points-prompts-19", qualityStrategyVersion: "program-validation-3" },
 ])
   test(`resuming ${legacy.promptVersion} retains completed batches and regenerates only unfinished teaching`, async () => {
     const root = await mkdtemp(join(tmpdir(), "cll-simple-resume-"));
@@ -1069,6 +1149,12 @@ for (const legacy of [
         const execution = {
           ...job.execution,
           ...legacy,
+          languageStrategyVersion: [
+            "learning-points-prompts-18",
+            "learning-points-prompts-19",
+          ].includes(legacy.promptVersion)
+            ? "learning-language-strategies-5"
+            : "learning-language-strategies-4",
         };
         const batches = job.learningPlan.batches.map(b => {
           if (b.result || legacy.qualityStrategyVersion !== "learning-quality-1") return b;
@@ -1128,6 +1214,13 @@ for (const legacy of [
       assert.equal(after.learningPlan.batches[1].quality, undefined);
       assert.equal(doc.sections[0].utterances.length, 2);
       assert.equal(doc.execution!.previousExecution?.promptVersion, legacy.promptVersion);
+      assert.equal(
+        doc.execution!.previousExecution?.languageStrategyVersion,
+        ["learning-points-prompts-18", "learning-points-prompts-19"].includes(legacy.promptVersion)
+          ? "learning-language-strategies-5"
+          : "learning-language-strategies-4",
+      );
+      assert.equal(doc.execution!.languageStrategyVersion, LANGUAGE_STRATEGY_VERSION);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

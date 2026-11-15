@@ -1,0 +1,65 @@
+{
+  "createdAt": "2026-10-19T05:04:51.055805+00:00",
+  "beforeInference": true,
+  "caseCount": 3,
+  "groups": {
+    "previouslyRejected": 1,
+    "newAuthoredContrast": 1,
+    "control": 1
+  },
+  "execution": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium",
+    "wholeCaseRuns": 1,
+    "maxConcurrentCases": 1,
+    "timeoutMs": 600000,
+    "fallback": false
+  },
+  "criteria": [
+    {
+      "id": "structure_source_identity",
+      "method": "deterministic",
+      "rule": "Canonical fresh-document structural/source-span/whole-Latin-word checks, exact frozen cues/profile, current versions and selected model."
+    },
+    {
+      "id": "source_coverage",
+      "method": "deterministic",
+      "rule": "All four input cues occur in selected units."
+    },
+    {
+      "id": "required_teaching_targets",
+      "method": "editorial_with_quote_integrity",
+      "rule": "A selected source cue alone does not exercise a teaching rule. Required forms must be cited and taught; otherwise targetCoverage is not_exercised and the case is not accepted. No content reruns to obtain missing targets."
+    },
+    {
+      "id": "grammar_scope",
+      "method": "editorial",
+      "rule": "Distinguish a form in this instance from an exclusive rule. Do not universalize the current tense/form; essential alternatives remain compatible with generalizations. Recognize the complete compound predicate rather than classifying it only by the auxiliary. Simpler level does not justify a false universal. An explicitly local explanation is acceptable; a comprehensive grammar lecture is not required."
+    },
+    {
+      "id": "source_and_examples",
+      "method": "editorial",
+      "rule": "Check all source translations, contexts/titles, chunks, explanations, patterns, examples and available written readings for source roles, actors/person/number, timing, grammar, exact citations and coherent situations. Pending findings are not automatically accepted."
+    }
+  ],
+  "requiredTeachingTargets": {
+    "es-actor-recipient-variant-automatic": ["cuando_tenga"],
+    "es-temporal-aspect-contrast-automatic": ["cuando_reciba", "cuando_haya_recibido"],
+    "en-normal-transfer-automatic": []
+  },
+  "acceptance": "Generated, structural/source/identity/source coverage and required target coverage passed, with no blocking or pending editorial findings. Nonblocking warnings remain explicit.",
+  "stoppingRule": "One whole generation per case. Preserve all client requests/responses and existing internal structural repairs. No fallback, alternative result selection, rubric changes, prompt/runtime changes or content reruns during this round. A pre-model credential-lock failure can be retried only with zero model calls and retained separate evidence.",
+  "references": [
+    {
+      "url": "https://www.rae.es/gtg/pret%C3%A9rito-perfecto-compuesto-de-subjuntivo",
+      "supports": "Perfect subjunctive can refer to future completion, including a future main clause with cuando hayan comenzado. Supports a counterexample to present-only claims, not automatic severity or translation judgments."
+    }
+  ],
+  "limits": [
+    "Same unblinded Codex reviewer and reviewer-authored contrast, not independent or a held-out benchmark.",
+    "One output per case; no stability/causality/overall accuracy estimate and no pooling older acceptances.",
+    "Older Spanish sender-reference, Japanese timing and Chinese reported-role disputes remain independently pending; new outputs do not rewrite those decisions.",
+    "Installed Host/Chrome/real-video acceptance follows separately only if this focused round passes; text-only results do not establish audio or learning outcomes."
+  ]
+}

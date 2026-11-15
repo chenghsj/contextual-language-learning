@@ -1,0 +1,17 @@
+{
+  "provider": "antigravity",
+  "modelId": "gemini-3.8-flash",
+  "thinkingLevel": "medium",
+  "instructionLanguage": "zh-TW",
+  "contextualExampleCount": 1,
+  "timeoutMs": 600000,
+  "protocolVersion": 12,
+  "promptVersion": "learning-points-prompts-13",
+  "workflowVersion": "learning-points-v7-1",
+  "rulesHash": "14f061d5aacae8a5b61b1ec3b7ff64033e1978a0550cd9dcf85009c846b59ae5",
+  "promptsHash": "58254853a61872543bc0021a5b04ff914684147c2a75e0535a645b1737fe5f1a",
+  "transportPatchHash": "bd0ff22846e5665562e5a6263fb5e3000284e942bf06523c104cbba39e94bdef",
+  "selectedCases": [
+    "ja-normal-transfer-N3-automatic"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "case": "es-temporal-aspect-contrast-automatic",
+  "document": "batch-1/es-temporal-aspect-contrast-automatic/videos/es-temporal-aspect-contrast-automatic--367c2e0d9e9f626d/00c9a289-dec4-409a-aa92-baa2b282821b.json",
+  "documentHash": "84d60b1d7a68e9f91bc7b34123dbe0dd9249d5e3ee126091ad0d41dee4e2ce6f",
+  "reviewer": "Same unblinded Codex source/editorial reviewer; not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "All source translations, contexts/titles, units/chunks, points, source citations, patterns, invented examples and any available written readings",
+      "result": "Both required source constructions are actually cited and taught. The general temporal-clause statement requires subjunctive mood, then explicitly identifies reciba as present subjunctive in this instance. The complete haya recibido predicate is explained as perfect subjunctive with haber plus participle, indicating future prior completion. Its local haya pattern does not claim all persons use haya. Source translations, timing, participants, chunks and both invented conversations remain coherent. No optional source or example readings are supplied, so pronunciation is not exercised."
+    }
+  ],
+  "targets": [
+    {
+      "id": "cuando_reciba",
+      "result": "passed",
+      "path": "/reusableItems/0/sourceForms/0/text",
+      "quote": "cuando reciba",
+      "teachingPath": "/points/0/explanation",
+      "reason": "The source form is cited; the explanation separates subjunctive mood from this present-tense instance."
+    },
+    {
+      "id": "cuando_haya_recibido",
+      "result": "passed",
+      "path": "/reusableItems/1/sourceForms/0/text",
+      "quote": "cuando haya recibido",
+      "teachingPath": "/points/1/explanation",
+      "reason": "The complete compound predicate is cited and explicitly explained as perfect subjunctive with prior completion."
+    }
+  ],
+  "issues": [],
+  "references": [
+    {
+      "title": "RAE-ASALE: pretérito perfecto compuesto de subjuntivo",
+      "url": "https://www.rae.es/gtg/pret%C3%A9rito-perfecto-compuesto-de-subjuntivo",
+      "supports": "Perfect subjunctive can locate completion in the future and is formed with subjunctive haber plus participle. Supports the grammar check, not independent certification."
+    }
+  ],
+  "boundary": "One fresh output per frozen case. Target passed denotes actual teaching coverage; the case can still be pending or failed semantically. This does not resolve earlier disputed documents. No independent/native review, stability/causal estimate, audio, installed Host, real Chrome/video or learning-effect acceptance."
+}

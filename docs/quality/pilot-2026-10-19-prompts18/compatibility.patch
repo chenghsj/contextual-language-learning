@@ -1,0 +1,129 @@
+--- a/packages/core/src/schema.ts
++++ b/packages/core/src/schema.ts
+@@ -344,13 +344,17 @@
+   return (
+     e.workflowVersion === LEARNING_POINTS_WORKFLOW_VERSION &&
+     e.schemaVersion === "7" &&
+-    e.languageStrategyVersion === LANGUAGE_STRATEGY_VERSION &&
++    e.languageStrategyVersion === "learning-language-strategies-4" &&
+     e.levelStrategyVersion === LEVEL_STRATEGY_VERSION &&
+     ((e.qualityStrategyVersion === "learning-quality-1" &&
+       ["learning-points-prompts-12", "learning-points-prompts-13"].includes(e.promptVersion)) ||
+       (e.qualityStrategyVersion === "program-validation-1" &&
+         e.promptVersion === "learning-points-prompts-14") ||
+       (e.qualityStrategyVersion === "program-validation-2" &&
+-        ["learning-points-prompts-15", "learning-points-prompts-16"].includes(e.promptVersion)))
++        [
++          "learning-points-prompts-15",
++          "learning-points-prompts-16",
++          "learning-points-prompts-17",
++        ].includes(e.promptVersion)))
+   );
+ }
+--- a/apps/local-host/src/jobs/manager.ts
++++ b/apps/local-host/src/jobs/manager.ts
+@@ -279,6 +279,8 @@
+             ...current.execution,
+             previousExecution: ExecutionIdentitySchema.parse(current.execution),
+             promptVersion: LEARNING_POINTS_PROMPT_VERSION,
++            languageStrategyVersion: LANGUAGE_STRATEGY_VERSION,
++            levelStrategyVersion: LEVEL_STRATEGY_VERSION,
+             qualityStrategyVersion: QUALITY_STRATEGY_VERSION,
+           };
+           return {
+--- a/packages/core/src/learning-points.test.ts
++++ b/packages/core/src/learning-points.test.ts
+@@ -3,6 +3,8 @@
+ import { pointsFixture } from "../test/learning-points-fixture";
+ import {
+   readLearningDocument,
++  currentLearningExecution,
++  readableLearningExecution,
+   validateTeachingBatch,
+   validateLearningDocumentV7,
+   readerScene,
+@@ -69,12 +71,17 @@
+   { promptVersion: "learning-points-prompts-14", qualityStrategyVersion: "program-validation-1" },
+   { promptVersion: "learning-points-prompts-15", qualityStrategyVersion: "program-validation-2" },
+   { promptVersion: "learning-points-prompts-16", qualityStrategyVersion: "program-validation-2" },
++  { promptVersion: "learning-points-prompts-17", qualityStrategyVersion: "program-validation-2" },
+ ])
+   test(`${legacy.promptVersion} documents remain readable without applying new teaching-only construction checks`, () => {
+     const f = pointsFixture();
+     f.document.profile.targetLanguage = "ja";
+     f.document.profile.level = "N3";
+-    Object.assign(f.document.execution!, legacy);
++    Object.assign(f.document.execution!, legacy, {
++      languageStrategyVersion: "learning-language-strategies-4",
++    });
++    assert.equal(currentLearningExecution(f.document.execution), false);
++    assert.equal(readableLearningExecution(f.document.execution), true);
+     f.document.reusableItems[0].pattern = "[動詞て形省略い]てた？";
+     const before = JSON.stringify(f.document);
+     assert.deepEqual(readLearningDocument(f.document), f.document);
+--- a/apps/local-host/src/storage/file.test.ts
++++ b/apps/local-host/src/storage/file.test.ts
+@@ -101,7 +101,11 @@
+   const root = await mkdtemp(join(tmpdir(), "cll-readable-v7-"));
+   try {
+     const { storage, document } = await completedLesson(root);
+-    for (const promptVersion of ["learning-points-prompts-12", "learning-points-prompts-13"]) {
++    for (const promptVersion of [
++      "learning-points-prompts-12",
++      "learning-points-prompts-13",
++      "learning-points-prompts-17",
++    ]) {
+       const id = randomUUID(),
+         folder = join(root, "videos", promptVersion);
+       const old = {
+@@ -110,7 +114,11 @@
+         execution: {
+           ...document.execution!,
+           promptVersion,
+-          qualityStrategyVersion: "learning-quality-1",
++          qualityStrategyVersion:
++            promptVersion === "learning-points-prompts-17"
++              ? "program-validation-2"
++              : "learning-quality-1",
++          languageStrategyVersion: "learning-language-strategies-4",
+         },
+       };
+       const text = JSON.stringify(old);
+@@ -140,6 +148,7 @@
+           .digest("hex"),
+         promptVersion: "learning-points-prompts-13",
+         qualityStrategyVersion: "learning-quality-1",
++        languageStrategyVersion: "learning-language-strategies-4",
+       },
+     };
+     const path = (await findVideoDocument(root, document.id))!;
+--- a/apps/local-host/src/generation/learning-points-pipeline.test.ts
++++ b/apps/local-host/src/generation/learning-points-pipeline.test.ts
+@@ -1029,6 +1029,7 @@
+   { promptVersion: "learning-points-prompts-14", qualityStrategyVersion: "program-validation-1" },
+   { promptVersion: "learning-points-prompts-15", qualityStrategyVersion: "program-validation-2" },
+   { promptVersion: "learning-points-prompts-16", qualityStrategyVersion: "program-validation-2" },
++  { promptVersion: "learning-points-prompts-17", qualityStrategyVersion: "program-validation-2" },
+ ])
+   test(`resuming ${legacy.promptVersion} retains completed batches and regenerates only unfinished teaching`, async () => {
+     const root = await mkdtemp(join(tmpdir(), "cll-simple-resume-"));
+@@ -1070,6 +1071,7 @@
+         const execution = {
+           ...job.execution,
+           ...legacy,
++          languageStrategyVersion: "learning-language-strategies-4",
+         };
+         const batches = job.learningPlan.batches.map(b => {
+           if (b.result || legacy.qualityStrategyVersion !== "learning-quality-1") return b;
+@@ -1129,6 +1131,11 @@
+       assert.equal(after.learningPlan.batches[1].quality, undefined);
+       assert.equal(doc.sections[0].utterances.length, 2);
+       assert.equal(doc.execution!.previousExecution?.promptVersion, legacy.promptVersion);
++      assert.equal(
++        doc.execution!.previousExecution?.languageStrategyVersion,
++        "learning-language-strategies-4",
++      );
++      assert.equal(doc.execution!.languageStrategyVersion, LANGUAGE_STRATEGY_VERSION);
+     } finally {
+       await rm(root, { recursive: true, force: true });
+     }

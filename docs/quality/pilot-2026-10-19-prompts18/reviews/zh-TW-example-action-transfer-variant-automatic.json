@@ -1,0 +1,15 @@
+{
+  "case": "zh-TW-example-action-transfer-variant-automatic",
+  "document": "batch-2/zh-TW-example-action-transfer-variant-automatic/videos/zh-TW-example-action-transfer-variant-automatic--ff9f2e5ce0c27886/79947a4c-c433-4888-8446-48cd81e9a72d.json",
+  "documentHash": "74a4a3762e5a973ee3756173875b6d3f74e4bf9fc04c5fb8fe45cf878686bf40",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The new meeting-update source and each invented situation keep the same task as their own dialogue: sending a report, preparing to leave for lunch and checking a telephone number before printing. The short final reply remains basic_only. Frames instantiate the stated constructions and Chinese source readings do not invent unknown information."
+    }
+  ],
+  "issues": [],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

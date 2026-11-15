@@ -1,0 +1,106 @@
+{
+  "scope": "Recorded generation evidence and regression observations, not a language-quality score or product acceptance certificate.",
+  "policy": {
+    "aiAcceptanceScoreUsed": false,
+    "independentEditorialReviewRequired": false,
+    "editorialNotesBlockBrowserTesting": false,
+    "optionalTeachingSelectionBlocksBrowserTesting": false,
+    "confirmedDefects": "Retain explicit source/structure violations and reproducible counterexamples; editorial preference alone is insufficient."
+  },
+  "cases": [
+    {
+      "case": "es-actor-recipient-variant-automatic",
+      "group": "previously_rejected",
+      "generation": "generated",
+      "document": "batch-1/es-actor-recipient-variant-automatic/videos/es-actor-recipient-variant-automatic--28e6eb85f1301309/eb3b3318-7da8-4e71-aabd-0f4907534111.json",
+      "documentHash": "df761686d62bb599070647129004deafc00e6093defcacaf7ebc957a156da472",
+      "teachingTargets": [
+        {
+          "id": "cuando_tenga",
+          "path": "/reusableItems/1/sourceForms/0/text",
+          "quote": "cuando tenga",
+          "teachingPath": "/points/1/explanation",
+          "observation": "exercised"
+        }
+      ],
+      "editorialNotes": [
+        {
+          "kind": "editorial_observation",
+          "path": "/sections/0/translations/0/text",
+          "quote": "我會請他們把時間表寄給我們。",
+          "blocking": false,
+          "note": "The source envíen has morphology shared by ellos/ellas and formal plural ustedes; the subtitles do not establish the subordinate sender identity. 他們 selects a third party, whereas neutral 對方 would preserve the unresolved role. A third-party reading may still be natural generic translation. The new explanation calls the subject third-person plural, which by itself can describe the grammatical agreement used with ustedes and does not independently settle discourse person. This is the same editorial ambiguity kept pending in prompts-19, not a new definite error. An independent language editor should decide the acceptable translation scope.",
+          "originalClassification": "needs_review",
+          "historicalReview": "history/editorial-gate/reviews/es-actor-recipient-variant-automatic.json"
+        }
+      ]
+    },
+    {
+      "case": "es-temporal-aspect-contrast-automatic",
+      "group": "new_authored_contrast",
+      "generation": "generated",
+      "document": "batch-1/es-temporal-aspect-contrast-automatic/videos/es-temporal-aspect-contrast-automatic--367c2e0d9e9f626d/00c9a289-dec4-409a-aa92-baa2b282821b.json",
+      "documentHash": "84d60b1d7a68e9f91bc7b34123dbe0dd9249d5e3ee126091ad0d41dee4e2ce6f",
+      "teachingTargets": [
+        {
+          "id": "cuando_reciba",
+          "path": "/reusableItems/0/sourceForms/0/text",
+          "quote": "cuando reciba",
+          "teachingPath": "/points/0/explanation",
+          "observation": "exercised"
+        },
+        {
+          "id": "cuando_haya_recibido",
+          "path": "/reusableItems/1/sourceForms/0/text",
+          "quote": "cuando haya recibido",
+          "teachingPath": "/points/1/explanation",
+          "observation": "exercised"
+        }
+      ],
+      "editorialNotes": []
+    },
+    {
+      "case": "en-normal-transfer-automatic",
+      "group": "previously_accepted_control",
+      "generation": "generated",
+      "document": "batch-1/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/47e8d9c4-15e0-4d82-8f0b-004f4f159921.json",
+      "documentHash": "4acb74f72db1457091df7b6efd3a14e998d3afad1f5f85284ebf99c03232130c",
+      "teachingTargets": [],
+      "editorialNotes": [
+        {
+          "kind": "editorial_observation",
+          "path": "/sections/0/translations/1/text",
+          "quote": "你打電話來的時候我正準備要走。",
+          "blocking": false,
+          "note": "Called is translated as a telephone call. That is a natural reading but the source also permits calling out; the medium is not explicitly established. This keeps the same nonblocking lexical ambiguity treatment as the preceding English controls.",
+          "originalClassification": "warning",
+          "historicalReview": "history/editorial-gate/reviews/en-normal-transfer-automatic.json"
+        },
+        {
+          "kind": "editorial_observation",
+          "path": "/sections/0/title",
+          "quote": "詢問滯留原由與請求稍候",
+          "blocking": false,
+          "note": "滯留 can suggest being delayed or unable to leave more strongly than still here establishes. It can also be read broadly as remaining, so this is a precision warning rather than a definite event error. A neutral title such as 詢問停留原因 would better preserve the source scope.",
+          "originalClassification": "warning",
+          "historicalReview": "history/editorial-gate/reviews/en-normal-transfer-automatic.json"
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "recordedCalls": 9,
+    "traceRequests": 9,
+    "traceResponses": 9,
+    "structuralRepairs": 0,
+    "callsWithoutUsage": 0,
+    "reportedTokens": {
+      "input": 29196,
+      "output": 26019,
+      "reasoning": 21248
+    },
+    "reasoningIncludedInOutput": true
+  },
+  "installedBrowserAcceptance": "not_performed",
+  "historicalJudgments": "history/editorial-gate/acceptance.json"
+}

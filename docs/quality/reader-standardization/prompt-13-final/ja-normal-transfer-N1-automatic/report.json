@@ -1,0 +1,137 @@
+[
+  {
+    "case": "ja-normal-transfer-N1-automatic",
+    "status": "generated",
+    "durationMs": 154839,
+    "id": "b5f81f58-33e7-4d56-94f1-a0a12a1e6d58",
+    "scenes": 1,
+    "utterances": 5,
+    "points": 2,
+    "reusableItems": 2,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-13",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "learning-quality-1",
+      "inputFingerprint": "82f71f743bf6206f32f884fb8b8368d322f1ea8e035db57835d6085e456db252",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "qualityReports": [
+        {
+          "batchId": "s0",
+          "sceneId": "f77c2934-df23-478e-a4ea-f32d77458ab0",
+          "draftHash": "5df6e84162ae3239f3dc407826995a5f50a0b0742e5c2d75531c88decb862ae0",
+          "reviewed": false,
+          "repaired": false,
+          "issues": []
+        }
+      ],
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:34:04.311Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 23320.020167,
+          "usage": {
+            "input": 4196,
+            "output": 3060,
+            "reasoning": 2820
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:34:08.520Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 4192.089125000002,
+          "usage": {
+            "input": 3959,
+            "output": 312,
+            "reasoning": 273
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:35:54.667Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 106128.80049999998,
+          "usage": {
+            "input": 7954,
+            "output": 14481,
+            "reasoning": 12763
+          }
+        },
+        {
+          "step": "s0-pronunciation-repair",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:36:14.596Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 19899.857791999995,
+          "usage": {
+            "input": 4037,
+            "output": 2281,
+            "reasoning": 2211
+          }
+        }
+      ],
+      "pronunciationDiagnostics": [
+        {
+          "id": "s0:/pronunciations/0:all:empty_annotation",
+          "batchId": "s0",
+          "sceneId": "f77c2934-df23-478e-a4ea-f32d77458ab0",
+          "path": "/pronunciations/0",
+          "cueId": "c1",
+          "code": "empty_annotation",
+          "action": "repaired"
+        },
+        {
+          "id": "s0:/pronunciations/3:all:empty_annotation",
+          "batchId": "s0",
+          "sceneId": "f77c2934-df23-478e-a4ea-f32d77458ab0",
+          "path": "/pronunciations/3",
+          "cueId": "c4",
+          "code": "empty_annotation",
+          "action": "repaired"
+        }
+      ]
+    },
+    "semanticAcceptance": "pending manual review; structure/model review are insufficient",
+    "quality": [
+      {
+        "batchId": "s0",
+        "sceneId": "f77c2934-df23-478e-a4ea-f32d77458ab0",
+        "draftHash": "5df6e84162ae3239f3dc407826995a5f50a0b0742e5c2d75531c88decb862ae0",
+        "reviewed": false,
+        "repaired": false,
+        "issues": []
+      }
+    ]
+  }
+]

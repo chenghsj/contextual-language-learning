@@ -7,6 +7,7 @@ import {
   defaultLevelForTargetLanguage,
   levelsForTargetLanguage,
   languageTagMatches,
+  UNRESTRICTED_LEVEL,
 } from "./languages";
 import { LearningProfileSchema } from "./schema";
 
@@ -48,12 +49,50 @@ test("twelve languages share CEFR without overwriting Japanese or Korean levels"
   assert.equal(EXPLANATION_LANGUAGES.length, 14);
   assert.equal(new Set(EXPLANATION_LANGUAGES).size, 14);
   for (const language of CEFR_LANGUAGES) {
-    assert.deepEqual(levelsForTargetLanguage(language), ["A1", "A2", "B1", "B2", "C1", "C2"]);
+    assert.deepEqual(levelsForTargetLanguage(language), [
+      "A1",
+      "A2",
+      "B1",
+      "B2",
+      "C1",
+      "C2",
+      UNRESTRICTED_LEVEL,
+    ]);
   }
-  assert.deepEqual(levelsForTargetLanguage("ja"), ["N5", "N4", "N3", "N2", "N1"]);
-  assert.deepEqual(levelsForTargetLanguage("ko"), ["1", "2", "3", "4", "5", "6"]);
+  assert.deepEqual(levelsForTargetLanguage("ja"), [
+    "N5",
+    "N4",
+    "N3",
+    "N2",
+    "N1",
+    UNRESTRICTED_LEVEL,
+  ]);
+  assert.deepEqual(levelsForTargetLanguage("ko"), [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    UNRESTRICTED_LEVEL,
+  ]);
   assert.equal(defaultLevelForTargetLanguage("ja"), "N4");
   assert.equal(defaultLevelForTargetLanguage("ko"), "2");
+});
+
+test("unrestricted proficiency is a stable saved option for every learning language", () => {
+  for (const targetLanguage of LEARNING_LANGUAGES) {
+    const profile = LearningProfileSchema.parse({
+      targetLanguage,
+      instructionLanguage: "zh-TW",
+      level: UNRESTRICTED_LEVEL,
+      sceneCount: 4,
+      contextualExampleCount: 2,
+    });
+    assert.equal(profile.level, UNRESTRICTED_LEVEL);
+    assert.ok(levelsForTargetLanguage(targetLanguage).includes(profile.level));
+    assert.notEqual(defaultLevelForTargetLanguage(targetLanguage), UNRESTRICTED_LEVEL);
+  }
 });
 
 test("Chinese track matching recognizes script aliases without guessing bare zh or mixing scripts", () => {

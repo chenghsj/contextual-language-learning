@@ -1,0 +1,148 @@
+[
+  {
+    "case": "ja-normal-transfer-N3-automatic",
+    "status": "generated",
+    "durationMs": 160336,
+    "id": "a6c10164-dd96-447e-a089-37b6e020d04f",
+    "scenes": 1,
+    "utterances": 5,
+    "points": 3,
+    "reusableItems": 2,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-13",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "learning-quality-1",
+      "inputFingerprint": "2b0b0b0ac131004e92dc0fed223870ec68212cdfe2d698a9eda65b0f318798da",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "qualityReports": [
+        {
+          "batchId": "s0",
+          "sceneId": "0133b581-84b3-42e5-a18d-cb29670a8e5d",
+          "draftHash": "352071c40f656380d050db69b0ec145ca9b1553edeb25d4d568a35089a64f28c",
+          "reviewed": false,
+          "repaired": false,
+          "issues": []
+        }
+      ],
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:34:04.566Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 23838.256542,
+          "usage": {
+            "input": 4198,
+            "output": 2945,
+            "reasoning": 2628
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:34:09.284Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 4701.197082999999,
+          "usage": {
+            "input": 4038,
+            "output": 408,
+            "reasoning": 367
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:35:09.076Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 59776.91008300001,
+          "usage": {
+            "input": 8029,
+            "output": 9113,
+            "reasoning": 7372
+          }
+        },
+        {
+          "step": "s0-pronunciation-repair",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:36:20.095Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 70990.99674999999,
+          "usage": {
+            "input": 4221,
+            "output": 8870,
+            "reasoning": 8730
+          }
+        }
+      ],
+      "pronunciationDiagnostics": [
+        {
+          "id": "s0:/pronunciations/0:all:empty_annotation",
+          "batchId": "s0",
+          "sceneId": "0133b581-84b3-42e5-a18d-cb29670a8e5d",
+          "path": "/pronunciations/0",
+          "cueId": "c1",
+          "code": "empty_annotation",
+          "action": "repaired"
+        },
+        {
+          "id": "s0:/pronunciations/3:all:empty_annotation",
+          "batchId": "s0",
+          "sceneId": "0133b581-84b3-42e5-a18d-cb29670a8e5d",
+          "path": "/pronunciations/3",
+          "cueId": "c4",
+          "code": "empty_annotation",
+          "action": "repaired"
+        },
+        {
+          "id": "s0:/reusableItems/1/examples/0/dialogue/1/pronunciation:all:empty_annotation",
+          "batchId": "s0",
+          "sceneId": "0133b581-84b3-42e5-a18d-cb29670a8e5d",
+          "path": "/reusableItems/1/examples/0/dialogue/1/pronunciation",
+          "itemId": "0133b581-84b3-42e5-a18d-cb29670a8e5d:s0:r2",
+          "exampleIndex": 0,
+          "lineIndex": 1,
+          "code": "empty_annotation",
+          "action": "repaired"
+        }
+      ]
+    },
+    "semanticAcceptance": "pending manual review; structure/model review are insufficient",
+    "quality": [
+      {
+        "batchId": "s0",
+        "sceneId": "0133b581-84b3-42e5-a18d-cb29670a8e5d",
+        "draftHash": "352071c40f656380d050db69b0ec145ca9b1553edeb25d4d568a35089a64f28c",
+        "reviewed": false,
+        "repaired": false,
+        "issues": []
+      }
+    ]
+  }
+]

@@ -51,7 +51,7 @@ export function RequestBackupSwitch({
         <p
           id={descriptionId}
           role="status"
-          className="min-w-0 py-1.5 text-xs leading-5 text-muted-foreground wrap-anywhere"
+          className="min-w-0 py-1.5 text-ui-body text-muted-foreground wrap-anywhere"
         >
           {description}
         </p>

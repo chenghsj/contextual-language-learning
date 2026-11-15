@@ -7,16 +7,27 @@ import {
 } from "./schema";
 import { isPiProviderId } from "./pi-providers";
 import { SpeechSettingsSchema } from "./speech";
+import { CustomModelIdsSchema } from "./custom-model";
 const locales = z.enum(["auto", "en", "zh-TW", "zh-CN", "ja", "ko"]);
 const repeat = z.enum(["2", "3", "5", "infinite"]);
 const providers = z
-  .record(z.object({ modelId: z.string().max(120), thinkingLevel: ThinkingLevelSchema.optional() }))
+  .record(
+    z.object({
+      modelId: z.string().max(120),
+      thinkingLevel: ThinkingLevelSchema.optional(),
+      customModel: z.boolean().optional(),
+    }),
+  )
   .refine(value => Object.keys(value).every(isPiProviderId));
 export const PreferencesSchema = z
   .object({
     schemaVersion: z.literal(2),
     agent: AgentSettingsSchema.nullable(),
     providerSettings: providers,
+    customModels: z
+      .record(CustomModelIdsSchema)
+      .refine(value => Object.keys(value).every(isPiProviderId))
+      .optional(),
     agentModelPreferences: z
       .record(z.string().max(120))
       .refine(value => Object.keys(value).every(isPiProviderId)),

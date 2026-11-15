@@ -1,0 +1,32 @@
+[
+  {
+    "control": "missing-callback",
+    "rejected": true,
+    "exitCode": 1,
+    "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:"
+  },
+  {
+    "control": "completion-before-cancel",
+    "rejected": true,
+    "exitCode": 1,
+    "failure": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:"
+  },
+  {
+    "control": "missing-system-progress",
+    "rejected": true,
+    "exitCode": 1,
+    "failure": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:"
+  },
+  {
+    "control": "missing-existing-voice",
+    "rejected": true,
+    "exitCode": 1,
+    "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:"
+  },
+  {
+    "control": "missing-evidence-file",
+    "rejected": true,
+    "exitCode": 1,
+    "failure": "Error: ENOENT: no such file or directory, open '/private/var/folders/9p/y1z7d0wd4033k52mhtfk2trc0000gn/T/cll-siri-evidence-controls-r542rpmf/missing-evidence-file/hiro-cancellation.ndjson'"
+  }
+]

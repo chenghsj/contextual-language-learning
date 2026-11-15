@@ -1,0 +1,18 @@
+{
+  "conditions": "Offline payload reconstruction with 31 saved points and 24 reusable items; no old generator executed. Estimates are text token estimates, not provider usage.",
+  "existingIndex": {
+    "beforeBytes": 69963,
+    "afterBytes": 10051,
+    "byteReductionPercent": 85.63383502708575,
+    "beforeEstimatedTokens": 10738,
+    "afterEstimatedTokens": 2004
+  },
+  "repairAppendix": {
+    "beforeBytes": 72391,
+    "afterBytes": 144,
+    "byteReductionPercent": 99.80108024478182,
+    "beforeEstimatedTokens": 11190,
+    "afterEstimatedTokens": 36
+  },
+  "teachingInputOccurrences": 1
+}

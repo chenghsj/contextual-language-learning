@@ -1,6 +1,14 @@
 import { hasUncertaintyDisclosure } from "./source-uncertainty";
 import type { LearningSceneV7, LearningDocument, ReusableItem } from "./schema";
 type LearningUtterance = LearningSceneV7["utterances"][number];
+export type ReaderDocument = Pick<LearningDocument, "cues" | "points" | "reusableItems"> & {
+  execution?: Pick<
+    NonNullable<LearningDocument["execution"]>,
+    "pointEquivalenceGroups" | "itemEquivalenceGroups" | "pronunciationDiagnostics"
+  >;
+};
+const equivalentId = (id: string, groups: string[][] = []) =>
+  groups.find(g => g.includes(id))?.[0] ?? id;
 import type { ExplanationType, SourceSpan } from "./explanations";
 /** Display fields assembled exclusively from the current lesson format. */
 export type ReaderItem = {
@@ -77,7 +85,7 @@ export type ReaderGroup = {
  * Deduplication is local to one source unit; uncertainty is always explicit.
  */
 export function readerPresentation(
-  document: LearningDocument,
+  document: ReaderDocument,
   source: LearningSceneV7,
   translationVisible = true,
 ): ReaderScene & { groups: ReaderGroup[] } {
@@ -181,7 +189,7 @@ export function readerPresentation(
   return { ...scene, analyses, groups };
 }
 /** Presentation only. Never serialize this adapter as a learning document. */
-export function readerScene(document: LearningDocument, source: LearningSceneV7): ReaderScene {
+export function readerScene(document: ReaderDocument, source: LearningSceneV7): ReaderScene {
   const items = document.reusableItems.filter(item =>
     item.pointIds.some(id => source.utterances.some(u => u.pointIds.includes(id))),
   );
@@ -194,7 +202,10 @@ export function readerScene(document: LearningDocument, source: LearningSceneV7)
     contextExplanation: "",
     contextCueIds: [],
     wordNotes: [],
-    examples: item.examples,
+    examples:
+      document.reusableItems.find(
+        i => i.id === equivalentId(item.id, document.execution?.itemEquivalenceGroups),
+      )?.examples ?? item.examples,
     kind: item.kind,
     pattern: item.pattern,
     sourceForms: item.sourceForms,
@@ -227,11 +238,15 @@ export function readerScene(document: LearningDocument, source: LearningSceneV7)
       notes: [...new Set(u.pointIds)].map(id => {
         const p = document.points.find(p => p.id === id);
         if (!p) throw new Error("Missing learning point");
+        const canonical =
+          document.points.find(
+            point => point.id === equivalentId(p.id, document.execution?.pointEquivalenceGroups),
+          ) ?? p;
         return {
-          id: p.id,
+          id: canonical.id,
           type: p.category,
-          title: p.title,
-          explanation: p.explanation,
+          title: canonical.title,
+          explanation: canonical.explanation,
           presentation: p.presentation ?? "core",
           sourceSpans: p.sourceSpans,
           chunkIds: exactChunkIds(p.sourceSpans, u.chunks),

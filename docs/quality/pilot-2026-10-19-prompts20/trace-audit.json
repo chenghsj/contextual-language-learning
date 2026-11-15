@@ -1,0 +1,38 @@
+{
+  "boundary": "Actual generatePiText client parameters and returned text, not provider HTTP capture or SDK internal-attempt accounting. Marker presence establishes delivery, not compliance.",
+  "cases": [
+    {
+      "case": "es-actor-recipient-variant-automatic",
+      "steps": ["window-0", "selection", "s0"],
+      "teachingClientRequests": [
+        {
+          "step": "s0",
+          "scopeCompoundPredicateAndLocalFallbackDelivered": true,
+          "actorAndCitationRulesDelivered": true
+        }
+      ]
+    },
+    {
+      "case": "es-temporal-aspect-contrast-automatic",
+      "steps": ["window-0", "selection", "s0"],
+      "teachingClientRequests": [
+        {
+          "step": "s0",
+          "scopeCompoundPredicateAndLocalFallbackDelivered": true,
+          "actorAndCitationRulesDelivered": true
+        }
+      ]
+    },
+    {
+      "case": "en-normal-transfer-automatic",
+      "steps": ["window-0", "selection", "s0"],
+      "teachingClientRequests": [
+        {
+          "step": "s0",
+          "scopeCompoundPredicateAndLocalFallbackDelivered": true,
+          "actorAndCitationRulesDelivered": true
+        }
+      ]
+    }
+  ]
+}

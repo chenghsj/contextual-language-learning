@@ -1,0 +1,56 @@
+{
+  "createdAt": "2026-10-19T04:30:49.621954+00:00",
+  "beforeInference": true,
+  "caseCount": 6,
+  "groups": {
+    "previouslyRejected": 2,
+    "newAuthoredVariants": 2,
+    "controls": 2
+  },
+  "execution": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium",
+    "wholeCaseRuns": 1,
+    "maxConcurrentCases": 2,
+    "timeoutMs": 600000,
+    "fallback": false
+  },
+  "criteria": [
+    {
+      "id": "structure_source_identity",
+      "method": "deterministic",
+      "rule": "Exact frozen inputs, canonical structural checks, versions/model and request identity. New point/reusable citations cannot cut inside Latin letter runs; apostrophes and hyphens are allowed boundaries. This is not a morphology parser or cross-cue word inference."
+    },
+    {
+      "id": "coverage",
+      "method": "deterministic",
+      "rule": "All four cues must occur in selected units; missing targets are not exercised, never silently a pass."
+    },
+    {
+      "id": "source_citations",
+      "method": "editorial",
+      "rule": "Citation text remains exact reliable source. Explain an affix inside a complete cited word; optional omission is not proof that a feature was exercised."
+    },
+    {
+      "id": "translation_actor",
+      "method": "editorial",
+      "rule": "Each source/example translation preserves the explicit actor, grammatical person/number, recipient and beneficiary. Resolve person only from actual evidence/verb agreement. A plural recipient must not silently create a plural asking actor. A loose team-oriented paraphrase is judged under the same actor-fidelity criterion used in prompts-18."
+    },
+    {
+      "id": "content",
+      "method": "editorial",
+      "rule": "Check source roles, title/context grounding, contextual chunk meanings, grammar scope, unknown-fragment safety and example situation/action/translation consistency."
+    }
+  ],
+  "verdicts": ["passed", "failed", "needs_review", "not_exercised", "generation_failed"],
+  "acceptance": "Generated, structural/source/identity/coverage passed and no blocking or pending editorial finding. Warnings remain explicit.",
+  "stoppingRule": "No content reruns, alternative selection, fallback, rubric changes or generation-source changes during inference. Preserve all client requests/responses and canonical internal structural repairs. Pre-model credential-lock failures may be retried only with zero model calls and a separate retained record.",
+  "limits": [
+    "Same unblinded Codex reviewer and same-reviewer authored variants, not independent certification or a held-out benchmark.",
+    "One output per case; no overall accuracy, stability or causal improvement estimate.",
+    "Do not pool earlier-version acceptances with these new outputs.",
+    "Traditional/Simplified Chinese reported-role disputes and French unclear-source selection coverage remain outside this set.",
+    "No installed Host, personal Chrome/video, audio or learning-effect acceptance."
+  ]
+}

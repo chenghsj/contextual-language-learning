@@ -1,3 +1,4 @@
+import { localModelCopy } from "../i18n/local-model";
 import React, { useEffect, useState } from "react";
 import type { AgentInfo, AgentModel, AgentSettings } from "@contextual/core";
 import type { UiLocale } from "../i18n/messages";
@@ -6,6 +7,7 @@ import { AiModelSelection } from "./ai-model-selection";
 import { Button } from "./ui/button";
 import { piCopy } from "../i18n/pi";
 import { sidePanelLayoutCopy } from "../i18n/side-panel-layout";
+import { selectedCustomModel } from "../lib/custom-models";
 export function RequestModelSelection({
   locale,
   selected,
@@ -14,6 +16,8 @@ export function RequestModelSelection({
   onChange,
   onReady,
   onConfigure,
+  customModels = [],
+  onCustomModel,
 }: {
   locale: UiLocale;
   selected: AgentSettings;
@@ -22,6 +26,8 @@ export function RequestModelSelection({
   onChange: (agent: AgentSettings) => void;
   onReady: (ready: boolean) => void;
   onConfigure: () => void;
+  customModels?: string[];
+  onCustomModel?: (id: string) => void;
 }) {
   const [models, setModels] = useState<AgentModel[]>([]),
     [busy, setBusy] = useState(true),
@@ -61,13 +67,13 @@ export function RequestModelSelection({
   const provider = providers.find(item => item.installed && item.id === selected.provider);
   const currentModels = catalogProvider === selected.provider ? models : [];
   const model = selected.modelId
-    ? currentModels.find(item => item.id === selected.modelId)
+    ? selectedCustomModel(selected, currentModels)
     : currentModels.find(item => !item.disabled);
   const ready = !!(
     available &&
     provider &&
     !busy &&
-    !notice &&
+    (!notice || selected.customModel) &&
     model &&
     !model.disabled &&
     (!selected.thinkingLevel || model.thinkingLevels?.includes(selected.thinkingLevel))
@@ -80,10 +86,12 @@ export function RequestModelSelection({
     <section className="mt-4 grid min-w-0 gap-2" data-ui="requestAi">
       <div className="flex min-w-0 items-start justify-between gap-2">
         <div className="grid min-w-0 gap-1">
-          <h3 className="text-xs font-semibold">{ui.title}</h3>
+          <h3 className="text-ui-heading font-semibold">{ui.title}</h3>
           {provider && (
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-              <p className="min-w-0 text-[13px] wrap-anywhere">{provider.label}</p>
+              <p className="min-w-0 text-ui-body wrap-anywhere">
+                {provider.id === "local" ? localModelCopy[locale].title : provider.label}
+              </p>
               <p className="text-xs text-muted-foreground" role="status">
                 {busy ? ui.loading : available ? ui.connected : ui.disconnected}
               </p>
@@ -100,6 +108,8 @@ export function RequestModelSelection({
         id="request"
         provider={selected.provider}
         modelId={selected.modelId}
+        customModel={selected.customModel}
+        customModels={customModels}
         providers={providers}
         models={currentModels}
         available={available}
@@ -107,7 +117,10 @@ export function RequestModelSelection({
         notice={notice}
         warning={warning}
         onProvider={provider => onChange({ provider, modelId: "" })}
-        onModel={modelId => onChange({ ...selected, modelId, thinkingLevel: undefined })}
+        onModel={(modelId, customModel) => {
+          if (customModel) onCustomModel?.(modelId);
+          onChange({ ...selected, modelId, customModel, thinkingLevel: undefined });
+        }}
         thinkingLevel={selected.thinkingLevel}
         onThinking={thinkingLevel => onChange({ ...selected, thinkingLevel })}
         onRefresh={() => {

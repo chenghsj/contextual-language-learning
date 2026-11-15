@@ -158,6 +158,10 @@ export async function buildHostSetup(options) {
       config.platform === "darwin"
         ? await readFile(join(project, "apps/local-host/dist/macos-speech.swift"))
         : Buffer.alloc(0);
+    const credentialHelper =
+      config.platform === "darwin"
+        ? await readFile(join(project, "apps/local-host/dist/macos-credentials"))
+        : Buffer.alloc(0);
     const siriHelper =
       config.platform === "darwin"
         ? await readFile(join(project, "apps/local-host/dist/macos-speech-siri")).catch(error => {
@@ -172,6 +176,7 @@ export async function buildHostSetup(options) {
       .update(await readFile(join(project, "apps/local-host/dist/native-host.mjs")))
       .update(speechHelper)
       .update(speechSource)
+      .update(credentialHelper)
       .update(siriHelper)
       .update(siriLicense)
       .update(await readFile(join(project, "apps/local-host/scripts/windows-launcher.cs")))
@@ -186,6 +191,7 @@ export async function buildHostSetup(options) {
       join(root, "dist/native-host.mjs"),
     );
     if (config.platform === "darwin") {
+      await writeFile(join(root, "dist/macos-credentials"), credentialHelper, { mode: 0o755 });
       await writeFile(join(root, "dist/macos-speech"), speechHelper, { mode: 0o755 });
       await writeFile(join(root, "dist/macos-speech.swift"), speechSource, { mode: 0o644 });
       if (siriHelper.length) {

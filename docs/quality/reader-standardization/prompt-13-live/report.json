@@ -1,0 +1,2783 @@
+[
+  {
+    "case": "ja-normal-transfer-N1-automatic",
+    "status": "failed",
+    "error": "Error: Quality blocked: Major issues remain after one repair",
+    "durationMs": 186113,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-13",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "learning-quality-1",
+      "inputFingerprint": "14b7d4156c2a670df48188e663e266b801c0a38263f4f3bb42044e9cfd0e07ca",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:13:25.072Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 17810.99025,
+          "usage": {
+            "input": 3917,
+            "output": 2347,
+            "reasoning": 2086
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:13:28.766Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 3689.0699999999997,
+          "usage": {
+            "input": 3711,
+            "output": 348,
+            "reasoning": 311
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:14:32.457Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 63685.48800000001,
+          "usage": {
+            "input": 7718,
+            "output": 9401,
+            "reasoning": 7603
+          }
+        },
+        {
+          "step": "s0-quality-review",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:15:10.676Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 38180.983125,
+          "usage": {
+            "input": 5980,
+            "output": 5465,
+            "reasoning": 5288
+          }
+        },
+        {
+          "step": "s0-quality-repair",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:15:30.691Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 19986.988457999993,
+          "usage": {
+            "input": 5705,
+            "output": 2661,
+            "reasoning": 2529
+          }
+        },
+        {
+          "step": "s0-quality-recheck",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:16:12.098Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 41382.85816600002,
+          "usage": {
+            "input": 5898,
+            "output": 5486,
+            "reasoning": 5384
+          }
+        }
+      ]
+    },
+    "checkpoint": [
+      {
+        "id": "s0",
+        "quality": {
+          "phase": "blocked",
+          "repairPatch": {
+            "patches": [
+              {
+                "path": "/context/text",
+                "value": "內容包含詢問是否還在此處、說明電話來時正打算出門、請求稍等片刻，以及隨後的應答「うん」與「やった」及叫聲標記。"
+              },
+              {
+                "path": "/points/1/explanation",
+                "value": "由動詞て形接續「くれる？」構成疑問句，字面為詢問對方是否願意為自己做某事，常用作親近關係間的口語請求，語氣直接隨和。在一般口語發音中，句尾通常傾向讀作上揚疑問語調。"
+              }
+            ]
+          },
+          "originalDraft": {
+            "risks": [],
+            "status": "complete",
+            "sceneId": "09bfdfca-9c46-47bf-80f8-3a35a7ad5c57",
+            "title": "出門前的插曲",
+            "context": {
+              "text": "對話中一方詢問對方為何還在此處，另一方說明電話來時正準備出門，並請求稍等片刻，隨後得到答應與歡呼反應。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4",
+                "c5"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "還在這裡嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "電話打來時正準備出門。"
+              },
+              {
+                "cueId": "c3",
+                "text": "可以稍微等一下嗎？"
+              },
+              {
+                "cueId": "c4",
+                "text": "嗯。"
+              },
+              {
+                "cueId": "c5",
+                "text": "太好了。[叫聲]"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "042e9648-c48e-47e5-a422-fdd86009d21e",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "136c35e0-121e-4f58-9a00-398b077566a3",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c1"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "c1_1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 7
+                      }
+                    ],
+                    "meaning": "電話打來的時候"
+                  },
+                  {
+                    "id": "c1_2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 8,
+                        "end": 18
+                      }
+                    ],
+                    "meaning": "正打算出門"
+                  }
+                ]
+              },
+              {
+                "id": "59b16511-157f-440e-99af-3a33fdda6166",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "c2_1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 2
+                      }
+                    ],
+                    "meaning": "稍微"
+                  },
+                  {
+                    "id": "c2_2",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 2,
+                        "end": 9
+                      }
+                    ],
+                    "meaning": "可以等我一下嗎？"
+                  }
+                ]
+              },
+              {
+                "id": "402930bb-a588-4f8a-ac09-cb429a13f28a",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "71730b91-6a15-4970-b4c3-484911637b66",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              }
+            ],
+            "points": [
+              {
+                "id": "p1",
+                "utteranceIds": [
+                  "136c35e0-121e-4f58-9a00-398b077566a3"
+                ],
+                "category": "grammar",
+                "presentation": "core",
+                "title": "「〜ところだった」表示正要進行動作的時點",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "contextCueIds": [
+                  "c1"
+                ],
+                "explanation": "接在動詞辭書形後，表示在該過去時間點「正準備要做……、正要……」。句中陳述電話打來時，自己正打算出門。此處僅說明兩個事件發生的時間點重合，是否因而中斷或延遲出門屬於語境推斷，並非此時態句型本身的必然語義。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 8,
+                    "end": 18
+                  }
+                ]
+              },
+              {
+                "id": "p2",
+                "utteranceIds": [
+                  "59b16511-157f-440e-99af-3a33fdda6166"
+                ],
+                "category": "usage",
+                "presentation": "core",
+                "title": "「〜てくれる？」口語請求",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "contextCueIds": [],
+                "explanation": "由動詞て形接續「くれる？」構成疑問句，字面為詢問對方是否願意為自己做某事，在平輩或親近關係中常用作口語請求，語氣隨和直接。句尾使用上揚疑問語調。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 2,
+                    "end": 9
+                  }
+                ]
+              }
+            ],
+            "reusableItems": [
+              {
+                "id": "r1",
+                "pointIds": [
+                  "p1"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c2"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c2",
+                        "start": 8,
+                        "end": 18
+                      }
+                    ],
+                    "text": "出かけるところだった"
+                  }
+                ],
+                "pattern": "[動詞辭書形]ところだった",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "在公司剛收拾好東西準備下班時，同事前來搭話。",
+                    "dialogue": [
+                      {
+                        "text": "お疲れさま。もう退勤するの？",
+                        "translation": "辛苦了。你已經要下班了嗎？",
+                        "pronunciation": [
+                          {
+                            "text": "お疲れさま",
+                            "reading": "おつかれさま"
+                          },
+                          {
+                            "text": "。"
+                          },
+                          {
+                            "text": "もう",
+                            "reading": "もう"
+                          },
+                          {
+                            "text": "退勤する",
+                            "reading": "たいきんする"
+                          },
+                          {
+                            "text": "の"
+                          },
+                          {
+                            "text": "？"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "うん、ちょうど荷物をまとめて、オフィスを出るところだった。",
+                        "translation": "嗯，剛好收拾好行李，正準備離開辦公室呢。",
+                        "pronunciation": [
+                          {
+                            "text": "うん",
+                            "reading": "うん"
+                          },
+                          {
+                            "text": "、"
+                          },
+                          {
+                            "text": "ちょうど",
+                            "reading": "ちょうど"
+                          },
+                          {
+                            "text": "荷物",
+                            "reading": "にもつ"
+                          },
+                          {
+                            "text": "を",
+                            "reading": "を"
+                          },
+                          {
+                            "text": "まとめて",
+                            "reading": "まとめて"
+                          },
+                          {
+                            "text": "、"
+                          },
+                          {
+                            "text": "オフィス",
+                            "reading": "おふぃす"
+                          },
+                          {
+                            "text": "を",
+                            "reading": "を"
+                          },
+                          {
+                            "text": "出るところだった",
+                            "reading": "でるところだった"
+                          },
+                          {
+                            "text": "。"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 1,
+                    "targetText": "出るところだった"
+                  }
+                ]
+              },
+              {
+                "id": "r2",
+                "pointIds": [
+                  "p2"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c3"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c3",
+                        "start": 2,
+                        "end": 9
+                      }
+                    ],
+                    "text": "待ってくれる？"
+                  }
+                ],
+                "pattern": "[動詞て形]くれる？",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "出門前請同行的朋友幫忙拿一下玄關的鑰匙。",
+                    "dialogue": [
+                      {
+                        "text": "そろそろ時間だし、出かけようか。",
+                        "translation": "時間差不多了，出發吧。",
+                        "pronunciation": [
+                          {
+                            "text": "そろそろ",
+                            "reading": "そろそろ"
+                          },
+                          {
+                            "text": "時間",
+                            "reading": "じかん"
+                          },
+                          {
+                            "text": "だし",
+                            "reading": "だし"
+                          },
+                          {
+                            "text": "、"
+                          },
+                          {
+                            "text": "出かけよう",
+                            "reading": "でかけよう"
+                          },
+                          {
+                            "text": "か"
+                          },
+                          {
+                            "text": "。"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "うん。ついでに玄関の鍵を取ってくれる？",
+                        "translation": "好啊。順便幫我拿一下玄關的鑰匙好嗎？",
+                        "pronunciation": [
+                          {
+                            "text": "うん",
+                            "reading": "うん"
+                          },
+                          {
+                            "text": "。"
+                          },
+                          {
+                            "text": "ついでに",
+                            "reading": "ついでに"
+                          },
+                          {
+                            "text": "玄関",
+                            "reading": "げんかん"
+                          },
+                          {
+                            "text": "の",
+                            "reading": "の"
+                          },
+                          {
+                            "text": "鍵",
+                            "reading": "かぎ"
+                          },
+                          {
+                            "text": "を",
+                            "reading": "を"
+                          },
+                          {
+                            "text": "取ってくれる",
+                            "reading": "とってくれる"
+                          },
+                          {
+                            "text": "？"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 1,
+                    "targetText": "取ってくれる？"
+                  }
+                ]
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "まだ",
+                    "reading": "まだ"
+                  },
+                  {
+                    "text": "ここに",
+                    "reading": "ここに"
+                  },
+                  {
+                    "text": "いるの",
+                    "reading": "いるの"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "電話",
+                    "reading": "でんわ"
+                  },
+                  {
+                    "text": "が",
+                    "reading": "が"
+                  },
+                  {
+                    "text": "来た",
+                    "reading": "きた"
+                  },
+                  {
+                    "text": "とき",
+                    "reading": "とき"
+                  },
+                  {
+                    "text": "、"
+                  },
+                  {
+                    "text": "出かける",
+                    "reading": "でかける"
+                  },
+                  {
+                    "text": "ところだった",
+                    "reading": "ところだった"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "少し",
+                    "reading": "すこし"
+                  },
+                  {
+                    "text": "待ってくれる",
+                    "reading": "まってくれる"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "うん",
+                    "reading": "うん"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c5",
+                "segments": [
+                  {
+                    "text": "やった",
+                    "reading": "やった"
+                  },
+                  {
+                    "text": "。"
+                  },
+                  {
+                    "text": "["
+                  },
+                  {
+                    "text": "叫び声",
+                    "reading": "さけびごえ"
+                  },
+                  {
+                    "text": "]"
+                  }
+                ]
+              }
+            ]
+          },
+          "draft": {
+            "risks": [],
+            "status": "complete",
+            "sceneId": "09bfdfca-9c46-47bf-80f8-3a35a7ad5c57",
+            "title": "出門前的插曲",
+            "context": {
+              "text": "內容包含詢問是否還在此處、說明電話來時正打算出門、請求稍等片刻，以及隨後的應答「うん」與「やった」及叫聲標記。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4",
+                "c5"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "還在這裡嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "電話打來時正準備出門。"
+              },
+              {
+                "cueId": "c3",
+                "text": "可以稍微等一下嗎？"
+              },
+              {
+                "cueId": "c4",
+                "text": "嗯。"
+              },
+              {
+                "cueId": "c5",
+                "text": "太好了。[叫聲]"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "042e9648-c48e-47e5-a422-fdd86009d21e",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "136c35e0-121e-4f58-9a00-398b077566a3",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c1"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "p1"
+                ],
+                "chunks": [
+                  {
+                    "id": "c1_1",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 7
+                      }
+                    ],
+                    "meaning": "電話打來的時候"
+                  },
+                  {
+                    "id": "c1_2",
+                    "spans": [
+                      {
+                        "cueId": "c2",
+                        "start": 8,
+                        "end": 18
+                      }
+                    ],
+                    "meaning": "正打算出門"
+                  }
+                ]
+              },
+              {
+                "id": "59b16511-157f-440e-99af-3a33fdda6166",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "p2"
+                ],
+                "chunks": [
+                  {
+                    "id": "c2_1",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 0,
+                        "end": 2
+                      }
+                    ],
+                    "meaning": "稍微"
+                  },
+                  {
+                    "id": "c2_2",
+                    "spans": [
+                      {
+                        "cueId": "c3",
+                        "start": 2,
+                        "end": 9
+                      }
+                    ],
+                    "meaning": "可以等我一下嗎？"
+                  }
+                ]
+              },
+              {
+                "id": "402930bb-a588-4f8a-ac09-cb429a13f28a",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "71730b91-6a15-4970-b4c3-484911637b66",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              }
+            ],
+            "points": [
+              {
+                "id": "p1",
+                "utteranceIds": [
+                  "136c35e0-121e-4f58-9a00-398b077566a3"
+                ],
+                "category": "grammar",
+                "presentation": "core",
+                "title": "「〜ところだった」表示正要進行動作的時點",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "contextCueIds": [
+                  "c1"
+                ],
+                "explanation": "接在動詞辭書形後，表示在該過去時間點「正準備要做……、正要……」。句中陳述電話打來時，自己正打算出門。此處僅說明兩個事件發生的時間點重合，是否因而中斷或延遲出門屬於語境推斷，並非此時態句型本身的必然語義。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 8,
+                    "end": 18
+                  }
+                ]
+              },
+              {
+                "id": "p2",
+                "utteranceIds": [
+                  "59b16511-157f-440e-99af-3a33fdda6166"
+                ],
+                "category": "usage",
+                "presentation": "core",
+                "title": "「〜てくれる？」口語請求",
+                "sourceCueIds": [
+                  "c3"
+                ],
+                "contextCueIds": [],
+                "explanation": "由動詞て形接續「くれる？」構成疑問句，字面為詢問對方是否願意為自己做某事，常用作親近關係間的口語請求，語氣直接隨和。在一般口語發音中，句尾通常傾向讀作上揚疑問語調。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 2,
+                    "end": 9
+                  }
+                ]
+              }
+            ],
+            "reusableItems": [
+              {
+                "id": "r1",
+                "pointIds": [
+                  "p1"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c2"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c2",
+                        "start": 8,
+                        "end": 18
+                      }
+                    ],
+                    "text": "出かけるところだった"
+                  }
+                ],
+                "pattern": "[動詞辭書形]ところだった",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "在公司剛收拾好東西準備下班時，同事前來搭話。",
+                    "dialogue": [
+                      {
+                        "text": "お疲れさま。もう退勤するの？",
+                        "translation": "辛苦了。你已經要下班了嗎？",
+                        "pronunciation": [
+                          {
+                            "text": "お疲れさま",
+                            "reading": "おつかれさま"
+                          },
+                          {
+                            "text": "。"
+                          },
+                          {
+                            "text": "もう",
+                            "reading": "もう"
+                          },
+                          {
+                            "text": "退勤する",
+                            "reading": "たいきんする"
+                          },
+                          {
+                            "text": "の"
+                          },
+                          {
+                            "text": "？"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "うん、ちょうど荷物をまとめて、オフィスを出るところだった。",
+                        "translation": "嗯，剛好收拾好行李，正準備離開辦公室呢。",
+                        "pronunciation": [
+                          {
+                            "text": "うん",
+                            "reading": "うん"
+                          },
+                          {
+                            "text": "、"
+                          },
+                          {
+                            "text": "ちょうど",
+                            "reading": "ちょうど"
+                          },
+                          {
+                            "text": "荷物",
+                            "reading": "にもつ"
+                          },
+                          {
+                            "text": "を",
+                            "reading": "を"
+                          },
+                          {
+                            "text": "まとめて",
+                            "reading": "まとめて"
+                          },
+                          {
+                            "text": "、"
+                          },
+                          {
+                            "text": "オフィス",
+                            "reading": "おふぃす"
+                          },
+                          {
+                            "text": "を",
+                            "reading": "を"
+                          },
+                          {
+                            "text": "出るところだった",
+                            "reading": "でるところだった"
+                          },
+                          {
+                            "text": "。"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 1,
+                    "targetText": "出るところだった"
+                  }
+                ]
+              },
+              {
+                "id": "r2",
+                "pointIds": [
+                  "p2"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c3"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c3",
+                        "start": 2,
+                        "end": 9
+                      }
+                    ],
+                    "text": "待ってくれる？"
+                  }
+                ],
+                "pattern": "[動詞て形]くれる？",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "出門前請同行的朋友幫忙拿一下玄關的鑰匙。",
+                    "dialogue": [
+                      {
+                        "text": "そろそろ時間だし、出かけようか。",
+                        "translation": "時間差不多了，出發吧。",
+                        "pronunciation": [
+                          {
+                            "text": "そろそろ",
+                            "reading": "そろそろ"
+                          },
+                          {
+                            "text": "時間",
+                            "reading": "じかん"
+                          },
+                          {
+                            "text": "だし",
+                            "reading": "だし"
+                          },
+                          {
+                            "text": "、"
+                          },
+                          {
+                            "text": "出かけよう",
+                            "reading": "でかけよう"
+                          },
+                          {
+                            "text": "か"
+                          },
+                          {
+                            "text": "。"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "うん。ついでに玄関の鍵を取ってくれる？",
+                        "translation": "好啊。順便幫我拿一下玄關的鑰匙好嗎？",
+                        "pronunciation": [
+                          {
+                            "text": "うん",
+                            "reading": "うん"
+                          },
+                          {
+                            "text": "。"
+                          },
+                          {
+                            "text": "ついでに",
+                            "reading": "ついでに"
+                          },
+                          {
+                            "text": "玄関",
+                            "reading": "げんかん"
+                          },
+                          {
+                            "text": "の",
+                            "reading": "の"
+                          },
+                          {
+                            "text": "鍵",
+                            "reading": "かぎ"
+                          },
+                          {
+                            "text": "を",
+                            "reading": "を"
+                          },
+                          {
+                            "text": "取ってくれる",
+                            "reading": "とってくれる"
+                          },
+                          {
+                            "text": "？"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 1,
+                    "targetText": "取ってくれる？"
+                  }
+                ]
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "まだ",
+                    "reading": "まだ"
+                  },
+                  {
+                    "text": "ここに",
+                    "reading": "ここに"
+                  },
+                  {
+                    "text": "いるの",
+                    "reading": "いるの"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "電話",
+                    "reading": "でんわ"
+                  },
+                  {
+                    "text": "が",
+                    "reading": "が"
+                  },
+                  {
+                    "text": "来た",
+                    "reading": "きた"
+                  },
+                  {
+                    "text": "とき",
+                    "reading": "とき"
+                  },
+                  {
+                    "text": "、"
+                  },
+                  {
+                    "text": "出かける",
+                    "reading": "でかける"
+                  },
+                  {
+                    "text": "ところだった",
+                    "reading": "ところだった"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "少し",
+                    "reading": "すこし"
+                  },
+                  {
+                    "text": "待ってくれる",
+                    "reading": "まってくれる"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "うん",
+                    "reading": "うん"
+                  },
+                  {
+                    "text": "。"
+                  }
+                ]
+              },
+              {
+                "cueId": "c5",
+                "segments": [
+                  {
+                    "text": "やった",
+                    "reading": "やった"
+                  },
+                  {
+                    "text": "。"
+                  },
+                  {
+                    "text": "["
+                  },
+                  {
+                    "text": "叫び声",
+                    "reading": "さけびごえ"
+                  },
+                  {
+                    "text": "]"
+                  }
+                ]
+              }
+            ]
+          },
+          "inputHash": "9e1ad4a1950bd5b5cd556e0861be9ec4e46010c4cca8a2f8363d91f85d816dd2",
+          "draftHash": "c2da9cf1b8037092727fafdfa350b8746b78240a5e0af3717404e2150e50fdca",
+          "risks": [
+            {
+              "type": "context_inference",
+              "unitId": "042e9648-c48e-47e5-a422-fdd86009d21e",
+              "path": "/context/text",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 9
+                }
+              ],
+              "description": "Potential ungrounded emotion, causality or linking separate turns to one speaker; verify this specific field against source."
+            }
+          ],
+          "review": {
+            "issues": [
+              {
+                "severity": "error",
+                "type": "unsupported_inference",
+                "path": "/context/text",
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 0,
+                    "end": 19
+                  },
+                  {
+                    "cueId": "c3",
+                    "start": 0,
+                    "end": 9
+                  }
+                ],
+                "description": "在字幕未標註說話者的情況下，將說明狀況者與提出請求者推定為同一人，並將後續內容斷定為答應請求與歡呼反應，缺乏原文支持。"
+              },
+              {
+                "severity": "error",
+                "type": "unsupported_inference",
+                "path": "/points/1/explanation",
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 2,
+                    "end": 9
+                  }
+                ],
+                "description": "在無音訊佐證下斷定錄音句尾實際使用上揚疑問語調，未明確表述為一般語調傾向或可能性。"
+              }
+            ]
+          },
+          "reviewDraftHash": "acec5ef68e8857e3da5f8060d9fce9fad76d2f6891ccb9ec78b8f1431a322b91",
+          "reviewHash": "45252dfe6c5135f953e91c02359c8c307d847e1f8597adcc49c23bdfd92c998a",
+          "originalDraftHash": "acec5ef68e8857e3da5f8060d9fce9fad76d2f6891ccb9ec78b8f1431a322b91",
+          "repairEligible": false,
+          "recheck": {
+            "issues": [
+              {
+                "severity": "error",
+                "type": "unsupported_inference",
+                "path": "/utterances/2/chunks/1/meaning",
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 2,
+                    "end": 9
+                  }
+                ],
+                "description": "原文「待ってくれる？」未指明對象，未提供說話者標籤時不應在 chunk 意思中補入受詞「我」（且「一下」亦與前一 chunk「少し」語義重疊）。"
+              }
+            ]
+          },
+          "recheckDraftHash": "c2da9cf1b8037092727fafdfa350b8746b78240a5e0af3717404e2150e50fdca",
+          "recheckHash": "71fbed1f05eda7a6720c7f625fecf0bdeb82379ae1bf44e804d1a247cfde2395",
+          "diagnostic": "Major issues remain after one repair"
+        }
+      }
+    ]
+  },
+  {
+    "case": "ja-uncertainty-quote-topic-N1-automatic",
+    "status": "generated",
+    "durationMs": 251626,
+    "id": "052c492f-dec9-4f60-a704-b31eabd279c9",
+    "scenes": 1,
+    "utterances": 6,
+    "points": 3,
+    "reusableItems": 3,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-13",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "learning-quality-1",
+      "inputFingerprint": "b7f496c758d4960461a755f6b62defe2111d8546f80b1cc3bd5c020e93061366",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "qualityReports": [
+        {
+          "batchId": "s0",
+          "sceneId": "8a753826-b8f6-4814-805b-3a144f9a141a",
+          "draftHash": "291e992173c9aadd85493631465592274e7c0ddaced47db94bdfb85cb777a1b5",
+          "reviewIssues": [],
+          "reviewed": true,
+          "repaired": false,
+          "issues": []
+        }
+      ],
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:16:35.717Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 22309.96545800002,
+          "usage": {
+            "input": 4013,
+            "output": 3192,
+            "reasoning": 2866
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:16:45.084Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 9352.24220800001,
+          "usage": {
+            "input": 3815,
+            "output": 946,
+            "reasoning": 904
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:18:49.855Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 124762.98404099996,
+          "usage": {
+            "input": 7841,
+            "output": 18569,
+            "reasoning": 15921
+          }
+        },
+        {
+          "step": "s0-quality-review",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:20:23.721Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 93834.66954199999,
+          "usage": {
+            "input": 7258,
+            "output": 13588,
+            "reasoning": 13584
+          }
+        }
+      ],
+      "pronunciationDiagnostics": []
+    },
+    "semanticAcceptance": "pending manual review; structure/model review are insufficient",
+    "quality": [
+      {
+        "batchId": "s0",
+        "sceneId": "8a753826-b8f6-4814-805b-3a144f9a141a",
+        "draftHash": "291e992173c9aadd85493631465592274e7c0ddaced47db94bdfb85cb777a1b5",
+        "reviewIssues": [],
+        "reviewed": true,
+        "repaired": false,
+        "issues": []
+      }
+    ]
+  },
+  {
+    "case": "ja-normal-transfer-N3-automatic",
+    "status": "generated",
+    "durationMs": 115633,
+    "id": "f601c448-aa4b-4bc3-a944-36304935e24e",
+    "scenes": 1,
+    "utterances": 5,
+    "points": 2,
+    "reusableItems": 2,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-13",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "learning-quality-1",
+      "inputFingerprint": "5ad1119b1dff747939ce60ce245bed9b231d694f55bc5b53ebba59d2570b1c1f",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "qualityReports": [
+        {
+          "batchId": "s0",
+          "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+          "draftHash": "e9fc40f3df7ffec6ccea701e403e3b69957886c5237c7d8e53f0ab7f79162ca6",
+          "reviewed": false,
+          "repaired": false,
+          "issues": []
+        }
+      ],
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:20:53.931Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 28619.591707999993,
+          "usage": {
+            "input": 3919,
+            "output": 4275,
+            "reasoning": 4031
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:20:57.563Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 3618.7447499999544,
+          "usage": {
+            "input": 3686,
+            "output": 217,
+            "reasoning": 178
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:22:04.431Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 66851.21391600004,
+          "usage": {
+            "input": 7679,
+            "output": 9371,
+            "reasoning": 7871
+          }
+        },
+        {
+          "step": "s0-pronunciation-repair",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:22:19.350Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 14899.299583999906,
+          "usage": {
+            "input": 3936,
+            "output": 1939,
+            "reasoning": 1791
+          }
+        }
+      ],
+      "pronunciationDiagnostics": [
+        {
+          "id": "s0:/pronunciations/0:all:empty_annotation",
+          "batchId": "s0",
+          "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+          "path": "/pronunciations/0",
+          "cueId": "c1",
+          "code": "empty_annotation",
+          "action": "repaired"
+        },
+        {
+          "id": "s0:/pronunciations/3:all:empty_annotation",
+          "batchId": "s0",
+          "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+          "path": "/pronunciations/3",
+          "cueId": "c4",
+          "code": "empty_annotation",
+          "action": "repaired"
+        },
+        {
+          "id": "s0:/reusableItems/1/examples/0/dialogue/1/pronunciation:all:empty_annotation",
+          "batchId": "s0",
+          "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+          "path": "/reusableItems/1/examples/0/dialogue/1/pronunciation",
+          "itemId": "84362615-bcfc-425b-ac00-6fd005536409:s0:r2",
+          "exampleIndex": 0,
+          "lineIndex": 1,
+          "code": "empty_annotation",
+          "action": "repaired"
+        }
+      ]
+    },
+    "semanticAcceptance": "pending manual review; structure/model review are insufficient",
+    "quality": [
+      {
+        "batchId": "s0",
+        "sceneId": "84362615-bcfc-425b-ac00-6fd005536409",
+        "draftHash": "e9fc40f3df7ffec6ccea701e403e3b69957886c5237c7d8e53f0ab7f79162ca6",
+        "reviewed": false,
+        "repaired": false,
+        "issues": []
+      }
+    ]
+  },
+  {
+    "case": "ja-uncertainty-quote-topic-N3-automatic",
+    "status": "failed",
+    "error": "Error: Invalid quality review: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"array\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Array must contain at least 1 element(s)\",\n    \"path\": [\n      \"issues\",\n      3,\n      \"sourceSpans\"\n    ]\n  }\n]",
+    "durationMs": 137066,
+    "execution": {
+      "workflowVersion": "learning-points-v7-1",
+      "promptVersion": "learning-points-prompts-13",
+      "schemaVersion": "7",
+      "languageStrategyVersion": "learning-language-strategies-4",
+      "levelStrategyVersion": "learning-level-strategies-1",
+      "qualityStrategyVersion": "learning-quality-1",
+      "inputFingerprint": "6d8af8686a6b1e0d02abd52aac4d7b807184c18e2bf8958b3946634c4bc11299",
+      "provider": "antigravity",
+      "modelId": "gemini-3.8-flash",
+      "contextWindow": 1048576,
+      "maxOutputTokens": 65536,
+      "chunkPlan": [
+        [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      ],
+      "calls": [
+        {
+          "step": "window-0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:22:46.357Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 26062.779541999917,
+          "usage": {
+            "input": 4015,
+            "output": 3570,
+            "reasoning": 3269
+          }
+        },
+        {
+          "step": "selection",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:22:51.863Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 5495.4223749999655,
+          "usage": {
+            "input": 3796,
+            "output": 602,
+            "reasoning": 563
+          }
+        },
+        {
+          "step": "s0",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:23:44.507Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 52636.023707999964,
+          "usage": {
+            "input": 7827,
+            "output": 7549,
+            "reasoning": 2944
+          }
+        },
+        {
+          "step": "s0-quality-review",
+          "provider": "antigravity",
+          "modelId": "gemini-3.8-flash",
+          "billing": "subscription",
+          "at": "2026-10-13T17:24:36.424Z",
+          "outputTokenBudget": 32768,
+          "stopReason": "stop",
+          "durationMs": 51894.14512500004,
+          "usage": {
+            "input": 6893,
+            "output": 7531,
+            "reasoning": 7177
+          }
+        }
+      ]
+    },
+    "checkpoint": [
+      {
+        "id": "s0",
+        "quality": {
+          "phase": "blocked",
+          "originalDraft": {
+            "risks": [
+              {
+                "type": "source_uncertainty",
+                "unitId": "722f787b-ec56-4cb7-b9e8-bb80c6c95559",
+                "path": "/translations/2/text",
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 8,
+                    "end": 14
+                  }
+                ],
+                "description": "「悪いない」為語意不明或有誤的字幕片段，發話者正對其提出疑問，無法確定其意圖或正確詞形。"
+              }
+            ],
+            "status": "complete",
+            "sceneId": "d5ebbc7f-2a98-419d-8423-f0865fa17f23",
+            "title": "詢問聚會與辨識字幕",
+            "context": {
+              "text": "對話包含詢問ミオ是否談及聚會、轉述回答內容、轉換話題詢問是否用餐，以及對畫面上不明字幕「悪いない」提出疑問。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "ミオ，剛才在聊聚會的事嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "她說「跟我說時間」。話說回來，你吃了嗎？"
+              },
+              {
+                "cueId": "c3",
+                "text": "還沒。這裡寫的「悪いない」（原文意思不明）是什麼？"
+              },
+              {
+                "cueId": "c4",
+                "text": "字幕看不太懂。"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "308ca9f0-b125-4ee8-b77c-8da68ba1e370",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "p1"
+                ]
+              },
+              {
+                "id": "e1954174-f5aa-49d4-a6a7-0d09ed3d06a4",
+                "meaning": "引用並轉述ミオ所說的話「把時間告訴我」。",
+                "contextExplanation": "回答前一句關於聚會談話內容的提問。",
+                "contextCueIds": [
+                  "c1"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "p2"
+                ]
+              },
+              {
+                "id": "8da23374-6172-4bae-9f17-44061aa7321c",
+                "meaning": "",
+                "contextExplanation": "回答完聚會的事後，主動切換話題詢問對方是否已用餐。",
+                "contextCueIds": [
+                  "c2"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "p3"
+                ]
+              },
+              {
+                "id": "8be1b5fc-fba1-4839-b489-eca32a130f87",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c2"
+                ],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "722f787b-ec56-4cb7-b9e8-bb80c6c95559",
+                "meaning": "詢問這裡出現的字樣「悪いない」（原文語意不明）是什麼意思。",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "882c9d4d-a198-43ea-b23c-d83b8f9b0d2a",
+                "meaning": "",
+                "contextExplanation": "接續說明之所以看不懂是因為字幕內容本身不明確。",
+                "contextCueIds": [
+                  "c3"
+                ],
+                "decision": "basic_only",
+                "pointIds": []
+              }
+            ],
+            "points": [
+              {
+                "id": "p1",
+                "utteranceIds": [
+                  "308ca9f0-b125-4ee8-b77c-8da68ba1e370"
+                ],
+                "category": "grammar",
+                "presentation": "core",
+                "title": "話してた：口語省略「い」的過去持續形",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "contextCueIds": [],
+                "explanation": "「話してた」是動詞「話していた」在日常會話中省略「い」的口語形態，表示過去某個時間點正在進行的動作或持續的狀態。日語口語中，接在動詞て形／で形後方的補助動詞「いる／いた」常將「い」省略，例如「書いていた」常縮略為「書いてた」、「読んでいた」常縮略為「読んでた」。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 10,
+                    "end": 14
+                  }
+                ]
+              },
+              {
+                "id": "p2",
+                "utteranceIds": [
+                  "e1954174-f5aa-49d4-a6a7-0d09ed3d06a4"
+                ],
+                "category": "grammar",
+                "presentation": "core",
+                "title": "引用助詞「って」：口語轉述他人話語",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "contextCueIds": [
+                  "c1"
+                ],
+                "explanation": "在句尾直接使用引用助詞「って」，相當於「〜と言っていた」或「〜と言って」，用來簡潔轉述他人剛才說過的話或要求。此處承接上一句對談話內容的詢問，直接引用對方的發言。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 9,
+                    "end": 11
+                  }
+                ]
+              },
+              {
+                "id": "p3",
+                "utteranceIds": [
+                  "8da23374-6172-4bae-9f17-44061aa7321c"
+                ],
+                "category": "usage",
+                "presentation": "core",
+                "title": "ところで：轉換談話話題",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "contextCueIds": [],
+                "explanation": "「ところで」是用於轉換話題的接續詞，相當於中文的「話說回來」、「對了」。在對前一個話題做出交代或回答之後，順勢切換至另一個新的話題時使用。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 11,
+                    "end": 15
+                  }
+                ]
+              }
+            ],
+            "reusableItems": [
+              {
+                "id": "r1",
+                "pointIds": [
+                  "p1"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c1"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c1",
+                        "start": 10,
+                        "end": 14
+                      }
+                    ],
+                    "text": "話してた"
+                  }
+                ],
+                "pattern": "[動詞て形]た",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "詢問朋友剛才在圖書館讀了什麼書。",
+                    "dialogue": [
+                      {
+                        "text": "さっき図書館で何を読んでたの？",
+                        "translation": "你剛才在圖書館讀了什麼？",
+                        "pronunciation": [
+                          {
+                            "text": "さっき"
+                          },
+                          {
+                            "text": "図書館",
+                            "reading": "としょかん"
+                          },
+                          {
+                            "text": "で"
+                          },
+                          {
+                            "text": "何",
+                            "reading": "なに"
+                          },
+                          {
+                            "text": "を"
+                          },
+                          {
+                            "text": "読んでた",
+                            "reading": "よんでた"
+                          },
+                          {
+                            "text": "の？"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "歴史の本を読んでたよ。",
+                        "translation": "我剛才在讀歷史書喔。",
+                        "pronunciation": [
+                          {
+                            "text": "歴史",
+                            "reading": "れきし"
+                          },
+                          {
+                            "text": "の"
+                          },
+                          {
+                            "text": "本",
+                            "reading": "ほん"
+                          },
+                          {
+                            "text": "を"
+                          },
+                          {
+                            "text": "読んでた",
+                            "reading": "よんでた"
+                          },
+                          {
+                            "text": "よ。"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 0,
+                    "targetText": "読んでた"
+                  }
+                ]
+              },
+              {
+                "id": "r2",
+                "pointIds": [
+                  "p2"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c2"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 11
+                      }
+                    ],
+                    "text": "「時間を教えて」って。"
+                  }
+                ],
+                "pattern": "「[引用内容]」って",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "轉述田中先生交代的集合時間。",
+                    "dialogue": [
+                      {
+                        "text": "田中さんは何て言ってた？",
+                        "translation": "田中先生說了什麼？",
+                        "pronunciation": [
+                          {
+                            "text": "田中",
+                            "reading": "たなか"
+                          },
+                          {
+                            "text": "さん"
+                          },
+                          {
+                            "text": "は"
+                          },
+                          {
+                            "text": "何て",
+                            "reading": "なんて"
+                          },
+                          {
+                            "text": "言ってた",
+                            "reading": "いってた"
+                          },
+                          {
+                            "text": "？"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "「３時に来て」って。",
+                        "translation": "他說「3點過來」。",
+                        "pronunciation": [
+                          {
+                            "text": "「３時",
+                            "reading": "さんじ"
+                          },
+                          {
+                            "text": "に"
+                          },
+                          {
+                            "text": "来て",
+                            "reading": "きて"
+                          },
+                          {
+                            "text": "」って。"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 1,
+                    "targetText": "「３時に来て」って"
+                  }
+                ]
+              },
+              {
+                "id": "r3",
+                "pointIds": [
+                  "p3"
+                ],
+                "kind": "expression",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c2"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c2",
+                        "start": 11,
+                        "end": 15
+                      }
+                    ],
+                    "text": "ところで"
+                  }
+                ],
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "確認完工作進度後，切換話題詢問明天的計畫。",
+                    "dialogue": [
+                      {
+                        "text": "資料の準備は終わりました。",
+                        "translation": "資料的準備已經完成了。",
+                        "pronunciation": [
+                          {
+                            "text": "資料",
+                            "reading": "しりょう"
+                          },
+                          {
+                            "text": "の"
+                          },
+                          {
+                            "text": "準備",
+                            "reading": "じゅんび"
+                          },
+                          {
+                            "text": "は"
+                          },
+                          {
+                            "text": "終わりました",
+                            "reading": "おわりました"
+                          },
+                          {
+                            "text": "。"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "お疲れ様。ところで、明日の予定は空いてる？",
+                        "translation": "辛苦了。話說回來，你明天的行程有空嗎？",
+                        "pronunciation": [
+                          {
+                            "text": "お疲れ様",
+                            "reading": "おつかれさま"
+                          },
+                          {
+                            "text": "。"
+                          },
+                          {
+                            "text": "ところで、"
+                          },
+                          {
+                            "text": "明日",
+                            "reading": "あした"
+                          },
+                          {
+                            "text": "の"
+                          },
+                          {
+                            "text": "予定",
+                            "reading": "よてい"
+                          },
+                          {
+                            "text": "は"
+                          },
+                          {
+                            "text": "空いてる",
+                            "reading": "あいてる"
+                          },
+                          {
+                            "text": "？"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 1,
+                    "targetText": "ところで"
+                  }
+                ]
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "ミオ",
+                    "reading": "みお"
+                  },
+                  {
+                    "text": "、"
+                  },
+                  {
+                    "text": "集まり",
+                    "reading": "あつまり"
+                  },
+                  {
+                    "text": "の"
+                  },
+                  {
+                    "text": "こと"
+                  },
+                  {
+                    "text": "を"
+                  },
+                  {
+                    "text": "話してた",
+                    "reading": "はなしてた"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "「"
+                  },
+                  {
+                    "text": "時間",
+                    "reading": "じかん"
+                  },
+                  {
+                    "text": "を"
+                  },
+                  {
+                    "text": "教えて",
+                    "reading": "おしえて"
+                  },
+                  {
+                    "text": "」って。"
+                  },
+                  {
+                    "text": "ところで、"
+                  },
+                  {
+                    "text": "もう"
+                  },
+                  {
+                    "text": "食べた",
+                    "reading": "たべた"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "まだ。"
+                  },
+                  {
+                    "text": "ここ"
+                  },
+                  {
+                    "text": "に"
+                  },
+                  {
+                    "text": "ある"
+                  },
+                  {
+                    "text": "「悪いない」"
+                  },
+                  {
+                    "text": "って"
+                  },
+                  {
+                    "text": "何",
+                    "reading": "なに"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "字幕",
+                    "reading": "じまく"
+                  },
+                  {
+                    "text": "が"
+                  },
+                  {
+                    "text": "よくわからない。"
+                  }
+                ]
+              }
+            ]
+          },
+          "draft": {
+            "risks": [
+              {
+                "type": "source_uncertainty",
+                "unitId": "722f787b-ec56-4cb7-b9e8-bb80c6c95559",
+                "path": "/translations/2/text",
+                "sourceSpans": [
+                  {
+                    "cueId": "c3",
+                    "start": 8,
+                    "end": 14
+                  }
+                ],
+                "description": "「悪いない」為語意不明或有誤的字幕片段，發話者正對其提出疑問，無法確定其意圖或正確詞形。"
+              }
+            ],
+            "status": "complete",
+            "sceneId": "d5ebbc7f-2a98-419d-8423-f0865fa17f23",
+            "title": "詢問聚會與辨識字幕",
+            "context": {
+              "text": "對話包含詢問ミオ是否談及聚會、轉述回答內容、轉換話題詢問是否用餐，以及對畫面上不明字幕「悪いない」提出疑問。",
+              "evidenceCueIds": [
+                "c1",
+                "c2",
+                "c3",
+                "c4"
+              ]
+            },
+            "translations": [
+              {
+                "cueId": "c1",
+                "text": "ミオ，剛才在聊聚會的事嗎？"
+              },
+              {
+                "cueId": "c2",
+                "text": "她說「跟我說時間」。話說回來，你吃了嗎？"
+              },
+              {
+                "cueId": "c3",
+                "text": "還沒。這裡寫的「悪いない」（原文意思不明）是什麼？"
+              },
+              {
+                "cueId": "c4",
+                "text": "字幕看不太懂。"
+              }
+            ],
+            "utterances": [
+              {
+                "id": "308ca9f0-b125-4ee8-b77c-8da68ba1e370",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "explained",
+                "pointIds": [
+                  "p1"
+                ]
+              },
+              {
+                "id": "e1954174-f5aa-49d4-a6a7-0d09ed3d06a4",
+                "meaning": "引用並轉述ミオ所說的話「把時間告訴我」。",
+                "contextExplanation": "回答前一句關於聚會談話內容的提問。",
+                "contextCueIds": [
+                  "c1"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "p2"
+                ]
+              },
+              {
+                "id": "8da23374-6172-4bae-9f17-44061aa7321c",
+                "meaning": "",
+                "contextExplanation": "回答完聚會的事後，主動切換話題詢問對方是否已用餐。",
+                "contextCueIds": [
+                  "c2"
+                ],
+                "decision": "explained",
+                "pointIds": [
+                  "p3"
+                ]
+              },
+              {
+                "id": "8be1b5fc-fba1-4839-b489-eca32a130f87",
+                "meaning": "",
+                "contextExplanation": "",
+                "contextCueIds": [
+                  "c2"
+                ],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "722f787b-ec56-4cb7-b9e8-bb80c6c95559",
+                "meaning": "詢問這裡出現的字樣「悪いない」（原文語意不明）是什麼意思。",
+                "contextExplanation": "",
+                "contextCueIds": [],
+                "decision": "basic_only",
+                "pointIds": []
+              },
+              {
+                "id": "882c9d4d-a198-43ea-b23c-d83b8f9b0d2a",
+                "meaning": "",
+                "contextExplanation": "接續說明之所以看不懂是因為字幕內容本身不明確。",
+                "contextCueIds": [
+                  "c3"
+                ],
+                "decision": "basic_only",
+                "pointIds": []
+              }
+            ],
+            "points": [
+              {
+                "id": "p1",
+                "utteranceIds": [
+                  "308ca9f0-b125-4ee8-b77c-8da68ba1e370"
+                ],
+                "category": "grammar",
+                "presentation": "core",
+                "title": "話してた：口語省略「い」的過去持續形",
+                "sourceCueIds": [
+                  "c1"
+                ],
+                "contextCueIds": [],
+                "explanation": "「話してた」是動詞「話していた」在日常會話中省略「い」的口語形態，表示過去某個時間點正在進行的動作或持續的狀態。日語口語中，接在動詞て形／で形後方的補助動詞「いる／いた」常將「い」省略，例如「書いていた」常縮略為「書いてた」、「読んでいた」常縮略為「読んでた」。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c1",
+                    "start": 10,
+                    "end": 14
+                  }
+                ]
+              },
+              {
+                "id": "p2",
+                "utteranceIds": [
+                  "e1954174-f5aa-49d4-a6a7-0d09ed3d06a4"
+                ],
+                "category": "grammar",
+                "presentation": "core",
+                "title": "引用助詞「って」：口語轉述他人話語",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "contextCueIds": [
+                  "c1"
+                ],
+                "explanation": "在句尾直接使用引用助詞「って」，相當於「〜と言っていた」或「〜と言って」，用來簡潔轉述他人剛才說過的話或要求。此處承接上一句對談話內容的詢問，直接引用對方的發言。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 9,
+                    "end": 11
+                  }
+                ]
+              },
+              {
+                "id": "p3",
+                "utteranceIds": [
+                  "8da23374-6172-4bae-9f17-44061aa7321c"
+                ],
+                "category": "usage",
+                "presentation": "core",
+                "title": "ところで：轉換談話話題",
+                "sourceCueIds": [
+                  "c2"
+                ],
+                "contextCueIds": [],
+                "explanation": "「ところで」是用於轉換話題的接續詞，相當於中文的「話說回來」、「對了」。在對前一個話題做出交代或回答之後，順勢切換至另一個新的話題時使用。",
+                "sourceSpans": [
+                  {
+                    "cueId": "c2",
+                    "start": 11,
+                    "end": 15
+                  }
+                ]
+              }
+            ],
+            "reusableItems": [
+              {
+                "id": "r1",
+                "pointIds": [
+                  "p1"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c1"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c1",
+                        "start": 10,
+                        "end": 14
+                      }
+                    ],
+                    "text": "話してた"
+                  }
+                ],
+                "pattern": "[動詞て形]た",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "詢問朋友剛才在圖書館讀了什麼書。",
+                    "dialogue": [
+                      {
+                        "text": "さっき図書館で何を読んでたの？",
+                        "translation": "你剛才在圖書館讀了什麼？",
+                        "pronunciation": [
+                          {
+                            "text": "さっき"
+                          },
+                          {
+                            "text": "図書館",
+                            "reading": "としょかん"
+                          },
+                          {
+                            "text": "で"
+                          },
+                          {
+                            "text": "何",
+                            "reading": "なに"
+                          },
+                          {
+                            "text": "を"
+                          },
+                          {
+                            "text": "読んでた",
+                            "reading": "よんでた"
+                          },
+                          {
+                            "text": "の？"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "歴史の本を読んでたよ。",
+                        "translation": "我剛才在讀歷史書喔。",
+                        "pronunciation": [
+                          {
+                            "text": "歴史",
+                            "reading": "れきし"
+                          },
+                          {
+                            "text": "の"
+                          },
+                          {
+                            "text": "本",
+                            "reading": "ほん"
+                          },
+                          {
+                            "text": "を"
+                          },
+                          {
+                            "text": "読んでた",
+                            "reading": "よんでた"
+                          },
+                          {
+                            "text": "よ。"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 0,
+                    "targetText": "読んでた"
+                  }
+                ]
+              },
+              {
+                "id": "r2",
+                "pointIds": [
+                  "p2"
+                ],
+                "kind": "frame",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c2"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c2",
+                        "start": 0,
+                        "end": 11
+                      }
+                    ],
+                    "text": "「時間を教えて」って。"
+                  }
+                ],
+                "pattern": "「[引用内容]」って",
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "轉述田中先生交代的集合時間。",
+                    "dialogue": [
+                      {
+                        "text": "田中さんは何て言ってた？",
+                        "translation": "田中先生說了什麼？",
+                        "pronunciation": [
+                          {
+                            "text": "田中",
+                            "reading": "たなか"
+                          },
+                          {
+                            "text": "さん"
+                          },
+                          {
+                            "text": "は"
+                          },
+                          {
+                            "text": "何て",
+                            "reading": "なんて"
+                          },
+                          {
+                            "text": "言ってた",
+                            "reading": "いってた"
+                          },
+                          {
+                            "text": "？"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "「３時に来て」って。",
+                        "translation": "他說「3點過來」。",
+                        "pronunciation": [
+                          {
+                            "text": "「３時",
+                            "reading": "さんじ"
+                          },
+                          {
+                            "text": "に"
+                          },
+                          {
+                            "text": "来て",
+                            "reading": "きて"
+                          },
+                          {
+                            "text": "」って。"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 1,
+                    "targetText": "「３時に来て」って"
+                  }
+                ]
+              },
+              {
+                "id": "r3",
+                "pointIds": [
+                  "p3"
+                ],
+                "kind": "expression",
+                "sourceForms": [
+                  {
+                    "cueIds": [
+                      "c2"
+                    ],
+                    "sourceSpans": [
+                      {
+                        "cueId": "c2",
+                        "start": 11,
+                        "end": 15
+                      }
+                    ],
+                    "text": "ところで"
+                  }
+                ],
+                "examples": [
+                  {
+                    "origin": "ai",
+                    "situation": "確認完工作進度後，切換話題詢問明天的計畫。",
+                    "dialogue": [
+                      {
+                        "text": "資料の準備は終わりました。",
+                        "translation": "資料的準備已經完成了。",
+                        "pronunciation": [
+                          {
+                            "text": "資料",
+                            "reading": "しりょう"
+                          },
+                          {
+                            "text": "の"
+                          },
+                          {
+                            "text": "準備",
+                            "reading": "じゅんび"
+                          },
+                          {
+                            "text": "は"
+                          },
+                          {
+                            "text": "終わりました",
+                            "reading": "おわりました"
+                          },
+                          {
+                            "text": "。"
+                          }
+                        ]
+                      },
+                      {
+                        "text": "お疲れ様。ところで、明日の予定は空いてる？",
+                        "translation": "辛苦了。話說回來，你明天的行程有空嗎？",
+                        "pronunciation": [
+                          {
+                            "text": "お疲れ様",
+                            "reading": "おつかれさま"
+                          },
+                          {
+                            "text": "。"
+                          },
+                          {
+                            "text": "ところで、"
+                          },
+                          {
+                            "text": "明日",
+                            "reading": "あした"
+                          },
+                          {
+                            "text": "の"
+                          },
+                          {
+                            "text": "予定",
+                            "reading": "よてい"
+                          },
+                          {
+                            "text": "は"
+                          },
+                          {
+                            "text": "空いてる",
+                            "reading": "あいてる"
+                          },
+                          {
+                            "text": "？"
+                          }
+                        ]
+                      }
+                    ],
+                    "targetLineIndex": 1,
+                    "targetText": "ところで"
+                  }
+                ]
+              }
+            ],
+            "pronunciations": [
+              {
+                "cueId": "c1",
+                "segments": [
+                  {
+                    "text": "ミオ",
+                    "reading": "みお"
+                  },
+                  {
+                    "text": "、"
+                  },
+                  {
+                    "text": "集まり",
+                    "reading": "あつまり"
+                  },
+                  {
+                    "text": "の"
+                  },
+                  {
+                    "text": "こと"
+                  },
+                  {
+                    "text": "を"
+                  },
+                  {
+                    "text": "話してた",
+                    "reading": "はなしてた"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c2",
+                "segments": [
+                  {
+                    "text": "「"
+                  },
+                  {
+                    "text": "時間",
+                    "reading": "じかん"
+                  },
+                  {
+                    "text": "を"
+                  },
+                  {
+                    "text": "教えて",
+                    "reading": "おしえて"
+                  },
+                  {
+                    "text": "」って。"
+                  },
+                  {
+                    "text": "ところで、"
+                  },
+                  {
+                    "text": "もう"
+                  },
+                  {
+                    "text": "食べた",
+                    "reading": "たべた"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c3",
+                "segments": [
+                  {
+                    "text": "まだ。"
+                  },
+                  {
+                    "text": "ここ"
+                  },
+                  {
+                    "text": "に"
+                  },
+                  {
+                    "text": "ある"
+                  },
+                  {
+                    "text": "「悪いない」"
+                  },
+                  {
+                    "text": "って"
+                  },
+                  {
+                    "text": "何",
+                    "reading": "なに"
+                  },
+                  {
+                    "text": "？"
+                  }
+                ]
+              },
+              {
+                "cueId": "c4",
+                "segments": [
+                  {
+                    "text": "字幕",
+                    "reading": "じまく"
+                  },
+                  {
+                    "text": "が"
+                  },
+                  {
+                    "text": "よくわからない。"
+                  }
+                ]
+              }
+            ]
+          },
+          "inputHash": "bd730491b416ec4ccaf2dcb50fc4af199956ccd4790e722bdbdf1522683d1de3",
+          "draftHash": "a7e4685fc3a4a98a30c77fce679049610985e6144b55cf5ac788ce2cba27db29",
+          "risks": [
+            {
+              "type": "source_uncertainty",
+              "unitId": "722f787b-ec56-4cb7-b9e8-bb80c6c95559",
+              "path": "/translations/2/text",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 8,
+                  "end": 14
+                }
+              ],
+              "description": "「悪いない」為語意不明或有誤的字幕片段，發話者正對其提出疑問，無法確定其意圖或正確詞形。"
+            },
+            {
+              "type": "context_inference",
+              "unitId": "308ca9f0-b125-4ee8-b77c-8da68ba1e370",
+              "path": "/context/text",
+              "sourceSpans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 15
+                }
+              ],
+              "description": "Potential ungrounded emotion, causality or linking separate turns to one speaker; verify this specific field against source."
+            },
+            {
+              "type": "reported_role",
+              "unitId": "e1954174-f5aa-49d4-a6a7-0d09ed3d06a4",
+              "path": "/utterances/1/meaning",
+              "sourceSpans": [
+                {
+                  "cueId": "c2",
+                  "start": 0,
+                  "end": 11
+                }
+              ],
+              "description": "Quoted speech may change whose stance is being explained."
+            },
+            {
+              "type": "reported_role",
+              "unitId": "722f787b-ec56-4cb7-b9e8-bb80c6c95559",
+              "path": "/utterances/4/meaning",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 3,
+                  "end": 18
+                }
+              ],
+              "description": "Quoted speech may change whose stance is being explained."
+            },
+            {
+              "type": "construction_example",
+              "unitId": "722f787b-ec56-4cb7-b9e8-bb80c6c95559",
+              "path": "/utterances/4/meaning",
+              "sourceSpans": [
+                {
+                  "cueId": "c3",
+                  "start": 3,
+                  "end": 18
+                }
+              ],
+              "description": "Language-specific uncertainty, contraction or reported-role case."
+            },
+            {
+              "type": "source_uncertainty",
+              "unitId": "882c9d4d-a198-43ea-b23c-d83b8f9b0d2a",
+              "path": "/utterances/5/meaning",
+              "sourceSpans": [
+                {
+                  "cueId": "c4",
+                  "start": 0,
+                  "end": 11
+                }
+              ],
+              "description": "Teaching acknowledges uncertain source; check all dependent claims."
+            }
+          ],
+          "originalDraftHash": "a7e4685fc3a4a98a30c77fce679049610985e6144b55cf5ac788ce2cba27db29",
+          "repairEligible": false,
+          "diagnostic": "Invalid quality review: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"array\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Array must contain at least 1 element(s)\",\n    \"path\": [\n      \"issues\",\n      3,\n      \"sourceSpans\"\n    ]\n  }\n]"
+        }
+      }
+    ]
+  }
+]

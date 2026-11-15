@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":34}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":40}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":33}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":4}]}],\"learningValue\":\"日常對話中詢問去向與說明的實用句型，包含以未完成過去時表達原本正打算進行的動作，以及請求對方稍候的禮貌表達。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"「aller (imparfait) + 原形動詞」用來表達原本正打算做某事，並以複合過去時說明被打斷的事件。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c3\"],\"description\":\"使用「Vous pouvez patienter un moment ?」禮貌請求對方稍候。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T04:35:17.500Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 14212.583834000001,
+    "usage": {
+      "input": 2516,
+      "output": 1316,
+      "reasoning": 1079
+    }
+  }
+}

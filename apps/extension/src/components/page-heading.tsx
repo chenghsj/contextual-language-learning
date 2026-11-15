@@ -24,7 +24,7 @@ export function PageHeading({
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
       </Button>
-      <h1 id={id} className="min-w-0 text-sm font-semibold">
+      <h1 id={id} className="min-w-0 text-ui-heading font-semibold">
         {title}
       </h1>
     </div>

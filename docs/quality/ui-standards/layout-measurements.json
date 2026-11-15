@@ -1,0 +1,1051 @@
+{
+  "note": "reader-* 為初次量測；final-reader-* 為捲軸置中修正後量測。Sheet 動畫中的 x 不作最終定位驗收。",
+  "measurements": [
+    {
+      "surface": "create-320",
+      "create": {
+        "clientWidth": 273,
+        "font": "14px",
+        "gap": "normal",
+        "height": 346,
+        "padding": "12px 0px",
+        "scrollWidth": 273,
+        "width": 288,
+        "x": 16,
+        "y": 153
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 288,
+        "font": "14px",
+        "gap": "8px",
+        "height": 61,
+        "padding": "12px 0px",
+        "scrollWidth": 288,
+        "width": 288,
+        "x": 16,
+        "y": 499
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 320
+      }
+    },
+    {
+      "surface": "general-320",
+      "create": {
+        "clientWidth": 273,
+        "font": "14px",
+        "gap": "normal",
+        "height": 346,
+        "padding": "12px 0px",
+        "scrollWidth": 273,
+        "width": 288,
+        "x": 16,
+        "y": 153
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 288,
+        "font": "14px",
+        "gap": "8px",
+        "height": 61,
+        "padding": "12px 0px",
+        "scrollWidth": 288,
+        "width": 288,
+        "x": 16,
+        "y": 499
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": {
+        "clientWidth": 304,
+        "font": "14px",
+        "gap": "normal",
+        "height": 503,
+        "padding": "0px 16px 24px",
+        "scrollWidth": 304,
+        "width": 319,
+        "x": 1,
+        "y": 57
+      },
+      "viewport": {
+        "height": 560,
+        "width": 320
+      }
+    },
+    {
+      "surface": "ai-320",
+      "create": {
+        "clientWidth": 273,
+        "font": "14px",
+        "gap": "normal",
+        "height": 346,
+        "padding": "12px 0px",
+        "scrollWidth": 273,
+        "width": 288,
+        "x": 16,
+        "y": 153
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 288,
+        "font": "14px",
+        "gap": "8px",
+        "height": 61,
+        "padding": "12px 0px",
+        "scrollWidth": 288,
+        "width": 288,
+        "x": 16,
+        "y": 499
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": {
+        "clientWidth": 304,
+        "font": "14px",
+        "gap": "normal",
+        "height": 503,
+        "padding": "0px 16px 24px",
+        "scrollWidth": 304,
+        "width": 319,
+        "x": 1,
+        "y": 57
+      },
+      "viewport": {
+        "height": 560,
+        "width": 320
+      }
+    },
+    {
+      "surface": "storage-320",
+      "create": {
+        "clientWidth": 273,
+        "font": "14px",
+        "gap": "normal",
+        "height": 346,
+        "padding": "12px 0px",
+        "scrollWidth": 273,
+        "width": 288,
+        "x": 16,
+        "y": 153
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 288,
+        "font": "14px",
+        "gap": "8px",
+        "height": 61,
+        "padding": "12px 0px",
+        "scrollWidth": 288,
+        "width": 288,
+        "x": 16,
+        "y": 499
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": {
+        "clientWidth": 319,
+        "font": "14px",
+        "gap": "normal",
+        "height": 503,
+        "padding": "0px 16px 24px",
+        "scrollWidth": 319,
+        "width": 319,
+        "x": 1,
+        "y": 57
+      },
+      "viewport": {
+        "height": 560,
+        "width": 320
+      }
+    },
+    {
+      "surface": "advanced-320",
+      "create": {
+        "clientWidth": 273,
+        "font": "14px",
+        "gap": "normal",
+        "height": 346,
+        "padding": "12px 0px",
+        "scrollWidth": 273,
+        "width": 288,
+        "x": 16,
+        "y": 153
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 288,
+        "font": "14px",
+        "gap": "8px",
+        "height": 61,
+        "padding": "12px 0px",
+        "scrollWidth": 288,
+        "width": 288,
+        "x": 16,
+        "y": 499
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": {
+        "clientWidth": 319,
+        "font": "14px",
+        "gap": "normal",
+        "height": 503,
+        "padding": "0px 16px 24px",
+        "scrollWidth": 319,
+        "width": 319,
+        "x": 1,
+        "y": 57
+      },
+      "viewport": {
+        "height": 560,
+        "width": 320
+      }
+    },
+    {
+      "surface": "create-short",
+      "create": {
+        "clientWidth": 273,
+        "font": "14px",
+        "gap": "normal",
+        "height": 106,
+        "padding": "12px 0px",
+        "scrollWidth": 273,
+        "width": 288,
+        "x": 16,
+        "y": 153
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 288,
+        "font": "14px",
+        "gap": "8px",
+        "height": 61,
+        "padding": "12px 0px",
+        "scrollWidth": 288,
+        "width": 288,
+        "x": 16,
+        "y": 259
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": {
+        "clientWidth": 304,
+        "font": "14px",
+        "gap": "normal",
+        "height": 263,
+        "padding": "0px 16px 24px",
+        "scrollWidth": 304,
+        "width": 318.9999694824219,
+        "x": 295.6288146972656,
+        "y": 57
+      },
+      "viewport": {
+        "height": 320,
+        "width": 320
+      }
+    },
+    {
+      "surface": "activity-short",
+      "create": {
+        "clientWidth": 273,
+        "font": "14px",
+        "gap": "normal",
+        "height": 106,
+        "padding": "12px 0px",
+        "scrollWidth": 273,
+        "width": 288,
+        "x": 16,
+        "y": 153
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 288,
+        "font": "14px",
+        "gap": "8px",
+        "height": 61,
+        "padding": "12px 0px",
+        "scrollWidth": 288,
+        "width": 288,
+        "x": 16,
+        "y": 259
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": null,
+      "viewport": {
+        "height": 320,
+        "width": 320
+      }
+    },
+    {
+      "surface": "activity-expanded-dark-short",
+      "create": {
+        "clientWidth": 273,
+        "font": "14px",
+        "gap": "normal",
+        "height": 106,
+        "padding": "12px 0px",
+        "scrollWidth": 273,
+        "width": 288,
+        "x": 16,
+        "y": 153
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 288,
+        "font": "14px",
+        "gap": "8px",
+        "height": 61,
+        "padding": "12px 0px",
+        "scrollWidth": 288,
+        "width": 288,
+        "x": 16,
+        "y": 259
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": {
+        "clientWidth": 304,
+        "font": "14px",
+        "gap": "normal",
+        "height": 263,
+        "padding": "0px 16px 24px",
+        "scrollWidth": 304,
+        "width": 319,
+        "x": 1,
+        "y": 57
+      },
+      "viewport": {
+        "height": 320,
+        "width": 320
+      }
+    },
+    {
+      "surface": "activity-details-dark-short",
+      "create": {
+        "clientWidth": 273,
+        "font": "14px",
+        "gap": "normal",
+        "height": 106,
+        "padding": "12px 0px",
+        "scrollWidth": 273,
+        "width": 288,
+        "x": 16,
+        "y": 153
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 288,
+        "font": "14px",
+        "gap": "8px",
+        "height": 61,
+        "padding": "12px 0px",
+        "scrollWidth": 288,
+        "width": 288,
+        "x": 16,
+        "y": 259
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": {
+        "clientWidth": 304,
+        "font": "14px",
+        "gap": "normal",
+        "height": 235,
+        "padding": "0px 16px 24px",
+        "scrollWidth": 304,
+        "width": 319,
+        "x": 1,
+        "y": 85
+      },
+      "viewport": {
+        "height": 320,
+        "width": 320
+      }
+    },
+    {
+      "surface": "reader-320",
+      "create": null,
+      "custom": null,
+      "footer": null,
+      "overflow": false,
+      "player": {
+        "clientWidth": 270,
+        "font": "14px",
+        "gap": "4px",
+        "height": 85.875,
+        "padding": "0px",
+        "scrollWidth": 270,
+        "width": 270,
+        "x": 25,
+        "y": 453.125
+      },
+      "reader": {
+        "clientWidth": 255,
+        "font": "14px",
+        "gap": "normal",
+        "height": 1135.75,
+        "padding": "0px",
+        "scrollWidth": 267,
+        "width": 255,
+        "x": 25,
+        "y": 155.875
+      },
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 320
+      }
+    },
+    {
+      "surface": "reader-390",
+      "create": null,
+      "custom": null,
+      "footer": null,
+      "overflow": false,
+      "player": {
+        "clientWidth": 340,
+        "font": "14px",
+        "gap": "4px",
+        "height": 85.875,
+        "padding": "0px",
+        "scrollWidth": 340,
+        "width": 340,
+        "x": 25,
+        "y": 453.125
+      },
+      "reader": {
+        "clientWidth": 325,
+        "font": "14px",
+        "gap": "normal",
+        "height": 1067.5,
+        "padding": "0px",
+        "scrollWidth": 337,
+        "width": 325,
+        "x": 25,
+        "y": 139.875
+      },
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 390
+      }
+    },
+    {
+      "surface": "reader-555",
+      "create": null,
+      "custom": null,
+      "footer": null,
+      "overflow": false,
+      "player": {
+        "clientWidth": 505,
+        "font": "14px",
+        "gap": "4px",
+        "height": 85.875,
+        "padding": "0px",
+        "scrollWidth": 505,
+        "width": 505,
+        "x": 25,
+        "y": 453.125
+      },
+      "reader": {
+        "clientWidth": 490,
+        "font": "14px",
+        "gap": "normal",
+        "height": 899,
+        "padding": "0px",
+        "scrollWidth": 502,
+        "width": 490,
+        "x": 25,
+        "y": 139.875
+      },
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 555
+      }
+    },
+    {
+      "surface": "reader-900",
+      "create": null,
+      "custom": null,
+      "footer": null,
+      "overflow": false,
+      "player": {
+        "clientWidth": 720,
+        "font": "14px",
+        "gap": "4px",
+        "height": 85.875,
+        "padding": "0px",
+        "scrollWidth": 720,
+        "width": 720,
+        "x": 90,
+        "y": 453.125
+      },
+      "reader": {
+        "clientWidth": 720,
+        "font": "14px",
+        "gap": "normal",
+        "height": 830.75,
+        "padding": "0px",
+        "scrollWidth": 732,
+        "width": 720,
+        "x": 82.5,
+        "y": 139.875
+      },
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 900
+      }
+    },
+    {
+      "surface": "custom-320",
+      "create": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "normal",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "custom": {
+        "clientWidth": 296,
+        "font": "14px",
+        "gap": "16px",
+        "height": 132.25,
+        "padding": "0px",
+        "scrollWidth": 296,
+        "width": 296,
+        "x": 12,
+        "y": 62.875
+      },
+      "footer": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "8px",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 320
+      }
+    },
+    {
+      "surface": "custom-390",
+      "create": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "normal",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "custom": {
+        "clientWidth": 366,
+        "font": "14px",
+        "gap": "16px",
+        "height": 132.25,
+        "padding": "0px",
+        "scrollWidth": 366,
+        "width": 366,
+        "x": 12,
+        "y": 62.875
+      },
+      "footer": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "8px",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 390
+      }
+    },
+    {
+      "surface": "custom-555",
+      "create": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "normal",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "custom": {
+        "clientWidth": 531,
+        "font": "14px",
+        "gap": "16px",
+        "height": 132.25,
+        "padding": "0px",
+        "scrollWidth": 531,
+        "width": 531,
+        "x": 12,
+        "y": 62.875
+      },
+      "footer": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "8px",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 555
+      }
+    },
+    {
+      "surface": "custom-900",
+      "create": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "normal",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "custom": {
+        "clientWidth": 720,
+        "font": "14px",
+        "gap": "16px",
+        "height": 132.25,
+        "padding": "0px",
+        "scrollWidth": 720,
+        "width": 720,
+        "x": 90,
+        "y": 62.875
+      },
+      "footer": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "8px",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 900
+      }
+    },
+    {
+      "surface": "custom-final-900",
+      "create": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "normal",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "custom": {
+        "clientWidth": 720,
+        "font": "14px",
+        "gap": "16px",
+        "height": 132.25,
+        "padding": "0px",
+        "scrollWidth": 720,
+        "width": 720,
+        "x": 90,
+        "y": 62.875
+      },
+      "footer": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "8px",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 900
+      }
+    },
+    {
+      "surface": "final-reader-320",
+      "create": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "normal",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "8px",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "overflow": false,
+      "player": {
+        "clientWidth": 296,
+        "font": "14px",
+        "gap": "4px",
+        "height": 85.875,
+        "padding": "0px",
+        "scrollWidth": 296,
+        "width": 296,
+        "x": 12,
+        "y": 466.125
+      },
+      "reader": {
+        "clientWidth": 281,
+        "font": "14px",
+        "gap": "normal",
+        "height": 932.75,
+        "padding": "0px",
+        "scrollWidth": 293,
+        "width": 281,
+        "x": 12,
+        "y": 102.875
+      },
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 320
+      }
+    },
+    {
+      "surface": "final-reader-390",
+      "create": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "normal",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "8px",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "overflow": false,
+      "player": {
+        "clientWidth": 366,
+        "font": "14px",
+        "gap": "4px",
+        "height": 85.875,
+        "padding": "0px",
+        "scrollWidth": 366,
+        "width": 366,
+        "x": 12,
+        "y": 466.125
+      },
+      "reader": {
+        "clientWidth": 351,
+        "font": "14px",
+        "gap": "normal",
+        "height": 887.25,
+        "padding": "0px",
+        "scrollWidth": 363,
+        "width": 351,
+        "x": 12,
+        "y": 102.875
+      },
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 390
+      }
+    },
+    {
+      "surface": "final-reader-555",
+      "create": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "normal",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "8px",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "overflow": false,
+      "player": {
+        "clientWidth": 531,
+        "font": "14px",
+        "gap": "4px",
+        "height": 85.875,
+        "padding": "0px",
+        "scrollWidth": 531,
+        "width": 531,
+        "x": 12,
+        "y": 466.125
+      },
+      "reader": {
+        "clientWidth": 516,
+        "font": "14px",
+        "gap": "normal",
+        "height": 871.25,
+        "padding": "0px",
+        "scrollWidth": 528,
+        "width": 516,
+        "x": 12,
+        "y": 102.875
+      },
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 555
+      }
+    },
+    {
+      "surface": "final-reader-900",
+      "create": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "normal",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "8px",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "overflow": false,
+      "player": {
+        "clientWidth": 720,
+        "font": "14px",
+        "gap": "4px",
+        "height": 85.875,
+        "padding": "0px",
+        "scrollWidth": 720,
+        "width": 720,
+        "x": 90,
+        "y": 466.125
+      },
+      "reader": {
+        "clientWidth": 720,
+        "font": "14px",
+        "gap": "normal",
+        "height": 848.5,
+        "padding": "0px",
+        "scrollWidth": 732,
+        "width": 720,
+        "x": 90,
+        "y": 102.875
+      },
+      "sheet": null,
+      "viewport": {
+        "height": 560,
+        "width": 900
+      }
+    },
+    {
+      "surface": "final-reader-short",
+      "create": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "normal",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 0,
+        "font": "14px",
+        "gap": "8px",
+        "height": 0,
+        "padding": "12px 0px",
+        "scrollWidth": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      },
+      "overflow": false,
+      "player": {
+        "clientWidth": 296,
+        "font": "14px",
+        "gap": "4px",
+        "height": 85.875,
+        "padding": "0px",
+        "scrollWidth": 296,
+        "width": 296,
+        "x": 12,
+        "y": 226.125
+      },
+      "reader": {
+        "clientWidth": 281,
+        "font": "14px",
+        "gap": "normal",
+        "height": 932.75,
+        "padding": "0px",
+        "scrollWidth": 293,
+        "width": 281,
+        "x": 12,
+        "y": 102.875
+      },
+      "sheet": null,
+      "viewport": {
+        "height": 320,
+        "width": 320
+      }
+    },
+    {
+      "surface": "final-storage-dark-short",
+      "create": {
+        "clientWidth": 273,
+        "font": "14px",
+        "gap": "normal",
+        "height": 106,
+        "padding": "12px 0px",
+        "scrollWidth": 273,
+        "width": 288,
+        "x": 16,
+        "y": 153
+      },
+      "custom": null,
+      "footer": {
+        "clientWidth": 288,
+        "font": "14px",
+        "gap": "8px",
+        "height": 61,
+        "padding": "12px 0px",
+        "scrollWidth": 288,
+        "width": 288,
+        "x": 16,
+        "y": 259
+      },
+      "overflow": false,
+      "player": null,
+      "reader": null,
+      "sheet": {
+        "clientWidth": 304,
+        "font": "14px",
+        "gap": "normal",
+        "height": 263,
+        "padding": "0px 16px 24px",
+        "scrollWidth": 304,
+        "width": 319,
+        "x": 1,
+        "y": 57
+      },
+      "viewport": {
+        "height": 320,
+        "width": 320
+      }
+    }
+  ]
+}

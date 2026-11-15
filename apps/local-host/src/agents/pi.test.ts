@@ -1,3 +1,4 @@
+import { createTestPiRuntime as createPiRuntime } from "./credentials-test-support";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -126,13 +127,36 @@ test("isolated SDK generates JSON with no tools, global resources or cross-stage
     assert.equal(markdown.call.outputTokenBudget, 512);
     assert.equal(markdown.call.stopReason, "stop");
     assert.ok(markdown.call.durationMs! >= 0);
-    assert.ok(markdown.call.usage?.input && markdown.call.usage.output);
+    assert.ok(markdown.call.usage?.output);
+    assert.ok(
+      markdown.call.usage.cacheWrite,
+      "the SDK faux provider reports prompt tokens as cache writes for a fresh session",
+    );
+    assert.equal(markdown.call.usage.input, undefined);
     assert.equal(
       markdown.call.usage.cacheRead,
       undefined,
       "unreported cache use is not shown as actual zero",
     );
     assert.equal(fake.state.callCount, 4);
+    fake.setResponses([
+      (_context, providerOptions) => {
+        assert.equal(providerOptions?.reasoning, "medium");
+        assert.equal(
+          providerOptions?.maxTokens,
+          16384,
+          "the provider request still respects this model's capacity",
+        );
+        return fauxAssistantMessage('{"automatic":true}');
+      },
+    ]);
+    const automatic = await generatePiText(
+      { ...settings, thinkingLevel: undefined },
+      "Automatic intensity",
+      new AbortController().signal,
+      { ...options, maxOutputTokens: 32768 },
+    );
+    assert.equal(automatic.call.effectiveThinkingLevel, "medium");
     fake.setResponses([
       fauxAssistantMessage('{"partial":', { stopReason: "length" }),
       fauxAssistantMessage(""),
@@ -265,7 +289,6 @@ test("SDK OAuth loads and can be cancelled before exchanging any credential", as
 });
 
 test("Antigravity is registered offline with OAuth, models and product-owned credentials", async () => {
-  const { createPiRuntime } = await import("./pi");
   const { readFile, readdir } = await import("node:fs/promises");
   const root = await mkdtemp(join(tmpdir(), "contextual-antigravity-"));
   const previousDirectory = process.env.PI_CODING_AGENT_DIR;
@@ -320,8 +343,7 @@ test("Antigravity is registered offline with OAuth, models and product-owned cre
     await runtime.logout("antigravity");
     assert.deepEqual(await runtime.listCredentials(), []);
     assert.equal((await readdir(root)).includes("antigravity-accounts.json"), false);
-    const saved = JSON.parse(await readFile(join(root, "auth.json"), "utf8"));
-    assert.equal("antigravity" in saved, false);
+    await assert.rejects(readFile(join(root, "auth.json")), { code: "ENOENT" });
   } finally {
     if (previousDirectory === undefined) delete process.env.PI_CODING_AGENT_DIR;
     else process.env.PI_CODING_AGENT_DIR = previousDirectory;
@@ -330,7 +352,6 @@ test("Antigravity is registered offline with OAuth, models and product-owned cre
 });
 
 test("Antigravity streams a lesson through the real SDK provider without tools or external requests", async () => {
-  const { createPiRuntime } = await import("./pi");
   const { writeFile } = await import("node:fs/promises");
   const root = await mkdtemp(join(tmpdir(), "contextual-antigravity-stream-"));
   const previousFetch = globalThis.fetch;
@@ -401,7 +422,6 @@ test("Antigravity streams a lesson through the real SDK provider without tools o
 });
 
 test("Antigravity model refresh warns and retains authenticated SDK candidates on network failure", async () => {
-  const { createPiRuntime, piModels } = await import("./pi");
   const { writeFile } = await import("node:fs/promises");
   const root = await mkdtemp(join(tmpdir(), "contextual-antigravity-models-"));
   const previousFetch = globalThis.fetch;

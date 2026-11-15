@@ -30,7 +30,8 @@ export function RequestFolderSelection({
     <div className="flex min-w-0 items-start gap-2" data-ui="request-folder-selection">
       <Disclosure
         key={fullPath}
-        className="min-w-0 flex-1 [&>div]:border-b-0 [&_h3>button]:min-h-8 [&_h3>button]:py-1 [&_h3>button]:text-xs [&_h3>button]:font-normal [&_h3>button]:hover:no-underline"
+        className="min-w-0 flex-1 [&>div]:border-b-0"
+        triggerClassName="min-h-8 py-1 text-ui-body font-normal hover:no-underline"
         title={
           <span className="min-w-0 truncate text-left" title={fullPath}>
             {folder}
@@ -39,7 +40,7 @@ export function RequestFolderSelection({
         }
       >
         <p
-          className="pt-1 text-xs leading-5 text-muted-foreground break-all"
+          className="pt-1 text-ui-body text-muted-foreground break-all"
           data-ui="request-folder-path"
         >
           {fullPath}

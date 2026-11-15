@@ -1,7 +1,27 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { EXPLANATION_TYPES } from "@contextual/core";
+import { EXPLANATION_TYPES, UNRESTRICTED_LEVEL } from "@contextual/core";
 import { PreferencesStore, defaultPreferences } from "./preferences-store";
+
+test("unrestricted proficiency survives preference normalization, saving and reload", async () => {
+  let saved: Record<string, unknown> = {};
+  const storage = {
+    get: async () => saved,
+    set: async (value: Record<string, unknown>) => {
+      saved = value;
+    },
+  };
+  const store = new PreferencesStore(storage);
+  const defaults = await store.load();
+  await store.save({
+    ...defaults,
+    profile: { ...defaults.profile, targetLanguage: "ja", level: UNRESTRICTED_LEVEL },
+  });
+  const reloaded = await new PreferencesStore(storage).load();
+  assert.equal(reloaded.profile.targetLanguage, "ja");
+  assert.equal(reloaded.profile.level, UNRESTRICTED_LEVEL);
+  assert.equal(reloaded.profile.sceneCount, defaults.profile.sceneCount);
+});
 
 test("motion defaults migrate old and malformed fields without discarding other saved settings", async () => {
   for (const motionPreference of [undefined, "system", "invalid", 7, null]) {

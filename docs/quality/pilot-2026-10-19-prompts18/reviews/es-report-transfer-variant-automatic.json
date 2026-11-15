@@ -1,0 +1,31 @@
+{
+  "case": "es-report-transfer-variant-automatic",
+  "document": "batch-2/es-report-transfer-variant-automatic/videos/es-report-transfer-variant-automatic--db5d62f0c446b74f/32d2dad5-bb58-4cd2-808b-570dd4954b71.json",
+  "documentHash": "a382d624a875f1329f94780cc8bfd0681247939b61b90e837f09a96e3982d499",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "failed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The summary does not identify Leo as the reported speaker. The dijo explanation qualifies Leo as only a possibility. The unclear token is preserved and excluded from teaching targets. The examples are coherent in Spanish, but one translated line changes the asking actor from I to we."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "type": "example_translation_actor",
+      "path": "/reusableItems/1/examples/0/dialogue/2/translation",
+      "quote": "那我們請他發電子郵件給我們吧。",
+      "description": "The Spanish line Entonces le voy a pedir que nos mande un correo says the current speaker will ask. The translation makes the asking action a collective 我們 proposal, while nos only establishes the recipients of the email. This fails the predeclared actor/translation consistency criterion. A team-oriented paraphrase is understandable, but the teaching translation should preserve the explicit singular agent.",
+      "sourceLine": "Entonces le voy a pedir que nos mande un correo.",
+      "references": [
+        {
+          "title": "RAE-ASALE: ir, conjugation",
+          "url": "https://dle.rae.es/ir",
+          "supports": "The conjugation table identifies voy with singular first-person yo, contrasting plural vamos. It supports person/number only; severity remains an editorial judgment."
+        }
+      ]
+    }
+  ],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

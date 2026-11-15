@@ -1,0 +1,23 @@
+{
+  "case": "en-normal-transfer-automatic",
+  "document": "batch-1/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/4686a30b-b645-4eba-a01a-3e2616dba3c6.json",
+  "documentHash": "ebaa300ae2104b2db06a24dfc806eb8242200ad53465900371aa1ad5a90caab7",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The accepted control preserves imminence and the waiting request, with Sure basic_only. Both new dialogues match their situation and target construction. The phone-specific reading of called is plausible but not uniquely established by this English wording; record the same medium concern rather than automatically declaring it false."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "calling_medium_not_unique",
+      "path": "/sections/0/context/text",
+      "quote": "通話時",
+      "description": "Called can also describe calling out. The context and point choose a telephone reading without qualification. This is a possible contextual interpretation, so it is a non-blocking ambiguity concern, consistent with the prior French medium reassessment."
+    }
+  ],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

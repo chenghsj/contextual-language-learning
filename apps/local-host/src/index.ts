@@ -1,10 +1,16 @@
 import "./platform/migrate-startup";
+import { join } from "node:path";
+import { defaultDocumentsFolder } from "./platform/paths";
+import { createFavoritesService } from "./favorites/service";
+import { createFavoriteDrive, createFavoriteCatalogDrive } from "./drive/favorites";
 import { type HostMessage } from "@contextual/core";
 import { CustomJobManager } from "./jobs/custom-manager";
 import { FileCustomRepository } from "./storage/custom";
 import { JobManager } from "./jobs/manager";
+import { acceptedGenerationPolicy } from "./generation/runtime-policy";
 import { encodeMessage, NativeFramer } from "./protocol";
 import { localStoragePorts } from "./storage/file";
+import { interruptDriveLogins } from "./host/drive";
 import { interruptPiLogins } from "./host/agents";
 import { createHostDispatcher } from "./host/dispatcher";
 
@@ -15,7 +21,7 @@ const storage = localStoragePorts();
 function reply(message: HostMessage): void {
   process.stdout.write(encodeMessage(message));
 }
-const manager = new JobManager({ storage }, (requestId, job) => {
+const manager = new JobManager({ storage, ...acceptedGenerationPolicy }, (requestId, job) => {
   reply({ id: requestId, type: "job", job });
   reply({
     id: requestId,
@@ -30,7 +36,21 @@ const customManager = new CustomJobManager(
   (id, job) => reply({ id, type: "job", job }),
   () => manager.isRunning(),
 );
-const handle = createHostDispatcher({ storage, manager, customManager, reply, hostVersion });
+const favorites = createFavoritesService({
+  root: join(defaultDocumentsFolder(), "user-data", "favorites-v1"),
+  loadDocument: id => storage.documents.get(id),
+  loadCustomDocument: id => customManager.deps.repository.getDocument(id),
+  drive: createFavoriteDrive(),
+  catalog: createFavoriteCatalogDrive(),
+});
+const handle = createHostDispatcher({
+  storage,
+  manager,
+  customManager,
+  reply,
+  hostVersion,
+  favorites,
+});
 
 const framer = new NativeFramer(message => {
   void handle(message).catch(error => {
@@ -51,4 +71,5 @@ process.stdin.on("end", () => {
   manager.interruptAll();
   customManager.interruptAll();
   interruptPiLogins();
+  interruptDriveLogins();
 });

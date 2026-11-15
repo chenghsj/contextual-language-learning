@@ -1,0 +1,15 @@
+{
+  "case": "vi-heading-transfer-variant-automatic",
+  "document": "batch-2/vi-heading-transfer-variant-automatic/videos/vi-heading-transfer-variant-automatic--18771693b19bd652/d727c4f7-48ce-4b15-ba63-6d4142ae2537.json",
+  "documentHash": "15651330a652ee8d743eeb4ad1c564f594d181c39db0fb842acd90d99f40cc0c",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The novel office source supports its office heading; no chance encounter is invented. The translation, context and point qualify calling/contact and explicitly avoid guaranteed cancellation. The rain example has matching actors, action and timing; Được remains basic_only."
+    }
+  ],
+  "issues": [],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

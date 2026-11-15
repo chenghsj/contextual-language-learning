@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":26}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":35}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":29}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":4}]}],\"learningValue\":\"日常對話中詢問原因、解釋未完成動作被中斷（未完成過去時＋複合過去時）以及提出簡短請求的完整互動。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"學習以「aller 的未完成過去時（imparfait）＋動詞原形」表達「正打算做某事」，並由 quand 引導的複合過去時（passé composé）切入表示中斷\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\"],\"description\":\"學習疑問句中的主語與動詞倒裝結構「Pourquoi es-tu...」\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c3\"],\"description\":\"學習口語請求時常用的動詞搭配「attendre un instant（稍等一下）」\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:36:04.085Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 8599.241917000007,
+    "usage": {
+      "input": 2508,
+      "output": 774,
+      "reasoning": 495
+    }
+  }
+}

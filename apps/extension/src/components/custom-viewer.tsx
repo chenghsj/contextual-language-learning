@@ -1,15 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useContentMotion } from "../hooks/use-content-motion";
 import { ArrowLeft, MoreHorizontal, WholeWord } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import rehypeSanitize from "rehype-sanitize";
-import { type CustomDocument, type LearningLanguage } from "@contextual/core";
+import { SafeMarkdown as SharedSafeMarkdown } from "@contextual/reader-ui";
+import {
+  type CustomDocument,
+  type CustomFavoriteReaderDocument,
+  type LearningLanguage,
+} from "@contextual/core";
 import { formatDisplayTime } from "../lib/time-display";
 import { translate, type UiLocale } from "../i18n/messages";
 import { analysisRangeCopy } from "../i18n/analysis-range";
 import { customContentCopy } from "../i18n/custom-content";
 import { Button, destructiveOutlineClassName } from "./ui/button";
 import { Input } from "./ui/input";
+import { SceneFavoriteButton } from "./scene-favorite-button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { unifiedPlayerMessages } from "../i18n/unified-player";
 import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogFooter } from "./ui/dialog";
@@ -45,75 +49,44 @@ export const SafeMarkdown = React.memo(function SafeMarkdown({
   return (
     <div
       data-ui="custom-markdown"
-      className="min-w-0 space-y-3 text-ui-body wrap-anywhere [&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_a]:text-primary [&_a]:underline [&_rt]:text-[10px] [&_rt]:font-normal [&_ruby]:leading-loose"
+      className="min-w-0 space-y-3 text-ui-body wrap-anywhere [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_h4]:font-semibold [&_h5]:font-semibold [&_h6]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_a]:text-primary [&_a]:underline [&_ruby]:leading-loose"
     >
-      <ReactMarkdown
-        skipHtml
-        rehypePlugins={[rehypeSanitize]}
-        urlTransform={url => (/^(https?:\/\/|mailto:|#)/i.test(url) ? url : "")}
-        components={{
-          ...Object.fromEntries(
-            ["p", "h1", "h2", "h3", "h4", "h5", "h6", "li"].map(tag => [
-              tag,
-              ({
-                node: _node,
-                children,
-                ...props
-              }: {
-                node?: unknown;
-                children?: React.ReactNode;
-              }) =>
-                React.createElement(
-                  tag,
-                  props,
-                  language
-                    ? annotatedMarkdownText(children, language, pronunciationMode)
-                    : children,
-                ),
-            ]),
-          ),
-          img: ({ alt }) => (
-            <span className="text-xs text-muted-foreground">
-              {ui.imageBlocked}
-              {alt ? ` · ${alt}` : ""}
-            </span>
-          ),
-          a: ({ node: _node, ...props }) =>
-            props.href ? (
-              <a {...props} target="_blank" rel="noopener noreferrer" />
-            ) : (
-              <span>{props.children}</span>
-            ),
-        }}
-      >
-        {markdown}
-      </ReactMarkdown>
+      <SharedSafeMarkdown
+        markdown={markdown}
+        imageBlocked={ui.imageBlocked}
+        renderText={
+          language
+            ? children => annotatedMarkdownText(children, language, pronunciationMode)
+            : undefined
+        }
+      />
     </div>
   );
 });
-export function CustomViewer({
-  document,
-  locale,
-  busy,
-  onRename,
-  onDelete,
-  onReuse,
-  onRegenerate,
-  onBack,
-  backLabel,
-  menuActions = [],
-}: {
-  document: CustomDocument;
+type CustomViewerProps = {
   locale: UiLocale;
   busy: boolean;
-  onRename: (title: string) => Promise<void>;
-  onDelete: () => Promise<void>;
-  onReuse: () => void;
-  onRegenerate: () => void;
   onBack: () => void;
   backLabel: string;
   menuActions?: { label: string; onSelect: () => void }[];
-}) {
+} & (
+  | {
+      mode?: "document";
+      document: CustomDocument;
+      onRename: (title: string) => Promise<void>;
+      onDelete: () => Promise<void>;
+      onReuse: () => void;
+      onRegenerate: () => void;
+    }
+  | {
+      mode: "favorite";
+      document: CustomFavoriteReaderDocument;
+    }
+);
+export function CustomViewer(props: CustomViewerProps) {
+  const { document, locale, busy, onBack, backLabel, menuActions = [] } = props;
+  const editable = props.mode !== "favorite" ? props : null;
+  const original = editable?.document;
   const ui = customContentCopy(locale),
     [title, setTitle] = useState(document.title),
     [action, setAction] = useState<"delete" | "regenerate" | null>(null),
@@ -192,13 +165,22 @@ export function CustomViewer({
             <ArrowLeft aria-hidden="true" />
           </Button>
           <div className="min-w-0 flex-1">
-            <p className="m-0 text-[11px] text-muted-foreground">
+            <p className="m-0 text-ui-meta text-muted-foreground">
               {ui.custom} · {language.toUpperCase()}
             </p>
-            <h1 className="truncate text-xs font-semibold" title={document.title}>
+            <h1 className="truncate text-ui-heading font-semibold" title={document.title}>
               {document.title}
             </h1>
           </div>
+          <SceneFavoriteButton
+            documentId={document.id}
+            sceneId={document.id}
+            sceneIds={[document.id]}
+            sceneTitle={document.title}
+            locale={locale}
+            kind="custom"
+            ready={!busy}
+          />
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -242,7 +224,7 @@ export function CustomViewer({
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+              <p className="mt-2 text-ui-label text-muted-foreground leading-relaxed">
                 {ui.annotationsHint}
               </p>
             </PopoverContent>
@@ -275,25 +257,34 @@ export function CustomViewer({
               }}
             >
               {[
-                { label: ui.viewPrompt, run: () => showPanel("prompt") },
-                { label: ui.details, run: () => showPanel("details") },
+                ...(editable
+                  ? [
+                      { label: ui.viewPrompt, run: () => showPanel("prompt") },
+                      { label: ui.details, run: () => showPanel("details") },
+                    ]
+                  : []),
                 {
                   label: ui.exportMarkdown,
                   run: () => exportMarkdown(document.markdown, document.title),
+                  disabled: false,
                 },
-                { label: ui.reuse, run: onReuse, disabled: busy },
-                { label: ui.regenerate, run: () => openAction("regenerate"), disabled: busy },
-                {
-                  label: ui.rename,
-                  run: () => {
-                    setTitle(document.title);
-                    setRenaming(true);
-                    if (contentRef.current) contentRef.current.scrollTop = 0;
-                    window.requestAnimationFrame(() => renameInput.current?.focus());
-                  },
-                  disabled: busy,
-                },
-                { label: ui.deleteLocal, run: () => openAction("delete"), disabled: busy },
+                ...(editable
+                  ? [
+                      { label: ui.reuse, run: editable.onReuse, disabled: busy },
+                      { label: ui.regenerate, run: () => openAction("regenerate"), disabled: busy },
+                      {
+                        label: ui.rename,
+                        run: () => {
+                          setTitle(document.title);
+                          setRenaming(true);
+                          if (contentRef.current) contentRef.current.scrollTop = 0;
+                          window.requestAnimationFrame(() => renameInput.current?.focus());
+                        },
+                        disabled: busy,
+                      },
+                      { label: ui.deleteLocal, run: () => openAction("delete"), disabled: busy },
+                    ]
+                  : []),
               ].map(item => (
                 <Button
                   key={item.label}
@@ -326,7 +317,7 @@ export function CustomViewer({
         data-ui="customContent"
       >
         <div ref={readingMotionRef} className="mx-auto grid w-full min-w-0 max-w-[720px] gap-4">
-          {renaming && (
+          {renaming && editable && (
             <form
               className="grid gap-2"
               onKeyDown={event => {
@@ -339,7 +330,8 @@ export function CustomViewer({
               onSubmit={event => {
                 event.preventDefault();
                 if (busy || !title.trim()) return;
-                void onRename(title)
+                void editable
+                  .onRename(title)
                   .then(closeRename)
                   .catch(() => {});
               }}
@@ -364,7 +356,7 @@ export function CustomViewer({
               </div>
             </form>
           )}
-          {panel ? (
+          {panel && original ? (
             <section
               className="grid min-w-0 gap-3"
               aria-label={panel === "prompt" ? ui.viewPrompt : ui.details}
@@ -384,11 +376,11 @@ export function CustomViewer({
                 </h2>
               </div>
               {panel === "prompt" ? (
-                <pre className="whitespace-pre-wrap text-xs wrap-anywhere">
-                  {document.request.prompt}
+                <pre className="whitespace-pre-wrap text-ui-body wrap-anywhere">
+                  {original.request.prompt}
                 </pre>
               ) : (
-                <ExecutionDetails execution={document.execution} locale={locale} />
+                <ExecutionDetails execution={original.execution} locale={locale} />
               )}
             </section>
           ) : (
@@ -403,90 +395,93 @@ export function CustomViewer({
           )}
         </div>
       </div>
-      <Dialog
-        open={action !== null}
-        onOpenChange={open => {
-          if (!open && !busy) setAction(null);
-        }}
-      >
-        <DialogContent
-          className="max-h-[85dvh] max-w-[min(400px,calc(100%-2rem))] overflow-y-auto p-4 sm:max-w-[400px]"
-          showCloseButton={false}
-          onCloseAutoFocus={event => {
-            event.preventDefault();
-            const target = actionFocus.current?.isConnected
-              ? actionFocus.current
-              : window.document.getElementById("page-nav-lessons");
-            window.requestAnimationFrame(() => target?.focus());
+      {original && editable && (
+        <Dialog
+          open={action !== null}
+          onOpenChange={open => {
+            if (!open && !busy) setAction(null);
           }}
         >
-          <DialogHeader className="text-left">
-            <DialogTitleBar closeLabel={cancelLabel} closeDisabled={busy}>
-              {action === "delete" ? ui.deleteLocal : ui.regenerate}
-            </DialogTitleBar>
-            <DialogDescription className="text-xs">
-              {action === "delete" ? ui.deleteHint : ui.regenerateHint}
-            </DialogDescription>
-          </DialogHeader>
-          {action === "regenerate" && (
-            <div className="grid min-w-0 gap-2 text-xs wrap-anywhere">
-              <p>{document.request.source.title}</p>
-              <p>
-                {document.execution.provider} · {document.execution.modelId}
-              </p>
-              <p>
-                {document.request.cues.length} ·{" "}
-                {document.request.analysisRange
-                  ? `${formatDisplayTime(document.request.analysisRange.startMs)}–${formatDisplayTime(document.request.analysisRange.endMs)}`
-                  : analysisRangeCopy(locale).full}
-              </p>
-              <p>
-                {ui.subtitles}: {document.request.context.subtitles ? "✓" : "—"} · {ui.title}:{" "}
-                {document.request.context.title ? "✓" : "—"}
-              </p>
-              <p className="wrap-anywhere">
-                {translate(locale, "localFolder")}:{" "}
-                {document.request.destination?.kind === "local" &&
-                document.request.destination.directory
-                  ? document.request.destination.directory
-                  : translate(locale, "defaultFolder")}
-              </p>
-              <p>
-                {translate(locale, "backupAccount")}:{" "}
-                {document.request.backup?.enabled
-                  ? (document.request.backup.accountId ?? ui.unknown)
-                  : "—"}
-              </p>
-              <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap wrap-anywhere">
-                {document.request.prompt}
-              </pre>
-            </div>
-          )}
-          <DialogFooter className="flex-row flex-wrap items-center justify-end gap-2 sm:space-x-0">
-            <Button variant="outline" size="sm" disabled={busy} onClick={() => setAction(null)}>
-              {cancelLabel}
-            </Button>
-            <Button
-              variant={action === "delete" ? "outline" : "default"}
-              className={action === "delete" ? destructiveOutlineClassName : undefined}
-              size="sm"
-              disabled={busy}
-              onClick={() => {
-                if (action === "delete")
-                  void onDelete()
-                    .then(() => setAction(null))
-                    .catch(() => {});
-                else {
-                  setAction(null);
-                  onRegenerate();
-                }
-              }}
-            >
-              {action === "delete" ? ui.deleteLocal : ui.regenerate}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <DialogContent
+            className="max-h-[85dvh] max-w-[min(400px,calc(100%-2rem))] overflow-y-auto p-4 sm:max-w-[400px]"
+            showCloseButton={false}
+            onCloseAutoFocus={event => {
+              event.preventDefault();
+              const target = actionFocus.current?.isConnected
+                ? actionFocus.current
+                : window.document.getElementById("page-nav-lessons");
+              window.requestAnimationFrame(() => target?.focus());
+            }}
+          >
+            <DialogHeader className="text-left">
+              <DialogTitleBar closeLabel={cancelLabel} closeDisabled={busy}>
+                {action === "delete" ? ui.deleteLocal : ui.regenerate}
+              </DialogTitleBar>
+              <DialogDescription className="text-ui-body">
+                {action === "delete" ? ui.deleteHint : ui.regenerateHint}
+              </DialogDescription>
+            </DialogHeader>
+            {action === "regenerate" && (
+              <div className="grid min-w-0 gap-2 text-xs wrap-anywhere">
+                <p>{document.request.source.title}</p>
+                <p>
+                  {original.execution.provider} · {original.execution.modelId}
+                </p>
+                <p>
+                  {document.request.cues.length} ·{" "}
+                  {original.request.analysisRange
+                    ? `${formatDisplayTime(original.request.analysisRange.startMs)}–${formatDisplayTime(original.request.analysisRange.endMs)}`
+                    : analysisRangeCopy(locale).full}
+                </p>
+                <p>
+                  {ui.subtitles}: {original.request.context.subtitles ? "✓" : "—"} · {ui.title}:{" "}
+                  {original.request.context.title ? "✓" : "—"}
+                </p>
+                <p className="wrap-anywhere">
+                  {translate(locale, "localFolder")}:{" "}
+                  {original.request.destination?.kind === "local" &&
+                  original.request.destination.directory
+                    ? original.request.destination.directory
+                    : translate(locale, "defaultFolder")}
+                </p>
+                <p>
+                  {translate(locale, "backupAccount")}:{" "}
+                  {original.request.backup?.enabled
+                    ? (original.request.backup.accountId ?? ui.unknown)
+                    : "—"}
+                </p>
+                <pre className="text-ui-body max-h-40 overflow-y-auto whitespace-pre-wrap wrap-anywhere">
+                  {original.request.prompt}
+                </pre>
+              </div>
+            )}
+            <DialogFooter className="flex-row flex-wrap items-center justify-end gap-2 sm:space-x-0">
+              <Button variant="outline" size="sm" disabled={busy} onClick={() => setAction(null)}>
+                {cancelLabel}
+              </Button>
+              <Button
+                variant={action === "delete" ? "outline" : "default"}
+                className={action === "delete" ? destructiveOutlineClassName : undefined}
+                size="sm"
+                disabled={busy}
+                onClick={() => {
+                  if (action === "delete")
+                    void editable
+                      .onDelete()
+                      .then(() => setAction(null))
+                      .catch(() => {});
+                  else {
+                    setAction(null);
+                    editable.onRegenerate();
+                  }
+                }}
+              >
+                {action === "delete" ? ui.deleteLocal : ui.regenerate}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </article>
   );
 }

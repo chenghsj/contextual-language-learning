@@ -11,9 +11,6 @@ test("build injects the package version into the Native Host health response", a
   ).version;
   assert.match(version, /^\d+\.\d+\.\d+/);
   assert.match(build, /__CONTEXTUAL_HOST_VERSION__: JSON\.stringify\(hostVersion\)/);
-  assert.match(
-    index.replace(/\s+/g, " "),
-    /createHostDispatcher\(\{ storage, manager, customManager, reply, hostVersion,? \}\)/,
-  );
+  assert.match(index.replace(/\s+/g, " "), /createHostDispatcher\(\{[^}]*\bhostVersion\b[^}]*\}\)/);
   assert.match(dispatcher.replace(/\s+/g, " "), /type: "health", agents, version: hostVersion/);
 });

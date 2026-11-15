@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-10-14T00:35:26.196Z",
+  "extensionId": "agkdfdbgkoeooffhfkonpdkgfeldjifi",
+  "manifestPath": "/Users/cheng/Library/Application Support/Google/Chrome/NativeMessagingHosts/dev.contextual.language_learning.json",
+  "launcherPath": "/Users/cheng/Library/Application Support/Contextual Language Learning/native-host/launch.sh",
+  "bundleHash": "6caec3b64d445e98d2f93f952294c47c8b0839c217063f47e684f2848d75cd7b",
+  "protocolVersion": 12,
+  "documents": [
+    {
+      "id": "b5f81f58-33e7-4d56-94f1-a0a12a1e6d58",
+      "level": "N1",
+      "cues": 5,
+      "scenes": 1,
+      "points": 2
+    },
+    {
+      "id": "a6c10164-dd96-447e-a089-37b6e020d04f",
+      "level": "N3",
+      "cues": 5,
+      "scenes": 1,
+      "points": 3
+    },
+    {
+      "id": "0bff08cc-f2a5-41c8-b70c-8514393f3fa1",
+      "level": "N1",
+      "cues": 4,
+      "scenes": 1,
+      "points": 3
+    },
+    {
+      "id": "bb4bcf29-a067-4b5b-9495-ec150b1c885f",
+      "level": "N3",
+      "cues": 4,
+      "scenes": 1,
+      "points": 4
+    }
+  ],
+  "retiredIdsRejected": [
+    "7211a949-285f-4655-95ab-11617cc4908a",
+    "68f7ac84-5d9c-4a25-97d7-51d0792881c6"
+  ],
+  "boundary": "Actual installed process over stdio; Chrome connectNative, extension reload and real video playback require separate acceptance."
+}

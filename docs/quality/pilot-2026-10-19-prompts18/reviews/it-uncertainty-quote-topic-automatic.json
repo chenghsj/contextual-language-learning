@@ -1,0 +1,23 @@
+{
+  "case": "it-uncertainty-quote-topic-automatic",
+  "document": "batch-1/it-uncertainty-quote-topic-automatic/videos/it-uncertainty-quote-topic-automatic--ad117456da3e8339/26c95e1b-5662-4e2d-929b-7ed695d90fa8.json",
+  "documentHash": "1ff0085e1531617a3ff0d7bcd4c1e0a0ac607145a7c50f09dfe1f6afcf7991c1",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The local di’ + mi derivation stays correct and now explicitly gives the gli exception rather than universal -mm-. The possible Maya reference is qualified consistently in translation, meaning and chunk. Unknown text is locally marked and excluded from targets. All three example actions and replies match."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "redundant_basic_reply_teaching",
+      "path": "/points/2/title",
+      "quote": "Non ancora",
+      "description": "The translated short reply receives another core explanation and full example at B1; correct but repetitive."
+    }
+  ],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

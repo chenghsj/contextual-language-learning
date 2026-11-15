@@ -1,0 +1,15 @@
+{
+  "case": "fr-normal-transfer-automatic",
+  "document": "batch-1/fr-normal-transfer-automatic/videos/fr-normal-transfer-automatic--f558dcaaa1b19fbd/3948789b-d739-4f15-9f7e-c049b185f0c3.json",
+  "documentHash": "46bd3c55a55d93109f0b5ac6563496f0e95ca685266ef2417d2632497755de85",
+  "reviewer": "Same Codex source/editorial review; unblinded, not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "Source, translations, unit meanings/chunks, constructions, citations and invented examples",
+      "result": "The source-location chunk is now 你在（倒裝疑問）, not 你是. Calling is explicitly qualified as phone or calling out across affected translations, chunks and explanations. Imminence is not recast as an ongoing departure. All examples keep situation, dialogue and target actions coherent; Oui remains basic_only."
+    }
+  ],
+  "issues": [],
+  "boundary": "One fresh output from the frozen prompts-18 source. Text-only AI editorial review; structural checks and quote integrity do not certify the judgments. Optional missing pronunciation/chunks do not prove those features accurate; no audio, installed Host, real Chrome/video or learning effects checked."
+}

@@ -1,0 +1,67 @@
+{
+  "reviewBoundary": "Same unblinded AI editorial judgment, not independent language certification. Identity, deterministic validity, rule delivery and target coverage are separate from semantic acceptance. Earlier acceptances and pending disputes are not overwritten.",
+  "counts": {
+    "requested": 3,
+    "generated": 3,
+    "structuralPassed": 3,
+    "fixedSourcePassed": 3,
+    "identityPassed": 3,
+    "coveragePassed": 3,
+    "targetCoveragePassed": 3,
+    "semanticPassed": 2,
+    "semanticFailed": 0,
+    "semanticNeedsReview": 1,
+    "accepted": 2
+  },
+  "usage": {
+    "recordedCalls": 9,
+    "traceRequests": 9,
+    "traceResponses": 9,
+    "structuralRepairs": 0,
+    "callsWithoutUsage": 0,
+    "reportedTokens": {
+      "input": 29196,
+      "output": 26019,
+      "reasoning": 21248
+    },
+    "reasoningIncludedInOutput": true
+  },
+  "cases": [
+    {
+      "case": "es-actor-recipient-variant-automatic",
+      "group": "previously_rejected",
+      "generation": "generated",
+      "document": "batch-1/es-actor-recipient-variant-automatic/videos/es-actor-recipient-variant-automatic--28e6eb85f1301309/eb3b3318-7da8-4e71-aabd-0f4907534111.json",
+      "documentHash": "df761686d62bb599070647129004deafc00e6093defcacaf7ebc957a156da472",
+      "coverage": "passed",
+      "targetCoverage": "passed",
+      "semantic": "needs_review",
+      "accepted": false,
+      "review": "reviews/es-actor-recipient-variant-automatic.json"
+    },
+    {
+      "case": "es-temporal-aspect-contrast-automatic",
+      "group": "new_authored_contrast",
+      "generation": "generated",
+      "document": "batch-1/es-temporal-aspect-contrast-automatic/videos/es-temporal-aspect-contrast-automatic--367c2e0d9e9f626d/00c9a289-dec4-409a-aa92-baa2b282821b.json",
+      "documentHash": "84d60b1d7a68e9f91bc7b34123dbe0dd9249d5e3ee126091ad0d41dee4e2ce6f",
+      "coverage": "passed",
+      "targetCoverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/es-temporal-aspect-contrast-automatic.json"
+    },
+    {
+      "case": "en-normal-transfer-automatic",
+      "group": "previously_accepted_control",
+      "generation": "generated",
+      "document": "batch-1/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/47e8d9c4-15e0-4d82-8f0b-004f4f159921.json",
+      "documentHash": "4acb74f72db1457091df7b6efd3a14e998d3afad1f5f85284ebf99c03232130c",
+      "coverage": "passed",
+      "targetCoverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/en-normal-transfer-automatic.json"
+    }
+  ]
+}

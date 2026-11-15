@@ -1,0 +1,19 @@
+{
+  "candidate": "isolated Siri client subscription replacement",
+  "os": "macOS 27.0.1 (26A434), arm64",
+  "applicationClientModified": false,
+  "ownSubscriptionRemoved": true,
+  "otherClientSubscriptionsUnchanged": true,
+  "nativeCancellationObserved": "MADownloadCancelled (48), OperationCanceled (6115)",
+  "nativeTransfer": {
+    "jobId": "B67C4291-49FD-4DAA-9ED3-7E60A5387EE3",
+    "assetId": "63b1b29afa3eacec7fe4edd3b08a44d0213a301f",
+    "assetSpecifier": "com.apple.siri.tts.voice.sv_SE.axel.neural.premium"
+  },
+  "freshProcessObservationSeconds": 60,
+  "targetAxelInstalled": false,
+  "repeatWithdrawalSucceeded": true,
+  "parallelControlTildeCompleted": true,
+  "cancellationGate": "VERIFIED_SCOPED_SYSTEM_CANCELLATION",
+  "productionImplementation": "NOT STARTED"
+}

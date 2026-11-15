@@ -9,8 +9,13 @@ test("Host advertises SDK providers without CLI executable discovery", async () 
     [...PI_PROVIDER_IDS],
   );
   assert.ok(
-    agents.every(a => Object.keys(a).every(key => ["id", "label", "installed"].includes(key))),
+    agents.every(a =>
+      Object.keys(a).every(key => ["id", "label", "installed", "credentialMethod"].includes(key)),
+    ),
   );
+  for (const agent of agents)
+    if ("credentialMethod" in agent)
+      assert.ok(["api_key", "oauth"].includes(agent.credentialMethod!));
 });
 test("old CLI tasks cannot silently execute with different provider semantics", async () => {
   for (const provider of [

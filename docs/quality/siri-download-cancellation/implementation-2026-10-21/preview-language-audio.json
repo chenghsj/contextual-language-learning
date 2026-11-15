@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-21T06:24:23.285Z",
+  "helper": "/Users/cheng/Library/Application Support/Contextual Language Learning/native-host/macos-speech-siri",
+  "scope": "actual native synthesis to WAV, no playback or download",
+  "results": [
+    {
+      "name": "Else",
+      "voiceId": "siri:com.apple.speech.synthesis.voice.custom.siri.else.premium",
+      "text": "Lad os lære noget nyt sammen.",
+      "outputPath": "/tmp/cll-siri-preview-else.wav",
+      "bytes": 178198,
+      "nonSilentPCM": true
+    },
+    {
+      "name": "Tilde",
+      "voiceId": "siri:com.apple.speech.synthesis.voice.custom.siri.tilde.premium",
+      "text": "Låt oss lära oss något nytt tillsammans.",
+      "outputPath": "/tmp/cll-siri-preview-tilde.wav",
+      "bytes": 267276,
+      "nonSilentPCM": true
+    }
+  ]
+}

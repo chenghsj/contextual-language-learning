@@ -1,0 +1,10 @@
+{
+  "query": "韓",
+  "matched": [
+    "韓語"
+  ],
+  "selected": "所有語言",
+  "englishAlias": "japanese matched 日語",
+  "emptyResult": "找不到符合的語言 verified",
+  "keyboardSelection": "韓語 verified; 所有語言 restored"
+}

@@ -17,7 +17,7 @@ export function ExplanationSettings({
   const { enabled, emphasized } = explanationPreferences(profile);
   return (
     <section className="my-4 min-w-0 border-t border-border pt-4" data-ui="explanationSettings">
-      <h3 className="text-xs font-semibold">{copy.preferences}</h3>
+      <h3 className="text-ui-heading font-semibold">{copy.preferences}</h3>
       <p className="mt-1 mb-3 text-xs leading-relaxed text-muted-foreground">
         {copy.preferencesHint}
       </p>

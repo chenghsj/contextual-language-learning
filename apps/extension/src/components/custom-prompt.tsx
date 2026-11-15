@@ -189,7 +189,7 @@ export function CustomPrompt({
       </div>
       {loadError && (
         <div className="flex items-center justify-between gap-2">
-          <p role="alert" className="text-xs text-destructive">
+          <p role="alert" className="text-ui-body text-destructive">
             {loadError}
           </p>
           <Button variant="outline" size="sm" onClick={() => void load()}>
@@ -246,7 +246,7 @@ export function CustomPrompt({
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-muted-foreground">{copy.empty}</p>
+          <p className="text-ui-body text-muted-foreground">{copy.empty}</p>
         )}
       </Disclosure>
       {(["subtitles", "title"] as const).map(key => (
@@ -276,7 +276,7 @@ export function CustomPrompt({
             <DialogTitleBar closeLabel={ux.close} closeDisabled={busy}>
               {editor?.id ? ux.edit : copy.add}
             </DialogTitleBar>
-            <DialogDescription className="text-xs">
+            <DialogDescription className="text-ui-body">
               {editor?.id ? copy.editHelp : copy.createHelp}
             </DialogDescription>
           </DialogHeader>
@@ -320,7 +320,7 @@ export function CustomPrompt({
               />
             </label>
             {error && (
-              <p role="alert" className="text-xs text-destructive">
+              <p role="alert" className="text-ui-body text-destructive">
                 {error}
               </p>
             )}
@@ -356,10 +356,10 @@ export function CustomPrompt({
             <DialogTitleBar closeLabel={ux.close} closeDisabled={busy}>
               {ux.deleteAction} · {deleting?.name}
             </DialogTitleBar>
-            <DialogDescription className="text-xs">{copy.deleteHelp}</DialogDescription>
+            <DialogDescription className="text-ui-body">{copy.deleteHelp}</DialogDescription>
           </DialogHeader>
           {error && (
-            <p role="alert" className="text-xs text-destructive">
+            <p role="alert" className="text-ui-body text-destructive">
               {error}
             </p>
           )}

@@ -1,0 +1,61 @@
+{
+  "results": [
+    {
+      "width": 320,
+      "dark": false,
+      "mode": "multi",
+      "screenshot": "reader-320-light-multi.png",
+      "status": "passed"
+    },
+    {
+      "width": 320,
+      "dark": false,
+      "mode": "cross",
+      "screenshot": "reader-320-light-cross.png",
+      "status": "passed"
+    },
+    {
+      "width": 320,
+      "dark": true,
+      "mode": "multi",
+      "screenshot": "reader-320-dark-multi.png",
+      "status": "passed"
+    },
+    {
+      "width": 320,
+      "dark": true,
+      "mode": "cross",
+      "screenshot": "reader-320-dark-cross.png",
+      "status": "passed"
+    },
+    {
+      "width": 480,
+      "dark": false,
+      "mode": "multi",
+      "screenshot": "reader-480-light-multi.png",
+      "status": "passed"
+    },
+    {
+      "width": 480,
+      "dark": false,
+      "mode": "cross",
+      "screenshot": "reader-480-light-cross.png",
+      "status": "passed"
+    },
+    {
+      "width": 480,
+      "dark": true,
+      "mode": "multi",
+      "screenshot": "reader-480-dark-multi.png",
+      "status": "passed"
+    },
+    {
+      "width": 480,
+      "dark": true,
+      "mode": "cross",
+      "screenshot": "reader-480-dark-cross.png",
+      "status": "passed"
+    }
+  ],
+  "boundary": "Real Chrome engine, synthetic source and simulated video adapter; not installed extension or provider playback."
+}

@@ -1,0 +1,185 @@
+{
+  "scope": "Five previous failures, five newly authored variants, two accepted controls; one fresh generation per case on an unchanged isolated snapshot. Not an overall accuracy or repeatability estimate.",
+  "reviewer": "Same unblinded Codex reviewer; not an independent opinion",
+  "counts": {
+    "requested": 12,
+    "generated": 12,
+    "structuralPassed": 12,
+    "fixedSourcePassed": 12,
+    "identityPassed": 12,
+    "coveragePassed": 12,
+    "semanticPassed": 9,
+    "semanticFailed": 2,
+    "semanticNeedsReview": 1,
+    "accepted": 9
+  },
+  "originalTargetFindings": "All five previously identified specific defects were absent in these fresh outputs; the Traditional Chinese case has a different pending quotation explanation and is not accepted.",
+  "usage": {
+    "recordedCalls": 37,
+    "traceRequests": 37,
+    "traceResponses": 37,
+    "structuralRepairs": 1,
+    "callsWithoutUsage": 0,
+    "reportedTokens": {
+      "input": 120627,
+      "output": 179482,
+      "reasoning": 150083
+    },
+    "reasoningIncludedInOutput": true
+  },
+  "cases": [
+    {
+      "case": "es-uncertainty-quote-topic-automatic",
+      "group": "previously_rejected",
+      "generation": "generated",
+      "document": "batch-1/es-uncertainty-quote-topic-automatic/videos/es-uncertainty-quote-topic-automatic--e7e2303510d77dee/34943d1e-4856-4c90-a6b0-bb7ad8ed09c1.json",
+      "documentHash": "ef0ba3e05553574e298ce239ea7754cfafbb9497c337ff8c739fc42973843500",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/es-uncertainty-quote-topic-automatic.json",
+      "optionalChunkUnits": 0
+    },
+    {
+      "case": "fr-normal-transfer-automatic",
+      "group": "previously_rejected",
+      "generation": "generated",
+      "document": "batch-1/fr-normal-transfer-automatic/videos/fr-normal-transfer-automatic--f558dcaaa1b19fbd/3948789b-d739-4f15-9f7e-c049b185f0c3.json",
+      "documentHash": "46bd3c55a55d93109f0b5ac6563496f0e95ca685266ef2417d2632497755de85",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/fr-normal-transfer-automatic.json",
+      "optionalChunkUnits": 3
+    },
+    {
+      "case": "it-uncertainty-quote-topic-automatic",
+      "group": "previously_rejected",
+      "generation": "generated",
+      "document": "batch-1/it-uncertainty-quote-topic-automatic/videos/it-uncertainty-quote-topic-automatic--ad117456da3e8339/26c95e1b-5662-4e2d-929b-7ed695d90fa8.json",
+      "documentHash": "1ff0085e1531617a3ff0d7bcd4c1e0a0ac607145a7c50f09dfe1f6afcf7991c1",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/it-uncertainty-quote-topic-automatic.json",
+      "optionalChunkUnits": 3
+    },
+    {
+      "case": "vi-normal-transfer-automatic",
+      "group": "previously_rejected",
+      "generation": "generated",
+      "document": "batch-1/vi-normal-transfer-automatic/videos/vi-normal-transfer-automatic--ba7640c6bc82068b/cf2ac4ab-b8e9-451f-9af1-aad1867f4c95.json",
+      "documentHash": "2378a06617a2d4f10cf592cb1f88bf88b735794207917fa296d80f6622e35b10",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/vi-normal-transfer-automatic.json",
+      "optionalChunkUnits": 3
+    },
+    {
+      "case": "zh-TW-uncertainty-quote-topic-automatic",
+      "group": "previously_rejected",
+      "generation": "generated",
+      "document": "batch-1/zh-TW-uncertainty-quote-topic-automatic/videos/zh-TW-uncertainty-quote-topic-automatic--55559a73cb5cf209/16ce13fd-9171-4db9-be82-de31f755769b.json",
+      "documentHash": "50dee863017c8597fb74a868b3a801520dc69abe42c04169c54c0af64ca721a3",
+      "coverage": "passed",
+      "semantic": "needs_review",
+      "accepted": false,
+      "review": "reviews/zh-TW-uncertainty-quote-topic-automatic.json",
+      "optionalChunkUnits": 0
+    },
+    {
+      "case": "en-normal-transfer-automatic",
+      "group": "previously_accepted_control",
+      "generation": "generated",
+      "document": "batch-1/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/4686a30b-b645-4eba-a01a-3e2616dba3c6.json",
+      "documentHash": "ebaa300ae2104b2db06a24dfc806eb8242200ad53465900371aa1ad5a90caab7",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/en-normal-transfer-automatic.json",
+      "optionalChunkUnits": 2
+    },
+    {
+      "case": "es-report-transfer-variant-automatic",
+      "group": "new_authored_variant",
+      "generation": "generated",
+      "document": "batch-2/es-report-transfer-variant-automatic/videos/es-report-transfer-variant-automatic--db5d62f0c446b74f/32d2dad5-bb58-4cd2-808b-570dd4954b71.json",
+      "documentHash": "a382d624a875f1329f94780cc8bfd0681247939b61b90e837f09a96e3982d499",
+      "coverage": "passed",
+      "semantic": "failed",
+      "accepted": false,
+      "review": "reviews/es-report-transfer-variant-automatic.json",
+      "optionalChunkUnits": 3
+    },
+    {
+      "case": "fr-location-transfer-variant-automatic",
+      "group": "new_authored_variant",
+      "generation": "generated",
+      "document": "batch-2/fr-location-transfer-variant-automatic/videos/fr-location-transfer-variant-automatic--93b824faf45a7df0/f24551de-5fe6-4eca-ab1c-770b727b67d6.json",
+      "documentHash": "5763db5ea0acc5b5567c21273c2cea3da7f8fec9adab2042deaa5d544b1ddc92",
+      "coverage": "passed",
+      "semantic": "failed",
+      "accepted": false,
+      "review": "reviews/fr-location-transfer-variant-automatic.json",
+      "optionalChunkUnits": 3
+    },
+    {
+      "case": "it-pronoun-transfer-variant-automatic",
+      "group": "new_authored_variant",
+      "generation": "generated",
+      "document": "batch-2/it-pronoun-transfer-variant-automatic/videos/it-pronoun-transfer-variant-automatic--33166c80b65f497e/fce649f8-0c49-4b67-8d6b-10d841f16431.json",
+      "documentHash": "5484d4b2ccdb4dc44ff8b8c64956f30831170016579deb454196ac254c11acfc",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/it-pronoun-transfer-variant-automatic.json",
+      "optionalChunkUnits": 3
+    },
+    {
+      "case": "vi-heading-transfer-variant-automatic",
+      "group": "new_authored_variant",
+      "generation": "generated",
+      "document": "batch-2/vi-heading-transfer-variant-automatic/videos/vi-heading-transfer-variant-automatic--18771693b19bd652/d727c4f7-48ce-4b15-ba63-6d4142ae2537.json",
+      "documentHash": "15651330a652ee8d743eeb4ad1c564f594d181c39db0fb842acd90d99f40cc0c",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/vi-heading-transfer-variant-automatic.json",
+      "optionalChunkUnits": 3
+    },
+    {
+      "case": "zh-TW-example-action-transfer-variant-automatic",
+      "group": "new_authored_variant",
+      "generation": "generated",
+      "document": "batch-2/zh-TW-example-action-transfer-variant-automatic/videos/zh-TW-example-action-transfer-variant-automatic--ff9f2e5ce0c27886/79947a4c-c433-4888-8446-48cd81e9a72d.json",
+      "documentHash": "74a4a3762e5a973ee3756173875b6d3f74e4bf9fc04c5fb8fe45cf878686bf40",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/zh-TW-example-action-transfer-variant-automatic.json",
+      "optionalChunkUnits": 3
+    },
+    {
+      "case": "ja-normal-transfer-automatic",
+      "group": "previously_accepted_control",
+      "generation": "generated",
+      "document": "batch-2/ja-normal-transfer-automatic/videos/ja-normal-transfer-automatic--bd15425fed549f2b/5f79dec2-1420-4439-9332-0b3d967123dd.json",
+      "documentHash": "fc828cbce2ce275497e3e0068ef7b3293f1f62dba497a881ad9be5f2f11d8363",
+      "coverage": "passed",
+      "semantic": "passed",
+      "accepted": true,
+      "review": "reviews/ja-normal-transfer-automatic.json",
+      "optionalChunkUnits": 2
+    }
+  ],
+  "limits": [
+    "Preflight sandbox credential-lock failures occurred before model requests and are preserved separately; they are not hidden content reruns.",
+    "Traces capture generatePiText arguments and return text, not provider HTTP messages or SDK-internal attempts.",
+    "These results are not pooled with prompts-17.",
+    "Final source adds separately verified legacy-reading/resume compatibility; generation used the frozen source recorded in run-context.json.",
+    "French unclear-source selection coverage and the earlier Simplified Chinese editorial dispute remain outside this focused run.",
+    "No native-speaker certification, audio, installed Host, real Chrome/video, release or deployment.",
+    "One output per case, without repeated seeds or a paired new-variant baseline: absence of a previous defect does not establish a causal effect or stable generalization."
+  ]
+}

@@ -1,11 +1,13 @@
 import type { UiLocale } from "./messages";
 import type { LearningProfile, LearningLanguage } from "@contextual/core";
+import { LEARNING_LANGUAGES, UNRESTRICTED_LEVEL } from "@contextual/core";
 import { learningLanguageName } from "./preferences";
 
 export type LearningSettingKey = "targetLanguage" | "level" | "instructionLanguage" | "sceneCount";
 export type SettingOptionInfo = { label: string; description: string };
 export type LearningSettingsCopy = {
   infoLabel: string;
+  unrestrictedLevel: SettingOptionInfo;
   fieldHints: Record<LearningSettingKey, string>;
   levelHints: Record<LearningProfile["targetLanguage"], string>;
   targetDescriptions: Record<LearningProfile["targetLanguage"], string>;
@@ -29,6 +31,11 @@ type OriginalLearningSettingsCopy = Omit<
 const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCopy> = {
   en: {
     infoLabel: "Information about",
+    unrestrictedLevel: {
+      label: "Unrestricted",
+      description:
+        "Select material from the video without a fixed level. Difficulty may vary; necessary points are explained in plain language.",
+    },
     fieldHints: {
       targetLanguage:
         "Choose the language you want to learn. The subtitle phrases and example sentences stay in that language.",
@@ -135,6 +142,10 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
   },
   "zh-TW": {
     infoLabel: "設定說明：",
+    unrestrictedLevel: {
+      label: "不限程度",
+      description: "依影片內容選材，不限定級別；難度可能混合，必要的難點會以白話說明。",
+    },
     fieldHints: {
       targetLanguage: "選擇你要學的語言。字幕原句和學習例句會保留該語言。",
       level: "影響選材、解說支援、術語及例句難度；不代表每個學習重點都有正式檢定級別。",
@@ -238,6 +249,10 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
   },
   "zh-CN": {
     infoLabel: "设置说明：",
+    unrestrictedLevel: {
+      label: "不限程度",
+      description: "根据视频内容选材，不限定级别；难度可能混合，必要的难点会用通俗语言说明。",
+    },
     fieldHints: {
       targetLanguage: "选择你要学习的语言。字幕原句和学习例句会保留该语言。",
       level: "影响选材、解说支持、术语及例句难度；不代表每个学习重点都有正式考试级别。",
@@ -341,6 +356,11 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
   },
   ja: {
     infoLabel: "設定の説明：",
+    unrestrictedLevel: {
+      label: "レベル制限なし",
+      description:
+        "動画の内容に沿って教材を選び、レベルを限定しません。難易度は混在しますが、必要な点は平易な言葉で説明します。",
+    },
     fieldHints: {
       targetLanguage: "学習したい言語を選びます。字幕の原文や例文はその言語のままです。",
       level:
@@ -446,6 +466,11 @@ const originalLearningSettingsCopy: Record<UiLocale, OriginalLearningSettingsCop
   },
   ko: {
     infoLabel: "설정 설명:",
+    unrestrictedLevel: {
+      label: "수준 제한 없음",
+      description:
+        "정해진 수준 없이 동영상 내용에 따라 소재를 고릅니다. 난이도가 섞일 수 있으며, 필요한 부분은 쉬운 말로 설명합니다.",
+    },
     fieldHints: {
       targetLanguage: "학습할 언어를 선택합니다. 자막 원문과 예문은 해당 언어로 유지됩니다.",
       level:
@@ -624,10 +649,17 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = Obje
               names.map(([code, name]) => [code, localizedInstructionDescription[locale](name)]),
             ),
           },
-          levels: {
-            ...base.levels,
-            ...Object.fromEntries(ADDED_LANGUAGES.map(code => [code, base.levels.en])),
-          },
+          levels: Object.fromEntries(
+            LEARNING_LANGUAGES.map(
+              (code): [LearningLanguage, Record<string, SettingOptionInfo>] => [
+                code,
+                {
+                  ...base.levels[code === "ja" || code === "ko" ? code : "en"],
+                  [UNRESTRICTED_LEVEL]: base.unrestrictedLevel,
+                },
+              ],
+            ),
+          ) as LearningSettingsCopy["levels"],
         },
       ];
     },
@@ -638,6 +670,15 @@ export const learningSettingsCopy: Record<UiLocale, LearningSettingsCopy> = Obje
 export function levelHint(
   copy: LearningSettingsCopy,
   language: LearningProfile["targetLanguage"],
+  level?: string,
 ): string {
+  if (level === UNRESTRICTED_LEVEL) return copy.unrestrictedLevel.description;
   return copy.levelHints[language] + " " + copy.fieldHints.level;
+}
+
+/** Compact level metadata for confirmation, library and reader surfaces. */
+export function learningLevelLabel(locale: UiLocale, level: string): string {
+  return level === UNRESTRICTED_LEVEL
+    ? learningSettingsCopy[locale].unrestrictedLevel.label
+    : level;
 }

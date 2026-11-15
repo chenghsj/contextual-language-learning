@@ -19,7 +19,7 @@ export function VideoConnectionNotice({
     <div
       role="status"
       data-ui="video-connection-notice"
-      className="grid min-w-0 gap-1.5 text-xs leading-relaxed text-muted-foreground"
+      className="grid min-w-0 gap-1.5 text-ui-body text-muted-foreground"
     >
       <p>{hasSubtitles ? copy.subtitlesPreserved : copy.reloadNeeded}</p>
       {failed && (

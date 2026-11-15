@@ -1,0 +1,33 @@
+{
+  "case": "zh-CN-uncertainty-quote-topic-automatic",
+  "document": "docs/quality/matrix-2026-10-19-prompts17/batch-4/zh-CN-uncertainty-quote-topic-automatic/videos/zh-CN-uncertainty-quote-topic-automatic--153278afd6065fe1/3a81f36b-bc78-4425-aab1-9dc0cd3a39c8.json",
+  "documentHash": "1c6b6c0a626fdd81fbca8da301c655511921ccdaa3641c12aa5879e05b7637a9",
+  "reviewer": "Codex source/editorial inspection, separate from Gemini generation; not human/native-speaker certification",
+  "verdict": "needs_review",
+  "checks": [
+    {
+      "scope": "source preservation, local uncertainty and examples",
+      "result": "ミオ and [???] retain their original source spelling without guessed readings. The unknown fragment is locally identified in summary, translation and affected meaning, and excluded from teaching targets. Quote/topic and reply/question units are separate; 还没 stays basic_only. The teacher-deadline, activity-topic and 暂定 examples have coherent roles and meanings."
+    },
+    {
+      "scope": "source attribution inside a teaching point",
+      "result": "The point-level wording may narrow an unresolved role, but the initial assertion that it definitely identifies the current interlocutor was stronger than the evidence. This finding is pending and does not count as accepted."
+    }
+  ],
+  "issues": [
+    {
+      "severity": "needs_review",
+      "type": "ambiguous_source_role_explanation",
+      "path": "/points/0/explanation",
+      "quote": "對方的原話",
+      "description": "對方 may be a generic quoted other person rather than the current listener. The original review overstated that identification. 在此處 and 確實 may still narrow an unresolved source role; whether this is a concrete unsupported claim or generic teaching language needs independent editorial adjudication. Neither a definitive error nor a pass is established here.",
+      "suggestedDirection": "Have an independent editor decide whether the wording assigns a concrete source participant. A neutral rewrite is possible, but its availability alone does not prove the existing wording wrong."
+    }
+  ],
+  "boundary": "Fixed text-only review of this one generated output under the same source-fidelity rubric. No actual audio, installed Host or real Chrome/video acceptance; no native-speaker certification or learning-effect measurement. Coverage is judged separately. Original output unchanged.",
+  "reassessment": {
+    "originalReview": "reviews/zh-CN-uncertainty-quote-topic-automatic.json",
+    "disposition": "pending",
+    "reason": "初審把「對方」直接解讀為當下聽者，判斷過強。它可能只是泛稱引述中的另一人；另一方面「在此處」「確實」也可能把原文未明的引述角色說得過窄。尚無足夠依據在這輪判為確定錯誤或直接通過，改列待複核。"
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "action": "start",
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "The Siri operation subscription identity does not match. expected=sv-SE:neural:male:Axel:premium:0 own=[(\"sv-SE:neural:undefined:Axel:undefined:0\", nil)]\n"
+  },
+  {
+    "action": "cleanup",
+    "returncode": 0,
+    "stdout": "{\"speechDownloadObservations\":[{\"voiceId\":\"siri:com.apple.speech.synthesis.voice.custom.siri.axel.premium\",\"shared\":false,\"cancelFenced\":true,\"resource\":\"absent\",\"operationId\":\"2faae709-430a-4fbb-ba97-30fb86aa7804\",\"ordering\":\"settled\",\"subscription\":\"absent\"}]}",
+    "stderr": ""
+  }
+]

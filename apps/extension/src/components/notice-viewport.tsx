@@ -69,7 +69,7 @@ export function NoticeViewport({
       return;
     }
     toast(
-      <div className="grid gap-2 text-xs">
+      <div className="grid gap-2 text-ui-body">
         <p>{recoveryMessage}</p>
         {videoRecovery.failed && (
           <p className="text-destructive" role="status">

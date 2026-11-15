@@ -1,0 +1,38 @@
+[
+  {
+    "language": "es",
+    "level": "B1",
+    "name": "actor-recipient-variant",
+    "group": "previously_rejected",
+    "lines": [
+      "Yo voy a pedir que nos envíen los horarios.",
+      "Perfecto. Nosotros vamos a revisar las fechas.",
+      "Te avisaré cuando tenga una respuesta.",
+      "Gracias."
+    ]
+  },
+  {
+    "language": "es",
+    "level": "B2",
+    "name": "temporal-aspect-contrast",
+    "group": "new_authored_contrast",
+    "lines": [
+      "Te avisaré cuando reciba la confirmación.",
+      "Yo enviaré los documentos cuando haya recibido tu mensaje.",
+      "Entonces revisaremos juntos los horarios.",
+      "De acuerdo."
+    ]
+  },
+  {
+    "language": "en",
+    "level": "B1",
+    "name": "normal-transfer",
+    "lines": [
+      "Why are you still here?",
+      "I was about to leave when you called.",
+      "Can you wait a minute?",
+      "Sure."
+    ],
+    "group": "previously_accepted_control"
+  }
+]

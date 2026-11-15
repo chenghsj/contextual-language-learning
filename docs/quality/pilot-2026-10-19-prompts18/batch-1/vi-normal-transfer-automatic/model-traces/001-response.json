@@ -1,0 +1,18 @@
+{
+  "text": "{\"status\":\"complete\",\"candidates\":[{\"dialogueCueIds\":[\"c1\",\"c2\",\"c3\",\"c4\"],\"contextCueIds\":[],\"utterances\":[{\"sourceSpans\":[{\"cueId\":\"c1\",\"start\":0,\"end\":22}]},{\"sourceSpans\":[{\"cueId\":\"c2\",\"start\":0,\"end\":29}]},{\"sourceSpans\":[{\"cueId\":\"c3\",\"start\":0,\"end\":28}]},{\"sourceSpans\":[{\"cueId\":\"c4\",\"start\":0,\"end\":5}]}],\"learningValue\":\"涵蓋日常詢問原因、說明時間巧合的句型，以及提出請求與簡短答應的完整對話表達。\",\"opportunities\":[{\"category\":\"grammar\",\"sourceCueIds\":[\"c1\"],\"description\":\"學習用「Sao」詢問原因與「vẫn còn」表示狀態持續的句型。\"},{\"category\":\"grammar\",\"sourceCueIds\":[\"c2\"],\"description\":\"學習「đang định... thì...」表示正打算做某事時恰好發生另一件事的時間關聯結構。\"},{\"category\":\"chunks\",\"sourceCueIds\":[\"c3\"],\"description\":\"學習「...được không?」用於禮貌提出請求或徵詢意見的常用表達。\"},{\"category\":\"usage\",\"sourceCueIds\":[\"c4\"],\"description\":\"學習單獨使用「Được」作為簡短俐落答應對方請求的口語用法。\"}]}]}",
+  "call": {
+    "step": "window-0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "billing": "subscription",
+    "at": "2026-10-19T02:39:47.637Z",
+    "outputTokenBudget": 32768,
+    "stopReason": "stop",
+    "durationMs": 9674.062333999958,
+    "usage": {
+      "input": 2610,
+      "output": 1294,
+      "reasoning": 1001
+    }
+  }
+}

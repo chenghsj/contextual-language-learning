@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { QualityBatchReportSchema } from "./quality";
 import { BillingKindSchema } from "./usage-estimate";
+import { ThinkingLevelSchema } from "./thinking";
+export const COMPACT_QUALITY_STRATEGY_VERSION = "compact-source-review-2";
 /** Host-authored processing evidence, never model-authored teaching content. */
 export const PronunciationDiagnosticSchema = z
   .object({
@@ -32,6 +34,7 @@ export const ExecutionCallSchema = z.object({
   step: z.string(),
   provider: z.string(),
   modelId: z.string(),
+  effectiveThinkingLevel: ThinkingLevelSchema.optional(),
   billing: BillingKindSchema.optional(),
   at: z.string().datetime(),
   outputTokenBudget: z.number().int().positive().optional(),
@@ -70,6 +73,21 @@ export const ExecutionIdentitySchema = z.object({
   modelId: z.string(),
   contextWindow: z.number().int().positive(),
   maxOutputTokens: z.number().int().positive(),
+  effectiveThinkingLevel: ThinkingLevelSchema.optional(),
+  budgetStrategyVersion: z.string().max(80).optional(),
+  effectiveSettingsFromCall: z.number().int().nonnegative().optional(),
+  generationStrategyVersion: z.literal("compact-scenes-1").optional(),
+  compactQualityVersion: z
+    .enum(["compact-source-review-1", COMPACT_QUALITY_STRATEGY_VERSION])
+    .optional(),
+  compactReasoningPolicy: z
+    .object({
+      version: z.enum(["light-candidates-1", "light-selection-1"]),
+      candidate: ThinkingLevelSchema,
+      selection: ThinkingLevelSchema,
+    })
+    .strict()
+    .optional(),
 });
 export const ExecutionMetadataSchema = ExecutionIdentitySchema.extend({
   previousExecution: ExecutionIdentitySchema.optional(),
@@ -77,6 +95,8 @@ export const ExecutionMetadataSchema = ExecutionIdentitySchema.extend({
   chunkPlan: z.array(z.array(z.string())).max(1000),
   calls: z.array(ExecutionCallSchema).max(2000),
   pronunciationDiagnostics: z.array(PronunciationDiagnosticSchema).max(20000).optional(),
+  pointEquivalenceGroups: z.array(z.array(z.string()).min(2)).max(1000).optional(),
+  itemEquivalenceGroups: z.array(z.array(z.string()).min(2)).max(1000).optional(),
 });
 export type ExecutionIdentity = z.infer<typeof ExecutionIdentitySchema>;
 export type ExecutionMetadata = z.infer<typeof ExecutionMetadataSchema>;

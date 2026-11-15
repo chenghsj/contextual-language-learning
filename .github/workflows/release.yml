@@ -19,7 +19,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  macos-speech:
+    name: Build universal macOS speech helper
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node apps/local-host/scripts/build-macos-speech.mjs
+      - run: node apps/local-host/scripts/build-macos-siri.mjs
+      - run: node apps/local-host/scripts/build-macos-credentials.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-speech
+          path: |
+            apps/local-host/dist/macos-speech*
+            apps/local-host/dist/macos-credentials
+          if-no-files-found: error
+
   chromium:
+    needs: macos-speech
     name: Build and publish Chromium release
     runs-on: ubuntu-latest
     permissions:
@@ -87,6 +109,7 @@ jobs:
         env:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          VITE_HOST_SETUP_DOWNLOAD_URL: https://github.com/chenghsj/contextual-language-learning/releases/tag/v${{ env.RELEASE_VERSION }}
         run: |
           test -n "$GOOGLE_OAUTH_CLIENT_ID" || { echo "::error::Set GOOGLE_OAUTH_CLIENT_ID for one-click Drive authorization"; exit 1; }
           pnpm build
@@ -96,8 +119,21 @@ jobs:
           node apps/extension/scripts/check-build.mjs
           node apps/local-host/scripts/smoke-host.mjs
 
-      - name: Package Chromium and macOS, Windows and Linux Hosts
-        run: pnpm package:release
+      - name: Download macOS speech helper
+        # The Ubuntu packager consumes the helper built from the same ref on macOS.
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-speech
+          path: apps/local-host/dist
+
+      - name: Package Chromium and graphical Host setups with bundled runtimes
+        env:
+          CLL_CHROME_EXTENSION_ID: ${{ vars.CLL_CHROME_EXTENSION_ID }}
+          CLL_EDGE_EXTENSION_ID: ${{ vars.CLL_EDGE_EXTENSION_ID }}
+          CLL_CHROMIUM_EXTENSION_ID: ${{ vars.CLL_CHROMIUM_EXTENSION_ID }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y mono-mcs libmono-system-windows-forms4.0-cil
+          pnpm package:release
 
       - name: Verify ZIPs and checksums
         shell: bash
@@ -109,10 +145,13 @@ jobs:
           unzip -tq "$chromium"
           unzip -Z -1 "$chromium" | grep -Eq '^(\./)?manifest\.json$'
           for platform in macos windows linux; do
-            host="contextual-language-learning-$platform-host-$RELEASE_VERSION.zip"
-            unzip -tq "$host"
-            unzip -Z -1 "$host" | grep -Eq '^(\./)?dist/native-host\.mjs$'
-            unzip -Z -1 "$host" | grep -Eq '^(\./)?scripts/install-host\.mjs$'
+            for arch in arm64 x64; do
+              host="contextual-language-learning-$platform-$arch-setup-$RELEASE_VERSION.zip"
+              unzip -tq "$host"
+              unzip -Z -1 "$host" | grep -Eq '(^|/)dist/native-host\.mjs$'
+              unzip -Z -1 "$host" | grep -Eq '(^|/)setup/server\.mjs$'
+              unzip -Z -1 "$host" | grep -Eq '(^|/)runtime/node(\.exe)?$'
+            done
           done
 
       - name: Write installation notes
@@ -120,28 +159,20 @@ jobs:
         run: |
           cat > release-notes.md <<'EOF'
           ## Chromium Extension
-          Extract the Chromium ZIP. In chrome://extensions or edge://extensions,
-          enable Developer mode and Load unpacked. Choose the folder containing
-          manifest.json at its root. This is not a signed CRX.
+          The normal setup uses the browser-store extension with its fixed ID.
+          The Chromium ZIP is for unpacked development/testing; pair it with
+          a local-mode setup package if its ID differs from the store build.
 
-          ## Native Host for macOS, Windows or Linux (required for local AI generation)
-          Download and extract the matching OS Host ZIP. With Node.js 22+ run
-          from its extracted directory:
+          ## Local service
+          Download the setup ZIP for your operating system and processor, then extract it.
+          Open CLL 本機服務.app on macOS, Setup.exe on Windows, or CLL Setup.desktop on Linux.
+          Choose your browser and click Install. Return to the extension and check the connection.
+          Node.js is included. No terminal commands or source repository are needed.
+          Reopen Setup to update or uninstall; lessons, settings and sign-ins are preserved.
 
-          node scripts/install-host.mjs YOUR_EXTENSION_ID
-
-          For Edge, append --browser edge; for Chromium, --browser chromium.
-          Copy the current extension ID from your browser's extensions page.
-          The installer registers the Host for that ID and browser. On Windows
-          it compiles a native .exe stdio launcher locally using Windows
-          PowerShell 5.1 and .NET Framework; macOS/Linux use a shell launcher.
-          The Host includes Pi SDK. Connect your AI provider in Extension Settings;
-          no separate CLI Agent installation is required.
-          Linux GUI folder selection requires zenity or kdialog.
-
-          All four ZIPs are covered by SHA256SUMS. Google Drive OAuth remains
-          experimental and macOS-only because its credential storage currently
-          uses macOS Keychain.
+          Linux requires a graphical desktop and xdg-open. Browser store identities must
+          match the IDs configured for this release. All archives are covered by SHA256SUMS.
+          Google Drive OAuth remains experimental and macOS-only.
           EOF
 
       - name: Publish GitHub Release and assets

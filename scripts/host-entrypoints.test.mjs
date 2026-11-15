@@ -34,6 +34,7 @@ async function fixture(withBundle = true) {
   if (withBundle) {
     await writeFile(join(host, "dist/native-host.mjs"), bundle);
     await writeFile(join(host, "dist/macos-speech"), "speech helper fixture");
+    await writeFile(join(host, "dist/macos-credentials"), "credential helper fixture");
     await writeFile(join(host, "dist/macos-speech.swift"), "speech helper fixture");
   }
   const env = {

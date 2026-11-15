@@ -1,0 +1,458 @@
+{
+  "id": "9c113a42-7e7b-4742-a93d-81457138fb0b",
+  "createdAt": "2026-10-19T04:35:34.376Z",
+  "source": {
+    "platform": "import",
+    "title": "fr-citation-plural-variant-automatic"
+  },
+  "profile": {
+    "targetLanguage": "fr",
+    "instructionLanguage": "zh-TW",
+    "level": "B1",
+    "sceneCount": 2,
+    "contextualExampleCount": 1,
+    "enabledExplanations": [
+      "vocabulary",
+      "grammar",
+      "chunks",
+      "usage",
+      "pronunciation",
+      "culture"
+    ],
+    "emphasizedExplanations": []
+  },
+  "generation": {
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "thinkingLevel": "medium"
+  },
+  "execution": {
+    "workflowVersion": "learning-points-v7-1",
+    "promptVersion": "learning-points-prompts-19",
+    "schemaVersion": "7",
+    "languageStrategyVersion": "learning-language-strategies-5",
+    "levelStrategyVersion": "learning-level-strategies-1",
+    "qualityStrategyVersion": "program-validation-3",
+    "inputFingerprint": "9298d3373d64dc63e51476e21f0c152a3c19f603ebdb19119a2e4a9a94f065f0",
+    "provider": "antigravity",
+    "modelId": "gemini-3.8-flash",
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "chunkPlan": [
+      [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    ],
+    "calls": [
+      {
+        "step": "window-0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T04:35:42.680Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 7442.582041000001,
+        "usage": {
+          "input": 2571,
+          "output": 909,
+          "reasoning": 648
+        }
+      },
+      {
+        "step": "selection",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T04:35:46.852Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 4158.600583000001,
+        "usage": {
+          "input": 2208,
+          "output": 163,
+          "reasoning": 123
+        }
+      },
+      {
+        "step": "s0",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T04:36:14.438Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 27571.217708999997,
+        "usage": {
+          "input": 4636,
+          "output": 3767,
+          "reasoning": 1876
+        }
+      },
+      {
+        "step": "s0-repair",
+        "provider": "antigravity",
+        "modelId": "gemini-3.8-flash",
+        "billing": "subscription",
+        "at": "2026-10-19T04:37:18.806Z",
+        "outputTokenBudget": 32768,
+        "stopReason": "stop",
+        "durationMs": 64353.472334,
+        "usage": {
+          "input": 4884,
+          "output": 8971,
+          "reasoning": 7713
+        }
+      }
+    ],
+    "pronunciationDiagnostics": []
+  },
+  "cues": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 2800,
+      "originalText": "Les dossiers sont-ils encore disponibles ?"
+    },
+    {
+      "id": "c2",
+      "startMs": 3000,
+      "endMs": 5800,
+      "originalText": "Oui, ils sont dans l’armoire."
+    },
+    {
+      "id": "c3",
+      "startMs": 6000,
+      "endMs": 8800,
+      "originalText": "Pouvez-vous me donner les deux premiers ?"
+    },
+    {
+      "id": "c4",
+      "startMs": 9000,
+      "endMs": 11800,
+      "originalText": "Bien sûr."
+    }
+  ],
+  "schemaVersion": 7,
+  "sections": [
+    {
+      "id": "1c96db26-b16f-44d1-823a-1a06803791aa",
+      "cueIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "contextCueIds": [],
+      "startMs": 0,
+      "endMs": 11800,
+      "title": "文件查詢與索取",
+      "context": {
+        "text": "此段對話包含一項關於文件是否仍可用的詢問、一項說明文件位於櫃子裡的回答、一項索取前兩份文件的請求，以及一項肯定的答覆。",
+        "evidenceCueIds": [
+          "c1",
+          "c2",
+          "c3",
+          "c4"
+        ]
+      },
+      "translations": [
+        {
+          "cueId": "c1",
+          "text": "這些文件目前還有嗎？"
+        },
+        {
+          "cueId": "c2",
+          "text": "有的，它們在櫃子裡。"
+        },
+        {
+          "cueId": "c3",
+          "text": "您可以給我前兩份嗎？"
+        },
+        {
+          "cueId": "c4",
+          "text": "當然。"
+        }
+      ],
+      "utterances": [
+        {
+          "id": "c43a6a9c-76bd-4c9d-9488-b135815d78fd",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "1c96db26-b16f-44d1-823a-1a06803791aa:s0:p1"
+          ],
+          "chunks": [
+            {
+              "id": "1c96db26-b16f-44d1-823a-1a06803791aa:s0:k1",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 0,
+                  "end": 21
+                }
+              ],
+              "meaning": "這些文件是否"
+            },
+            {
+              "id": "1c96db26-b16f-44d1-823a-1a06803791aa:s0:k2",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 22,
+                  "end": 28
+                }
+              ],
+              "meaning": "仍然"
+            },
+            {
+              "id": "1c96db26-b16f-44d1-823a-1a06803791aa:s0:k3",
+              "spans": [
+                {
+                  "cueId": "c1",
+                  "start": 29,
+                  "end": 40
+                }
+              ],
+              "meaning": "可取得的"
+            }
+          ],
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 42
+            }
+          ]
+        },
+        {
+          "id": "f0d97bfb-aab9-4638-937c-f31c9b26a406",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c2"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c2",
+              "start": 0,
+              "end": 29
+            }
+          ]
+        },
+        {
+          "id": "4342383b-1b0d-4d8a-bef3-e2462ec9266d",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "explained",
+          "pointIds": [
+            "1c96db26-b16f-44d1-823a-1a06803791aa:s0:p2"
+          ],
+          "chunks": [
+            {
+              "id": "1c96db26-b16f-44d1-823a-1a06803791aa:s0:k4",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 0,
+                  "end": 11
+                }
+              ],
+              "meaning": "您可以……嗎"
+            },
+            {
+              "id": "1c96db26-b16f-44d1-823a-1a06803791aa:s0:k5",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 12,
+                  "end": 21
+                }
+              ],
+              "meaning": "給我"
+            },
+            {
+              "id": "1c96db26-b16f-44d1-823a-1a06803791aa:s0:k6",
+              "spans": [
+                {
+                  "cueId": "c3",
+                  "start": 22,
+                  "end": 39
+                }
+              ],
+              "meaning": "前兩份"
+            }
+          ],
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 41
+            }
+          ]
+        },
+        {
+          "id": "06bf42af-d060-4efc-b13f-3b00765c694c",
+          "meaning": "",
+          "contextExplanation": "",
+          "contextCueIds": [],
+          "decision": "basic_only",
+          "pointIds": [],
+          "cueIds": [
+            "c4"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c4",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "1c96db26-b16f-44d1-823a-1a06803791aa:s0:p1",
+      "utteranceIds": [
+        "c43a6a9c-76bd-4c9d-9488-b135815d78fd"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "名詞主詞的複合倒裝疑問句",
+      "sourceCueIds": [
+        "c1"
+      ],
+      "contextCueIds": [],
+      "explanation": "在法語正式或書面語體中，若疑問句的主詞是名詞（如 Les dossiers），倒裝時須將名詞置於句首，動詞後方再附加與該名詞性數一致的主詞代名詞（如 sont-ils）以形成複合倒裝。",
+      "sourceSpans": [
+        {
+          "cueId": "c1",
+          "start": 0,
+          "end": 21
+        }
+      ]
+    },
+    {
+      "id": "1c96db26-b16f-44d1-823a-1a06803791aa:s0:p2",
+      "utteranceIds": [
+        "4342383b-1b0d-4d8a-bef3-e2462ec9266d"
+      ],
+      "category": "grammar",
+      "presentation": "core",
+      "title": "動詞 pouvoir 的倒裝請求句型",
+      "sourceCueIds": [
+        "c3"
+      ],
+      "contextCueIds": [],
+      "explanation": "「Pouvez-vous + 動詞原形」為法語表達禮貌請求的常見句型，藉由助動詞 pouvoir 與主詞 vous 倒裝，委婉向對方提出「您可以……嗎？」的要求。",
+      "sourceSpans": [
+        {
+          "cueId": "c3",
+          "start": 0,
+          "end": 11
+        }
+      ]
+    }
+  ],
+  "reusableItems": [
+    {
+      "id": "1c96db26-b16f-44d1-823a-1a06803791aa:s0:r1",
+      "pointIds": [
+        "1c96db26-b16f-44d1-823a-1a06803791aa:s0:p1"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c1"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c1",
+              "start": 0,
+              "end": 21
+            }
+          ],
+          "text": "Les dossiers sont-ils"
+        }
+      ],
+      "pattern": "[nom] + [verbe]-[pronom] ... ?",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "顧客在書店向店員詢問某本新小說是否已經到貨。",
+          "dialogue": [
+            {
+              "text": "Le nouveau roman est-il arrivé ce matin ?",
+              "translation": "那本新小說今天早上到了嗎？"
+            },
+            {
+              "text": "Oui, il vient tout juste d’être livré.",
+              "translation": "是的，它剛送達。"
+            }
+          ],
+          "targetLineIndex": 0,
+          "targetText": "Le nouveau roman est-il"
+        }
+      ]
+    },
+    {
+      "id": "1c96db26-b16f-44d1-823a-1a06803791aa:s0:r2",
+      "pointIds": [
+        "1c96db26-b16f-44d1-823a-1a06803791aa:s0:p2"
+      ],
+      "kind": "frame",
+      "sourceForms": [
+        {
+          "cueIds": [
+            "c3"
+          ],
+          "sourceSpans": [
+            {
+              "cueId": "c3",
+              "start": 0,
+              "end": 11
+            }
+          ],
+          "text": "Pouvez-vous"
+        }
+      ],
+      "pattern": "Pouvez-vous + [infinitif] ... ?",
+      "examples": [
+        {
+          "origin": "ai",
+          "situation": "客人在餐廳用餐時向服務生索取甜點菜單。",
+          "dialogue": [
+            {
+              "text": "Pouvez-vous m’apporter la carte des desserts, s’il vous plaît ?",
+              "translation": "您可以為我拿甜點菜單來嗎？"
+            },
+            {
+              "text": "Certainement, je vous l’apporte tout de suite.",
+              "translation": "當然，我馬上為您送來。"
+            }
+          ],
+          "targetLineIndex": 0,
+          "targetText": "Pouvez-vous"
+        }
+      ]
+    }
+  ]
+}

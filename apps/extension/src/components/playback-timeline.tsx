@@ -92,7 +92,7 @@ export function PlaybackTimeline({
   }
 
   return (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 text-[10px] tabular-nums text-muted-foreground">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 text-ui-meta tabular-nums text-muted-foreground">
       <span>{formatLoopTimestamp(range.startMs)}</span>
       <input
         type="range"

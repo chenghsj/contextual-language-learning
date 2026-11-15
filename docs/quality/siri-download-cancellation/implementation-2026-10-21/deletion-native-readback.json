@@ -1,0 +1,58 @@
+{
+  "checkedAt": "2026-10-21T06:54:14.289626+00:00",
+  "voices": [
+    {
+      "name": "Samer",
+      "engine": "siri",
+      "quality": "premium",
+      "technology": "neural",
+      "language": "ar-SA",
+      "id": "siri:com.apple.speech.synthesis.voice.custom.siri.samer.premium",
+      "removable": false,
+      "resourceAvailable": false,
+      "neural": true,
+      "installed": false,
+      "downloadSize": 55408590
+    },
+    {
+      "name": "Helena",
+      "engine": "siri",
+      "quality": "premium",
+      "technology": "natural",
+      "resourceId": "com.apple.siri.tts.voice.de_DE.helena.natural.premium",
+      "language": "de-DE",
+      "id": "siri:com.apple.speech.synthesis.voice.custom.siri.helena.premium",
+      "removable": true,
+      "resourceAvailable": true,
+      "neural": true,
+      "downloadSize": 190367198,
+      "installed": true
+    },
+    {
+      "name": "Nora",
+      "engine": "siri",
+      "quality": "premium",
+      "technology": "natural",
+      "resourceId": "com.apple.siri.tts.voice.en_US.nora.natural.premium",
+      "language": "en-US",
+      "id": "siri:com.apple.speech.synthesis.voice.custom.siri.nora.premium",
+      "removable": true,
+      "resourceAvailable": true,
+      "neural": true,
+      "downloadSize": 273716376,
+      "installed": true
+    }
+  ],
+  "subscriptions": [
+    {
+      "assetKey": "de-DE:natural:undefined:Helena:undefined:0",
+      "clientId": "dev.contextual.language_learning.siri-download.21e5090d-6807-485b-a9fe-607718685de7"
+    },
+    {
+      "assetKey": "en-US:natural:undefined:Nora:undefined:0",
+      "clientId": "dev.contextual.language_learning.siri-download.b0dfb44d-5d15-427d-b4b3-713a4a276ea8"
+    }
+  ],
+  "samerReceiptCancelFenced": true,
+  "checks": "Samer absent; Nora and Helena original subscriptions retained"
+}

@@ -4,7 +4,12 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { learningSettingsCopy, levelHint, type LearningSettingKey } from "./learning-settings";
+import {
+  learningSettingsCopy,
+  levelHint,
+  learningLevelLabel,
+  type LearningSettingKey,
+} from "./learning-settings";
 import {
   nativeLanguageName,
   learningLanguageName,
@@ -16,6 +21,7 @@ import {
   EXPLANATION_LANGUAGES,
   levelsForTargetLanguage,
   defaultLevelForTargetLanguage,
+  UNRESTRICTED_LEVEL,
 } from "@contextual/core";
 import { messages, type UiLocale } from "./messages";
 import { SettingInfo } from "../components/setting-info";
@@ -27,9 +33,9 @@ const fields: LearningSettingKey[] = [
   "sceneCount",
 ];
 const levels = {
-  en: ["A1", "A2", "B1", "B2", "C1", "C2"],
-  ja: ["N5", "N4", "N3", "N2", "N1"],
-  ko: ["1", "2", "3", "4", "5", "6"],
+  en: ["A1", "A2", "B1", "B2", "C1", "C2", UNRESTRICTED_LEVEL],
+  ja: ["N5", "N4", "N3", "N2", "N1", UNRESTRICTED_LEVEL],
+  ko: ["1", "2", "3", "4", "5", "6", UNRESTRICTED_LEVEL],
 } as const;
 const locales = Object.keys(messages) as UiLocale[];
 
@@ -95,9 +101,9 @@ test("settings keep stable saved option values rather than persisting translated
       assert.equal(option.label, learningLanguageName(option.value, locale));
     }
   }
-  assert.match(app, /EXPLANATION_LANGUAGES\.map\(value/);
-  assert.match(app, /explanationLanguageName\(value, uiLocale\)/);
-  assert.match(app, /levelHint\(settingsCopy, profile\.targetLanguage\)/);
+  assert.match(app, /<SearchableSelectField id="learning-explanation-language"/);
+  assert.match(app, /explanationLanguageName\(option\.value, uiLocale\)/);
+  assert.match(app, /levelHint\(settingsCopy, profile\.targetLanguage, profile\.level\)/);
   assert.match(app, /settingsCopy.fieldHints.targetLanguage/);
   assert.match(app, /settingsCopy.fieldHints.instructionLanguage/);
   assert.match(app, /t\("lessonLength"\)/);
@@ -158,7 +164,10 @@ test("level help follows the selected learning language in every interface local
     }
   }
   const app = await readSource(new URL("../App.tsx", import.meta.url));
-  assert.match(app, /explanation=\{levelHint\(settingsCopy, profile\.targetLanguage\)\}/);
+  assert.match(
+    app,
+    /explanation=\{levelHint\(settingsCopy, profile\.targetLanguage, profile\.level\)\}/,
+  );
   assert.match(app, /defaultLevelForTargetLanguage\(language\)/);
   assert.match(app, /onValueChange=\{chooseLearningLanguage\}/);
 });
@@ -238,8 +247,38 @@ test("all fourteen learning languages have localized names, levels and help with
     }
     for (const language of added) {
       assert.match(levelHint(copy, language), /CEFR/);
-      assert.deepEqual(Object.keys(copy.levels[language]), ["A1", "A2", "B1", "B2", "C1", "C2"]);
+      assert.deepEqual(Object.keys(copy.levels[language]), [
+        "A1",
+        "A2",
+        "B1",
+        "B2",
+        "C1",
+        "C2",
+        UNRESTRICTED_LEVEL,
+      ]);
     }
+  }
+});
+
+test("unrestricted labels and help are localized without exposing the saved option ID", () => {
+  for (const locale of locales) {
+    const copy = learningSettingsCopy[locale];
+    for (const language of LEARNING_LANGUAGES) {
+      const option = copy.levels[language][UNRESTRICTED_LEVEL];
+      assert.equal(learningLevelLabel(locale, UNRESTRICTED_LEVEL), option.label);
+      assert.equal(levelHint(copy, language, UNRESTRICTED_LEVEL), option.description);
+      assert.doesNotMatch(option.description, /CEFR|JLPT|TOPIK/);
+      const html = renderToStaticMarkup(
+        createElement(SettingInfo, {
+          label: "Level",
+          infoLabel: copy.infoLabel,
+          explanation: levelHint(copy, language, UNRESTRICTED_LEVEL),
+          items: [{ value: UNRESTRICTED_LEVEL, valueLabel: "", ...option }],
+        }),
+      );
+      assert.doesNotMatch(html, /unrestricted ·/);
+    }
+    assert.equal(learningLevelLabel(locale, "N3"), "N3");
   }
 });
 

@@ -1,0 +1,29 @@
+{
+  "case": "en-normal-transfer-automatic",
+  "document": "batch-1/en-normal-transfer-automatic/videos/en-normal-transfer-automatic--d86f6efec99d1d0b/5e2c10db-71dd-45f2-b0be-9a4ddaf76ce1.json",
+  "documentHash": "f102acbfa6f1188ab59ad8dce29c7d996e1feb96d09868589a406a4d69df20fc",
+  "reviewer": "Same unblinded Codex source/editorial reviewer; not independent or native-speaker certification",
+  "verdict": "passed",
+  "checks": [
+    {
+      "scope": "All source translations, contexts, unit meanings/chunks, points, source citations, invented examples and available written readings",
+      "result": "Source and example preserve imminent intention rather than an already ongoing action, and preserve the I/you actors. The example situation matches its dialogue. Citations contain complete Latin words. Telephone is chosen as the reading of called without source disambiguation."
+    }
+  ],
+  "targets": [
+    {
+      "target": "english_control",
+      "result": "passed"
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "type": "lexical_disambiguation",
+      "path": "/sections/0/translations/1/text",
+      "quote": "你打來的時候我正準備要走。",
+      "description": "Called can mean a telephone call or calling out. Telephone is a natural reading here, but the source does not explicitly disambiguate the medium. This remains the same nonblocking ambiguity warning used for the earlier English control."
+    }
+  ],
+  "boundary": "One fresh output per frozen case. Missing optional teaching targets/readings do not count as exercised. No stability/causal estimate, actual audio, installed Host, real Chrome/video or learning-effect acceptance."
+}

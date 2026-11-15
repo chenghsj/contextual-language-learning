@@ -85,7 +85,7 @@ export function AnalysisRangePicker({
         }}
       />
       {!timed ? (
-        <p className="text-xs text-muted-foreground">{ui.untimed}</p>
+        <p className="text-ui-body text-muted-foreground">{ui.untimed}</p>
       ) : (
         <>
           {estimated && <p className="text-xs text-muted-foreground">{ui.estimated}</p>}
@@ -146,7 +146,9 @@ export function AnalysisRangePicker({
                   />
                 ))}
               </div>
-              {!connected && <p className="text-xs text-muted-foreground">{ux.disconnected}</p>}
+              {!connected && (
+                <p className="text-ui-body text-muted-foreground">{ux.disconnected}</p>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -166,7 +168,7 @@ export function AnalysisRangePicker({
             </p>
           )}
           {!valid && (
-            <p role="alert" className="text-xs text-destructive">
+            <p role="alert" className="text-ui-body text-destructive">
               {ui.invalid}
             </p>
           )}

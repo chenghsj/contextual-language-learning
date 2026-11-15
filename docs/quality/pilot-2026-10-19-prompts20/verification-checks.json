@@ -1,0 +1,56 @@
+{
+  "scope": "Integrity and coverage/advisory behavior in temporary copies; original model evidence unchanged",
+  "checks": [
+    {
+      "name": "Saved evidence verifies without an AI acceptance score",
+      "exitCode": 0,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Reviewer wording preference does not block verification",
+      "exitCode": 0,
+      "matchedExpectation": true
+    },
+    {
+      "name": "A subjective note cannot silently become a hard gate",
+      "exitCode": 1,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Missing optional teaching remains an observation, not a case failure",
+      "exitCode": 0,
+      "matchedExpectation": true
+    },
+    {
+      "name": "A claimed exercised target still needs actual source evidence",
+      "exitCode": 1,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Changed raw response is rejected",
+      "exitCode": 1,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Changed frozen plan is rejected",
+      "exitCode": 1,
+      "matchedExpectation": true
+    },
+    {
+      "name": "No reusable items is not a correctness failure",
+      "exitCode": 0,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Valid teaching on a short response is not labelled filler and rejected",
+      "exitCode": 0,
+      "matchedExpectation": true
+    },
+    {
+      "name": "Fixed-case identity remains a hard check",
+      "exitCode": 1,
+      "matchedExpectation": true
+    }
+  ],
+  "newModelCalls": 0
+}

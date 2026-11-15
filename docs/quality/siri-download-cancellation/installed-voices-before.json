@@ -1,0 +1,72 @@
+[
+  {
+    "removable": true,
+    "name": "Aaron",
+    "technology": "natural",
+    "language": "en-US",
+    "installed": true,
+    "resourceId": "com.apple.siri.tts.voice.en_US.aaron.natural.premium",
+    "engine": "siri",
+    "resourceAvailable": true,
+    "quality": "premium",
+    "neural": true,
+    "downloadSize": 271174828,
+    "id": "siri:com.apple.speech.synthesis.voice.custom.siri.aaron.premium"
+  },
+  {
+    "removable": true,
+    "name": "aaron",
+    "technology": "fmvoice",
+    "language": "en-US",
+    "installed": true,
+    "resourceId": "com.apple.siri.tts.voice.en_US.aaron.natural.premium",
+    "engine": "siri",
+    "resourceAvailable": true,
+    "quality": "premium",
+    "neural": true,
+    "downloadSize": 0,
+    "id": "siri:com.apple.tts.ifp.en-US.aaron"
+  },
+  {
+    "removable": true,
+    "name": "Sakura",
+    "technology": "neural",
+    "language": "ja-JP",
+    "installed": true,
+    "resourceId": "com.apple.siri.tts.voice.ja_JP.sakura.neural.premium",
+    "engine": "siri",
+    "resourceAvailable": true,
+    "quality": "premium",
+    "neural": true,
+    "downloadSize": 65607344,
+    "id": "siri:com.apple.speech.synthesis.voice.custom.siri.sakura.premium"
+  },
+  {
+    "removable": true,
+    "name": "Jinsoo",
+    "technology": "natural",
+    "language": "ko-KR",
+    "installed": true,
+    "resourceId": "com.apple.siri.tts.voice.ko_KR.jinsoo.natural.premium",
+    "engine": "siri",
+    "resourceAvailable": true,
+    "quality": "premium",
+    "neural": true,
+    "downloadSize": 217524305,
+    "id": "siri:com.apple.speech.synthesis.voice.custom.siri.jinsoo.premium"
+  },
+  {
+    "removable": true,
+    "name": "Shufen",
+    "technology": "neural",
+    "language": "zh-TW",
+    "installed": true,
+    "resourceId": "com.apple.siri.tts.voice.zh_TW.shufen.neural.premium",
+    "engine": "siri",
+    "resourceAvailable": true,
+    "quality": "premium",
+    "neural": true,
+    "downloadSize": 77995671,
+    "id": "siri:com.apple.speech.synthesis.voice.custom.siri.shufen.premium"
+  }
+]

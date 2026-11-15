@@ -28,7 +28,7 @@
 - `pnpm test`：385 個主回歸測試、7 個 Host／打包測試、5 個套件管理測試，合計 **397/397** 通過。
 - `pnpm typecheck`、`pnpm format:check`、`pnpm build` 通過。Build 保留既有的大 bundle 警告，沒有編譯失敗。
 - `node apps/local-host/scripts/smoke-host.mjs`：對實際 production Host 傳送 Native Messaging frames，驗證 protocol 5、Pi provider catalog、V5 讀取與重複確認、custom-v1 讀取／改名／刪除及舊資料隔離。使用隔離測試資料；未使用真實 Pi credentials。
-- `pnpm --filter @immersive/extension test:redesign-ui`：獨立 Chrome profile、實際 App 與 worker，320／360／480px × Light／Dark 共六組通過。覆蓋範圍邊界、目前位置、原 cue 時間、50 筆分頁、鍵盤選項、Portal／Escape／焦點回復、生成／新版本、改名、匯出、Prompt 重用、Activity、本機刪除及四分類設定。
+- `pnpm --filter @contextual/extension test:redesign-ui`：獨立 Chrome profile、實際 App 與 worker，320／360／480px × Light／Dark 共六組通過。覆蓋範圍邊界、目前位置、原 cue 時間、50 筆分頁、鍵盤選項、Portal／Escape／焦點回復、生成／新版本、改名、匯出、Prompt 重用、Activity、本機刪除及四分類設定。
 - UI 測試的影片橋接、Host 與通知 API 使用開發 fixture；模型與 Drive 測試使用注入的測試介面。這些結果不構成真實影片平台、Pi 帳號、Drive 或 macOS 系統通知驗收。
 - Drive 回歸覆蓋 Markdown 先上傳／metadata 最後提交、部分上傳重試去重、checksum／成對檔案驗證、衝突保留、重啟接續備份、上傳中切換帳號的同步處理。
 - 重連回歸確認最多 1／2／4 秒三次，只握手及查詢狀態，不重送生成、續跑或其他副作用指令；關閉 Side Panel 不取消進行中的任務。
@@ -37,8 +37,8 @@ UI 驗收環境：macOS、Node v22.20.0、Chrome 154.0.8037.93。截圖與 evide
 
 ## 保留界線與待實機驗證
 
-- V5 與舊 checkpoint 可讀；自訂資料獨立，沒有將舊任務改寫成自訂格式。Canonical custom 資料位於 `~/Documents/Immersive Learning/custom-v1/`。
+- V5 與舊 checkpoint 可讀；自訂資料獨立，沒有將舊任務改寫成自訂格式。Canonical custom 資料位於 `~/Documents/Contextual Language Learning/custom-v1/`。
 - Canonical 文件保存後才發布／備份；本機刪除保留 Drive 備份及任務紀錄。已另行匯出或發布到選定資料夾的副本是獨立檔案。
 - 未回報的用量標示未知；模型牌價估算不代表訂閱額度或實際帳單。
 - 尚待實機驗證：真實 Pi 帳號登入與生成、真實 YouTube／Netflix 字幕與播放、Drive OAuth／多帳號／上傳及還原、系統通知橫幅、已安裝 Side Panel、Windows／Linux 原生資料夾選擇器。
-- TTS、本地 AI、正式安裝器、獨立 Runner、Virtual Models、Pi Durable、雙向同步仍屬另案。
+- 系統 TTS 已另行接入，功能及實機驗證界線見 [系統朗讀](./system-speech.md)。本地 AI、正式安裝器、獨立 Runner、Virtual Models、Pi Durable、雙向同步仍屬另案。
