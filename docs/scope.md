@@ -12,7 +12,7 @@
 
 ## Data and compatibility
 
-Canonical V5 documents and jobs live under `~/Documents/Contextual Language Learning/data-v5/`; custom documents/jobs use the separate `custom-v1/` namespace. Older V1/V2/V3/V4 development files stay at their original paths but are not loaded, resumed, migrated or automatically deleted. Older Drive lesson files remain untouched and are hidden from V5 library and duplicate checks. Pi credentials use the renamed configuration root; existing credentials are copied during the branding upgrade. Drive Keychain credentials are copied on first use. See the README branding upgrade steps. Interface settings use only `preferencesV2`; older keys remain untouched and are never read or migrated. Extension and Host require Native Messaging protocol version 6 plus matching package version.
+Canonical V5 documents and jobs live under `~/Documents/Contextual Language Learning/data-v5/`; custom documents/jobs use the separate `custom-v1/` namespace. Older V1/V2/V3/V4 development files stay at their original paths but are not loaded, resumed, migrated or automatically deleted. Older Drive lesson files remain untouched and are hidden from V5 library and duplicate checks. Pi credentials use the renamed configuration root; existing credentials are copied during the branding upgrade. Drive Keychain credentials are copied on first use. See the [upgrade guide](development.md#upgrade-an-older-installation). Interface settings use only `preferencesV2`; older keys remain untouched and are never read or migrated. Extension and Host require Native Messaging protocol version 6 plus matching package version.
 
 ## Limitations
 

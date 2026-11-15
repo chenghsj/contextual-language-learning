@@ -10,7 +10,7 @@
 
 重新建置並載入擴充功能，再透過新版 Setup 安裝本機服務。Native Host 改為 `dev.contextual.language_learning`；舊版註冊無法供新版擴充功能使用。已開啟的影片分頁也需重新載入。
 
-新版 Host 首次啟動會將舊 `Immersive Learning` 資料與設定複製至 `Contextual Language Learning`，保留原件供恢復，完成後不會重複複製。相同相對路徑若有不同檔案，會停止並指出衝突位置，不覆寫任何一份。既有 Google 憑證與 Drive 備份有相容讀取；資料 schema 與舊 CLI 任務不會轉換。詳細政策見 README 的品牌升級說明。
+新版 Host 首次啟動會將舊 `Immersive Learning` 資料與設定複製至 `Contextual Language Learning`，保留原件供恢復，完成後不會重複複製。相同相對路徑若有不同檔案，會停止並指出衝突位置，不覆寫任何一份。既有 Google 憑證與 Drive 備份有相容讀取；資料 schema 與舊 CLI 任務不會轉換。詳細政策見[升級指南](development.md#upgrade-an-older-installation)。
 
 ## 開發者建置本機測試包
 
