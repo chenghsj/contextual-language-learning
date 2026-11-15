@@ -4,6 +4,8 @@ A local-first Chrome side-panel extension that turns **video subtitles you have 
 
 The product name is **Contextual Language Learning (CLL)**. Packages, download filenames, local paths and Native Host registration use the `contextual` name. See the branding upgrade steps below when updating an older installation.
 
+![Netflix subtitle selection and lesson creation in the Chrome side panel](assets/screenshots/netflix-sidepanel.png)
+
 ## Learning approach
 
 Learning starts from the context of a video. Standard lessons select meaningful subtitle scenes and add explanations, translations, pronunciation notes and examples for the learner's level. Custom content uses your prompt and the selected source to produce Markdown. An interactive reader connects lessons to source timestamps, with optional sentence looping and playback speed controls on supported video platforms.
@@ -12,7 +14,7 @@ Learning starts from the context of a video. Standard lessons select meaningful 
 
 ## Open source and project status
 
-This repository remains **private** pending the public-release checklist and live platform testing. Adding a license and contributor files does not make it public. See the [MIT license](LICENSE), [contribution guide](CONTRIBUTING.md), [code of conduct](CODE_OF_CONDUCT.md), [security policy](SECURITY.md), [privacy and data handling](PRIVACY.md), [changelog](CHANGELOG.md), [roadmap](docs/ROADMAP.md) and [open-source readiness checklist](docs/OPEN_SOURCE_CHECKLIST.md).
+This repository is **public** and licensed under MIT. Live platform testing is still in progress. See the [MIT license](LICENSE), [contribution guide](CONTRIBUTING.md), [code of conduct](CODE_OF_CONDUCT.md), [security policy](SECURITY.md), [privacy and data handling](PRIVACY.md), [changelog](CHANGELOG.md), [roadmap](docs/ROADMAP.md) and [open-source readiness checklist](docs/OPEN_SOURCE_CHECKLIST.md).
 
 **No production-ready Google Drive or Netflix compatibility guarantee:** Google OAuth and Netflix's undocumented playback API require manual platform testing before a public stable release. This project is not affiliated with the streaming platforms or model providers.
 
