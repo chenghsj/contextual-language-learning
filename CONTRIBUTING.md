@@ -18,7 +18,7 @@ pnpm build
 pnpm package:release
 ```
 
-Use a branch based on current `main` for each contribution. npm/yarn installs are blocked by `preinstall` because this is a pnpm workspace. The Extension is in apps/extension, Host in apps/local-host, and V4 lesson, job and Native Messaging contracts plus subtitle utilities are in packages/core. Load apps/extension/dist with chrome://extensions > Developer mode > Load unpacked. See README for your OS Host installer and the --browser option for Edge/Chromium. Do not commit generated dist/, release-assets/, npm/yarn lockfiles, credentials, OAuth tokens, downloaded videos or imported subtitles.
+Use a branch based on current `main` for each contribution. npm/yarn installs are blocked by `preinstall` because this is a pnpm workspace. The Extension is in apps/extension, Host in apps/local-host, and V4 lesson, job and Native Messaging contracts plus subtitle utilities are in packages/core. Load apps/extension/dist with chrome://extensions > Developer mode > Load unpacked. See the [development guide](docs/development.md#install-from-source) for the current development checkout, OS requirements and browser-specific Host setup. Do not commit generated dist/, release-assets/, npm/yarn lockfiles, credentials, OAuth tokens, downloaded videos or imported subtitles.
 
 ## Interface components
 
