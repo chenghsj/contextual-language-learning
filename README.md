@@ -2,6 +2,8 @@
 
 A local-first Chrome side-panel extension that uses its bundled Pi SDK to turn **video subtitles you have permission to use** into structured, level-appropriate language lessons. Learn expressions in dialogue context, then return to the original video for focused listening practice.
 
+![Netflix subtitle selection and lesson creation in the Chrome side panel](assets/screenshots/netflix-sidepanel.png)
+
 ## Learning approach
 
 This is **contextual, video-based language learning**, not a promise of full language immersion. AI selects meaningful subtitle scenes and adds grounded explanations, translations, pronunciation notes and contextual examples for the learner's level. An interactive reader connects lessons to source timestamps, with optional sentence looping and playback speed controls on supported video platforms.
@@ -10,7 +12,7 @@ This is **contextual, video-based language learning**, not a promise of full lan
 
 ## Open source and project status
 
-This repository remains **private** pending the public-release checklist and live platform testing. Adding a license and contributor files does not make it public. See the [MIT license](LICENSE), [contribution guide](CONTRIBUTING.md), [code of conduct](CODE_OF_CONDUCT.md), [security policy](SECURITY.md), [privacy and data handling](PRIVACY.md), [changelog](CHANGELOG.md), [roadmap](docs/ROADMAP.md) and [open-source readiness checklist](docs/OPEN_SOURCE_CHECKLIST.md).
+This repository is **public** and licensed under MIT. Live platform testing is still in progress. See the [MIT license](LICENSE), [contribution guide](CONTRIBUTING.md), [code of conduct](CODE_OF_CONDUCT.md), [security policy](SECURITY.md), [privacy and data handling](PRIVACY.md), [changelog](CHANGELOG.md), [roadmap](docs/ROADMAP.md) and [open-source readiness checklist](docs/OPEN_SOURCE_CHECKLIST.md).
 
 **No production-ready Google Drive or Netflix compatibility guarantee:** Google OAuth and Netflix's undocumented playback API require manual platform testing before a public stable release. This project is not affiliated with the streaming platforms or model providers.
 
